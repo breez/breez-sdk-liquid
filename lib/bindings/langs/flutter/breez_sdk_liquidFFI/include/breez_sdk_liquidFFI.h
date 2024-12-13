@@ -97,6 +97,8 @@ RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_pay
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdraw(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parse(void*_Nonnull ptr, RustBuffer input, RustCallStatus *_Nonnull out_status
+);
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
@@ -144,8 +146,6 @@ void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect(RustBuffer req, R
 void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(RustBuffer req, uint64_t signer, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(RustBuffer network, RustBuffer breez_api_key, RustCallStatus *_Nonnull out_status
-);
-RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse(RustBuffer input, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice(RustBuffer input, RustCallStatus *_Nonnull out_status
 );
@@ -274,9 +274,6 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signer(void
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_default_config(void
     
 );
-uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_parse(void
-    
-);
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice(void
     
 );
@@ -329,6 +326,9 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw(void
+    
+);
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parse(void
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain(void

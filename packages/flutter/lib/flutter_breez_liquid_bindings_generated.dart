@@ -813,38 +813,6 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  void
-      frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ptr,
-    );
-  }
-
-  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser');
-  late final _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser =
-      _frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ptr,
-    );
-  }
-
-  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser');
-  late final _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser =
-      _frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
   ffi.Pointer<wire_cst_aes_success_action_data>
       frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data();
@@ -1432,30 +1400,6 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
 
-  ffi.Pointer<
-          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-      frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-    int len,
-  ) {
-    return _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      len,
-    );
-  }
-
-  late final _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr =
-      _lookup<
-              ffi.NativeFunction<
-                  ffi.Pointer<
-                          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-                      Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser');
-  late final _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser =
-      _frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr
-          .asFunction<
-              ffi.Pointer<
-                      wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-                  Function(int)>();
-
   ffi.Pointer<wire_cst_list_String> frbgen_breez_liquid_cst_new_list_String(
     int len,
   ) {
@@ -1469,6 +1413,21 @@ class FlutterBreezLiquidBindings {
           'frbgen_breez_liquid_cst_new_list_String');
   late final _frbgen_breez_liquid_cst_new_list_String = _frbgen_breez_liquid_cst_new_list_StringPtr
       .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_external_input_parser> frbgen_breez_liquid_cst_new_list_external_input_parser(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_external_input_parser(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_external_input_parserPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_external_input_parser> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_external_input_parser');
+  late final _frbgen_breez_liquid_cst_new_list_external_input_parser =
+      _frbgen_breez_liquid_cst_new_list_external_input_parserPtr
+          .asFunction<ffi.Pointer<wire_cst_list_external_input_parser> Function(int)>();
 
   ffi.Pointer<wire_cst_list_fiat_currency> frbgen_breez_liquid_cst_new_list_fiat_currency(
     int len,
@@ -1958,6 +1917,26 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdrawPtr
           .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parse(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer input,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parse(
+      ptr,
+      input,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parsePtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parse');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parse =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parsePtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain(
     ffi.Pointer<ffi.Void> ptr,
     RustBuffer req,
@@ -2413,23 +2392,6 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_default_config =
       _uniffi_breez_sdk_liquid_bindings_fn_func_default_configPtr
           .asFunction<RustBuffer Function(RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>();
-
-  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse(
-    RustBuffer input,
-    ffi.Pointer<RustCallStatus> out_status,
-  ) {
-    return _uniffi_breez_sdk_liquid_bindings_fn_func_parse(
-      input,
-      out_status,
-    );
-  }
-
-  late final _uniffi_breez_sdk_liquid_bindings_fn_func_parsePtr =
-      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
-          'uniffi_breez_sdk_liquid_bindings_fn_func_parse');
-  late final _uniffi_breez_sdk_liquid_bindings_fn_func_parse =
-      _uniffi_breez_sdk_liquid_bindings_fn_func_parsePtr
-          .asFunction<RustBuffer Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice(
     RustBuffer input,
@@ -3413,16 +3375,6 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_checksum_func_default_config =
       _uniffi_breez_sdk_liquid_bindings_checksum_func_default_configPtr.asFunction<int Function()>();
 
-  int uniffi_breez_sdk_liquid_bindings_checksum_func_parse() {
-    return _uniffi_breez_sdk_liquid_bindings_checksum_func_parse();
-  }
-
-  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_parsePtr =
-      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
-          'uniffi_breez_sdk_liquid_bindings_checksum_func_parse');
-  late final _uniffi_breez_sdk_liquid_bindings_checksum_func_parse =
-      _uniffi_breez_sdk_liquid_bindings_checksum_func_parsePtr.asFunction<int Function()>();
-
   int uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice();
   }
@@ -3617,6 +3569,17 @@ class FlutterBreezLiquidBindings {
           'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw');
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdrawPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parse() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parse();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parsePtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parse');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parse =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parsePtr
           .asFunction<int Function()>();
 
   int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain() {
@@ -4567,9 +4530,16 @@ final class wire_cst_sdk_event extends ffi.Struct {
   external SdkEventKind kind;
 }
 
-final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser
-    extends ffi.Struct {
-  external ffi.Pointer<ffi.UintPtr> ptr;
+final class wire_cst_external_input_parser extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> provider_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> input_regex;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> parser_url;
+}
+
+final class wire_cst_list_external_input_parser extends ffi.Struct {
+  external ffi.Pointer<wire_cst_external_input_parser> ptr;
 
   @ffi.Int32()
   external int len;
@@ -4599,9 +4569,7 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key;
 
-  external ffi.Pointer<
-          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-      external_input_parsers;
+  external ffi.Pointer<wire_cst_list_external_input_parser> external_input_parsers;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {

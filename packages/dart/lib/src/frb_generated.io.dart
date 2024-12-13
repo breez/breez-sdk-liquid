@@ -10,7 +10,6 @@ import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'error.dart';
 import 'frb_generated.dart';
-import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
@@ -25,20 +24,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BindingLiquidSdkPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ExternalInputParserPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
   @protected
   BindingLiquidSdk
       dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
-          dynamic raw);
-
-  @protected
-  ExternalInputParser
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
           dynamic raw);
 
   @protected
@@ -49,11 +40,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   BindingLiquidSdk dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       dynamic raw);
-
-  @protected
-  ExternalInputParser
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw);
 
   @protected
   RustStreamSink<LogEntry> dco_decode_StreamSink_log_entry_Dco(dynamic raw);
@@ -260,6 +246,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CurrencyInfo dco_decode_currency_info(dynamic raw);
 
   @protected
+  ExternalInputParser dco_decode_external_input_parser(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
 
   @protected
@@ -293,12 +282,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidNetwork dco_decode_liquid_network(dynamic raw);
 
   @protected
-  List<ExternalInputParser>
-      dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw);
+  List<String> dco_decode_list_String(dynamic raw);
 
   @protected
-  List<String> dco_decode_list_String(dynamic raw);
+  List<ExternalInputParser> dco_decode_list_external_input_parser(dynamic raw);
 
   @protected
   List<FiatCurrency> dco_decode_list_fiat_currency(dynamic raw);
@@ -451,9 +438,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
 
   @protected
-  List<ExternalInputParser>?
-      dco_decode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw);
+  List<ExternalInputParser>? dco_decode_opt_list_external_input_parser(dynamic raw);
 
   @protected
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw);
@@ -608,11 +593,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           SseDeserializer deserializer);
 
   @protected
-  ExternalInputParser
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer);
-
-  @protected
   BindingLiquidSdk
       sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           SseDeserializer deserializer);
@@ -620,11 +600,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   BindingLiquidSdk sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       SseDeserializer deserializer);
-
-  @protected
-  ExternalInputParser
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer);
 
   @protected
   RustStreamSink<LogEntry> sse_decode_StreamSink_log_entry_Dco(SseDeserializer deserializer);
@@ -833,6 +808,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
 
   @protected
+  ExternalInputParser sse_decode_external_input_parser(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
@@ -866,12 +844,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LiquidNetwork sse_decode_liquid_network(SseDeserializer deserializer);
 
   @protected
-  List<ExternalInputParser>
-      sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer);
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
-  List<String> sse_decode_list_String(SseDeserializer deserializer);
+  List<ExternalInputParser> sse_decode_list_external_input_parser(SseDeserializer deserializer);
 
   @protected
   List<FiatCurrency> sse_decode_list_fiat_currency(SseDeserializer deserializer);
@@ -1024,9 +1000,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
 
   @protected
-  List<ExternalInputParser>?
-      sse_decode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer);
+  List<ExternalInputParser>? sse_decode_opt_list_external_input_parser(SseDeserializer deserializer);
 
   @protected
   List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer);
@@ -1634,28 +1608,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<
-          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-      cst_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          List<ExternalInputParser> raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ans = wire
-        .cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-            raw.length);
-    for (var i = 0; i < raw.length; ++i) {
-      ans.ref.ptr[i] =
-          cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-              raw[i]);
-    }
-    return ans;
-  }
-
-  @protected
   ffi.Pointer<wire_cst_list_String> cst_encode_list_String(List<String> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_String(raw.length);
     for (var i = 0; i < raw.length; ++i) {
       ans.ref.ptr[i] = cst_encode_String(raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_external_input_parser> cst_encode_list_external_input_parser(
+      List<ExternalInputParser> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_external_input_parser(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_external_input_parser(raw[i], ans.ref.ptr[i]);
     }
     return ans;
   }
@@ -1850,15 +1818,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<
-          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-      cst_encode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          List<ExternalInputParser>? raw) {
+  ffi.Pointer<wire_cst_list_external_input_parser> cst_encode_opt_list_external_input_parser(
+      List<ExternalInputParser>? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null
-        ? ffi.nullptr
-        : cst_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-            raw);
+    return raw == null ? ffi.nullptr : cst_encode_list_external_input_parser(raw);
   }
 
   @protected
@@ -2248,9 +2211,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.zero_conf_min_fee_rate_msat = cst_encode_u_32(apiObj.zeroConfMinFeeRateMsat);
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
     wireObj.breez_api_key = cst_encode_opt_String(apiObj.breezApiKey);
-    wireObj.external_input_parsers =
-        cst_encode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-            apiObj.externalInputParsers);
+    wireObj.external_input_parsers = cst_encode_opt_list_external_input_parser(apiObj.externalInputParsers);
   }
 
   @protected
@@ -2268,6 +2229,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.uniq_symbol = cst_encode_opt_box_autoadd_symbol(apiObj.uniqSymbol);
     wireObj.localized_name = cst_encode_list_localized_name(apiObj.localizedName);
     wireObj.locale_overrides = cst_encode_list_locale_overrides(apiObj.localeOverrides);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_external_input_parser(
+      ExternalInputParser apiObj, wire_cst_external_input_parser wireObj) {
+    wireObj.provider_id = cst_encode_String(apiObj.providerId);
+    wireObj.input_regex = cst_encode_String(apiObj.inputRegex);
+    wireObj.parser_url = cst_encode_String(apiObj.parserUrl);
   }
 
   @protected
@@ -3281,20 +3250,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BindingLiquidSdk raw);
 
   @protected
-  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ExternalInputParser raw);
-
-  @protected
   int cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw);
 
   @protected
   int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw);
-
-  @protected
-  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ExternalInputParser raw);
 
   @protected
   bool cst_encode_bool(bool raw);
@@ -3343,21 +3304,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       BindingLiquidSdk self, SseSerializer serializer);
 
   @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          ExternalInputParser self, SseSerializer serializer);
-
-  @protected
   void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer);
 
   @protected
   void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ExternalInputParser self, SseSerializer serializer);
 
   @protected
   void sse_encode_StreamSink_log_entry_Dco(RustStreamSink<LogEntry> self, SseSerializer serializer);
@@ -3573,6 +3525,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
 
   @protected
+  void sse_encode_external_input_parser(ExternalInputParser self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
@@ -3607,12 +3562,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_liquid_network(LiquidNetwork self, SseSerializer serializer);
 
   @protected
-  void
-      sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          List<ExternalInputParser> self, SseSerializer serializer);
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+  void sse_encode_list_external_input_parser(List<ExternalInputParser> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_fiat_currency(List<FiatCurrency> self, SseSerializer serializer);
@@ -3767,9 +3720,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
 
   @protected
-  void
-      sse_encode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          List<ExternalInputParser>? self, SseSerializer serializer);
+  void sse_encode_opt_list_external_input_parser(List<ExternalInputParser>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer);
@@ -4712,38 +4663,6 @@ class RustLibWire implements BaseWire {
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  void
-      rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser');
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-      rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-          'frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser');
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
   ffi.Pointer<wire_cst_aes_success_action_data> cst_new_box_autoadd_aes_success_action_data() {
     return _cst_new_box_autoadd_aes_success_action_data();
   }
@@ -5273,30 +5192,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_url_success_action_data = _cst_new_box_autoadd_url_success_action_dataPtr
       .asFunction<ffi.Pointer<wire_cst_url_success_action_data> Function()>();
 
-  ffi.Pointer<
-          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-      cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-    int len,
-  ) {
-    return _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      len,
-    );
-  }
-
-  late final _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr =
-      _lookup<
-              ffi.NativeFunction<
-                  ffi.Pointer<
-                          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-                      Function(ffi.Int32)>>(
-          'frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser');
-  late final _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser =
-      _cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParserPtr
-          .asFunction<
-              ffi.Pointer<
-                      wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-                  Function(int)>();
-
   ffi.Pointer<wire_cst_list_String> cst_new_list_String(
     int len,
   ) {
@@ -5310,6 +5205,20 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_list_String');
   late final _cst_new_list_String =
       _cst_new_list_StringPtr.asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_external_input_parser> cst_new_list_external_input_parser(
+    int len,
+  ) {
+    return _cst_new_list_external_input_parser(
+      len,
+    );
+  }
+
+  late final _cst_new_list_external_input_parserPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_external_input_parser> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_external_input_parser');
+  late final _cst_new_list_external_input_parser = _cst_new_list_external_input_parserPtr
+      .asFunction<ffi.Pointer<wire_cst_list_external_input_parser> Function(int)>();
 
   ffi.Pointer<wire_cst_list_fiat_currency> cst_new_list_fiat_currency(
     int len,
@@ -6121,9 +6030,16 @@ final class wire_cst_sdk_event extends ffi.Struct {
   external SdkEventKind kind;
 }
 
-final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser
-    extends ffi.Struct {
-  external ffi.Pointer<ffi.UintPtr> ptr;
+final class wire_cst_external_input_parser extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> provider_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> input_regex;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> parser_url;
+}
+
+final class wire_cst_list_external_input_parser extends ffi.Struct {
+  external ffi.Pointer<wire_cst_external_input_parser> ptr;
 
   @ffi.Int32()
   external int len;
@@ -6153,9 +6069,7 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key;
 
-  external ffi.Pointer<
-          wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser>
-      external_input_parsers;
+  external ffi.Pointer<wire_cst_list_external_input_parser> external_input_parsers;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {

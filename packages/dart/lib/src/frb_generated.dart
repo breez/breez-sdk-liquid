@@ -10,7 +10,6 @@ import 'dart:convert';
 import 'error.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.dart';
-import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
@@ -185,12 +184,6 @@ abstract class RustLibApi extends BaseApi {
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BindingLiquidSdkPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_ExternalInputParser;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_ExternalInputParser;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ExternalInputParserPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -1212,12 +1205,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_BindingLiquidSdk => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk;
 
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_ExternalInputParser => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_ExternalInputParser => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser;
-
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -1233,14 +1220,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ExternalInputParser
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ExternalInputParserImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   BindingLiquidSdk
       dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           dynamic raw) {
@@ -1253,14 +1232,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return BindingLiquidSdkImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  ExternalInputParser
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ExternalInputParserImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -1734,9 +1705,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       zeroConfMinFeeRateMsat: dco_decode_u_32(arr[7]),
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[8]),
       breezApiKey: dco_decode_opt_String(arr[9]),
-      externalInputParsers:
-          dco_decode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-              arr[10]),
+      externalInputParsers: dco_decode_opt_list_external_input_parser(arr[10]),
     );
   }
 
@@ -1764,6 +1733,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       uniqSymbol: dco_decode_opt_box_autoadd_symbol(arr[4]),
       localizedName: dco_decode_list_localized_name(arr[5]),
       localeOverrides: dco_decode_list_locale_overrides(arr[6]),
+    );
+  }
+
+  @protected
+  ExternalInputParser dco_decode_external_input_parser(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return ExternalInputParser(
+      providerId: dco_decode_String(arr[0]),
+      inputRegex: dco_decode_String(arr[1]),
+      parserUrl: dco_decode_String(arr[2]),
     );
   }
 
@@ -1917,20 +1898,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<ExternalInputParser>
-      dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>)
-        .map(
-            dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser)
-        .toList();
-  }
-
-  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<ExternalInputParser> dco_decode_list_external_input_parser(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_external_input_parser).toList();
   }
 
   @protected
@@ -2494,14 +2470,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<ExternalInputParser>?
-      dco_decode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          dynamic raw) {
+  List<ExternalInputParser>? dco_decode_opt_list_external_input_parser(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null
-        ? null
-        : dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-            raw);
+    return raw == null ? null : dco_decode_list_external_input_parser(raw);
   }
 
   @protected
@@ -3174,15 +3145,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ExternalInputParser
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return ExternalInputParserImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
   BindingLiquidSdk
       sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
           SseDeserializer deserializer) {
@@ -3196,15 +3158,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return BindingLiquidSdkImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
-  }
-
-  @protected
-  ExternalInputParser
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return ExternalInputParserImpl.frbInternalSseDecode(
         sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
@@ -3661,9 +3614,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_breezApiKey = sse_decode_opt_String(deserializer);
-    var var_externalInputParsers =
-        sse_decode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-            deserializer);
+    var var_externalInputParsers = sse_decode_opt_list_external_input_parser(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
@@ -3704,6 +3655,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         uniqSymbol: var_uniqSymbol,
         localizedName: var_localizedName,
         localeOverrides: var_localeOverrides);
+  }
+
+  @protected
+  ExternalInputParser sse_decode_external_input_parser(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_providerId = sse_decode_String(deserializer);
+    var var_inputRegex = sse_decode_String(deserializer);
+    var var_parserUrl = sse_decode_String(deserializer);
+    return ExternalInputParser(
+        providerId: var_providerId, inputRegex: var_inputRegex, parserUrl: var_parserUrl);
   }
 
   @protected
@@ -3846,22 +3807,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<ExternalInputParser>
-      sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <ExternalInputParser>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-              deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3869,6 +3814,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <String>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ExternalInputParser> sse_decode_list_external_input_parser(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ExternalInputParser>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_external_input_parser(deserializer));
     }
     return ans_;
   }
@@ -4532,14 +4489,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<ExternalInputParser>?
-      sse_decode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          SseDeserializer deserializer) {
+  List<ExternalInputParser>? sse_decode_opt_list_external_input_parser(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return (sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          deserializer));
+      return (sse_decode_list_external_input_parser(deserializer));
     } else {
       return null;
     }
@@ -5166,14 +5120,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ExternalInputParser raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-    return (raw as ExternalInputParserImpl).frbInternalCstEncode(move: true);
-  }
-
-  @protected
   int cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -5187,14 +5133,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
 // ignore: invalid_use_of_internal_member
     return (raw as BindingLiquidSdkImpl).frbInternalCstEncode();
-  }
-
-  @protected
-  int cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ExternalInputParser raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-// ignore: invalid_use_of_internal_member
-    return (raw as ExternalInputParserImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -5289,14 +5227,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          ExternalInputParser self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize((self as ExternalInputParserImpl).frbInternalSseEncode(move: true), serializer);
-  }
-
-  @protected
   void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -5308,13 +5238,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       BindingLiquidSdk self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize((self as BindingLiquidSdkImpl).frbInternalSseEncode(move: null), serializer);
-  }
-
-  @protected
-  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-      ExternalInputParser self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize((self as ExternalInputParserImpl).frbInternalSseEncode(move: null), serializer);
   }
 
   @protected
@@ -5771,8 +5694,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
     sse_encode_opt_String(self.breezApiKey, serializer);
-    sse_encode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-        self.externalInputParsers, serializer);
+    sse_encode_opt_list_external_input_parser(self.externalInputParsers, serializer);
   }
 
   @protected
@@ -5792,6 +5714,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
     sse_encode_list_localized_name(self.localizedName, serializer);
     sse_encode_list_locale_overrides(self.localeOverrides, serializer);
+  }
+
+  @protected
+  void sse_encode_external_input_parser(ExternalInputParser self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.providerId, serializer);
+    sse_encode_String(self.inputRegex, serializer);
+    sse_encode_String(self.parserUrl, serializer);
   }
 
   @protected
@@ -5914,23 +5844,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-      sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          List<ExternalInputParser> self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_external_input_parser(List<ExternalInputParser> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_external_input_parser(item, serializer);
     }
   }
 
@@ -6479,15 +6406,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void
-      sse_encode_opt_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          List<ExternalInputParser>? self, SseSerializer serializer) {
+  void sse_encode_opt_list_external_input_parser(List<ExternalInputParser>? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
-      sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerExternalInputParser(
-          self, serializer);
+      sse_encode_list_external_input_parser(self, serializer);
     }
   }
 
@@ -7149,22 +7073,4 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<void> unregisterWebhook() => RustLib.instance.api.crateBindingsBindingLiquidSdkUnregisterWebhook(
         that: this,
       );
-}
-
-@sealed
-class ExternalInputParserImpl extends RustOpaque implements ExternalInputParser {
-  // Not to be used by end users
-  ExternalInputParserImpl.frbInternalDcoDecode(List<dynamic> wire)
-      : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  ExternalInputParserImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_ExternalInputParser,
-    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_ExternalInputParser,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_ExternalInputParserPtr,
-  );
 }

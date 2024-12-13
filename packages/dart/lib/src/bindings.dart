@@ -6,7 +6,6 @@
 import 'bindings/duplicates.dart';
 import 'error.dart';
 import 'frb_generated.dart';
-import 'lib.dart';
 import 'model.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
@@ -262,6 +261,30 @@ class CurrencyInfo {
           uniqSymbol == other.uniqSymbol &&
           localizedName == other.localizedName &&
           localeOverrides == other.localeOverrides;
+}
+
+class ExternalInputParser {
+  final String providerId;
+  final String inputRegex;
+  final String parserUrl;
+
+  const ExternalInputParser({
+    required this.providerId,
+    required this.inputRegex,
+    required this.parserUrl,
+  });
+
+  @override
+  int get hashCode => providerId.hashCode ^ inputRegex.hashCode ^ parserUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExternalInputParser &&
+          runtimeType == other.runtimeType &&
+          providerId == other.providerId &&
+          inputRegex == other.inputRegex &&
+          parserUrl == other.parserUrl;
 }
 
 class FiatCurrency {

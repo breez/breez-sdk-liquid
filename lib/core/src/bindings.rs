@@ -297,6 +297,13 @@ pub enum _Network {
     Regtest,
 }
 
+#[frb(mirror(ExternalInputParser))]
+pub struct _ExternalInputParser {
+    pub provider_id: String,
+    pub input_regex: String,
+    pub parser_url: String,
+}
+
 #[frb(mirror(LNInvoice))]
 pub struct _LNInvoice {
     pub bolt11: String,
