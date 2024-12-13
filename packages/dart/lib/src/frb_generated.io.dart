@@ -306,6 +306,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ListPaymentDetails dco_decode_list_payment_details(dynamic raw);
 
   @protected
+  List<PaymentState> dco_decode_list_payment_state(dynamic raw);
+
+  @protected
   List<PaymentType> dco_decode_list_payment_type(dynamic raw);
 
   @protected
@@ -439,6 +442,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ExternalInputParser>? dco_decode_opt_list_external_input_parser(dynamic raw);
+
+  @protected
+  List<PaymentState>? dco_decode_opt_list_payment_state(dynamic raw);
 
   @protected
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw);
@@ -868,6 +874,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ListPaymentDetails sse_decode_list_payment_details(SseDeserializer deserializer);
 
   @protected
+  List<PaymentState> sse_decode_list_payment_state(SseDeserializer deserializer);
+
+  @protected
   List<PaymentType> sse_decode_list_payment_type(SseDeserializer deserializer);
 
   @protected
@@ -1001,6 +1010,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ExternalInputParser>? sse_decode_opt_list_external_input_parser(SseDeserializer deserializer);
+
+  @protected
+  List<PaymentState>? sse_decode_opt_list_payment_state(SseDeserializer deserializer);
 
   @protected
   List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer);
@@ -1680,6 +1692,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_payment_state> cst_encode_list_payment_state(List<PaymentState> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_payment_state(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] = cst_encode_payment_state(raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_payment_type> cst_encode_list_payment_type(List<PaymentType> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_payment_type(raw.length);
@@ -1822,6 +1844,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       List<ExternalInputParser>? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_list_external_input_parser(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_payment_state> cst_encode_opt_list_payment_state(List<PaymentState>? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_list_payment_state(raw);
   }
 
   @protected
@@ -2377,6 +2405,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_list_payments_request(
       ListPaymentsRequest apiObj, wire_cst_list_payments_request wireObj) {
     wireObj.filters = cst_encode_opt_list_payment_type(apiObj.filters);
+    wireObj.states = cst_encode_opt_list_payment_state(apiObj.states);
     wireObj.from_timestamp = cst_encode_opt_box_autoadd_i_64(apiObj.fromTimestamp);
     wireObj.to_timestamp = cst_encode_opt_box_autoadd_i_64(apiObj.toTimestamp);
     wireObj.offset = cst_encode_opt_box_autoadd_u_32(apiObj.offset);
@@ -3588,6 +3617,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_payment_details(ListPaymentDetails self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_payment_state(List<PaymentState> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_payment_type(List<PaymentType> self, SseSerializer serializer);
 
   @protected
@@ -3723,6 +3755,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_list_external_input_parser(List<ExternalInputParser>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_payment_state(List<PaymentState>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer);
@@ -5292,6 +5327,20 @@ class RustLibWire implements BaseWire {
   late final _cst_new_list_payment =
       _cst_new_list_paymentPtr.asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_payment_state> cst_new_list_payment_state(
+    int len,
+  ) {
+    return _cst_new_list_payment_state(
+      len,
+    );
+  }
+
+  late final _cst_new_list_payment_statePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_state> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_payment_state');
+  late final _cst_new_list_payment_state =
+      _cst_new_list_payment_statePtr.asFunction<ffi.Pointer<wire_cst_list_payment_state> Function(int)>();
+
   ffi.Pointer<wire_cst_list_payment_type> cst_new_list_payment_type(
     int len,
   ) {
@@ -5451,6 +5500,13 @@ final class wire_cst_list_payment_type extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_list_payment_state extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_ListPaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 }
@@ -5474,6 +5530,8 @@ final class wire_cst_list_payment_details extends ffi.Struct {
 
 final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_payment_type> filters;
+
+  external ffi.Pointer<wire_cst_list_payment_state> states;
 
   external ffi.Pointer<ffi.Int64> from_timestamp;
 
