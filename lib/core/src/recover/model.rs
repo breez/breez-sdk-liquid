@@ -14,7 +14,7 @@ pub(crate) type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = lwk_wollet::elements::Script;
 pub(crate) type SendSwapHistory = Vec<HistoryTxId>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct HistoryTxId {
     pub txid: Txid,
     /// Confirmation height of txid
