@@ -14,7 +14,7 @@ pub(crate) type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = lwk_wollet::elements::Script;
 pub(crate) type SendSwapHistory = Vec<HistoryTxId>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct HistoryTxId {
     pub txid: Txid,
     /// Confirmation height of txid
@@ -532,6 +532,11 @@ impl SwapsList {
             .iter()
             .for_each(|(lbtc_script, lbtc_script_history)| {
                 if let Some(imm) = receive_swaps_by_claim_script.get(lbtc_script) {
+                    log::info!(
+                        "found history for  reeive swap {:?} {:?}",
+                        imm.swap_id,
+                        lbtc_script_history.len()
+                    );
                     // The MRH script history filtered by the swap timeout block height
                     let mrh_script_history = imm
                         .mrh_script

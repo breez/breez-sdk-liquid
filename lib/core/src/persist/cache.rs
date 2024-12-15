@@ -148,11 +148,19 @@ impl Persister {
                     KEY_LAST_DERIVATION_INDEX,
                     next_index.to_string(),
                 )?;
+                self.commit_outgoing(
+                    &tx,
+                    LAST_DERIVATION_INDEX_DATA_ID,
+                    RecordType::LastDerivationIndex,
+                    // insert a mock updated field so that merging with incoming data works as expected
+                    Some(vec![LAST_DERIVATION_INDEX_DATA_ID.to_string()]),
+                )?;
                 Some(next_index)
             }
             None => None,
         };
         tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(res)
     }
