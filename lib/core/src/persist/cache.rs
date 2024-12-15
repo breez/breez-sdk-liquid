@@ -111,21 +111,23 @@ impl Persister {
         self.get_cached_item(KEY_WEBHOOK_URL)
     }
 
-    pub fn set_last_derivation_index(&self, index: u32) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
-        Self::update_cached_item_inner(&tx, KEY_LAST_DERIVATION_INDEX, index.to_string())?;
+    pub fn set_last_derivation_index_inner(&self, tx: &Transaction, index: u32) -> Result<()> {
+        Self::update_cached_item_inner(tx, KEY_LAST_DERIVATION_INDEX, index.to_string())?;
         self.commit_outgoing(
-            &tx,
+            tx,
             LAST_DERIVATION_INDEX_DATA_ID,
             RecordType::LastDerivationIndex,
             // insert a mock updated field so that merging with incoming data works as expected
             Some(vec![LAST_DERIVATION_INDEX_DATA_ID.to_string()]),
-        )?;
+        )
+    }
+
+    pub fn set_last_derivation_index(&self, index: u32) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        self.set_last_derivation_index_inner(&tx, index)?;
         tx.commit()?;
         self.sync_trigger.try_send(())?;
-
         Ok(())
     }
 
@@ -143,18 +145,7 @@ impl Persister {
                     .as_str()
                     .parse::<u32>()
                     .map(|index| index + 1)?;
-                Self::update_cached_item_inner(
-                    &tx,
-                    KEY_LAST_DERIVATION_INDEX,
-                    next_index.to_string(),
-                )?;
-                self.commit_outgoing(
-                    &tx,
-                    LAST_DERIVATION_INDEX_DATA_ID,
-                    RecordType::LastDerivationIndex,
-                    // insert a mock updated field so that merging with incoming data works as expected
-                    Some(vec![LAST_DERIVATION_INDEX_DATA_ID.to_string()]),
-                )?;
+                self.set_last_derivation_index_inner(&tx, next_index)?;
                 Some(next_index)
             }
             None => None,
