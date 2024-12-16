@@ -24,7 +24,6 @@ impl Persister {
                 id,
                 id_hash,
                 direction,
-                claim_address,
                 lockup_address,
                 timeout_block_height,
                 preimage,
@@ -38,13 +37,12 @@ impl Persister {
                 created_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		    ON CONFLICT DO NOTHING",
             (
                 &chain_swap.id,
                 &id_hash,
                 &chain_swap.direction,
-                &chain_swap.claim_address,
                 &chain_swap.lockup_address,
                 &chain_swap.timeout_block_height,
                 &chain_swap.preimage,
@@ -69,6 +67,7 @@ impl Persister {
                 accept_zero_conf = :accept_zero_conf,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
+                claim_address = :claim_address,
                 claim_tx_id = :claim_tx_id,
                 refund_tx_id = :refund_tx_id,
                 pair_fees_json = :pair_fees_json,
@@ -83,6 +82,7 @@ impl Persister {
                 ":accept_zero_conf": &chain_swap.accept_zero_conf,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
+                ":claim_address": &chain_swap.claim_address,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
                 ":pair_fees_json": &chain_swap.pair_fees_json,
