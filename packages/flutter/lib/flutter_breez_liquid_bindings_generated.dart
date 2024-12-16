@@ -4570,6 +4570,9 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key;
 
   external ffi.Pointer<wire_cst_list_external_input_parser> external_input_parsers;
+
+  @ffi.Bool()
+  external bool use_default_external_input_parsers;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {

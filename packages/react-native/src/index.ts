@@ -68,6 +68,7 @@ export interface Config {
     breezApiKey?: string
     cacheDir?: string
     zeroConfMaxAmountSat?: number
+    useDefaultExternalInputParsers: boolean
     externalInputParsers?: ExternalInputParser[]
 }
 

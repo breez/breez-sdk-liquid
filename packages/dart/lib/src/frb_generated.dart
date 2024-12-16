@@ -1693,7 +1693,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 11) throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
     return Config(
       liquidElectrumUrl: dco_decode_String(arr[0]),
       bitcoinElectrumUrl: dco_decode_String(arr[1]),
@@ -1706,6 +1706,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[8]),
       breezApiKey: dco_decode_opt_String(arr[9]),
       externalInputParsers: dco_decode_opt_list_external_input_parser(arr[10]),
+      useDefaultExternalInputParsers: dco_decode_bool(arr[11]),
     );
   }
 
@@ -3615,6 +3616,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_breezApiKey = sse_decode_opt_String(deserializer);
     var var_externalInputParsers = sse_decode_opt_list_external_input_parser(deserializer);
+    var var_useDefaultExternalInputParsers = sse_decode_bool(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
@@ -3626,7 +3628,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         zeroConfMinFeeRateMsat: var_zeroConfMinFeeRateMsat,
         zeroConfMaxAmountSat: var_zeroConfMaxAmountSat,
         breezApiKey: var_breezApiKey,
-        externalInputParsers: var_externalInputParsers);
+        externalInputParsers: var_externalInputParsers,
+        useDefaultExternalInputParsers: var_useDefaultExternalInputParsers);
   }
 
   @protected
@@ -5695,6 +5698,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
     sse_encode_opt_String(self.breezApiKey, serializer);
     sse_encode_opt_list_external_input_parser(self.externalInputParsers, serializer);
+    sse_encode_bool(self.useDefaultExternalInputParsers, serializer);
   }
 
   @protected

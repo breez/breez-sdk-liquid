@@ -248,6 +248,7 @@ fun asConfig(config: ReadableMap): Config? {
                 "network",
                 "paymentTimeoutSec",
                 "zeroConfMinFeeRateMsat",
+                "useDefaultExternalInputParsers",
             ),
         )
     ) {
@@ -272,6 +273,7 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
+    val useDefaultExternalInputParsers = config.getBoolean("useDefaultExternalInputParsers")
     val externalInputParsers =
         if (hasNonNullKey(config, "externalInputParsers")) {
             config.getArray("externalInputParsers")?.let {
@@ -291,6 +293,7 @@ fun asConfig(config: ReadableMap): Config? {
         breezApiKey,
         cacheDir,
         zeroConfMaxAmountSat,
+        useDefaultExternalInputParsers,
         externalInputParsers,
     )
 }
@@ -307,6 +310,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "breezApiKey" to config.breezApiKey,
         "cacheDir" to config.cacheDir,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
+        "useDefaultExternalInputParsers" to config.useDefaultExternalInputParsers,
         "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },
     )
 

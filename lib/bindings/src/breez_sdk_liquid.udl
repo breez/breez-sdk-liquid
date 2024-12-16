@@ -335,6 +335,7 @@ dictionary Config {
     string? breez_api_key;
     string? cache_dir;
     u64? zero_conf_max_amount_sat;
+    boolean use_default_external_input_parsers = true;
     sequence<ExternalInputParser>? external_input_parsers = null;
 };
 

@@ -146,6 +146,11 @@ class Config {
   /// external parsing.
   final List<ExternalInputParser>? externalInputParsers;
 
+  /// The SDK includes some default external input parsers
+  /// ([DEFAULT_EXTERNAL_INPUT_PARSERS](crate::sdk::DEFAULT_EXTERNAL_INPUT_PARSERS)).
+  /// Set this to false in order to prevent their use.
+  final bool useDefaultExternalInputParsers;
+
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
@@ -158,6 +163,7 @@ class Config {
     this.zeroConfMaxAmountSat,
     this.breezApiKey,
     this.externalInputParsers,
+    required this.useDefaultExternalInputParsers,
   });
 
   @override
@@ -172,7 +178,8 @@ class Config {
       zeroConfMinFeeRateMsat.hashCode ^
       zeroConfMaxAmountSat.hashCode ^
       breezApiKey.hashCode ^
-      externalInputParsers.hashCode;
+      externalInputParsers.hashCode ^
+      useDefaultExternalInputParsers.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -189,7 +196,8 @@ class Config {
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
           breezApiKey == other.breezApiKey &&
-          externalInputParsers == other.externalInputParsers;
+          externalInputParsers == other.externalInputParsers &&
+          useDefaultExternalInputParsers == other.useDefaultExternalInputParsers;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].

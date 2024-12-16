@@ -57,6 +57,10 @@ pub struct Config {
     /// is not recognized. See [ExternalInputParser] for more details on how to configure
     /// external parsing.
     pub external_input_parsers: Option<Vec<ExternalInputParser>>,
+    /// The SDK includes some default external input parsers
+    /// ([DEFAULT_EXTERNAL_INPUT_PARSERS](crate::sdk::DEFAULT_EXTERNAL_INPUT_PARSERS)).
+    /// Set this to false in order to prevent their use.
+    pub use_default_external_input_parsers: bool,
 }
 
 impl Config {
@@ -73,6 +77,7 @@ impl Config {
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
             external_input_parsers: None,
+            use_default_external_input_parsers: true,
         }
     }
 
@@ -89,6 +94,7 @@ impl Config {
             zero_conf_max_amount_sat: None,
             breez_api_key,
             external_input_parsers: None,
+            use_default_external_input_parsers: true,
         }
     }
 
