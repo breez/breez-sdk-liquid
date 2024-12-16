@@ -133,7 +133,7 @@ impl Persister {
     ) -> Result<(), PaymentError> {
         let con = self.get_connection()?;
         con.execute(
-            "INSERT OR REPLACE INTO payment_tx_data (
+            "INSERT INTO payment_tx_data (
            tx_id,
            timestamp,
            amount_sat,
@@ -142,10 +142,16 @@ impl Persister {
            is_confirmed
         )
         VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT (tx_id)
+        DO UPDATE SET timestamp = CASE WHEN excluded.is_confirmed = 1 THEN excluded.timestamp ELSE timestamp END,
+                      amount_sat = excluded.amount_sat,
+                      fees_sat = excluded.fees_sat,
+                      payment_type = excluded.payment_type,
+                      is_confirmed = excluded.is_confirmed
         ",
             (
                 &ptx.tx_id,
-                ptx.timestamp,
+                ptx.timestamp.or(Some(utils::now())),
                 ptx.amount_sat,
                 ptx.fees_sat,
                 ptx.payment_type,
@@ -268,7 +274,7 @@ impl Persister {
                 ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL)
             AND {}
             ORDER BY                             -- Order by swap creation time or tx timestamp (in case of direct tx)
-                COALESCE(rs.created_at, ss.created_at, cs.created_at, ptx.timestamp, strftime('%s', 'now')) DESC
+                COALESCE(rs.created_at, ss.created_at, cs.created_at, ptx.timestamp) DESC
             LIMIT {}
             OFFSET {}
             ",
