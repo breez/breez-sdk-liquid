@@ -273,6 +273,7 @@ impl TryFrom<SendSwap> for SendSwapImmutableData {
 #[derive(Clone)]
 pub(crate) struct ReceiveSwapImmutableData {
     pub(crate) swap_id: String,
+    pub(crate) swap_timestamp: u32,
     pub(crate) timeout_block_height: u32,
     pub(crate) claim_script: LBtcScript,
     pub(crate) mrh_script: Option<LBtcScript>,
@@ -294,6 +295,7 @@ impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
         let swap_id = swap.id;
         Ok(ReceiveSwapImmutableData {
             swap_id,
+            swap_timestamp: swap.created_at,
             timeout_block_height: create_response.timeout_block_height,
             claim_script: funding_address.script_pubkey(),
             mrh_script: mrh_address.map(|s| s.script_pubkey()),

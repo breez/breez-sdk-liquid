@@ -344,9 +344,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             true,
             true,
         ))?;
+        // Use the cached derivation index with a buffer of 5 to perform the scan
         let index = self
             .persister
             .get_last_derivation_index()?
+            .map(|i| i + 5)
             .unwrap_or_default();
         match lwk_wollet::full_scan_to_index_with_electrum_client(
             &mut wallet,
