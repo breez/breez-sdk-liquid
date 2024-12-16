@@ -9,6 +9,7 @@ use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use lwk_wollet::hashes::{sha256, Hash as _};
+use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
 use crate::prelude::{Direction, Swap};
@@ -133,8 +134,11 @@ impl Recoverer {
             .collect::<HashMap<&String, Txid>>();
         let mut recovered_preimages = self.recover_preimages(recovered_send_with_claim_tx).await?;
 
-        let recovered_receive_data =
-            self.recover_receive_swap_tx_ids(&tx_map, histories.receive)?;
+        let recovered_receive_data = self.recover_receive_swap_tx_ids(
+            &tx_map,
+            histories.receive,
+            &swaps_list.receive_swap_immutable_data_by_swap_id,
+        )?;
         let recovered_chain_send_data = self.recover_send_chain_swap_tx_ids(
             &tx_map,
             histories.send_chain,
@@ -407,19 +411,32 @@ impl Recoverer {
         &self,
         tx_map: &TxMap,
         receive_histories_by_swap_id: HashMap<String, ReceiveSwapHistory>,
+        receive_swap_immutable_data_by_swap_id: &HashMap<String, ReceiveSwapImmutableData>,
     ) -> Result<HashMap<String, RecoveredOnchainDataReceive>> {
         let mut res: HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
         for (swap_id, history) in receive_histories_by_swap_id {
             debug!("[Recover Receive] Checking swap {swap_id}");
 
+            // The MRH script history txs filtered by the swap timestamp
+            let swap_timestamp = receive_swap_immutable_data_by_swap_id
+                .get(&swap_id)
+                .map(|imm: &ReceiveSwapImmutableData| imm.swap_timestamp)
+                .ok_or_else(|| anyhow!("Swap timestamp not found for Receive Swap {swap_id}"))?;
+            let mrh_txs: HashMap<Txid, WalletTx> = history
+                .lbtc_mrh_script_history
+                .iter()
+                .filter_map(|h| tx_map.incoming_tx_map.get(&h.txid))
+                .filter(|tx| tx.timestamp.map(|t| t > swap_timestamp).unwrap_or(true))
+                .map(|tx| (tx.txid, tx.clone()))
+                .collect();
             let mrh_tx_id = history
                 .lbtc_mrh_script_history
                 .iter()
-                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                .find(|&tx| mrh_txs.contains_key::<Txid>(&tx.txid))
                 .cloned();
             let mrh_amount_sat = mrh_tx_id
                 .clone()
-                .and_then(|h| tx_map.incoming_tx_map.get(&h.txid))
+                .and_then(|h| mrh_txs.get(&h.txid))
                 .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
 
             let (lockup_tx_id, claim_tx_id) = match history.lbtc_claim_script_history.len() {
