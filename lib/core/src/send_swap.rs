@@ -10,10 +10,14 @@ use boltz_client::Bolt11Invoice;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
+use lwk_wollet::hashes::sha256;
+use lwk_wollet::secp256k1::ThirtyTwoByteHash;
+use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
+use crate::persist::model::PaymentTxDetails;
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::recover::recoverer::Recoverer;
 use crate::swapper::Swapper;
@@ -233,7 +237,6 @@ impl SendSwapHandler {
                 is_confirmed: false,
             },
             None,
-            None,
         )?;
 
         self.update_swap_info(swap_id, Pending, None, Some(&lockup_tx_id), None)?;
@@ -268,7 +271,8 @@ impl SendSwapHandler {
     // Updates the swap without state transition validation
     pub(crate) fn update_swap(&self, updated_swap: SendSwap) -> Result<(), PaymentError> {
         let swap = self.fetch_send_swap_by_id(&updated_swap.id)?;
-        if updated_swap != swap {
+        let lnurl_info_updated = self.update_swap_lnurl_info(&swap, &updated_swap)?;
+        if updated_swap != swap || lnurl_info_updated {
             info!(
                 "Updating Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
                 updated_swap.id,
@@ -280,6 +284,52 @@ impl SendSwapHandler {
             self.notify_swap_changes(swap, updated_swap)?;
         }
         Ok(())
+    }
+
+    pub(crate) fn update_swap_lnurl_info(
+        &self,
+        swap: &SendSwap,
+        updated_swap: &SendSwap,
+    ) -> Result<bool> {
+        if swap.preimage.is_none() {
+            let Some(ref tx_id) = updated_swap.lockup_tx_id.clone() else {
+                return Ok(false);
+            };
+            let Some(ref preimage_str) = updated_swap.preimage.clone() else {
+                return Ok(false);
+            };
+            if let Some(PaymentTxDetails {
+                destination,
+                description,
+                lnurl_info: Some(mut lnurl_info),
+            }) = self.persister.get_payment_details(tx_id)?
+            {
+                if let Some(SuccessAction::Aes { data }) =
+                    lnurl_info.lnurl_pay_unprocessed_success_action.clone()
+                {
+                    let preimage = sha256::Hash::from_str(preimage_str)?;
+                    let preimage_arr: [u8; 32] = preimage.into_32();
+                    let result = match (data, &preimage_arr).try_into() {
+                        Ok(data) => AesSuccessActionDataResult::Decrypted { data },
+                        Err(e) => AesSuccessActionDataResult::ErrorStatus {
+                            reason: e.to_string(),
+                        },
+                    };
+                    lnurl_info.lnurl_pay_success_action =
+                        Some(SuccessActionProcessed::Aes { result });
+                    self.persister.insert_or_update_payment_details(
+                        tx_id,
+                        PaymentTxDetails {
+                            destination,
+                            description,
+                            lnurl_info: Some(lnurl_info),
+                        },
+                    )?;
+                    return Ok(true);
+                }
+            }
+        }
+        Ok(false)
     }
 
     // Updates the swap state with validation
@@ -305,7 +355,8 @@ impl SendSwapHandler {
             refund_tx_id,
         )?;
         let updated_swap = self.fetch_send_swap_by_id(swap_id)?;
-        if updated_swap != swap {
+        let lnurl_info_updated = self.update_swap_lnurl_info(&swap, &updated_swap)?;
+        if updated_swap != swap || lnurl_info_updated {
             self.notify_swap_changes(swap, updated_swap)?;
         }
         Ok(())

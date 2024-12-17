@@ -485,7 +485,7 @@ impl ChainSwapHandler {
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
-                        }, None, None)?;
+                        }, None)?;
 
                         self.update_swap_info(&ChainSwapUpdate {
                             swap_id: id,
@@ -839,7 +839,6 @@ impl ChainSwapHandler {
                                         payment_type: PaymentType::Receive,
                                         is_confirmed: false,
                                     },
-                                    None,
                                     None,
                                 )?;
                                 Some(claim_tx_id.clone())
