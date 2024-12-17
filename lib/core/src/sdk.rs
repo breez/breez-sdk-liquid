@@ -80,7 +80,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
-    pub(crate) external_input_parsers: Option<Vec<ExternalInputParser>>,
+    pub(crate) external_input_parsers: Vec<ExternalInputParser>,
 }
 
 impl LiquidSdk {
@@ -250,8 +250,9 @@ impl LiquidSdk {
         Ok(sdk)
     }
 
-    fn get_all_external_input_parsers(config: &Config) -> Option<Vec<ExternalInputParser>> {
-        let external_input_parsers = if config.use_default_external_input_parsers {
+    fn get_all_external_input_parsers(config: &Config) -> Vec<ExternalInputParser> {
+        let mut external_input_parsers = Vec::new();
+        if config.use_default_external_input_parsers {
             let default_parsers = DEFAULT_EXTERNAL_INPUT_PARSERS
                 .iter()
                 .map(|(id, regex, url)| ExternalInputParser {
@@ -260,17 +261,11 @@ impl LiquidSdk {
                     parser_url: url.to_string(),
                 })
                 .collect::<Vec<_>>();
+            external_input_parsers.extend(default_parsers);
+        }
+        external_input_parsers.extend(config.external_input_parsers.clone().unwrap_or_default());
 
-            [
-                default_parsers,
-                config.external_input_parsers.clone().unwrap_or_default(),
-            ]
-            .concat()
-        } else {
-            config.external_input_parsers.clone().unwrap_or_default()
-        };
-
-        (!external_input_parsers.is_empty()).then_some(external_input_parsers)
+        external_input_parsers
     }
 
     /// Starts an SDK instance.
@@ -2800,7 +2795,7 @@ impl LiquidSdk {
         }
 
         let external_parsers = &self.external_input_parsers;
-        parse(input, external_parsers.as_deref())
+        parse(input, Some(external_parsers))
             .await
             .map_err(|e| PaymentError::generic(&e.to_string()))
     }
