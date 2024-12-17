@@ -225,7 +225,7 @@ impl LiquidSdk {
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
-        let external_input_parsers = Self::get_all_external_input_parsers(&config);
+        let external_input_parsers = config.get_all_external_input_parsers();
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
@@ -248,24 +248,6 @@ impl LiquidSdk {
             external_input_parsers,
         });
         Ok(sdk)
-    }
-
-    fn get_all_external_input_parsers(config: &Config) -> Vec<ExternalInputParser> {
-        let mut external_input_parsers = Vec::new();
-        if config.use_default_external_input_parsers {
-            let default_parsers = DEFAULT_EXTERNAL_INPUT_PARSERS
-                .iter()
-                .map(|(id, regex, url)| ExternalInputParser {
-                    provider_id: id.to_string(),
-                    input_regex: regex.to_string(),
-                    parser_url: url.to_string(),
-                })
-                .collect::<Vec<_>>();
-            external_input_parsers.extend(default_parsers);
-        }
-        external_input_parsers.extend(config.external_input_parsers.clone().unwrap_or_default());
-
-        external_input_parsers
     }
 
     /// Starts an SDK instance.

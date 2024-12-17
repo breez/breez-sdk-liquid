@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkError, SdkResult};
+use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
 use crate::receive_swap::{
     DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
     DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
@@ -126,6 +127,24 @@ impl Config {
             LiquidNetwork::Mainnet => Some((LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32),
             LiquidNetwork::Testnet => None,
         }
+    }
+
+    pub(crate) fn get_all_external_input_parsers(&self) -> Vec<ExternalInputParser> {
+        let mut external_input_parsers = Vec::new();
+        if self.use_default_external_input_parsers {
+            let default_parsers = DEFAULT_EXTERNAL_INPUT_PARSERS
+                .iter()
+                .map(|(id, regex, url)| ExternalInputParser {
+                    provider_id: id.to_string(),
+                    input_regex: regex.to_string(),
+                    parser_url: url.to_string(),
+                })
+                .collect::<Vec<_>>();
+            external_input_parsers.extend(default_parsers);
+        }
+        external_input_parsers.extend(self.external_input_parsers.clone().unwrap_or_default());
+
+        external_input_parsers
     }
 }
 
