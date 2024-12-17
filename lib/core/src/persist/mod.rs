@@ -125,6 +125,34 @@ impl Persister {
         )
     }
 
+    pub(crate) fn list_unconfirmed_payment_txs_data(&self) -> Result<Vec<PaymentTxData>> {
+        let con = self.get_connection()?;
+        let mut stmt = con.prepare(
+            "SELECT tx_id, 
+                        timestamp, 
+                        amount_sat, 
+                        fees_sat, 
+                        payment_type, 
+                        is_confirmed
+            FROM payment_tx_data
+            WHERE is_confirmed = 0",
+        )?;
+        let payments: Vec<PaymentTxData> = stmt
+            .query_map([], |row| {
+                Ok(PaymentTxData {
+                    tx_id: row.get(0)?,
+                    timestamp: row.get(1)?,
+                    amount_sat: row.get(2)?,
+                    fees_sat: row.get(3)?,
+                    payment_type: row.get(4)?,
+                    is_confirmed: row.get(5)?,
+                })
+            })?
+            .map(|i| i.unwrap())
+            .collect();
+        Ok(payments)
+    }
+
     pub(crate) fn insert_or_update_payment(
         &self,
         ptx: PaymentTxData,
