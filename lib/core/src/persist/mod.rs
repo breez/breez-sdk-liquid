@@ -3,6 +3,7 @@ mod backup;
 pub(crate) mod cache;
 pub(crate) mod chain;
 mod migrations;
+pub(crate) mod model;
 pub(crate) mod receive;
 pub(crate) mod send;
 pub(crate) mod sync;
@@ -18,6 +19,7 @@ use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
+use model::PaymentTxDetails;
 use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
 use rusqlite_migration::{Migrations, M};
 use sdk_common::bitcoin::hashes::hex::ToHex;
@@ -120,8 +122,10 @@ impl Persister {
                 },
                 is_confirmed: is_tx_confirmed,
             },
-            maybe_script_pubkey,
-            None,
+            Some(PaymentTxDetails {
+                destination: maybe_script_pubkey,
+                ..Default::default()
+            }),
         )
     }
 
@@ -156,8 +160,7 @@ impl Persister {
     pub(crate) fn insert_or_update_payment(
         &self,
         ptx: PaymentTxData,
-        destination: Option<String>,
-        description: Option<String>,
+        payment_tx_details: Option<PaymentTxDetails>,
     ) -> Result<(), PaymentError> {
         let con = self.get_connection()?;
         con.execute(
@@ -187,24 +190,75 @@ impl Persister {
             ),
         )?;
 
-        if let Some(destination) = destination {
+        if let Some(payment_details) = payment_tx_details {
             // Only store the destination if there is no payment_details entry else
             // the destination is overwritten by the tx script_pubkey
-            con.execute(
-                "INSERT INTO payment_details (
-                    tx_id,
-                    destination,
-                    description 
-                )
-                VALUES (?1, ?2, ?3)
-                ON CONFLICT (tx_id)
-                DO UPDATE SET description = COALESCE(?3, description) 
-            ",
-                (ptx.tx_id, destination, description),
-            )?;
+            Self::insert_or_update_payment_details_inner(&con, &ptx.tx_id, payment_details)?;
         }
 
         Ok(())
+    }
+
+    fn insert_or_update_payment_details_inner(
+        con: &Connection,
+        tx_id: &str,
+        payment_tx_details: PaymentTxDetails,
+    ) -> Result<()> {
+        // Only store the destination if there is no payment_details entry else
+        // the destination is overwritten by the tx script_pubkey
+        con.execute(
+            "INSERT INTO payment_details (
+                tx_id,
+                destination,
+                description,
+                lnurl_info_json
+            )
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (tx_id)
+            DO UPDATE SET
+                description = COALESCE(excluded.description, description),
+                lnurl_info_json = excluded.lnurl_info_json
+        ",
+            (
+                tx_id,
+                payment_tx_details.destination,
+                payment_tx_details.description,
+                payment_tx_details
+                    .lnurl_info
+                    .map(|info| serde_json::to_string(&info).ok()),
+            ),
+        )?;
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_payment_details(
+        &self,
+        tx_id: &str,
+        payment_tx_details: PaymentTxDetails,
+    ) -> Result<()> {
+        let con = self.get_connection()?;
+        Self::insert_or_update_payment_details_inner(&con, tx_id, payment_tx_details)
+    }
+
+    pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
+        let con = self.get_connection()?;
+        let mut stmt = con.prepare(
+            "SELECT destination, description, lnurl_info_json
+            FROM payment_details
+            WHERE tx_id = ?",
+        )?;
+        let res = stmt.query_row([tx_id], |row| {
+            let destination = row.get(1)?;
+            let description = row.get(2)?;
+            let maybe_lnurl_info_json: Option<String> = row.get(3)?;
+            Ok(PaymentTxDetails {
+                destination,
+                description,
+                lnurl_info: maybe_lnurl_info_json
+                    .and_then(|info| serde_json::from_str::<LnUrlInfo>(&info).ok()),
+            })
+        });
+        Ok(res.ok())
     }
 
     pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
@@ -281,7 +335,8 @@ impl Persister {
                 cs.pair_fees_json,
                 rtx.amount_sat,
                 pd.destination,
-                pd.description
+                pd.description,
+                pd.lnurl_info_json
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
                 SELECT * FROM receive_swaps
@@ -372,6 +427,9 @@ impl Persister {
 
         let maybe_payment_details_destination: Option<String> = row.get(40)?;
         let maybe_payment_details_description: Option<String> = row.get(41)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(42)?;
+        let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
+            maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => {
@@ -503,6 +561,7 @@ impl Persister {
                 bolt11,
                 bolt12_offer,
                 payment_hash,
+                lnurl_info: maybe_payment_details_lnurl_info,
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Lightning transfer".to_string()),
@@ -678,6 +737,7 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
+        persist::PaymentTxDetails,
         prelude::ListPaymentsRequest,
         test_utils::persist::{
             create_persister, new_payment_tx_data, new_receive_swap, new_send_swap,
@@ -693,8 +753,10 @@ mod tests {
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
         storage.insert_or_update_payment(
             payment_tx_data.clone(),
-            Some("mock-address".to_string()),
-            None,
+            Some(PaymentTxDetails {
+                destination: Some("mock-address".to_string()),
+                ..Default::default()
+            }),
         )?;
 
         assert!(storage

@@ -19,6 +19,7 @@ use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::ElementsNetwork;
+use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
@@ -1221,8 +1222,11 @@ impl LiquidSdk {
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
-            Some(destination.clone()),
-            description.clone(),
+            Some(PaymentTxDetails {
+                destination: Some(destination.clone()),
+                description: description.clone(),
+                ..Default::default()
+            }),
         )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
@@ -1341,7 +1345,7 @@ impl LiquidSdk {
             .try_lockup(&swap, &create_response)
             .await?;
 
-        self.wait_for_payment(Swap::Send(swap), create_response.accept_zero_conf)
+        self.wait_for_payment_with_timeout(Swap::Send(swap), create_response.accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
     }
@@ -1619,12 +1623,12 @@ impl LiquidSdk {
         self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap_id)?;
 
-        self.wait_for_payment(Swap::Chain(swap), accept_zero_conf)
+        self.wait_for_payment_with_timeout(Swap::Chain(swap), accept_zero_conf)
             .await
             .map(|payment| SendPaymentResponse { payment })
     }
 
-    async fn wait_for_payment(
+    async fn wait_for_payment_with_timeout(
         &self,
         swap: Swap,
         accept_zero_conf: bool,
@@ -2634,6 +2638,8 @@ impl LiquidSdk {
                 Ok(PrepareLnUrlPayResponse {
                     destination: prepare_response.destination,
                     fees_sat: prepare_response.fees_sat,
+                    data: req.data,
+                    comment: req.comment,
                     success_action: data.success_action,
                 })
             }
@@ -2670,41 +2676,69 @@ impl LiquidSdk {
 
         let maybe_sa_processed: Option<SuccessActionProcessed> = match prepare_response
             .success_action
+            .clone()
         {
             Some(sa) => {
-                let processed_sa = match sa {
-                    // For AES, we decrypt the contents on the fly
+                match sa {
+                    // For AES, we decrypt the contents if the preimage is available
                     SuccessAction::Aes { data } => {
                         let PaymentDetails::Lightning { preimage, .. } = &payment.details else {
                             return Err(LnUrlPayError::Generic {
-                                        err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
-                                    });
+                                err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
+                            });
                         };
 
-                        let preimage_str = preimage.clone().ok_or(LnUrlPayError::Generic {
-                            err: "Payment successful but no preimage found".to_string(),
-                        })?;
-                        let preimage = sha256::Hash::from_str(&preimage_str).map_err(|_| {
-                            LnUrlPayError::Generic {
-                                err: "Invalid preimage".to_string(),
+                        match preimage {
+                            Some(preimage_str) => {
+                                let preimage =
+                                    sha256::Hash::from_str(preimage_str).map_err(|_| {
+                                        LnUrlPayError::Generic {
+                                            err: "Invalid preimage".to_string(),
+                                        }
+                                    })?;
+                                let preimage_arr: [u8; 32] = preimage.into_32();
+                                let result = match (data, &preimage_arr).try_into() {
+                                    Ok(data) => AesSuccessActionDataResult::Decrypted { data },
+                                    Err(e) => AesSuccessActionDataResult::ErrorStatus {
+                                        reason: e.to_string(),
+                                    },
+                                };
+                                Some(SuccessActionProcessed::Aes { result })
                             }
-                        })?;
-                        let preimage_arr: [u8; 32] = preimage.into_32();
-                        let result = match (data, &preimage_arr).try_into() {
-                            Ok(data) => AesSuccessActionDataResult::Decrypted { data },
-                            Err(e) => AesSuccessActionDataResult::ErrorStatus {
-                                reason: e.to_string(),
-                            },
-                        };
-                        SuccessActionProcessed::Aes { result }
+                            None => None,
+                        }
                     }
-                    SuccessAction::Message { data } => SuccessActionProcessed::Message { data },
-                    SuccessAction::Url { data } => SuccessActionProcessed::Url { data },
-                };
-                Some(processed_sa)
+                    SuccessAction::Message { data } => {
+                        Some(SuccessActionProcessed::Message { data })
+                    }
+                    SuccessAction::Url { data } => Some(SuccessActionProcessed::Url { data }),
+                }
             }
             None => None,
         };
+
+        let lnurl_pay_domain = match prepare_response.data.ln_address {
+            Some(_) => None,
+            None => Some(prepare_response.data.domain),
+        };
+        if let Some(tx_id) = &payment.tx_id {
+            self.persister.insert_or_update_payment_details(
+                tx_id,
+                PaymentTxDetails {
+                    destination: payment.destination.clone(),
+                    description: prepare_response.comment.clone(),
+                    lnurl_info: Some(LnUrlInfo {
+                        ln_address: prepare_response.data.ln_address,
+                        lnurl_pay_comment: prepare_response.comment,
+                        lnurl_pay_domain,
+                        lnurl_pay_metadata: Some(prepare_response.data.metadata_str),
+                        lnurl_pay_success_action: maybe_sa_processed.clone(),
+                        lnurl_pay_unprocessed_success_action: prepare_response.success_action,
+                        lnurl_withdraw_endpoint: None,
+                    }),
+                },
+            )?;
+        }
 
         Ok(LnUrlPayResult::EndpointSuccess {
             data: model::LnUrlPaySuccessData {
@@ -2735,19 +2769,40 @@ impl LiquidSdk {
         let receive_res = self
             .receive_payment(&ReceivePaymentRequest {
                 prepare_response,
-                description: None,
+                description: req.description.clone(),
                 use_description_hash: Some(false),
             })
             .await?;
 
-        if let Ok(invoice) = parse_invoice(&receive_res.destination) {
-            let res = validate_lnurl_withdraw(req.data, invoice).await?;
-            Ok(res)
-        } else {
-            Err(LnUrlWithdrawError::Generic {
+        let Ok(invoice) = parse_invoice(&receive_res.destination) else {
+            return Err(LnUrlWithdrawError::Generic {
                 err: "Received unexpected output from receive request".to_string(),
-            })
+            });
+        };
+
+        let res = validate_lnurl_withdraw(req.data.clone(), invoice.clone()).await?;
+        if let LnUrlWithdrawResult::Ok { data: _ } = res {
+            if let Some(ReceiveSwap {
+                claim_tx_id: Some(tx_id),
+                ..
+            }) = self
+                .persister
+                .fetch_receive_swap_by_invoice(&invoice.bolt11)?
+            {
+                self.persister.insert_or_update_payment_details(
+                    &tx_id,
+                    PaymentTxDetails {
+                        destination: Some(receive_res.destination),
+                        description: req.description,
+                        lnurl_info: Some(LnUrlInfo {
+                            lnurl_withdraw_endpoint: Some(req.data.callback),
+                            ..Default::default()
+                        }),
+                    },
+                )?;
+            }
         }
+        Ok(res)
     }
 
     /// Third and last step of LNURL-auth. The first step is [parse], which also validates the LNURL destination
