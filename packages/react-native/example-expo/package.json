@@ -1,0 +1,26 @@
+{
+  "name": "expo-breez-sdk-liquid-example",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild:ios": "expo prebuild --no-install --platform ios"
+  },
+  "dependencies": {
+    "@breeztech/react-native-breez-sdk-liquid": "file:../",
+    "expo": "~52.0.4",
+    "expo-crypto": "^14.0.1",
+    "expo-secure-store": "^14.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.3.12",
+    "typescript": "^5.3.3"
+  },
+  "private": true
+}
