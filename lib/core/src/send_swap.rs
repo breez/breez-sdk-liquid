@@ -237,6 +237,7 @@ impl SendSwapHandler {
                 is_confirmed: false,
             },
             None,
+            false,
         )?;
 
         self.update_swap_info(swap_id, Pending, None, Some(&lockup_tx_id), None)?;
@@ -292,7 +293,7 @@ impl SendSwapHandler {
         updated_swap: &SendSwap,
     ) -> Result<bool> {
         if swap.preimage.is_none() {
-            let Some(ref tx_id) = updated_swap.lockup_tx_id.clone() else {
+            let Some(tx_id) = updated_swap.lockup_tx_id.clone() else {
                 return Ok(false);
             };
             let Some(ref preimage_str) = updated_swap.preimage.clone() else {
@@ -302,11 +303,16 @@ impl SendSwapHandler {
                 destination,
                 description,
                 lnurl_info: Some(mut lnurl_info),
-            }) = self.persister.get_payment_details(tx_id)?
+                ..
+            }) = self.persister.get_payment_details(&tx_id)?
             {
                 if let Some(SuccessAction::Aes { data }) =
                     lnurl_info.lnurl_pay_unprocessed_success_action.clone()
                 {
+                    debug!(
+                        "Decrypting AES success action with preimage for Send Swap {}",
+                        swap.id
+                    );
                     let preimage = sha256::Hash::from_str(preimage_str)?;
                     let preimage_arr: [u8; 32] = preimage.into_32();
                     let result = match (data, &preimage_arr).try_into() {
@@ -317,14 +323,13 @@ impl SendSwapHandler {
                     };
                     lnurl_info.lnurl_pay_success_action =
                         Some(SuccessActionProcessed::Aes { result });
-                    self.persister.insert_or_update_payment_details(
-                        tx_id,
-                        PaymentTxDetails {
+                    self.persister
+                        .insert_or_update_payment_details(PaymentTxDetails {
+                            tx_id,
                             destination,
                             description,
                             lnurl_info: Some(lnurl_info),
-                        },
-                    )?;
+                        })?;
                     return Ok(true);
                 }
             }
