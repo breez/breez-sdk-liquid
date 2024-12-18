@@ -2715,12 +2715,7 @@ impl LiquidSdk {
         Ok(config)
     }
 
-    /// Parses a string into an [InputType]. See [input_parser::parse].
-    ///
-    /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
-    pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
-        let mut input_str = input.to_string();
-
+    async fn bip353_parse(&self, input: &str) -> Option<String> {
         if let Some((local_part, domain)) = input.split_once('@') {
             let resolver = Arc::clone(&self.dns_resolver);
 
@@ -2730,23 +2725,38 @@ impl LiquidSdk {
             let txt_data = match resolver.txt_lookup(dns_name).await {
                 Ok(records) => records
                     .iter()
-                    .flat_map(|record| record.to_string().into_bytes()) // Convert each record to bytes
+                    .flat_map(|record| record.to_string().into_bytes())
                     .collect::<Vec<u8>>(),
                 Err(e) => {
                     eprintln!("Failed to lookup TXT records: {}", e);
-                    Vec::new()
+                    return None;
                 }
             };
 
+            // Decode TXT data
             match String::from_utf8(txt_data) {
                 Ok(decoded) => {
                     if let Some((_, bolt12_address)) = decoded.split_once("lno=") {
-                        input_str = bolt12_address.to_string();
+                        return Some(bolt12_address.to_string());
                     }
                 }
-                Err(e) => eprintln!("Failed to decode TXT data: {}", e),
-            };
+                Err(e) => {
+                    eprintln!("Failed to decode TXT data: {}", e);
+                }
+            }
         }
+
+        None
+    }
+
+    /// Parses a string into an [InputType]. See [input_parser::parse].
+    ///
+    /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
+    pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
+        let input_str = match self.bip353_parse(input).await {
+            Some(value) => value,
+            None => input.to_string(),
+        };
 
         if let Ok(offer) = input_str.parse::<Offer>() {
             // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
