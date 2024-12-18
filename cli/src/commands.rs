@@ -29,9 +29,13 @@ pub(crate) enum Command {
         #[arg(long)]
         offer: Option<String>,
 
-        /// Either BIP21 URI or Liquid address we intend to pay to
+        /// Either BIP21 URI, Liquid address we intend to pay to
         #[arg(long)]
         address: Option<String>,
+
+        /// BIP353 address that contains a BOLT12 offer. If specified, amount_sat must also be set.
+        #[arg(long)]
+        pay_code: Option<String>,
 
         /// The amount in satoshi to pay, in case of a direct Liquid address
         /// or amount-less BIP21
@@ -326,20 +330,27 @@ pub(crate) async fn handle_command(
             invoice,
             offer,
             address,
+            pay_code,
             amount_sat,
             drain,
             delay,
         } => {
-            let destination = match (invoice, offer, address) {
-                (Some(invoice), None, None) => Ok(invoice),
-                (None, Some(offer), None) => match amount_sat {
+            let destination = match (invoice, offer, address, pay_code) {
+                (Some(invoice), None, None, None) => Ok(invoice),
+                (None, Some(offer), None, None) => match amount_sat {
                     Some(_) => Ok(offer),
                     None => Err(anyhow!(
                         "Must specify an amount for a BOLT12 offer."
                     ))
                 },
-                (None, None, Some(address)) => Ok(address),
-                (Some(_), _, Some(_)) => {
+                (None, None, Some(address), None) => Ok(address),
+                (None, None, None, Some(pay_code)) => match amount_sat {
+                    Some(_) => Ok(pay_code),
+                    None => Err(anyhow!(
+                        "Must specify an amount for a BOLT12 offer."
+                    ))
+                },
+                (Some(_), _, Some(_), _) => {
                     Err(anyhow::anyhow!(
                         "Cannot specify both invoice and address at the same time."
                     ))

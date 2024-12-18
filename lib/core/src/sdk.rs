@@ -25,6 +25,8 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
+use trust_dns_resolver::config::*;
+use trust_dns_resolver::TokioAsyncResolver;
 use x509_parser::parse_x509_certificate;
 
 use crate::chain::bitcoin::BitcoinChainService;
@@ -72,6 +74,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
+    pub(crate) dns_resolver: Arc<TokioAsyncResolver>,
 }
 
 impl LiquidSdk {
@@ -216,6 +219,11 @@ impl LiquidSdk {
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
+        let dns_resolver = Arc::new(TokioAsyncResolver::tokio(
+            ResolverConfig::default(),
+            ResolverOpts::default(),
+        ));
+
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
             onchain_wallet,
@@ -234,6 +242,7 @@ impl LiquidSdk {
             receive_swap_handler,
             chain_swap_handler,
             buy_bitcoin_service,
+            dns_resolver,
         });
         Ok(sdk)
     }
@@ -801,7 +810,7 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PrepareSendRequest] containing:
-    ///     * `destination` - Either a Liquid BIP21 URI/address, a BOLT11 invoice or a BOLT12 offer
+    ///     * `destination` - Either a Liquid BIP21 URI/address, a BOLT11 invoice, a BOLT12 offer or a BIP353 pay code that contains a BOLT12 offer
     ///     * `amount` - The optional amount of type [PayAmount]. Should only be specified
     ///        when paying directly onchain or via amount-less BIP21.
     ///        - [PayAmount::Drain] which uses all funds
@@ -2710,7 +2719,36 @@ impl LiquidSdk {
     ///
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
-        if let Ok(offer) = input.parse::<Offer>() {
+        let mut input_str = input.to_string();
+
+        if let Some((local_part, domain)) = input.split_once('@') {
+            let resolver = Arc::clone(&self.dns_resolver);
+
+            let dns_name = format!("{local_part}.user._bitcoin-payment.{domain}");
+
+            // Query for TXT records of a domain
+            let txt_data = match resolver.txt_lookup(dns_name).await {
+                Ok(records) => records
+                    .iter()
+                    .flat_map(|record| record.to_string().into_bytes()) // Convert each record to bytes
+                    .collect::<Vec<u8>>(),
+                Err(e) => {
+                    eprintln!("Failed to lookup TXT records: {}", e);
+                    Vec::new()
+                }
+            };
+
+            match String::from_utf8(txt_data) {
+                Ok(decoded) => {
+                    if let Some((_, bolt12_address)) = decoded.split_once("lno=") {
+                        input_str = bolt12_address.to_string();
+                    }
+                }
+                Err(e) => eprintln!("Failed to decode TXT data: {}", e),
+            };
+        }
+
+        if let Ok(offer) = input_str.parse::<Offer>() {
             // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
             //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
             let min_amount = offer

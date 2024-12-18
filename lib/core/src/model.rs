@@ -384,7 +384,7 @@ pub struct OnchainPaymentLimitsResponse {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
-    /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers and Liquid addresses
+    /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers, BIP353 addresses and Liquid addresses
     pub destination: String,
 
     /// Should only be set when paying directly onchain or to a BIP21 URI
