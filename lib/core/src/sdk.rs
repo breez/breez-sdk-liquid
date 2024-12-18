@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::ops::Not as _;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
@@ -2404,9 +2405,17 @@ impl LiquidSdk {
             .persister
             .get_payments_by_tx_id(&ListPaymentsRequest::default())?;
 
+        // We query only these that may need update, should be a fast query.
+        let unconfirmed_payment_txs_data = self.persister.list_unconfirmed_payment_txs_data()?;
+        let unconfirmed_txs_by_id: HashMap<String, PaymentTxData> = unconfirmed_payment_txs_data
+            .into_iter()
+            .map(|tx| (tx.tx_id.clone(), tx))
+            .collect::<HashMap<String, PaymentTxData>>();
+
         for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
             let maybe_payment = payments.get(&tx_id);
+            let mut updated = false;
             match maybe_payment {
                 // When no payment is found or its a Liquid payment
                 None
@@ -2421,11 +2430,16 @@ impl LiquidSdk {
                         // An unknown tx which needs inserting or a known Liquid payment tx
                         // that was in the mempool, but is now confirmed
                         self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
-                        self.emit_payment_updated(Some(tx_id)).await?;
+                        self.emit_payment_updated(Some(tx_id.clone())).await?;
+                        updated = true
                     }
                 }
 
                 _ => {}
+            }
+            if !updated && unconfirmed_txs_by_id.contains_key(&tx_id) && tx.height.is_some() {
+                // An unconfirmed tx that was not found in the payments table
+                self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
             }
         }
 
