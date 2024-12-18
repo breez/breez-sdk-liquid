@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
+use model::data::PaymentDetailsSyncData;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
 
@@ -134,6 +135,13 @@ impl SyncService {
                     *last_commit_time,
                 )
             }
+            SyncData::PaymentDetails(payment_details_sync_data) => {
+                self.persister.commit_incoming_payment_details(
+                    payment_details_sync_data.into(),
+                    new_sync_state,
+                    *last_commit_time,
+                )
+            }
         }
     }
 
@@ -169,6 +177,14 @@ impl SyncService {
                     .ok_or(anyhow!("Could not find last derivation index"))?
                     .parse()?,
             ),
+            RecordType::PaymentDetails => {
+                let payment_details_data: PaymentDetailsSyncData = self
+                    .persister
+                    .get_payment_details(data_id)?
+                    .ok_or(anyhow!("Could not find Payment Details {data_id}"))?
+                    .into();
+                SyncData::PaymentDetails(payment_details_data)
+            }
         };
         Ok(data)
     }

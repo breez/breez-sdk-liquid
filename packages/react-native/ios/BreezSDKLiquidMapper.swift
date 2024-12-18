@@ -1131,6 +1131,85 @@ enum BreezSDKLiquidMapper {
         return lnUrlErrorDataList.map { v -> [String: Any?] in return dictionaryOf(lnUrlErrorData: v) }
     }
 
+    static func asLnUrlInfo(lnUrlInfo: [String: Any?]) throws -> LnUrlInfo {
+        var lnAddress: String?
+        if hasNonNilKey(data: lnUrlInfo, key: "lnAddress") {
+            guard let lnAddressTmp = lnUrlInfo["lnAddress"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lnAddress"))
+            }
+            lnAddress = lnAddressTmp
+        }
+        var lnurlPayComment: String?
+        if hasNonNilKey(data: lnUrlInfo, key: "lnurlPayComment") {
+            guard let lnurlPayCommentTmp = lnUrlInfo["lnurlPayComment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lnurlPayComment"))
+            }
+            lnurlPayComment = lnurlPayCommentTmp
+        }
+        var lnurlPayDomain: String?
+        if hasNonNilKey(data: lnUrlInfo, key: "lnurlPayDomain") {
+            guard let lnurlPayDomainTmp = lnUrlInfo["lnurlPayDomain"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lnurlPayDomain"))
+            }
+            lnurlPayDomain = lnurlPayDomainTmp
+        }
+        var lnurlPayMetadata: String?
+        if hasNonNilKey(data: lnUrlInfo, key: "lnurlPayMetadata") {
+            guard let lnurlPayMetadataTmp = lnUrlInfo["lnurlPayMetadata"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lnurlPayMetadata"))
+            }
+            lnurlPayMetadata = lnurlPayMetadataTmp
+        }
+        var lnurlPaySuccessAction: SuccessActionProcessed?
+        if let lnurlPaySuccessActionTmp = lnUrlInfo["lnurlPaySuccessAction"] as? [String: Any?] {
+            lnurlPaySuccessAction = try asSuccessActionProcessed(successActionProcessed: lnurlPaySuccessActionTmp)
+        }
+
+        var lnurlPayUnprocessedSuccessAction: SuccessAction?
+        if let lnurlPayUnprocessedSuccessActionTmp = lnUrlInfo["lnurlPayUnprocessedSuccessAction"] as? [String: Any?] {
+            lnurlPayUnprocessedSuccessAction = try asSuccessAction(successAction: lnurlPayUnprocessedSuccessActionTmp)
+        }
+
+        var lnurlWithdrawEndpoint: String?
+        if hasNonNilKey(data: lnUrlInfo, key: "lnurlWithdrawEndpoint") {
+            guard let lnurlWithdrawEndpointTmp = lnUrlInfo["lnurlWithdrawEndpoint"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lnurlWithdrawEndpoint"))
+            }
+            lnurlWithdrawEndpoint = lnurlWithdrawEndpointTmp
+        }
+
+        return LnUrlInfo(lnAddress: lnAddress, lnurlPayComment: lnurlPayComment, lnurlPayDomain: lnurlPayDomain, lnurlPayMetadata: lnurlPayMetadata, lnurlPaySuccessAction: lnurlPaySuccessAction, lnurlPayUnprocessedSuccessAction: lnurlPayUnprocessedSuccessAction, lnurlWithdrawEndpoint: lnurlWithdrawEndpoint)
+    }
+
+    static func dictionaryOf(lnUrlInfo: LnUrlInfo) -> [String: Any?] {
+        return [
+            "lnAddress": lnUrlInfo.lnAddress == nil ? nil : lnUrlInfo.lnAddress,
+            "lnurlPayComment": lnUrlInfo.lnurlPayComment == nil ? nil : lnUrlInfo.lnurlPayComment,
+            "lnurlPayDomain": lnUrlInfo.lnurlPayDomain == nil ? nil : lnUrlInfo.lnurlPayDomain,
+            "lnurlPayMetadata": lnUrlInfo.lnurlPayMetadata == nil ? nil : lnUrlInfo.lnurlPayMetadata,
+            "lnurlPaySuccessAction": lnUrlInfo.lnurlPaySuccessAction == nil ? nil : dictionaryOf(successActionProcessed: lnUrlInfo.lnurlPaySuccessAction!),
+            "lnurlPayUnprocessedSuccessAction": lnUrlInfo.lnurlPayUnprocessedSuccessAction == nil ? nil : dictionaryOf(successAction: lnUrlInfo.lnurlPayUnprocessedSuccessAction!),
+            "lnurlWithdrawEndpoint": lnUrlInfo.lnurlWithdrawEndpoint == nil ? nil : lnUrlInfo.lnurlWithdrawEndpoint,
+        ]
+    }
+
+    static func asLnUrlInfoList(arr: [Any]) throws -> [LnUrlInfo] {
+        var list = [LnUrlInfo]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var lnUrlInfo = try asLnUrlInfo(lnUrlInfo: val)
+                list.append(lnUrlInfo)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "LnUrlInfo"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(lnUrlInfoList: [LnUrlInfo]) -> [Any] {
+        return lnUrlInfoList.map { v -> [String: Any?] in return dictionaryOf(lnUrlInfo: v) }
+    }
+
     static func asLnUrlPayErrorData(lnUrlPayErrorData: [String: Any?]) throws -> LnUrlPayErrorData {
         guard let paymentHash = lnUrlPayErrorData["paymentHash"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentHash", typeName: "LnUrlPayErrorData"))
@@ -1871,18 +1950,32 @@ enum BreezSDKLiquidMapper {
         guard let feesSat = prepareLnUrlPayResponse["feesSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "PrepareLnUrlPayResponse"))
         }
+        guard let dataTmp = prepareLnUrlPayResponse["data"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "data", typeName: "PrepareLnUrlPayResponse"))
+        }
+        let data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
+
+        var comment: String?
+        if hasNonNilKey(data: prepareLnUrlPayResponse, key: "comment") {
+            guard let commentTmp = prepareLnUrlPayResponse["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
         var successAction: SuccessAction?
         if let successActionTmp = prepareLnUrlPayResponse["successAction"] as? [String: Any?] {
             successAction = try asSuccessAction(successAction: successActionTmp)
         }
 
-        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, successAction: successAction)
+        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, data: data, comment: comment, successAction: successAction)
     }
 
     static func dictionaryOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse) -> [String: Any?] {
         return [
             "destination": dictionaryOf(sendDestination: prepareLnUrlPayResponse.destination),
             "feesSat": prepareLnUrlPayResponse.feesSat,
+            "data": dictionaryOf(lnUrlPayRequestData: prepareLnUrlPayResponse.data),
+            "comment": prepareLnUrlPayResponse.comment == nil ? nil : prepareLnUrlPayResponse.comment,
             "successAction": prepareLnUrlPayResponse.successAction == nil ? nil : dictionaryOf(successAction: prepareLnUrlPayResponse.successAction!),
         ]
     }
@@ -3659,11 +3752,16 @@ enum BreezSDKLiquidMapper {
 
             let _paymentHash = paymentDetails["paymentHash"] as? String
 
+            var _lnurlInfo: LnUrlInfo?
+            if let lnurlInfoTmp = paymentDetails["lnurlInfo"] as? [String: Any?] {
+                _lnurlInfo = try asLnUrlInfo(lnUrlInfo: lnurlInfoTmp)
+            }
+
             let _refundTxId = paymentDetails["refundTxId"] as? String
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.lightning(swapId: _swapId, description: _description, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.lightning(swapId: _swapId, description: _description, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, lnurlInfo: _lnurlInfo, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
         if type == "liquid" {
             guard let _destination = paymentDetails["destination"] as? String else {
@@ -3694,7 +3792,7 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(paymentDetails: PaymentDetails) -> [String: Any?] {
         switch paymentDetails {
         case let .lightning(
-            swapId, description, preimage, bolt11, bolt12Offer, paymentHash, refundTxId, refundTxAmountSat
+            swapId, description, preimage, bolt11, bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "lightning",
@@ -3704,6 +3802,7 @@ enum BreezSDKLiquidMapper {
                 "bolt11": bolt11 == nil ? nil : bolt11,
                 "bolt12Offer": bolt12Offer == nil ? nil : bolt12Offer,
                 "paymentHash": paymentHash == nil ? nil : paymentHash,
+                "lnurlInfo": lnurlInfo == nil ? nil : dictionaryOf(lnUrlInfo: lnurlInfo!),
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
             ]
