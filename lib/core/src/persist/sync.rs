@@ -5,7 +5,7 @@ use rusqlite::{
     named_params, Connection, OptionalExtension, Row, Statement, Transaction, TransactionBehavior,
 };
 
-use super::{cache::KEY_LAST_DERIVATION_INDEX, Persister, Swap};
+use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentTxDetails, Persister, Swap};
 use crate::{
     sync::model::{
         data::LAST_DERIVATION_INDEX_DATA_ID, sync::Record, RecordType, SyncOutgoingChanges,
@@ -460,6 +460,33 @@ impl Persister {
             ":record_id": sync_state.record_id,
             ":record_revision": sync_state.record_revision,
             ":is_local": sync_state.is_local,
+        })?;
+
+        tx.commit()?;
+
+        Ok(())
+    }
+
+    pub(crate) fn commit_incoming_payment_details(
+        &self,
+        payment_tx_details: PaymentTxDetails,
+        sync_state: &SyncState,
+        last_commit_time: Option<u32>,
+    ) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        if let Some(last_commit_time) = last_commit_time {
+            Self::check_commit_update(&tx, &sync_state.record_id, last_commit_time)?;
+        }
+
+        Self::insert_or_update_payment_details_inner(&tx, &payment_tx_details, false)?;
+
+        Self::set_sync_state_stmt(&tx)?.execute(named_params! {
+            ":data_id": &sync_state.data_id,
+            ":record_id": &sync_state.record_id,
+            ":record_revision": &sync_state.record_revision,
+            ":is_local": &sync_state.is_local,
         })?;
 
         tx.commit()?;

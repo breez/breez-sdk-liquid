@@ -356,6 +356,7 @@ impl ReceiveSwapHandler {
                                 is_confirmed: false,
                             },
                             None,
+                            false,
                         )?;
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");

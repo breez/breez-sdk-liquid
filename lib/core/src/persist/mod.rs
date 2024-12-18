@@ -9,18 +9,21 @@ pub(crate) mod send;
 pub(crate) mod sync;
 
 use std::collections::{HashMap, HashSet};
+use std::ops::Not;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
-use crate::error::PaymentError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
+use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use model::PaymentTxDetails;
-use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
+use rusqlite::{
+    params, params_from_iter, Connection, OptionalExtension, Row, ToSql, TransactionBehavior,
+};
 use rusqlite_migration::{Migrations, M};
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use tokio::sync::mpsc::Sender;
@@ -98,10 +101,7 @@ impl Persister {
         }
     }
 
-    pub(crate) fn insert_or_update_payment_with_wallet_tx(
-        &self,
-        tx: &WalletTx,
-    ) -> Result<(), PaymentError> {
+    pub(crate) fn insert_or_update_payment_with_wallet_tx(&self, tx: &WalletTx) -> Result<()> {
         let tx_id = tx.txid.to_string();
         let is_tx_confirmed = tx.height.is_some();
         let amount_sat = tx.balance.values().sum::<i64>();
@@ -122,10 +122,12 @@ impl Persister {
                 },
                 is_confirmed: is_tx_confirmed,
             },
-            Some(PaymentTxDetails {
-                destination: maybe_script_pubkey,
+            maybe_script_pubkey.map(|destination| PaymentTxDetails {
+                tx_id,
+                destination,
                 ..Default::default()
             }),
+            true,
         )
     }
 
@@ -161,9 +163,11 @@ impl Persister {
         &self,
         ptx: PaymentTxData,
         payment_tx_details: Option<PaymentTxDetails>,
-    ) -> Result<(), PaymentError> {
-        let con = self.get_connection()?;
-        con.execute(
+        from_wallet_tx_data: bool,
+    ) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        tx.execute(
             "INSERT INTO payment_tx_data (
            tx_id,
            timestamp,
@@ -190,10 +194,31 @@ impl Persister {
             ),
         )?;
 
-        if let Some(payment_details) = payment_tx_details {
-            // Only store the destination if there is no payment_details entry else
-            // the destination is overwritten by the tx script_pubkey
-            Self::insert_or_update_payment_details_inner(&con, &ptx.tx_id, payment_details)?;
+        let mut trigger_sync = false;
+        if let Some(ref payment_tx_details) = payment_tx_details {
+            // If the update comes from the wallet tx:
+            // - Skip updating the destination from the script_pubkey
+            // - Skip syncing the payment_tx_details
+            Self::insert_or_update_payment_details_inner(
+                &tx,
+                payment_tx_details,
+                from_wallet_tx_data,
+            )?;
+            if !from_wallet_tx_data {
+                self.commit_outgoing(
+                    &tx,
+                    &payment_tx_details.tx_id,
+                    RecordType::PaymentDetails,
+                    None,
+                )?;
+                trigger_sync = true;
+            }
+        }
+
+        tx.commit()?;
+
+        if trigger_sync {
+            self.sync_trigger.try_send(())?;
         }
 
         Ok(())
@@ -201,13 +226,16 @@ impl Persister {
 
     fn insert_or_update_payment_details_inner(
         con: &Connection,
-        tx_id: &str,
-        payment_tx_details: PaymentTxDetails,
+        payment_tx_details: &PaymentTxDetails,
+        skip_destination_update: bool,
     ) -> Result<()> {
-        // Only store the destination if there is no payment_details entry else
-        // the destination is overwritten by the tx script_pubkey
+        let destination_update = skip_destination_update
+            .not()
+            .then_some("destination = excluded.destination,")
+            .unwrap_or_default();
         con.execute(
-            "INSERT INTO payment_details (
+            &format!(
+                "INSERT INTO payment_details (
                 tx_id,
                 destination,
                 description,
@@ -216,15 +244,18 @@ impl Persister {
             VALUES (?, ?, ?, ?)
             ON CONFLICT (tx_id)
             DO UPDATE SET
+                {destination_update}
                 description = COALESCE(excluded.description, description),
-                lnurl_info_json = excluded.lnurl_info_json
-        ",
+                lnurl_info_json = COALESCE(excluded.lnurl_info_json, lnurl_info_json)
+        "
+            ),
             (
-                tx_id,
-                payment_tx_details.destination,
-                payment_tx_details.description,
+                &payment_tx_details.tx_id,
+                &payment_tx_details.destination,
+                &payment_tx_details.description,
                 payment_tx_details
                     .lnurl_info
+                    .as_ref()
                     .map(|info| serde_json::to_string(&info).ok()),
             ),
         )?;
@@ -233,11 +264,23 @@ impl Persister {
 
     pub(crate) fn insert_or_update_payment_details(
         &self,
-        tx_id: &str,
         payment_tx_details: PaymentTxDetails,
     ) -> Result<()> {
-        let con = self.get_connection()?;
-        Self::insert_or_update_payment_details_inner(&con, tx_id, payment_tx_details)
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_payment_details_inner(&tx, &payment_tx_details, false)?;
+        self.commit_outgoing(
+            &tx,
+            &payment_tx_details.tx_id,
+            RecordType::PaymentDetails,
+            None,
+        )?;
+        tx.commit()?;
+
+        self.sync_trigger.try_send(())?;
+
+        Ok(())
     }
 
     pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
@@ -248,10 +291,11 @@ impl Persister {
             WHERE tx_id = ?",
         )?;
         let res = stmt.query_row([tx_id], |row| {
-            let destination = row.get(1)?;
-            let description = row.get(2)?;
-            let maybe_lnurl_info_json: Option<String> = row.get(3)?;
+            let destination = row.get(0)?;
+            let description = row.get(1)?;
+            let maybe_lnurl_info_json: Option<String> = row.get(2)?;
             Ok(PaymentTxDetails {
+                tx_id: tx_id.to_string(),
                 destination,
                 description,
                 lnurl_info: maybe_lnurl_info_json
@@ -754,9 +798,10 @@ mod tests {
         storage.insert_or_update_payment(
             payment_tx_data.clone(),
             Some(PaymentTxDetails {
-                destination: Some("mock-address".to_string()),
+                destination: "mock-address".to_string(),
                 ..Default::default()
             }),
+            false,
         )?;
 
         assert!(storage

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::{ChainSwap, Direction, PaymentState, ReceiveSwap, SendSwap, Swap};
+use crate::{
+    persist::model::PaymentTxDetails,
+    prelude::{ChainSwap, Direction, LnUrlInfo, PaymentState, ReceiveSwap, SendSwap, Swap},
+};
 
 pub(crate) const LAST_DERIVATION_INDEX_DATA_ID: &str = "last-derivation-index";
 
@@ -216,12 +219,56 @@ impl From<ReceiveSyncData> for ReceiveSwap {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct PaymentDetailsSyncData {
+    pub(crate) tx_id: String,
+    pub(crate) destination: String,
+    pub(crate) description: Option<String>,
+    pub(crate) lnurl_info: Option<LnUrlInfo>,
+}
+
+impl PaymentDetailsSyncData {
+    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
+        for field in updated_fields {
+            match field.as_str() {
+                "destination" => self.destination = other.destination.clone(),
+                "description" => clone_if_set(&mut self.description, &other.description),
+                "lnurl_info" => clone_if_set(&mut self.lnurl_info, &other.lnurl_info),
+                _ => continue,
+            }
+        }
+    }
+}
+
+impl From<PaymentTxDetails> for PaymentDetailsSyncData {
+    fn from(value: PaymentTxDetails) -> Self {
+        Self {
+            tx_id: value.tx_id,
+            destination: value.destination,
+            description: value.description,
+            lnurl_info: value.lnurl_info,
+        }
+    }
+}
+
+impl From<PaymentDetailsSyncData> for PaymentTxDetails {
+    fn from(val: PaymentDetailsSyncData) -> Self {
+        PaymentTxDetails {
+            tx_id: val.tx_id,
+            destination: val.destination,
+            description: val.description,
+            lnurl_info: val.lnurl_info,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
     Chain(ChainSyncData),
     Send(SendSyncData),
     Receive(ReceiveSyncData),
     LastDerivationIndex(u32),
+    PaymentDetails(PaymentDetailsSyncData),
 }
 
 impl SyncData {
@@ -231,6 +278,7 @@ impl SyncData {
             SyncData::Send(send_data) => &send_data.swap_id,
             SyncData::Receive(receive_data) => &receive_data.swap_id,
             SyncData::LastDerivationIndex(_) => LAST_DERIVATION_INDEX_DATA_ID,
+            SyncData::PaymentDetails(payment_details) => &payment_details.tx_id,
         }
     }
 
@@ -241,7 +289,7 @@ impl SyncData {
     /// Whether the data is a swap
     pub(crate) fn is_swap(&self) -> bool {
         match self {
-            SyncData::LastDerivationIndex(_) => false,
+            SyncData::LastDerivationIndex(_) | SyncData::PaymentDetails(_) => false,
             SyncData::Chain(_) | SyncData::Send(_) | SyncData::Receive(_) => true,
         }
     }
@@ -262,6 +310,9 @@ impl SyncData {
                 SyncData::LastDerivationIndex(their_index),
             ) => {
                 *our_index = std::cmp::max(*their_index, *our_index);
+            }
+            (SyncData::PaymentDetails(ref mut base), SyncData::PaymentDetails(other)) => {
+                base.merge(other, updated_fields)
             }
             _ => return Err(anyhow::anyhow!("Cannot merge data from two separate types")),
         };

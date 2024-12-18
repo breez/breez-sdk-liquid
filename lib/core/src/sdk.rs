@@ -1223,10 +1223,12 @@ impl LiquidSdk {
         self.persister.insert_or_update_payment(
             tx_data.clone(),
             Some(PaymentTxDetails {
-                destination: Some(destination.clone()),
+                tx_id: tx_id.clone(),
+                destination: destination.clone(),
                 description: description.clone(),
                 ..Default::default()
             }),
+            false,
         )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
@@ -2682,7 +2684,10 @@ impl LiquidSdk {
                 match sa {
                     // For AES, we decrypt the contents if the preimage is available
                     SuccessAction::Aes { data } => {
-                        let PaymentDetails::Lightning { preimage, .. } = &payment.details else {
+                        let PaymentDetails::Lightning {
+                            swap_id, preimage, ..
+                        } = &payment.details
+                        else {
                             return Err(LnUrlPayError::Generic {
                                 err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
                             });
@@ -2690,6 +2695,10 @@ impl LiquidSdk {
 
                         match preimage {
                             Some(preimage_str) => {
+                                debug!(
+                                    "Decrypting AES success action with preimage for Send Swap {}",
+                                    swap_id
+                                );
                                 let preimage =
                                     sha256::Hash::from_str(preimage_str).map_err(|_| {
                                         LnUrlPayError::Generic {
@@ -2705,7 +2714,10 @@ impl LiquidSdk {
                                 };
                                 Some(SuccessActionProcessed::Aes { result })
                             }
-                            None => None,
+                            None => {
+                                debug!("Preimage not yet available to decrypt AES success action for Send Swap {}", swap_id);
+                                None
+                            }
                         }
                     }
                     SuccessAction::Message { data } => {
@@ -2721,11 +2733,13 @@ impl LiquidSdk {
             Some(_) => None,
             None => Some(prepare_response.data.domain),
         };
-        if let Some(tx_id) = &payment.tx_id {
-            self.persister.insert_or_update_payment_details(
-                tx_id,
-                PaymentTxDetails {
-                    destination: payment.destination.clone(),
+        if let (Some(tx_id), Some(destination)) =
+            (payment.tx_id.clone(), payment.destination.clone())
+        {
+            self.persister
+                .insert_or_update_payment_details(PaymentTxDetails {
+                    tx_id,
+                    destination,
                     description: prepare_response.comment.clone(),
                     lnurl_info: Some(LnUrlInfo {
                         ln_address: prepare_response.data.ln_address,
@@ -2736,8 +2750,7 @@ impl LiquidSdk {
                         lnurl_pay_unprocessed_success_action: prepare_response.success_action,
                         lnurl_withdraw_endpoint: None,
                     }),
-                },
-            )?;
+                })?;
         }
 
         Ok(LnUrlPayResult::EndpointSuccess {
@@ -2789,17 +2802,16 @@ impl LiquidSdk {
                 .persister
                 .fetch_receive_swap_by_invoice(&invoice.bolt11)?
             {
-                self.persister.insert_or_update_payment_details(
-                    &tx_id,
-                    PaymentTxDetails {
-                        destination: Some(receive_res.destination),
+                self.persister
+                    .insert_or_update_payment_details(PaymentTxDetails {
+                        tx_id,
+                        destination: receive_res.destination,
                         description: req.description,
                         lnurl_info: Some(LnUrlInfo {
                             lnurl_withdraw_endpoint: Some(req.data.callback),
                             ..Default::default()
                         }),
-                    },
-                )?;
+                    })?;
             }
         }
         Ok(res)
