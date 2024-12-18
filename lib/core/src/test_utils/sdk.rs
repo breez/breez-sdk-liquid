@@ -24,6 +24,9 @@ use super::{
     wallet::{MockSigner, MockWallet},
 };
 
+use trust_dns_resolver::config::*;
+use trust_dns_resolver::TokioAsyncResolver;
+
 pub(crate) fn new_liquid_sdk(
     persister: Arc<Persister>,
     swapper: Arc<MockSwapper>,
@@ -91,6 +94,11 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     let buy_bitcoin_service =
         Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
+    let dns_resolver = Arc::new(TokioAsyncResolver::tokio(
+        ResolverConfig::default(),
+        ResolverOpts::default(),
+    ));
+
     Ok(LiquidSdk {
         config,
         onchain_wallet,
@@ -109,5 +117,6 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         receive_swap_handler,
         chain_swap_handler,
         buy_bitcoin_service,
+        dns_resolver,
     })
 }
