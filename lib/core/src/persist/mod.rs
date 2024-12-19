@@ -285,21 +285,28 @@ impl Persister {
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
                 SELECT * FROM receive_swaps
-                WHERE COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL
-            ) rs                                 -- Receive Swap data (by claim)
+                WHERE 
+                    COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL
+                    AND state NOT IN (0, 3, 4)   -- Ignore Created, Failed and TimedOut
+            ) rs                                 -- Receive Swap data
                 ON ptx.tx_id in (rs.claim_tx_id, rs.mrh_tx_id)
+            FULL JOIN (
+                SELECT * FROM chain_swaps
+                WHERE 
+                    COALESCE(user_lockup_tx_id, claim_tx_id) IS NOT NULL
+                    AND state NOT IN (0, 4)      -- Ignore Created and TimedOut
+            ) cs                                 -- Chain Swap data
+                ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
-            LEFT JOIN chain_swaps AS cs          -- Chain Swap data
-                ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
                 ON rtx.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
             LEFT JOIN payment_details AS pd      -- Payment details
                 ON pd.tx_id = ptx.tx_id
-            WHERE                                -- Filter out refund txs from Send Swaps
-                ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
-            AND                                  -- Filter out refund txs from Chain Swaps
-                ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL)
+            WHERE                                
+                (ptx.tx_id IS NULL               -- Filter out refund txs from Chain/Send Swaps
+                    OR ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
+                    AND ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL))
             AND {}
             ORDER BY                             -- Order by swap creation time or tx timestamp (in case of direct tx)
                 COALESCE(rs.created_at, ss.created_at, cs.created_at, ptx.timestamp) DESC
@@ -529,7 +536,11 @@ impl Persister {
 
         match (tx, swap.clone()) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
-            (None, Some(swap)) => Ok(Payment::from_pending_swap(swap, payment_type)),
+            (None, Some(swap)) => Ok(Payment::from_pending_swap(
+                swap,
+                payment_type,
+                payment_details,
+            )),
             (Some(tx), None) => Ok(Payment::from_tx_data(tx, None, payment_details)),
             (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap), payment_details)),
         }
