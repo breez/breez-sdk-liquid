@@ -29,7 +29,7 @@ pub(crate) enum Command {
         #[arg(long)]
         offer: Option<String>,
 
-        /// Either BIP21 URI, Liquid address we intend to pay to
+        /// Either BIP21 URI or Liquid address we intend to pay to
         #[arg(long)]
         address: Option<String>,
 
