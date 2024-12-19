@@ -550,7 +550,11 @@ impl Persister {
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(Some("ptx.tx_id = ?1"), None, None),
+                &self.select_payment_query(
+                    Some("(ptx.tx_id = ?1 OR COALESCE(rs.id, ss.id, cs.id) = ?1)"),
+                    None,
+                    None,
+                ),
                 params![id],
                 |row| self.sql_row_to_payment(row),
             )
