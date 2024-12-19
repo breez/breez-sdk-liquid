@@ -512,6 +512,7 @@ typedef struct wire_cst_config {
   uint64_t *zero_conf_max_amount_sat;
   struct wire_cst_list_prim_u_8_strict *breez_api_key;
   struct wire_cst_list_external_input_parser *external_input_parsers;
+  bool use_default_external_input_parsers;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {

@@ -328,12 +328,15 @@ enum BreezSDKLiquidMapper {
             }
             zeroConfMaxAmountSat = zeroConfMaxAmountSatTmp
         }
+        guard let useDefaultExternalInputParsers = config["useDefaultExternalInputParsers"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "useDefaultExternalInputParsers", typeName: "Config"))
+        }
         var externalInputParsers: [ExternalInputParser]?
         if let externalInputParsersTmp = config["externalInputParsers"] as? [[String: Any?]] {
             externalInputParsers = try asExternalInputParserList(arr: externalInputParsersTmp)
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, externalInputParsers: externalInputParsers)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -348,6 +351,7 @@ enum BreezSDKLiquidMapper {
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "cacheDir": config.cacheDir == nil ? nil : config.cacheDir,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
+            "useDefaultExternalInputParsers": config.useDefaultExternalInputParsers,
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
         ]
     }
