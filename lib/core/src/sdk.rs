@@ -54,6 +54,10 @@ pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
+const USER_BITCOIN_PAYMENT_PREFIX: &str = "user._bitcoin-payment";
+const BOLT12_PREFIX: &str = "lno=";
+const LNURL_PAY_PREFIX: &str = "lnurl=";
+
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
@@ -2719,7 +2723,7 @@ impl LiquidSdk {
         if let Some((local_part, domain)) = input.split_once('@') {
             let resolver = Arc::clone(&self.dns_resolver);
 
-            let dns_name = format!("{local_part}.user._bitcoin-payment.{domain}");
+            let dns_name = format!("{}.{}.{}", local_part, USER_BITCOIN_PAYMENT_PREFIX, domain);
 
             // Query for TXT records of a domain
             let txt_data = match resolver.txt_lookup(dns_name).await {
@@ -2736,8 +2740,12 @@ impl LiquidSdk {
             // Decode TXT data
             match String::from_utf8(txt_data) {
                 Ok(decoded) => {
-                    if let Some((_, bolt12_address)) = decoded.split_once("lno=") {
+                    if let Some((_, bolt12_address)) = decoded.split_once(BOLT12_PREFIX) {
                         return Some(bolt12_address.to_string());
+                    }
+
+                    if let Some((_, lnurl)) = decoded.split_once(LNURL_PAY_PREFIX) {
+                        return Some(lnurl.to_string());
                     }
                 }
                 Err(e) => {
@@ -2753,6 +2761,7 @@ impl LiquidSdk {
     ///
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
+        // Try to parse the destination as a bip353 address.
         let input_str = match self.bip353_parse(input).await {
             Some(value) => value,
             None => input.to_string(),
