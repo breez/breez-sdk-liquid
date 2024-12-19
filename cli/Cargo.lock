@@ -3436,7 +3436,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=e537feb8ed134bc3c7af5196e10a0a189dd36ac7#e537feb8ed134bc3c7af5196e10a0a189dd36ac7"
+source = "git+https://github.com/breez/breez-sdk?rev=f77208acd34d74b571388889e856444908c59a85#f77208acd34d74b571388889e856444908c59a85"
 dependencies = [
  "aes 0.8.4",
  "anyhow",

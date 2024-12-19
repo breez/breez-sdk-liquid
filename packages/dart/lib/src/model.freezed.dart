@@ -795,6 +795,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String? bolt11,
       String? bolt12Offer,
       String? paymentHash,
+      LnUrlInfo? lnurlInfo,
       String? refundTxId,
       BigInt? refundTxAmountSat});
 }
@@ -818,6 +819,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? bolt11 = freezed,
     Object? bolt12Offer = freezed,
     Object? paymentHash = freezed,
+    Object? lnurlInfo = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
   }) {
@@ -846,6 +848,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
           ? _value.paymentHash
           : paymentHash // ignore: cast_nullable_to_non_nullable
               as String?,
+      lnurlInfo: freezed == lnurlInfo
+          ? _value.lnurlInfo
+          : lnurlInfo // ignore: cast_nullable_to_non_nullable
+              as LnUrlInfo?,
       refundTxId: freezed == refundTxId
           ? _value.refundTxId
           : refundTxId // ignore: cast_nullable_to_non_nullable
@@ -868,6 +874,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       this.bolt11,
       this.bolt12Offer,
       this.paymentHash,
+      this.lnurlInfo,
       this.refundTxId,
       this.refundTxAmountSat})
       : super._();
@@ -895,6 +902,10 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final String? paymentHash;
 
+  /// The payment LNURL info
+  @override
+  final LnUrlInfo? lnurlInfo;
+
   /// For a Send swap which was refunded, this is the refund tx id
   @override
   final String? refundTxId;
@@ -905,7 +916,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -919,6 +930,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
             (identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer) &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash) &&
+            (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
                 other.refundTxAmountSat == refundTxAmountSat));
@@ -926,7 +938,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   int get hashCode => Object.hash(runtimeType, swapId, description, preimage, bolt11, bolt12Offer,
-      paymentHash, refundTxId, refundTxAmountSat);
+      paymentHash, lnurlInfo, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -945,6 +957,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       final String? bolt11,
       final String? bolt12Offer,
       final String? paymentHash,
+      final LnUrlInfo? lnurlInfo,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
   const PaymentDetails_Lightning._() : super._();
@@ -966,6 +979,9 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
 
   /// The payment hash of the invoice
   String? get paymentHash;
+
+  /// The payment LNURL info
+  LnUrlInfo? get lnurlInfo;
 
   /// For a Send swap which was refunded, this is the refund tx id
   String? get refundTxId;

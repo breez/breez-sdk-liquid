@@ -399,6 +399,50 @@ class ListPaymentsRequest {
           details == other.details;
 }
 
+/// Represents the payment LNURL info
+class LnUrlInfo {
+  final String? lnAddress;
+  final String? lnurlPayComment;
+  final String? lnurlPayDomain;
+  final String? lnurlPayMetadata;
+  final SuccessActionProcessed? lnurlPaySuccessAction;
+  final SuccessAction? lnurlPayUnprocessedSuccessAction;
+  final String? lnurlWithdrawEndpoint;
+
+  const LnUrlInfo({
+    this.lnAddress,
+    this.lnurlPayComment,
+    this.lnurlPayDomain,
+    this.lnurlPayMetadata,
+    this.lnurlPaySuccessAction,
+    this.lnurlPayUnprocessedSuccessAction,
+    this.lnurlWithdrawEndpoint,
+  });
+
+  @override
+  int get hashCode =>
+      lnAddress.hashCode ^
+      lnurlPayComment.hashCode ^
+      lnurlPayDomain.hashCode ^
+      lnurlPayMetadata.hashCode ^
+      lnurlPaySuccessAction.hashCode ^
+      lnurlPayUnprocessedSuccessAction.hashCode ^
+      lnurlWithdrawEndpoint.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LnUrlInfo &&
+          runtimeType == other.runtimeType &&
+          lnAddress == other.lnAddress &&
+          lnurlPayComment == other.lnurlPayComment &&
+          lnurlPayDomain == other.lnurlPayDomain &&
+          lnurlPayMetadata == other.lnurlPayMetadata &&
+          lnurlPaySuccessAction == other.lnurlPaySuccessAction &&
+          lnurlPayUnprocessedSuccessAction == other.lnurlPayUnprocessedSuccessAction &&
+          lnurlWithdrawEndpoint == other.lnurlWithdrawEndpoint;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::lnurl_pay].
 class LnUrlPayRequest {
   /// The response from calling [crate::sdk::LiquidSdk::prepare_lnurl_pay]
@@ -651,6 +695,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The payment hash of the invoice
     String? paymentHash,
 
+    /// The payment LNURL info
+    LnUrlInfo? lnurlInfo,
+
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
 
@@ -856,6 +903,12 @@ class PrepareLnUrlPayResponse {
   /// The fees in satoshis to send the payment
   final BigInt feesSat;
 
+  /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+  final LnUrlPayRequestData data;
+
+  /// An optional comment for this payment
+  final String? comment;
+
   /// The unprocessed LUD-09 success action. This will be processed and decrypted if
   /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
   final SuccessAction? successAction;
@@ -863,11 +916,14 @@ class PrepareLnUrlPayResponse {
   const PrepareLnUrlPayResponse({
     required this.destination,
     required this.feesSat,
+    required this.data,
+    this.comment,
     this.successAction,
   });
 
   @override
-  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ successAction.hashCode;
+  int get hashCode =>
+      destination.hashCode ^ feesSat.hashCode ^ data.hashCode ^ comment.hashCode ^ successAction.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -876,6 +932,8 @@ class PrepareLnUrlPayResponse {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           feesSat == other.feesSat &&
+          data == other.data &&
+          comment == other.comment &&
           successAction == other.successAction;
 }
 

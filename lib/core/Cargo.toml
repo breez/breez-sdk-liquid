@@ -32,7 +32,7 @@ lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-s
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "e537feb8ed134bc3c7af5196e10a0a189dd36ac7", features = ["liquid"] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f77208acd34d74b571388889e856444908c59a85", features = ["liquid"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
