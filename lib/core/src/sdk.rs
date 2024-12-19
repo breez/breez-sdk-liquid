@@ -203,7 +203,7 @@ impl LiquidSdk {
             bitcoin_chain_service.clone(),
         )?);
 
-        let syncer_client = Box::new(BreezSyncerClient::new());
+        let syncer_client = Box::new(BreezSyncerClient::new(config.breez_api_key.clone()));
         let sync_service = Arc::new(SyncService::new(
             config.sync_service_url.clone(),
             persister.clone(),
