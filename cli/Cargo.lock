@@ -651,7 +651,9 @@ dependencies = [
  "async-trait",
  "bip39",
  "boltz-client",
+ "bytes",
  "chrono",
+ "domain",
  "electrum-client",
  "env_logger 0.11.5",
  "flutter_rust_bridge",
@@ -1004,6 +1006,22 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.75",
+]
+
+[[package]]
+name = "domain"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2fbe77a63bf2445649b4ec41ba5300d30dc8358fef4503da03bf2313e31bef3"
+dependencies = [
+ "bytes",
+ "futures",
+ "libc",
+ "octseq",
+ "rand",
+ "smallvec",
+ "time",
+ "tokio",
 ]
 
 [[package]]
@@ -2232,6 +2250,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27b64972346851a39438c60b341ebc01bba47464ae329e55cf343eb93964efd9"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "octseq"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5190e3482f38446ee3f3ab50b049a16b072b6111cba008381b816598478ba65d"
+dependencies = [
+ "bytes",
+ "smallvec",
 ]
 
 [[package]]
