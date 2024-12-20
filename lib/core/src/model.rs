@@ -65,6 +65,13 @@ pub struct Config {
     /// ([DEFAULT_EXTERNAL_INPUT_PARSERS](crate::sdk::DEFAULT_EXTERNAL_INPUT_PARSERS)).
     /// Set this to false in order to prevent their use.
     pub use_default_external_input_parsers: bool,
+    /// For payments where the onchain fees can only be estimated on creation, this can be used
+    /// in order to automatically allow slightly more expensive fees. If the actual fee rate ends up
+    /// being above the sum of the initial estimate and this leeway, the payment will require
+    /// user fee acceptance. See [WaitingFeeAcceptance](PaymentState::WaitingFeeAcceptance).
+    ///
+    /// Defaults to zero.
+    pub onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
 }
 
 impl Config {
@@ -83,6 +90,7 @@ impl Config {
             breez_api_key: Some(breez_api_key),
             external_input_parsers: None,
             use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
         }
     }
 
@@ -101,6 +109,7 @@ impl Config {
             breez_api_key,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
         }
     }
 
@@ -243,6 +252,7 @@ pub enum SdkEvent {
     PaymentRefundPending { details: Payment },
     PaymentSucceeded { details: Payment },
     PaymentWaitingConfirmation { details: Payment },
+    PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
 }
 
@@ -1121,6 +1131,19 @@ pub enum PaymentState {
     ///
     /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     RefundPending = 6,
+
+    /// ## Chain Swaps
+    ///
+    /// This is the state when the user needs to accept new fees before the payment can proceed.
+    ///
+    /// Use [LiquidSdk::fetch_payment_proposed_fees](crate::sdk::LiquidSdk::fetch_payment_proposed_fees)
+    /// to find out the current fees and
+    /// [LiquidSdk::accept_payment_proposed_fees](crate::sdk::LiquidSdk::accept_payment_proposed_fees)
+    /// to accept them, allowing the payment to proceed.
+    ///
+    /// Otherwise, this payment can be immediately refunded using
+    /// [prepare_refund](crate::sdk::LiquidSdk::prepare_refund)/[refund](crate::sdk::LiquidSdk::refund).
+    WaitingFeeAcceptance = 7,
 }
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
@@ -1138,6 +1161,7 @@ impl FromSql for PaymentState {
                 4 => Ok(PaymentState::TimedOut),
                 5 => Ok(PaymentState::Refundable),
                 6 => Ok(PaymentState::RefundPending),
+                7 => Ok(PaymentState::WaitingFeeAcceptance),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),
@@ -1729,6 +1753,27 @@ impl Utxo {
             Utxo::Liquid(utxo) => Some(utxo.clone()),
         }
     }
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
+#[derive(Debug, Clone)]
+pub struct FetchPaymentProposedFeesRequest {
+    pub swap_id: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
+#[derive(Debug, Clone, Serialize)]
+pub struct FetchPaymentProposedFeesResponse {
+    pub swap_id: String,
+    pub fees_sat: u64,
+    /// Amount sent by the swap payer
+    pub payer_amount_sat: u64,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::accept_payment_proposed_fees].
+#[derive(Debug, Clone)]
+pub struct AcceptPaymentProposedFeesRequest {
+    pub response: FetchPaymentProposedFeesResponse,
 }
 
 #[macro_export]

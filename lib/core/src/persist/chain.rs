@@ -233,13 +233,14 @@ impl Persister {
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
+            PaymentState::WaitingFeeAcceptance,
         ])];
 
         self.list_chain_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        self.list_chain_swaps_by_state(vec![PaymentState::Pending, PaymentState::RefundPending])
+        self.list_chain_swaps_by_state(vec![PaymentState::Pending, PaymentState::RefundPending, PaymentState::WaitingFeeAcceptance])
     }
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {

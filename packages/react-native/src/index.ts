@@ -19,6 +19,10 @@ const BreezSDKLiquid = NativeModules.RNBreezSDKLiquid
 
 const BreezSDKLiquidEmitter = new NativeEventEmitter(BreezSDKLiquid)
 
+export interface AcceptPaymentProposedFeesRequest {
+    response: FetchPaymentProposedFeesResponse
+}
+
 export interface AesSuccessActionData {
     description: string
     ciphertext: string
@@ -71,6 +75,7 @@ export interface Config {
     zeroConfMaxAmountSat?: number
     useDefaultExternalInputParsers: boolean
     externalInputParsers?: ExternalInputParser[]
+    onchainFeeRateLeewaySatPerVbyte?: number
 }
 
 export interface ConnectRequest {
@@ -96,6 +101,16 @@ export interface ExternalInputParser {
     providerId: string
     inputRegex: string
     parserUrl: string
+}
+
+export interface FetchPaymentProposedFeesRequest {
+    swapId: string
+}
+
+export interface FetchPaymentProposedFeesResponse {
+    swapId: string
+    feesSat: number
+    payerAmountSat: number
 }
 
 export interface FiatCurrency {
@@ -648,7 +663,8 @@ export enum PaymentState {
     FAILED = "failed",
     TIMED_OUT = "timedOut",
     REFUNDABLE = "refundable",
-    REFUND_PENDING = "refundPending"
+    REFUND_PENDING = "refundPending",
+    WAITING_FEE_ACCEPTANCE = "waitingFeeAcceptance"
 }
 
 export enum PaymentType {
@@ -663,6 +679,7 @@ export enum SdkEventVariant {
     PAYMENT_REFUND_PENDING = "paymentRefundPending",
     PAYMENT_SUCCEEDED = "paymentSucceeded",
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
+    PAYMENT_WAITING_FEE_ACCEPTANCE = "paymentWaitingFeeAcceptance",
     SYNCED = "synced"
 }
 
@@ -683,6 +700,9 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.PAYMENT_WAITING_CONFIRMATION,
+    details: Payment
+} | {
+    type: SdkEventVariant.PAYMENT_WAITING_FEE_ACCEPTANCE,
     details: Payment
 } | {
     type: SdkEventVariant.SYNCED
@@ -859,6 +879,15 @@ export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]>
 export const getPayment = async (req: GetPaymentRequest): Promise<Payment | null> => {
     const response = await BreezSDKLiquid.getPayment(req)
     return response
+}
+
+export const fetchPaymentProposedFees = async (req: FetchPaymentProposedFeesRequest): Promise<FetchPaymentProposedFeesResponse> => {
+    const response = await BreezSDKLiquid.fetchPaymentProposedFees(req)
+    return response
+}
+
+export const acceptPaymentProposedFees = async (req: AcceptPaymentProposedFeesRequest): Promise<void> => {
+    await BreezSDKLiquid.acceptPaymentProposedFees(req)
 }
 
 export const listRefundables = async (): Promise<RefundableSwap[]> => {
