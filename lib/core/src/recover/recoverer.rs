@@ -12,6 +12,8 @@ use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
+use crate::chain::bitcoin::ESTIMATED_BITCOIN_BLOCK_TIME_SEC;
+use crate::chain::liquid::ESTIMATED_LIQUID_BLOCK_TIME_SEC;
 use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
@@ -150,8 +152,8 @@ impl Recoverer {
             &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
         )?;
 
-        let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
-        let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+        let bitcoin_tip = self.bitcoin_chain_service.lock().await.tip()?;
+        let liquid_tip = self.liquid_chain_service.lock().await.tip().await?;
 
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
@@ -161,10 +163,19 @@ impl Recoverer {
                         log::warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let is_expired = liquid_height
-                        >= send_swap.get_boltz_create_response()?.timeout_block_height as u32;
+                    let timeout_block_height =
+                        send_swap.get_boltz_create_response()?.timeout_block_height as u32;
+                    let is_expired = liquid_tip.height >= timeout_block_height;
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         send_swap.state = new_state;
+                    }
+                    // Stop updating the expiry when the swap is expired or complete
+                    if !is_expired && send_swap.state.is_ongoing() {
+                        send_swap.expiry_at = Some(
+                            liquid_tip.time
+                                + (timeout_block_height.saturating_sub(liquid_tip.height)
+                                    * ESTIMATED_LIQUID_BLOCK_TIME_SEC),
+                        );
                     }
                     send_swap.lockup_tx_id = recovered_data
                         .lockup_tx_id
@@ -183,12 +194,20 @@ impl Recoverer {
                         log::warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let is_expired = liquid_height
-                        >= receive_swap
-                            .get_boltz_create_response()?
-                            .timeout_block_height;
+                    let timeout_block_height = receive_swap
+                        .get_boltz_create_response()?
+                        .timeout_block_height;
+                    let is_expired = liquid_tip.height >= timeout_block_height;
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         receive_swap.state = new_state;
+                    }
+                    // Stop updating the expiry when the swap is expired or complete
+                    if !is_expired && receive_swap.state.is_ongoing() {
+                        receive_swap.expiry_at = Some(
+                            liquid_tip.time
+                                + (timeout_block_height.saturating_sub(liquid_tip.height)
+                                    * ESTIMATED_LIQUID_BLOCK_TIME_SEC),
+                        );
                     }
                     receive_swap.claim_tx_id = recovered_data
                         .claim_tx_id
@@ -213,12 +232,23 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        let is_expired = bitcoin_height >= chain_swap.timeout_block_height;
+                        let is_expired =
+                            bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
                         if let Some(new_state) =
                             recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired)
                         {
                             chain_swap.state = new_state;
+                        }
+                        // Stop updating the expiry when the swap is expired or complete
+                        if !is_expired && chain_swap.state.is_ongoing() {
+                            chain_swap.expiry_at = Some(
+                                bitcoin_tip.header.time
+                                    + (chain_swap
+                                        .timeout_block_height
+                                        .saturating_sub(bitcoin_tip.height as u32)
+                                        * ESTIMATED_BITCOIN_BLOCK_TIME_SEC),
+                            );
                         }
                         chain_swap.server_lockup_tx_id = recovered_data
                             .lbtc_server_lockup_tx_id
@@ -245,9 +275,19 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        let is_expired = liquid_height >= chain_swap.timeout_block_height;
+                        let is_expired = liquid_tip.height >= chain_swap.timeout_block_height;
                         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                             chain_swap.state = new_state;
+                        }
+                        // Stop updating the expiry when the swap is expired or complete
+                        if !is_expired && chain_swap.state.is_ongoing() {
+                            chain_swap.expiry_at = Some(
+                                liquid_tip.time
+                                    + (chain_swap
+                                        .timeout_block_height
+                                        .saturating_sub(liquid_tip.height)
+                                        * ESTIMATED_LIQUID_BLOCK_TIME_SEC),
+                            );
                         }
                         chain_swap.server_lockup_tx_id = recovered_data
                             .btc_server_lockup_tx_id

@@ -3619,6 +3619,7 @@ impl SseDecode for crate::model::PaymentDetails {
             0 => {
                 let mut var_swapId = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_expiryTimestamp = <Option<u32>>::sse_decode(deserializer);
                 let mut var_preimage = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt12Offer = <Option<String>>::sse_decode(deserializer);
@@ -3629,6 +3630,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 return crate::model::PaymentDetails::Lightning {
                     swap_id: var_swapId,
                     description: var_description,
+                    expiry_timestamp: var_expiryTimestamp,
                     preimage: var_preimage,
                     bolt11: var_bolt11,
                     bolt12_offer: var_bolt12Offer,
@@ -3649,11 +3651,13 @@ impl SseDecode for crate::model::PaymentDetails {
             2 => {
                 let mut var_swapId = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_expiryTimestamp = <Option<u32>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Bitcoin {
                     swap_id: var_swapId,
                     description: var_description,
+                    expiry_timestamp: var_expiryTimestamp,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
                 };
@@ -5687,6 +5691,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Lightning {
                 swap_id,
                 description,
+                expiry_timestamp,
                 preimage,
                 bolt11,
                 bolt12_offer,
@@ -5698,6 +5703,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 0.into_dart(),
                 swap_id.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
+                expiry_timestamp.into_into_dart().into_dart(),
                 preimage.into_into_dart().into_dart(),
                 bolt11.into_into_dart().into_dart(),
                 bolt12_offer.into_into_dart().into_dart(),
@@ -5719,12 +5725,14 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
                 description,
+                expiry_timestamp,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => [
                 2.into_dart(),
                 swap_id.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
+                expiry_timestamp.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
             ]
@@ -7743,6 +7751,7 @@ impl SseEncode for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Lightning {
                 swap_id,
                 description,
+                expiry_timestamp,
                 preimage,
                 bolt11,
                 bolt12_offer,
@@ -7754,6 +7763,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(swap_id, serializer);
                 <String>::sse_encode(description, serializer);
+                <Option<u32>>::sse_encode(expiry_timestamp, serializer);
                 <Option<String>>::sse_encode(preimage, serializer);
                 <Option<String>>::sse_encode(bolt11, serializer);
                 <Option<String>>::sse_encode(bolt12_offer, serializer);
@@ -7773,12 +7783,14 @@ impl SseEncode for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
                 description,
+                expiry_timestamp,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(swap_id, serializer);
                 <String>::sse_encode(description, serializer);
+                <Option<u32>>::sse_encode(expiry_timestamp, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
             }
@@ -9758,6 +9770,7 @@ mod io {
                     crate::model::PaymentDetails::Lightning {
                         swap_id: ans.swap_id.cst_decode(),
                         description: ans.description.cst_decode(),
+                        expiry_timestamp: ans.expiry_timestamp.cst_decode(),
                         preimage: ans.preimage.cst_decode(),
                         bolt11: ans.bolt11.cst_decode(),
                         bolt12_offer: ans.bolt12_offer.cst_decode(),
@@ -9779,6 +9792,7 @@ mod io {
                     crate::model::PaymentDetails::Bitcoin {
                         swap_id: ans.swap_id.cst_decode(),
                         description: ans.description.cst_decode(),
+                        expiry_timestamp: ans.expiry_timestamp.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
                     }
@@ -13201,6 +13215,7 @@ mod io {
     pub struct wire_cst_PaymentDetails_Lightning {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
+        expiry_timestamp: *mut u32,
         preimage: *mut wire_cst_list_prim_u_8_strict,
         bolt11: *mut wire_cst_list_prim_u_8_strict,
         bolt12_offer: *mut wire_cst_list_prim_u_8_strict,
@@ -13220,6 +13235,7 @@ mod io {
     pub struct wire_cst_PaymentDetails_Bitcoin {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
+        expiry_timestamp: *mut u32,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
     }

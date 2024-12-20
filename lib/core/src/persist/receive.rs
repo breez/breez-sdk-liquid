@@ -29,12 +29,13 @@ impl Persister {
                 payer_amount_sat,
                 receiver_amount_sat,
                 created_at,
+                expiry_at,
                 claim_fees_sat,
                 mrh_address,
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT DO NOTHING
             ",
             (
@@ -48,6 +49,7 @@ impl Persister {
                 &receive_swap.payer_amount_sat,
                 &receive_swap.receiver_amount_sat,
                 &receive_swap.created_at,
+                &receive_swap.expiry_at,
                 &receive_swap.claim_fees_sat,
                 &receive_swap.mrh_address,
                 &receive_swap.state,
@@ -62,6 +64,7 @@ impl Persister {
                 claim_tx_id = :claim_tx_id,
                 lockup_tx_id = :lockup_tx_id,
                 mrh_tx_id = :mrh_tx_id,
+                expiry_at = :expiry_at,
                 state = :state
             WHERE
                 id = :id",
@@ -71,6 +74,7 @@ impl Persister {
                 ":claim_tx_id": &receive_swap.claim_tx_id,
                 ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
+                ":expiry_at": &receive_swap.expiry_at,
                 ":state": &receive_swap.state,
             },
         )?;
@@ -119,6 +123,7 @@ impl Persister {
                 rs.mrh_address,
                 rs.mrh_tx_id,
                 rs.created_at,
+                rs.expiry_at,
                 rs.state,
                 rs.pair_fees_json
             FROM receive_swaps AS rs
@@ -164,8 +169,9 @@ impl Persister {
             mrh_address: row.get(12)?,
             mrh_tx_id: row.get(13)?,
             created_at: row.get(14)?,
-            state: row.get(15)?,
-            pair_fees_json: row.get(16)?,
+            expiry_at: row.get(15)?,
+            state: row.get(16)?,
+            pair_fees_json: row.get(17)?,
         })
     }
 
