@@ -265,6 +265,7 @@ export interface Payment {
     swapperFeesSat?: number
     destination?: string
     txId?: string
+    unblindingData?: string
 }
 
 export interface PrepareBuyBitcoinRequest {
