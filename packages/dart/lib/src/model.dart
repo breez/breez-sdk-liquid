@@ -128,20 +128,20 @@ class Config {
   final String? cacheDir;
   final LiquidNetwork network;
 
-  /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
+  /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
   final BigInt paymentTimeoutSec;
 
   /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
   final int zeroConfMinFeeRateMsat;
 
   /// Maximum amount in satoshi to accept zero-conf payments with
-  /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
+  /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
 
   /// The Breez API key used for making requests to their mempool service
   final String? breezApiKey;
 
-  /// A set of external input parsers that are used by [LiquidSdk::parse] when the input
+  /// A set of external input parsers that are used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input
   /// is not recognized. See [ExternalInputParser] for more details on how to configure
   /// external parsing.
   final List<ExternalInputParser>? externalInputParsers;
@@ -1137,7 +1137,7 @@ class ReceivePaymentRequest {
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
 class ReceivePaymentResponse {
   /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
-  /// or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
+  /// or an invoice, depending on the [PrepareReceiveResponse] parameters
   final String destination;
 
   const ReceivePaymentResponse({

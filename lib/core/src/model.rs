@@ -44,16 +44,16 @@ pub struct Config {
     /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
     pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
-    /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
+    /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     pub zero_conf_min_fee_rate_msat: u32,
     /// Maximum amount in satoshi to accept zero-conf payments with
-    /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
+    /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
     /// The Breez API key used for making requests to their mempool service
     pub breez_api_key: Option<String>,
-    /// A set of external input parsers that are used by [LiquidSdk::parse] when the input
+    /// A set of external input parsers that are used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input
     /// is not recognized. See [ExternalInputParser] for more details on how to configure
     /// external parsing.
     pub external_input_parsers: Option<Vec<ExternalInputParser>>,
@@ -242,14 +242,14 @@ impl From<bip32::Error> for SignerError {
 /// The sdk user can implement this trait to use their own signer.
 pub trait Signer: Send + Sync {
     /// The master xpub encoded as 78 bytes length as defined in bip32 specification.
-    /// For reference: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-Serialization_format
+    /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-Serialization_format>
     fn xpub(&self) -> Result<Vec<u8>, SignerError>;
 
     /// The derived xpub encoded as 78 bytes length as defined in bip32 specification.
     /// The derivation path is a string represents the shorter notation of the key tree to derive. For example:
     /// m/49'/1'/0'/0/0
     /// m/48'/1'/0'/0/0
-    /// For reference: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-The_key_tree
+    /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-The_key_tree>
     fn derive_xpub(&self, derivation_path: String) -> Result<Vec<u8>, SignerError>;
 
     /// Sign an ECDSA message using the private key derived from the given derivation path
@@ -258,11 +258,11 @@ pub trait Signer: Send + Sync {
     /// Sign an ECDSA message using the private key derived from the master key
     fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 
-    /// Return the master blinding key for SLIP77: https://github.com/satoshilabs/slips/blob/master/slip-0077.md
+    /// Return the master blinding key for SLIP77: <https://github.com/satoshilabs/slips/blob/master/slip-0077.md>
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError>;
 
     /// HMAC-SHA256 using the private key derived from the given derivation path
-    /// This is used to calculate the linking key of lnurl-auth specification: https://github.com/lnurl/luds/blob/luds/05.md
+    /// This is used to calculate the linking key of lnurl-auth specification: <https://github.com/lnurl/luds/blob/luds/05.md>
     fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
 }
 
@@ -350,7 +350,7 @@ pub struct ReceivePaymentRequest {
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
-    /// or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
+    /// or an invoice, depending on the [PrepareReceiveResponse] parameters
     pub destination: String,
 }
 
