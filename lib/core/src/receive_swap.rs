@@ -10,7 +10,7 @@ use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::{
-    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
+    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut, WaitingFeeAcceptance,
 };
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::{Swap, Transaction};
@@ -388,6 +388,10 @@ impl ReceiveSwapHandler {
                 err: format!("Cannot transition from {from_state:?} to Failed state"),
             }),
             (_, Failed) => Ok(()),
+
+            (_, WaitingFeeAcceptance) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to WaitingFeeAcceptance state"),
+            }),
         }
     }
 

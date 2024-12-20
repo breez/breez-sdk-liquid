@@ -1693,7 +1693,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
     return Config(
       liquidElectrumUrl: dco_decode_String(arr[0]),
       bitcoinElectrumUrl: dco_decode_String(arr[1]),
@@ -1707,6 +1707,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       breezApiKey: dco_decode_opt_String(arr[9]),
       externalInputParsers: dco_decode_opt_list_external_input_parser(arr[10]),
       useDefaultExternalInputParsers: dco_decode_bool(arr[11]),
+      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[12]),
     );
   }
 
@@ -2971,6 +2972,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 6:
+        return SdkEvent_PaymentWaitingFeeAcceptance(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 7:
         return SdkEvent_Synced();
       default:
         throw Exception("unreachable");
@@ -3630,6 +3635,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_breezApiKey = sse_decode_opt_String(deserializer);
     var var_externalInputParsers = sse_decode_opt_list_external_input_parser(deserializer);
     var var_useDefaultExternalInputParsers = sse_decode_bool(deserializer);
+    var var_onchainFeeRateLeewaySatPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
@@ -3642,7 +3648,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         zeroConfMaxAmountSat: var_zeroConfMaxAmountSat,
         breezApiKey: var_breezApiKey,
         externalInputParsers: var_externalInputParsers,
-        useDefaultExternalInputParsers: var_useDefaultExternalInputParsers);
+        useDefaultExternalInputParsers: var_useDefaultExternalInputParsers,
+        onchainFeeRateLeewaySatPerVbyte: var_onchainFeeRateLeewaySatPerVbyte);
   }
 
   @protected
@@ -5002,6 +5009,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_details = sse_decode_box_autoadd_payment(deserializer);
         return SdkEvent_PaymentWaitingConfirmation(details: var_details);
       case 6:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentWaitingFeeAcceptance(details: var_details);
+      case 7:
         return SdkEvent_Synced();
       default:
         throw UnimplementedError('');
@@ -5737,6 +5747,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.breezApiKey, serializer);
     sse_encode_opt_list_external_input_parser(self.externalInputParsers, serializer);
     sse_encode_bool(self.useDefaultExternalInputParsers, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.onchainFeeRateLeewaySatPerVbyte, serializer);
   }
 
   @protected
@@ -6858,8 +6869,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SdkEvent_PaymentWaitingConfirmation(details: final details):
         sse_encode_i_32(5, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_Synced():
+      case SdkEvent_PaymentWaitingFeeAcceptance(details: final details):
         sse_encode_i_32(6, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_Synced():
+        sse_encode_i_32(7, serializer);
       default:
         throw UnimplementedError('');
     }

@@ -2241,6 +2241,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.breez_api_key = cst_encode_opt_String(apiObj.breezApiKey);
     wireObj.external_input_parsers = cst_encode_opt_list_external_input_parser(apiObj.externalInputParsers);
     wireObj.use_default_external_input_parsers = cst_encode_bool(apiObj.useDefaultExternalInputParsers);
+    wireObj.onchain_fee_rate_leeway_sat_per_vbyte =
+        cst_encode_opt_box_autoadd_u_32(apiObj.onchainFeeRateLeewaySatPerVbyte);
   }
 
   @protected
@@ -3160,8 +3162,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.PaymentWaitingConfirmation.details = pre_details;
       return;
     }
-    if (apiObj is SdkEvent_Synced) {
+    if (apiObj is SdkEvent_PaymentWaitingFeeAcceptance) {
+      var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
       wireObj.tag = 6;
+      wireObj.kind.PaymentWaitingFeeAcceptance.details = pre_details;
+      return;
+    }
+    if (apiObj is SdkEvent_Synced) {
+      wireObj.tag = 7;
       return;
     }
   }
@@ -6068,6 +6076,10 @@ final class wire_cst_SdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
 final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
@@ -6080,6 +6092,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
 
   external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+
+  external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
@@ -6132,6 +6146,8 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Bool()
   external bool use_default_external_input_parsers;
+
+  external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -6803,6 +6819,8 @@ final class wire_cst_sign_message_response extends ffi.Struct {
 }
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
+
+const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
