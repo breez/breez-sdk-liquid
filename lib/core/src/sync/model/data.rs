@@ -37,6 +37,28 @@ impl ChainSyncData {
             }
         }
     }
+
+    pub(crate) fn updated_fields(
+        swap: Option<ChainSwap>,
+        update: &ChainSwap,
+    ) -> Option<Vec<String>> {
+        match swap {
+            Some(swap) => {
+                let mut updated_fields = vec![];
+                if update.accept_zero_conf != swap.accept_zero_conf {
+                    updated_fields.push("accept_zero_conf".to_string());
+                }
+                if update.payer_amount_sat != swap.payer_amount_sat {
+                    updated_fields.push("payer_amount_sat".to_string());
+                }
+                if update.receiver_amount_sat != swap.receiver_amount_sat {
+                    updated_fields.push("receiver_amount_sat".to_string());
+                }
+                Some(updated_fields)
+            }
+            None => None,
+        }
+    }
 }
 
 impl From<ChainSwap> for ChainSyncData {
@@ -114,6 +136,20 @@ impl SendSyncData {
             }
         }
     }
+
+    pub(crate) fn updated_fields(swap: Option<SendSwap>, update: &SendSwap) -> Option<Vec<String>> {
+        match swap {
+            Some(swap) => {
+                let mut updated_fields = vec![];
+                if !matches!(update.preimage.clone(), Some(u) if swap.preimage.map_or(false, |s| s == u))
+                {
+                    updated_fields.push("preimage".to_string());
+                }
+                Some(updated_fields)
+            }
+            None => None,
+        }
+    }
 }
 
 impl From<SendSwap> for SendSyncData {
@@ -172,6 +208,21 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) created_at: u32,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
+}
+
+impl ReceiveSyncData {
+    pub(crate) fn updated_fields(
+        swap: Option<ReceiveSwap>,
+        _update: &ReceiveSwap,
+    ) -> Option<Vec<String>> {
+        match swap {
+            Some(_swap) => {
+                let updated_fields = vec![];
+                Some(updated_fields)
+            }
+            None => None,
+        }
+    }
 }
 
 impl From<ReceiveSwap> for ReceiveSyncData {
