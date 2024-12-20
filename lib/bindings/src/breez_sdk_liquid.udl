@@ -553,9 +553,9 @@ dictionary LnUrlInfo {
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? bolt12_offer, string? payment_hash, LnUrlInfo? lnurl_info, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, u32? expiry_timestamp, string? preimage, string? bolt11, string? bolt12_offer, string? payment_hash, LnUrlInfo? lnurl_info, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string destination, string description);
-    Bitcoin(string swap_id, string description, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Bitcoin(string swap_id, string description, u32? expiry_timestamp, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
 dictionary Payment {

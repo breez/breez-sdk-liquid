@@ -616,6 +616,7 @@ export type PaymentDetails = {
     type: PaymentDetailsVariant.LIGHTNING,
     swapId: string
     description: string
+    expiryTimestamp?: number
     preimage?: string
     bolt11?: string
     bolt12Offer?: string
@@ -631,6 +632,7 @@ export type PaymentDetails = {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string
     description: string
+    expiryTimestamp?: number
     refundTxId?: string
     refundTxAmountSat?: number
 }

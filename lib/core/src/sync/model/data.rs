@@ -23,6 +23,8 @@ pub(crate) struct ChainSyncData {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) accept_zero_conf: bool,
     pub(crate) created_at: u32,
+    #[serde(default)]
+    pub(crate) expiry_at: Option<u32>,
     pub(crate) description: Option<String>,
 }
 
@@ -33,6 +35,7 @@ impl ChainSyncData {
                 "payer_amount_sat" => self.payer_amount_sat = other.payer_amount_sat,
                 "receiver_amount_sat" => self.receiver_amount_sat = other.receiver_amount_sat,
                 "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
+                "expiry_at" => clone_if_set(&mut self.expiry_at, &other.expiry_at),
                 _ => continue,
             }
         }
@@ -56,6 +59,7 @@ impl From<ChainSwap> for ChainSyncData {
             receiver_amount_sat: value.receiver_amount_sat,
             accept_zero_conf: value.accept_zero_conf,
             created_at: value.created_at,
+            expiry_at: value.expiry_at,
             description: value.description,
         }
     }
@@ -77,6 +81,7 @@ impl From<ChainSyncData> for ChainSwap {
             pair_fees_json: val.pair_fees_json,
             create_response_json: val.create_response_json,
             created_at: val.created_at,
+            expiry_at: val.expiry_at,
             claim_private_key: val.claim_private_key,
             refund_private_key: val.refund_private_key,
             state: PaymentState::Created,
@@ -99,6 +104,8 @@ pub(crate) struct SendSyncData {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) created_at: u32,
+    #[serde(default)]
+    pub(crate) expiry_at: Option<u32>,
     pub(crate) preimage: Option<String>,
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
@@ -110,6 +117,7 @@ impl SendSyncData {
         for field in updated_fields {
             match field.as_str() {
                 "preimage" => clone_if_set(&mut self.preimage, &other.preimage),
+                "expiry_at" => clone_if_set(&mut self.expiry_at, &other.expiry_at),
                 _ => continue,
             }
         }
@@ -128,6 +136,7 @@ impl From<SendSwap> for SendSyncData {
             payer_amount_sat: value.payer_amount_sat,
             receiver_amount_sat: value.receiver_amount_sat,
             created_at: value.created_at,
+            expiry_at: value.expiry_at,
             preimage: value.preimage,
             description: value.description,
             bolt12_offer: value.bolt12_offer,
@@ -148,6 +157,7 @@ impl From<SendSyncData> for SendSwap {
             pair_fees_json: val.pair_fees_json,
             create_response_json: val.create_response_json,
             created_at: val.created_at,
+            expiry_at: val.expiry_at,
             refund_private_key: val.refund_private_key,
             bolt12_offer: val.bolt12_offer,
             state: PaymentState::Created,
@@ -170,8 +180,21 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) receiver_amount_sat: u64,
     pub(crate) mrh_address: String,
     pub(crate) created_at: u32,
+    #[serde(default)]
+    pub(crate) expiry_at: Option<u32>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
+}
+
+impl ReceiveSyncData {
+    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
+        for field in updated_fields {
+            match field.as_str() {
+                "expiry_at" => clone_if_set(&mut self.expiry_at, &other.expiry_at),
+                _ => continue,
+            }
+        }
+    }
 }
 
 impl From<ReceiveSwap> for ReceiveSyncData {
@@ -189,6 +212,7 @@ impl From<ReceiveSwap> for ReceiveSyncData {
             receiver_amount_sat: value.receiver_amount_sat,
             mrh_address: value.mrh_address,
             created_at: value.created_at,
+            expiry_at: value.expiry_at,
             description: value.description,
         }
     }
@@ -210,6 +234,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             claim_fees_sat: val.claim_fees_sat,
             mrh_address: val.mrh_address,
             created_at: val.created_at,
+            expiry_at: val.expiry_at,
             state: PaymentState::Created,
             claim_tx_id: None,
             lockup_tx_id: None,
@@ -302,8 +327,8 @@ impl SyncData {
             (SyncData::Send(ref mut base), SyncData::Send(other)) => {
                 base.merge(other, updated_fields)
             }
-            (SyncData::Receive(ref mut _base), SyncData::Receive(_other)) => {
-                log::warn!("Attempting to merge for unnecessary type SyncData::Receive");
+            (SyncData::Receive(ref mut base), SyncData::Receive(other)) => {
+                base.merge(other, updated_fields)
             }
             (
                 SyncData::LastDerivationIndex(our_index),

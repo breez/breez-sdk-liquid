@@ -735,6 +735,7 @@ pub(crate) struct ChainSwap {
     /// Persisted as soon as a refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
+    pub(crate) expiry_at: Option<u32>,
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
@@ -879,6 +880,7 @@ pub(crate) struct SendSwap {
     /// Persisted as soon as a refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
+    pub(crate) expiry_at: Option<u32>,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
 }
@@ -972,6 +974,7 @@ pub(crate) struct ReceiveSwap {
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
     /// Afterwards, it shows the lockup tx creation time.
     pub(crate) created_at: u32,
+    pub(crate) expiry_at: Option<u32>,
     pub(crate) state: PaymentState,
 }
 impl ReceiveSwap {
@@ -1122,6 +1125,13 @@ pub enum PaymentState {
     /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     RefundPending = 6,
 }
+
+impl PaymentState {
+    pub(crate) fn is_ongoing(&self) -> bool {
+        matches!(self, Self::Created | Self::Pending)
+    }
+}
+
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
@@ -1242,6 +1252,9 @@ pub struct PaymentSwapData {
     /// Swap creation timestamp
     pub created_at: u32,
 
+    /// Swap expiry timestamp
+    pub expiry_at: Option<u32>,
+
     pub preimage: Option<String>,
     pub bolt11: Option<String>,
     pub bolt12_offer: Option<String>,
@@ -1292,7 +1305,10 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+        /// The estimated swap expiry
+        expiry_timestamp: Option<u32>,
+
+        /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
 
         /// Represents the Bolt11 invoice associated with a payment
@@ -1328,6 +1344,9 @@ pub enum PaymentDetails {
 
         /// Represents the invoice description
         description: String,
+
+        /// The estimated swap expiry
+        expiry_timestamp: Option<u32>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
@@ -1443,7 +1462,18 @@ impl Payment {
             swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
-            details: payment_details,
+            details: PaymentDetails::Lightning {
+                swap_id: swap.swap_id,
+                preimage: swap.preimage,
+                bolt11: swap.bolt11,
+                bolt12_offer: swap.bolt12_offer,
+                payment_hash: swap.payment_hash,
+                description: swap.description,
+                expiry_timestamp: swap.expiry_at,
+                lnurl_info: None,
+                refund_tx_id: swap.refund_tx_id,
+                refund_tx_amount_sat: swap.refund_tx_amount_sat,
+            },
         }
     }
 

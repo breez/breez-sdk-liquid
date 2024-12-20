@@ -2577,13 +2577,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Lightning(
           swapId: dco_decode_String(raw[1]),
           description: dco_decode_String(raw[2]),
-          preimage: dco_decode_opt_String(raw[3]),
-          bolt11: dco_decode_opt_String(raw[4]),
-          bolt12Offer: dco_decode_opt_String(raw[5]),
-          paymentHash: dco_decode_opt_String(raw[6]),
-          lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[7]),
-          refundTxId: dco_decode_opt_String(raw[8]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[9]),
+          expiryTimestamp: dco_decode_opt_box_autoadd_u_32(raw[3]),
+          preimage: dco_decode_opt_String(raw[4]),
+          bolt11: dco_decode_opt_String(raw[5]),
+          bolt12Offer: dco_decode_opt_String(raw[6]),
+          paymentHash: dco_decode_opt_String(raw[7]),
+          lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[8]),
+          refundTxId: dco_decode_opt_String(raw[9]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[10]),
         );
       case 1:
         return PaymentDetails_Liquid(
@@ -2594,8 +2595,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Bitcoin(
           swapId: dco_decode_String(raw[1]),
           description: dco_decode_String(raw[2]),
-          refundTxId: dco_decode_opt_String(raw[3]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[4]),
+          expiryTimestamp: dco_decode_opt_box_autoadd_u_32(raw[3]),
+          refundTxId: dco_decode_opt_String(raw[4]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[5]),
         );
       default:
         throw Exception("unreachable");
@@ -4682,6 +4684,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 0:
         var var_swapId = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
+        var var_expiryTimestamp = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_preimage = sse_decode_opt_String(deserializer);
         var var_bolt11 = sse_decode_opt_String(deserializer);
         var var_bolt12Offer = sse_decode_opt_String(deserializer);
@@ -4692,6 +4695,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Lightning(
             swapId: var_swapId,
             description: var_description,
+            expiryTimestamp: var_expiryTimestamp,
             preimage: var_preimage,
             bolt11: var_bolt11,
             bolt12Offer: var_bolt12Offer,
@@ -4706,11 +4710,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         var var_swapId = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
+        var var_expiryTimestamp = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
         return PaymentDetails_Bitcoin(
             swapId: var_swapId,
             description: var_description,
+            expiryTimestamp: var_expiryTimestamp,
             refundTxId: var_refundTxId,
             refundTxAmountSat: var_refundTxAmountSat);
       default:
@@ -6641,6 +6647,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case PaymentDetails_Lightning(
           swapId: final swapId,
           description: final description,
+          expiryTimestamp: final expiryTimestamp,
           preimage: final preimage,
           bolt11: final bolt11,
           bolt12Offer: final bolt12Offer,
@@ -6652,6 +6659,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_String(swapId, serializer);
         sse_encode_String(description, serializer);
+        sse_encode_opt_box_autoadd_u_32(expiryTimestamp, serializer);
         sse_encode_opt_String(preimage, serializer);
         sse_encode_opt_String(bolt11, serializer);
         sse_encode_opt_String(bolt12Offer, serializer);
@@ -6666,12 +6674,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case PaymentDetails_Bitcoin(
           swapId: final swapId,
           description: final description,
+          expiryTimestamp: final expiryTimestamp,
           refundTxId: final refundTxId,
           refundTxAmountSat: final refundTxAmountSat
         ):
         sse_encode_i_32(2, serializer);
         sse_encode_String(swapId, serializer);
         sse_encode_String(description, serializer);
+        sse_encode_opt_box_autoadd_u_32(expiryTimestamp, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
       default:

@@ -369,6 +369,7 @@ impl Persister {
                 ptx.unblinding_data,
                 rs.id,
                 rs.created_at,
+                rs.expiry_at,
                 rs.invoice,
                 rs.payment_hash,
                 rs.description,
@@ -379,6 +380,7 @@ impl Persister {
                 rs.pair_fees_json,
                 ss.id,
                 ss.created_at,
+                ss.expiry_at,
                 ss.invoice,
                 ss.bolt12_offer,
                 ss.payment_hash,
@@ -391,6 +393,7 @@ impl Persister {
                 ss.pair_fees_json,
                 cs.id,
                 cs.created_at,
+                cs.expiry_at,
                 cs.direction,
                 cs.preimage,
                 cs.description,
@@ -456,8 +459,9 @@ impl Persister {
             _ => None,
         };
 
-        let maybe_receive_swap_id: Option<String> = row.get(7)?;
-        let maybe_receive_swap_created_at: Option<u32> = row.get(8)?;
+        let maybe_receive_swap_id: Option<String> = row.get(6)?;
+        let maybe_receive_swap_created_at: Option<u32> = row.get(7)?;
+        let maybe_receive_swap_expiry_at: Option<u32> = row.get(8)?;
         let maybe_receive_swap_invoice: Option<String> = row.get(9)?;
         let maybe_receive_swap_payment_hash: Option<String> = row.get(10)?;
         let maybe_receive_swap_description: Option<String> = row.get(11)?;
@@ -471,38 +475,40 @@ impl Persister {
 
         let maybe_send_swap_id: Option<String> = row.get(17)?;
         let maybe_send_swap_created_at: Option<u32> = row.get(18)?;
-        let maybe_send_swap_invoice: Option<String> = row.get(19)?;
-        let maybe_send_swap_bolt12_offer: Option<String> = row.get(20)?;
-        let maybe_send_swap_payment_hash: Option<String> = row.get(21)?;
-        let maybe_send_swap_description: Option<String> = row.get(22)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(23)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(24)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(25)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(26)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(27)?;
-        let maybe_send_swap_pair_fees_json: Option<String> = row.get(28)?;
+        let maybe_send_swap_expiry_at: Option<u32> = row.get(19)?;
+        let maybe_send_swap_invoice: Option<String> = row.get(20)?;
+        let maybe_send_swap_bolt12_offer: Option<String> = row.get(21)?;
+        let maybe_send_swap_payment_hash: Option<String> = row.get(22)?;
+        let maybe_send_swap_description: Option<String> = row.get(23)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(24)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(25)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(26)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(27)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(28)?;
+        let maybe_send_swap_pair_fees_json: Option<String> = row.get(29)?;
         let maybe_send_swap_pair_fees: Option<SubmarinePair> =
             maybe_send_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_chain_swap_id: Option<String> = row.get(29)?;
-        let maybe_chain_swap_created_at: Option<u32> = row.get(30)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(31)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(32)?;
-        let maybe_chain_swap_description: Option<String> = row.get(33)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(34)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(35)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(36)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(37)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(38)?;
-        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(39)?;
+        let maybe_chain_swap_id: Option<String> = row.get(30)?;
+        let maybe_chain_swap_created_at: Option<u32> = row.get(31)?;
+        let maybe_chain_swap_expiry_at: Option<u32> = row.get(32)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(33)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(34)?;
+        let maybe_chain_swap_description: Option<String> = row.get(35)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(36)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(37)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(38)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(39)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(40)?;
+        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(41)?;
         let maybe_chain_swap_pair_fees: Option<ChainPair> =
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(40)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(42)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(41)?;
-        let maybe_payment_details_description: Option<String> = row.get(42)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(43)?;
+        let maybe_payment_details_destination: Option<String> = row.get(43)?;
+        let maybe_payment_details_description: Option<String> = row.get(44)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(45)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
@@ -515,6 +521,7 @@ impl Persister {
                         swap_id: receive_swap_id,
                         swap_type: PaymentSwapType::Receive,
                         created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
+                        expiry_at: maybe_receive_swap_expiry_at,
                         preimage: maybe_receive_swap_preimage,
                         bolt11: maybe_receive_swap_invoice.clone(),
                         bolt12_offer: None, // Bolt12 not supported for Receive Swaps
@@ -545,6 +552,7 @@ impl Persister {
                             swap_id: send_swap_id,
                             swap_type: PaymentSwapType::Send,
                             created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
+                            expiry_at: maybe_send_swap_expiry_at,
                             preimage: maybe_send_swap_preimage,
                             bolt11: match maybe_send_swap_bolt12_offer.is_some() {
                                 true => None, // We don't expose the Bolt12 invoice
@@ -580,6 +588,7 @@ impl Persister {
                                 swap_id: chain_swap_id,
                                 swap_type: PaymentSwapType::Chain,
                                 created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
+                                expiry_at: maybe_chain_swap_expiry_at,
                                 preimage: maybe_chain_swap_preimage,
                                 bolt11: None,
                                 bolt12_offer: None, // Bolt12 not supported for Chain Swaps
@@ -611,6 +620,7 @@ impl Persister {
                 PaymentSwapData {
                     swap_type: PaymentSwapType::Receive,
                     swap_id,
+                    expiry_at,
                     bolt11,
                     bolt12_offer,
                     payment_hash,
@@ -622,6 +632,7 @@ impl Persister {
                 | PaymentSwapData {
                     swap_type: PaymentSwapType::Send,
                     swap_id,
+                    expiry_at,
                     bolt11,
                     bolt12_offer,
                     payment_hash,
@@ -640,10 +651,12 @@ impl Persister {
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Lightning transfer".to_string()),
+                expiry_timestamp: expiry_at,
             },
             Some(PaymentSwapData {
                 swap_type: PaymentSwapType::Chain,
                 swap_id,
+                expiry_at,
                 refund_tx_id,
                 refund_tx_amount_sat,
                 ..
@@ -652,6 +665,7 @@ impl Persister {
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Bitcoin transfer".to_string()),
+                expiry_timestamp: expiry_at,
             },
             _ => PaymentDetails::Liquid {
                 destination: maybe_payment_details_destination

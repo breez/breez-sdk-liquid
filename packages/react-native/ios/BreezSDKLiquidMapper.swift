@@ -3756,6 +3756,8 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
+            let _expiryTimestamp = paymentDetails["expiryTimestamp"] as? UInt32
+
             let _preimage = paymentDetails["preimage"] as? String
 
             let _bolt11 = paymentDetails["bolt11"] as? String
@@ -3773,7 +3775,7 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.lightning(swapId: _swapId, description: _description, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, lnurlInfo: _lnurlInfo, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.lightning(swapId: _swapId, description: _description, expiryTimestamp: _expiryTimestamp, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, lnurlInfo: _lnurlInfo, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
         if type == "liquid" {
             guard let _destination = paymentDetails["destination"] as? String else {
@@ -3791,11 +3793,13 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
+            let _expiryTimestamp = paymentDetails["expiryTimestamp"] as? UInt32
+
             let _refundTxId = paymentDetails["refundTxId"] as? String
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, expiryTimestamp: _expiryTimestamp, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -3804,12 +3808,13 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(paymentDetails: PaymentDetails) -> [String: Any?] {
         switch paymentDetails {
         case let .lightning(
-            swapId, description, preimage, bolt11, bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat
+            swapId, description, expiryTimestamp, preimage, bolt11, bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "lightning",
                 "swapId": swapId,
                 "description": description,
+                "expiryTimestamp": expiryTimestamp == nil ? nil : expiryTimestamp,
                 "preimage": preimage == nil ? nil : preimage,
                 "bolt11": bolt11 == nil ? nil : bolt11,
                 "bolt12Offer": bolt12Offer == nil ? nil : bolt12Offer,
@@ -3829,12 +3834,13 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bitcoin(
-            swapId, description, refundTxId, refundTxAmountSat
+            swapId, description, expiryTimestamp, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "bitcoin",
                 "swapId": swapId,
                 "description": description,
+                "expiryTimestamp": expiryTimestamp == nil ? nil : expiryTimestamp,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
             ]
