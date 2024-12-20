@@ -40,6 +40,32 @@ impl ChainSyncData {
             }
         }
     }
+
+    pub(crate) fn updated_fields(
+        swap: Option<ChainSwap>,
+        update: &ChainSwap,
+    ) -> Option<Vec<String>> {
+        match swap {
+            Some(swap) => {
+                let mut updated_fields = vec![];
+                if update.accept_zero_conf != swap.accept_zero_conf {
+                    updated_fields.push("accept_zero_conf".to_string());
+                }
+                if update.payer_amount_sat != swap.payer_amount_sat {
+                    updated_fields.push("payer_amount_sat".to_string());
+                }
+                if update.receiver_amount_sat != swap.receiver_amount_sat {
+                    updated_fields.push("receiver_amount_sat".to_string());
+                }
+                if !matches!(update.expiry_at, Some(u) if swap.expiry_at.map_or(false, |s| s == u))
+                {
+                    updated_fields.push("expiry_at".to_string());
+                }
+                Some(updated_fields)
+            }
+            None => None,
+        }
+    }
 }
 
 impl From<ChainSwap> for ChainSyncData {
@@ -122,6 +148,24 @@ impl SendSyncData {
             }
         }
     }
+
+    pub(crate) fn updated_fields(swap: Option<SendSwap>, update: &SendSwap) -> Option<Vec<String>> {
+        match swap {
+            Some(swap) => {
+                let mut updated_fields = vec![];
+                if !matches!(update.preimage.clone(), Some(u) if swap.preimage.map_or(false, |s| s == u))
+                {
+                    updated_fields.push("preimage".to_string());
+                }
+                if !matches!(update.expiry_at, Some(u) if swap.expiry_at.map_or(false, |s| s == u))
+                {
+                    updated_fields.push("expiry_at".to_string());
+                }
+                Some(updated_fields)
+            }
+            None => None,
+        }
+    }
 }
 
 impl From<SendSwap> for SendSyncData {
@@ -193,6 +237,23 @@ impl ReceiveSyncData {
                 "expiry_at" => clone_if_set(&mut self.expiry_at, &other.expiry_at),
                 _ => continue,
             }
+        }
+    }
+
+    pub(crate) fn updated_fields(
+        swap: Option<ReceiveSwap>,
+        update: &ReceiveSwap,
+    ) -> Option<Vec<String>> {
+        match swap {
+            Some(swap) => {
+                let mut updated_fields = vec![];
+                if !matches!(update.expiry_at, Some(u) if swap.expiry_at.map_or(false, |s| s == u))
+                {
+                    updated_fields.push("expiry_at".to_string());
+                }
+                Some(updated_fields)
+            }
+            None => None,
         }
     }
 }
