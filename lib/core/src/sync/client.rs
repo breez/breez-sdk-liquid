@@ -36,7 +36,7 @@ impl BreezSyncerClient {
         let mut req = tonic::Request::new(req);
         if let Some(api_key) = &self.api_key {
             let metadata = req.metadata_mut();
-            metadata.insert("Authorization", format!("Bearer {}", api_key).parse()?);
+            metadata.insert("authorization", format!("Bearer {}", api_key).parse()?);
         }
         Ok(req)
     }
