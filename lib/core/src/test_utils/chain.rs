@@ -128,15 +128,24 @@ impl LiquidChainService for MockLiquidChainService {
 
 pub(crate) struct MockBitcoinChainService {
     history: Vec<MockHistory>,
+    script_balance_sat: u64,
 }
 
 impl MockBitcoinChainService {
     pub(crate) fn new() -> Self {
-        MockBitcoinChainService { history: vec![] }
+        MockBitcoinChainService {
+            history: vec![],
+            script_balance_sat: 0,
+        }
     }
 
     pub(crate) fn set_history(&mut self, history: Vec<MockHistory>) -> &mut Self {
         self.history = history;
+        self
+    }
+
+    pub(crate) fn set_script_balance_sat(&mut self, script_balance_sat: u64) -> &mut Self {
+        self.script_balance_sat = script_balance_sat;
         self
     }
 }
@@ -208,7 +217,10 @@ impl BitcoinChainService for MockBitcoinChainService {
         _script: &boltz_client::bitcoin::Script,
         _retries: u64,
     ) -> Result<electrum_client::GetBalanceRes> {
-        unimplemented!()
+        Ok(GetBalanceRes {
+            confirmed: self.script_balance_sat,
+            unconfirmed: 0,
+        })
     }
 
     async fn verify_tx(

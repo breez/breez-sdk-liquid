@@ -591,6 +591,10 @@ impl SendSwapHandler {
                 err: format!("Cannot transition from {from_state:?} to Failed state"),
             }),
             (_, Failed) => Ok(()),
+
+            (_, WaitingFeeAcceptance) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to WaitingFeeAcceptance state"),
+            }),
         }
     }
 

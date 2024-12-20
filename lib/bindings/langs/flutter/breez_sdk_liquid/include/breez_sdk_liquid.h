@@ -16,6 +16,8 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define ESTIMATED_BTC_CLAIM_TX_VSIZE 111
 
+#define ESTIMATED_BTC_LOCKUP_TX_VSIZE 154
+
 #define STANDARD_FEE_RATE_SAT_PER_VBYTE 0.1
 
 #define LOWBALL_FEE_RATE_SAT_PER_VBYTE 0.01
@@ -540,6 +542,10 @@ typedef struct wire_cst_SdkEvent_PaymentWaitingConfirmation {
   struct wire_cst_payment *details;
 } wire_cst_SdkEvent_PaymentWaitingConfirmation;
 
+typedef struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
+  struct wire_cst_payment *details;
+} wire_cst_SdkEvent_PaymentWaitingFeeAcceptance;
+
 typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentFailed PaymentFailed;
   struct wire_cst_SdkEvent_PaymentPending PaymentPending;
@@ -547,6 +553,7 @@ typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentRefundPending PaymentRefundPending;
   struct wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
   struct wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+  struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 } SdkEventKind;
 
 typedef struct wire_cst_sdk_event {
@@ -579,6 +586,7 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *breez_api_key;
   struct wire_cst_list_external_input_parser *external_input_parsers;
   bool use_default_external_input_parsers;
+  uint32_t *onchain_fee_rate_leeway_sat_per_vbyte;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {

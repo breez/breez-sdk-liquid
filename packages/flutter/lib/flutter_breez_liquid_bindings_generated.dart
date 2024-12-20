@@ -4640,6 +4640,10 @@ final class wire_cst_SdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
 final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
@@ -4652,6 +4656,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
 
   external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+
+  external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
@@ -4706,6 +4712,8 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Bool()
   external bool use_default_external_input_parsers;
+
+  external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -5364,6 +5372,8 @@ typedef UniFfiRustFutureContinuationFunction = ffi.Void Function(ffi.Pointer<ffi
 typedef DartUniFfiRustFutureContinuationFunction = void Function(ffi.Pointer<ffi.Void>, int);
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
+
+const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 

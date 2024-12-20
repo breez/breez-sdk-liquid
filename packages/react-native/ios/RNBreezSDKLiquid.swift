@@ -321,6 +321,28 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(fetchPaymentProposedFees:resolve:reject:)
+    func fetchPaymentProposedFees(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let fetchPaymentProposedFeesRequest = try BreezSDKLiquidMapper.asFetchPaymentProposedFeesRequest(fetchPaymentProposedFeesRequest: req)
+            var res = try getBindingLiquidSdk().fetchPaymentProposedFees(req: fetchPaymentProposedFeesRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(fetchPaymentProposedFeesResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(acceptPaymentProposedFees:resolve:reject:)
+    func acceptPaymentProposedFees(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let acceptPaymentProposedFeesRequest = try BreezSDKLiquidMapper.asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: req)
+            try getBindingLiquidSdk().acceptPaymentProposedFees(req: acceptPaymentProposedFeesRequest)
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(listRefundables:reject:)
     func listRefundables(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
