@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::data::SendSyncData;
 use crate::sync::model::RecordType;
 use crate::{ensure_sdk, get_updated_fields};
 
@@ -75,13 +76,26 @@ impl Persister {
     }
 
     pub(crate) fn insert_or_update_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
+        let maybe_swap = self.fetch_send_swap_by_id(&send_swap.id)?;
+        let updated_fields = SendSyncData::updated_fields(maybe_swap, send_swap);
+
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
 
         Self::insert_or_update_send_swap_inner(&tx, send_swap)?;
-        self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
+        // Trigger a sync if:
+        // - updated_fields is None (swap is inserted, not updated)
+        // - updated_fields in a non empty list of updated fields
+        let trigger_sync = updated_fields.as_ref().map_or(true, |u| !u.is_empty());
+        if trigger_sync {
+            self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, updated_fields)?;
+        }
+
         tx.commit()?;
-        self.sync_trigger.try_send(())?;
+
+        if trigger_sync {
+            self.sync_trigger.try_send(())?;
+        }
 
         Ok(())
     }
