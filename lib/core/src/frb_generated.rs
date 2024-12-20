@@ -2376,6 +2376,7 @@ impl SseDecode for crate::model::Config {
         let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_externalInputParsers =
             <Option<Vec<crate::bindings::ExternalInputParser>>>::sse_decode(deserializer);
+        let mut var_useDefaultExternalInputParsers = <bool>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
@@ -2388,6 +2389,7 @@ impl SseDecode for crate::model::Config {
             zero_conf_max_amount_sat: var_zeroConfMaxAmountSat,
             breez_api_key: var_breezApiKey,
             external_input_parsers: var_externalInputParsers,
+            use_default_external_input_parsers: var_useDefaultExternalInputParsers,
         };
     }
 }
@@ -4601,6 +4603,9 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.zero_conf_max_amount_sat.into_into_dart().into_dart(),
             self.breez_api_key.into_into_dart().into_dart(),
             self.external_input_parsers.into_into_dart().into_dart(),
+            self.use_default_external_input_parsers
+                .into_into_dart()
+                .into_dart(),
         ]
         .into_dart()
     }
@@ -6680,6 +6685,7 @@ impl SseEncode for crate::model::Config {
             self.external_input_parsers,
             serializer,
         );
+        <bool>::sse_encode(self.use_default_external_input_parsers, serializer);
     }
 }
 
@@ -8774,6 +8780,9 @@ mod io {
                 zero_conf_max_amount_sat: self.zero_conf_max_amount_sat.cst_decode(),
                 breez_api_key: self.breez_api_key.cst_decode(),
                 external_input_parsers: self.external_input_parsers.cst_decode(),
+                use_default_external_input_parsers: self
+                    .use_default_external_input_parsers
+                    .cst_decode(),
             }
         }
     }
@@ -10231,6 +10240,7 @@ mod io {
                 zero_conf_max_amount_sat: core::ptr::null_mut(),
                 breez_api_key: core::ptr::null_mut(),
                 external_input_parsers: core::ptr::null_mut(),
+                use_default_external_input_parsers: Default::default(),
             }
         }
     }
@@ -12268,6 +12278,7 @@ mod io {
         zero_conf_max_amount_sat: *mut u64,
         breez_api_key: *mut wire_cst_list_prim_u_8_strict,
         external_input_parsers: *mut wire_cst_list_external_input_parser,
+        use_default_external_input_parsers: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

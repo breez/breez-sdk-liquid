@@ -109,5 +109,6 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         receive_swap_handler,
         chain_swap_handler,
         buy_bitcoin_service,
+        external_input_parsers: Vec::new(),
     })
 }

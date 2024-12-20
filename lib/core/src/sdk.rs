@@ -52,6 +52,14 @@ pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
+/// A list of external input parsers that are used by default.
+/// To opt-out, set `use_default_external_input_parsers` in [Config] to false.
+pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
+    "picknpay",
+    "(.*)(za.co.electrum.picknpay)(.*)",
+    "https://cryptoqr.net/.well-known/lnurlp/<input>",
+)];
+
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
@@ -72,6 +80,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
+    pub(crate) external_input_parsers: Vec<ExternalInputParser>,
 }
 
 impl LiquidSdk {
@@ -216,6 +225,8 @@ impl LiquidSdk {
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
 
+        let external_input_parsers = config.get_all_external_input_parsers();
+
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
             onchain_wallet,
@@ -234,6 +245,7 @@ impl LiquidSdk {
             receive_swap_handler,
             chain_swap_handler,
             buy_bitcoin_service,
+            external_input_parsers,
         });
         Ok(sdk)
     }
@@ -2553,8 +2565,8 @@ impl LiquidSdk {
                     SuccessAction::Aes { data } => {
                         let PaymentDetails::Lightning { preimage, .. } = &payment.details else {
                             return Err(LnUrlPayError::Generic {
-                                        err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
-                                    });
+                                err: format!("Invalid payment type: expected type `PaymentDetails::Lightning`, got payment details {:?}.", payment.details),
+                            });
                         };
 
                         let preimage_str = preimage.clone().ok_or(LnUrlPayError::Generic {
@@ -2764,8 +2776,8 @@ impl LiquidSdk {
             });
         }
 
-        let external_parsers = &self.config.external_input_parsers;
-        parse(input, external_parsers.as_deref())
+        let external_parsers = &self.external_input_parsers;
+        parse(input, Some(external_parsers))
             .await
             .map_err(|e| PaymentError::generic(&e.to_string()))
     }

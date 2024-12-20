@@ -2212,6 +2212,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.zero_conf_max_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.zeroConfMaxAmountSat);
     wireObj.breez_api_key = cst_encode_opt_String(apiObj.breezApiKey);
     wireObj.external_input_parsers = cst_encode_opt_list_external_input_parser(apiObj.externalInputParsers);
+    wireObj.use_default_external_input_parsers = cst_encode_bool(apiObj.useDefaultExternalInputParsers);
   }
 
   @protected
@@ -6070,6 +6071,9 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> breez_api_key;
 
   external ffi.Pointer<wire_cst_list_external_input_parser> external_input_parsers;
+
+  @ffi.Bool()
+  external bool use_default_external_input_parsers;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
