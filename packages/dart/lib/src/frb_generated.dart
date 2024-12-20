@@ -1413,6 +1413,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BlockchainInfo dco_decode_blockchain_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return BlockchainInfo(
+      liquidTip: dco_decode_u_32(arr[0]),
+      bitcoinTip: dco_decode_u_32(arr[1]),
+    );
+  }
+
+  @protected
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
@@ -1881,13 +1892,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GetInfoResponse dco_decode_get_info_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return GetInfoResponse(
-      balanceSat: dco_decode_u_64(arr[0]),
-      pendingSendSat: dco_decode_u_64(arr[1]),
-      pendingReceiveSat: dco_decode_u_64(arr[2]),
-      fingerprint: dco_decode_String(arr[3]),
-      pubkey: dco_decode_String(arr[4]),
+      walletInfo: dco_decode_wallet_info(arr[0]),
+      blockchainInfo: dco_decode_blockchain_info(arr[1]),
     );
   }
 
@@ -2681,13 +2689,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Lightning(
           swapId: dco_decode_String(raw[1]),
           description: dco_decode_String(raw[2]),
-          preimage: dco_decode_opt_String(raw[3]),
-          bolt11: dco_decode_opt_String(raw[4]),
-          bolt12Offer: dco_decode_opt_String(raw[5]),
-          paymentHash: dco_decode_opt_String(raw[6]),
-          lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[7]),
-          refundTxId: dco_decode_opt_String(raw[8]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[9]),
+          liquidExpirationBlockheight: dco_decode_u_32(raw[3]),
+          preimage: dco_decode_opt_String(raw[4]),
+          bolt11: dco_decode_opt_String(raw[5]),
+          bolt12Offer: dco_decode_opt_String(raw[6]),
+          paymentHash: dco_decode_opt_String(raw[7]),
+          lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[8]),
+          refundTxId: dco_decode_opt_String(raw[9]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[10]),
         );
       case 1:
         return PaymentDetails_Liquid(
@@ -2698,8 +2707,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Bitcoin(
           swapId: dco_decode_String(raw[1]),
           description: dco_decode_String(raw[2]),
-          refundTxId: dco_decode_opt_String(raw[3]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[4]),
+          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[3]),
+          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[4]),
+          refundTxId: dco_decode_opt_String(raw[5]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[6]),
         );
       default:
         throw Exception("unreachable");
@@ -3284,6 +3295,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WalletInfo dco_decode_wallet_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return WalletInfo(
+      balanceSat: dco_decode_u_64(arr[0]),
+      pendingSendSat: dco_decode_u_64(arr[1]),
+      pendingReceiveSat: dco_decode_u_64(arr[2]),
+      fingerprint: dco_decode_String(arr[3]),
+      pubkey: dco_decode_String(arr[4]),
+    );
+  }
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_String(deserializer);
@@ -3423,6 +3448,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         amountSat: var_amountSat,
         label: var_label,
         message: var_message);
+  }
+
+  @protected
+  BlockchainInfo sse_decode_blockchain_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_liquidTip = sse_decode_u_32(deserializer);
+    var var_bitcoinTip = sse_decode_u_32(deserializer);
+    return BlockchainInfo(liquidTip: var_liquidTip, bitcoinTip: var_bitcoinTip);
   }
 
   @protected
@@ -3896,17 +3929,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_balanceSat = sse_decode_u_64(deserializer);
-    var var_pendingSendSat = sse_decode_u_64(deserializer);
-    var var_pendingReceiveSat = sse_decode_u_64(deserializer);
-    var var_fingerprint = sse_decode_String(deserializer);
-    var var_pubkey = sse_decode_String(deserializer);
-    return GetInfoResponse(
-        balanceSat: var_balanceSat,
-        pendingSendSat: var_pendingSendSat,
-        pendingReceiveSat: var_pendingReceiveSat,
-        fingerprint: var_fingerprint,
-        pubkey: var_pubkey);
+    var var_walletInfo = sse_decode_wallet_info(deserializer);
+    var var_blockchainInfo = sse_decode_blockchain_info(deserializer);
+    return GetInfoResponse(walletInfo: var_walletInfo, blockchainInfo: var_blockchainInfo);
   }
 
   @protected
@@ -4837,6 +4862,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 0:
         var var_swapId = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
+        var var_liquidExpirationBlockheight = sse_decode_u_32(deserializer);
         var var_preimage = sse_decode_opt_String(deserializer);
         var var_bolt11 = sse_decode_opt_String(deserializer);
         var var_bolt12Offer = sse_decode_opt_String(deserializer);
@@ -4847,6 +4873,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Lightning(
             swapId: var_swapId,
             description: var_description,
+            liquidExpirationBlockheight: var_liquidExpirationBlockheight,
             preimage: var_preimage,
             bolt11: var_bolt11,
             bolt12Offer: var_bolt12Offer,
@@ -4861,11 +4888,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         var var_swapId = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
+        var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
+        var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
         return PaymentDetails_Bitcoin(
             swapId: var_swapId,
             description: var_description,
+            liquidExpirationBlockheight: var_liquidExpirationBlockheight,
+            bitcoinExpirationBlockheight: var_bitcoinExpirationBlockheight,
             refundTxId: var_refundTxId,
             refundTxAmountSat: var_refundTxAmountSat);
       default:
@@ -5393,6 +5424,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WalletInfo sse_decode_wallet_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_balanceSat = sse_decode_u_64(deserializer);
+    var var_pendingSendSat = sse_decode_u_64(deserializer);
+    var var_pendingReceiveSat = sse_decode_u_64(deserializer);
+    var var_fingerprint = sse_decode_String(deserializer);
+    var var_pubkey = sse_decode_String(deserializer);
+    return WalletInfo(
+        balanceSat: var_balanceSat,
+        pendingSendSat: var_pendingSendSat,
+        pendingReceiveSat: var_pendingReceiveSat,
+        fingerprint: var_fingerprint,
+        pubkey: var_pubkey);
+  }
+
+  @protected
   int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -5621,6 +5668,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_64(self.amountSat, serializer);
     sse_encode_opt_String(self.label, serializer);
     sse_encode_opt_String(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_blockchain_info(BlockchainInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.liquidTip, serializer);
+    sse_encode_u_32(self.bitcoinTip, serializer);
   }
 
   @protected
@@ -6064,11 +6118,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.balanceSat, serializer);
-    sse_encode_u_64(self.pendingSendSat, serializer);
-    sse_encode_u_64(self.pendingReceiveSat, serializer);
-    sse_encode_String(self.fingerprint, serializer);
-    sse_encode_String(self.pubkey, serializer);
+    sse_encode_wallet_info(self.walletInfo, serializer);
+    sse_encode_blockchain_info(self.blockchainInfo, serializer);
   }
 
   @protected
@@ -6814,6 +6865,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case PaymentDetails_Lightning(
           swapId: final swapId,
           description: final description,
+          liquidExpirationBlockheight: final liquidExpirationBlockheight,
           preimage: final preimage,
           bolt11: final bolt11,
           bolt12Offer: final bolt12Offer,
@@ -6825,6 +6877,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_String(swapId, serializer);
         sse_encode_String(description, serializer);
+        sse_encode_u_32(liquidExpirationBlockheight, serializer);
         sse_encode_opt_String(preimage, serializer);
         sse_encode_opt_String(bolt11, serializer);
         sse_encode_opt_String(bolt12Offer, serializer);
@@ -6839,12 +6892,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case PaymentDetails_Bitcoin(
           swapId: final swapId,
           description: final description,
+          liquidExpirationBlockheight: final liquidExpirationBlockheight,
+          bitcoinExpirationBlockheight: final bitcoinExpirationBlockheight,
           refundTxId: final refundTxId,
           refundTxAmountSat: final refundTxAmountSat
         ):
         sse_encode_i_32(2, serializer);
         sse_encode_String(swapId, serializer);
         sse_encode_String(description, serializer);
+        sse_encode_opt_box_autoadd_u_32(liquidExpirationBlockheight, serializer);
+        sse_encode_opt_box_autoadd_u_32(bitcoinExpirationBlockheight, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
     }
@@ -7272,6 +7329,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
+  void sse_encode_wallet_info(WalletInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.balanceSat, serializer);
+    sse_encode_u_64(self.pendingSendSat, serializer);
+    sse_encode_u_64(self.pendingReceiveSat, serializer);
+    sse_encode_String(self.fingerprint, serializer);
+    sse_encode_String(self.pubkey, serializer);
   }
 }
 

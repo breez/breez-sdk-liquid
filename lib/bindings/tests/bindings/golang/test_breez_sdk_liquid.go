@@ -29,5 +29,5 @@ func main() {
 		log.Fatalf("GetInfo failed: %#v", err)
 	}
 
-	log.Print(info.Pubkey)
+	log.Print(info.WalletInfo.Pubkey)
 }

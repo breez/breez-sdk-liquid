@@ -217,5 +217,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         "ALTER TABLE payment_tx_data ADD COLUMN unblinding_data TEXT;",
         "ALTER TABLE chain_swaps ADD COLUMN actual_payer_amount_sat INTEGER;",
         "ALTER TABLE chain_swaps ADD COLUMN accepted_receiver_amount_sat INTEGER;",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE send_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
+        ",
     ]
 }
