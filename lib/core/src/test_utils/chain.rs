@@ -16,7 +16,8 @@ use electrum_client::{
 };
 use lwk_wollet::{
     bitcoin::constants::genesis_block,
-    elements::{BlockHash, Txid as ElementsTxid},
+    elements::{BlockHash, BlockHeader, TxMerkleNode, Txid as ElementsTxid},
+    hashes::Hash,
     History,
 };
 
@@ -63,8 +64,17 @@ impl MockLiquidChainService {
 
 #[async_trait]
 impl LiquidChainService for MockLiquidChainService {
-    async fn tip(&mut self) -> Result<u32> {
-        Ok(0)
+    async fn tip(&mut self) -> Result<BlockHeader> {
+        let block_enc = BlockHash::engine();
+        let merkle_enc = TxMerkleNode::engine();
+        Ok(BlockHeader {
+            version: 0,
+            prev_blockhash: BlockHash::from_engine(block_enc),
+            merkle_root: TxMerkleNode::from_engine(merkle_enc),
+            time: 0,
+            height: 0,
+            ext: Default::default(),
+        })
     }
 
     async fn broadcast(
