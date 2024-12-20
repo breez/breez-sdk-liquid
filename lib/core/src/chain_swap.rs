@@ -814,12 +814,6 @@ impl ChainSwapHandler {
             .ok_or(PaymentError::Generic {
                 err: format!("Chain Swap not found {swap_id}"),
             })?;
-        let payment_id = match swap.direction {
-            Direction::Incoming => claim_tx_id.map(|c| c.to_string()).or(swap.claim_tx_id),
-            Direction::Outgoing => user_lockup_tx_id
-                .map(|c| c.to_string())
-                .or(swap.user_lockup_tx_id),
-        };
 
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_chain_swap_update(
@@ -830,9 +824,8 @@ impl ChainSwapHandler {
             claim_tx_id,
             refund_tx_id,
         )?;
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
-        }
+
+        let _ = self.subscription_notifier.send(swap.id);
         Ok(())
     }
 

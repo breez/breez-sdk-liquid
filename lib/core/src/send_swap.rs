@@ -259,7 +259,6 @@ impl SendSwapHandler {
             .ok_or(PaymentError::Generic {
                 err: format!("Send Swap not found {swap_id}"),
             })?;
-        let payment_id = lockup_tx_id.map(|c| c.to_string()).or(swap.lockup_tx_id);
 
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_send_swap_update(
@@ -269,9 +268,8 @@ impl SendSwapHandler {
             lockup_tx_id,
             refund_tx_id,
         )?;
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
-        }
+
+        let _ = self.subscription_notifier.send(swap.id);
         Ok(())
     }
 
