@@ -21,11 +21,14 @@ use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawErr
 use signer::SdkSigner;
 use std::collections::HashMap;
 use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+use std::{fs, path::PathBuf, str::FromStr, str, sync::Arc, time::Duration};
 use tokio::sync::{watch, Mutex, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use x509_parser::parse_x509_certificate;
+use domain::base::name::Dname;
+use domain::rdata::Txt;
+use domain::resolv::stub::StubResolver;
 
 use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
@@ -2706,11 +2709,56 @@ impl LiquidSdk {
         Ok(config)
     }
 
+    /// 
+    /// 
+    pub async fn bip353_address_resolver(&self, input: &str) -> Option<String> {
+        let resolver = StubResolver::new();
+        let input_parts : Vec<&str> = input.split("@").collect();
+        let input_formated = input_parts[0].to_owned() + ".user._bitcoin-payment." + input_parts[1];
+        let domain : domain::base::Dname<Vec<u8>> = Dname::from_str(&input_formated)?;
+    
+        let response = resolver.query((domain, domain::base::iana::Rtype::Txt)).await?;
+    
+        match response.answer() {
+            Ok(answer) => {
+                for record in answer.limit_to::<Txt<bytes::Bytes>>() {
+                    if let Ok(txt_record) = record {
+                        for txt in txt_record.data() {
+                            match str::from_utf8(txt) {
+                                Ok(text) => {
+                                    if text.starts_with("bitcoin:") {
+                                        if let Some((_, bolt12_offer)) = text.split_once("lno=") {
+                                            return Some(bolt12_offer.to_string());
+                                        }
+                                    }
+                                },
+                                Err(_) => {
+                                    return None
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to resolve the address {}", e);
+            }
+        }
+    
+        None
+    }
+
     /// Parses a string into an [InputType]. See [input_parser::parse].
     ///
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
-        if let Ok(offer) = input.parse::<Offer>() {
+        // Get bolt12offer from the address
+        let new_input = match self.bip353_address_resolver(input).await {
+            Some(b12offer) => b12offer,
+            None => input.to_string(),
+        };
+
+        if let Ok(offer) = new_input.parse::<Offer>() {
             // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
             //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
             let min_amount = offer
