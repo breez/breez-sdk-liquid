@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use boltz_client::ToHex;
 use log::{info, warn};
 use lwk_wollet::elements::hex::FromHex;
+use lwk_wollet::elements::BlockHeader;
 use lwk_wollet::{
     elements::{
         pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, Txid,
@@ -22,11 +23,12 @@ use crate::{
 };
 
 const LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
+pub(crate) const ESTIMATED_LIQUID_BLOCK_TIME_SEC: u32 = 60;
 
 #[async_trait]
 pub trait LiquidChainService: Send + Sync {
     /// Get the blockchain latest block
-    async fn tip(&mut self) -> Result<u32>;
+    async fn tip(&mut self) -> Result<BlockHeader>;
 
     /// Broadcast a transaction
     async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid>;
@@ -99,8 +101,8 @@ impl HybridLiquidChainService {
 
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
-    async fn tip(&mut self) -> Result<u32> {
-        Ok(self.electrum_client.tip()?.height)
+    async fn tip(&mut self) -> Result<BlockHeader> {
+        Ok(self.electrum_client.tip()?)
     }
 
     async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid> {

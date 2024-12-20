@@ -683,7 +683,10 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
-    /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+    /// The estimated swap expiry
+    int? expiryTimestamp,
+
+    /// The preimage of the paid invoice (proof of payment).
     String? preimage,
 
     /// Represents the Bolt11 invoice associated with a payment
@@ -720,6 +723,9 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// Represents the invoice description
     required String description,
+
+    /// The estimated swap expiry
+    int? expiryTimestamp,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
