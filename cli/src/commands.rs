@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use breez_sdk_liquid::prelude::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
@@ -98,6 +98,10 @@ pub(crate) enum Command {
         #[clap(name = "filter", short = 'r', long = "filter")]
         filters: Option<Vec<PaymentType>>,
 
+        /// The optional payment state. Either "Pending", "Complete", "Failed", "RefundPending", "Refundable" or "WaitingFeeAcceptance"
+        #[clap(name = "state", short = 's', long = "state")]
+        states: Option<Vec<PaymentState>>,
+
         /// The optional from unix timestamp
         #[clap(name = "from_timestamp", short = 'f', long = "from")]
         from_timestamp: Option<i64>,
@@ -126,6 +130,14 @@ pub(crate) enum Command {
     GetPayment {
         /// Lightning payment hash
         payment_hash: String,
+    },
+    /// Get proposed fees for WaitingFeeAcceptance Payment
+    FetchPaymentProposedFees { swap_id: String },
+    /// Accept proposed fees for WaitingFeeAcceptance Payment
+    AcceptPaymentProposedFees {
+        swap_id: String,
+        // Fee amount obtained using FetchPaymentProposedFees
+        fees_sat: u64,
     },
     /// List refundable chain swaps
     ListRefundables,
@@ -477,6 +489,7 @@ pub(crate) async fn handle_command(
         }
         Command::ListPayments {
             filters,
+            states,
             from_timestamp,
             to_timestamp,
             limit,
@@ -493,6 +506,7 @@ pub(crate) async fn handle_command(
             let payments = sdk
                 .list_payments(&ListPaymentsRequest {
                     filters,
+                    states,
                     from_timestamp,
                     to_timestamp,
                     limit,
@@ -512,6 +526,23 @@ pub(crate) async fn handle_command(
                     return Err(anyhow!("Payment not found."));
                 }
             }
+        }
+        Command::FetchPaymentProposedFees { swap_id } => {
+            let res = sdk
+                .fetch_payment_proposed_fees(&FetchPaymentProposedFeesRequest { swap_id })
+                .await?;
+            command_result!(res)
+        }
+        Command::AcceptPaymentProposedFees { swap_id, fees_sat } => {
+            let res = sdk
+                .fetch_payment_proposed_fees(&FetchPaymentProposedFeesRequest { swap_id })
+                .await?;
+            if fees_sat != res.fees_sat {
+                bail!("Fees changed since they were fetched")
+            }
+            sdk.accept_payment_proposed_fees(&AcceptPaymentProposedFeesRequest { response: res })
+                .await?;
+            command_result!("Proposed fees accepted successfully")
         }
         Command::ListRefundables => {
             let refundables = sdk.list_refundables().await?;

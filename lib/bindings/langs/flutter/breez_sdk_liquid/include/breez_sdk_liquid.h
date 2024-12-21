@@ -16,6 +16,8 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define ESTIMATED_BTC_CLAIM_TX_VSIZE 111
 
+#define ESTIMATED_BTC_LOCKUP_TX_VSIZE 154
+
 #define STANDARD_FEE_RATE_SAT_PER_VBYTE 0.1
 
 #define LOWBALL_FEE_RATE_SAT_PER_VBYTE 0.01
@@ -81,6 +83,11 @@ typedef struct wire_cst_list_payment_type {
   int32_t len;
 } wire_cst_list_payment_type;
 
+typedef struct wire_cst_list_payment_state {
+  int32_t *ptr;
+  int32_t len;
+} wire_cst_list_payment_state;
+
 typedef struct wire_cst_ListPaymentDetails_Liquid {
   struct wire_cst_list_prim_u_8_strict *destination;
 } wire_cst_ListPaymentDetails_Liquid;
@@ -101,6 +108,7 @@ typedef struct wire_cst_list_payment_details {
 
 typedef struct wire_cst_list_payments_request {
   struct wire_cst_list_payment_type *filters;
+  struct wire_cst_list_payment_state *states;
   int64_t *from_timestamp;
   int64_t *to_timestamp;
   uint32_t *offset;
@@ -475,6 +483,10 @@ typedef struct wire_cst_SdkEvent_PaymentWaitingConfirmation {
   struct wire_cst_payment *details;
 } wire_cst_SdkEvent_PaymentWaitingConfirmation;
 
+typedef struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
+  struct wire_cst_payment *details;
+} wire_cst_SdkEvent_PaymentWaitingFeeAcceptance;
+
 typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentFailed PaymentFailed;
   struct wire_cst_SdkEvent_PaymentPending PaymentPending;
@@ -482,6 +494,7 @@ typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentRefundPending PaymentRefundPending;
   struct wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
   struct wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+  struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 } SdkEventKind;
 
 typedef struct wire_cst_sdk_event {
@@ -513,6 +526,7 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *breez_api_key;
   struct wire_cst_list_external_input_parser *external_input_parsers;
   bool use_default_external_input_parsers;
+  uint32_t *onchain_fee_rate_leeway_sat_per_vbyte;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {
@@ -1303,6 +1317,8 @@ struct wire_cst_list_localized_name *frbgen_breez_liquid_cst_new_list_localized_
 
 struct wire_cst_list_payment *frbgen_breez_liquid_cst_new_list_payment(int32_t len);
 
+struct wire_cst_list_payment_state *frbgen_breez_liquid_cst_new_list_payment_state(int32_t len);
+
 struct wire_cst_list_payment_type *frbgen_breez_liquid_cst_new_list_payment_type(int32_t len);
 
 struct wire_cst_list_prim_u_8_strict *frbgen_breez_liquid_cst_new_list_prim_u_8_strict(int32_t len);
@@ -1373,6 +1389,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_locale_overrides);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_localized_name);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment_state);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_payment_type);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_prim_u_8_strict);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_rate);

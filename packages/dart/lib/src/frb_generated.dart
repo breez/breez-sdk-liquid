@@ -1693,7 +1693,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 12) throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
     return Config(
       liquidElectrumUrl: dco_decode_String(arr[0]),
       bitcoinElectrumUrl: dco_decode_String(arr[1]),
@@ -1707,6 +1707,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       breezApiKey: dco_decode_opt_String(arr[9]),
       externalInputParsers: dco_decode_opt_list_external_input_parser(arr[10]),
       useDefaultExternalInputParsers: dco_decode_bool(arr[11]),
+      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[12]),
     );
   }
 
@@ -1958,6 +1959,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PaymentState> dco_decode_list_payment_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_payment_state).toList();
+  }
+
+  @protected
   List<PaymentType> dco_decode_list_payment_type(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_payment_type).toList();
@@ -1967,14 +1974,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ListPaymentsRequest dco_decode_list_payments_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return ListPaymentsRequest(
       filters: dco_decode_opt_list_payment_type(arr[0]),
-      fromTimestamp: dco_decode_opt_box_autoadd_i_64(arr[1]),
-      toTimestamp: dco_decode_opt_box_autoadd_i_64(arr[2]),
-      offset: dco_decode_opt_box_autoadd_u_32(arr[3]),
-      limit: dco_decode_opt_box_autoadd_u_32(arr[4]),
-      details: dco_decode_opt_box_autoadd_list_payment_details(arr[5]),
+      states: dco_decode_opt_list_payment_state(arr[1]),
+      fromTimestamp: dco_decode_opt_box_autoadd_i_64(arr[2]),
+      toTimestamp: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      offset: dco_decode_opt_box_autoadd_u_32(arr[4]),
+      limit: dco_decode_opt_box_autoadd_u_32(arr[5]),
+      details: dco_decode_opt_box_autoadd_list_payment_details(arr[6]),
     );
   }
 
@@ -2477,6 +2485,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PaymentState>? dco_decode_opt_list_payment_state(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_payment_state(raw);
+  }
+
+  @protected
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_list_payment_type(raw);
@@ -2958,6 +2972,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 6:
+        return SdkEvent_PaymentWaitingFeeAcceptance(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 7:
         return SdkEvent_Synced();
       default:
         throw Exception("unreachable");
@@ -3617,6 +3635,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_breezApiKey = sse_decode_opt_String(deserializer);
     var var_externalInputParsers = sse_decode_opt_list_external_input_parser(deserializer);
     var var_useDefaultExternalInputParsers = sse_decode_bool(deserializer);
+    var var_onchainFeeRateLeewaySatPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
     return Config(
         liquidElectrumUrl: var_liquidElectrumUrl,
         bitcoinElectrumUrl: var_bitcoinElectrumUrl,
@@ -3629,7 +3648,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         zeroConfMaxAmountSat: var_zeroConfMaxAmountSat,
         breezApiKey: var_breezApiKey,
         externalInputParsers: var_externalInputParsers,
-        useDefaultExternalInputParsers: var_useDefaultExternalInputParsers);
+        useDefaultExternalInputParsers: var_useDefaultExternalInputParsers,
+        onchainFeeRateLeewaySatPerVbyte: var_onchainFeeRateLeewaySatPerVbyte);
   }
 
   @protected
@@ -3911,6 +3931,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PaymentState> sse_decode_list_payment_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PaymentState>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_payment_state(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<PaymentType> sse_decode_list_payment_type(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -3926,6 +3958,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ListPaymentsRequest sse_decode_list_payments_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_filters = sse_decode_opt_list_payment_type(deserializer);
+    var var_states = sse_decode_opt_list_payment_state(deserializer);
     var var_fromTimestamp = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_toTimestamp = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_offset = sse_decode_opt_box_autoadd_u_32(deserializer);
@@ -3933,6 +3966,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_details = sse_decode_opt_box_autoadd_list_payment_details(deserializer);
     return ListPaymentsRequest(
         filters: var_filters,
+        states: var_states,
         fromTimestamp: var_fromTimestamp,
         toTimestamp: var_toTimestamp,
         offset: var_offset,
@@ -4503,6 +4537,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PaymentState>? sse_decode_opt_list_payment_state(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_payment_state(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -4964,6 +5009,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_details = sse_decode_box_autoadd_payment(deserializer);
         return SdkEvent_PaymentWaitingConfirmation(details: var_details);
       case 6:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentWaitingFeeAcceptance(details: var_details);
+      case 7:
         return SdkEvent_Synced();
       default:
         throw UnimplementedError('');
@@ -5699,6 +5747,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.breezApiKey, serializer);
     sse_encode_opt_list_external_input_parser(self.externalInputParsers, serializer);
     sse_encode_bool(self.useDefaultExternalInputParsers, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.onchainFeeRateLeewaySatPerVbyte, serializer);
   }
 
   @protected
@@ -5926,6 +5975,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_payment_state(List<PaymentState> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_payment_state(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_payment_type(List<PaymentType> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -5938,6 +5996,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_list_payments_request(ListPaymentsRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_list_payment_type(self.filters, serializer);
+    sse_encode_opt_list_payment_state(self.states, serializer);
     sse_encode_opt_box_autoadd_i_64(self.fromTimestamp, serializer);
     sse_encode_opt_box_autoadd_i_64(self.toTimestamp, serializer);
     sse_encode_opt_box_autoadd_u_32(self.offset, serializer);
@@ -6420,6 +6479,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_list_payment_state(List<PaymentState>? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_payment_state(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -6800,8 +6869,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SdkEvent_PaymentWaitingConfirmation(details: final details):
         sse_encode_i_32(5, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_Synced():
+      case SdkEvent_PaymentWaitingFeeAcceptance(details: final details):
         sse_encode_i_32(6, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_Synced():
+        sse_encode_i_32(7, serializer);
       default:
         throw UnimplementedError('');
     }

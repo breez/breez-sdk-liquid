@@ -3,6 +3,36 @@ import breez_sdk_liquid.*
 import com.facebook.react.bridge.*
 import java.util.*
 
+fun asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: ReadableMap): AcceptPaymentProposedFeesRequest? {
+    if (!validateMandatoryFields(
+            acceptPaymentProposedFeesRequest,
+            arrayOf(
+                "response",
+            ),
+        )
+    ) {
+        return null
+    }
+    val response = acceptPaymentProposedFeesRequest.getMap("response")?.let { asFetchPaymentProposedFeesResponse(it) }!!
+    return AcceptPaymentProposedFeesRequest(response)
+}
+
+fun readableMapOf(acceptPaymentProposedFeesRequest: AcceptPaymentProposedFeesRequest): ReadableMap =
+    readableMapOf(
+        "response" to readableMapOf(acceptPaymentProposedFeesRequest.response),
+    )
+
+fun asAcceptPaymentProposedFeesRequestList(arr: ReadableArray): List<AcceptPaymentProposedFeesRequest> {
+    val list = ArrayList<AcceptPaymentProposedFeesRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAcceptPaymentProposedFeesRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asAesSuccessActionData(aesSuccessActionData: ReadableMap): AesSuccessActionData? {
     if (!validateMandatoryFields(
             aesSuccessActionData,
@@ -282,6 +312,16 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
+    val onchainFeeRateLeewaySatPerVbyte =
+        if (hasNonNullKey(
+                config,
+                "onchainFeeRateLeewaySatPerVbyte",
+            )
+        ) {
+            config.getInt("onchainFeeRateLeewaySatPerVbyte").toUInt()
+        } else {
+            null
+        }
     return Config(
         liquidElectrumUrl,
         bitcoinElectrumUrl,
@@ -295,6 +335,7 @@ fun asConfig(config: ReadableMap): Config? {
         zeroConfMaxAmountSat,
         useDefaultExternalInputParsers,
         externalInputParsers,
+        onchainFeeRateLeewaySatPerVbyte,
     )
 }
 
@@ -312,6 +353,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
         "useDefaultExternalInputParsers" to config.useDefaultExternalInputParsers,
         "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },
+        "onchainFeeRateLeewaySatPerVbyte" to config.onchainFeeRateLeewaySatPerVbyte,
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {
@@ -463,6 +505,72 @@ fun asExternalInputParserList(arr: ReadableArray): List<ExternalInputParser> {
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asExternalInputParser(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asFetchPaymentProposedFeesRequest(fetchPaymentProposedFeesRequest: ReadableMap): FetchPaymentProposedFeesRequest? {
+    if (!validateMandatoryFields(
+            fetchPaymentProposedFeesRequest,
+            arrayOf(
+                "swapId",
+            ),
+        )
+    ) {
+        return null
+    }
+    val swapId = fetchPaymentProposedFeesRequest.getString("swapId")!!
+    return FetchPaymentProposedFeesRequest(swapId)
+}
+
+fun readableMapOf(fetchPaymentProposedFeesRequest: FetchPaymentProposedFeesRequest): ReadableMap =
+    readableMapOf(
+        "swapId" to fetchPaymentProposedFeesRequest.swapId,
+    )
+
+fun asFetchPaymentProposedFeesRequestList(arr: ReadableArray): List<FetchPaymentProposedFeesRequest> {
+    val list = ArrayList<FetchPaymentProposedFeesRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asFetchPaymentProposedFeesRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asFetchPaymentProposedFeesResponse(fetchPaymentProposedFeesResponse: ReadableMap): FetchPaymentProposedFeesResponse? {
+    if (!validateMandatoryFields(
+            fetchPaymentProposedFeesResponse,
+            arrayOf(
+                "swapId",
+                "feesSat",
+                "payerAmountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val swapId = fetchPaymentProposedFeesResponse.getString("swapId")!!
+    val feesSat = fetchPaymentProposedFeesResponse.getDouble("feesSat").toULong()
+    val payerAmountSat = fetchPaymentProposedFeesResponse.getDouble("payerAmountSat").toULong()
+    return FetchPaymentProposedFeesResponse(swapId, feesSat, payerAmountSat)
+}
+
+fun readableMapOf(fetchPaymentProposedFeesResponse: FetchPaymentProposedFeesResponse): ReadableMap =
+    readableMapOf(
+        "swapId" to fetchPaymentProposedFeesResponse.swapId,
+        "feesSat" to fetchPaymentProposedFeesResponse.feesSat,
+        "payerAmountSat" to fetchPaymentProposedFeesResponse.payerAmountSat,
+    )
+
+fun asFetchPaymentProposedFeesResponseList(arr: ReadableArray): List<FetchPaymentProposedFeesResponse> {
+    val list = ArrayList<FetchPaymentProposedFeesResponse>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asFetchPaymentProposedFeesResponse(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -789,6 +897,14 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
+    val states =
+        if (hasNonNullKey(listPaymentsRequest, "states")) {
+            listPaymentsRequest.getArray("states")?.let {
+                asPaymentStateList(it)
+            }
+        } else {
+            null
+        }
     val fromTimestamp =
         if (hasNonNullKey(
                 listPaymentsRequest,
@@ -810,12 +926,13 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
-    return ListPaymentsRequest(filters, fromTimestamp, toTimestamp, offset, limit, details)
+    return ListPaymentsRequest(filters, states, fromTimestamp, toTimestamp, offset, limit, details)
 }
 
 fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
     readableMapOf(
         "filters" to listPaymentsRequest.filters?.let { readableArrayOf(it) },
+        "states" to listPaymentsRequest.states?.let { readableArrayOf(it) },
         "fromTimestamp" to listPaymentsRequest.fromTimestamp,
         "toTimestamp" to listPaymentsRequest.toTimestamp,
         "offset" to listPaymentsRequest.offset,
@@ -3114,6 +3231,10 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
         val details = sdkEvent.getMap("details")?.let { asPayment(it) }!!
         return SdkEvent.PaymentWaitingConfirmation(details)
     }
+    if (type == "paymentWaitingFeeAcceptance") {
+        val details = sdkEvent.getMap("details")?.let { asPayment(it) }!!
+        return SdkEvent.PaymentWaitingFeeAcceptance(details)
+    }
     if (type == "synced") {
         return SdkEvent.Synced
     }
@@ -3145,6 +3266,10 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
         }
         is SdkEvent.PaymentWaitingConfirmation -> {
             pushToMap(map, "type", "paymentWaitingConfirmation")
+            pushToMap(map, "details", readableMapOf(sdkEvent.details))
+        }
+        is SdkEvent.PaymentWaitingFeeAcceptance -> {
+            pushToMap(map, "type", "paymentWaitingFeeAcceptance")
             pushToMap(map, "details", readableMapOf(sdkEvent.details))
         }
         is SdkEvent.Synced -> {
@@ -3347,6 +3472,7 @@ fun pushToArray(
         is LocaleOverrides -> array.pushMap(readableMapOf(value))
         is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))
+        is PaymentState -> array.pushString(value.name.lowercase())
         is PaymentType -> array.pushString(value.name.lowercase())
         is Rate -> array.pushMap(readableMapOf(value))
         is RefundableSwap -> array.pushMap(readableMapOf(value))

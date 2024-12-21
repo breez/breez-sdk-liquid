@@ -10,7 +10,7 @@ use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::{
-    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
+    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut, WaitingFeeAcceptance,
 };
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::{Swap, Transaction};
@@ -252,11 +252,6 @@ impl ReceiveSwapHandler {
             .ok_or(PaymentError::Generic {
                 err: format!("Receive Swap not found {swap_id}"),
             })?;
-        let payment_id = claim_tx_id
-            .or(lockup_tx_id)
-            .or(mrh_tx_id)
-            .map(|id| id.to_string())
-            .or(swap.claim_tx_id);
 
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_receive_swap_update(
@@ -268,9 +263,7 @@ impl ReceiveSwapHandler {
             mrh_amount_sat,
         )?;
 
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
-        }
+        let _ = self.subscription_notifier.send(swap.id);
         Ok(())
     }
 
@@ -395,6 +388,10 @@ impl ReceiveSwapHandler {
                 err: format!("Cannot transition from {from_state:?} to Failed state"),
             }),
             (_, Failed) => Ok(()),
+
+            (_, WaitingFeeAcceptance) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to WaitingFeeAcceptance state"),
+            }),
         }
     }
 

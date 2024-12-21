@@ -2,6 +2,38 @@ import BreezSDKLiquid
 import Foundation
 
 enum BreezSDKLiquidMapper {
+    static func asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: [String: Any?]) throws -> AcceptPaymentProposedFeesRequest {
+        guard let responseTmp = acceptPaymentProposedFeesRequest["response"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "response", typeName: "AcceptPaymentProposedFeesRequest"))
+        }
+        let response = try asFetchPaymentProposedFeesResponse(fetchPaymentProposedFeesResponse: responseTmp)
+
+        return AcceptPaymentProposedFeesRequest(response: response)
+    }
+
+    static func dictionaryOf(acceptPaymentProposedFeesRequest: AcceptPaymentProposedFeesRequest) -> [String: Any?] {
+        return [
+            "response": dictionaryOf(fetchPaymentProposedFeesResponse: acceptPaymentProposedFeesRequest.response),
+        ]
+    }
+
+    static func asAcceptPaymentProposedFeesRequestList(arr: [Any]) throws -> [AcceptPaymentProposedFeesRequest] {
+        var list = [AcceptPaymentProposedFeesRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var acceptPaymentProposedFeesRequest = try asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: val)
+                list.append(acceptPaymentProposedFeesRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "AcceptPaymentProposedFeesRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(acceptPaymentProposedFeesRequestList: [AcceptPaymentProposedFeesRequest]) -> [Any] {
+        return acceptPaymentProposedFeesRequestList.map { v -> [String: Any?] in return dictionaryOf(acceptPaymentProposedFeesRequest: v) }
+    }
+
     static func asAesSuccessActionData(aesSuccessActionData: [String: Any?]) throws -> AesSuccessActionData {
         guard let description = aesSuccessActionData["description"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "AesSuccessActionData"))
@@ -336,7 +368,15 @@ enum BreezSDKLiquidMapper {
             externalInputParsers = try asExternalInputParserList(arr: externalInputParsersTmp)
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers)
+        var onchainFeeRateLeewaySatPerVbyte: UInt32?
+        if hasNonNilKey(data: config, key: "onchainFeeRateLeewaySatPerVbyte") {
+            guard let onchainFeeRateLeewaySatPerVbyteTmp = config["onchainFeeRateLeewaySatPerVbyte"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "onchainFeeRateLeewaySatPerVbyte"))
+            }
+            onchainFeeRateLeewaySatPerVbyte = onchainFeeRateLeewaySatPerVbyteTmp
+        }
+
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -353,6 +393,7 @@ enum BreezSDKLiquidMapper {
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
             "useDefaultExternalInputParsers": config.useDefaultExternalInputParsers,
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
+            "onchainFeeRateLeewaySatPerVbyte": config.onchainFeeRateLeewaySatPerVbyte == nil ? nil : config.onchainFeeRateLeewaySatPerVbyte,
         ]
     }
 
@@ -545,6 +586,76 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(externalInputParserList: [ExternalInputParser]) -> [Any] {
         return externalInputParserList.map { v -> [String: Any?] in return dictionaryOf(externalInputParser: v) }
+    }
+
+    static func asFetchPaymentProposedFeesRequest(fetchPaymentProposedFeesRequest: [String: Any?]) throws -> FetchPaymentProposedFeesRequest {
+        guard let swapId = fetchPaymentProposedFeesRequest["swapId"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "swapId", typeName: "FetchPaymentProposedFeesRequest"))
+        }
+
+        return FetchPaymentProposedFeesRequest(swapId: swapId)
+    }
+
+    static func dictionaryOf(fetchPaymentProposedFeesRequest: FetchPaymentProposedFeesRequest) -> [String: Any?] {
+        return [
+            "swapId": fetchPaymentProposedFeesRequest.swapId,
+        ]
+    }
+
+    static func asFetchPaymentProposedFeesRequestList(arr: [Any]) throws -> [FetchPaymentProposedFeesRequest] {
+        var list = [FetchPaymentProposedFeesRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var fetchPaymentProposedFeesRequest = try asFetchPaymentProposedFeesRequest(fetchPaymentProposedFeesRequest: val)
+                list.append(fetchPaymentProposedFeesRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "FetchPaymentProposedFeesRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(fetchPaymentProposedFeesRequestList: [FetchPaymentProposedFeesRequest]) -> [Any] {
+        return fetchPaymentProposedFeesRequestList.map { v -> [String: Any?] in return dictionaryOf(fetchPaymentProposedFeesRequest: v) }
+    }
+
+    static func asFetchPaymentProposedFeesResponse(fetchPaymentProposedFeesResponse: [String: Any?]) throws -> FetchPaymentProposedFeesResponse {
+        guard let swapId = fetchPaymentProposedFeesResponse["swapId"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "swapId", typeName: "FetchPaymentProposedFeesResponse"))
+        }
+        guard let feesSat = fetchPaymentProposedFeesResponse["feesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "FetchPaymentProposedFeesResponse"))
+        }
+        guard let payerAmountSat = fetchPaymentProposedFeesResponse["payerAmountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "FetchPaymentProposedFeesResponse"))
+        }
+
+        return FetchPaymentProposedFeesResponse(swapId: swapId, feesSat: feesSat, payerAmountSat: payerAmountSat)
+    }
+
+    static func dictionaryOf(fetchPaymentProposedFeesResponse: FetchPaymentProposedFeesResponse) -> [String: Any?] {
+        return [
+            "swapId": fetchPaymentProposedFeesResponse.swapId,
+            "feesSat": fetchPaymentProposedFeesResponse.feesSat,
+            "payerAmountSat": fetchPaymentProposedFeesResponse.payerAmountSat,
+        ]
+    }
+
+    static func asFetchPaymentProposedFeesResponseList(arr: [Any]) throws -> [FetchPaymentProposedFeesResponse] {
+        var list = [FetchPaymentProposedFeesResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var fetchPaymentProposedFeesResponse = try asFetchPaymentProposedFeesResponse(fetchPaymentProposedFeesResponse: val)
+                list.append(fetchPaymentProposedFeesResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "FetchPaymentProposedFeesResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(fetchPaymentProposedFeesResponseList: [FetchPaymentProposedFeesResponse]) -> [Any] {
+        return fetchPaymentProposedFeesResponseList.map { v -> [String: Any?] in return dictionaryOf(fetchPaymentProposedFeesResponse: v) }
     }
 
     static func asFiatCurrency(fiatCurrency: [String: Any?]) throws -> FiatCurrency {
@@ -952,6 +1063,11 @@ enum BreezSDKLiquidMapper {
             filters = try asPaymentTypeList(arr: filtersTmp)
         }
 
+        var states: [PaymentState]?
+        if let statesTmp = listPaymentsRequest["states"] as? [String] {
+            states = try asPaymentStateList(arr: statesTmp)
+        }
+
         var fromTimestamp: Int64?
         if hasNonNilKey(data: listPaymentsRequest, key: "fromTimestamp") {
             guard let fromTimestampTmp = listPaymentsRequest["fromTimestamp"] as? Int64 else {
@@ -985,12 +1101,13 @@ enum BreezSDKLiquidMapper {
             details = try asListPaymentDetails(listPaymentDetails: detailsTmp)
         }
 
-        return ListPaymentsRequest(filters: filters, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details)
+        return ListPaymentsRequest(filters: filters, states: states, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details)
     }
 
     static func dictionaryOf(listPaymentsRequest: ListPaymentsRequest) -> [String: Any?] {
         return [
             "filters": listPaymentsRequest.filters == nil ? nil : arrayOf(paymentTypeList: listPaymentsRequest.filters!),
+            "states": listPaymentsRequest.states == nil ? nil : arrayOf(paymentStateList: listPaymentsRequest.states!),
             "fromTimestamp": listPaymentsRequest.fromTimestamp == nil ? nil : listPaymentsRequest.fromTimestamp,
             "toTimestamp": listPaymentsRequest.toTimestamp == nil ? nil : listPaymentsRequest.toTimestamp,
             "offset": listPaymentsRequest.offset == nil ? nil : listPaymentsRequest.offset,
@@ -3809,6 +3926,9 @@ enum BreezSDKLiquidMapper {
         case "refundPending":
             return PaymentState.refundPending
 
+        case "waitingFeeAcceptance":
+            return PaymentState.waitingFeeAcceptance
+
         default: throw SdkError.Generic(message: "Invalid variant \(paymentState) for enum PaymentState")
         }
     }
@@ -3835,6 +3955,9 @@ enum BreezSDKLiquidMapper {
 
         case .refundPending:
             return "refundPending"
+
+        case .waitingFeeAcceptance:
+            return "waitingFeeAcceptance"
         }
     }
 
@@ -3944,6 +4067,14 @@ enum BreezSDKLiquidMapper {
 
             return SdkEvent.paymentWaitingConfirmation(details: _details)
         }
+        if type == "paymentWaitingFeeAcceptance" {
+            guard let detailsTmp = sdkEvent["details"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "SdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return SdkEvent.paymentWaitingFeeAcceptance(details: _details)
+        }
         if type == "synced" {
             return SdkEvent.synced
         }
@@ -3998,6 +4129,14 @@ enum BreezSDKLiquidMapper {
         ):
             return [
                 "type": "paymentWaitingConfirmation",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentWaitingFeeAcceptance(
+            details
+        ):
+            return [
+                "type": "paymentWaitingFeeAcceptance",
                 "details": dictionaryOf(payment: details),
             ]
 

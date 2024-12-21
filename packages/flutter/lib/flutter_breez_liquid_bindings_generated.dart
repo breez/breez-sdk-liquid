@@ -1503,6 +1503,21 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_list_payment = _frbgen_breez_liquid_cst_new_list_paymentPtr
       .asFunction<ffi.Pointer<wire_cst_list_payment> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_payment_state> frbgen_breez_liquid_cst_new_list_payment_state(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_payment_state(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_payment_statePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_payment_state> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_payment_state');
+  late final _frbgen_breez_liquid_cst_new_list_payment_state =
+      _frbgen_breez_liquid_cst_new_list_payment_statePtr
+          .asFunction<ffi.Pointer<wire_cst_list_payment_state> Function(int)>();
+
   ffi.Pointer<wire_cst_list_payment_type> frbgen_breez_liquid_cst_new_list_payment_type(
     int len,
   ) {
@@ -3949,6 +3964,13 @@ final class wire_cst_list_payment_type extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_list_payment_state extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_ListPaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 }
@@ -3972,6 +3994,8 @@ final class wire_cst_list_payment_details extends ffi.Struct {
 
 final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_payment_type> filters;
+
+  external ffi.Pointer<wire_cst_list_payment_state> states;
 
   external ffi.Pointer<ffi.Int64> from_timestamp;
 
@@ -4509,6 +4533,10 @@ final class wire_cst_SdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
 final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
@@ -4521,6 +4549,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
 
   external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+
+  external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
@@ -4573,6 +4603,8 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Bool()
   external bool use_default_external_input_parsers;
+
+  external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -5285,6 +5317,8 @@ typedef UniFfiRustFutureContinuationFunction = ffi.Void Function(ffi.Pointer<ffi
 typedef DartUniFfiRustFutureContinuationFunction = void Function(ffi.Pointer<ffi.Void>, int);
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
+
+const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 

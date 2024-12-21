@@ -12,7 +12,7 @@ use super::{chain::MockLiquidChainService, swapper::MockSwapper, wallet::MockWal
 pub(crate) fn new_receive_swap_handler(persister: Arc<Persister>) -> Result<ReceiveSwapHandler> {
     let config = Config::testnet(None);
     let onchain_wallet = Arc::new(MockWallet::new());
-    let swapper = Arc::new(MockSwapper::new());
+    let swapper = Arc::new(MockSwapper::default());
     let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
 
     Ok(ReceiveSwapHandler::new(
