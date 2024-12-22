@@ -67,7 +67,7 @@ impl BreezSyncerClient {
         &self,
     ) -> Result<ProtoSyncerClient<InterceptedService<Channel, ApiKeyInterceptor>>, Error> {
         let Some(channel) = self.grpc_channel.lock().await.clone() else {
-            return Err(anyhow!("Cannot run `set_record`: client not connected"));
+            return Err(anyhow!("Cannot get sync client: not connected"));
         };
         let api_key_metadata = self.api_key_metadata()?;
         Ok(ProtoSyncerClient::with_interceptor(
