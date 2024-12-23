@@ -240,23 +240,6 @@ impl ReceiveSwapHandler {
             })
     }
 
-    fn notify_swap_changes(
-        &self,
-        swap: ReceiveSwap,
-        updated_swap: ReceiveSwap,
-    ) -> Result<(), PaymentError> {
-        let payment_id = updated_swap
-            .claim_tx_id
-            .clone()
-            .or(updated_swap.mrh_tx_id.clone())
-            .or(swap.claim_tx_id.clone())
-            .or(swap.mrh_tx_id.clone());
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
-        }
-        Ok(())
-    }
-
     // Updates the swap without state transition validation
     pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<(), PaymentError> {
         let swap = self.fetch_receive_swap_by_id(&updated_swap.id)?;
@@ -267,7 +250,7 @@ impl ReceiveSwapHandler {
             );
             self.persister
                 .insert_or_update_receive_swap(&updated_swap)?;
-            self.notify_swap_changes(swap, updated_swap)?;
+            let _ = self.subscription_notifier.send(updated_swap.id);
         }
         Ok(())
     }
@@ -303,7 +286,7 @@ impl ReceiveSwapHandler {
         }
 
         if updated_swap != swap {
-            self.notify_swap_changes(swap, updated_swap)?;
+            let _ = self.subscription_notifier.send(updated_swap.id);
         }
         Ok(())
     }
