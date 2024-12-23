@@ -3588,6 +3588,7 @@ impl SseDecode for crate::model::Payment {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <Option<String>>::sse_decode(deserializer);
         let mut var_txId = <Option<String>>::sse_decode(deserializer);
+        let mut var_unblindingData = <Option<String>>::sse_decode(deserializer);
         let mut var_timestamp = <u32>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
@@ -3598,6 +3599,7 @@ impl SseDecode for crate::model::Payment {
         return crate::model::Payment {
             destination: var_destination,
             tx_id: var_txId,
+            unblinding_data: var_unblindingData,
             timestamp: var_timestamp,
             amount_sat: var_amountSat,
             fees_sat: var_feesSat,
@@ -5658,6 +5660,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Payment {
         [
             self.destination.into_into_dart().into_dart(),
             self.tx_id.into_into_dart().into_dart(),
+            self.unblinding_data.into_into_dart().into_dart(),
             self.timestamp.into_into_dart().into_dart(),
             self.amount_sat.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
@@ -7720,6 +7723,7 @@ impl SseEncode for crate::model::Payment {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<String>>::sse_encode(self.destination, serializer);
         <Option<String>>::sse_encode(self.tx_id, serializer);
+        <Option<String>>::sse_encode(self.unblinding_data, serializer);
         <u32>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.amount_sat, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
@@ -9730,6 +9734,7 @@ mod io {
             crate::model::Payment {
                 destination: self.destination.cst_decode(),
                 tx_id: self.tx_id.cst_decode(),
+                unblinding_data: self.unblinding_data.cst_decode(),
                 timestamp: self.timestamp.cst_decode(),
                 amount_sat: self.amount_sat.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
@@ -10978,6 +10983,7 @@ mod io {
             Self {
                 destination: core::ptr::null_mut(),
                 tx_id: core::ptr::null_mut(),
+                unblinding_data: core::ptr::null_mut(),
                 timestamp: Default::default(),
                 amount_sat: Default::default(),
                 fees_sat: Default::default(),
@@ -13163,6 +13169,7 @@ mod io {
     pub struct wire_cst_payment {
         destination: *mut wire_cst_list_prim_u_8_strict,
         tx_id: *mut wire_cst_list_prim_u_8_strict,
+        unblinding_data: *mut wire_cst_list_prim_u_8_strict,
         timestamp: u32,
         amount_sat: u64,
         fees_sat: u64,
