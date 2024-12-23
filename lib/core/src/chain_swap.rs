@@ -485,7 +485,7 @@ impl ChainSwapHandler {
                             fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
-                        }, None, None)?;
+                        }, None, false)?;
 
                         self.update_swap_info(&ChainSwapUpdate {
                             swap_id: id,
@@ -819,7 +819,7 @@ impl ChainSwapHandler {
                                         is_confirmed: false,
                                     },
                                     None,
-                                    None,
+                                    false,
                                 )?;
                                 Some(claim_tx_id.clone())
                             }
@@ -1299,9 +1299,8 @@ impl ChainSwapHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, HashSet};
-
     use anyhow::Result;
+    use std::collections::{HashMap, HashSet};
 
     use crate::{
         model::{

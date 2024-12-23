@@ -1240,8 +1240,21 @@ pub struct PaymentSwapData {
     pub status: PaymentState,
 }
 
+/// Represents the payment LNURL info
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct LnUrlInfo {
+    pub ln_address: Option<String>,
+    pub lnurl_pay_comment: Option<String>,
+    pub lnurl_pay_domain: Option<String>,
+    pub lnurl_pay_metadata: Option<String>,
+    pub lnurl_pay_success_action: Option<SuccessActionProcessed>,
+    pub lnurl_pay_unprocessed_success_action: Option<SuccessAction>,
+    pub lnurl_withdraw_endpoint: Option<String>,
+}
+
 /// The specific details of a payment, depending on its type
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[allow(clippy::large_enum_variant)]
 pub enum PaymentDetails {
     /// Swapping to or from Lightning
     Lightning {
@@ -1262,6 +1275,9 @@ pub enum PaymentDetails {
 
         /// The payment hash of the invoice
         payment_hash: Option<String>,
+
+        /// The payment LNURL info
+        lnurl_info: Option<LnUrlInfo>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
@@ -1580,6 +1596,10 @@ pub struct PrepareLnUrlPayResponse {
     pub destination: SendDestination,
     /// The fees in satoshis to send the payment
     pub fees_sat: u64,
+    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+    pub data: LnUrlPayRequestData,
+    /// An optional comment for this payment
+    pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if
     /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
     pub success_action: Option<SuccessAction>,
