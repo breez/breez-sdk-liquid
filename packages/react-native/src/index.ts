@@ -182,6 +182,16 @@ export interface LnUrlErrorData {
     reason: string
 }
 
+export interface LnUrlInfo {
+    lnAddress?: string
+    lnurlPayComment?: string
+    lnurlPayDomain?: string
+    lnurlPayMetadata?: string
+    lnurlPaySuccessAction?: SuccessActionProcessed
+    lnurlPayUnprocessedSuccessAction?: SuccessAction
+    lnurlWithdrawEndpoint?: string
+}
+
 export interface LnUrlPayErrorData {
     paymentHash: string
     reason: string
@@ -289,6 +299,8 @@ export interface PrepareLnUrlPayRequest {
 export interface PrepareLnUrlPayResponse {
     destination: SendDestination
     feesSat: number
+    data: LnUrlPayRequestData
+    comment?: string
     successAction?: SuccessAction
 }
 
@@ -607,6 +619,7 @@ export type PaymentDetails = {
     bolt11?: string
     bolt12Offer?: string
     paymentHash?: string
+    lnurlInfo?: LnUrlInfo
     refundTxId?: string
     refundTxAmountSat?: number
 } | {

@@ -390,6 +390,8 @@ dictionary PrepareLnUrlPayRequest {
 dictionary PrepareLnUrlPayResponse {
     SendDestination destination;
     u64 fees_sat;
+    LnUrlPayRequestData data;
+    string? comment = null;
     SuccessAction? success_action = null;
 };
 
@@ -539,9 +541,19 @@ interface GetPaymentRequest {
     Lightning(string payment_hash);
 };
 
+dictionary LnUrlInfo {
+    string? ln_address;
+    string? lnurl_pay_comment;
+    string? lnurl_pay_domain;
+    string? lnurl_pay_metadata;
+    SuccessActionProcessed? lnurl_pay_success_action;
+    SuccessAction? lnurl_pay_unprocessed_success_action;
+    string? lnurl_withdraw_endpoint;
+};
+
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? bolt12_offer, string? payment_hash, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? bolt12_offer, string? payment_hash, LnUrlInfo? lnurl_info, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string destination, string description);
     Bitcoin(string swap_id, string description, string? refund_tx_id, u64? refund_tx_amount_sat);
 };

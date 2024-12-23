@@ -945,6 +945,81 @@ fun asLnUrlErrorDataList(arr: ReadableArray): List<LnUrlErrorData> {
     return list
 }
 
+fun asLnUrlInfo(lnUrlInfo: ReadableMap): LnUrlInfo? {
+    if (!validateMandatoryFields(
+            lnUrlInfo,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val lnAddress = if (hasNonNullKey(lnUrlInfo, "lnAddress")) lnUrlInfo.getString("lnAddress") else null
+    val lnurlPayComment = if (hasNonNullKey(lnUrlInfo, "lnurlPayComment")) lnUrlInfo.getString("lnurlPayComment") else null
+    val lnurlPayDomain = if (hasNonNullKey(lnUrlInfo, "lnurlPayDomain")) lnUrlInfo.getString("lnurlPayDomain") else null
+    val lnurlPayMetadata = if (hasNonNullKey(lnUrlInfo, "lnurlPayMetadata")) lnUrlInfo.getString("lnurlPayMetadata") else null
+    val lnurlPaySuccessAction =
+        if (hasNonNullKey(lnUrlInfo, "lnurlPaySuccessAction")) {
+            lnUrlInfo.getMap("lnurlPaySuccessAction")?.let {
+                asSuccessActionProcessed(it)
+            }
+        } else {
+            null
+        }
+    val lnurlPayUnprocessedSuccessAction =
+        if (hasNonNullKey(
+                lnUrlInfo,
+                "lnurlPayUnprocessedSuccessAction",
+            )
+        ) {
+            lnUrlInfo.getMap("lnurlPayUnprocessedSuccessAction")?.let {
+                asSuccessAction(it)
+            }
+        } else {
+            null
+        }
+    val lnurlWithdrawEndpoint =
+        if (hasNonNullKey(
+                lnUrlInfo,
+                "lnurlWithdrawEndpoint",
+            )
+        ) {
+            lnUrlInfo.getString("lnurlWithdrawEndpoint")
+        } else {
+            null
+        }
+    return LnUrlInfo(
+        lnAddress,
+        lnurlPayComment,
+        lnurlPayDomain,
+        lnurlPayMetadata,
+        lnurlPaySuccessAction,
+        lnurlPayUnprocessedSuccessAction,
+        lnurlWithdrawEndpoint,
+    )
+}
+
+fun readableMapOf(lnUrlInfo: LnUrlInfo): ReadableMap =
+    readableMapOf(
+        "lnAddress" to lnUrlInfo.lnAddress,
+        "lnurlPayComment" to lnUrlInfo.lnurlPayComment,
+        "lnurlPayDomain" to lnUrlInfo.lnurlPayDomain,
+        "lnurlPayMetadata" to lnUrlInfo.lnurlPayMetadata,
+        "lnurlPaySuccessAction" to lnUrlInfo.lnurlPaySuccessAction?.let { readableMapOf(it) },
+        "lnurlPayUnprocessedSuccessAction" to lnUrlInfo.lnurlPayUnprocessedSuccessAction?.let { readableMapOf(it) },
+        "lnurlWithdrawEndpoint" to lnUrlInfo.lnurlWithdrawEndpoint,
+    )
+
+fun asLnUrlInfoList(arr: ReadableArray): List<LnUrlInfo> {
+    val list = ArrayList<LnUrlInfo>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlInfo(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asLnUrlPayErrorData(lnUrlPayErrorData: ReadableMap): LnUrlPayErrorData? {
     if (!validateMandatoryFields(
             lnUrlPayErrorData,
@@ -1585,6 +1660,7 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
             arrayOf(
                 "destination",
                 "feesSat",
+                "data",
             ),
         )
     ) {
@@ -1592,6 +1668,8 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
     }
     val destination = prepareLnUrlPayResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = prepareLnUrlPayResponse.getDouble("feesSat").toULong()
+    val data = prepareLnUrlPayResponse.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
+    val comment = if (hasNonNullKey(prepareLnUrlPayResponse, "comment")) prepareLnUrlPayResponse.getString("comment") else null
     val successAction =
         if (hasNonNullKey(prepareLnUrlPayResponse, "successAction")) {
             prepareLnUrlPayResponse.getMap("successAction")?.let {
@@ -1600,13 +1678,15 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
         } else {
             null
         }
-    return PrepareLnUrlPayResponse(destination, feesSat, successAction)
+    return PrepareLnUrlPayResponse(destination, feesSat, data, comment, successAction)
 }
 
 fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap =
     readableMapOf(
         "destination" to readableMapOf(prepareLnUrlPayResponse.destination),
         "feesSat" to prepareLnUrlPayResponse.feesSat,
+        "data" to readableMapOf(prepareLnUrlPayResponse.data),
+        "comment" to prepareLnUrlPayResponse.comment,
         "successAction" to prepareLnUrlPayResponse.successAction?.let { readableMapOf(it) },
     )
 
@@ -2983,6 +3063,16 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
         val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
         val paymentHash = if (hasNonNullKey(paymentDetails, "paymentHash")) paymentDetails.getString("paymentHash") else null
+        val lnurlInfo =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "lnurlInfo",
+                )
+            ) {
+                paymentDetails.getMap("lnurlInfo")?.let { asLnUrlInfo(it) }
+            } else {
+                null
+            }
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
             if (hasNonNullKey(
@@ -2994,7 +3084,17 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Lightning(swapId, description, preimage, bolt11, bolt12Offer, paymentHash, refundTxId, refundTxAmountSat)
+        return PaymentDetails.Lightning(
+            swapId,
+            description,
+            preimage,
+            bolt11,
+            bolt12Offer,
+            paymentHash,
+            lnurlInfo,
+            refundTxId,
+            refundTxAmountSat,
+        )
     }
     if (type == "liquid") {
         val destination = paymentDetails.getString("destination")!!
@@ -3031,6 +3131,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "bolt11", paymentDetails.bolt11)
             pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
             pushToMap(map, "paymentHash", paymentDetails.paymentHash)
+            pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
         }

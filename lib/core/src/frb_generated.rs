@@ -2991,6 +2991,30 @@ impl SseDecode for crate::bindings::LnUrlErrorData {
     }
 }
 
+impl SseDecode for crate::model::LnUrlInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_lnAddress = <Option<String>>::sse_decode(deserializer);
+        let mut var_lnurlPayComment = <Option<String>>::sse_decode(deserializer);
+        let mut var_lnurlPayDomain = <Option<String>>::sse_decode(deserializer);
+        let mut var_lnurlPayMetadata = <Option<String>>::sse_decode(deserializer);
+        let mut var_lnurlPaySuccessAction =
+            <Option<crate::bindings::SuccessActionProcessed>>::sse_decode(deserializer);
+        let mut var_lnurlPayUnprocessedSuccessAction =
+            <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
+        let mut var_lnurlWithdrawEndpoint = <Option<String>>::sse_decode(deserializer);
+        return crate::model::LnUrlInfo {
+            ln_address: var_lnAddress,
+            lnurl_pay_comment: var_lnurlPayComment,
+            lnurl_pay_domain: var_lnurlPayDomain,
+            lnurl_pay_metadata: var_lnurlPayMetadata,
+            lnurl_pay_success_action: var_lnurlPaySuccessAction,
+            lnurl_pay_unprocessed_success_action: var_lnurlPayUnprocessedSuccessAction,
+            lnurl_withdraw_endpoint: var_lnurlWithdrawEndpoint,
+        };
+    }
+}
+
 impl SseDecode for crate::bindings::duplicates::LnUrlPayError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3402,6 +3426,17 @@ impl SseDecode for Option<crate::model::ListPaymentDetails> {
     }
 }
 
+impl SseDecode for Option<crate::model::LnUrlInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::model::LnUrlInfo>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::model::PayAmount> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3588,6 +3623,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt12Offer = <Option<String>>::sse_decode(deserializer);
                 let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
+                let mut var_lnurlInfo = <Option<crate::model::LnUrlInfo>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Lightning {
@@ -3597,6 +3633,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     bolt11: var_bolt11,
                     bolt12_offer: var_bolt12Offer,
                     payment_hash: var_paymentHash,
+                    lnurl_info: var_lnurlInfo,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
                 };
@@ -3806,11 +3843,15 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
+        let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_successAction =
             <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
         return crate::model::PrepareLnUrlPayResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
+            data: var_data,
+            comment: var_comment,
             success_action: var_successAction,
         };
     }
@@ -5135,6 +5176,29 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::LnUrlErrorDat
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::LnUrlInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ln_address.into_into_dart().into_dart(),
+            self.lnurl_pay_comment.into_into_dart().into_dart(),
+            self.lnurl_pay_domain.into_into_dart().into_dart(),
+            self.lnurl_pay_metadata.into_into_dart().into_dart(),
+            self.lnurl_pay_success_action.into_into_dart().into_dart(),
+            self.lnurl_pay_unprocessed_success_action
+                .into_into_dart()
+                .into_dart(),
+            self.lnurl_withdraw_endpoint.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::LnUrlInfo {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::LnUrlInfo> for crate::model::LnUrlInfo {
+    fn into_into_dart(self) -> crate::model::LnUrlInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlPayError {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -5627,6 +5691,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 bolt11,
                 bolt12_offer,
                 payment_hash,
+                lnurl_info,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => [
@@ -5637,6 +5702,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 bolt11.into_into_dart().into_dart(),
                 bolt12_offer.into_into_dart().into_dart(),
                 payment_hash.into_into_dart().into_dart(),
+                lnurl_info.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
             ]
@@ -5867,6 +5933,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayResponse {
         [
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.data.into_into_dart().into_dart(),
+            self.comment.into_into_dart().into_dart(),
             self.success_action.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -7169,6 +7237,25 @@ impl SseEncode for crate::bindings::LnUrlErrorData {
     }
 }
 
+impl SseEncode for crate::model::LnUrlInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<String>>::sse_encode(self.ln_address, serializer);
+        <Option<String>>::sse_encode(self.lnurl_pay_comment, serializer);
+        <Option<String>>::sse_encode(self.lnurl_pay_domain, serializer);
+        <Option<String>>::sse_encode(self.lnurl_pay_metadata, serializer);
+        <Option<crate::bindings::SuccessActionProcessed>>::sse_encode(
+            self.lnurl_pay_success_action,
+            serializer,
+        );
+        <Option<crate::bindings::SuccessAction>>::sse_encode(
+            self.lnurl_pay_unprocessed_success_action,
+            serializer,
+        );
+        <Option<String>>::sse_encode(self.lnurl_withdraw_endpoint, serializer);
+    }
+}
+
 impl SseEncode for crate::bindings::duplicates::LnUrlPayError {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7498,6 +7585,16 @@ impl SseEncode for Option<crate::model::ListPaymentDetails> {
     }
 }
 
+impl SseEncode for Option<crate::model::LnUrlInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::model::LnUrlInfo>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::model::PayAmount> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7650,6 +7747,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 bolt11,
                 bolt12_offer,
                 payment_hash,
+                lnurl_info,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => {
@@ -7660,6 +7758,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <Option<String>>::sse_encode(bolt11, serializer);
                 <Option<String>>::sse_encode(bolt12_offer, serializer);
                 <Option<String>>::sse_encode(payment_hash, serializer);
+                <Option<crate::model::LnUrlInfo>>::sse_encode(lnurl_info, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
             }
@@ -7861,6 +7960,8 @@ impl SseEncode for crate::model::PrepareLnUrlPayResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+        <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
+        <Option<String>>::sse_encode(self.comment, serializer);
         <Option<crate::bindings::SuccessAction>>::sse_encode(self.success_action, serializer);
     }
 }
@@ -8577,6 +8678,13 @@ mod io {
             CstDecode::<crate::bindings::LnUrlErrorData>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::LnUrlInfo> for *mut wire_cst_ln_url_info {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::LnUrlInfo {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::LnUrlInfo>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::bindings::LnUrlPayErrorData> for *mut wire_cst_ln_url_pay_error_data {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::LnUrlPayErrorData {
@@ -9289,6 +9397,22 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::LnUrlInfo> for wire_cst_ln_url_info {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::LnUrlInfo {
+            crate::model::LnUrlInfo {
+                ln_address: self.ln_address.cst_decode(),
+                lnurl_pay_comment: self.lnurl_pay_comment.cst_decode(),
+                lnurl_pay_domain: self.lnurl_pay_domain.cst_decode(),
+                lnurl_pay_metadata: self.lnurl_pay_metadata.cst_decode(),
+                lnurl_pay_success_action: self.lnurl_pay_success_action.cst_decode(),
+                lnurl_pay_unprocessed_success_action: self
+                    .lnurl_pay_unprocessed_success_action
+                    .cst_decode(),
+                lnurl_withdraw_endpoint: self.lnurl_withdraw_endpoint.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::bindings::duplicates::LnUrlPayError> for wire_cst_ln_url_pay_error {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::duplicates::LnUrlPayError {
@@ -9638,6 +9762,7 @@ mod io {
                         bolt11: ans.bolt11.cst_decode(),
                         bolt12_offer: ans.bolt12_offer.cst_decode(),
                         payment_hash: ans.payment_hash.cst_decode(),
+                        lnurl_info: ans.lnurl_info.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
                     }
@@ -9778,6 +9903,8 @@ mod io {
             crate::model::PrepareLnUrlPayResponse {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
+                data: self.data.cst_decode(),
+                comment: self.comment.cst_decode(),
                 success_action: self.success_action.cst_decode(),
             }
         }
@@ -10595,6 +10722,24 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_ln_url_info {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                ln_address: core::ptr::null_mut(),
+                lnurl_pay_comment: core::ptr::null_mut(),
+                lnurl_pay_domain: core::ptr::null_mut(),
+                lnurl_pay_metadata: core::ptr::null_mut(),
+                lnurl_pay_success_action: core::ptr::null_mut(),
+                lnurl_pay_unprocessed_success_action: core::ptr::null_mut(),
+                lnurl_withdraw_endpoint: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_ln_url_info {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_ln_url_pay_error {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -10931,6 +11076,8 @@ mod io {
             Self {
                 destination: Default::default(),
                 fees_sat: Default::default(),
+                data: Default::default(),
+                comment: core::ptr::null_mut(),
                 success_action: core::ptr::null_mut(),
             }
         }
@@ -11841,6 +11988,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_info(
+    ) -> *mut wire_cst_ln_url_info {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_ln_url_info::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_ln_url_pay_error_data(
     ) -> *mut wire_cst_ln_url_pay_error_data {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -12719,6 +12874,17 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_ln_url_info {
+        ln_address: *mut wire_cst_list_prim_u_8_strict,
+        lnurl_pay_comment: *mut wire_cst_list_prim_u_8_strict,
+        lnurl_pay_domain: *mut wire_cst_list_prim_u_8_strict,
+        lnurl_pay_metadata: *mut wire_cst_list_prim_u_8_strict,
+        lnurl_pay_success_action: *mut wire_cst_success_action_processed,
+        lnurl_pay_unprocessed_success_action: *mut wire_cst_success_action,
+        lnurl_withdraw_endpoint: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_ln_url_pay_error {
         tag: i32,
         kind: LnUrlPayErrorKind,
@@ -13039,6 +13205,7 @@ mod io {
         bolt11: *mut wire_cst_list_prim_u_8_strict,
         bolt12_offer: *mut wire_cst_list_prim_u_8_strict,
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
+        lnurl_info: *mut wire_cst_ln_url_info,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
     }
@@ -13154,6 +13321,8 @@ mod io {
     pub struct wire_cst_prepare_ln_url_pay_response {
         destination: wire_cst_send_destination,
         fees_sat: u64,
+        data: wire_cst_ln_url_pay_request_data,
+        comment: *mut wire_cst_list_prim_u_8_strict,
         success_action: *mut wire_cst_success_action,
     }
     #[repr(C)]
