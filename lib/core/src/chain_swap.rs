@@ -716,27 +716,6 @@ impl ChainSwapHandler {
             })
     }
 
-    fn notify_swap_changes(
-        &self,
-        swap: ChainSwap,
-        updated_swap: ChainSwap,
-    ) -> Result<(), PaymentError> {
-        let payment_id = match swap.direction {
-            Direction::Incoming => updated_swap
-                .claim_tx_id
-                .clone()
-                .or(swap.claim_tx_id.clone()),
-            Direction::Outgoing => updated_swap
-                .user_lockup_tx_id
-                .clone()
-                .or(swap.user_lockup_tx_id.clone()),
-        };
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
-        }
-        Ok(())
-    }
-
     // Updates the swap without state transition validation
     pub(crate) fn update_swap(&self, updated_swap: ChainSwap) -> Result<(), PaymentError> {
         let swap = self.fetch_chain_swap_by_id(&updated_swap.id)?;
@@ -751,7 +730,7 @@ impl ChainSwapHandler {
                 updated_swap.refund_tx_id
             );
             self.persister.insert_or_update_chain_swap(&updated_swap)?;
-            self.notify_swap_changes(swap, updated_swap)?;
+            let _ = self.subscription_notifier.send(updated_swap.id);
         }
         Ok(())
     }
@@ -767,7 +746,7 @@ impl ChainSwapHandler {
         self.persister.try_handle_chain_swap_update(swap_update)?;
         let updated_swap = self.fetch_chain_swap_by_id(&swap_update.swap_id)?;
         if updated_swap != swap {
-            self.notify_swap_changes(swap, updated_swap)?;
+            let _ = self.subscription_notifier.send(updated_swap.id);
         }
         Ok(())
     }
