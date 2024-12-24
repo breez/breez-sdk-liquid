@@ -248,8 +248,8 @@ fun asConfig(config: ReadableMap): Config? {
                 "network",
                 "paymentTimeoutSec",
                 "zeroConfMinFeeRateMsat",
-                "useDefaultExternalInputParsers",
                 "syncServiceUrl",
+                "useDefaultExternalInputParsers",
             ),
         )
     ) {
