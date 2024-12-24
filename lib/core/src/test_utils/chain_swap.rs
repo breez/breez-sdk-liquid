@@ -49,7 +49,94 @@ pub(crate) fn new_chain_swap(
     payment_state: Option<PaymentState>,
     accept_zero_conf: bool,
     user_lockup_tx_id: Option<String>,
+    zero_amount: bool,
 ) -> ChainSwap {
+    if zero_amount {
+        if direction == Direction::Outgoing {
+            panic!("Zero amount swaps must be incoming")
+        }
+        return ChainSwap {
+            id: generate_random_string(4),
+            direction: Direction::Incoming,
+            claim_address: None,
+            lockup_address: "tb1p7cftn5u3ndt8ln0m6hruwyhsz8kc5sxt557ua03qcew0z29u5paqh8f7uu"
+                .to_string(),
+            timeout_block_height: 2868778,
+            preimage: "bbce422d96c0386c3a6c1b1fe11fc7be3fdd871c6855db6ab2e319e96ec19c78"
+                .to_string(),
+            description: Some("Bitcoin transfer".to_string()),
+            create_response_json: r#"{
+              "claim_details": {
+                "swapTree": {
+                  "claimLeaf": {
+                    "output": "82012088a914e5ec6c5b814b2d8616c1a0da0acc8b3388cf80d78820e5f32fc89e6947ca08a7855a99ac145f7de599446a0cc0ff4c9aa2694baa1138ac",
+                    "version": 196
+                  },
+                  "refundLeaf": {
+                    "output": "20692bbff63e48c1c05c5efeb7080f7c2416d2f9ecb79d217410eabc125f4d2ff0ad0312a716b1",
+                    "version": 196
+                  }
+                },
+                "lockupAddress": "tlq1pq0gfse32q454tmr30t7yl6lx2sv5sswdzh3j0zygz9v5jwwdq6deaec8ntnjq55yrx300u9ts5ykqnfcpuzrypmtda9yuszq0zpl6j8l9tunvqjyrdm3",
+                "serverPublicKey": "02692bbff63e48c1c05c5efeb7080f7c2416d2f9ecb79d217410eabc125f4d2ff0",
+                "timeoutBlockHeight": 1484562,
+                "amount": 0,
+                "blindingKey": "ebdd91bb06b2282e879256ff1c1a976016a582fea5418188799b1598281b0a5b"
+              },
+              "lockup_details": {
+                "swapTree": {
+                  "claimLeaf": {
+                    "output": "82012088a914e5ec6c5b814b2d8616c1a0da0acc8b3388cf80d7882039688adbf0625672ec56e713e65ce809ee84e96525a13a68fe521588bf41628cac",
+                    "version": 192
+                  },
+                  "refundLeaf": {
+                    "output": "20edf1db3da18ad19962c8dfd7566048c7dc2e11f3d6580cbfed8f9a1321ffe4c7ad032ac62bb1",
+                    "version": 192
+                  }
+                },
+                "lockupAddress": "tb1p7cftn5u3ndt8ln0m6hruwyhsz8kc5sxt557ua03qcew0z29u5paqh8f7uu",
+                "serverPublicKey": "0239688adbf0625672ec56e713e65ce809ee84e96525a13a68fe521588bf41628c",
+                "timeoutBlockHeight": 2868778,
+                "amount": 0,
+                "bip21": "bitcoin:tb1p7cftn5u3ndt8ln0m6hruwyhsz8kc5sxt557ua03qcew0z29u5paqh8f7uu?amount=0.0001836&label=Send%20to%20L-BTC%20address"
+              }
+            }"#.to_string(),
+            claim_private_key: "4b04c3b95570fc48c7f33bc900b801245c2be31b90d41616477574aedc5b9d28"
+                .to_string(),
+            refund_private_key: "9e23d322577cfeb2b5490f3f86db58c806004afcb7c88995927bfdfc1c64cd8c"
+                .to_string(),
+            payer_amount_sat: 0,
+            receiver_amount_sat: 0,
+            claim_fees_sat: 144,
+            server_lockup_tx_id: None,
+            user_lockup_tx_id,
+            claim_tx_id: None,
+            refund_tx_id: None,
+            created_at: utils::now(),
+            state: payment_state.unwrap_or(PaymentState::Created),
+            accept_zero_conf,
+            pair_fees_json: r#"{
+                "hash": "43087e267db95668b9b7c48efcf44d922484870f1bdb8b926e5d6b76bf4d0709",
+                "rate": 1,
+                "limits": {
+                    "maximal": 4294967,
+                    "minimal": 10000,
+                    "maximalZeroConf": 0
+                },
+                "fees": {
+                    "percentage": 0.1,
+                    "minerFees": {
+                        "server": 100,
+                        "user": {
+                            "claim": 100,
+                            "lockup": 100
+                        }
+                    }
+                }
+            }"#
+            .to_string(),
+        };
+    }
     match direction {
         Direction::Incoming => ChainSwap {
             id: generate_random_string(4),

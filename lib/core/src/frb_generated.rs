@@ -2092,6 +2092,7 @@ impl CstDecode<crate::model::PaymentState> for i32 {
             4 => crate::model::PaymentState::TimedOut,
             5 => crate::model::PaymentState::Refundable,
             6 => crate::model::PaymentState::RefundPending,
+            7 => crate::model::PaymentState::WaitingFeeAcceptance,
             _ => unreachable!("Invalid variant for PaymentState: {}", self),
         }
     }
@@ -2378,6 +2379,7 @@ impl SseDecode for crate::model::Config {
         let mut var_externalInputParsers =
             <Option<Vec<crate::bindings::ExternalInputParser>>>::sse_decode(deserializer);
         let mut var_useDefaultExternalInputParsers = <bool>::sse_decode(deserializer);
+        let mut var_onchainFeeRateLeewaySatPerVbyte = <Option<u32>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
@@ -2392,6 +2394,7 @@ impl SseDecode for crate::model::Config {
             breez_api_key: var_breezApiKey,
             external_input_parsers: var_externalInputParsers,
             use_default_external_input_parsers: var_useDefaultExternalInputParsers,
+            onchain_fee_rate_leeway_sat_per_vbyte: var_onchainFeeRateLeewaySatPerVbyte,
         };
     }
 }
@@ -3779,6 +3782,7 @@ impl SseDecode for crate::model::PaymentState {
             4 => crate::model::PaymentState::TimedOut,
             5 => crate::model::PaymentState::Refundable,
             6 => crate::model::PaymentState::RefundPending,
+            7 => crate::model::PaymentState::WaitingFeeAcceptance,
             _ => unreachable!("Invalid variant for PaymentState: {}", inner),
         };
     }
@@ -4168,6 +4172,12 @@ impl SseDecode for crate::model::SdkEvent {
                 };
             }
             6 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::SdkEvent::PaymentWaitingFeeAcceptance {
+                    details: var_details,
+                };
+            }
+            7 => {
                 return crate::model::SdkEvent::Synced;
             }
             _ => {
@@ -4673,6 +4683,9 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.breez_api_key.into_into_dart().into_dart(),
             self.external_input_parsers.into_into_dart().into_dart(),
             self.use_default_external_input_parsers
+                .into_into_dart()
+                .into_dart(),
+            self.onchain_fee_rate_leeway_sat_per_vbyte
                 .into_into_dart()
                 .into_dart(),
         ]
@@ -5833,6 +5846,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentState {
             Self::TimedOut => 4.into_dart(),
             Self::Refundable => 5.into_dart(),
             Self::RefundPending => 6.into_dart(),
+            Self::WaitingFeeAcceptance => 7.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -6365,7 +6379,10 @@ impl flutter_rust_bridge::IntoDart for crate::model::SdkEvent {
             crate::model::SdkEvent::PaymentWaitingConfirmation { details } => {
                 [5.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::Synced => [6.into_dart()].into_dart(),
+            crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
+                [6.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::SdkEvent::Synced => [7.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -6784,6 +6801,7 @@ impl SseEncode for crate::model::Config {
             serializer,
         );
         <bool>::sse_encode(self.use_default_external_input_parsers, serializer);
+        <Option<u32>>::sse_encode(self.onchain_fee_rate_leeway_sat_per_vbyte, serializer);
     }
 }
 
@@ -7903,6 +7921,7 @@ impl SseEncode for crate::model::PaymentState {
                 crate::model::PaymentState::TimedOut => 4,
                 crate::model::PaymentState::Refundable => 5,
                 crate::model::PaymentState::RefundPending => 6,
+                crate::model::PaymentState::WaitingFeeAcceptance => 7,
                 _ => {
                     unimplemented!("");
                 }
@@ -8177,8 +8196,12 @@ impl SseEncode for crate::model::SdkEvent {
                 <i32>::sse_encode(5, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::Synced => {
+            crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
                 <i32>::sse_encode(6, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::SdkEvent::Synced => {
+                <i32>::sse_encode(7, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -8942,6 +8965,9 @@ mod io {
                 external_input_parsers: self.external_input_parsers.cst_decode(),
                 use_default_external_input_parsers: self
                     .use_default_external_input_parsers
+                    .cst_decode(),
+                onchain_fee_rate_leeway_sat_per_vbyte: self
+                    .onchain_fee_rate_leeway_sat_per_vbyte
                     .cst_decode(),
             }
         }
@@ -10147,7 +10173,13 @@ mod io {
                         details: ans.details.cst_decode(),
                     }
                 }
-                6 => crate::model::SdkEvent::Synced,
+                6 => {
+                    let ans = unsafe { self.kind.PaymentWaitingFeeAcceptance };
+                    crate::model::SdkEvent::PaymentWaitingFeeAcceptance {
+                        details: ans.details.cst_decode(),
+                    }
+                }
+                7 => crate::model::SdkEvent::Synced,
                 _ => unreachable!(),
             }
         }
@@ -10432,6 +10464,7 @@ mod io {
                 breez_api_key: core::ptr::null_mut(),
                 external_input_parsers: core::ptr::null_mut(),
                 use_default_external_input_parsers: Default::default(),
+                onchain_fee_rate_leeway_sat_per_vbyte: core::ptr::null_mut(),
             }
         }
     }
@@ -12511,6 +12544,7 @@ mod io {
         breez_api_key: *mut wire_cst_list_prim_u_8_strict,
         external_input_parsers: *mut wire_cst_list_external_input_parser,
         use_default_external_input_parsers: bool,
+        onchain_fee_rate_leeway_sat_per_vbyte: *mut u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13485,6 +13519,7 @@ mod io {
         PaymentRefundPending: wire_cst_SdkEvent_PaymentRefundPending,
         PaymentSucceeded: wire_cst_SdkEvent_PaymentSucceeded,
         PaymentWaitingConfirmation: wire_cst_SdkEvent_PaymentWaitingConfirmation,
+        PaymentWaitingFeeAcceptance: wire_cst_SdkEvent_PaymentWaitingFeeAcceptance,
         nil__: (),
     }
     #[repr(C)]
@@ -13515,6 +13550,11 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_SdkEvent_PaymentWaitingConfirmation {
+        details: *mut wire_cst_payment,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
         details: *mut wire_cst_payment,
     }
     #[repr(C)]

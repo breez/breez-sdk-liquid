@@ -1725,6 +1725,88 @@ abstract class SdkEvent_PaymentWaitingConfirmation extends SdkEvent {
 }
 
 /// @nodoc
+abstract class _$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWith<$Res> {
+  factory _$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWith(
+          _$SdkEvent_PaymentWaitingFeeAcceptanceImpl value,
+          $Res Function(_$SdkEvent_PaymentWaitingFeeAcceptanceImpl) then) =
+      __$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Payment details});
+}
+
+/// @nodoc
+class __$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWithImpl<$Res>
+    extends _$SdkEventCopyWithImpl<$Res, _$SdkEvent_PaymentWaitingFeeAcceptanceImpl>
+    implements _$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWith<$Res> {
+  __$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWithImpl(_$SdkEvent_PaymentWaitingFeeAcceptanceImpl _value,
+      $Res Function(_$SdkEvent_PaymentWaitingFeeAcceptanceImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? details = null,
+  }) {
+    return _then(_$SdkEvent_PaymentWaitingFeeAcceptanceImpl(
+      details: null == details
+          ? _value.details
+          : details // ignore: cast_nullable_to_non_nullable
+              as Payment,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SdkEvent_PaymentWaitingFeeAcceptanceImpl extends SdkEvent_PaymentWaitingFeeAcceptance {
+  const _$SdkEvent_PaymentWaitingFeeAcceptanceImpl({required this.details}) : super._();
+
+  @override
+  final Payment details;
+
+  @override
+  String toString() {
+    return 'SdkEvent.paymentWaitingFeeAcceptance(details: $details)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SdkEvent_PaymentWaitingFeeAcceptanceImpl &&
+            (identical(other.details, details) || other.details == details));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, details);
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWith<_$SdkEvent_PaymentWaitingFeeAcceptanceImpl>
+      get copyWith => __$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWithImpl<
+          _$SdkEvent_PaymentWaitingFeeAcceptanceImpl>(this, _$identity);
+}
+
+abstract class SdkEvent_PaymentWaitingFeeAcceptance extends SdkEvent {
+  const factory SdkEvent_PaymentWaitingFeeAcceptance({required final Payment details}) =
+      _$SdkEvent_PaymentWaitingFeeAcceptanceImpl;
+  const SdkEvent_PaymentWaitingFeeAcceptance._() : super._();
+
+  Payment get details;
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SdkEvent_PaymentWaitingFeeAcceptanceImplCopyWith<_$SdkEvent_PaymentWaitingFeeAcceptanceImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$SdkEvent_SyncedImplCopyWith<$Res> {
   factory _$$SdkEvent_SyncedImplCopyWith(
           _$SdkEvent_SyncedImpl value, $Res Function(_$SdkEvent_SyncedImpl) then) =
