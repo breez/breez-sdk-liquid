@@ -91,13 +91,12 @@ impl Persister {
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         Self::insert_or_update_receive_swap_inner(&tx, receive_swap)?;
+
         // Trigger a sync if:
         // - updated_fields is None (swap is inserted, not updated)
         // - updated_fields in a non empty list of updated fields
         let trigger_sync = updated_fields.as_ref().map_or(true, |u| !u.is_empty());
-        if trigger_sync {
-            self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
-        }
+        self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
 
         tx.commit()?;
 
