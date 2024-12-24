@@ -4545,6 +4545,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
+  external ffi.Pointer<ffi.Uint32> expiry_timestamp;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
@@ -4570,6 +4572,8 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint32> expiry_timestamp;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 

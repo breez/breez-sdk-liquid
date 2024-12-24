@@ -29,10 +29,11 @@ impl Persister {
                 create_response_json,
                 refund_private_key,
                 created_at,
+                expiry_at,
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT DO NOTHING
             ",
             (
@@ -46,6 +47,7 @@ impl Persister {
                 &send_swap.create_response_json,
                 &send_swap.refund_private_key,
                 &send_swap.created_at,
+                &send_swap.expiry_at,
                 &send_swap.state,
                 &send_swap.pair_fees_json,
             ),
@@ -58,6 +60,7 @@ impl Persister {
                 preimage = :preimage,
                 lockup_tx_id = :lockup_tx_id,
                 refund_tx_id = :refund_tx_id,
+                expiry_at = :expiry_at,
                 state = :state
             WHERE
                 id = :id",
@@ -67,6 +70,7 @@ impl Persister {
                 ":preimage": &send_swap.preimage,
                 ":lockup_tx_id": &send_swap.lockup_tx_id,
                 ":refund_tx_id": &send_swap.refund_tx_id,
+                ":expiry_at": &send_swap.expiry_at,
                 ":state": &send_swap.state,
             },
         )?;
@@ -131,6 +135,7 @@ impl Persister {
                 lockup_tx_id,
                 refund_tx_id,
                 created_at,
+                expiry_at,
                 state,
                 pair_fees_json
             FROM send_swaps
@@ -171,8 +176,9 @@ impl Persister {
             lockup_tx_id: row.get(10)?,
             refund_tx_id: row.get(11)?,
             created_at: row.get(12)?,
-            state: row.get(13)?,
-            pair_fees_json: row.get(14)?,
+            expiry_at: row.get(13)?,
+            state: row.get(14)?,
+            pair_fees_json: row.get(15)?,
         })
     }
 
