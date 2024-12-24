@@ -240,7 +240,11 @@ impl Persister {
     }
 
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        self.list_chain_swaps_by_state(vec![PaymentState::Pending, PaymentState::RefundPending, PaymentState::WaitingFeeAcceptance])
+        self.list_chain_swaps_by_state(vec![
+            PaymentState::Pending,
+            PaymentState::RefundPending,
+            PaymentState::WaitingFeeAcceptance,
+        ])
     }
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {

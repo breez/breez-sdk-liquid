@@ -2512,7 +2512,11 @@ impl LiquidSdk {
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
         let payments = self.persister.get_payments(&ListPaymentsRequest {
-            states: Some(vec![PaymentState::Pending, PaymentState::RefundPending]),
+            states: Some(vec![
+                PaymentState::Pending,
+                PaymentState::RefundPending,
+                PaymentState::WaitingFeeAcceptance,
+            ]),
             ..Default::default()
         })?;
 
@@ -2581,6 +2585,13 @@ impl LiquidSdk {
                     err: format!("Could not find Swap {}", req.swap_id),
                 })?;
 
+        ensure_sdk!(
+            chain_swap.state == WaitingFeeAcceptance,
+            SdkError::Generic {
+                err: "Payment is not WaitingFeeAcceptance".to_string()
+            }
+        );
+
         let server_lockup_quote = self
             .swapper
             .get_zero_amount_chain_swap_quote(&req.swap_id)?;
@@ -2615,6 +2626,13 @@ impl LiquidSdk {
                     err: format!("Could not find Swap {}", swap_id),
                 })?;
 
+        ensure_sdk!(
+            chain_swap.state == WaitingFeeAcceptance,
+            PaymentError::Generic {
+                err: "Payment is not WaitingFeeAcceptance".to_string()
+            }
+        );
+
         let server_lockup_quote = self.swapper.get_zero_amount_chain_swap_quote(&swap_id)?;
 
         ensure_sdk!(
@@ -2629,9 +2647,11 @@ impl LiquidSdk {
         )?;
         self.swapper
             .accept_zero_amount_chain_swap_quote(&swap_id, server_lockup_quote.to_sat())?;
-        self.chain_swap_handler
-            .update_swap_info(&swap_id, Pending, None, None, None, None)
-            .await
+        self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
+            swap_id,
+            to_state: Pending,
+            ..Default::default()
+        })
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].
@@ -3572,8 +3592,7 @@ mod tests {
     async fn test_zero_amount_chain_swap_zero_leeway() -> Result<()> {
         let user_lockup_sat = 50_000;
 
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::new());
         let status_stream = Arc::new(MockStatusStream::new());
         let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
@@ -3637,8 +3656,7 @@ mod tests {
         let user_lockup_sat = 50_000;
         let onchain_fee_rate_leeway_sat_per_vbyte = 5;
 
-        let (_tmp_dir, persister) = new_persister()?;
-        let persister = Arc::new(persister);
+        create_persister!(persister);
         let swapper = Arc::new(MockSwapper::new());
         let status_stream = Arc::new(MockStatusStream::new());
         let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));

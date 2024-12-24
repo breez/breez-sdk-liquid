@@ -101,9 +101,12 @@ impl ChainSwapHandler {
                     .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
 
                 match swap_state {
-                    // If the swap is not local (pulled from real-time sync) we do not claim twice
+                    // If the swap is not local (pulled from real-time sync) we do not:
+                    // - claim twice
+                    // - accept fees twice
                     ChainSwapStates::TransactionServerMempool
-                    | ChainSwapStates::TransactionServerConfirmed => {
+                    | ChainSwapStates::TransactionServerConfirmed
+                    | ChainSwapStates::TransactionLockupFailed => {
                         log::debug!("Received {swap_state:?} for non-local Chain swap {id} from status stream, skipping update.");
                         return Ok(());
                     }
@@ -378,11 +381,13 @@ impl ChainSwapHandler {
     }
 
     async fn handle_amountless_update(&self, swap: &ChainSwap) -> Result<(), PaymentError> {
+        let id = swap.id.clone();
+
         let quote = self
             .swapper
-            .get_zero_amount_chain_swap_quote(&swap.id)
+            .get_zero_amount_chain_swap_quote(&id)
             .map(|quote| quote.to_sat())?;
-        info!("Got quote of {quote} sat for swap {}", &swap.id);
+        info!("Got quote of {quote} sat for swap {}", &id);
 
         match self.validate_amountless_swap(swap, quote).await? {
             ValidateAmountlessSwapResult::ReadyForAccepting {
@@ -391,12 +396,12 @@ impl ChainSwapHandler {
             } => {
                 debug!("Zero-amount swap validated. Auto-accepting...");
                 self.persister.update_zero_amount_swap_values(
-                    &swap.id,
+                    &id,
                     user_lockup_amount_sat,
                     receiver_amount_sat,
                 )?;
                 self.swapper
-                    .accept_zero_amount_chain_swap_quote(&swap.id, quote)
+                    .accept_zero_amount_chain_swap_quote(&id, quote)
                     .map_err(Into::into)
             }
             ValidateAmountlessSwapResult::RequiresUserAction {
@@ -406,12 +411,15 @@ impl ChainSwapHandler {
                 debug!("Zero-amount swap validated. Fees are too high for automatic accepting. Moving to WaitingFeeAcceptance");
                 // While the user doesn't accept new fees, let's continue to show the original estimate
                 self.persister.update_zero_amount_swap_values(
-                    &swap.id,
+                    &id,
                     user_lockup_amount_sat,
                     receiver_amount_sat_original_estimate,
                 )?;
-                self.update_swap_info(&swap.id, WaitingFeeAcceptance, None, None, None, None)
-                    .await
+                self.update_swap_info(&ChainSwapUpdate {
+                    swap_id: id,
+                    to_state: WaitingFeeAcceptance,
+                    ..Default::default()
+                })
             }
         }
     }
@@ -942,9 +950,9 @@ impl ChainSwapHandler {
         let id = &swap.id;
 
         ensure_sdk!(
-            swap.state == Refundable,
+            swap.state.is_refundable(),
             PaymentError::Generic {
-                err: format!("Chain Swap {id} was not marked as `Refundable`")
+                err: format!("Chain Swap {id} was not in refundable state")
             }
         );
 

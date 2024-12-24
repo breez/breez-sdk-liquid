@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
@@ -1166,6 +1167,15 @@ impl FromSql for PaymentState {
             },
             _ => Err(FromSqlError::InvalidType),
         }
+    }
+}
+
+impl PaymentState {
+    pub(crate) fn is_refundable(&self) -> bool {
+        matches!(
+            self,
+            PaymentState::Refundable | PaymentState::WaitingFeeAcceptance
+        )
     }
 }
 
