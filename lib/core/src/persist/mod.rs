@@ -1,29 +1,39 @@
 mod address;
 mod backup;
-mod cache;
+pub(crate) mod cache;
 pub(crate) mod chain;
 mod migrations;
+pub(crate) mod model;
 pub(crate) mod receive;
 pub(crate) mod send;
+pub(crate) mod sync;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+use std::ops::Not;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
-use crate::error::PaymentError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
+use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
+use lwk_wollet::WalletTx;
 use migrations::current_migrations;
-use rusqlite::{params, params_from_iter, Connection, OptionalExtension, Row, ToSql};
+use model::PaymentTxDetails;
+use rusqlite::{
+    params, params_from_iter, Connection, OptionalExtension, Row, ToSql, TransactionBehavior,
+};
 use rusqlite_migration::{Migrations, M};
+use sdk_common::bitcoin::hashes::hex::ToHex;
+use tokio::sync::mpsc::Sender;
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
     network: LiquidNetwork,
+    sync_trigger: Sender<()>,
 }
 
 /// Builds a WHERE clause that checks if `state` is any of the given arguments
@@ -39,7 +49,11 @@ fn get_where_clause_state_in(allowed_states: &[PaymentState]) -> String {
 }
 
 impl Persister {
-    pub fn new(working_dir: &str, network: LiquidNetwork) -> Result<Self> {
+    pub fn new(
+        working_dir: &str,
+        network: LiquidNetwork,
+        sync_trigger: Sender<()>,
+    ) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
             create_dir_all(&main_db_dir)?;
@@ -47,6 +61,7 @@ impl Persister {
         Ok(Persister {
             main_db_dir,
             network,
+            sync_trigger,
         })
     }
 
@@ -86,15 +101,74 @@ impl Persister {
         }
     }
 
+    pub(crate) fn insert_or_update_payment_with_wallet_tx(&self, tx: &WalletTx) -> Result<()> {
+        let tx_id = tx.txid.to_string();
+        let is_tx_confirmed = tx.height.is_some();
+        let amount_sat = tx.balance.values().sum::<i64>();
+        let maybe_script_pubkey = tx
+            .outputs
+            .iter()
+            .find(|output| output.is_some())
+            .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
+        self.insert_or_update_payment(
+            PaymentTxData {
+                tx_id: tx_id.clone(),
+                timestamp: tx.timestamp,
+                amount_sat: amount_sat.unsigned_abs(),
+                fees_sat: tx.fee,
+                payment_type: match amount_sat >= 0 {
+                    true => PaymentType::Receive,
+                    false => PaymentType::Send,
+                },
+                is_confirmed: is_tx_confirmed,
+            },
+            maybe_script_pubkey.map(|destination| PaymentTxDetails {
+                tx_id,
+                destination,
+                ..Default::default()
+            }),
+            true,
+        )
+    }
+
+    pub(crate) fn list_unconfirmed_payment_txs_data(&self) -> Result<Vec<PaymentTxData>> {
+        let con = self.get_connection()?;
+        let mut stmt = con.prepare(
+            "SELECT tx_id, 
+                        timestamp, 
+                        amount_sat, 
+                        fees_sat, 
+                        payment_type, 
+                        is_confirmed
+            FROM payment_tx_data
+            WHERE is_confirmed = 0",
+        )?;
+        let payments: Vec<PaymentTxData> = stmt
+            .query_map([], |row| {
+                Ok(PaymentTxData {
+                    tx_id: row.get(0)?,
+                    timestamp: row.get(1)?,
+                    amount_sat: row.get(2)?,
+                    fees_sat: row.get(3)?,
+                    payment_type: row.get(4)?,
+                    is_confirmed: row.get(5)?,
+                })
+            })?
+            .map(|i| i.unwrap())
+            .collect();
+        Ok(payments)
+    }
+
     pub(crate) fn insert_or_update_payment(
         &self,
         ptx: PaymentTxData,
-        destination: Option<String>,
-        description: Option<String>,
-    ) -> Result<(), PaymentError> {
-        let con = self.get_connection()?;
-        con.execute(
-            "INSERT OR REPLACE INTO payment_tx_data (
+        payment_tx_details: Option<PaymentTxDetails>,
+        from_wallet_tx_data: bool,
+    ) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        tx.execute(
+            "INSERT INTO payment_tx_data (
            tx_id,
            timestamp,
            amount_sat,
@@ -103,10 +177,16 @@ impl Persister {
            is_confirmed
         )
         VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT (tx_id)
+        DO UPDATE SET timestamp = CASE WHEN excluded.is_confirmed = 1 THEN excluded.timestamp ELSE timestamp END,
+                      amount_sat = excluded.amount_sat,
+                      fees_sat = excluded.fees_sat,
+                      payment_type = excluded.payment_type,
+                      is_confirmed = excluded.is_confirmed
         ",
             (
                 &ptx.tx_id,
-                ptx.timestamp,
+                ptx.timestamp.or(Some(utils::now())),
                 ptx.amount_sat,
                 ptx.fees_sat,
                 ptx.payment_type,
@@ -114,40 +194,130 @@ impl Persister {
             ),
         )?;
 
-        if let Some(destination) = destination {
-            // Only store the destination if there is no payment_details entry else
-            // the destination is overwritten by the tx script_pubkey
-            con.execute(
-                "INSERT INTO payment_details (
-                    tx_id,
-                    destination,
-                    description 
-                )
-                VALUES (?1, ?2, ?3)
-                ON CONFLICT (tx_id)
-                DO UPDATE SET description = COALESCE(?3, description) 
-            ",
-                (ptx.tx_id, destination, description),
+        let mut trigger_sync = false;
+        if let Some(ref payment_tx_details) = payment_tx_details {
+            // If the update comes from the wallet tx:
+            // - Skip updating the destination from the script_pubkey
+            // - Skip syncing the payment_tx_details
+            Self::insert_or_update_payment_details_inner(
+                &tx,
+                payment_tx_details,
+                from_wallet_tx_data,
             )?;
+            if !from_wallet_tx_data {
+                self.commit_outgoing(
+                    &tx,
+                    &payment_tx_details.tx_id,
+                    RecordType::PaymentDetails,
+                    None,
+                )?;
+                trigger_sync = true;
+            }
+        }
+
+        tx.commit()?;
+
+        if trigger_sync {
+            self.sync_trigger.try_send(())?;
         }
 
         Ok(())
     }
 
-    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
+    fn insert_or_update_payment_details_inner(
+        con: &Connection,
+        payment_tx_details: &PaymentTxDetails,
+        skip_destination_update: bool,
+    ) -> Result<()> {
+        let destination_update = skip_destination_update
+            .not()
+            .then_some("destination = excluded.destination,")
+            .unwrap_or_default();
+        con.execute(
+            &format!(
+                "INSERT INTO payment_details (
+                tx_id,
+                destination,
+                description,
+                lnurl_info_json
+            )
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (tx_id)
+            DO UPDATE SET
+                {destination_update}
+                description = COALESCE(excluded.description, description),
+                lnurl_info_json = COALESCE(excluded.lnurl_info_json, lnurl_info_json)
+        "
+            ),
+            (
+                &payment_tx_details.tx_id,
+                &payment_tx_details.destination,
+                &payment_tx_details.description,
+                payment_tx_details
+                    .lnurl_info
+                    .as_ref()
+                    .map(|info| serde_json::to_string(&info).ok()),
+            ),
+        )?;
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_payment_details(
+        &self,
+        payment_tx_details: PaymentTxDetails,
+    ) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_payment_details_inner(&tx, &payment_tx_details, false)?;
+        self.commit_outgoing(
+            &tx,
+            &payment_tx_details.tx_id,
+            RecordType::PaymentDetails,
+            None,
+        )?;
+        tx.commit()?;
+
+        self.sync_trigger.try_send(())?;
+
+        Ok(())
+    }
+
+    pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
         let con = self.get_connection()?;
+        let mut stmt = con.prepare(
+            "SELECT destination, description, lnurl_info_json
+            FROM payment_details
+            WHERE tx_id = ?",
+        )?;
+        let res = stmt.query_row([tx_id], |row| {
+            let destination = row.get(0)?;
+            let description = row.get(1)?;
+            let maybe_lnurl_info_json: Option<String> = row.get(2)?;
+            Ok(PaymentTxDetails {
+                tx_id: tx_id.to_string(),
+                destination,
+                description,
+                lnurl_info: maybe_lnurl_info_json
+                    .and_then(|info| serde_json::from_str::<LnUrlInfo>(&info).ok()),
+            })
+        });
+        Ok(res.ok())
+    }
+
+    pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         let ongoing_send_swaps: Vec<Swap> = self
-            .list_ongoing_send_swaps(&con)?
+            .list_ongoing_send_swaps()?
             .into_iter()
             .map(Swap::Send)
             .collect();
         let ongoing_receive_swaps: Vec<Swap> = self
-            .list_ongoing_receive_swaps(&con)?
+            .list_ongoing_receive_swaps()?
             .into_iter()
             .map(Swap::Receive)
             .collect();
         let ongoing_chain_swaps: Vec<Swap> = self
-            .list_ongoing_chain_swaps(&con)?
+            .list_ongoing_chain_swaps()?
             .into_iter()
             .map(Swap::Chain)
             .collect();
@@ -209,25 +379,33 @@ impl Persister {
                 cs.pair_fees_json,
                 rtx.amount_sat,
                 pd.destination,
-                pd.description
+                pd.description,
+                pd.lnurl_info_json
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
                 SELECT * FROM receive_swaps
-                WHERE COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL
-            ) rs                                 -- Receive Swap data (by claim)
+                WHERE 
+                    COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL
+                    AND state NOT IN (0, 3, 4)   -- Ignore Created, Failed and TimedOut
+            ) rs                                 -- Receive Swap data
                 ON ptx.tx_id in (rs.claim_tx_id, rs.mrh_tx_id)
+            FULL JOIN (
+                SELECT * FROM chain_swaps
+                WHERE 
+                    COALESCE(user_lockup_tx_id, claim_tx_id) IS NOT NULL
+                    AND state NOT IN (0, 4)      -- Ignore Created and TimedOut
+            ) cs                                 -- Chain Swap data
+                ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
-            LEFT JOIN chain_swaps AS cs          -- Chain Swap data
-                ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
                 ON rtx.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
             LEFT JOIN payment_details AS pd      -- Payment details
                 ON pd.tx_id = ptx.tx_id
-            WHERE                                -- Filter out refund txs from Send Swaps
-                ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
-            AND                                  -- Filter out refund txs from Chain Swaps
-                ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL)
+            WHERE                                
+                (ptx.tx_id IS NULL               -- Filter out refund txs from Chain/Send Swaps
+                    OR ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
+                    AND ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL))
             AND {}
             ORDER BY                             -- Order by swap creation time or tx timestamp (in case of direct tx)
                 COALESCE(rs.created_at, ss.created_at, cs.created_at, ptx.timestamp) DESC
@@ -300,6 +478,9 @@ impl Persister {
 
         let maybe_payment_details_destination: Option<String> = row.get(40)?;
         let maybe_payment_details_description: Option<String> = row.get(41)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(42)?;
+        let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
+            maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => {
@@ -431,6 +612,7 @@ impl Persister {
                 bolt11,
                 bolt12_offer,
                 payment_hash,
+                lnurl_info: maybe_payment_details_lnurl_info,
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Lightning transfer".to_string()),
@@ -457,7 +639,11 @@ impl Persister {
 
         match (tx, swap.clone()) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
-            (None, Some(swap)) => Ok(Payment::from_pending_swap(swap, payment_type)),
+            (None, Some(swap)) => Ok(Payment::from_pending_swap(
+                swap,
+                payment_type,
+                payment_details,
+            )),
             (Some(tx), None) => Ok(Payment::from_tx_data(tx, None, payment_details)),
             (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap), payment_details)),
         }
@@ -467,7 +653,11 @@ impl Persister {
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(Some("ptx.tx_id = ?1"), None, None),
+                &self.select_payment_query(
+                    Some("(ptx.tx_id = ?1 OR COALESCE(rs.id, ss.id, cs.id) = ?1)"),
+                    None,
+                    None,
+                ),
                 params![id],
                 |row| self.sql_row_to_payment(row),
             )
@@ -510,6 +700,28 @@ impl Persister {
             .collect();
         Ok(payments)
     }
+
+    pub fn get_payments_by_tx_id(
+        &self,
+        req: &ListPaymentsRequest,
+    ) -> Result<HashMap<String, Payment>> {
+        let res: HashMap<String, Payment> = self
+            .get_payments(req)?
+            .into_iter()
+            .flat_map(|payment| {
+                // Index payments by both tx_id (lockup/claim) and refund_tx_id
+                let mut res = vec![];
+                if let Some(tx_id) = payment.tx_id.clone() {
+                    res.push((tx_id, payment.clone()));
+                }
+                if let Some(refund_tx_id) = payment.get_refund_tx_id() {
+                    res.push((refund_tx_id, payment));
+                }
+                res
+            })
+            .collect();
+        Ok(res)
+    }
 }
 
 fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToSql + '_>>) {
@@ -544,6 +756,20 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
         }
     }
 
+    if let Some(states) = &req.states {
+        if !states.is_empty() {
+            let states_hash: HashSet<i8> = HashSet::from_iter(states.iter().map(|s| *s as i8));
+            where_clause.push(format!(
+                "COALESCE(rs.state, ss.state, cs.state) in ({})",
+                states_hash
+                    .iter()
+                    .map(|t| format!("{}", t))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+    }
+
     if let Some(details) = &req.details {
         match details {
             ListPaymentDetails::Bitcoin { address } => {
@@ -570,9 +796,10 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
+        persist::PaymentTxDetails,
         prelude::ListPaymentsRequest,
         test_utils::persist::{
-            new_payment_tx_data, new_persister, new_receive_swap, new_send_swap,
+            create_persister, new_payment_tx_data, new_receive_swap, new_send_swap,
         },
     };
 
@@ -580,13 +807,16 @@ mod tests {
 
     #[test]
     fn test_get_payments() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         let payment_tx_data = new_payment_tx_data(PaymentType::Send);
         storage.insert_or_update_payment(
             payment_tx_data.clone(),
-            Some("mock-address".to_string()),
-            None,
+            Some(PaymentTxDetails {
+                destination: "mock-address".to_string(),
+                ..Default::default()
+            }),
+            false,
         )?;
 
         assert!(storage
@@ -602,10 +832,10 @@ mod tests {
 
     #[test]
     fn test_list_ongoing_swaps() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
-        storage.insert_send_swap(&new_send_swap(None))?;
-        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_send_swap(&new_send_swap(None))?;
+        storage.insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
 
         assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
 

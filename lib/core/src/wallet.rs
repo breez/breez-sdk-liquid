@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::{self, create_dir_all};
 use std::io::Write;
 use std::path::PathBuf;
@@ -9,6 +10,7 @@ use boltz_client::ElementsAddress;
 use log::{debug, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
+use lwk_wollet::elements::Txid;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
@@ -35,6 +37,9 @@ static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 pub trait OnchainWallet: Send + Sync {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
+
+    /// List all transactions in the wallet mapped by tx id
+    async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError>;
 
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
@@ -177,6 +182,17 @@ impl OnchainWallet for LiquidOnchainWallet {
         wallet.transactions().map_err(|e| PaymentError::Generic {
             err: format!("Failed to fetch wallet transactions: {e:?}"),
         })
+    }
+
+    /// List all transactions in the wallet mapped by tx id
+    async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError> {
+        let tx_map: HashMap<Txid, WalletTx> = self
+            .transactions()
+            .await?
+            .iter()
+            .map(|tx| (tx.txid, tx.clone()))
+            .collect();
+        Ok(tx_map)
     }
 
     /// Build a transaction to send funds to a recipient
@@ -328,9 +344,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             true,
             true,
         ))?;
+        // Use the cached derivation index with a buffer of 5 to perform the scan
         let index = self
             .persister
             .get_last_derivation_index()?
+            .map(|i| i + 5)
             .unwrap_or_default();
         match lwk_wollet::full_scan_to_index_with_electrum_client(
             &mut wallet,
@@ -377,12 +395,13 @@ mod tests {
     use super::*;
     use crate::model::Config;
     use crate::signer::SdkSigner;
-    use crate::test_utils::persist::new_persister;
+    use crate::test_utils::persist::create_persister;
     use crate::wallet::LiquidOnchainWallet;
-    use tempfile::TempDir;
+    use anyhow::Result;
+    use tempdir::TempDir;
 
     #[tokio::test]
-    async fn test_sign_and_check_message() {
+    async fn test_sign_and_check_message() -> Result<()> {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
@@ -390,11 +409,10 @@ mod tests {
         let config = Config::testnet(None);
 
         // Create a temporary directory for working_dir
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new("").unwrap();
         let working_dir = temp_dir.path().to_str().unwrap().to_string();
 
-        let (_temp_dir, storage) = new_persister().unwrap();
-        let storage = Arc::new(storage);
+        create_persister!(storage);
 
         let wallet: Arc<dyn OnchainWallet> = Arc::new(
             LiquidOnchainWallet::new(config, &working_dir, storage, sdk_signer.clone()).unwrap(),
@@ -444,5 +462,6 @@ mod tests {
         );
 
         // The temporary directory will be automatically deleted when temp_dir goes out of scope
+        Ok(())
     }
 }

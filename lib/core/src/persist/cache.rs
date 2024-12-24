@@ -2,13 +2,16 @@ use anyhow::Result;
 use rusqlite::{Transaction, TransactionBehavior};
 use std::str::FromStr;
 
+use crate::model::GetInfoResponse;
+use crate::sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, RecordType};
+
 use super::Persister;
 
+const KEY_WALLET_INFO: &str = "wallet_info";
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
-// TODO: The `last_derivation_index` needs to be synced
-const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
+pub(crate) const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
 
 impl Persister {
     fn get_cached_item_inner(tx: &Transaction, key: &str) -> Result<Option<String>> {
@@ -20,7 +23,11 @@ impl Persister {
         Ok(res.ok())
     }
 
-    fn update_cached_item_inner(tx: &Transaction, key: &str, value: String) -> Result<()> {
+    pub(crate) fn update_cached_item_inner(
+        tx: &Transaction,
+        key: &str,
+        value: String,
+    ) -> Result<()> {
         tx.execute(
             "INSERT OR REPLACE INTO cached_items (key, value) VALUES (?1,?2)",
             (key, value),
@@ -57,6 +64,19 @@ impl Persister {
         res
     }
 
+    pub fn set_wallet_info(&self, info: &GetInfoResponse) -> Result<()> {
+        let serialized_info = serde_json::to_string(info)?;
+        self.update_cached_item(KEY_WALLET_INFO, serialized_info)
+    }
+
+    pub fn get_wallet_info(&self) -> Result<Option<GetInfoResponse>> {
+        let info_str = self.get_cached_item(KEY_WALLET_INFO)?;
+        Ok(match info_str {
+            Some(str) => serde_json::from_str(str.as_str())?,
+            None => None,
+        })
+    }
+
     pub fn set_swapper_proxy_url(&self, swapper_proxy_url: String) -> Result<()> {
         self.update_cached_item(KEY_SWAPPER_PROXY_URL, swapper_proxy_url)
     }
@@ -91,8 +111,24 @@ impl Persister {
         self.get_cached_item(KEY_WEBHOOK_URL)
     }
 
+    pub fn set_last_derivation_index_inner(&self, tx: &Transaction, index: u32) -> Result<()> {
+        Self::update_cached_item_inner(tx, KEY_LAST_DERIVATION_INDEX, index.to_string())?;
+        self.commit_outgoing(
+            tx,
+            LAST_DERIVATION_INDEX_DATA_ID,
+            RecordType::LastDerivationIndex,
+            // insert a mock updated field so that merging with incoming data works as expected
+            Some(vec![LAST_DERIVATION_INDEX_DATA_ID.to_string()]),
+        )
+    }
+
     pub fn set_last_derivation_index(&self, index: u32) -> Result<()> {
-        self.update_cached_item(KEY_LAST_DERIVATION_INDEX, index.to_string())
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        self.set_last_derivation_index_inner(&tx, index)?;
+        tx.commit()?;
+        self.sync_trigger.try_send(())?;
+        Ok(())
     }
 
     pub fn get_last_derivation_index(&self) -> Result<Option<u32>> {
@@ -109,16 +145,13 @@ impl Persister {
                     .as_str()
                     .parse::<u32>()
                     .map(|index| index + 1)?;
-                Self::update_cached_item_inner(
-                    &tx,
-                    KEY_LAST_DERIVATION_INDEX,
-                    next_index.to_string(),
-                )?;
+                self.set_last_derivation_index_inner(&tx, next_index)?;
                 Some(next_index)
             }
             None => None,
         };
         tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(res)
     }
@@ -128,11 +161,11 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::persist::new_persister;
+    use crate::test_utils::persist::create_persister;
 
     #[test]
     fn test_cached_items() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
+        create_persister!(persister);
 
         persister.update_cached_item("key1", "val1".to_string())?;
         let item_value = persister.get_cached_item("key1")?;
@@ -147,7 +180,7 @@ mod tests {
 
     #[test]
     fn test_get_last_derivation_index() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
+        create_persister!(persister);
 
         let maybe_last_index = persister.get_last_derivation_index()?;
         assert!(maybe_last_index.is_none());
@@ -169,7 +202,7 @@ mod tests {
 
     #[test]
     fn test_next_derivation_index() -> Result<()> {
-        let (_temp_dir, persister) = new_persister()?;
+        create_persister!(persister);
 
         let maybe_next_index = persister.next_derivation_index()?;
         assert!(maybe_next_index.is_none());

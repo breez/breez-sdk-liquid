@@ -32,7 +32,7 @@ lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-s
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "2208dd5530908d5cf7b607f34f80155669ab299b", features = ["liquid"] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f77208acd34d74b571388889e856444908c59a85", features = ["liquid"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -54,9 +54,13 @@ electrum-client = { version = "0.19.0" }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
+prost = "0.13.3"
+ecies = "0.2.7"
+semver = "1.0.23"
+lazy_static = "1.5.0"
+tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 
 [dev-dependencies]
-lazy_static = "1.5.0"
 paste = "1.0.15"
 tempdir = "0.3.7"
 uuid = { version = "1.8.0", features = ["v4"] }
@@ -64,6 +68,7 @@ uuid = { version = "1.8.0", features = ["v4"] }
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }
 glob = "0.3.1"
+tonic-build = "0.12.3"
 
 # Pin these versions to fix iOS build issues
 [target.'cfg(target_os = "ios")'.build-dependencies]

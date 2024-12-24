@@ -9,9 +9,7 @@ use lwk_wollet::hashes::hex::DisplayHex;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::PaymentState::{
-    Complete, Created, Failed, Pending, RefundPending, Refundable, TimedOut,
-};
+use crate::model::PaymentState::*;
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::{Swap, Transaction};
 use crate::{ensure_sdk, utils};
@@ -61,36 +59,45 @@ impl ReceiveSwapHandler {
     /// Handles status updates from Boltz for Receive swaps
     pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
         let id = &update.id;
-        let swap_state = &update.status;
-        let receive_swap = self
-            .persister
-            .fetch_receive_swap_by_id(id)?
-            .ok_or(anyhow!("No ongoing Receive Swap found for ID {id}"))?;
+        let status = &update.status;
+        let swap_state = RevSwapStates::from_str(status)
+            .map_err(|_| anyhow!("Invalid RevSwapState for Receive Swap {id}: {status}"))?;
+        let receive_swap = self.fetch_receive_swap_by_id(id)?;
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
 
-        match RevSwapStates::from_str(swap_state) {
-            Ok(
-                RevSwapStates::SwapExpired
-                | RevSwapStates::InvoiceExpired
-                | RevSwapStates::TransactionFailed
-                | RevSwapStates::TransactionRefunded,
-            ) => {
+        if let Some(sync_state) = self.persister.get_sync_state_by_data_id(&receive_swap.id)? {
+            if !sync_state.is_local {
+                match swap_state {
+                    // If the swap is not local (pulled from real-time sync) we do not claim twice
+                    RevSwapStates::TransactionMempool | RevSwapStates::TransactionConfirmed => {
+                        log::debug!("Received {swap_state:?} for non-local Receive swap {id} from status stream, skipping update.");
+                        return Ok(());
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        match swap_state {
+            RevSwapStates::SwapExpired
+            | RevSwapStates::InvoiceExpired
+            | RevSwapStates::TransactionFailed
+            | RevSwapStates::TransactionRefunded => {
                 match receive_swap.mrh_tx_id {
                     Some(mrh_tx_id) => {
                         warn!("Swap {id} is expired but MRH payment was received: txid {mrh_tx_id}")
                     }
                     None => {
                         error!("Swap {id} entered into an unrecoverable state: {swap_state:?}");
-                        self.update_swap_info(id, Failed, None, None, None, None)
-                            .await?;
+                        self.update_swap_info(id, Failed, None, None, None, None)?;
                     }
                 }
                 Ok(())
             }
             // The lockup tx is in the mempool and we accept 0-conf => try to claim
             // Execute 0-conf preconditions check
-            Ok(RevSwapStates::TransactionMempool) => {
+            RevSwapStates::TransactionMempool => {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
@@ -122,8 +129,7 @@ impl ReceiveSwapHandler {
                 info!("swapper lockup was verified");
 
                 let lockup_tx_id = &transaction.id;
-                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None, None)
-                    .await?;
+                self.update_swap_info(id, Pending, None, Some(lockup_tx_id), None, None)?;
 
                 let lockup_tx = utils::deserialize_tx_hex(&transaction.hex)?;
 
@@ -173,7 +179,7 @@ impl ReceiveSwapHandler {
 
                 Ok(())
             }
-            Ok(RevSwapStates::TransactionConfirmed) => {
+            RevSwapStates::TransactionConfirmed => {
                 let Some(transaction) = update.transaction.clone() else {
                     return Err(anyhow!("Unexpected payload from Boltz status stream"));
                 };
@@ -203,8 +209,7 @@ impl ReceiveSwapHandler {
                         warn!("Claim tx for Receive Swap {id} was already broadcast: txid {claim_tx_id}")
                     }
                     None => {
-                        self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)
-                            .await?;
+                        self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)?;
                         match self.claim(id).await {
                             Ok(_) => {}
                             Err(err) => match err {
@@ -219,19 +224,39 @@ impl ReceiveSwapHandler {
                 Ok(())
             }
 
-            Ok(_) => {
-                debug!("Unhandled state for Receive Swap {id}: {swap_state}");
+            _ => {
+                debug!("Unhandled state for Receive Swap {id}: {swap_state:?}");
                 Ok(())
             }
-
-            _ => Err(anyhow!(
-                "Invalid RevSwapState for Receive Swap {id}: {swap_state}"
-            )),
         }
     }
 
-    /// Transitions a Receive swap to a new state
-    pub(crate) async fn update_swap_info(
+    fn fetch_receive_swap_by_id(&self, swap_id: &str) -> Result<ReceiveSwap, PaymentError> {
+        self.persister
+            .fetch_receive_swap_by_id(swap_id)
+            .map_err(|_| PaymentError::PersistError)?
+            .ok_or(PaymentError::Generic {
+                err: format!("Receive Swap not found {swap_id}"),
+            })
+    }
+
+    // Updates the swap without state transition validation
+    pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<(), PaymentError> {
+        let swap = self.fetch_receive_swap_by_id(&updated_swap.id)?;
+        if updated_swap != swap {
+            info!(
+                "Updating Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
+                updated_swap.id, updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
+            );
+            self.persister
+                .insert_or_update_receive_swap(&updated_swap)?;
+            let _ = self.subscription_notifier.send(updated_swap.id);
+        }
+        Ok(())
+    }
+
+    // Updates the swap state with validation
+    pub(crate) fn update_swap_info(
         &self,
         swap_id: &str,
         to_state: PaymentState,
@@ -244,20 +269,7 @@ impl ReceiveSwapHandler {
             "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
             swap_id, to_state, claim_tx_id, lockup_tx_id, mrh_tx_id
         );
-
-        let swap = self
-            .persister
-            .fetch_receive_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
-            .ok_or(PaymentError::Generic {
-                err: format!("Receive Swap not found {swap_id}"),
-            })?;
-        let payment_id = claim_tx_id
-            .or(lockup_tx_id)
-            .or(mrh_tx_id)
-            .map(|id| id.to_string())
-            .or(swap.claim_tx_id);
-
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
         Self::validate_state_transition(swap.state, to_state)?;
         self.persister.try_handle_receive_swap_update(
             swap_id,
@@ -267,18 +279,20 @@ impl ReceiveSwapHandler {
             mrh_tx_id,
             mrh_amount_sat,
         )?;
+        let updated_swap = self.fetch_receive_swap_by_id(swap_id)?;
 
-        if let Some(payment_id) = payment_id {
-            let _ = self.subscription_notifier.send(payment_id);
+        if mrh_tx_id.is_some() {
+            self.persister.delete_reserved_address(&swap.mrh_address)?;
+        }
+
+        if updated_swap != swap {
+            let _ = self.subscription_notifier.send(updated_swap.id);
         }
         Ok(())
     }
 
     async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
-        let swap = self
-            .persister
-            .fetch_receive_swap_by_id(swap_id)?
-            .ok_or(anyhow!("No Receive Swap found for ID {swap_id}"))?;
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         info!("Initiating claim for Receive Swap {swap_id}");
@@ -325,19 +339,14 @@ impl ReceiveSwapHandler {
                                 is_confirmed: false,
                             },
                             None,
-                            None,
+                            false,
                         )?;
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
-                        self.update_swap_info(
-                            swap_id,
-                            Pending,
-                            Some(&claim_tx_id),
-                            None,
-                            None,
-                            None,
-                        )
-                        .await
+                        // The claim_tx_id is already set by set_receive_swap_claim_tx_id. Manually trigger notifying
+                        // subscribers as update_swap_info will not recognise a change to the swap
+                        _ = self.subscription_notifier.send(claim_tx_id);
+                        Ok(())
                     }
                     Err(err) => {
                         // Multiple attempts to broadcast have failed. Unset the swap claim_tx_id
@@ -428,27 +437,23 @@ impl ReceiveSwapHandler {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-    };
+    use std::collections::{HashMap, HashSet};
 
     use anyhow::Result;
 
     use crate::{
         model::PaymentState::{self, *},
         test_utils::{
-            persist::{new_persister, new_receive_swap},
+            persist::{create_persister, new_receive_swap},
             receive_swap::new_receive_swap_handler,
         },
     };
 
     #[tokio::test]
     async fn test_receive_swap_state_transitions() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
-        let storage = Arc::new(storage);
+        create_persister!(persister);
 
-        let receive_swap_state_handler = new_receive_swap_handler(storage.clone())?;
+        let receive_swap_state_handler = new_receive_swap_handler(persister.clone())?;
 
         // Test valid combinations of states
         let valid_combinations = HashMap::from([
@@ -467,11 +472,10 @@ mod tests {
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
                 let receive_swap = new_receive_swap(Some(*first_state));
-                storage.insert_receive_swap(&receive_swap)?;
+                persister.insert_or_update_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *allowed_state, None, None, None, None)
-                    .await
                     .is_ok());
             }
         }
@@ -491,11 +495,10 @@ mod tests {
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
                 let receive_swap = new_receive_swap(Some(*first_state));
-                storage.insert_receive_swap(&receive_swap)?;
+                persister.insert_or_update_receive_swap(&receive_swap)?;
 
                 assert!(receive_swap_state_handler
                     .update_swap_info(&receive_swap.id, *disallowed_state, None, None, None, None)
-                    .await
                     .is_err());
             }
         }

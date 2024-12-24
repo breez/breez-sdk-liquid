@@ -65,6 +65,7 @@ export interface Config {
     network: LiquidNetwork
     paymentTimeoutSec: number
     zeroConfMinFeeRateMsat: number
+    syncServiceUrl: string
     breezApiKey?: string
     cacheDir?: string
     zeroConfMaxAmountSat?: number
@@ -158,6 +159,7 @@ export interface LiquidAddressData {
 
 export interface ListPaymentsRequest {
     filters?: PaymentType[]
+    states?: PaymentState[]
     fromTimestamp?: number
     toTimestamp?: number
     offset?: number
@@ -178,6 +180,16 @@ export interface LnUrlAuthRequestData {
 
 export interface LnUrlErrorData {
     reason: string
+}
+
+export interface LnUrlInfo {
+    lnAddress?: string
+    lnurlPayComment?: string
+    lnurlPayDomain?: string
+    lnurlPayMetadata?: string
+    lnurlPaySuccessAction?: SuccessActionProcessed
+    lnurlPayUnprocessedSuccessAction?: SuccessAction
+    lnurlWithdrawEndpoint?: string
 }
 
 export interface LnUrlPayErrorData {
@@ -287,6 +299,8 @@ export interface PrepareLnUrlPayRequest {
 export interface PrepareLnUrlPayResponse {
     destination: SendDestination
     feesSat: number
+    data: LnUrlPayRequestData
+    comment?: string
     successAction?: SuccessAction
 }
 
@@ -605,6 +619,7 @@ export type PaymentDetails = {
     bolt11?: string
     bolt12Offer?: string
     paymentHash?: string
+    lnurlInfo?: LnUrlInfo
     refundTxId?: string
     refundTxAmountSat?: number
 } | {

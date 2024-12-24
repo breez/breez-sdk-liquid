@@ -6,7 +6,7 @@ use boltz_client::PublicKey;
 use lwk_common::Signer as LwkSigner;
 use lwk_wollet::bitcoin::bip32::Xpriv;
 use lwk_wollet::bitcoin::Network;
-use lwk_wollet::elements_miniscript;
+use lwk_wollet::elements_miniscript::{self, ToPublicKey as _};
 use lwk_wollet::elements_miniscript::{
     bitcoin::{self, bip32::DerivationPath},
     elements::{
@@ -252,6 +252,21 @@ impl Signer for SdkSigner {
         Ok(Hmac::<sha256::Hash>::from_engine(engine)
             .as_byte_array()
             .to_vec())
+    }
+
+    fn ecies_encrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+        let keypair = self.xprv.to_keypair(&self.secp);
+        let rc_pub = keypair.public_key().to_public_key().to_bytes();
+        ecies::encrypt(&rc_pub, &msg).map_err(|err| SignerError::Generic {
+            err: format!("Could not encrypt data: {err}"),
+        })
+    }
+
+    fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+        let rc_prv = self.xprv.to_priv().to_bytes();
+        ecies::decrypt(&rc_prv, &msg).map_err(|err| SignerError::Generic {
+            err: format!("Could not decrypt data: {err}"),
+        })
     }
 }
 

@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use boltz_client::swaps::boltz::{ChainSwapDetails, CreateChainResponse};
-use rusqlite::{named_params, params, Connection, Row};
+use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
@@ -10,20 +8,22 @@ use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::RecordType;
 
 impl Persister {
-    pub(crate) fn insert_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
-        let con = self.get_connection()?;
-
+    pub(crate) fn insert_or_update_chain_swap_inner(
+        con: &Connection,
+        chain_swap: &ChainSwap,
+    ) -> Result<()> {
         // There is a limit of 16 param elements in a single tuple in rusqlite,
         // so we split up the insert into two statements.
-        let mut stmt = con.prepare(
+        let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
+        con.execute(
             "
             INSERT INTO chain_swaps (
                 id,
                 id_hash,
                 direction,
-                claim_address,
                 lockup_address,
                 timeout_block_height,
                 preimage,
@@ -35,51 +35,72 @@ impl Persister {
                 refund_private_key,
                 claim_fees_sat,
                 created_at,
-                state,
-                pair_fees_json
+                state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		    ON CONFLICT DO NOTHING",
+            (
+                &chain_swap.id,
+                &id_hash,
+                &chain_swap.direction,
+                &chain_swap.lockup_address,
+                &chain_swap.timeout_block_height,
+                &chain_swap.preimage,
+                &chain_swap.payer_amount_sat,
+                &chain_swap.receiver_amount_sat,
+                &chain_swap.accept_zero_conf,
+                &chain_swap.create_response_json,
+                &chain_swap.claim_private_key,
+                &chain_swap.refund_private_key,
+                &chain_swap.claim_fees_sat,
+                &chain_swap.created_at,
+                &chain_swap.state,
+            ),
         )?;
-        let id_hash = sha256::Hash::hash(chain_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute(params![
-            &chain_swap.id,
-            &id_hash,
-            &chain_swap.direction,
-            &chain_swap.claim_address,
-            &chain_swap.lockup_address,
-            &chain_swap.timeout_block_height,
-            &chain_swap.preimage,
-            &chain_swap.payer_amount_sat,
-            &chain_swap.receiver_amount_sat,
-            &chain_swap.accept_zero_conf,
-            &chain_swap.create_response_json,
-            &chain_swap.claim_private_key,
-            &chain_swap.refund_private_key,
-            &chain_swap.claim_fees_sat,
-            &chain_swap.created_at,
-            &chain_swap.state,
-            &chain_swap.pair_fees_json
-        ])?;
 
         con.execute(
             "UPDATE chain_swaps
             SET
                 description = :description,
+                payer_amount_sat = :payer_amount_sat,
+                receiver_amount_sat = :receiver_amount_sat,
+                accept_zero_conf = :accept_zero_conf,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
+                claim_address = :claim_address,
                 claim_tx_id = :claim_tx_id,
-                refund_tx_id = :refund_tx_id
+                refund_tx_id = :refund_tx_id,
+                pair_fees_json = :pair_fees_json,
+                state = :state
             WHERE
                 id = :id",
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
+                ":payer_amount_sat": &chain_swap.payer_amount_sat,
+                ":receiver_amount_sat": &chain_swap.receiver_amount_sat,
+                ":accept_zero_conf": &chain_swap.accept_zero_conf,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
+                ":claim_address": &chain_swap.claim_address,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
+                ":pair_fees_json": &chain_swap.pair_fees_json,
+                ":state": &chain_swap.state,
             },
         )?;
+
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_chain_swap_inner(&tx, chain_swap)?;
+        self.commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, None)?;
+        tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(())
     }
@@ -188,63 +209,29 @@ impl Persister {
 
     pub(crate) fn list_chain_swaps_by_state(
         &self,
-        con: &Connection,
         states: Vec<PaymentState>,
     ) -> Result<Vec<ChainSwap>> {
+        let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&states)];
-        self.list_chain_swaps_where(con, where_clause)
+        self.list_chain_swaps_where(&con, where_clause)
     }
 
-    pub(crate) fn list_ongoing_chain_swaps(&self, con: &Connection) -> Result<Vec<ChainSwap>> {
-        self.list_chain_swaps_by_state(con, vec![PaymentState::Created, PaymentState::Pending])
+    pub(crate) fn list_ongoing_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+        let con = self.get_connection()?;
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+        ])];
+
+        self.list_chain_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn list_pending_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_chain_swaps_by_state(
-            &con,
-            vec![PaymentState::Pending, PaymentState::RefundPending],
-        )
+        self.list_chain_swaps_by_state(vec![PaymentState::Pending, PaymentState::RefundPending])
     }
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_chain_swaps_by_state(&con, vec![PaymentState::Refundable])
-    }
-
-    /// Pending Chain swaps, indexed by refund tx id
-    pub(crate) fn list_pending_chain_swaps_by_refund_tx_id(
-        &self,
-    ) -> Result<HashMap<String, ChainSwap>> {
-        let res: HashMap<String, ChainSwap> = self
-            .list_pending_chain_swaps()?
-            .iter()
-            .filter_map(|pending_chain_swap| {
-                pending_chain_swap
-                    .refund_tx_id
-                    .as_ref()
-                    .map(|refund_tx_id| (refund_tx_id.clone(), pending_chain_swap.clone()))
-            })
-            .collect();
-        Ok(res)
-    }
-
-    /// This only returns the swaps that have a claim tx, skipping the pending ones that are being refunded.
-    pub(crate) fn list_pending_chain_swaps_by_claim_tx_id(
-        &self,
-    ) -> Result<HashMap<String, ChainSwap>> {
-        let con: Connection = self.get_connection()?;
-        let res: HashMap<String, ChainSwap> = self
-            .list_chain_swaps_by_state(&con, vec![PaymentState::Pending])?
-            .iter()
-            .filter_map(|pending_chain_swap| {
-                pending_chain_swap
-                    .claim_tx_id
-                    .as_ref()
-                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_chain_swap.clone()))
-            })
-            .collect();
-        Ok(res)
+        self.list_chain_swaps_by_state(vec![PaymentState::Refundable])
     }
 
     pub(crate) fn update_chain_swap_accept_zero_conf(
@@ -252,8 +239,10 @@ impl Persister {
         swap_id: &str,
         accept_zero_conf: bool,
     ) -> Result<(), PaymentError> {
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con: Connection = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 accept_zero_conf = :accept_zero_conf
@@ -264,6 +253,19 @@ impl Persister {
                 ":accept_zero_conf": accept_zero_conf,
             },
         )?;
+        self.commit_outgoing(
+            &tx,
+            swap_id,
+            RecordType::Chain,
+            Some(vec!["accept_zero_conf".to_string()]),
+        )?;
+        tx.commit()?;
+        self.sync_trigger
+            .try_send(())
+            .map_err(|err| PaymentError::Generic {
+                err: format!("Could not trigger manual sync: {err:?}"),
+            })?;
+
         Ok(())
     }
 
@@ -276,8 +278,10 @@ impl Persister {
         receiver_amount_sat: u64,
     ) -> Result<(), PaymentError> {
         log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}, receiver_amount_sat = {receiver_amount_sat}");
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con: Connection = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 payer_amount_sat = :payer_amount_sat,
@@ -290,6 +294,22 @@ impl Persister {
                 ":receiver_amount_sat": receiver_amount_sat,
             },
         )?;
+        self.commit_outgoing(
+            &tx,
+            swap_id,
+            RecordType::Chain,
+            Some(vec![
+                "payer_amount_sat".to_string(),
+                "receiver_amount_sat".to_string(),
+            ]),
+        )?;
+        tx.commit()?;
+        self.sync_trigger
+            .try_send(())
+            .map_err(|err| PaymentError::Generic {
+                err: format!("Could not trigger manual sync: {err:?}"),
+            })?;
+
         Ok(())
     }
 
@@ -341,16 +361,13 @@ impl Persister {
 
     pub(crate) fn try_handle_chain_swap_update(
         &self,
-        swap_id: &str,
-        to_state: PaymentState,
-        server_lockup_tx_id: Option<&str>,
-        user_lockup_tx_id: Option<&str>,
-        claim_tx_id: Option<&str>,
-        refund_tx_id: Option<&str>,
+        swap_update: &ChainSwapUpdate,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_tx_id, refund_tx_id
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_address, claim_tx_id, refund_tx_id
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE chain_swaps
             SET
                 server_lockup_tx_id =
@@ -363,6 +380,12 @@ impl Persister {
                     CASE
                         WHEN user_lockup_tx_id IS NULL THEN :user_lockup_tx_id
                         ELSE user_lockup_tx_id
+                    END,
+
+                claim_address =
+                    CASE
+                        WHEN claim_address IS NULL THEN :claim_address
+                        ELSE claim_address
                     END,
 
                 claim_tx_id =
@@ -381,14 +404,17 @@ impl Persister {
             WHERE
                 id = :id",
             named_params! {
-                ":id": swap_id,
-                ":server_lockup_tx_id": server_lockup_tx_id,
-                ":user_lockup_tx_id": user_lockup_tx_id,
-                ":claim_tx_id": claim_tx_id,
-                ":refund_tx_id": refund_tx_id,
-                ":state": to_state,
+                ":id": swap_update.swap_id,
+                ":server_lockup_tx_id": swap_update.server_lockup_tx_id,
+                ":user_lockup_tx_id": swap_update.user_lockup_tx_id,
+                ":claim_address": swap_update.claim_address,
+                ":claim_tx_id": swap_update.claim_tx_id,
+                ":refund_tx_id": swap_update.refund_tx_id,
+                ":state": swap_update.to_state,
             },
         )?;
+
+        tx.commit()?;
 
         Ok(())
     }

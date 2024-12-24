@@ -134,6 +134,9 @@ class Config {
   /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
   final int zeroConfMinFeeRateMsat;
 
+  /// The url of the real-time sync service
+  final String syncServiceUrl;
+
   /// Maximum amount in satoshi to accept zero-conf payments with
   /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
@@ -160,6 +163,7 @@ class Config {
     required this.network,
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
+    required this.syncServiceUrl,
     this.zeroConfMaxAmountSat,
     this.breezApiKey,
     this.externalInputParsers,
@@ -176,6 +180,7 @@ class Config {
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
       zeroConfMinFeeRateMsat.hashCode ^
+      syncServiceUrl.hashCode ^
       zeroConfMaxAmountSat.hashCode ^
       breezApiKey.hashCode ^
       externalInputParsers.hashCode ^
@@ -194,6 +199,7 @@ class Config {
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
           zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
+          syncServiceUrl == other.syncServiceUrl &&
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
           breezApiKey == other.breezApiKey &&
           externalInputParsers == other.externalInputParsers &&
@@ -356,6 +362,7 @@ sealed class ListPaymentDetails with _$ListPaymentDetails {
 /// An argument when calling [crate::sdk::LiquidSdk::list_payments].
 class ListPaymentsRequest {
   final List<PaymentType>? filters;
+  final List<PaymentState>? states;
 
   /// Epoch time, in seconds
   final PlatformInt64? fromTimestamp;
@@ -368,6 +375,7 @@ class ListPaymentsRequest {
 
   const ListPaymentsRequest({
     this.filters,
+    this.states,
     this.fromTimestamp,
     this.toTimestamp,
     this.offset,
@@ -378,6 +386,7 @@ class ListPaymentsRequest {
   @override
   int get hashCode =>
       filters.hashCode ^
+      states.hashCode ^
       fromTimestamp.hashCode ^
       toTimestamp.hashCode ^
       offset.hashCode ^
@@ -390,11 +399,56 @@ class ListPaymentsRequest {
       other is ListPaymentsRequest &&
           runtimeType == other.runtimeType &&
           filters == other.filters &&
+          states == other.states &&
           fromTimestamp == other.fromTimestamp &&
           toTimestamp == other.toTimestamp &&
           offset == other.offset &&
           limit == other.limit &&
           details == other.details;
+}
+
+/// Represents the payment LNURL info
+class LnUrlInfo {
+  final String? lnAddress;
+  final String? lnurlPayComment;
+  final String? lnurlPayDomain;
+  final String? lnurlPayMetadata;
+  final SuccessActionProcessed? lnurlPaySuccessAction;
+  final SuccessAction? lnurlPayUnprocessedSuccessAction;
+  final String? lnurlWithdrawEndpoint;
+
+  const LnUrlInfo({
+    this.lnAddress,
+    this.lnurlPayComment,
+    this.lnurlPayDomain,
+    this.lnurlPayMetadata,
+    this.lnurlPaySuccessAction,
+    this.lnurlPayUnprocessedSuccessAction,
+    this.lnurlWithdrawEndpoint,
+  });
+
+  @override
+  int get hashCode =>
+      lnAddress.hashCode ^
+      lnurlPayComment.hashCode ^
+      lnurlPayDomain.hashCode ^
+      lnurlPayMetadata.hashCode ^
+      lnurlPaySuccessAction.hashCode ^
+      lnurlPayUnprocessedSuccessAction.hashCode ^
+      lnurlWithdrawEndpoint.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LnUrlInfo &&
+          runtimeType == other.runtimeType &&
+          lnAddress == other.lnAddress &&
+          lnurlPayComment == other.lnurlPayComment &&
+          lnurlPayDomain == other.lnurlPayDomain &&
+          lnurlPayMetadata == other.lnurlPayMetadata &&
+          lnurlPaySuccessAction == other.lnurlPaySuccessAction &&
+          lnurlPayUnprocessedSuccessAction == other.lnurlPayUnprocessedSuccessAction &&
+          lnurlWithdrawEndpoint == other.lnurlWithdrawEndpoint;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::lnurl_pay].
@@ -649,6 +703,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The payment hash of the invoice
     String? paymentHash,
 
+    /// The payment LNURL info
+    LnUrlInfo? lnurlInfo,
+
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
 
@@ -854,6 +911,12 @@ class PrepareLnUrlPayResponse {
   /// The fees in satoshis to send the payment
   final BigInt feesSat;
 
+  /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+  final LnUrlPayRequestData data;
+
+  /// An optional comment for this payment
+  final String? comment;
+
   /// The unprocessed LUD-09 success action. This will be processed and decrypted if
   /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
   final SuccessAction? successAction;
@@ -861,11 +924,14 @@ class PrepareLnUrlPayResponse {
   const PrepareLnUrlPayResponse({
     required this.destination,
     required this.feesSat,
+    required this.data,
+    this.comment,
     this.successAction,
   });
 
   @override
-  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ successAction.hashCode;
+  int get hashCode =>
+      destination.hashCode ^ feesSat.hashCode ^ data.hashCode ^ comment.hashCode ^ successAction.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -874,6 +940,8 @@ class PrepareLnUrlPayResponse {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           feesSat == other.feesSat &&
+          data == other.data &&
+          comment == other.comment &&
           successAction == other.successAction;
 }
 

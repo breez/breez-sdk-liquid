@@ -13,6 +13,7 @@ use crate::{
     model::{Config, Signer},
     persist::Persister,
     receive_swap::ReceiveSwapHandler,
+    recover::recoverer::Recoverer,
     sdk::LiquidSdk,
     send_swap::SendSwapHandler,
 };
@@ -21,6 +22,7 @@ use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     status_stream::MockStatusStream,
     swapper::MockSwapper,
+    sync::new_sync_service,
     wallet::{MockSigner, MockWallet},
 };
 
@@ -55,8 +57,8 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         .ok_or(anyhow!("An invalid SDK directory was specified"))?
         .to_string();
 
-    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()));
-    let onchain_wallet = Arc::new(MockWallet::new());
+    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
+    let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
 
     let send_swap_handler = SendSwapHandler::new(
         config.clone(),
@@ -83,6 +85,13 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         bitcoin_chain_service.clone(),
     )?);
 
+    let recoverer = Arc::new(Recoverer::new(
+        signer.slip77_master_blinding_key()?,
+        onchain_wallet.clone(),
+        liquid_chain_service.clone(),
+        bitcoin_chain_service.clone(),
+    )?);
+
     let event_manager = Arc::new(EventManager::new());
     let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
@@ -90,6 +99,10 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
 
     let buy_bitcoin_service =
         Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
+
+    let (_incoming_tx, _outgoing_records, sync_service) =
+        new_sync_service(persister.clone(), recoverer.clone(), signer.clone())?;
+    let sync_service = Arc::new(sync_service);
 
     Ok(LiquidSdk {
         config,
@@ -99,6 +112,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         event_manager,
         status_stream,
         swapper,
+        recoverer,
         liquid_chain_service,
         bitcoin_chain_service,
         fiat_api: breez_server,
@@ -107,6 +121,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         shutdown_receiver,
         send_swap_handler,
         receive_swap_handler,
+        sync_service,
         chain_swap_handler,
         buy_bitcoin_service,
         external_input_parsers: Vec::new(),

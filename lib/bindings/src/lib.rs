@@ -230,7 +230,7 @@ impl BindingLiquidSdk {
     }
 
     pub fn sync(&self) -> SdkResult<()> {
-        rt().block_on(self.sdk.sync()).map_err(Into::into)
+        rt().block_on(self.sdk.sync(false)).map_err(Into::into)
     }
 
     pub fn recommended_fees(&self) -> SdkResult<RecommendedFees> {

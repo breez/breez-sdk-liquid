@@ -1,6 +1,8 @@
 use anyhow::*;
 use glob::glob;
 use std::env;
+use std::os::unix::process::CommandExt as _;
+use std::process::Command;
 use std::result::Result::Ok;
 
 /// Adds a temporary workaround for an issue with the Rust compiler and Android
@@ -32,7 +34,21 @@ fn setup_x86_64_android_workaround() {
     }
 }
 
+fn compile_protos() -> Result<()> {
+    tonic_build::configure()
+        .build_server(false)
+        .out_dir("src/sync/model")
+        .compile_protos(&["src/sync/proto/sync.proto"], &["src/sync/proto"])?;
+    Command::new("rustfmt")
+        .arg("--edition")
+        .arg("2021")
+        .arg("src/sync/model/sync.rs")
+        .exec();
+    Ok(())
+}
+
 fn main() -> Result<()> {
     setup_x86_64_android_workaround();
+    compile_protos()?;
     Ok(())
 }

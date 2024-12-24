@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
-
-use boltz_client::boltz::ChainPair;
+use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
+    boltz::ChainPair,
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -30,6 +30,7 @@ use crate::utils;
 // Both use f64 for the maximum precision when converting between units
 pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
+const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
@@ -49,6 +50,8 @@ pub struct Config {
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     pub zero_conf_min_fee_rate_msat: u32,
+    /// The url of the real-time sync service
+    pub sync_service_url: String,
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
@@ -75,6 +78,7 @@ impl Config {
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
             external_input_parsers: None,
@@ -92,6 +96,7 @@ impl Config {
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key,
             external_input_parsers: None,
@@ -289,6 +294,12 @@ pub trait Signer: Send + Sync {
     /// HMAC-SHA256 using the private key derived from the given derivation path
     /// This is used to calculate the linking key of lnurl-auth specification: <https://github.com/lnurl/luds/blob/luds/05.md>
     fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
+
+    /// Encrypts a message using (ECIES)[ecies::encrypt]
+    fn ecies_encrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
+
+    /// Decrypts a message using (ECIES)[ecies::decrypt]
+    fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -519,7 +530,7 @@ pub struct RefundResponse {
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetInfoResponse {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
@@ -584,6 +595,7 @@ pub struct RestoreRequest {
 #[derive(Default)]
 pub struct ListPaymentsRequest {
     pub filters: Option<Vec<PaymentType>>,
+    pub states: Option<Vec<PaymentState>>,
     /// Epoch time, in seconds
     pub from_timestamp: Option<i64>,
     /// Epoch time, in seconds
@@ -610,6 +622,13 @@ pub enum GetPaymentRequest {
     Lightning { payment_hash: String },
 }
 
+/// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
+#[async_trait]
+pub(crate) trait BlockListener: Send + Sync {
+    async fn on_bitcoin_block(&self, height: u32);
+    async fn on_liquid_block(&self, height: u32);
+}
+
 // A swap enum variant
 #[derive(Clone, Debug)]
 pub(crate) enum Swap {
@@ -624,6 +643,21 @@ impl Swap {
             | Swap::Send(SendSwap { id, .. })
             | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
         }
+    }
+}
+impl From<ChainSwap> for Swap {
+    fn from(swap: ChainSwap) -> Self {
+        Self::Chain(swap)
+    }
+}
+impl From<SendSwap> for Swap {
+    fn from(swap: SendSwap) -> Self {
+        Self::Send(swap)
+    }
+}
+impl From<ReceiveSwap> for Swap {
+    fn from(swap: ReceiveSwap) -> Self {
+        Self::Receive(swap)
     }
 }
 
@@ -648,7 +682,7 @@ impl SwapScriptV2 {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Direction {
     Incoming = 0,
     Outgoing = 1,
@@ -674,7 +708,7 @@ impl FromSql for Direction {
 /// A chain swap
 ///
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
@@ -812,8 +846,19 @@ impl ChainSwap {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ChainSwapUpdate {
+    pub(crate) swap_id: String,
+    pub(crate) to_state: PaymentState,
+    pub(crate) server_lockup_tx_id: Option<String>,
+    pub(crate) user_lockup_tx_id: Option<String>,
+    pub(crate) claim_address: Option<String>,
+    pub(crate) claim_tx_id: Option<String>,
+    pub(crate) refund_tx_id: Option<String>,
+}
+
 /// A submarine swap, used for Send
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
@@ -900,7 +945,7 @@ impl SendSwap {
 }
 
 /// A reverse swap, used for Receive
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
@@ -918,12 +963,10 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
-    /// Persisted only when the lockup tx is broadcast
+    /// The transaction id of the swapper's tx broadcast
     pub(crate) lockup_tx_id: Option<String>,
     /// The address reserved for a magic routing hint payment
     pub(crate) mrh_address: String,
-    /// The script pubkey for a magic routing hint payment
-    pub(crate) mrh_script_pubkey: String,
     /// Persisted only if a transaction is sent to the `mrh_address`
     pub(crate) mrh_tx_id: Option<String>,
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
@@ -1011,8 +1054,10 @@ pub struct RefundableSwap {
 }
 
 /// The payment state of an individual payment.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
+#[derive(Clone, Copy, Debug, Default, EnumString, Eq, PartialEq, Serialize, Hash)]
+#[strum(serialize_all = "lowercase")]
 pub enum PaymentState {
+    #[default]
     Created = 0,
 
     /// ## Receive Swaps
@@ -1220,8 +1265,21 @@ pub struct PaymentSwapData {
     pub status: PaymentState,
 }
 
+/// Represents the payment LNURL info
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct LnUrlInfo {
+    pub ln_address: Option<String>,
+    pub lnurl_pay_comment: Option<String>,
+    pub lnurl_pay_domain: Option<String>,
+    pub lnurl_pay_metadata: Option<String>,
+    pub lnurl_pay_success_action: Option<SuccessActionProcessed>,
+    pub lnurl_pay_unprocessed_success_action: Option<SuccessAction>,
+    pub lnurl_withdraw_endpoint: Option<String>,
+}
+
 /// The specific details of a payment, depending on its type
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[allow(clippy::large_enum_variant)]
 pub enum PaymentDetails {
     /// Swapping to or from Lightning
     Lightning {
@@ -1242,6 +1300,9 @@ pub enum PaymentDetails {
 
         /// The payment hash of the invoice
         payment_hash: Option<String>,
+
+        /// The payment LNURL info
+        lnurl_info: Option<LnUrlInfo>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
@@ -1354,7 +1415,11 @@ pub struct Payment {
     pub details: PaymentDetails,
 }
 impl Payment {
-    pub(crate) fn from_pending_swap(swap: PaymentSwapData, payment_type: PaymentType) -> Payment {
+    pub(crate) fn from_pending_swap(
+        swap: PaymentSwapData,
+        payment_type: PaymentType,
+        payment_details: PaymentDetails,
+    ) -> Payment {
         let amount_sat = match payment_type {
             PaymentType::Receive => swap.receiver_amount_sat,
             PaymentType::Send => swap.payer_amount_sat,
@@ -1369,16 +1434,7 @@ impl Payment {
             swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
-            details: PaymentDetails::Lightning {
-                swap_id: swap.swap_id,
-                preimage: swap.preimage,
-                bolt11: swap.bolt11,
-                bolt12_offer: swap.bolt12_offer,
-                payment_hash: swap.payment_hash,
-                description: swap.description,
-                refund_tx_id: swap.refund_tx_id,
-                refund_tx_amount_sat: swap.refund_tx_amount_sat,
-            },
+            details: payment_details,
         }
     }
 
@@ -1565,6 +1621,10 @@ pub struct PrepareLnUrlPayResponse {
     pub destination: SendDestination,
     /// The fees in satoshis to send the payment
     pub fees_sat: u64,
+    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+    pub data: LnUrlPayRequestData,
+    /// An optional comment for this payment
+    pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if
     /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
     pub success_action: Option<SuccessAction>,
@@ -1686,4 +1746,20 @@ macro_rules! get_invoice_description {
             Bolt11InvoiceDescription::Hash(_) => None,
         }
     };
+}
+
+#[macro_export]
+macro_rules! get_updated_fields {
+    ($($var:ident),* $(,)?) => {{
+        let mut options = Vec::new();
+        $(
+            if $var.is_some() {
+                options.push(stringify!($var).to_string());
+            }
+        )*
+        match options.len() > 0 {
+            true => Some(options),
+            false => None,
+        }
+    }};
 }

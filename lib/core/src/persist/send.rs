@@ -1,21 +1,22 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use boltz_client::swaps::boltz::CreateSubmarineResponse;
 use rusqlite::{named_params, params, Connection, Row};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
-use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::RecordType;
+use crate::{ensure_sdk, get_updated_fields};
 
 impl Persister {
-    pub(crate) fn insert_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
-        let con = self.get_connection()?;
-
-        let mut stmt = con.prepare(
+    pub(crate) fn insert_or_update_send_swap_inner(
+        con: &Connection,
+        send_swap: &SendSwap,
+    ) -> Result<()> {
+        let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
+        con.execute(
             "
             INSERT INTO send_swaps (
                 id,
@@ -23,37 +24,64 @@ impl Persister {
                 invoice,
                 bolt12_offer,
                 payment_hash,
-                description,
                 payer_amount_sat,
                 receiver_amount_sat,
                 create_response_json,
                 refund_private_key,
-                lockup_tx_id,
-                refund_tx_id,
                 created_at,
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT DO NOTHING
+            ",
+            (
+                &send_swap.id,
+                &id_hash,
+                &send_swap.invoice,
+                &send_swap.bolt12_offer,
+                &send_swap.payment_hash,
+                &send_swap.payer_amount_sat,
+                &send_swap.receiver_amount_sat,
+                &send_swap.create_response_json,
+                &send_swap.refund_private_key,
+                &send_swap.created_at,
+                &send_swap.state,
+                &send_swap.pair_fees_json,
+            ),
         )?;
-        let id_hash = sha256::Hash::hash(send_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute((
-            &send_swap.id,
-            &id_hash,
-            &send_swap.invoice,
-            &send_swap.bolt12_offer,
-            &send_swap.payment_hash,
-            &send_swap.description,
-            &send_swap.payer_amount_sat,
-            &send_swap.receiver_amount_sat,
-            &send_swap.create_response_json,
-            &send_swap.refund_private_key,
-            &send_swap.lockup_tx_id,
-            &send_swap.refund_tx_id,
-            &send_swap.created_at,
-            &send_swap.state,
-            &send_swap.pair_fees_json,
-        ))?;
+
+        con.execute(
+            "UPDATE send_swaps 
+            SET
+                description = :description,
+                preimage = :preimage,
+                lockup_tx_id = :lockup_tx_id,
+                refund_tx_id = :refund_tx_id,
+                state = :state
+            WHERE
+                id = :id",
+            named_params! {
+                ":id": &send_swap.id,
+                ":description": &send_swap.description,
+                ":preimage": &send_swap.preimage,
+                ":lockup_tx_id": &send_swap.lockup_tx_id,
+                ":refund_tx_id": &send_swap.refund_tx_id,
+                ":state": &send_swap.state,
+            },
+        )?;
+
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_send_swap(&self, send_swap: &SendSwap) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_send_swap_inner(&tx, send_swap)?;
+        self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, None)?;
+        tx.commit()?;
+        self.sync_trigger.try_send(())?;
 
         Ok(())
     }
@@ -148,11 +176,6 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_send_swaps(&self) -> Result<Vec<SendSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_send_swaps_where(&con, vec![])
-    }
-
     pub(crate) fn list_send_swaps_where(
         &self,
         con: &Connection,
@@ -167,13 +190,14 @@ impl Persister {
         Ok(ongoing_send)
     }
 
-    pub(crate) fn list_ongoing_send_swaps(&self, con: &Connection) -> Result<Vec<SendSwap>> {
+    pub(crate) fn list_ongoing_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
 
-        self.list_send_swaps_where(con, where_clause)
+        self.list_send_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn list_pending_send_swaps(&self) -> Result<Vec<SendSwap>> {
@@ -185,21 +209,13 @@ impl Persister {
         self.list_send_swaps_where(&con, where_clause)
     }
 
-    /// Pending Send swaps, indexed by refund tx id
-    pub(crate) fn list_pending_send_swaps_by_refund_tx_id(
-        &self,
-    ) -> Result<HashMap<String, SendSwap>> {
-        let res: HashMap<String, SendSwap> = self
-            .list_pending_send_swaps()?
-            .iter()
-            .filter_map(|pending_send_swap| {
-                pending_send_swap
-                    .refund_tx_id
-                    .as_ref()
-                    .map(|refund_tx_id| (refund_tx_id.clone(), pending_send_swap.clone()))
-            })
-            .collect();
-        Ok(res)
+    pub(crate) fn list_recoverable_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        let con = self.get_connection()?;
+        let where_clause = vec![get_where_clause_state_in(&[
+            PaymentState::Pending,
+            PaymentState::RefundPending,
+        ])];
+        self.list_send_swaps_where(&con, where_clause)
     }
 
     pub(crate) fn try_handle_send_swap_update(
@@ -211,8 +227,10 @@ impl Persister {
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         // Do not overwrite preimage, lockup_tx_id, refund_tx_id
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE send_swaps
             SET
                 preimage =
@@ -244,6 +262,15 @@ impl Persister {
                 ":state": to_state,
             },
         )?;
+
+        let updated_fields = get_updated_fields!(preimage);
+        self.commit_outgoing(&tx, swap_id, RecordType::Send, updated_fields)?;
+        tx.commit()?;
+        self.sync_trigger
+            .try_send(())
+            .map_err(|err| PaymentError::Generic {
+                err: format!("Could not trigger manual sync: {err:?}"),
+            })?;
 
         Ok(())
     }
@@ -336,16 +363,16 @@ impl InternalCreateSubmarineResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::persist::{new_persister, new_send_swap};
+    use crate::test_utils::persist::{create_persister, new_send_swap};
 
     use super::PaymentState;
 
     #[test]
     fn test_fetch_send_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
         let send_swap = new_send_swap(None);
 
-        storage.insert_send_swap(&send_swap)?;
+        storage.insert_or_update_send_swap(&send_swap)?;
         // Fetch swap by id
         assert!(storage.fetch_send_swap_by_id(&send_swap.id).is_ok());
         // Fetch swap by invoice
@@ -358,12 +385,12 @@ mod tests {
 
     #[test]
     fn test_list_send_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         // List general send swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_send_swap(&new_send_swap(None))?;
+            storage.insert_or_update_send_swap(&new_send_swap(None))?;
         }
 
         let con = storage.get_connection()?;
@@ -371,8 +398,8 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing send swaps
-        storage.insert_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
-        let ongoing_swaps = storage.list_ongoing_send_swaps(&con)?;
+        storage.insert_or_update_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
+        let ongoing_swaps = storage.list_ongoing_send_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
         // List pending send swaps
@@ -384,10 +411,10 @@ mod tests {
 
     #[test]
     fn test_update_send_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         let mut send_swap = new_send_swap(None);
-        storage.insert_send_swap(&send_swap)?;
+        storage.insert_or_update_send_swap(&send_swap)?;
 
         // Update metadata
         let new_state = PaymentState::Pending;

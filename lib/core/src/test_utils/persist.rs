@@ -1,6 +1,5 @@
 #![cfg(test)]
 
-use anyhow::{anyhow, Result};
 use bip39::rand::{self, RngCore};
 use sdk_common::{
     bitcoin::{
@@ -10,11 +9,9 @@ use sdk_common::{
     lightning::ln::PaymentSecret,
     lightning_invoice::{Currency, InvoiceBuilder},
 };
-use tempdir::TempDir;
 
 use crate::{
-    model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
-    persist::Persister,
+    model::{PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
     test_utils::generate_random_string,
     utils,
 };
@@ -134,25 +131,28 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         claim_tx_id: None,
         lockup_tx_id: None,
         mrh_address: "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n".to_string(),
-        mrh_script_pubkey: "tex1qnkznyyxwnxnkk0j94cnvq27h24jk6sqf0te55x".to_string(),
         mrh_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
     }
 }
 
-pub(crate) fn new_persister() -> Result<(TempDir, Persister)> {
-    let temp_dir = TempDir::new("liquid-sdk")?;
-    let persister = Persister::new(
-        temp_dir
-            .path()
-            .to_str()
-            .ok_or(anyhow!("Could not create temporary directory"))?,
-        LiquidNetwork::Testnet,
-    )?;
-    persister.init()?;
-    Ok((temp_dir, persister))
+macro_rules! create_persister {
+    ($name:ident) => {
+        let (sync_trigger_tx, _sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(100);
+        let temp_dir = tempdir::TempDir::new("liquid-sdk")?;
+        let $name = std::sync::Arc::new(crate::persist::Persister::new(
+            temp_dir
+                .path()
+                .to_str()
+                .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
+            crate::model::LiquidNetwork::Testnet,
+            sync_trigger_tx,
+        )?);
+        $name.init()?;
+    };
 }
+pub(crate) use create_persister;
 
 pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
     PaymentTxData {

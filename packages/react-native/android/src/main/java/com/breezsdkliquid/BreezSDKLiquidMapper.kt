@@ -248,6 +248,7 @@ fun asConfig(config: ReadableMap): Config? {
                 "network",
                 "paymentTimeoutSec",
                 "zeroConfMinFeeRateMsat",
+                "syncServiceUrl",
                 "useDefaultExternalInputParsers",
             ),
         )
@@ -261,6 +262,7 @@ fun asConfig(config: ReadableMap): Config? {
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRateMsat = config.getInt("zeroConfMinFeeRateMsat").toUInt()
+    val syncServiceUrl = config.getString("syncServiceUrl")!!
     val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
     val cacheDir = if (hasNonNullKey(config, "cacheDir")) config.getString("cacheDir") else null
     val zeroConfMaxAmountSat =
@@ -290,6 +292,7 @@ fun asConfig(config: ReadableMap): Config? {
         network,
         paymentTimeoutSec,
         zeroConfMinFeeRateMsat,
+        syncServiceUrl,
         breezApiKey,
         cacheDir,
         zeroConfMaxAmountSat,
@@ -307,6 +310,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "zeroConfMinFeeRateMsat" to config.zeroConfMinFeeRateMsat,
+        "syncServiceUrl" to config.syncServiceUrl,
         "breezApiKey" to config.breezApiKey,
         "cacheDir" to config.cacheDir,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
@@ -789,6 +793,14 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
+    val states =
+        if (hasNonNullKey(listPaymentsRequest, "states")) {
+            listPaymentsRequest.getArray("states")?.let {
+                asPaymentStateList(it)
+            }
+        } else {
+            null
+        }
     val fromTimestamp =
         if (hasNonNullKey(
                 listPaymentsRequest,
@@ -810,12 +822,13 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
-    return ListPaymentsRequest(filters, fromTimestamp, toTimestamp, offset, limit, details)
+    return ListPaymentsRequest(filters, states, fromTimestamp, toTimestamp, offset, limit, details)
 }
 
 fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
     readableMapOf(
         "filters" to listPaymentsRequest.filters?.let { readableArrayOf(it) },
+        "states" to listPaymentsRequest.states?.let { readableArrayOf(it) },
         "fromTimestamp" to listPaymentsRequest.fromTimestamp,
         "toTimestamp" to listPaymentsRequest.toTimestamp,
         "offset" to listPaymentsRequest.offset,
@@ -926,6 +939,81 @@ fun asLnUrlErrorDataList(arr: ReadableArray): List<LnUrlErrorData> {
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asLnUrlErrorData(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asLnUrlInfo(lnUrlInfo: ReadableMap): LnUrlInfo? {
+    if (!validateMandatoryFields(
+            lnUrlInfo,
+            arrayOf(),
+        )
+    ) {
+        return null
+    }
+    val lnAddress = if (hasNonNullKey(lnUrlInfo, "lnAddress")) lnUrlInfo.getString("lnAddress") else null
+    val lnurlPayComment = if (hasNonNullKey(lnUrlInfo, "lnurlPayComment")) lnUrlInfo.getString("lnurlPayComment") else null
+    val lnurlPayDomain = if (hasNonNullKey(lnUrlInfo, "lnurlPayDomain")) lnUrlInfo.getString("lnurlPayDomain") else null
+    val lnurlPayMetadata = if (hasNonNullKey(lnUrlInfo, "lnurlPayMetadata")) lnUrlInfo.getString("lnurlPayMetadata") else null
+    val lnurlPaySuccessAction =
+        if (hasNonNullKey(lnUrlInfo, "lnurlPaySuccessAction")) {
+            lnUrlInfo.getMap("lnurlPaySuccessAction")?.let {
+                asSuccessActionProcessed(it)
+            }
+        } else {
+            null
+        }
+    val lnurlPayUnprocessedSuccessAction =
+        if (hasNonNullKey(
+                lnUrlInfo,
+                "lnurlPayUnprocessedSuccessAction",
+            )
+        ) {
+            lnUrlInfo.getMap("lnurlPayUnprocessedSuccessAction")?.let {
+                asSuccessAction(it)
+            }
+        } else {
+            null
+        }
+    val lnurlWithdrawEndpoint =
+        if (hasNonNullKey(
+                lnUrlInfo,
+                "lnurlWithdrawEndpoint",
+            )
+        ) {
+            lnUrlInfo.getString("lnurlWithdrawEndpoint")
+        } else {
+            null
+        }
+    return LnUrlInfo(
+        lnAddress,
+        lnurlPayComment,
+        lnurlPayDomain,
+        lnurlPayMetadata,
+        lnurlPaySuccessAction,
+        lnurlPayUnprocessedSuccessAction,
+        lnurlWithdrawEndpoint,
+    )
+}
+
+fun readableMapOf(lnUrlInfo: LnUrlInfo): ReadableMap =
+    readableMapOf(
+        "lnAddress" to lnUrlInfo.lnAddress,
+        "lnurlPayComment" to lnUrlInfo.lnurlPayComment,
+        "lnurlPayDomain" to lnUrlInfo.lnurlPayDomain,
+        "lnurlPayMetadata" to lnUrlInfo.lnurlPayMetadata,
+        "lnurlPaySuccessAction" to lnUrlInfo.lnurlPaySuccessAction?.let { readableMapOf(it) },
+        "lnurlPayUnprocessedSuccessAction" to lnUrlInfo.lnurlPayUnprocessedSuccessAction?.let { readableMapOf(it) },
+        "lnurlWithdrawEndpoint" to lnUrlInfo.lnurlWithdrawEndpoint,
+    )
+
+fun asLnUrlInfoList(arr: ReadableArray): List<LnUrlInfo> {
+    val list = ArrayList<LnUrlInfo>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asLnUrlInfo(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -1572,6 +1660,7 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
             arrayOf(
                 "destination",
                 "feesSat",
+                "data",
             ),
         )
     ) {
@@ -1579,6 +1668,8 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
     }
     val destination = prepareLnUrlPayResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = prepareLnUrlPayResponse.getDouble("feesSat").toULong()
+    val data = prepareLnUrlPayResponse.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
+    val comment = if (hasNonNullKey(prepareLnUrlPayResponse, "comment")) prepareLnUrlPayResponse.getString("comment") else null
     val successAction =
         if (hasNonNullKey(prepareLnUrlPayResponse, "successAction")) {
             prepareLnUrlPayResponse.getMap("successAction")?.let {
@@ -1587,13 +1678,15 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
         } else {
             null
         }
-    return PrepareLnUrlPayResponse(destination, feesSat, successAction)
+    return PrepareLnUrlPayResponse(destination, feesSat, data, comment, successAction)
 }
 
 fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap =
     readableMapOf(
         "destination" to readableMapOf(prepareLnUrlPayResponse.destination),
         "feesSat" to prepareLnUrlPayResponse.feesSat,
+        "data" to readableMapOf(prepareLnUrlPayResponse.data),
+        "comment" to prepareLnUrlPayResponse.comment,
         "successAction" to prepareLnUrlPayResponse.successAction?.let { readableMapOf(it) },
     )
 
@@ -2970,6 +3063,16 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
         val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
         val paymentHash = if (hasNonNullKey(paymentDetails, "paymentHash")) paymentDetails.getString("paymentHash") else null
+        val lnurlInfo =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "lnurlInfo",
+                )
+            ) {
+                paymentDetails.getMap("lnurlInfo")?.let { asLnUrlInfo(it) }
+            } else {
+                null
+            }
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
             if (hasNonNullKey(
@@ -2981,7 +3084,17 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Lightning(swapId, description, preimage, bolt11, bolt12Offer, paymentHash, refundTxId, refundTxAmountSat)
+        return PaymentDetails.Lightning(
+            swapId,
+            description,
+            preimage,
+            bolt11,
+            bolt12Offer,
+            paymentHash,
+            lnurlInfo,
+            refundTxId,
+            refundTxAmountSat,
+        )
     }
     if (type == "liquid") {
         val destination = paymentDetails.getString("destination")!!
@@ -3018,6 +3131,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "bolt11", paymentDetails.bolt11)
             pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
             pushToMap(map, "paymentHash", paymentDetails.paymentHash)
+            pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
         }
@@ -3347,6 +3461,7 @@ fun pushToArray(
         is LocaleOverrides -> array.pushMap(readableMapOf(value))
         is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))
+        is PaymentState -> array.pushString(value.name.lowercase())
         is PaymentType -> array.pushString(value.name.lowercase())
         is Rate -> array.pushMap(readableMapOf(value))
         is RefundableSwap -> array.pushMap(readableMapOf(value))

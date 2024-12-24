@@ -189,5 +189,30 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE send_swaps ADD COLUMN pair_fees_json TEXT NOT NULL DEFAULT '';
         ALTER TABLE chain_swaps ADD COLUMN pair_fees_json TEXT NOT NULL DEFAULT '';
         ",
+        "CREATE TABLE IF NOT EXISTS sync_state(
+            data_id TEXT NOT NULL PRIMARY KEY,
+            record_id TEXT NOT NULL,
+            record_revision INTEGER NOT NULL,
+            is_local INTEGER NOT NULL DEFAULT 1
+        ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS sync_settings(
+            key TEXT NOT NULL PRIMARY KEY,
+            value TEXT NOT NULL
+        ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS sync_outgoing(
+            record_id TEXT NOT NULL PRIMARY KEY,
+            data_id TEXT NOT NULL UNIQUE,
+            record_type INTEGER NOT NULL,
+            commit_time INTEGER NOT NULL,
+            updated_fields_json TEXT
+        ) STRICT;",
+        "CREATE TABLE IF NOT EXISTS sync_incoming(
+            record_id TEXT NOT NULL PRIMARY KEY,
+            revision INTEGER NOT NULL UNIQUE,
+            schema_version TEXT NOT NULL,
+            data BLOB NOT NULL
+        ) STRICT;",
+        "ALTER TABLE receive_swaps DROP COLUMN mrh_script_pubkey;",
+        "ALTER TABLE payment_details ADD COLUMN lnurl_info_json TEXT;",
     ]
 }
