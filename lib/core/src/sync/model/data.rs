@@ -141,8 +141,7 @@ impl SendSyncData {
         match swap {
             Some(swap) => {
                 let mut updated_fields = vec![];
-                if !matches!(update.preimage.clone(), Some(u) if swap.preimage.map_or(false, |s| s == u))
-                {
+                if update.preimage.is_some() && update.preimage != swap.preimage {
                     updated_fields.push("preimage".to_string());
                 }
                 Some(updated_fields)
