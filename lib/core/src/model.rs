@@ -1126,12 +1126,6 @@ pub enum PaymentState {
     RefundPending = 6,
 }
 
-impl PaymentState {
-    pub(crate) fn is_ongoing(&self) -> bool {
-        matches!(self, Self::Created | Self::Pending)
-    }
-}
-
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
