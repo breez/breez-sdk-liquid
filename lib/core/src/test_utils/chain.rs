@@ -11,7 +11,7 @@ use boltz_client::{
 };
 use electrum_client::GetBalanceRes;
 use electrum_client::{
-    bitcoin::{consensus::deserialize, OutPoint, Script, TxOut},
+    bitcoin::{block::Header, consensus::deserialize, OutPoint, Script, TxOut},
     HeaderNotification,
 };
 use lwk_wollet::{
@@ -134,6 +134,14 @@ impl LiquidChainService for MockLiquidChainService {
     ) -> Result<lwk_wollet::elements::Transaction> {
         utils::deserialize_tx_hex(tx_hex)
     }
+
+    async fn get_headers(&self, _heights: &[u32]) -> Result<Vec<BlockHeader>> {
+        unimplemented!();
+    }
+
+    async fn get_block_timestamp(&mut self, _height: u32) -> Result<u32> {
+        unimplemented!();
+    }
 }
 
 pub(crate) struct MockBitcoinChainService {
@@ -235,5 +243,15 @@ impl BitcoinChainService for MockBitcoinChainService {
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {
         unimplemented!()
+    }
+
+    fn get_header(&self, _height: usize) -> Result<Header> {
+        Ok(genesis_block(lwk_wollet::bitcoin::Network::Testnet).header)
+    }
+
+    fn get_block_timestamp(&mut self, _height: usize) -> Result<u32> {
+        Ok(genesis_block(lwk_wollet::bitcoin::Network::Testnet)
+            .header
+            .time)
     }
 }

@@ -67,6 +67,13 @@ pub trait LiquidChainService: Send + Sync {
         tx_hex: &str,
         verify_confirmation: bool,
     ) -> Result<Transaction>;
+
+    /// Get the block headers from their given heights
+    async fn get_headers(&self, heights: &[u32]) -> Result<Vec<BlockHeader>>;
+
+    /// Get a block's timestamp given its height
+    /// If the block has not been mined yet, the method returns an estimate of that timestamp
+    async fn get_block_timestamp(&mut self, height: u32) -> Result<u32>;
 }
 
 #[derive(Deserialize)]
@@ -271,6 +278,28 @@ impl LiquidChainService for HybridLiquidChainService {
                 "Liquid transaction was not found, txid={} waiting for broadcast",
                 tx_id,
             )),
+        }
+    }
+
+    async fn get_headers(&self, heights: &[u32]) -> Result<Vec<BlockHeader>> {
+        Ok(self
+            .electrum_client
+            .get_headers(heights, &Default::default())?)
+    }
+
+    async fn get_block_timestamp(&mut self, height: u32) -> Result<u32> {
+        let current_tip = self.tip().await?;
+
+        match current_tip.height >= height {
+            true => {
+                let headers = self.get_headers(&[height]).await?;
+                let header = headers
+                    .first()
+                    .ok_or(anyhow!("Expected block header, got None"))?;
+                Ok(header.time)
+            }
+            false => Ok(current_tip.time
+                + (height.saturating_sub(current_tip.height) * ESTIMATED_LIQUID_BLOCK_TIME_SEC)),
         }
     }
 }

@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use boltz_client::Amount;
 use electrum_client::{
     bitcoin::{
+        block::Header,
         consensus::{deserialize, serialize},
         hashes::{sha256, Hash},
         Address, OutPoint, Script, Transaction, TxOut, Txid,
@@ -75,6 +76,13 @@ pub trait BitcoinChainService: Send + Sync {
 
     /// Get the recommended fees, in sat/vbyte
     async fn recommended_fees(&self) -> Result<RecommendedFees>;
+
+    /// Get a block's header given its height
+    fn get_header(&self, height: usize) -> Result<Header>;
+
+    /// Get a block's timestamp given its height
+    /// If the block has not been mined yet, the method returns an estimate of that timestamp
+    fn get_block_timestamp(&mut self, height: usize) -> Result<u32>;
 }
 
 pub(crate) struct HybridBitcoinChainService {
@@ -300,5 +308,20 @@ impl BitcoinChainService for HybridBitcoinChainService {
         )
         .await
         .map_err(Into::into)
+    }
+
+    fn get_header(&self, height: usize) -> Result<Header> {
+        Ok(self.client.block_header(height)?)
+    }
+
+    fn get_block_timestamp(&mut self, height: usize) -> Result<u32> {
+        let current_tip = self.tip()?;
+
+        match current_tip.height >= height {
+            true => Ok(self.get_header(height)?.time),
+            false => Ok(current_tip.header.time
+                + (height.saturating_sub(current_tip.height) as u32
+                    * ESTIMATED_BITCOIN_BLOCK_TIME_SEC)),
+        }
     }
 }

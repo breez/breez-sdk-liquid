@@ -12,8 +12,6 @@ use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
-use crate::chain::bitcoin::ESTIMATED_BITCOIN_BLOCK_TIME_SEC;
-use crate::chain::liquid::ESTIMATED_LIQUID_BLOCK_TIME_SEC;
 use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
@@ -169,14 +167,13 @@ impl Recoverer {
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         send_swap.state = new_state;
                     }
-                    // Stop updating the expiry when the swap is expired or complete
-                    if !is_expired && send_swap.state.is_ongoing() {
-                        send_swap.expiry_at = Some(
-                            liquid_tip.time
-                                + (timeout_block_height.saturating_sub(liquid_tip.height)
-                                    * ESTIMATED_LIQUID_BLOCK_TIME_SEC),
-                        );
-                    }
+                    send_swap.expiry_at = self
+                        .liquid_chain_service
+                        .lock()
+                        .await
+                        .get_block_timestamp(timeout_block_height)
+                        .await?
+                        .into();
                     send_swap.lockup_tx_id = recovered_data
                         .lockup_tx_id
                         .clone()
@@ -201,14 +198,13 @@ impl Recoverer {
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         receive_swap.state = new_state;
                     }
-                    // Stop updating the expiry when the swap is expired or complete
-                    if !is_expired && receive_swap.state.is_ongoing() {
-                        receive_swap.expiry_at = Some(
-                            liquid_tip.time
-                                + (timeout_block_height.saturating_sub(liquid_tip.height)
-                                    * ESTIMATED_LIQUID_BLOCK_TIME_SEC),
-                        );
-                    }
+                    receive_swap.expiry_at = self
+                        .liquid_chain_service
+                        .lock()
+                        .await
+                        .get_block_timestamp(timeout_block_height)
+                        .await?
+                        .into();
                     receive_swap.claim_tx_id = recovered_data
                         .claim_tx_id
                         .clone()
@@ -240,16 +236,12 @@ impl Recoverer {
                         {
                             chain_swap.state = new_state;
                         }
-                        // Stop updating the expiry when the swap is expired or complete
-                        if !is_expired && chain_swap.state.is_ongoing() {
-                            chain_swap.expiry_at = Some(
-                                bitcoin_tip.header.time
-                                    + (chain_swap
-                                        .timeout_block_height
-                                        .saturating_sub(bitcoin_tip.height as u32)
-                                        * ESTIMATED_BITCOIN_BLOCK_TIME_SEC),
-                            );
-                        }
+                        chain_swap.expiry_at = self
+                            .bitcoin_chain_service
+                            .lock()
+                            .await
+                            .get_block_timestamp(chain_swap.timeout_block_height as usize)?
+                            .into();
                         chain_swap.server_lockup_tx_id = recovered_data
                             .lbtc_server_lockup_tx_id
                             .clone()
@@ -279,16 +271,13 @@ impl Recoverer {
                         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                             chain_swap.state = new_state;
                         }
-                        // Stop updating the expiry when the swap is expired or complete
-                        if !is_expired && chain_swap.state.is_ongoing() {
-                            chain_swap.expiry_at = Some(
-                                liquid_tip.time
-                                    + (chain_swap
-                                        .timeout_block_height
-                                        .saturating_sub(liquid_tip.height)
-                                        * ESTIMATED_LIQUID_BLOCK_TIME_SEC),
-                            );
-                        }
+                        chain_swap.expiry_at = self
+                            .liquid_chain_service
+                            .lock()
+                            .await
+                            .get_block_timestamp(chain_swap.timeout_block_height)
+                            .await?
+                            .into();
                         chain_swap.server_lockup_tx_id = recovered_data
                             .btc_server_lockup_tx_id
                             .clone()
