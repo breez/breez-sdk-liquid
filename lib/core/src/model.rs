@@ -1462,18 +1462,7 @@ impl Payment {
             swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
-            details: PaymentDetails::Lightning {
-                swap_id: swap.swap_id,
-                preimage: swap.preimage,
-                bolt11: swap.bolt11,
-                bolt12_offer: swap.bolt12_offer,
-                payment_hash: swap.payment_hash,
-                description: swap.description,
-                expiry_timestamp: swap.expiry_at,
-                lnurl_info: None,
-                refund_tx_id: swap.refund_tx_id,
-                refund_tx_amount_sat: swap.refund_tx_amount_sat,
-            },
+            details: payment_details,
         }
     }
 
