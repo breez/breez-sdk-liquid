@@ -12,6 +12,8 @@ use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
+use crate::chain::bitcoin::ESTIMATED_BITCOIN_BLOCK_TIME_SEC;
+use crate::chain::liquid::ESTIMATED_LIQUID_BLOCK_TIME_SEC;
 use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
@@ -104,6 +106,41 @@ impl Recoverer {
         Ok(preimage_hex)
     }
 
+    async fn get_liquid_block_timestamp(
+        &self,
+        tip: &lwk_wollet::elements::BlockHeader,
+        height: u32,
+    ) -> Result<u32> {
+        match tip.height >= height {
+            true => {
+                let chain_service = self.liquid_chain_service.lock().await;
+                let headers = chain_service.get_headers(&[height]).await?;
+                let header = headers
+                    .first()
+                    .ok_or(anyhow!("Expected block header, got None"))?;
+                Ok(header.time)
+            }
+            false => Ok(
+                tip.time + (height.saturating_sub(tip.height) * ESTIMATED_LIQUID_BLOCK_TIME_SEC)
+            ),
+        }
+    }
+
+    async fn get_bitcoin_block_timestamp(
+        &self,
+        tip: &electrum_client::HeaderNotification,
+        height: usize,
+    ) -> Result<u32> {
+        match tip.height >= height {
+            true => {
+                let chain_service = self.bitcoin_chain_service.lock().await;
+                Ok(chain_service.get_header(height)?.time)
+            }
+            false => Ok(tip.header.time
+                + (height.saturating_sub(tip.height) as u32 * ESTIMATED_BITCOIN_BLOCK_TIME_SEC)),
+        }
+    }
+
     /// For each swap, recovers data from chain services.
     ///
     /// The returned data include txs and the partial swap state. See [PartialSwapState::derive_partial_state].
@@ -168,10 +205,7 @@ impl Recoverer {
                         send_swap.state = new_state;
                     }
                     send_swap.expiry_at = self
-                        .liquid_chain_service
-                        .lock()
-                        .await
-                        .get_block_timestamp(timeout_block_height)
+                        .get_liquid_block_timestamp(&liquid_tip, timeout_block_height)
                         .await?
                         .into();
                     send_swap.lockup_tx_id = recovered_data
@@ -199,10 +233,7 @@ impl Recoverer {
                         receive_swap.state = new_state;
                     }
                     receive_swap.expiry_at = self
-                        .liquid_chain_service
-                        .lock()
-                        .await
-                        .get_block_timestamp(timeout_block_height)
+                        .get_liquid_block_timestamp(&liquid_tip, timeout_block_height)
                         .await?
                         .into();
                     receive_swap.claim_tx_id = recovered_data
@@ -237,10 +268,11 @@ impl Recoverer {
                             chain_swap.state = new_state;
                         }
                         chain_swap.expiry_at = self
-                            .bitcoin_chain_service
-                            .lock()
-                            .await
-                            .get_block_timestamp(chain_swap.timeout_block_height as usize)?
+                            .get_bitcoin_block_timestamp(
+                                &bitcoin_tip,
+                                chain_swap.timeout_block_height as usize,
+                            )
+                            .await?
                             .into();
                         chain_swap.server_lockup_tx_id = recovered_data
                             .lbtc_server_lockup_tx_id
@@ -272,10 +304,10 @@ impl Recoverer {
                             chain_swap.state = new_state;
                         }
                         chain_swap.expiry_at = self
-                            .liquid_chain_service
-                            .lock()
-                            .await
-                            .get_block_timestamp(chain_swap.timeout_block_height)
+                            .get_liquid_block_timestamp(
+                                &liquid_tip,
+                                chain_swap.timeout_block_height,
+                            )
                             .await?
                             .into();
                         chain_swap.server_lockup_tx_id = recovered_data

@@ -138,10 +138,6 @@ impl LiquidChainService for MockLiquidChainService {
     async fn get_headers(&self, _heights: &[u32]) -> Result<Vec<BlockHeader>> {
         unimplemented!();
     }
-
-    async fn get_block_timestamp(&mut self, _height: u32) -> Result<u32> {
-        unimplemented!();
-    }
 }
 
 pub(crate) struct MockBitcoinChainService {
@@ -247,11 +243,5 @@ impl BitcoinChainService for MockBitcoinChainService {
 
     fn get_header(&self, _height: usize) -> Result<Header> {
         Ok(genesis_block(lwk_wollet::bitcoin::Network::Testnet).header)
-    }
-
-    fn get_block_timestamp(&mut self, _height: usize) -> Result<u32> {
-        Ok(genesis_block(lwk_wollet::bitcoin::Network::Testnet)
-            .header
-            .time)
     }
 }
