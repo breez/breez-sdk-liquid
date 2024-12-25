@@ -104,7 +104,20 @@ impl Persister {
     pub(crate) fn insert_or_update_payment_with_wallet_tx(&self, tx: &WalletTx) -> Result<()> {
         let tx_id = tx.txid.to_string();
         let is_tx_confirmed = tx.height.is_some();
-        let amount_sat = tx.balance.values().sum::<i64>();
+        let amount_sat = tx
+            .balance
+            .iter()
+            .filter_map(|(asset_id, balance)| {
+                if *asset_id == lwk_wollet::elements::AssetId::LIQUID_BTC {
+                    return Some(balance);
+                }
+                None
+            })
+            .sum::<i64>();
+        if amount_sat == 0 {
+            log::warn!("Attempted to persist a payment with no output amount: tx_id {tx_id}");
+            return Ok(());
+        }
         let maybe_script_pubkey = tx
             .outputs
             .iter()
