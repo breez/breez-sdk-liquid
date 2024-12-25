@@ -255,7 +255,7 @@ impl PaymentDetailsSyncData {
     pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
         for field in updated_fields {
             match field.as_str() {
-                "destination" => self.destination = other.destination.clone(),
+                "destination" => self.destination.clone_from(&other.destination),
                 "description" => clone_if_set(&mut self.description, &other.description),
                 "lnurl_info" => clone_if_set(&mut self.lnurl_info, &other.lnurl_info),
                 _ => continue,
