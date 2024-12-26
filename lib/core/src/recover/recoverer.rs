@@ -12,14 +12,14 @@ use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
+use super::model::*;
+use crate::model::PaymentState;
 use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     recover::model::{BtcScript, HistoryTxId, LBtcScript},
 };
-
-use super::model::*;
 
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
@@ -215,10 +215,15 @@ impl Recoverer {
                         };
                         let is_expired = bitcoin_height >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
+                        let is_waiting_fee_acceptance =
+                            chain_swap.state == PaymentState::WaitingFeeAcceptance;
                         if let Some(new_state) =
                             recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired)
                         {
-                            chain_swap.state = new_state;
+                            // When local state is WaitingFeeAcceptance do not change to Pending
+                            if !(new_state == PaymentState::Pending && is_waiting_fee_acceptance) {
+                                chain_swap.state = new_state;
+                            }
                         }
                         chain_swap.server_lockup_tx_id = recovered_data
                             .lbtc_server_lockup_tx_id
