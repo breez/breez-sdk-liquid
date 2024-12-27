@@ -791,7 +791,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
   $Res call(
       {String swapId,
       String description,
-      int? expiryTimestamp,
+      int expirationBlock,
       String? preimage,
       String? bolt11,
       String? bolt12Offer,
@@ -816,7 +816,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
   $Res call({
     Object? swapId = null,
     Object? description = null,
-    Object? expiryTimestamp = freezed,
+    Object? expirationBlock = null,
     Object? preimage = freezed,
     Object? bolt11 = freezed,
     Object? bolt12Offer = freezed,
@@ -834,10 +834,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String,
-      expiryTimestamp: freezed == expiryTimestamp
-          ? _value.expiryTimestamp
-          : expiryTimestamp // ignore: cast_nullable_to_non_nullable
-              as int?,
+      expirationBlock: null == expirationBlock
+          ? _value.expirationBlock
+          : expirationBlock // ignore: cast_nullable_to_non_nullable
+              as int,
       preimage: freezed == preimage
           ? _value.preimage
           : preimage // ignore: cast_nullable_to_non_nullable
@@ -876,7 +876,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   const _$PaymentDetails_LightningImpl(
       {required this.swapId,
       required this.description,
-      this.expiryTimestamp,
+      required this.expirationBlock,
       this.preimage,
       this.bolt11,
       this.bolt12Offer,
@@ -893,9 +893,9 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final String description;
 
-  /// The estimated swap expiry
+  /// The block at which the swap will no longer be valid
   @override
-  final int? expiryTimestamp;
+  final int expirationBlock;
 
   /// The preimage of the paid invoice (proof of payment).
   @override
@@ -927,7 +927,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, expiryTimestamp: $expiryTimestamp, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, expirationBlock: $expirationBlock, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -937,7 +937,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             other is _$PaymentDetails_LightningImpl &&
             (identical(other.swapId, swapId) || other.swapId == swapId) &&
             (identical(other.description, description) || other.description == description) &&
-            (identical(other.expiryTimestamp, expiryTimestamp) || other.expiryTimestamp == expiryTimestamp) &&
+            (identical(other.expirationBlock, expirationBlock) || other.expirationBlock == expirationBlock) &&
             (identical(other.preimage, preimage) || other.preimage == preimage) &&
             (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
             (identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer) &&
@@ -949,7 +949,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, swapId, description, expiryTimestamp, preimage, bolt11,
+  int get hashCode => Object.hash(runtimeType, swapId, description, expirationBlock, preimage, bolt11,
       bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
@@ -965,7 +965,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
   const factory PaymentDetails_Lightning(
       {required final String swapId,
       required final String description,
-      final int? expiryTimestamp,
+      required final int expirationBlock,
       final String? preimage,
       final String? bolt11,
       final String? bolt12Offer,
@@ -981,8 +981,8 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
   @override
   String get description;
 
-  /// The estimated swap expiry
-  int? get expiryTimestamp;
+  /// The block at which the swap will no longer be valid
+  int get expirationBlock;
 
   /// The preimage of the paid invoice (proof of payment).
   String? get preimage;
@@ -1121,7 +1121,7 @@ abstract class _$$PaymentDetails_BitcoinImplCopyWith<$Res> implements $PaymentDe
   $Res call(
       {String swapId,
       String description,
-      int? expiryTimestamp,
+      int expirationBlock,
       String? refundTxId,
       BigInt? refundTxAmountSat});
 }
@@ -1141,7 +1141,7 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
   $Res call({
     Object? swapId = null,
     Object? description = null,
-    Object? expiryTimestamp = freezed,
+    Object? expirationBlock = null,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
   }) {
@@ -1154,10 +1154,10 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String,
-      expiryTimestamp: freezed == expiryTimestamp
-          ? _value.expiryTimestamp
-          : expiryTimestamp // ignore: cast_nullable_to_non_nullable
-              as int?,
+      expirationBlock: null == expirationBlock
+          ? _value.expirationBlock
+          : expirationBlock // ignore: cast_nullable_to_non_nullable
+              as int,
       refundTxId: freezed == refundTxId
           ? _value.refundTxId
           : refundTxId // ignore: cast_nullable_to_non_nullable
@@ -1176,7 +1176,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   const _$PaymentDetails_BitcoinImpl(
       {required this.swapId,
       required this.description,
-      this.expiryTimestamp,
+      required this.expirationBlock,
       this.refundTxId,
       this.refundTxAmountSat})
       : super._();
@@ -1188,9 +1188,9 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   @override
   final String description;
 
-  /// The estimated swap expiry
+  /// The block at which the swap will no longer be valid
   @override
-  final int? expiryTimestamp;
+  final int expirationBlock;
 
   /// For a Send swap which was refunded, this is the refund tx id
   @override
@@ -1202,7 +1202,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   String toString() {
-    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, expiryTimestamp: $expiryTimestamp, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, expirationBlock: $expirationBlock, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1212,7 +1212,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
             other is _$PaymentDetails_BitcoinImpl &&
             (identical(other.swapId, swapId) || other.swapId == swapId) &&
             (identical(other.description, description) || other.description == description) &&
-            (identical(other.expiryTimestamp, expiryTimestamp) || other.expiryTimestamp == expiryTimestamp) &&
+            (identical(other.expirationBlock, expirationBlock) || other.expirationBlock == expirationBlock) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
                 other.refundTxAmountSat == refundTxAmountSat));
@@ -1220,7 +1220,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   int get hashCode =>
-      Object.hash(runtimeType, swapId, description, expiryTimestamp, refundTxId, refundTxAmountSat);
+      Object.hash(runtimeType, swapId, description, expirationBlock, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1235,7 +1235,7 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   const factory PaymentDetails_Bitcoin(
       {required final String swapId,
       required final String description,
-      final int? expiryTimestamp,
+      required final int expirationBlock,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_BitcoinImpl;
   const PaymentDetails_Bitcoin._() : super._();
@@ -1246,8 +1246,8 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   @override
   String get description;
 
-  /// The estimated swap expiry
-  int? get expiryTimestamp;
+  /// The block at which the swap will no longer be valid
+  int get expirationBlock;
 
   /// For a Send swap which was refunded, this is the refund tx id
   String? get refundTxId;

@@ -6,10 +6,8 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use anyhow::{anyhow, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
-use chain::bitcoin::{HybridBitcoinChainService, ESTIMATED_BITCOIN_BLOCK_TIME_SEC};
-use chain::liquid::{
-    HybridLiquidChainService, LiquidChainService, ESTIMATED_LIQUID_BLOCK_TIME_SEC,
-};
+use chain::bitcoin::HybridBitcoinChainService;
+use chain::liquid::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::{StreamExt, TryFutureExt};
@@ -1331,18 +1329,13 @@ impl LiquidSdk {
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
 
-                let liquid_tip = self.liquid_chain_service.lock().await.tip().await?;
-                let expiry_at = liquid_tip.time
-                    + ((create_response.timeout_block_height as u32)
-                        .saturating_sub(liquid_tip.height)
-                        * ESTIMATED_LIQUID_BLOCK_TIME_SEC);
-
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
                     id: swap_id.clone(),
                     invoice: invoice.to_string(),
                     bolt12_offer,
                     payment_hash: Some(payment_hash.to_string()),
+                    timeout_block_height: create_response.timeout_block_height,
                     description,
                     preimage: None,
                     payer_amount_sat,
@@ -1354,7 +1347,6 @@ impl LiquidSdk {
                     lockup_tx_id: None,
                     refund_tx_id: None,
                     created_at: utils::now(),
-                    expiry_at: Some(expiry_at),
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
                 };
@@ -1616,14 +1608,6 @@ impl LiquidSdk {
             ChainSwap::from_boltz_struct_to_json(&create_response, &create_response.id)?;
         let swap_id = create_response.id;
 
-        let liquid_tip = self.liquid_chain_service.lock().await.tip().await?;
-        let expiry_at = liquid_tip.time
-            + (create_response
-                .lockup_details
-                .timeout_block_height
-                .saturating_sub(liquid_tip.height)
-                * ESTIMATED_LIQUID_BLOCK_TIME_SEC);
-
         let accept_zero_conf = server_lockup_amount_sat <= pair.limits.maximal_zero_conf;
         let payer_amount_sat = req.prepare_response.total_fees_sat + receiver_amount_sat;
 
@@ -1650,7 +1634,6 @@ impl LiquidSdk {
             claim_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),
-            expiry_at: Some(expiry_at),
             state: PaymentState::Created,
         };
         self.persister.insert_or_update_chain_swap(&swap)?;
@@ -1977,13 +1960,6 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Hash(_) => None,
         };
 
-        let liquid_tip = self.liquid_chain_service.lock().await.tip().await?;
-        let expiry_at = liquid_tip.time
-            + (create_response
-                .timeout_block_height
-                .saturating_sub(liquid_tip.height)
-                * ESTIMATED_LIQUID_BLOCK_TIME_SEC);
-
         self.persister
             .insert_or_update_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
@@ -1992,6 +1968,7 @@ impl LiquidSdk {
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
                 payment_hash: Some(preimage_hash),
+                timeout_block_height: create_response.timeout_block_height,
                 description: invoice_description,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -2004,7 +1981,6 @@ impl LiquidSdk {
                 mrh_address: mrh_addr_str,
                 mrh_tx_id: None,
                 created_at: utils::now(),
-                expiry_at: Some(expiry_at),
                 state: PaymentState::Created,
             })
             .map_err(|_| PaymentError::PersistError)?;
@@ -2072,14 +2048,6 @@ impl LiquidSdk {
         let create_response_json =
             ChainSwap::from_boltz_struct_to_json(&create_response, &swap_id)?;
 
-        let bitcoin_tip = self.bitcoin_chain_service.lock().await.tip()?;
-        let expiry_at = bitcoin_tip.header.time
-            + (create_response
-                .lockup_details
-                .timeout_block_height
-                .saturating_sub(bitcoin_tip.height as u32)
-                * ESTIMATED_BITCOIN_BLOCK_TIME_SEC);
-
         let accept_zero_conf = user_lockup_amount_sat
             .map(|user_lockup_amount_sat| user_lockup_amount_sat <= pair.limits.maximal_zero_conf)
             .unwrap_or(false);
@@ -2110,7 +2078,6 @@ impl LiquidSdk {
             claim_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),
-            expiry_at: Some(expiry_at),
             state: PaymentState::Created,
         };
         self.persister.insert_or_update_chain_swap(&swap)?;

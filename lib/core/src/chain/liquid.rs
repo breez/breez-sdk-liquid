@@ -23,7 +23,6 @@ use crate::{
 };
 
 const LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
-pub(crate) const ESTIMATED_LIQUID_BLOCK_TIME_SEC: u32 = 60;
 
 #[async_trait]
 pub trait LiquidChainService: Send + Sync {

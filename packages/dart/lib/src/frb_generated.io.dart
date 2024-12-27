@@ -2838,7 +2838,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is PaymentDetails_Lightning) {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
       var pre_description = cst_encode_String(apiObj.description);
-      var pre_expiry_timestamp = cst_encode_opt_box_autoadd_u_32(apiObj.expiryTimestamp);
+      var pre_expiration_block = cst_encode_u_32(apiObj.expirationBlock);
       var pre_preimage = cst_encode_opt_String(apiObj.preimage);
       var pre_bolt11 = cst_encode_opt_String(apiObj.bolt11);
       var pre_bolt12_offer = cst_encode_opt_String(apiObj.bolt12Offer);
@@ -2849,7 +2849,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 0;
       wireObj.kind.Lightning.swap_id = pre_swap_id;
       wireObj.kind.Lightning.description = pre_description;
-      wireObj.kind.Lightning.expiry_timestamp = pre_expiry_timestamp;
+      wireObj.kind.Lightning.expiration_block = pre_expiration_block;
       wireObj.kind.Lightning.preimage = pre_preimage;
       wireObj.kind.Lightning.bolt11 = pre_bolt11;
       wireObj.kind.Lightning.bolt12_offer = pre_bolt12_offer;
@@ -2870,13 +2870,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is PaymentDetails_Bitcoin) {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
       var pre_description = cst_encode_String(apiObj.description);
-      var pre_expiry_timestamp = cst_encode_opt_box_autoadd_u_32(apiObj.expiryTimestamp);
+      var pre_expiration_block = cst_encode_u_32(apiObj.expirationBlock);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
       wireObj.tag = 2;
       wireObj.kind.Bitcoin.swap_id = pre_swap_id;
       wireObj.kind.Bitcoin.description = pre_description;
-      wireObj.kind.Bitcoin.expiry_timestamp = pre_expiry_timestamp;
+      wireObj.kind.Bitcoin.expiration_block = pre_expiration_block;
       wireObj.kind.Bitcoin.refund_tx_id = pre_refund_tx_id;
       wireObj.kind.Bitcoin.refund_tx_amount_sat = pre_refund_tx_amount_sat;
       return;
@@ -6129,7 +6129,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  external ffi.Pointer<ffi.Uint32> expiry_timestamp;
+  @ffi.Uint32()
+  external int expiration_block;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
@@ -6157,7 +6158,8 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  external ffi.Pointer<ffi.Uint32> expiry_timestamp;
+  @ffi.Uint32()
+  external int expiration_block;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 

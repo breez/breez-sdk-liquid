@@ -41,6 +41,7 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         invoice: invoice.to_string(),
         bolt12_offer: None,
         payment_hash: Some(payment_hash.to_string()),
+        timeout_block_height: 1459611,
         description: Some("Send to BTC lightning".to_string()),
         preimage: None,
         payer_amount_sat: 1149,
@@ -80,7 +81,6 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         lockup_tx_id: None,
         refund_tx_id: None,
         created_at: utils::now(),
-        expiry_at: Some(utils::now() + 86400),
         state: payment_state.unwrap_or(PaymentState::Created),
         refund_private_key: "945affeef55f12227f1d4a3f80a17062a05b229ddc5a01591eb5ddf882df92e3".to_string(),
     }
@@ -90,6 +90,7 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
     ReceiveSwap {
         id: generate_random_string(4),
         preimage: "49ef4cb865d78519e5b3cf6aae6b409e1b471fe8ddbda744582e23665a2252cf".to_string(),
+        timeout_block_height: 1459611,
         description: Some("Send to L-BTC address".to_string()),
         create_response_json: r#"{
             "swap_tree": {
@@ -134,7 +135,6 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         mrh_address: "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n".to_string(),
         mrh_tx_id: None,
         created_at: utils::now(),
-        expiry_at: Some(utils::now() + 86400),
         state: payment_state.unwrap_or(PaymentState::Created),
     }
 }

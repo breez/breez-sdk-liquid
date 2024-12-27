@@ -20,8 +20,6 @@ use crate::{
     prelude::Utxo,
 };
 
-pub(crate) const ESTIMATED_BITCOIN_BLOCK_TIME_SEC: u32 = 600;
-
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
 #[async_trait]

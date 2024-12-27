@@ -472,7 +472,7 @@ typedef struct wire_cst_ln_url_info {
 typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   struct wire_cst_list_prim_u_8_strict *description;
-  uint32_t *expiry_timestamp;
+  uint32_t expiration_block;
   struct wire_cst_list_prim_u_8_strict *preimage;
   struct wire_cst_list_prim_u_8_strict *bolt11;
   struct wire_cst_list_prim_u_8_strict *bolt12_offer;
@@ -490,7 +490,7 @@ typedef struct wire_cst_PaymentDetails_Liquid {
 typedef struct wire_cst_PaymentDetails_Bitcoin {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   struct wire_cst_list_prim_u_8_strict *description;
-  uint32_t *expiry_timestamp;
+  uint32_t expiration_block;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
 } wire_cst_PaymentDetails_Bitcoin;

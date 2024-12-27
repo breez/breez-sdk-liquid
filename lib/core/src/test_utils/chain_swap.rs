@@ -111,7 +111,6 @@ pub(crate) fn new_chain_swap(
             claim_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),
-            expiry_at: Some(utils::now() + 604800),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
             pair_fees_json: r#"{
@@ -194,7 +193,6 @@ pub(crate) fn new_chain_swap(
             claim_tx_id: None,
             refund_tx_id: None,
             created_at: utils::now(),
-            expiry_at: Some(utils::now() + 604800),
             state: payment_state.unwrap_or(PaymentState::Created),
             accept_zero_conf,
             pair_fees_json: r#"{

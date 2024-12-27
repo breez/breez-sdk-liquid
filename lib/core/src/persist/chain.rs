@@ -35,10 +35,9 @@ impl Persister {
                 refund_private_key,
                 claim_fees_sat,
                 created_at,
-                expiry_at,
                 state
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		    ON CONFLICT DO NOTHING",
             (
                 &chain_swap.id,
@@ -55,7 +54,6 @@ impl Persister {
                 &chain_swap.refund_private_key,
                 &chain_swap.claim_fees_sat,
                 &chain_swap.created_at,
-                &chain_swap.expiry_at,
                 &chain_swap.state,
             ),
         )?;
@@ -73,7 +71,6 @@ impl Persister {
                 claim_tx_id = :claim_tx_id,
                 refund_tx_id = :refund_tx_id,
                 pair_fees_json = :pair_fees_json,
-                expiry_at = :expiry_at,
                 state = :state
             WHERE
                 id = :id",
@@ -89,7 +86,6 @@ impl Persister {
                 ":claim_tx_id": &chain_swap.claim_tx_id,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
                 ":pair_fees_json": &chain_swap.pair_fees_json,
-                ":expiry_at": &chain_swap.expiry_at,
                 ":state": &chain_swap.state,
             },
         )?;
@@ -138,7 +134,6 @@ impl Persister {
                 claim_tx_id,
                 refund_tx_id,
                 created_at,
-                expiry_at,
                 state,
                 pair_fees_json
             FROM chain_swaps
@@ -188,9 +183,8 @@ impl Persister {
             claim_tx_id: row.get(16)?,
             refund_tx_id: row.get(17)?,
             created_at: row.get(18)?,
-            expiry_at: row.get(19)?,
-            state: row.get(20)?,
-            pair_fees_json: row.get(21)?,
+            state: row.get(19)?,
+            pair_fees_json: row.get(20)?,
         })
     }
 

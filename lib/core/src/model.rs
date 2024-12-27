@@ -735,7 +735,6 @@ pub(crate) struct ChainSwap {
     /// Persisted as soon as a refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
-    pub(crate) expiry_at: Option<u32>,
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
@@ -880,7 +879,7 @@ pub(crate) struct SendSwap {
     /// Persisted as soon as a refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
-    pub(crate) expiry_at: Option<u32>,
+    pub(crate) timeout_block_height: u64,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
 }
@@ -974,7 +973,7 @@ pub(crate) struct ReceiveSwap {
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
     /// Afterwards, it shows the lockup tx creation time.
     pub(crate) created_at: u32,
-    pub(crate) expiry_at: Option<u32>,
+    pub(crate) timeout_block_height: u32,
     pub(crate) state: PaymentState,
 }
 impl ReceiveSwap {
@@ -1126,12 +1125,6 @@ pub enum PaymentState {
     RefundPending = 6,
 }
 
-impl PaymentState {
-    pub(crate) fn is_ongoing(&self) -> bool {
-        matches!(self, Self::Created | Self::Pending)
-    }
-}
-
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
@@ -1252,8 +1245,8 @@ pub struct PaymentSwapData {
     /// Swap creation timestamp
     pub created_at: u32,
 
-    /// Swap expiry timestamp
-    pub expiry_at: Option<u32>,
+    /// The block at which the swap will no longer be valid
+    pub expiration_block: u32,
 
     pub preimage: Option<String>,
     pub bolt11: Option<String>,
@@ -1305,8 +1298,8 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// The estimated swap expiry
-        expiry_timestamp: Option<u32>,
+        /// The block at which the swap will no longer be valid
+        expiration_block: u32,
 
         /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
@@ -1345,8 +1338,8 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// The estimated swap expiry
-        expiry_timestamp: Option<u32>,
+        /// The block at which the swap will no longer be valid
+        expiration_block: u32,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,

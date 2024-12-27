@@ -120,8 +120,8 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
         create_response_json: "".to_string(),
         payer_amount_sat: 0,
         receiver_amount_sat: 0,
+        timeout_block_height: 1459611,
         created_at: 0,
-        expiry_at: None,
         claim_fees_sat: 0,
         claim_private_key: "".to_string(),
         mrh_address: "".to_string(),
@@ -140,8 +140,8 @@ pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
         refund_private_key: "".to_string(),
         payer_amount_sat: 0,
         receiver_amount_sat: 0,
+        timeout_block_height: 1459611,
         created_at: 0,
-        expiry_at: None,
         preimage,
         payment_hash: None,
         description: None,
@@ -165,7 +165,6 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
         receiver_amount_sat: 0,
         accept_zero_conf: accept_zero_conf.unwrap_or(true),
         created_at: 0,
-        expiry_at: None,
         description: None,
     }
 }

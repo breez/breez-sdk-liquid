@@ -3061,16 +3061,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
     if (type == "lightning") {
         val swapId = paymentDetails.getString("swapId")!!
         val description = paymentDetails.getString("description")!!
-        val expiryTimestamp =
-            if (hasNonNullKey(
-                    paymentDetails,
-                    "expiryTimestamp",
-                )
-            ) {
-                paymentDetails.getInt("expiryTimestamp").toUInt()
-            } else {
-                null
-            }
+        val expirationBlock = paymentDetails.getInt("expirationBlock").toUInt()
         val preimage = if (hasNonNullKey(paymentDetails, "preimage")) paymentDetails.getString("preimage") else null
         val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
         val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
@@ -3099,7 +3090,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         return PaymentDetails.Lightning(
             swapId,
             description,
-            expiryTimestamp,
+            expirationBlock,
             preimage,
             bolt11,
             bolt12Offer,
@@ -3117,16 +3108,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
         val description = paymentDetails.getString("description")!!
-        val expiryTimestamp =
-            if (hasNonNullKey(
-                    paymentDetails,
-                    "expiryTimestamp",
-                )
-            ) {
-                paymentDetails.getInt("expiryTimestamp").toUInt()
-            } else {
-                null
-            }
+        val expirationBlock = paymentDetails.getInt("expirationBlock").toUInt()
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
             if (hasNonNullKey(
@@ -3138,7 +3120,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Bitcoin(swapId, description, expiryTimestamp, refundTxId, refundTxAmountSat)
+        return PaymentDetails.Bitcoin(swapId, description, expirationBlock, refundTxId, refundTxAmountSat)
     }
     return null
 }
@@ -3150,7 +3132,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "type", "lightning")
             pushToMap(map, "swapId", paymentDetails.swapId)
             pushToMap(map, "description", paymentDetails.description)
-            pushToMap(map, "expiryTimestamp", paymentDetails.expiryTimestamp)
+            pushToMap(map, "expirationBlock", paymentDetails.expirationBlock)
             pushToMap(map, "preimage", paymentDetails.preimage)
             pushToMap(map, "bolt11", paymentDetails.bolt11)
             pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
@@ -3168,7 +3150,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "type", "bitcoin")
             pushToMap(map, "swapId", paymentDetails.swapId)
             pushToMap(map, "description", paymentDetails.description)
-            pushToMap(map, "expiryTimestamp", paymentDetails.expiryTimestamp)
+            pushToMap(map, "expirationBlock", paymentDetails.expirationBlock)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
         }

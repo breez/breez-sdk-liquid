@@ -698,8 +698,8 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
-    /// The estimated swap expiry
-    int? expiryTimestamp,
+    /// The block at which the swap will no longer be valid
+    required int expirationBlock,
 
     /// The preimage of the paid invoice (proof of payment).
     String? preimage,
@@ -739,8 +739,8 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
-    /// The estimated swap expiry
-    int? expiryTimestamp,
+    /// The block at which the swap will no longer be valid
+    required int expirationBlock,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
