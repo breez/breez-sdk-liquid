@@ -72,6 +72,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw);
 
   @protected
+  BlockchainDetails dco_decode_blockchain_details(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
@@ -645,6 +648,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer);
+
+  @protected
+  BlockchainDetails sse_decode_blockchain_details(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -1974,6 +1980,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_blockchain_details(
+      BlockchainDetails apiObj, wire_cst_blockchain_details wireObj) {
+    wireObj.liquid_tip = cst_encode_u_32(apiObj.liquidTip);
+    wireObj.bitcoin_tip = cst_encode_u_32(apiObj.bitcoinTip);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_aes_success_action_data(
       AesSuccessActionData apiObj, ffi.Pointer<wire_cst_aes_success_action_data> wireObj) {
     cst_api_fill_to_wire_aes_success_action_data(apiObj, wireObj.ref);
@@ -2320,6 +2333,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.pending_receive_sat = cst_encode_u_64(apiObj.pendingReceiveSat);
     wireObj.fingerprint = cst_encode_String(apiObj.fingerprint);
     wireObj.pubkey = cst_encode_String(apiObj.pubkey);
+    cst_api_fill_to_wire_blockchain_details(apiObj.blockchainDetails, wireObj.blockchain_details);
   }
 
   @protected
@@ -3432,6 +3446,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_blockchain_details(BlockchainDetails self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
@@ -6445,6 +6462,14 @@ final class wire_cst_list_refundable_swap extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_blockchain_details extends ffi.Struct {
+  @ffi.Uint32()
+  external int liquid_tip;
+
+  @ffi.Uint32()
+  external int bitcoin_tip;
+}
+
 final class wire_cst_check_message_response extends ffi.Struct {
   @ffi.Bool()
   external bool is_valid;
@@ -6463,6 +6488,8 @@ final class wire_cst_get_info_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> fingerprint;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
+
+  external wire_cst_blockchain_details blockchain_details;
 }
 
 final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {

@@ -30,6 +30,27 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
+class BlockchainDetails {
+  final int liquidTip;
+  final int bitcoinTip;
+
+  const BlockchainDetails({
+    required this.liquidTip,
+    required this.bitcoinTip,
+  });
+
+  @override
+  int get hashCode => liquidTip.hashCode ^ bitcoinTip.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BlockchainDetails &&
+          runtimeType == other.runtimeType &&
+          liquidTip == other.liquidTip &&
+          bitcoinTip == other.bitcoinTip;
+}
+
 /// An argument of [PrepareBuyBitcoinRequest] when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 enum BuyBitcoinProvider {
   moonpay,
@@ -245,12 +266,16 @@ class GetInfoResponse {
   /// The wallet's pubkey. Used to verify signed messages.
   final String pubkey;
 
+  /// Details regarding onchain data, such as the current Liquid/Bitcoin tip
+  final BlockchainDetails blockchainDetails;
+
   const GetInfoResponse({
     required this.balanceSat,
     required this.pendingSendSat,
     required this.pendingReceiveSat,
     required this.fingerprint,
     required this.pubkey,
+    required this.blockchainDetails,
   });
 
   @override
@@ -259,7 +284,8 @@ class GetInfoResponse {
       pendingSendSat.hashCode ^
       pendingReceiveSat.hashCode ^
       fingerprint.hashCode ^
-      pubkey.hashCode;
+      pubkey.hashCode ^
+      blockchainDetails.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -270,7 +296,8 @@ class GetInfoResponse {
           pendingSendSat == other.pendingSendSat &&
           pendingReceiveSat == other.pendingReceiveSat &&
           fingerprint == other.fingerprint &&
-          pubkey == other.pubkey;
+          pubkey == other.pubkey &&
+          blockchainDetails == other.blockchainDetails;
 }
 
 @freezed

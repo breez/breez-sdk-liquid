@@ -139,6 +139,39 @@ fun asBitcoinAddressDataList(arr: ReadableArray): List<BitcoinAddressData> {
     return list
 }
 
+fun asBlockchainDetails(blockchainDetails: ReadableMap): BlockchainDetails? {
+    if (!validateMandatoryFields(
+            blockchainDetails,
+            arrayOf(
+                "liquidTip",
+                "bitcoinTip",
+            ),
+        )
+    ) {
+        return null
+    }
+    val liquidTip = blockchainDetails.getInt("liquidTip").toUInt()
+    val bitcoinTip = blockchainDetails.getInt("bitcoinTip").toUInt()
+    return BlockchainDetails(liquidTip, bitcoinTip)
+}
+
+fun readableMapOf(blockchainDetails: BlockchainDetails): ReadableMap =
+    readableMapOf(
+        "liquidTip" to blockchainDetails.liquidTip,
+        "bitcoinTip" to blockchainDetails.bitcoinTip,
+    )
+
+fun asBlockchainDetailsList(arr: ReadableArray): List<BlockchainDetails> {
+    val list = ArrayList<BlockchainDetails>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBlockchainDetails(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBuyBitcoinRequest(buyBitcoinRequest: ReadableMap): BuyBitcoinRequest? {
     if (!validateMandatoryFields(
             buyBitcoinRequest,
@@ -515,6 +548,7 @@ fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
                 "pendingReceiveSat",
                 "fingerprint",
                 "pubkey",
+                "blockchainDetails",
             ),
         )
     ) {
@@ -525,7 +559,8 @@ fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
     val pendingReceiveSat = getInfoResponse.getDouble("pendingReceiveSat").toULong()
     val fingerprint = getInfoResponse.getString("fingerprint")!!
     val pubkey = getInfoResponse.getString("pubkey")!!
-    return GetInfoResponse(balanceSat, pendingSendSat, pendingReceiveSat, fingerprint, pubkey)
+    val blockchainDetails = getInfoResponse.getMap("blockchainDetails")?.let { asBlockchainDetails(it) }!!
+    return GetInfoResponse(balanceSat, pendingSendSat, pendingReceiveSat, fingerprint, pubkey, blockchainDetails)
 }
 
 fun readableMapOf(getInfoResponse: GetInfoResponse): ReadableMap =
@@ -535,6 +570,7 @@ fun readableMapOf(getInfoResponse: GetInfoResponse): ReadableMap =
         "pendingReceiveSat" to getInfoResponse.pendingReceiveSat,
         "fingerprint" to getInfoResponse.fingerprint,
         "pubkey" to getInfoResponse.pubkey,
+        "blockchainDetails" to readableMapOf(getInfoResponse.blockchainDetails),
     )
 
 fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {

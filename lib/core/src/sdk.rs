@@ -2504,12 +2504,19 @@ impl LiquidSdk {
             }
         }
 
+        let liquid_tip = self.liquid_chain_service.lock().await.tip().await?.height;
+        let bitcoin_tip = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
+
         let info_response = GetInfoResponse {
             balance_sat: wallet_amount_sat as u64,
             pending_send_sat,
             pending_receive_sat,
             fingerprint: self.onchain_wallet.fingerprint()?,
             pubkey: self.onchain_wallet.pubkey()?,
+            blockchain_details: BlockchainDetails {
+                liquid_tip,
+                bitcoin_tip,
+            },
         };
         self.persister.set_wallet_info(&info_response)
     }

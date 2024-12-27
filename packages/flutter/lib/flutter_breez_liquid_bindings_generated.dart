@@ -4861,6 +4861,14 @@ final class wire_cst_list_refundable_swap extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_blockchain_details extends ffi.Struct {
+  @ffi.Uint32()
+  external int liquid_tip;
+
+  @ffi.Uint32()
+  external int bitcoin_tip;
+}
+
 final class wire_cst_check_message_response extends ffi.Struct {
   @ffi.Bool()
   external bool is_valid;
@@ -4879,6 +4887,8 @@ final class wire_cst_get_info_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> fingerprint;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
+
+  external wire_cst_blockchain_details blockchain_details;
 }
 
 final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {

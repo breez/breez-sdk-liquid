@@ -2306,6 +2306,18 @@ impl SseDecode for crate::bindings::BitcoinAddressData {
     }
 }
 
+impl SseDecode for crate::model::BlockchainDetails {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_liquidTip = <u32>::sse_decode(deserializer);
+        let mut var_bitcoinTip = <u32>::sse_decode(deserializer);
+        return crate::model::BlockchainDetails {
+            liquid_tip: var_liquidTip,
+            bitcoin_tip: var_bitcoinTip,
+        };
+    }
+}
+
 impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2472,12 +2484,14 @@ impl SseDecode for crate::model::GetInfoResponse {
         let mut var_pendingReceiveSat = <u64>::sse_decode(deserializer);
         let mut var_fingerprint = <String>::sse_decode(deserializer);
         let mut var_pubkey = <String>::sse_decode(deserializer);
+        let mut var_blockchainDetails = <crate::model::BlockchainDetails>::sse_decode(deserializer);
         return crate::model::GetInfoResponse {
             balance_sat: var_balanceSat,
             pending_send_sat: var_pendingSendSat,
             pending_receive_sat: var_pendingReceiveSat,
             fingerprint: var_fingerprint,
             pubkey: var_pubkey,
+            blockchain_details: var_blockchainDetails,
         };
     }
 }
@@ -4581,6 +4595,27 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::BitcoinAddres
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::BlockchainDetails {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.liquid_tip.into_into_dart().into_dart(),
+            self.bitcoin_tip.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::BlockchainDetails
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::BlockchainDetails>
+    for crate::model::BlockchainDetails
+{
+    fn into_into_dart(self) -> crate::model::BlockchainDetails {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::BuyBitcoinProvider {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -4787,6 +4822,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::GetInfoResponse {
             self.pending_receive_sat.into_into_dart().into_dart(),
             self.fingerprint.into_into_dart().into_dart(),
             self.pubkey.into_into_dart().into_dart(),
+            self.blockchain_details.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6730,6 +6766,14 @@ impl SseEncode for crate::bindings::BitcoinAddressData {
     }
 }
 
+impl SseEncode for crate::model::BlockchainDetails {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.liquid_tip, serializer);
+        <u32>::sse_encode(self.bitcoin_tip, serializer);
+    }
+}
+
 impl SseEncode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6851,6 +6895,7 @@ impl SseEncode for crate::model::GetInfoResponse {
         <u64>::sse_encode(self.pending_receive_sat, serializer);
         <String>::sse_encode(self.fingerprint, serializer);
         <String>::sse_encode(self.pubkey, serializer);
+        <crate::model::BlockchainDetails>::sse_encode(self.blockchain_details, serializer);
     }
 }
 
@@ -8546,6 +8591,15 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::BlockchainDetails> for wire_cst_blockchain_details {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::BlockchainDetails {
+            crate::model::BlockchainDetails {
+                liquid_tip: self.liquid_tip.cst_decode(),
+                bitcoin_tip: self.bitcoin_tip.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::bindings::AesSuccessActionData> for *mut wire_cst_aes_success_action_data {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::AesSuccessActionData {
@@ -9013,6 +9067,7 @@ mod io {
                 pending_receive_sat: self.pending_receive_sat.cst_decode(),
                 fingerprint: self.fingerprint.cst_decode(),
                 pubkey: self.pubkey.cst_decode(),
+                blockchain_details: self.blockchain_details.cst_decode(),
             }
         }
     }
@@ -10396,6 +10451,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_blockchain_details {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                liquid_tip: Default::default(),
+                bitcoin_tip: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_blockchain_details {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_buy_bitcoin_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -10525,6 +10593,7 @@ mod io {
                 pending_receive_sat: Default::default(),
                 fingerprint: core::ptr::null_mut(),
                 pubkey: core::ptr::null_mut(),
+                blockchain_details: Default::default(),
             }
         }
     }
@@ -12499,6 +12568,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_blockchain_details {
+        liquid_tip: u32,
+        bitcoin_tip: u32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_buy_bitcoin_request {
         prepare_response: wire_cst_prepare_buy_bitcoin_response,
         redirect_url: *mut wire_cst_list_prim_u_8_strict,
@@ -12570,6 +12645,7 @@ mod io {
         pending_receive_sat: u64,
         fingerprint: *mut wire_cst_list_prim_u_8_strict,
         pubkey: *mut wire_cst_list_prim_u_8_strict,
+        blockchain_details: wire_cst_blockchain_details,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

@@ -42,6 +42,11 @@ export interface BitcoinAddressData {
     message?: string
 }
 
+export interface BlockchainDetails {
+    liquidTip: number
+    bitcoinTip: number
+}
+
 export interface BuyBitcoinRequest {
     prepareResponse: PrepareBuyBitcoinResponse
     redirectUrl?: string
@@ -109,6 +114,7 @@ export interface GetInfoResponse {
     pendingReceiveSat: number
     fingerprint: string
     pubkey: string
+    blockchainDetails: BlockchainDetails
 }
 
 export interface LnInvoice {

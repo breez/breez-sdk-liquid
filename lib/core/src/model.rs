@@ -529,6 +529,12 @@ pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct BlockchainDetails {
+    pub liquid_tip: u32,
+    pub bitcoin_tip: u32,
+}
+
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetInfoResponse {
@@ -542,6 +548,9 @@ pub struct GetInfoResponse {
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
+    #[serde(default)]
+    /// Details regarding onchain data, such as the current Liquid/Bitcoin tip
+    pub blockchain_details: BlockchainDetails,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::sign_message].

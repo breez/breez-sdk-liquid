@@ -172,6 +172,41 @@ enum BreezSDKLiquidMapper {
         return bitcoinAddressDataList.map { v -> [String: Any?] in return dictionaryOf(bitcoinAddressData: v) }
     }
 
+    static func asBlockchainDetails(blockchainDetails: [String: Any?]) throws -> BlockchainDetails {
+        guard let liquidTip = blockchainDetails["liquidTip"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidTip", typeName: "BlockchainDetails"))
+        }
+        guard let bitcoinTip = blockchainDetails["bitcoinTip"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinTip", typeName: "BlockchainDetails"))
+        }
+
+        return BlockchainDetails(liquidTip: liquidTip, bitcoinTip: bitcoinTip)
+    }
+
+    static func dictionaryOf(blockchainDetails: BlockchainDetails) -> [String: Any?] {
+        return [
+            "liquidTip": blockchainDetails.liquidTip,
+            "bitcoinTip": blockchainDetails.bitcoinTip,
+        ]
+    }
+
+    static func asBlockchainDetailsList(arr: [Any]) throws -> [BlockchainDetails] {
+        var list = [BlockchainDetails]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var blockchainDetails = try asBlockchainDetails(blockchainDetails: val)
+                list.append(blockchainDetails)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "BlockchainDetails"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(blockchainDetailsList: [BlockchainDetails]) -> [Any] {
+        return blockchainDetailsList.map { v -> [String: Any?] in return dictionaryOf(blockchainDetails: v) }
+    }
+
     static func asBuyBitcoinRequest(buyBitcoinRequest: [String: Any?]) throws -> BuyBitcoinRequest {
         guard let prepareResponseTmp = buyBitcoinRequest["prepareResponse"] as? [String: Any?] else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareResponse", typeName: "BuyBitcoinRequest"))
@@ -603,8 +638,12 @@ enum BreezSDKLiquidMapper {
         guard let pubkey = getInfoResponse["pubkey"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
         }
+        guard let blockchainDetailsTmp = getInfoResponse["blockchainDetails"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "blockchainDetails", typeName: "GetInfoResponse"))
+        }
+        let blockchainDetails = try asBlockchainDetails(blockchainDetails: blockchainDetailsTmp)
 
-        return GetInfoResponse(balanceSat: balanceSat, pendingSendSat: pendingSendSat, pendingReceiveSat: pendingReceiveSat, fingerprint: fingerprint, pubkey: pubkey)
+        return GetInfoResponse(balanceSat: balanceSat, pendingSendSat: pendingSendSat, pendingReceiveSat: pendingReceiveSat, fingerprint: fingerprint, pubkey: pubkey, blockchainDetails: blockchainDetails)
     }
 
     static func dictionaryOf(getInfoResponse: GetInfoResponse) -> [String: Any?] {
@@ -614,6 +653,7 @@ enum BreezSDKLiquidMapper {
             "pendingReceiveSat": getInfoResponse.pendingReceiveSat,
             "fingerprint": getInfoResponse.fingerprint,
             "pubkey": getInfoResponse.pubkey,
+            "blockchainDetails": dictionaryOf(blockchainDetails: getInfoResponse.blockchainDetails),
         ]
     }
 
