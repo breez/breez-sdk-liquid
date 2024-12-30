@@ -2469,7 +2469,17 @@ impl LiquidSdk {
         let transactions = self.onchain_wallet.transactions().await?;
         let wallet_amount_sat = transactions
             .into_iter()
-            .map(|tx| tx.balance.values().sum::<i64>())
+            .map(|tx| {
+                tx.balance
+                    .into_iter()
+                    .filter_map(|(asset_id, balance)| {
+                        if asset_id == lwk_wollet::elements::AssetId::LIQUID_BTC {
+                            return Some(balance);
+                        }
+                        None
+                    })
+                    .sum::<i64>()
+            })
             .sum::<i64>();
         debug!("Onchain wallet balance: {wallet_amount_sat} sats");
 
