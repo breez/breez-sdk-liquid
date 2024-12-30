@@ -172,39 +172,39 @@ enum BreezSDKLiquidMapper {
         return bitcoinAddressDataList.map { v -> [String: Any?] in return dictionaryOf(bitcoinAddressData: v) }
     }
 
-    static func asBlockchainDetails(blockchainDetails: [String: Any?]) throws -> BlockchainDetails {
-        guard let liquidTip = blockchainDetails["liquidTip"] as? UInt32 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidTip", typeName: "BlockchainDetails"))
+    static func asBlockchainInfo(blockchainInfo: [String: Any?]) throws -> BlockchainInfo {
+        guard let liquidTip = blockchainInfo["liquidTip"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidTip", typeName: "BlockchainInfo"))
         }
-        guard let bitcoinTip = blockchainDetails["bitcoinTip"] as? UInt32 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinTip", typeName: "BlockchainDetails"))
+        guard let bitcoinTip = blockchainInfo["bitcoinTip"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinTip", typeName: "BlockchainInfo"))
         }
 
-        return BlockchainDetails(liquidTip: liquidTip, bitcoinTip: bitcoinTip)
+        return BlockchainInfo(liquidTip: liquidTip, bitcoinTip: bitcoinTip)
     }
 
-    static func dictionaryOf(blockchainDetails: BlockchainDetails) -> [String: Any?] {
+    static func dictionaryOf(blockchainInfo: BlockchainInfo) -> [String: Any?] {
         return [
-            "liquidTip": blockchainDetails.liquidTip,
-            "bitcoinTip": blockchainDetails.bitcoinTip,
+            "liquidTip": blockchainInfo.liquidTip,
+            "bitcoinTip": blockchainInfo.bitcoinTip,
         ]
     }
 
-    static func asBlockchainDetailsList(arr: [Any]) throws -> [BlockchainDetails] {
-        var list = [BlockchainDetails]()
+    static func asBlockchainInfoList(arr: [Any]) throws -> [BlockchainInfo] {
+        var list = [BlockchainInfo]()
         for value in arr {
             if let val = value as? [String: Any?] {
-                var blockchainDetails = try asBlockchainDetails(blockchainDetails: val)
-                list.append(blockchainDetails)
+                var blockchainInfo = try asBlockchainInfo(blockchainInfo: val)
+                list.append(blockchainInfo)
             } else {
-                throw SdkError.Generic(message: errUnexpectedType(typeName: "BlockchainDetails"))
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "BlockchainInfo"))
             }
         }
         return list
     }
 
-    static func arrayOf(blockchainDetailsList: [BlockchainDetails]) -> [Any] {
-        return blockchainDetailsList.map { v -> [String: Any?] in return dictionaryOf(blockchainDetails: v) }
+    static func arrayOf(blockchainInfoList: [BlockchainInfo]) -> [Any] {
+        return blockchainInfoList.map { v -> [String: Any?] in return dictionaryOf(blockchainInfo: v) }
     }
 
     static func asBuyBitcoinRequest(buyBitcoinRequest: [String: Any?]) throws -> BuyBitcoinRequest {
@@ -623,37 +623,23 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asGetInfoResponse(getInfoResponse: [String: Any?]) throws -> GetInfoResponse {
-        guard let balanceSat = getInfoResponse["balanceSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "GetInfoResponse"))
+        guard let walletInfoTmp = getInfoResponse["walletInfo"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "walletInfo", typeName: "GetInfoResponse"))
         }
-        guard let pendingSendSat = getInfoResponse["pendingSendSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pendingSendSat", typeName: "GetInfoResponse"))
-        }
-        guard let pendingReceiveSat = getInfoResponse["pendingReceiveSat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pendingReceiveSat", typeName: "GetInfoResponse"))
-        }
-        guard let fingerprint = getInfoResponse["fingerprint"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "fingerprint", typeName: "GetInfoResponse"))
-        }
-        guard let pubkey = getInfoResponse["pubkey"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "GetInfoResponse"))
-        }
-        guard let blockchainDetailsTmp = getInfoResponse["blockchainDetails"] as? [String: Any?] else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "blockchainDetails", typeName: "GetInfoResponse"))
-        }
-        let blockchainDetails = try asBlockchainDetails(blockchainDetails: blockchainDetailsTmp)
+        let walletInfo = try asWalletInfo(walletInfo: walletInfoTmp)
 
-        return GetInfoResponse(balanceSat: balanceSat, pendingSendSat: pendingSendSat, pendingReceiveSat: pendingReceiveSat, fingerprint: fingerprint, pubkey: pubkey, blockchainDetails: blockchainDetails)
+        guard let blockchainInfoTmp = getInfoResponse["blockchainInfo"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "blockchainInfo", typeName: "GetInfoResponse"))
+        }
+        let blockchainInfo = try asBlockchainInfo(blockchainInfo: blockchainInfoTmp)
+
+        return GetInfoResponse(walletInfo: walletInfo, blockchainInfo: blockchainInfo)
     }
 
     static func dictionaryOf(getInfoResponse: GetInfoResponse) -> [String: Any?] {
         return [
-            "balanceSat": getInfoResponse.balanceSat,
-            "pendingSendSat": getInfoResponse.pendingSendSat,
-            "pendingReceiveSat": getInfoResponse.pendingReceiveSat,
-            "fingerprint": getInfoResponse.fingerprint,
-            "pubkey": getInfoResponse.pubkey,
-            "blockchainDetails": dictionaryOf(blockchainDetails: getInfoResponse.blockchainDetails),
+            "walletInfo": dictionaryOf(walletInfo: getInfoResponse.walletInfo),
+            "blockchainInfo": dictionaryOf(blockchainInfo: getInfoResponse.blockchainInfo),
         ]
     }
 
@@ -3017,6 +3003,53 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(urlSuccessActionDataList: [UrlSuccessActionData]) -> [Any] {
         return urlSuccessActionDataList.map { v -> [String: Any?] in return dictionaryOf(urlSuccessActionData: v) }
+    }
+
+    static func asWalletInfo(walletInfo: [String: Any?]) throws -> WalletInfo {
+        guard let balanceSat = walletInfo["balanceSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "WalletInfo"))
+        }
+        guard let pendingSendSat = walletInfo["pendingSendSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pendingSendSat", typeName: "WalletInfo"))
+        }
+        guard let pendingReceiveSat = walletInfo["pendingReceiveSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pendingReceiveSat", typeName: "WalletInfo"))
+        }
+        guard let fingerprint = walletInfo["fingerprint"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "fingerprint", typeName: "WalletInfo"))
+        }
+        guard let pubkey = walletInfo["pubkey"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "pubkey", typeName: "WalletInfo"))
+        }
+
+        return WalletInfo(balanceSat: balanceSat, pendingSendSat: pendingSendSat, pendingReceiveSat: pendingReceiveSat, fingerprint: fingerprint, pubkey: pubkey)
+    }
+
+    static func dictionaryOf(walletInfo: WalletInfo) -> [String: Any?] {
+        return [
+            "balanceSat": walletInfo.balanceSat,
+            "pendingSendSat": walletInfo.pendingSendSat,
+            "pendingReceiveSat": walletInfo.pendingReceiveSat,
+            "fingerprint": walletInfo.fingerprint,
+            "pubkey": walletInfo.pubkey,
+        ]
+    }
+
+    static func asWalletInfoList(arr: [Any]) throws -> [WalletInfo] {
+        var list = [WalletInfo]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var walletInfo = try asWalletInfo(walletInfo: val)
+                list.append(walletInfo)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "WalletInfo"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(walletInfoList: [WalletInfo]) -> [Any] {
+        return walletInfoList.map { v -> [String: Any?] in return dictionaryOf(walletInfo: v) }
     }
 
     static func asAesSuccessActionDataResult(aesSuccessActionDataResult: [String: Any?]) throws -> AesSuccessActionDataResult {

@@ -42,7 +42,7 @@ export interface BitcoinAddressData {
     message?: string
 }
 
-export interface BlockchainDetails {
+export interface BlockchainInfo {
     liquidTip: number
     bitcoinTip: number
 }
@@ -109,12 +109,8 @@ export interface FiatCurrency {
 }
 
 export interface GetInfoResponse {
-    balanceSat: number
-    pendingSendSat: number
-    pendingReceiveSat: number
-    fingerprint: string
-    pubkey: string
-    blockchainDetails: BlockchainDetails
+    walletInfo: WalletInfo
+    blockchainInfo: BlockchainInfo
 }
 
 export interface LnInvoice {
@@ -442,6 +438,14 @@ export interface UrlSuccessActionData {
     description: string
     url: string
     matchesCallbackDomain: boolean
+}
+
+export interface WalletInfo {
+    balanceSat: number
+    pendingSendSat: number
+    pendingReceiveSat: number
+    fingerprint: string
+    pubkey: string
 }
 
 export enum AesSuccessActionDataResultVariant {

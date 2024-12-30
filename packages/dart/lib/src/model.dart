@@ -30,11 +30,11 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
-class BlockchainDetails {
+class BlockchainInfo {
   final int liquidTip;
   final int bitcoinTip;
 
-  const BlockchainDetails({
+  const BlockchainInfo({
     required this.liquidTip,
     required this.bitcoinTip,
   });
@@ -45,7 +45,7 @@ class BlockchainDetails {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is BlockchainDetails &&
+      other is BlockchainInfo &&
           runtimeType == other.runtimeType &&
           liquidTip == other.liquidTip &&
           bitcoinTip == other.bitcoinTip;
@@ -251,53 +251,27 @@ class ConnectRequest {
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
 class GetInfoResponse {
-  /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
-  final BigInt balanceSat;
+  /// The wallet information, such as the balance, fingerprint and public key
+  final WalletInfo walletInfo;
 
-  /// Amount that is being used for ongoing Send swaps
-  final BigInt pendingSendSat;
-
-  /// Incoming amount that is pending from ongoing Receive swaps
-  final BigInt pendingReceiveSat;
-
-  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
-  final String fingerprint;
-
-  /// The wallet's pubkey. Used to verify signed messages.
-  final String pubkey;
-
-  /// Details regarding onchain data, such as the current Liquid/Bitcoin tip
-  final BlockchainDetails blockchainDetails;
+  /// The latest synced blockchain information, such as the Liquid/Bitcoin tips
+  final BlockchainInfo blockchainInfo;
 
   const GetInfoResponse({
-    required this.balanceSat,
-    required this.pendingSendSat,
-    required this.pendingReceiveSat,
-    required this.fingerprint,
-    required this.pubkey,
-    required this.blockchainDetails,
+    required this.walletInfo,
+    required this.blockchainInfo,
   });
 
   @override
-  int get hashCode =>
-      balanceSat.hashCode ^
-      pendingSendSat.hashCode ^
-      pendingReceiveSat.hashCode ^
-      fingerprint.hashCode ^
-      pubkey.hashCode ^
-      blockchainDetails.hashCode;
+  int get hashCode => walletInfo.hashCode ^ blockchainInfo.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is GetInfoResponse &&
           runtimeType == other.runtimeType &&
-          balanceSat == other.balanceSat &&
-          pendingSendSat == other.pendingSendSat &&
-          pendingReceiveSat == other.pendingReceiveSat &&
-          fingerprint == other.fingerprint &&
-          pubkey == other.pubkey &&
-          blockchainDetails == other.blockchainDetails;
+          walletInfo == other.walletInfo &&
+          blockchainInfo == other.blockchainInfo;
 }
 
 @freezed
@@ -1510,4 +1484,48 @@ class SignMessageResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SignMessageResponse && runtimeType == other.runtimeType && signature == other.signature;
+}
+
+class WalletInfo {
+  /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
+  final BigInt balanceSat;
+
+  /// Amount that is being used for ongoing Send swaps
+  final BigInt pendingSendSat;
+
+  /// Incoming amount that is pending from ongoing Receive swaps
+  final BigInt pendingReceiveSat;
+
+  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
+  final String fingerprint;
+
+  /// The wallet's pubkey. Used to verify signed messages.
+  final String pubkey;
+
+  const WalletInfo({
+    required this.balanceSat,
+    required this.pendingSendSat,
+    required this.pendingReceiveSat,
+    required this.fingerprint,
+    required this.pubkey,
+  });
+
+  @override
+  int get hashCode =>
+      balanceSat.hashCode ^
+      pendingSendSat.hashCode ^
+      pendingReceiveSat.hashCode ^
+      fingerprint.hashCode ^
+      pubkey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WalletInfo &&
+          runtimeType == other.runtimeType &&
+          balanceSat == other.balanceSat &&
+          pendingSendSat == other.pendingSendSat &&
+          pendingReceiveSat == other.pendingReceiveSat &&
+          fingerprint == other.fingerprint &&
+          pubkey == other.pubkey;
 }

@@ -354,18 +354,22 @@ dictionary ConnectWithSignerRequest {
   Config config;  
 };
 
-dictionary BlockchainDetails {
+dictionary BlockchainInfo {
     u32 liquid_tip;
     u32 bitcoin_tip;
 };
 
-dictionary GetInfoResponse {
+dictionary WalletInfo {
     u64 balance_sat;
     u64 pending_send_sat;
     u64 pending_receive_sat;
     string fingerprint;
     string pubkey;
-    BlockchainDetails blockchain_details;
+};
+
+dictionary GetInfoResponse {
+    WalletInfo wallet_info;
+    BlockchainInfo blockchain_info;
 };
 
 dictionary SignMessageRequest {

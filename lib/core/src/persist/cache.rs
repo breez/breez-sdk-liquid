@@ -5,9 +5,10 @@ use std::str::FromStr;
 use crate::model::GetInfoResponse;
 use crate::sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, RecordType};
 
-use super::Persister;
+use super::{BlockchainInfo, Persister, WalletInfo};
 
 const KEY_WALLET_INFO: &str = "wallet_info";
+const KEY_BLOCKCHAIN_INFO: &str = "blockchain_info";
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
@@ -64,17 +65,52 @@ impl Persister {
         res
     }
 
-    pub fn set_wallet_info(&self, info: &GetInfoResponse) -> Result<()> {
+    pub fn set_wallet_info(&self, info: &WalletInfo) -> Result<()> {
         let serialized_info = serde_json::to_string(info)?;
         self.update_cached_item(KEY_WALLET_INFO, serialized_info)
     }
 
-    pub fn get_wallet_info(&self) -> Result<Option<GetInfoResponse>> {
-        let info_str = self.get_cached_item(KEY_WALLET_INFO)?;
-        Ok(match info_str {
-            Some(str) => serde_json::from_str(str.as_str())?,
-            None => None,
-        })
+    pub fn set_blockchain_info(&self, info: &BlockchainInfo) -> Result<()> {
+        let serialized_info = serde_json::to_string(info)?;
+        self.update_cached_item(KEY_BLOCKCHAIN_INFO, serialized_info)
+    }
+
+    fn sql_row_to_info(row: &rusqlite::Row<'_>) -> Result<Option<GetInfoResponse>> {
+        let wallet_info = match row.get::<_, Option<String>>(0)? {
+            Some(info) => serde_json::from_str(&info)?,
+            None => return Ok(None),
+        };
+        let blockchain_info = row
+            .get::<_, Option<String>>(1)?
+            .map(|info| serde_json::from_str(&info))
+            .and_then(|res| res.ok())
+            .unwrap_or_default();
+
+        Ok(Some(GetInfoResponse {
+            wallet_info,
+            blockchain_info,
+        }))
+    }
+
+    pub fn get_info(&self) -> Result<Option<GetInfoResponse>> {
+        let con = self.get_connection()?;
+
+        let info = con.query_row_and_then(
+            &format!(
+                "
+            SELECT 
+                c1.value,   -- wallet info
+                c2.value    -- blockchain info
+            FROM cached_items c1
+            JOIN cached_items c2
+            ON c1.key = '{KEY_WALLET_INFO}' AND c2.key = '{KEY_BLOCKCHAIN_INFO}'
+        "
+            ),
+            [],
+            Self::sql_row_to_info,
+        )?;
+
+        Ok(info)
     }
 
     pub fn set_swapper_proxy_url(&self, swapper_proxy_url: String) -> Result<()> {

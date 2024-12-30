@@ -1345,11 +1345,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BlockchainDetails dco_decode_blockchain_details(dynamic raw) {
+  BlockchainInfo dco_decode_blockchain_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return BlockchainDetails(
+    return BlockchainInfo(
       liquidTip: dco_decode_u_32(arr[0]),
       bitcoinTip: dco_decode_u_32(arr[1]),
     );
@@ -1788,14 +1788,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GetInfoResponse dco_decode_get_info_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return GetInfoResponse(
-      balanceSat: dco_decode_u_64(arr[0]),
-      pendingSendSat: dco_decode_u_64(arr[1]),
-      pendingReceiveSat: dco_decode_u_64(arr[2]),
-      fingerprint: dco_decode_String(arr[3]),
-      pubkey: dco_decode_String(arr[4]),
-      blockchainDetails: dco_decode_blockchain_details(arr[5]),
+      walletInfo: dco_decode_wallet_info(arr[0]),
+      blockchainInfo: dco_decode_blockchain_info(arr[1]),
     );
   }
 
@@ -3191,6 +3187,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WalletInfo dco_decode_wallet_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return WalletInfo(
+      balanceSat: dco_decode_u_64(arr[0]),
+      pendingSendSat: dco_decode_u_64(arr[1]),
+      pendingReceiveSat: dco_decode_u_64(arr[2]),
+      fingerprint: dco_decode_String(arr[3]),
+      pubkey: dco_decode_String(arr[4]),
+    );
+  }
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_String(deserializer);
@@ -3325,11 +3335,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BlockchainDetails sse_decode_blockchain_details(SseDeserializer deserializer) {
+  BlockchainInfo sse_decode_blockchain_info(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_liquidTip = sse_decode_u_32(deserializer);
     var var_bitcoinTip = sse_decode_u_32(deserializer);
-    return BlockchainDetails(liquidTip: var_liquidTip, bitcoinTip: var_bitcoinTip);
+    return BlockchainInfo(liquidTip: var_liquidTip, bitcoinTip: var_bitcoinTip);
   }
 
   @protected
@@ -3764,19 +3774,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   GetInfoResponse sse_decode_get_info_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_balanceSat = sse_decode_u_64(deserializer);
-    var var_pendingSendSat = sse_decode_u_64(deserializer);
-    var var_pendingReceiveSat = sse_decode_u_64(deserializer);
-    var var_fingerprint = sse_decode_String(deserializer);
-    var var_pubkey = sse_decode_String(deserializer);
-    var var_blockchainDetails = sse_decode_blockchain_details(deserializer);
-    return GetInfoResponse(
-        balanceSat: var_balanceSat,
-        pendingSendSat: var_pendingSendSat,
-        pendingReceiveSat: var_pendingReceiveSat,
-        fingerprint: var_fingerprint,
-        pubkey: var_pubkey,
-        blockchainDetails: var_blockchainDetails);
+    var var_walletInfo = sse_decode_wallet_info(deserializer);
+    var var_blockchainInfo = sse_decode_blockchain_info(deserializer);
+    return GetInfoResponse(walletInfo: var_walletInfo, blockchainInfo: var_blockchainInfo);
   }
 
   @protected
@@ -5266,6 +5266,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  WalletInfo sse_decode_wallet_info(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_balanceSat = sse_decode_u_64(deserializer);
+    var var_pendingSendSat = sse_decode_u_64(deserializer);
+    var var_pendingReceiveSat = sse_decode_u_64(deserializer);
+    var var_fingerprint = sse_decode_String(deserializer);
+    var var_pubkey = sse_decode_String(deserializer);
+    return WalletInfo(
+        balanceSat: var_balanceSat,
+        pendingSendSat: var_pendingSendSat,
+        pendingReceiveSat: var_pendingReceiveSat,
+        fingerprint: var_fingerprint,
+        pubkey: var_pubkey);
+  }
+
+  @protected
   int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -5494,7 +5510,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_blockchain_details(BlockchainDetails self, SseSerializer serializer) {
+  void sse_encode_blockchain_info(BlockchainInfo self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.liquidTip, serializer);
     sse_encode_u_32(self.bitcoinTip, serializer);
@@ -5909,12 +5925,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_get_info_response(GetInfoResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.balanceSat, serializer);
-    sse_encode_u_64(self.pendingSendSat, serializer);
-    sse_encode_u_64(self.pendingReceiveSat, serializer);
-    sse_encode_String(self.fingerprint, serializer);
-    sse_encode_String(self.pubkey, serializer);
-    sse_encode_blockchain_details(self.blockchainDetails, serializer);
+    sse_encode_wallet_info(self.walletInfo, serializer);
+    sse_encode_blockchain_info(self.blockchainInfo, serializer);
   }
 
   @protected
@@ -7155,6 +7167,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putBigUint64(self);
+  }
+
+  @protected
+  void sse_encode_wallet_info(WalletInfo self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self.balanceSat, serializer);
+    sse_encode_u_64(self.pendingSendSat, serializer);
+    sse_encode_u_64(self.pendingReceiveSat, serializer);
+    sse_encode_String(self.fingerprint, serializer);
+    sse_encode_String(self.pubkey, serializer);
   }
 }
 

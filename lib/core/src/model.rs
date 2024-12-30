@@ -530,14 +530,13 @@ pub struct RefundResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-pub struct BlockchainDetails {
+pub struct BlockchainInfo {
     pub liquid_tip: u32,
     pub bitcoin_tip: u32,
 }
 
-/// Returned when calling [crate::sdk::LiquidSdk::get_info].
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GetInfoResponse {
+pub struct WalletInfo {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
     /// Amount that is being used for ongoing Send swaps
@@ -548,9 +547,16 @@ pub struct GetInfoResponse {
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::get_info].
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetInfoResponse {
+    /// The wallet information, such as the balance, fingerprint and public key
+    pub wallet_info: WalletInfo,
+    /// The latest synced blockchain information, such as the Liquid/Bitcoin tips
     #[serde(default)]
-    /// Details regarding onchain data, such as the current Liquid/Bitcoin tip
-    pub blockchain_details: BlockchainDetails,
+    pub blockchain_info: BlockchainInfo,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::sign_message].
