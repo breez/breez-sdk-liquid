@@ -96,13 +96,16 @@ impl Persister {
         // - updated_fields is None (swap is inserted, not updated)
         // - updated_fields in a non empty list of updated fields
         let trigger_sync = updated_fields.as_ref().map_or(true, |u| !u.is_empty());
-        self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
-
-        tx.commit()?;
-
-        if trigger_sync {
-            self.sync_trigger.try_send(())?;
-        }
+        match trigger_sync {
+            true => {
+                self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
+                tx.commit()?;
+                self.sync_trigger.try_send(())?;
+            }
+            false => {
+                tx.commit()?;
+            }
+        };
 
         Ok(())
     }
