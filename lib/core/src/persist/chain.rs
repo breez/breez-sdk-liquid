@@ -71,7 +71,9 @@ impl Persister {
                 claim_tx_id = :claim_tx_id,
                 refund_tx_id = :refund_tx_id,
                 pair_fees_json = :pair_fees_json,
-                state = :state
+                state = :state,
+                actual_payer_amount_sat = :actual_payer_amount_sat,
+                accepted_receiver_amount_sat = :accepted_receiver_amount_sat
             WHERE
                 id = :id",
             named_params! {
@@ -87,6 +89,8 @@ impl Persister {
                 ":refund_tx_id": &chain_swap.refund_tx_id,
                 ":pair_fees_json": &chain_swap.pair_fees_json,
                 ":state": &chain_swap.state,
+                ":actual_payer_amount_sat": &chain_swap.actual_payer_amount_sat,
+                ":accepted_receiver_amount_sat": &chain_swap.accepted_receiver_amount_sat,
             },
         )?;
 
