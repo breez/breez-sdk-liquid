@@ -664,7 +664,7 @@ impl Recoverer {
             };
 
             // Get the current confirmed amount available for the lockup script
-            let btc_user_lockup_amount_sat = history
+            let btc_user_lockup_address_balance_sat = history
                 .btc_lockup_script_balance
                 .map(|balance| balance.confirmed)
                 .unwrap_or_default();
@@ -696,6 +696,16 @@ impl Recoverer {
                         .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
                 })
                 .cloned();
+            let btc_user_lockup_amount_sat = btc_lockup_incoming_txs
+                .first()
+                .and_then(|tx| {
+                    tx.output
+                        .iter()
+                        .find(|out| out.script_pubkey == btc_lockup_script)
+                        .map(|out| out.value)
+                })
+                .unwrap_or_default()
+                .to_sat();
             let btc_outgoing_tx_ids: Vec<HistoryTxId> = btc_lockup_outgoing_txs
                 .iter()
                 .filter_map(|tx| {
@@ -733,6 +743,7 @@ impl Recoverer {
                     lbtc_claim_tx_id,
                     lbtc_claim_address,
                     btc_user_lockup_tx_id,
+                    btc_user_lockup_address_balance_sat,
                     btc_user_lockup_amount_sat,
                     btc_refund_tx_id,
                 },
