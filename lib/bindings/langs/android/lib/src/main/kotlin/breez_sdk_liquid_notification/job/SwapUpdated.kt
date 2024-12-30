@@ -147,7 +147,7 @@ class SwapUpdatedJob(
 
     private fun notifyPaymentWaitingFeeAcceptance(payment: Payment) {
         if (!this.notified) {
-            logger.log(TAG, "Payment ${payment.txId} requires fee acceptance", "INFO")
+            logger.log(TAG, "Payment with swap ID ${getSwapId(payment.details)} requires fee acceptance", "INFO")
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_SWAP_UPDATED,
