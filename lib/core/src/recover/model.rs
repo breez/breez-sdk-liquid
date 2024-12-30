@@ -199,6 +199,7 @@ impl RecoveredOnchainDataChainReceive {
         &self,
         min_lockup_amount_sat: u64,
         is_expired: bool,
+        is_waiting_fee_acceptance: bool,
     ) -> Option<PaymentState> {
         let is_refundable = self.btc_user_lockup_amount_sat > 0
             && (is_expired || self.btc_user_lockup_amount_sat < min_lockup_amount_sat);
@@ -232,7 +233,10 @@ impl RecoveredOnchainDataChainReceive {
                 }
                 (None, None) => match is_refundable {
                     true => Some(PaymentState::Refundable),
-                    false => Some(PaymentState::Pending),
+                    false => match is_waiting_fee_acceptance {
+                        true => Some(PaymentState::WaitingFeeAcceptance),
+                        false => Some(PaymentState::Pending),
+                    },
                 },
             },
             None => match is_expired {

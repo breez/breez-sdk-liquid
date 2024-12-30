@@ -65,6 +65,8 @@ typedef void (*UniFfiRustFutureContinuation)(void * _Nonnull, int8_t);
 // Scaffolding functions
 void uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_fees(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
+);
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener(void*_Nonnull ptr, uint64_t listener, RustCallStatus *_Nonnull out_status
 );
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backup(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
@@ -80,6 +82,8 @@ RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fia
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limits(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_fees(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
@@ -280,6 +284,9 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice(void
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger(void
     
 );
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_fees(void
+    
+);
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener(void
     
 );
@@ -302,6 +309,9 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits(void
+    
+);
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_fees(void
     
 );
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info(void

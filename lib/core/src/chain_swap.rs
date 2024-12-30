@@ -101,12 +101,9 @@ impl ChainSwapHandler {
                     .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
 
                 match swap_state {
-                    // If the swap is not local (pulled from real-time sync) we do not:
-                    // - claim twice
-                    // - accept fees twice
+                    // If the swap is not local (pulled from real-time sync) we do not claim twice
                     ChainSwapStates::TransactionServerMempool
-                    | ChainSwapStates::TransactionServerConfirmed
-                    | ChainSwapStates::TransactionLockupFailed => {
+                    | ChainSwapStates::TransactionServerConfirmed => {
                         log::debug!("Received {swap_state:?} for non-local Chain swap {id} from status stream, skipping update.");
                         return Ok(());
                     }
@@ -331,7 +328,7 @@ impl ChainSwapHandler {
             | ChainSwapStates::TransactionRefunded
             | ChainSwapStates::SwapExpired => {
                 // Zero-amount Receive Chain Swaps also get to TransactionLockupFailed when user locks up funds
-                let is_zero_amount = swap.get_boltz_create_response()?.lockup_details.amount == 0;
+                let is_zero_amount = swap.payer_amount_sat == 0;
                 if matches!(swap_state, ChainSwapStates::TransactionLockupFailed) && is_zero_amount
                 {
                     match self.handle_amountless_update(swap).await {
@@ -395,26 +392,19 @@ impl ChainSwapHandler {
                 receiver_amount_sat,
             } => {
                 debug!("Zero-amount swap validated. Auto-accepting...");
-                self.persister.update_zero_amount_swap_values(
-                    &id,
-                    user_lockup_amount_sat,
-                    receiver_amount_sat,
-                )?;
+                self.persister
+                    .update_actual_payer_amount(&id, user_lockup_amount_sat)?;
                 self.swapper
-                    .accept_zero_amount_chain_swap_quote(&id, quote)
-                    .map_err(Into::into)
+                    .accept_zero_amount_chain_swap_quote(&id, quote)?;
+                self.persister
+                    .update_accepted_receiver_amount(&id, receiver_amount_sat)
             }
             ValidateAmountlessSwapResult::RequiresUserAction {
                 user_lockup_amount_sat,
-                receiver_amount_sat_original_estimate,
             } => {
                 debug!("Zero-amount swap validated. Fees are too high for automatic accepting. Moving to WaitingFeeAcceptance");
-                // While the user doesn't accept new fees, let's continue to show the original estimate
-                self.persister.update_zero_amount_swap_values(
-                    &id,
-                    user_lockup_amount_sat,
-                    receiver_amount_sat_original_estimate,
-                )?;
+                self.persister
+                    .update_actual_payer_amount(&id, user_lockup_amount_sat)?;
                 self.update_swap_info(&ChainSwapUpdate {
                     swap_id: id,
                     to_state: WaitingFeeAcceptance,
@@ -486,11 +476,8 @@ impl ChainSwapHandler {
         );
 
         if min_auto_accept_server_lockup_amount_sat > quote_server_lockup_amount_sat {
-            let receiver_amount_sat_original_estimate =
-                server_lockup_amount_estimate_sat - swap.claim_fees_sat;
             Ok(ValidateAmountlessSwapResult::RequiresUserAction {
                 user_lockup_amount_sat,
-                receiver_amount_sat_original_estimate,
             })
         } else {
             let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
@@ -1231,12 +1218,25 @@ impl ChainSwapHandler {
                 .unblind(&secp, liquid_swap_script.blinding_key.secret_key())?
                 .value;
         }
-        if value < claim_details.amount {
-            return Err(anyhow!(
-                "Transaction value {value} sats is less than {} sats",
-                claim_details.amount
-            ));
+        match chain_swap.accepted_receiver_amount_sat {
+            None => {
+                if value < claim_details.amount {
+                    return Err(anyhow!(
+                        "Transaction value {value} sats is less than {} sats",
+                        claim_details.amount
+                    ));
+                }
+            }
+            Some(accepted_receiver_amount_sat) => {
+                if value < accepted_receiver_amount_sat - chain_swap.claim_fees_sat {
+                    return Err(anyhow!(
+                        "Transaction value {value} sats is less than accepted {} sats",
+                        claim_details.amount
+                    ));
+                }
+            }
         }
+
         Ok(())
     }
 
@@ -1360,7 +1360,6 @@ enum ValidateAmountlessSwapResult {
     },
     RequiresUserAction {
         user_lockup_amount_sat: u64,
-        receiver_amount_sat_original_estimate: u64,
     },
 }
 

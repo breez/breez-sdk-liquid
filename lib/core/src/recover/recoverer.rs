@@ -13,7 +13,6 @@ use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
 use super::model::*;
-use crate::model::PaymentState;
 use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
@@ -213,17 +212,23 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
+                        if chain_swap.receiver_amount_sat
+                            != recovered_data.btc_user_lockup_amount_sat
+                        {
+                            chain_swap.actual_payer_amount_sat =
+                                Some(recovered_data.btc_user_lockup_amount_sat)
+                        }
                         let is_expired = bitcoin_height >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
                         let is_waiting_fee_acceptance =
-                            chain_swap.state == PaymentState::WaitingFeeAcceptance;
-                        if let Some(new_state) =
-                            recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired)
-                        {
-                            // When local state is WaitingFeeAcceptance do not change to Pending
-                            if !(new_state == PaymentState::Pending && is_waiting_fee_acceptance) {
-                                chain_swap.state = new_state;
-                            }
+                            chain_swap.actual_payer_amount_sat.is_some()
+                                && chain_swap.accepted_receiver_amount_sat.is_none();
+                        if let Some(new_state) = recovered_data.derive_partial_state(
+                            min_lockup_amount_sat,
+                            is_expired,
+                            is_waiting_fee_acceptance,
+                        ) {
+                            chain_swap.state = new_state;
                         }
                         chain_swap.server_lockup_tx_id = recovered_data
                             .lbtc_server_lockup_tx_id

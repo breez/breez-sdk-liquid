@@ -377,6 +377,8 @@ impl Persister {
                 cs.claim_address,
                 cs.state,
                 cs.pair_fees_json,
+                cs.actual_payer_amount_sat,
+                cs.accepted_receiver_amount_sat,
                 rtx.amount_sat,
                 pd.destination,
                 pd.description,
@@ -473,12 +475,14 @@ impl Persister {
         let maybe_chain_swap_pair_fees_json: Option<String> = row.get(38)?;
         let maybe_chain_swap_pair_fees: Option<ChainPair> =
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
+        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(39)?;
+        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(40)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(39)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(41)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(40)?;
-        let maybe_payment_details_description: Option<String> = row.get(41)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(42)?;
+        let maybe_payment_details_destination: Option<String> = row.get(42)?;
+        let maybe_payment_details_description: Option<String> = row.get(43)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(44)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
@@ -545,7 +549,18 @@ impl Persister {
                 }
                 None => match maybe_chain_swap_id {
                     Some(chain_swap_id) => {
-                        let payer_amount_sat = maybe_chain_swap_payer_amount_sat.unwrap_or(0);
+                        let payer_amount_sat = match maybe_chain_swap_actual_payer_amount_sat {
+                            Some(actual_payer_amount_sat) => actual_payer_amount_sat,
+                            None => maybe_chain_swap_payer_amount_sat.unwrap_or(0),
+                        };
+                        let receiver_amount_sat =
+                            match maybe_chain_swap_accepted_receiver_amount_sat {
+                                Some(accepted_receiver_amount_sat) => accepted_receiver_amount_sat,
+                                None => match maybe_chain_swap_actual_payer_amount_sat {
+                                    Some(_) => payer_amount_sat, // For over/underpaid chain swaps WaitingFeeAcceptance, show zero fees
+                                    None => maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
+                                },
+                            };
                         let swapper_fees_sat = maybe_chain_swap_pair_fees
                             .map(|pair| pair.fees.percentage)
                             .map(|fr| ((fr / 100.0) * payer_amount_sat as f64).ceil() as u64)
@@ -563,8 +578,7 @@ impl Persister {
                                 description: maybe_chain_swap_description
                                     .unwrap_or("Bitcoin transfer".to_string()),
                                 payer_amount_sat,
-                                receiver_amount_sat: maybe_chain_swap_receiver_amount_sat
-                                    .unwrap_or(0),
+                                receiver_amount_sat,
                                 swapper_fees_sat,
                                 refund_tx_id: maybe_chain_swap_refund_tx_id,
                                 refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
