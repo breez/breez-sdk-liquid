@@ -725,8 +725,8 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
-    /// The block at which the swap will no longer be valid
-    required int expirationBlock,
+    /// The height of the block at which the swap will no longer be valid
+    required int liquidExpirationBlockheight,
 
     /// The preimage of the paid invoice (proof of payment).
     String? preimage,
@@ -766,8 +766,13 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
-    /// The block at which the swap will no longer be valid
-    required int expirationBlock,
+    /// The height of the Liquid block at which the swap will no longer be valid
+    /// It should always be populated in case of an incoming chain swap
+    int? liquidExpirationBlockheight,
+
+    /// The height of the Bitcoin block at which the swap will no longer be valid
+    /// It should always be populated in case of an outgoing chain swap
+    int? bitcoinExpirationBlockheight,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,

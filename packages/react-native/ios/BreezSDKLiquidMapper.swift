@@ -3796,8 +3796,8 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
-            guard let _expirationBlock = paymentDetails["expirationBlock"] as? UInt32 else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "expirationBlock", typeName: "PaymentDetails"))
+            guard let _liquidExpirationBlockheight = paymentDetails["liquidExpirationBlockheight"] as? UInt32 else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidExpirationBlockheight", typeName: "PaymentDetails"))
             }
             let _preimage = paymentDetails["preimage"] as? String
 
@@ -3816,7 +3816,7 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.lightning(swapId: _swapId, description: _description, expirationBlock: _expirationBlock, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, lnurlInfo: _lnurlInfo, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.lightning(swapId: _swapId, description: _description, liquidExpirationBlockheight: _liquidExpirationBlockheight, preimage: _preimage, bolt11: _bolt11, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, lnurlInfo: _lnurlInfo, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
         if type == "liquid" {
             guard let _destination = paymentDetails["destination"] as? String else {
@@ -3834,14 +3834,15 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
-            guard let _expirationBlock = paymentDetails["expirationBlock"] as? UInt32 else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "expirationBlock", typeName: "PaymentDetails"))
-            }
+            let _bitcoinExpirationBlockheight = paymentDetails["bitcoinExpirationBlockheight"] as? UInt32
+
+            let _liquidExpirationBlockheight = paymentDetails["liquidExpirationBlockheight"] as? UInt32
+
             let _refundTxId = paymentDetails["refundTxId"] as? String
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, expirationBlock: _expirationBlock, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -3850,13 +3851,13 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(paymentDetails: PaymentDetails) -> [String: Any?] {
         switch paymentDetails {
         case let .lightning(
-            swapId, description, expirationBlock, preimage, bolt11, bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat
+            swapId, description, liquidExpirationBlockheight, preimage, bolt11, bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "lightning",
                 "swapId": swapId,
                 "description": description,
-                "expirationBlock": expirationBlock,
+                "liquidExpirationBlockheight": liquidExpirationBlockheight,
                 "preimage": preimage == nil ? nil : preimage,
                 "bolt11": bolt11 == nil ? nil : bolt11,
                 "bolt12Offer": bolt12Offer == nil ? nil : bolt12Offer,
@@ -3876,13 +3877,14 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bitcoin(
-            swapId, description, expirationBlock, refundTxId, refundTxAmountSat
+            swapId, description, bitcoinExpirationBlockheight, liquidExpirationBlockheight, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "bitcoin",
                 "swapId": swapId,
                 "description": description,
-                "expirationBlock": expirationBlock,
+                "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight == nil ? nil : bitcoinExpirationBlockheight,
+                "liquidExpirationBlockheight": liquidExpirationBlockheight == nil ? nil : liquidExpirationBlockheight,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
             ]

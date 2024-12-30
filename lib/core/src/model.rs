@@ -1254,8 +1254,8 @@ pub struct PaymentSwapData {
     /// Swap creation timestamp
     pub created_at: u32,
 
-    /// The block at which the swap will no longer be valid
-    pub expiration_block: u32,
+    /// The height of the block at which the swap will no longer be valid
+    pub expiration_blockheight: u32,
 
     pub preimage: Option<String>,
     pub bolt11: Option<String>,
@@ -1307,8 +1307,8 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// The block at which the swap will no longer be valid
-        expiration_block: u32,
+        /// The height of the block at which the swap will no longer be valid
+        liquid_expiration_blockheight: u32,
 
         /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
@@ -1347,8 +1347,13 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// The block at which the swap will no longer be valid
-        expiration_block: u32,
+        /// The height of the Liquid block at which the swap will no longer be valid
+        /// It should always be populated in case of an incoming chain swap
+        liquid_expiration_blockheight: Option<u32>,
+
+        /// The height of the Bitcoin block at which the swap will no longer be valid
+        /// It should always be populated in case of an outgoing chain swap
+        bitcoin_expiration_blockheight: Option<u32>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,

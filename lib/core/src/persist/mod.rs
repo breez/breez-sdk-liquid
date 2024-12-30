@@ -521,7 +521,8 @@ impl Persister {
                         swap_id: receive_swap_id,
                         swap_type: PaymentSwapType::Receive,
                         created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
-                        expiration_block: maybe_receive_swap_timeout_block_height.unwrap_or(0),
+                        expiration_blockheight: maybe_receive_swap_timeout_block_height
+                            .unwrap_or(0),
                         preimage: maybe_receive_swap_preimage,
                         bolt11: maybe_receive_swap_invoice.clone(),
                         bolt12_offer: None, // Bolt12 not supported for Receive Swaps
@@ -552,7 +553,8 @@ impl Persister {
                             swap_id: send_swap_id,
                             swap_type: PaymentSwapType::Send,
                             created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
-                            expiration_block: maybe_send_swap_timeout_block_height.unwrap_or(0),
+                            expiration_blockheight: maybe_send_swap_timeout_block_height
+                                .unwrap_or(0),
                             preimage: maybe_send_swap_preimage,
                             bolt11: match maybe_send_swap_bolt12_offer.is_some() {
                                 true => None, // We don't expose the Bolt12 invoice
@@ -588,7 +590,7 @@ impl Persister {
                                 swap_id: chain_swap_id,
                                 swap_type: PaymentSwapType::Chain,
                                 created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
-                                expiration_block: maybe_chain_swap_timeout_block_height
+                                expiration_blockheight: maybe_chain_swap_timeout_block_height
                                     .unwrap_or(0),
                                 preimage: maybe_chain_swap_preimage,
                                 bolt11: None,
@@ -627,7 +629,7 @@ impl Persister {
                     refund_tx_id,
                     preimage,
                     refund_tx_amount_sat,
-                    expiration_block,
+                    expiration_blockheight,
                     ..
                 }
                 | PaymentSwapData {
@@ -639,7 +641,7 @@ impl Persister {
                     preimage,
                     refund_tx_id,
                     refund_tx_amount_sat,
-                    expiration_block,
+                    expiration_blockheight,
                     ..
                 },
             ) => PaymentDetails::Lightning {
@@ -652,22 +654,31 @@ impl Persister {
                 refund_tx_id,
                 refund_tx_amount_sat,
                 description: description.unwrap_or("Lightning transfer".to_string()),
-                expiration_block,
+                liquid_expiration_blockheight: expiration_blockheight,
             },
             Some(PaymentSwapData {
                 swap_type: PaymentSwapType::Chain,
                 swap_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
-                expiration_block,
+                expiration_blockheight,
                 ..
-            }) => PaymentDetails::Bitcoin {
-                swap_id,
-                refund_tx_id,
-                refund_tx_amount_sat,
-                description: description.unwrap_or("Bitcoin transfer".to_string()),
-                expiration_block,
-            },
+            }) => {
+                let (bitcoin_expiration_blockheight, liquid_expiration_blockheight) =
+                    match maybe_chain_swap_direction {
+                        Some(Direction::Incoming) => (Some(expiration_blockheight), None),
+                        Some(Direction::Outgoing) | None => (None, Some(expiration_blockheight)),
+                    };
+
+                PaymentDetails::Bitcoin {
+                    swap_id,
+                    refund_tx_id,
+                    refund_tx_amount_sat,
+                    description: description.unwrap_or("Bitcoin transfer".to_string()),
+                    liquid_expiration_blockheight,
+                    bitcoin_expiration_blockheight,
+                }
+            }
             _ => PaymentDetails::Liquid {
                 destination: maybe_payment_details_destination
                     .unwrap_or("Destination unknown".to_string()),
