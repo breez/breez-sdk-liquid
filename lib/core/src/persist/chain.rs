@@ -147,7 +147,9 @@ impl Persister {
                 refund_tx_id,
                 created_at,
                 state,
-                pair_fees_json
+                pair_fees_json,
+                actual_payer_amount_sat,
+                accepted_receiver_amount_sat
             FROM chain_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -197,6 +199,8 @@ impl Persister {
             created_at: row.get(18)?,
             state: row.get(19)?,
             pair_fees_json: row.get(20)?,
+            actual_payer_amount_sat: row.get(21)?,
+            accepted_receiver_amount_sat: row.get(22)?,
         })
     }
 
@@ -286,39 +290,55 @@ impl Persister {
         Ok(())
     }
 
-    /// Used for Zero-amount Receive Chain swaps, when we fetched the quote and we know how much
-    /// the sender locked up
-    pub(crate) fn update_zero_amount_swap_values(
+    /// Used for receive chain swaps, when the sender over/underpays
+    pub(crate) fn update_actual_payer_amount(
         &self,
         swap_id: &str,
-        payer_amount_sat: u64,
-        receiver_amount_sat: u64,
+        actual_payer_amount_sat: u64,
     ) -> Result<(), PaymentError> {
-        log::info!("Updating chain swap {swap_id}: payer_amount_sat = {payer_amount_sat}, receiver_amount_sat = {receiver_amount_sat}");
+        log::info!(
+            "Updating chain swap {swap_id}: actual_payer_amount_sat = {actual_payer_amount_sat}"
+        );
+        let con: Connection = self.get_connection()?;
+        con.execute(
+            "UPDATE chain_swaps 
+            SET actual_payer_amount_sat = :actual_payer_amount_sat
+            WHERE id = :id",
+            named_params! {
+                ":id": swap_id,
+                ":actual_payer_amount_sat": actual_payer_amount_sat,
+            },
+        )?;
+
+        Ok(())
+    }
+
+    /// Used for receive chain swaps, when fees are accepted and thus the agreed received amount is known
+    pub(crate) fn update_accepted_receiver_amount(
+        &self,
+        swap_id: &str,
+        accepted_receiver_amount_sat: u64,
+    ) -> Result<(), PaymentError> {
+        log::info!(
+            "Updating chain swap {swap_id}: accepted_receiver_amount_sat = {accepted_receiver_amount_sat}"
+        );
         let mut con: Connection = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         tx.execute(
-            "UPDATE chain_swaps
-            SET
-                payer_amount_sat = :payer_amount_sat,
-                receiver_amount_sat = :receiver_amount_sat
-            WHERE
-                id = :id",
+            "UPDATE chain_swaps 
+            SET accepted_receiver_amount_sat = :accepted_receiver_amount_sat
+            WHERE id = :id",
             named_params! {
                 ":id": swap_id,
-                ":payer_amount_sat": payer_amount_sat,
-                ":receiver_amount_sat": receiver_amount_sat,
+                ":accepted_receiver_amount_sat": accepted_receiver_amount_sat,
             },
         )?;
         self.commit_outgoing(
             &tx,
             swap_id,
             RecordType::Chain,
-            Some(vec![
-                "payer_amount_sat".to_string(),
-                "receiver_amount_sat".to_string(),
-            ]),
+            Some(vec!["accepted_receiver_amount_sat".to_string()]),
         )?;
         tx.commit()?;
         self.sync_trigger

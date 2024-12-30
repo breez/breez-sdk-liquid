@@ -1644,7 +1644,9 @@ impl LiquidSdk {
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
+            actual_payer_amount_sat: None,
             receiver_amount_sat,
+            accepted_receiver_amount_sat: None,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
                 PaymentError::generic(&format!("Failed to serialize outgoing ChainPair: {e:?}"))
@@ -2086,7 +2088,9 @@ impl LiquidSdk {
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat: user_lockup_amount_sat.unwrap_or(0),
+            actual_payer_amount_sat: None,
             receiver_amount_sat,
+            accepted_receiver_amount_sat: None,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
                 PaymentError::generic(&format!("Failed to serialize incoming ChainPair: {e:?}"))
@@ -2596,13 +2600,20 @@ impl LiquidSdk {
             .swapper
             .get_zero_amount_chain_swap_quote(&req.swap_id)?;
 
-        let payer_amount_sat = chain_swap.payer_amount_sat;
-        let fees_sat = payer_amount_sat - server_lockup_quote.to_sat() + chain_swap.claim_fees_sat;
+        let actual_payer_amount_sat =
+            chain_swap
+                .actual_payer_amount_sat
+                .ok_or(SdkError::Generic {
+                    err: "No actual payer amount found when state is WaitingFeeAcceptance"
+                        .to_string(),
+                })?;
+        let fees_sat =
+            actual_payer_amount_sat - server_lockup_quote.to_sat() + chain_swap.claim_fees_sat;
 
         Ok(FetchPaymentProposedFeesResponse {
             swap_id: req.swap_id.clone(),
             fees_sat,
-            payer_amount_sat,
+            payer_amount_sat: actual_payer_amount_sat,
         })
     }
 
@@ -2640,13 +2651,10 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        self.persister.update_zero_amount_swap_values(
-            &swap_id,
-            payer_amount_sat,
-            payer_amount_sat - fees_sat,
-        )?;
         self.swapper
             .accept_zero_amount_chain_swap_quote(&swap_id, server_lockup_quote.to_sat())?;
+        self.persister
+            .update_accepted_receiver_amount(&swap_id, payer_amount_sat - fees_sat)?;
         self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
             swap_id,
             to_state: Pending,

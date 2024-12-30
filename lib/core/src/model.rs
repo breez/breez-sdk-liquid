@@ -729,8 +729,14 @@ pub(crate) struct ChainSwap {
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
+    /// Payer amount defined at swap creation
     pub(crate) payer_amount_sat: u64,
+    /// The actual payer amount in case it differs from `payer_amount_sat` (over/underpayment)
+    pub(crate) actual_payer_amount_sat: Option<u64>,
+    /// Receiver amount defined at swap creation
     pub(crate) receiver_amount_sat: u64,
+    /// The final receiver amount, in case of an over/underpayment that has been accepted
+    pub(crate) accepted_receiver_amount_sat: Option<u64>,
     pub(crate) claim_fees_sat: u64,
     /// The [ChainPair] chosen on swap creation
     pub(crate) pair_fees_json: String,
