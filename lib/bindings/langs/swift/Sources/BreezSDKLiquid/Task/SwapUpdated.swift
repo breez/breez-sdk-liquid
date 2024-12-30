@@ -91,7 +91,7 @@ class SwapUpdatedTask : TaskProtocol {
     
     func notifyPaymentWaitingFeeAcceptance(payment: Payment) {
         if !self.notified {
-            self.logger.log(tag: TAG, line: "Payment \(payment.txId ?? "") requires fee acceptance", level: "INFO")
+            self.logger.log(tag: TAG, line: "Payment \(self.getSwapId(details: payment.details) ?? "") requires fee acceptance", level: "INFO")
             let notificationTitle = ResourceHelper.shared.getString(
                 key: Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE,
                 fallback: Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE)
