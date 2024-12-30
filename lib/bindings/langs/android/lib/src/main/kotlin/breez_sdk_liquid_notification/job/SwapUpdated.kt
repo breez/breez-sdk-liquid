@@ -10,6 +10,8 @@ import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICA
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE
+import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT
+import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_SWAP_UPDATED
@@ -17,6 +19,8 @@ import breez_sdk_liquid_notification.Constants.PAYMENT_RECEIVED_NOTIFICATION_TEX
 import breez_sdk_liquid_notification.Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.PAYMENT_SENT_NOTIFICATION_TEXT
 import breez_sdk_liquid_notification.Constants.PAYMENT_SENT_NOTIFICATION_TITLE
+import breez_sdk_liquid_notification.Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT
+import breez_sdk_liquid_notification.Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE
 import breez_sdk_liquid_notification.Constants.SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
 import breez_sdk_liquid_notification.Constants.SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
@@ -57,8 +61,9 @@ class SwapUpdatedJob(
 
     override fun onEvent(e: SdkEvent) {
         when (e) {
-            is SdkEvent.PaymentWaitingConfirmation -> handlePaymentEvent(e.details)
-            is SdkEvent.PaymentSucceeded -> handlePaymentEvent(e.details)
+            is SdkEvent.PaymentWaitingConfirmation -> handlePaymentSuccess(e.details)
+            is SdkEvent.PaymentSucceeded -> handlePaymentSuccess(e.details)
+            is SdkEvent.PaymentWaitingFeeAcceptance -> handlePaymentWaitingFeeAcceptance(e.details)
 
             else -> {
                 logger.log(TAG, "Received event: ${e}", "TRACE")
@@ -76,12 +81,16 @@ class SwapUpdatedJob(
             .fold(StringBuilder()) { sb, it -> sb.append("%02x".format(it)) }
             .toString()
 
-    private fun handlePaymentEvent(payment: Payment) {
-        val swapId = when (val details = payment.details) {
+    private fun getSwapId(details: PaymentDetails?): String? {
+        return when (details) {
             is PaymentDetails.Bitcoin -> details.swapId
             is PaymentDetails.Lightning -> details.swapId
             else -> null
         }
+    }
+
+    private fun handlePaymentSuccess(payment: Payment) {
+        val swapId = getSwapId(payment.details)
 
         swapId?.let {
             if (this.swapIdHash == hashId(it)) {
@@ -91,6 +100,21 @@ class SwapUpdatedJob(
                     "TRACE"
                 )
                 notifySuccess(payment)
+            }
+        }
+    }
+
+    private fun handlePaymentWaitingFeeAcceptance(payment: Payment) {
+        val swapId = getSwapId(payment.details)
+
+        swapId?.let {
+            if (this.swapIdHash == hashId(it)) {
+                logger.log(
+                    TAG,
+                    "Payment waiting fee acceptance: ${this.swapIdHash}",
+                    "TRACE"
+                )
+                notifyPaymentWaitingFeeAcceptance(payment)
             }
         }
     }
@@ -114,6 +138,28 @@ class SwapUpdatedJob(
                         "%d",
                         if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT else DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
                     ), payment.amountSat.toLong()
+                )
+            )
+            this.notified = true
+            fgService.onFinished(this)
+        }
+    }
+
+    private fun notifyPaymentWaitingFeeAcceptance(payment: Payment) {
+        if (!this.notified) {
+            logger.log(TAG, "Payment ${payment.txId} requires fee acceptance", "INFO")
+            notifyChannel(
+                context,
+                NOTIFICATION_CHANNEL_SWAP_UPDATED,
+                getString(
+                    context,
+                    PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE,
+                    DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE
+                ),
+                getString(
+                    context,
+                    PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT,
+                    DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT
                 )
             )
             this.notified = true
