@@ -73,7 +73,11 @@ impl Persister {
                 pair_fees_json = :pair_fees_json,
                 state = :state,
                 actual_payer_amount_sat = :actual_payer_amount_sat,
-                accepted_receiver_amount_sat = :accepted_receiver_amount_sat
+                accepted_receiver_amount_sat = 
+                    CASE 
+                        WHEN accepted_receiver_amount_sat IS NULL THEN :accepted_receiver_amount_sat
+                        ELSE accepted_receiver_amount_sat 
+                    END
             WHERE
                 id = :id",
             named_params! {
