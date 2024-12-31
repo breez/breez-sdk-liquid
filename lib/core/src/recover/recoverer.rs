@@ -161,9 +161,8 @@ impl Recoverer {
                         log::warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let timeout_block_height =
-                        send_swap.get_boltz_create_response()?.timeout_block_height as u32;
-                    let is_expired = liquid_tip.height >= timeout_block_height;
+                    let timeout_block_height = send_swap.timeout_block_height as u32;
+                    let is_expired = liquid_tip >= timeout_block_height;
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         send_swap.state = new_state;
                     }
@@ -184,10 +183,8 @@ impl Recoverer {
                         log::warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let timeout_block_height = receive_swap
-                        .get_boltz_create_response()?
-                        .timeout_block_height;
-                    let is_expired = liquid_tip.height >= timeout_block_height;
+                    let timeout_block_height = receive_swap.timeout_block_height;
+                    let is_expired = liquid_tip >= timeout_block_height;
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         receive_swap.state = new_state;
                     }
@@ -247,7 +244,7 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        let is_expired = liquid_tip.height >= chain_swap.timeout_block_height;
+                        let is_expired = liquid_tip >= chain_swap.timeout_block_height;
                         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                             chain_swap.state = new_state;
                         }

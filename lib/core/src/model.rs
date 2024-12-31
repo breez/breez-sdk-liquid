@@ -1354,11 +1354,11 @@ pub enum PaymentDetails {
         description: String,
 
         /// The height of the Liquid block at which the swap will no longer be valid
-        /// It should always be populated in case of an incoming chain swap
+        /// It should always be populated in case of an outgoing chain swap
         liquid_expiration_blockheight: Option<u32>,
 
         /// The height of the Bitcoin block at which the swap will no longer be valid
-        /// It should always be populated in case of an outgoing chain swap
+        /// It should always be populated in case of an incoming chain swap
         bitcoin_expiration_blockheight: Option<u32>,
 
         /// For a Send swap which was refunded, this is the refund tx id

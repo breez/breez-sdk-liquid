@@ -99,6 +99,7 @@ pub(crate) struct SendSyncData {
     pub(crate) refund_private_key: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    #[serde(default)]
     pub(crate) timeout_block_height: u64,
     pub(crate) created_at: u32,
     pub(crate) preimage: Option<String>,
@@ -173,6 +174,7 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) mrh_address: String,
+    #[serde(default)]
     pub(crate) timeout_block_height: u32,
     pub(crate) created_at: u32,
     pub(crate) payment_hash: Option<String>,

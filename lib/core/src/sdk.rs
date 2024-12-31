@@ -355,7 +355,7 @@ impl LiquidSdk {
                 tokio::select! {
                     _ = interval.tick() => {
                         // Get the Liquid tip and process a new block
-                        let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await.map(|tip| tip.height);
+                        let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await;
                         let is_new_liquid_block = match &liquid_tip_res {
                             Ok(height) => {
                                 debug!("Got Liquid tip: {height}");
@@ -2325,7 +2325,7 @@ impl LiquidSdk {
         match partial_sync {
             false => {
                 let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
-                let liquid_height = self.liquid_chain_service.lock().await.tip().await?.height;
+                let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
                 let send_swaps = self

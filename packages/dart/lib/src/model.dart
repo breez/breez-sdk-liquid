@@ -741,11 +741,11 @@ sealed class PaymentDetails with _$PaymentDetails {
     required String description,
 
     /// The height of the Liquid block at which the swap will no longer be valid
-    /// It should always be populated in case of an incoming chain swap
+    /// It should always be populated in case of an outgoing chain swap
     int? liquidExpirationBlockheight,
 
     /// The height of the Bitcoin block at which the swap will no longer be valid
-    /// It should always be populated in case of an outgoing chain swap
+    /// It should always be populated in case of an incoming chain swap
     int? bitcoinExpirationBlockheight,
 
     /// For a Send swap which was refunded, this is the refund tx id

@@ -1197,12 +1197,12 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   final String description;
 
   /// The height of the Liquid block at which the swap will no longer be valid
-  /// It should always be populated in case of an incoming chain swap
+  /// It should always be populated in case of an outgoing chain swap
   @override
   final int? liquidExpirationBlockheight;
 
   /// The height of the Bitcoin block at which the swap will no longer be valid
-  /// It should always be populated in case of an outgoing chain swap
+  /// It should always be populated in case of an incoming chain swap
   @override
   final int? bitcoinExpirationBlockheight;
 
@@ -1265,11 +1265,11 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   String get description;
 
   /// The height of the Liquid block at which the swap will no longer be valid
-  /// It should always be populated in case of an incoming chain swap
+  /// It should always be populated in case of an outgoing chain swap
   int? get liquidExpirationBlockheight;
 
   /// The height of the Bitcoin block at which the swap will no longer be valid
-  /// It should always be populated in case of an outgoing chain swap
+  /// It should always be populated in case of an incoming chain swap
   int? get bitcoinExpirationBlockheight;
 
   /// For a Send swap which was refunded, this is the refund tx id
