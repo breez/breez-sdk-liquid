@@ -580,9 +580,12 @@ impl Persister {
                         let receiver_amount_sat =
                             match maybe_chain_swap_accepted_receiver_amount_sat {
                                 Some(accepted_receiver_amount_sat) => accepted_receiver_amount_sat,
-                                None => match maybe_chain_swap_actual_payer_amount_sat {
-                                    Some(_) => payer_amount_sat, // For over/underpaid chain swaps WaitingFeeAcceptance, show zero fees
-                                    None => maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
+                                None => match (
+                                    maybe_chain_swap_actual_payer_amount_sat,
+                                    maybe_chain_swap_payer_amount_sat,
+                                ) {
+                                    (Some(actual), Some(expected)) if actual != expected => actual, // For over/underpaid chain swaps WaitingFeeAcceptance, show zero fees
+                                    _ => maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
                                 },
                             };
                         let swapper_fees_sat = maybe_chain_swap_pair_fees
