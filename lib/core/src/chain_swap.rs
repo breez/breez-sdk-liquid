@@ -1228,10 +1228,12 @@ impl ChainSwapHandler {
                 }
             }
             Some(accepted_receiver_amount_sat) => {
-                if value < accepted_receiver_amount_sat - chain_swap.claim_fees_sat {
+                let expected_server_lockup_amount_sat =
+                    accepted_receiver_amount_sat + chain_swap.claim_fees_sat;
+                if value < expected_server_lockup_amount_sat {
                     return Err(anyhow!(
                         "Transaction value {value} sats is less than accepted {} sats",
-                        claim_details.amount
+                        expected_server_lockup_amount_sat
                     ));
                 }
             }
