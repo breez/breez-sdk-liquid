@@ -32,6 +32,9 @@ impl ChainSyncData {
         for field in updated_fields {
             match field.as_str() {
                 "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
+                "accepted_receiver_amount_sat" => {
+                    self.accepted_receiver_amount_sat = other.accepted_receiver_amount_sat
+                }
                 _ => continue,
             }
         }
