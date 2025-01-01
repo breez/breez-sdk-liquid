@@ -30,8 +30,6 @@ impl ChainSyncData {
     pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
         for field in updated_fields {
             match field.as_str() {
-                "payer_amount_sat" => self.payer_amount_sat = other.payer_amount_sat,
-                "receiver_amount_sat" => self.receiver_amount_sat = other.receiver_amount_sat,
                 "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
                 _ => continue,
             }
@@ -47,12 +45,6 @@ impl ChainSyncData {
                 let mut updated_fields = vec![];
                 if update.accept_zero_conf != swap.accept_zero_conf {
                     updated_fields.push("accept_zero_conf".to_string());
-                }
-                if update.payer_amount_sat != swap.payer_amount_sat {
-                    updated_fields.push("payer_amount_sat".to_string());
-                }
-                if update.receiver_amount_sat != swap.receiver_amount_sat {
-                    updated_fields.push("receiver_amount_sat".to_string());
                 }
                 Some(updated_fields)
             }

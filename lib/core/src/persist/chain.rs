@@ -63,8 +63,6 @@ impl Persister {
             "UPDATE chain_swaps
             SET
                 description = :description,
-                payer_amount_sat = :payer_amount_sat,
-                receiver_amount_sat = :receiver_amount_sat,
                 accept_zero_conf = :accept_zero_conf,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
@@ -78,8 +76,6 @@ impl Persister {
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
-                ":payer_amount_sat": &chain_swap.payer_amount_sat,
-                ":receiver_amount_sat": &chain_swap.receiver_amount_sat,
                 ":accept_zero_conf": &chain_swap.accept_zero_conf,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
