@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use breez_sdk_liquid::prelude::*;
 use clap::{arg, Parser};
 use qrcode_rs::render::unicode;
@@ -131,14 +131,8 @@ pub(crate) enum Command {
         /// Lightning payment hash
         payment_hash: String,
     },
-    /// Get proposed fees for WaitingFeeAcceptance Payment
-    FetchPaymentProposedFees { swap_id: String },
-    /// Accept proposed fees for WaitingFeeAcceptance Payment
-    AcceptPaymentProposedFees {
-        swap_id: String,
-        // Fee amount obtained using FetchPaymentProposedFees
-        fees_sat: u64,
-    },
+    /// Get and potentially accept proposed fees for WaitingFeeAcceptance Payment
+    ReviewPaymentProposedFees { swap_id: String },
     /// List refundable chain swaps
     ListRefundables,
     /// Prepare a refund transaction for an incomplete swap
@@ -527,21 +521,23 @@ pub(crate) async fn handle_command(
                 }
             }
         }
-        Command::FetchPaymentProposedFees { swap_id } => {
-            let res = sdk
+        Command::ReviewPaymentProposedFees { swap_id } => {
+            let fetch_response = sdk
                 .fetch_payment_proposed_fees(&FetchPaymentProposedFeesRequest { swap_id })
                 .await?;
-            command_result!(res)
-        }
-        Command::AcceptPaymentProposedFees { swap_id, fees_sat } => {
-            let res = sdk
-                .fetch_payment_proposed_fees(&FetchPaymentProposedFeesRequest { swap_id })
-                .await?;
-            if fees_sat != res.fees_sat {
-                bail!("Fees changed since they were fetched")
-            }
-            sdk.accept_payment_proposed_fees(&AcceptPaymentProposedFeesRequest { response: res })
-                .await?;
+
+            let confirmation_msg = format!(
+                "Payer amount: {} sat. Fees: {} sat. Are the fees acceptable? (y/N) ",
+                fetch_response.payer_amount_sat, fetch_response.fees_sat
+            );
+
+            wait_confirmation!(confirmation_msg, "Payment proposed fees review halted");
+
+            sdk.accept_payment_proposed_fees(&AcceptPaymentProposedFeesRequest {
+                response: fetch_response,
+            })
+            .await?;
+
             command_result!("Proposed fees accepted successfully")
         }
         Command::ListRefundables => {
