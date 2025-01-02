@@ -163,7 +163,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         tx: &boltz_client::bitcoin::Transaction,
     ) -> Result<boltz_client::bitcoin::Txid, anyhow::Error> {
-        Ok(tx.txid())
+        Ok(tx.compute_txid())
     }
 
     fn get_transactions(

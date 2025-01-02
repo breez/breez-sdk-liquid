@@ -87,8 +87,8 @@ pub(crate) struct HybridLiquidChainService {
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
-        let electrum_client =
-            ElectrumClient::new(&ElectrumUrl::new(&config.liquid_electrum_url, true, true))?;
+        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
+        let electrum_client = ElectrumClient::new(&electrum_url)?;
         Ok(Self {
             electrum_client,
             network: config.network,

@@ -1807,7 +1807,7 @@ impl Transaction {
     pub(crate) fn txid(&self) -> String {
         match self {
             Transaction::Liquid(tx) => tx.txid().to_hex(),
-            Transaction::Bitcoin(tx) => tx.txid().to_hex(),
+            Transaction::Bitcoin(tx) => tx.compute_txid().to_hex(),
         }
     }
 }
