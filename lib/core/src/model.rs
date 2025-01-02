@@ -1538,7 +1538,7 @@ impl Payment {
                 .unwrap_or(utils::now()),
             amount_sat: tx.amount_sat,
             fees_sat: match swap.as_ref() {
-                Some(s) => s.payer_amount_sat - s.receiver_amount_sat,
+                Some(s) => s.payer_amount_sat - tx.amount_sat,
                 None => match tx.payment_type {
                     PaymentType::Receive => 0,
                     PaymentType::Send => tx.fees_sat,
