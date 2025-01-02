@@ -8,6 +8,7 @@ use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::data::ReceiveSyncData;
 use crate::sync::model::RecordType;
 
 impl Persister {
@@ -83,13 +84,28 @@ impl Persister {
     }
 
     pub(crate) fn insert_or_update_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
+        let maybe_swap = self.fetch_receive_swap_by_id(&receive_swap.id)?;
+        let updated_fields = ReceiveSyncData::updated_fields(maybe_swap, receive_swap);
+
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         Self::insert_or_update_receive_swap_inner(&tx, receive_swap)?;
-        self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, None)?;
-        tx.commit()?;
-        self.sync_trigger.try_send(())?;
+
+        // Trigger a sync if:
+        // - updated_fields is None (swap is inserted, not updated)
+        // - updated_fields in a non empty list of updated fields
+        let trigger_sync = updated_fields.as_ref().map_or(true, |u| !u.is_empty());
+        match trigger_sync {
+            true => {
+                self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
+                tx.commit()?;
+                self.sync_trigger.try_send(())?;
+            }
+            false => {
+                tx.commit()?;
+            }
+        };
 
         Ok(())
     }

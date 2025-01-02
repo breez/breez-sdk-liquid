@@ -8,6 +8,7 @@ use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
+use crate::sync::model::data::ChainSyncData;
 use crate::sync::model::RecordType;
 
 impl Persister {
@@ -62,8 +63,6 @@ impl Persister {
             "UPDATE chain_swaps
             SET
                 description = :description,
-                payer_amount_sat = :payer_amount_sat,
-                receiver_amount_sat = :receiver_amount_sat,
                 accept_zero_conf = :accept_zero_conf,
                 server_lockup_tx_id = :server_lockup_tx_id,
                 user_lockup_tx_id = :user_lockup_tx_id,
@@ -77,8 +76,6 @@ impl Persister {
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
-                ":payer_amount_sat": &chain_swap.payer_amount_sat,
-                ":receiver_amount_sat": &chain_swap.receiver_amount_sat,
                 ":accept_zero_conf": &chain_swap.accept_zero_conf,
                 ":server_lockup_tx_id": &chain_swap.server_lockup_tx_id,
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
@@ -94,13 +91,28 @@ impl Persister {
     }
 
     pub(crate) fn insert_or_update_chain_swap(&self, chain_swap: &ChainSwap) -> Result<()> {
+        let maybe_swap = self.fetch_chain_swap_by_id(&chain_swap.id)?;
+        let updated_fields = ChainSyncData::updated_fields(maybe_swap, chain_swap);
+
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         Self::insert_or_update_chain_swap_inner(&tx, chain_swap)?;
-        self.commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, None)?;
-        tx.commit()?;
-        self.sync_trigger.try_send(())?;
+
+        // Trigger a sync if:
+        // - updated_fields is None (swap is inserted, not updated)
+        // - updated_fields in a non empty list of updated fields
+        let trigger_sync = updated_fields.as_ref().map_or(true, |u| !u.is_empty());
+        match trigger_sync {
+            true => {
+                self.commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, updated_fields)?;
+                tx.commit()?;
+                self.sync_trigger.try_send(())?;
+            }
+            false => {
+                tx.commit()?;
+            }
+        };
 
         Ok(())
     }
