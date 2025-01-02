@@ -568,6 +568,7 @@ dictionary Payment {
     u64? swapper_fees_sat = null;
     string? destination = null;
     string? tx_id = null;
+    string? unblinding_data = null;
 };
 
 enum PaymentType {

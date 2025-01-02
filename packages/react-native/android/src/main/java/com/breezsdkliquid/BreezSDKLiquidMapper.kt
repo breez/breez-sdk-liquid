@@ -1512,7 +1512,8 @@ fun asPayment(payment: ReadableMap): Payment? {
     val swapperFeesSat = if (hasNonNullKey(payment, "swapperFeesSat")) payment.getDouble("swapperFeesSat").toULong() else null
     val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
     val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
-    return Payment(timestamp, amountSat, feesSat, paymentType, status, details, swapperFeesSat, destination, txId)
+    val unblindingData = if (hasNonNullKey(payment, "unblindingData")) payment.getString("unblindingData") else null
+    return Payment(timestamp, amountSat, feesSat, paymentType, status, details, swapperFeesSat, destination, txId, unblindingData)
 }
 
 fun readableMapOf(payment: Payment): ReadableMap =
@@ -1526,6 +1527,7 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "swapperFeesSat" to payment.swapperFeesSat,
         "destination" to payment.destination,
         "txId" to payment.txId,
+        "unblindingData" to payment.unblindingData,
     )
 
 fun asPaymentList(arr: ReadableArray): List<Payment> {

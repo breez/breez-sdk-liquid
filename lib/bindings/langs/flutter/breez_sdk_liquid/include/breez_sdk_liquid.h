@@ -507,6 +507,7 @@ typedef struct wire_cst_payment_details {
 typedef struct wire_cst_payment {
   struct wire_cst_list_prim_u_8_strict *destination;
   struct wire_cst_list_prim_u_8_strict *tx_id;
+  struct wire_cst_list_prim_u_8_strict *unblinding_data;
   uint32_t timestamp;
   uint64_t amount_sat;
   uint64_t fees_sat;

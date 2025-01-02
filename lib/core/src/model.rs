@@ -1220,6 +1220,10 @@ pub struct PaymentTxData {
 
     /// Onchain tx status
     pub is_confirmed: bool,
+
+    /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
+    /// See: https://docs.liquid.net/docs/unblinding-transactions
+    pub unblinding_data: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1369,6 +1373,10 @@ pub struct Payment {
 
     pub tx_id: Option<String>,
 
+    /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
+    /// See: https://docs.liquid.net/docs/unblinding-transactions
+    pub unblinding_data: Option<String>,
+
     /// Composite timestamp that can be used for sorting or displaying the payment.
     ///
     /// If this payment has an associated swap, it is the swap creation time. Otherwise, the point
@@ -1428,6 +1436,7 @@ impl Payment {
         Payment {
             destination: swap.bolt11.clone(),
             tx_id: None,
+            unblinding_data: None,
             timestamp: swap.created_at,
             amount_sat,
             fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
@@ -1445,6 +1454,7 @@ impl Payment {
     ) -> Payment {
         Payment {
             tx_id: Some(tx.tx_id),
+            unblinding_data: tx.unblinding_data,
             // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
             // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
             // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.

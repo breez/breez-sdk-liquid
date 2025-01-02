@@ -595,6 +595,10 @@ class Payment {
   final String? destination;
   final String? txId;
 
+  /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
+  /// See: https://docs.liquid.net/docs/unblinding-transactions
+  final String? unblindingData;
+
   /// Composite timestamp that can be used for sorting or displaying the payment.
   ///
   /// If this payment has an associated swap, it is the swap creation time. Otherwise, the point
@@ -643,6 +647,7 @@ class Payment {
   const Payment({
     this.destination,
     this.txId,
+    this.unblindingData,
     required this.timestamp,
     required this.amountSat,
     required this.feesSat,
@@ -656,6 +661,7 @@ class Payment {
   int get hashCode =>
       destination.hashCode ^
       txId.hashCode ^
+      unblindingData.hashCode ^
       timestamp.hashCode ^
       amountSat.hashCode ^
       feesSat.hashCode ^
@@ -671,6 +677,7 @@ class Payment {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           txId == other.txId &&
+          unblindingData == other.unblindingData &&
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
           feesSat == other.feesSat &&
