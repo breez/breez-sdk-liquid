@@ -318,13 +318,15 @@ impl Persister {
     }
 
     /// Used for receive chain swaps, when fees are accepted and thus the agreed received amount is known
+    ///
+    /// Can also be used to erase a previously persisted accepted amount in case of failure to accept.
     pub(crate) fn update_accepted_receiver_amount(
         &self,
         swap_id: &str,
-        accepted_receiver_amount_sat: u64,
+        accepted_receiver_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
         log::info!(
-            "Updating chain swap {swap_id}: accepted_receiver_amount_sat = {accepted_receiver_amount_sat}"
+            "Updating chain swap {swap_id}: accepted_receiver_amount_sat = {accepted_receiver_amount_sat:?}"
         );
         let mut con: Connection = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;

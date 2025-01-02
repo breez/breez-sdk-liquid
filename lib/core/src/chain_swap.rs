@@ -380,6 +380,14 @@ impl ChainSwapHandler {
     async fn handle_amountless_update(&self, swap: &ChainSwap) -> Result<(), PaymentError> {
         let id = swap.id.clone();
 
+        // Since we optimistically persist the accepted receiver amount, if accepting a quote with
+        //  the swapper fails, we might still think it's accepted, so now we should get rid of the
+        //  old invalid accepted amount.
+        if swap.accepted_receiver_amount_sat.is_some() {
+            info!("Handling amountless update for swap {id} with existing accepted receiver amount. Erasing the accepted amount now...");
+            self.persister.update_accepted_receiver_amount(&id, None)?;
+        }
+
         let quote = self
             .swapper
             .get_zero_amount_chain_swap_quote(&id)
@@ -394,10 +402,14 @@ impl ChainSwapHandler {
                 debug!("Zero-amount swap validated. Auto-accepting...");
                 self.persister
                     .update_actual_payer_amount(&id, user_lockup_amount_sat)?;
-                self.swapper
-                    .accept_zero_amount_chain_swap_quote(&id, quote)?;
                 self.persister
-                    .update_accepted_receiver_amount(&id, receiver_amount_sat)
+                    .update_accepted_receiver_amount(&id, Some(receiver_amount_sat))?;
+                self.swapper
+                    .accept_zero_amount_chain_swap_quote(&id, quote)
+                    .inspect_err(|e| {
+                        error!("Failed to accept zero-amount swap {id} quote: {e} - trying to erase the accepted receiver amount...");
+                        let _ = self.persister.update_accepted_receiver_amount(&id, None);
+                    })
             }
             ValidateAmountlessSwapResult::RequiresUserAction {
                 user_lockup_amount_sat,

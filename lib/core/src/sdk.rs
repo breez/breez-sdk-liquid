@@ -2651,10 +2651,16 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        self.swapper
-            .accept_zero_amount_chain_swap_quote(&swap_id, server_lockup_quote.to_sat())?;
         self.persister
-            .update_accepted_receiver_amount(&swap_id, payer_amount_sat - fees_sat)?;
+            .update_accepted_receiver_amount(&swap_id, Some(payer_amount_sat - fees_sat))?;
+        self.swapper
+            .accept_zero_amount_chain_swap_quote(&swap_id, server_lockup_quote.to_sat())
+            .inspect_err(|e| {
+                error!("Failed to accept zero-amount swap {swap_id} quote: {e} - trying to erase the accepted receiver amount...");
+                let _ = self
+                    .persister
+                    .update_accepted_receiver_amount(&swap_id, None);
+            })?;
         self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
             swap_id,
             to_state: Pending,
