@@ -11,7 +11,7 @@ try
 
     GetInfoResponse? info = sdk.GetInfo();
 
-    Console.WriteLine(info!.pubkey);
+    Console.WriteLine(info!.walletInfo.pubkey);
 }
 catch (Exception e)
 {
