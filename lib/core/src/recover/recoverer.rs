@@ -332,7 +332,9 @@ impl Recoverer {
                     let relevant_tx_ids: Vec<Txid> = history.iter().map(|h| h.txid).collect();
                     let relevant_txs: Vec<boltz_client::bitcoin::Transaction> = btc_script_txs
                         .iter()
-                        .filter(|&tx| relevant_tx_ids.contains(&tx.txid().to_raw_hash().into()))
+                        .filter(|&tx| {
+                            relevant_tx_ids.contains(&tx.compute_txid().to_raw_hash().into())
+                        })
                         .cloned()
                         .collect();
 
@@ -683,7 +685,7 @@ impl Recoverer {
                     history
                         .btc_lockup_script_history
                         .iter()
-                        .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
+                        .find(|h| h.txid.as_raw_hash() == tx.compute_txid().as_raw_hash())
                 })
                 .cloned();
             let btc_outgoing_tx_ids: Vec<HistoryTxId> = btc_lockup_outgoing_txs
@@ -692,7 +694,7 @@ impl Recoverer {
                     history
                         .btc_lockup_script_history
                         .iter()
-                        .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
+                        .find(|h| h.txid.as_raw_hash() == tx.compute_txid().as_raw_hash())
                 })
                 .cloned()
                 .collect();

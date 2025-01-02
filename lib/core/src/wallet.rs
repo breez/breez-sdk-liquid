@@ -138,11 +138,14 @@ impl LiquidOnchainWallet {
         let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
         let mut lwk_persister =
             FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
-
-        match Wollet::new(elements_network, lwk_persister, descriptor.clone()) {
+        let wollet_res = Wollet::new(elements_network, lwk_persister, descriptor.clone());
+        match wollet_res {
             Ok(wollet) => Ok(wollet),
-            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
-                warn!("Update height too old, wipping storage and retrying");
+            Err(
+                lwk_wollet::Error::UpdateHeightTooOld { .. }
+                | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
+            ) => {
+                warn!("Update error initialising wollet, wipping storage and retrying: {wollet_res:?}");
                 let mut path = working_dir.as_ref().to_path_buf();
                 path.push(elements_network.as_str());
                 fs::remove_dir_all(&path)?;
@@ -339,11 +342,8 @@ impl OnchainWallet for LiquidOnchainWallet {
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError> {
         let mut wallet = self.wallet.lock().await;
-        let mut electrum_client = ElectrumClient::new(&ElectrumUrl::new(
-            &self.config.liquid_electrum_url,
-            true,
-            true,
-        ))?;
+        let electrum_url = ElectrumUrl::new(&self.config.liquid_electrum_url, true, true)?;
+        let mut electrum_client = ElectrumClient::new(&electrum_url)?;
         // Use the cached derivation index with a buffer of 5 to perform the scan
         let index = self
             .persister
