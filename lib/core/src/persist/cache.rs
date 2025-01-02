@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rusqlite::{Transaction, TransactionBehavior};
+use rusqlite::{OptionalExtension, Transaction, TransactionBehavior};
 use std::str::FromStr;
 
 use crate::model::GetInfoResponse;
@@ -75,29 +75,13 @@ impl Persister {
         self.update_cached_item(KEY_BLOCKCHAIN_INFO, serialized_info)
     }
 
-    fn sql_row_to_info(row: &rusqlite::Row<'_>) -> Result<Option<GetInfoResponse>> {
-        let wallet_info = match row.get::<_, Option<String>>(0)? {
-            Some(info) => serde_json::from_str(&info)?,
-            None => return Ok(None),
-        };
-        let blockchain_info = row
-            .get::<_, Option<String>>(1)?
-            .map(|info| serde_json::from_str(&info))
-            .and_then(|res| res.ok())
-            .unwrap_or_default();
-
-        Ok(Some(GetInfoResponse {
-            wallet_info,
-            blockchain_info,
-        }))
-    }
-
     pub fn get_info(&self) -> Result<Option<GetInfoResponse>> {
         let con = self.get_connection()?;
 
-        let info = con.query_row_and_then(
-            &format!(
-                "
+        let info: Option<(Option<String>, Option<String>)> = con
+            .query_row(
+                &format!(
+                    "
             SELECT 
                 c1.value,   -- wallet info
                 c2.value    -- blockchain info
@@ -105,12 +89,25 @@ impl Persister {
             JOIN cached_items c2
             ON c1.key = '{KEY_WALLET_INFO}' AND c2.key = '{KEY_BLOCKCHAIN_INFO}'
         "
-            ),
-            [],
-            Self::sql_row_to_info,
-        )?;
+                ),
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()?;
 
-        Ok(info)
+        match info {
+            Some((Some(wallet_info), blockchain_info)) => {
+                let wallet_info = serde_json::from_str(&wallet_info)?;
+                let blockchain_info = blockchain_info
+                    .and_then(|info| serde_json::from_str(&info).ok())
+                    .unwrap_or_default();
+                Ok(Some(GetInfoResponse {
+                    wallet_info,
+                    blockchain_info,
+                }))
+            }
+            _ => Ok(None),
+        }
     }
 
     pub fn set_swapper_proxy_url(&self, swapper_proxy_url: String) -> Result<()> {
