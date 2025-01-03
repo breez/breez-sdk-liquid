@@ -50,6 +50,9 @@ impl ChainSyncData {
                 if update.accept_zero_conf != swap.accept_zero_conf {
                     updated_fields.push("accept_zero_conf".to_string());
                 }
+                if update.accepted_receiver_amount_sat != swap.accepted_receiver_amount_sat {
+                    updated_fields.push("accepted_receiver_amount_sat".to_string());
+                }
                 Some(updated_fields)
             }
             None => None,
