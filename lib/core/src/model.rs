@@ -29,9 +29,8 @@ use crate::receive_swap::{
 };
 use crate::utils;
 
-// Both use f64 for the maximum precision when converting between units
-pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
-pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
+// Uses f64 for the maximum precision when converting between units
+pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
@@ -136,13 +135,6 @@ impl Config {
     pub fn zero_conf_max_amount_sat(&self) -> u64 {
         self.zero_conf_max_amount_sat
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
-    }
-
-    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f32> {
-        match self.network {
-            LiquidNetwork::Mainnet => Some((LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32),
-            LiquidNetwork::Testnet => None,
-        }
     }
 
     pub(crate) fn get_all_external_input_parsers(&self) -> Vec<ExternalInputParser> {

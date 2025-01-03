@@ -18,9 +18,7 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define ESTIMATED_BTC_LOCKUP_TX_VSIZE 154
 
-#define STANDARD_FEE_RATE_SAT_PER_VBYTE 0.1
-
-#define LOWBALL_FEE_RATE_SAT_PER_VBYTE 0.01
+#define LIQUID_FEE_RATE_SAT_PER_VBYTE 0.1
 
 /**
  * The minimum acceptable fee rate when claiming using zero-conf

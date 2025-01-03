@@ -15,10 +15,8 @@ use url::Url;
 
 use crate::{
     error::{PaymentError, SdkError},
-    prelude::{
-        ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo,
-        LOWBALL_FEE_RATE_SAT_PER_VBYTE,
-    },
+    model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
+    prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
 
 use self::status_stream::BoltzStatusStream;
@@ -340,14 +338,14 @@ impl Swapper for BoltzSwapper {
         };
 
         let refund_tx_size = match self.new_lbtc_refund_wrapper(&swap, refund_address) {
-            Ok(refund_tx_wrapper) => refund_tx_wrapper.size(&refund_keypair, &preimage)?,
+            Ok(refund_tx_wrapper) => refund_tx_wrapper.size(&refund_keypair, &preimage, true)?,
             Err(_) => {
                 let refund_tx_wrapper = self.new_btc_refund_wrapper(&swap, refund_address)?;
                 refund_tx_wrapper.size(&refund_keypair, &preimage)?
             }
         } as u32;
 
-        let fee_rate_sat_per_vb = fee_rate_sat_per_vb.unwrap_or(LOWBALL_FEE_RATE_SAT_PER_VBYTE);
+        let fee_rate_sat_per_vb = fee_rate_sat_per_vb.unwrap_or(LIQUID_FEE_RATE_SAT_PER_VBYTE);
         let refund_tx_fees_sat = (refund_tx_size as f64 * fee_rate_sat_per_vb).ceil() as u64;
 
         Ok((refund_tx_size, refund_tx_fees_sat))

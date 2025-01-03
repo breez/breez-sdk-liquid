@@ -734,11 +734,7 @@ impl ChainSwapHandler {
 
         let lockup_tx = self
             .onchain_wallet
-            .build_tx_or_drain_tx(
-                self.config.lowball_fee_rate_msat_per_vbyte(),
-                &lockup_details.lockup_address,
-                lockup_details.amount,
-            )
+            .build_tx_or_drain_tx(&lockup_details.lockup_address, lockup_details.amount)
             .await?;
 
         let lockup_tx_id = self

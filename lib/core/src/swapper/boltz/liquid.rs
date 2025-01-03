@@ -11,10 +11,7 @@ use log::info;
 use crate::{
     ensure_sdk,
     error::{PaymentError, SdkError},
-    prelude::{
-        ChainSwap, Direction, LiquidNetwork, ReceiveSwap, Swap, Utxo,
-        LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
-    },
+    prelude::{ChainSwap, Direction, ReceiveSwap, Swap, Utxo, LIQUID_FEE_RATE_SAT_PER_VBYTE},
     utils,
 };
 
@@ -85,11 +82,7 @@ impl BoltzSwapper {
     }
 
     fn calculate_refund_fees(&self, refund_tx_size: usize) -> u64 {
-        let fee_rate = match self.config.network {
-            LiquidNetwork::Mainnet => LOWBALL_FEE_RATE_SAT_PER_VBYTE,
-            LiquidNetwork::Testnet => STANDARD_FEE_RATE_SAT_PER_VBYTE,
-        };
-        (refund_tx_size as f64 * fee_rate).ceil() as u64
+        (refund_tx_size as f64 * LIQUID_FEE_RATE_SAT_PER_VBYTE).ceil() as u64
     }
 
     pub(crate) fn new_lbtc_refund_wrapper(
@@ -189,7 +182,7 @@ impl BoltzSwapper {
             genesis_hash,
         };
 
-        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage)?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage, true)?;
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
