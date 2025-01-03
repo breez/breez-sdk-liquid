@@ -3,23 +3,17 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
-use log::{info, warn};
+use log::info;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
     elements::{Address, BlockHash, OutPoint, Script, Transaction, Txid},
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
 };
-use reqwest::{Response, StatusCode};
 use serde::Deserialize;
 
 use crate::prelude::Utxo;
-use crate::{
-    model::{Config, LiquidNetwork},
-    utils,
-};
-
-const LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
+use crate::{model::Config, utils};
 
 #[async_trait]
 pub trait LiquidChainService: Send + Sync {
@@ -78,7 +72,6 @@ struct Status {
 }
 
 pub(crate) struct HybridLiquidChainService {
-    network: LiquidNetwork,
     electrum_client: ElectrumClient,
 }
 
@@ -86,10 +79,7 @@ impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
         let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
         let electrum_client = ElectrumClient::new(&electrum_url)?;
-        Ok(Self {
-            electrum_client,
-            network: config.network,
-        })
+        Ok(Self { electrum_client })
     }
 }
 
@@ -104,17 +94,7 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
-        match self.network {
-            LiquidNetwork::Mainnet => {
-                let url = format!("{}/tx/{}/hex", LIQUID_ESPLORA_URL, txid.to_hex());
-                let response = get_with_retry(&url, 3).await?;
-                Ok(match response.status() {
-                    StatusCode::OK => Some(utils::deserialize_tx_hex(&response.text().await?)?),
-                    _ => None,
-                })
-            }
-            LiquidNetwork::Testnet => Ok(self.get_transactions(&[*txid]).await?.first().cloned()),
-        }
+        Ok(self.get_transactions(&[*txid]).await?.first().cloned())
     }
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
@@ -122,26 +102,9 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
-        match self.network {
-            LiquidNetwork::Mainnet => {
-                let script = lwk_wollet::elements::bitcoin::Script::from_bytes(script.as_bytes());
-                let script_hash = sha256::Hash::hash(script.as_bytes())
-                    .to_byte_array()
-                    .to_hex();
-                let url = format!("{}/scripthash/{}/txs", LIQUID_ESPLORA_URL, script_hash);
-                // TODO must handle paging -> https://github.com/blockstream/esplora/blob/master/API.md#addresses
-                let response = get_with_retry(&url, 3).await?;
-                let json: Vec<EsploraTx> = response.json().await?;
-
-                let history: Vec<History> = json.into_iter().map(Into::into).collect();
-                Ok(history)
-            }
-            LiquidNetwork::Testnet => {
-                let mut history_vec = self.electrum_client.get_scripts_history(&[script])?;
-                let h = history_vec.pop();
-                Ok(h.unwrap_or(vec![]))
-            }
-        }
+        let mut history_vec = self.electrum_client.get_scripts_history(&[script])?;
+        let h = history_vec.pop();
+        Ok(h.unwrap_or(vec![]))
     }
 
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
@@ -246,28 +209,6 @@ impl LiquidChainService for HybridLiquidChainService {
                 "Liquid transaction was not found, txid={} waiting for broadcast",
                 tx_id,
             )),
-        }
-    }
-}
-
-async fn get_with_retry(url: &str, retries: usize) -> Result<Response> {
-    let mut attempt = 0;
-    loop {
-        info!("liquid chain service get_with_retry for url {url}");
-        let response = reqwest::get(url).await?;
-        attempt += 1;
-
-        let status = response.status();
-        if status.is_success() {
-            return Ok(response);
-        } else {
-            warn!("get_with_retry attempt {attempt} of {retries} failed with {status:?}, retrying");
-            if attempt >= retries {
-                return Err(anyhow!("Too many retries".to_string()));
-            }
-            let secs = 1 << attempt;
-
-            tokio::time::sleep(Duration::from_secs(secs)).await;
         }
     }
 }
