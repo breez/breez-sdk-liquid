@@ -181,7 +181,7 @@ class Config {
   /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
   final BigInt? zeroConfMaxAmountSat;
 
-  /// The Breez API key used for making requests to their mempool service
+  /// The Breez API key used for making requests to the sync service
   final String? breezApiKey;
 
   /// A set of external input parsers that are used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input
