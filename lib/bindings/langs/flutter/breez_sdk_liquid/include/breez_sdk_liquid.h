@@ -20,6 +20,8 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define LIQUID_FEE_RATE_SAT_PER_VBYTE 0.1
 
+#define LIQUID_FEE_RATE_MSAT_PER_VBYTE (float)(LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0)
+
 /**
  * The minimum acceptable fee rate when claiming using zero-conf
  */
