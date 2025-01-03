@@ -771,7 +771,7 @@ impl LiquidSdk {
     ) -> Result<u64, PaymentError> {
         Ok(self
             .onchain_wallet
-            .build_tx(address, amount_sat)
+            .build_tx(Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE), address, amount_sat)
             .await?
             .all_fees()
             .values()
@@ -805,7 +805,11 @@ impl LiquidSdk {
         let receipent_address = address.unwrap_or(self.get_temp_p2tr_addr());
         let fee_sat = self
             .onchain_wallet
-            .build_drain_tx(receipent_address, enforce_amount_sat)
+            .build_drain_tx(
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                receipent_address,
+                enforce_amount_sat,
+            )
             .await?
             .all_fees()
             .values()
@@ -1195,7 +1199,11 @@ impl LiquidSdk {
 
         let tx = self
             .onchain_wallet
-            .build_tx_or_drain_tx(&address_data.address, receiver_amount_sat)
+            .build_tx_or_drain_tx(
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                &address_data.address,
+                receiver_amount_sat,
+            )
             .await?;
         let tx_fees_sat = tx.all_fees().values().sum::<u64>();
         ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
