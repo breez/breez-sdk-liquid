@@ -694,7 +694,7 @@ impl ChainSwapHandler {
             .liquid_chain_service
             .lock()
             .await
-            .broadcast(&lockup_tx, Some(swap_id))
+            .broadcast(&lockup_tx)
             .await?
             .to_string();
 
@@ -778,7 +778,7 @@ impl ChainSwapHandler {
                     SdkTransaction::Liquid(tx) => {
                         let liquid_chain_service = self.liquid_chain_service.lock().await;
                         liquid_chain_service
-                            .broadcast(&tx, Some(&swap.id))
+                            .broadcast(&tx)
                             .await
                             .map(|tx_id| tx_id.to_hex())
                             .or_else(|err| {
@@ -999,7 +999,7 @@ impl ChainSwapHandler {
             });
         };
         let refund_tx_id = liquid_chain_service
-            .broadcast(&refund_tx, Some(&swap.id))
+            .broadcast(&refund_tx)
             .await?
             .to_string();
 

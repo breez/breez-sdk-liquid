@@ -70,7 +70,6 @@ impl LiquidChainService for MockLiquidChainService {
     async fn broadcast(
         &self,
         tx: &lwk_wollet::elements::Transaction,
-        _swap_id: Option<&str>,
     ) -> Result<lwk_wollet::elements::Txid> {
         Ok(tx.txid())
     }

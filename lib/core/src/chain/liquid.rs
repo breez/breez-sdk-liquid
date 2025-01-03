@@ -1,4 +1,4 @@
-use std::{str::FromStr, time::Duration};
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -6,9 +6,7 @@ use boltz_client::ToHex;
 use log::{info, warn};
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
-    elements::{
-        pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, Txid,
-    },
+    elements::{Address, BlockHash, OutPoint, Script, Transaction, Txid},
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
 };
@@ -29,7 +27,7 @@ pub trait LiquidChainService: Send + Sync {
     async fn tip(&mut self) -> Result<u32>;
 
     /// Broadcast a transaction
-    async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid>;
+    async fn broadcast(&self, tx: &Transaction) -> Result<Txid>;
 
     /// Get a single transaction from its raw hash
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>>;
@@ -37,17 +35,17 @@ pub trait LiquidChainService: Send + Sync {
     /// Get a list of transactions
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
 
-    /// Get the transactions involved in a script, including lowball transactions.
+    /// Get the transactions involved in a script.
     ///
     /// On mainnet, the data is fetched from Esplora. On testnet, it's fetched from Electrum.
     async fn get_script_history(&self, scripts: &Script) -> Result<Vec<History>>;
 
-    /// Get the transactions involved in a list of scripts, including lowball transactions.
+    /// Get the transactions involved in a list of scripts.
     ///
     /// The data is fetched in a single call from the Electrum endpoint.
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
 
-    /// Get the transactions involved in a list of scripts including lowball
+    /// Get the transactions involved in a list of scripts
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
@@ -81,7 +79,6 @@ struct Status {
 
 pub(crate) struct HybridLiquidChainService {
     network: LiquidNetwork,
-    api_key: Option<String>,
     electrum_client: ElectrumClient,
 }
 
@@ -92,7 +89,6 @@ impl HybridLiquidChainService {
         Ok(Self {
             electrum_client,
             network: config.network,
-            api_key: config.breez_api_key,
         })
     }
 }
@@ -103,27 +99,8 @@ impl LiquidChainService for HybridLiquidChainService {
         Ok(self.electrum_client.tip()?.height)
     }
 
-    async fn broadcast(&self, tx: &Transaction, swap_id: Option<&str>) -> Result<Txid> {
-        match self.network {
-            LiquidNetwork::Mainnet => {
-                let tx_bytes = tx.serialize();
-                info!("Broadcasting Liquid tx: {}", tx_bytes.to_hex());
-                let client = reqwest::Client::new();
-                let mut req = client
-                    .post(format!("{LIQUID_ESPLORA_URL}/tx"))
-                    .header("Swap-ID", swap_id.unwrap_or_default())
-                    .body(tx_bytes.to_hex());
-
-                if let Some(api_key) = &self.api_key {
-                    req = req.header("Authorization", format!("Bearer {}", api_key));
-                };
-
-                let response = req.send().await?;
-                let txid = Txid::from_str(&response.text().await?)?;
-                Ok(txid)
-            }
-            LiquidNetwork::Testnet => Ok(self.electrum_client.broadcast(tx)?),
-        }
+    async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
+        Ok(self.electrum_client.broadcast(tx)?)
     }
 
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
