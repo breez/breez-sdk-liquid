@@ -6906,9 +6906,9 @@ final class wire_cst_sign_message_response extends ffi.Struct {
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
-const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
+const double LIQUID_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
-const double LOWBALL_FEE_RATE_SAT_PER_VBYTE = 0.01;
+const double LIQUID_FEE_RATE_MSAT_PER_VBYTE = 100.0;
 
 const int DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET = 100;
 

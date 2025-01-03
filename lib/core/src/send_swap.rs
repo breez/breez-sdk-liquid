@@ -10,13 +10,14 @@ use boltz_client::Bolt11Invoice;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
-use lwk_wollet::hashes::sha256;
-use lwk_wollet::secp256k1::ThirtyTwoByteHash;
+use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
+use crate::model::{
+    BlockListener, Config, PaymentState::*, SendSwap, LIQUID_FEE_RATE_MSAT_PER_VBYTE,
+};
 use crate::persist::model::PaymentTxDetails;
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::recover::recoverer::Recoverer;
@@ -196,7 +197,7 @@ impl SendSwapHandler {
         let lockup_tx = self
             .onchain_wallet
             .build_tx_or_drain_tx(
-                self.config.lowball_fee_rate_msat_per_vbyte(),
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
                 &create_response.address,
                 create_response.expected_amount,
             )
@@ -208,12 +209,7 @@ impl SendSwapHandler {
 
         info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
 
-        let broadcast_result = self
-            .chain_service
-            .lock()
-            .await
-            .broadcast(&lockup_tx, Some(swap_id))
-            .await;
+        let broadcast_result = self.chain_service.lock().await.broadcast(&lockup_tx).await;
 
         if let Err(err) = broadcast_result {
             debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
@@ -300,7 +296,7 @@ impl SendSwapHandler {
                         swap.id
                     );
                     let preimage = sha256::Hash::from_str(preimage_str)?;
-                    let preimage_arr: [u8; 32] = preimage.into_32();
+                    let preimage_arr = preimage.to_byte_array();
                     let result = match (data, &preimage_arr).try_into() {
                         Ok(data) => AesSuccessActionDataResult::Decrypted { data },
                         Err(e) => AesSuccessActionDataResult::ErrorStatus {
@@ -472,7 +468,7 @@ impl SendSwapHandler {
             });
         };
         let refund_tx_id = liquid_chain_service
-            .broadcast(&refund_tx, Some(&swap.id))
+            .broadcast(&refund_tx)
             .await?
             .to_string();
 

@@ -17,7 +17,7 @@ use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
-use lwk_wollet::secp256k1::ThirtyTwoByteHash;
+use lwk_wollet::secp256k1::Message;
 use lwk_wollet::ElementsNetwork;
 use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
@@ -769,10 +769,9 @@ impl LiquidSdk {
         amount_sat: u64,
         address: &str,
     ) -> Result<u64, PaymentError> {
-        let fee_rate_msat_per_vbyte = self.config.lowball_fee_rate_msat_per_vbyte();
         Ok(self
             .onchain_wallet
-            .build_tx(fee_rate_msat_per_vbyte, address, amount_sat)
+            .build_tx(Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE), address, amount_sat)
             .await?
             .all_fees()
             .values()
@@ -804,11 +803,10 @@ impl LiquidSdk {
         address: Option<&str>,
     ) -> Result<u64, PaymentError> {
         let receipent_address = address.unwrap_or(self.get_temp_p2tr_addr());
-        let fee_rate_msat_per_vbyte = self.config.lowball_fee_rate_msat_per_vbyte();
         let fee_sat = self
             .onchain_wallet
             .build_drain_tx(
-                fee_rate_msat_per_vbyte,
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
                 receipent_address,
                 enforce_amount_sat,
             )
@@ -1202,7 +1200,7 @@ impl LiquidSdk {
         let tx = self
             .onchain_wallet
             .build_tx_or_drain_tx(
-                self.config.lowball_fee_rate_msat_per_vbyte(),
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
                 &address_data.address,
                 receiver_amount_sat,
             )
@@ -1217,7 +1215,7 @@ impl LiquidSdk {
         );
 
         let liquid_chain_service = self.liquid_chain_service.lock().await;
-        let tx_id = liquid_chain_service.broadcast(&tx, None).await?.to_string();
+        let tx_id = liquid_chain_service.broadcast(&tx).await?.to_string();
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -1886,7 +1884,8 @@ impl LiquidSdk {
         // Signature of the claim public key of the SHA256 hash of the address for the direct payment
         let mrh_addr_str = mrh_addr.to_string();
         let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
-        let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
+        let mrh_addr_hash_sig =
+            keypair.sign_schnorr(Message::from_digest_slice(mrh_addr_hash.as_byte_array())?);
 
         let receiver_amount_sat = payer_amount_sat - fees_sat;
         let webhook_claim_status =
@@ -2728,7 +2727,7 @@ impl LiquidSdk {
                                             err: "Invalid preimage".to_string(),
                                         }
                                     })?;
-                                let preimage_arr: [u8; 32] = preimage.into_32();
+                                let preimage_arr = preimage.to_byte_array();
                                 let result = match (data, &preimage_arr).try_into() {
                                     Ok(data) => AesSuccessActionDataResult::Decrypted { data },
                                     Err(e) => AesSuccessActionDataResult::ErrorStatus {

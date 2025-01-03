@@ -188,6 +188,14 @@ impl From<lwk_wollet::Error> for PaymentError {
     }
 }
 
+impl From<lwk_wollet::UrlError> for PaymentError {
+    fn from(err: lwk_wollet::UrlError) -> Self {
+        PaymentError::Generic {
+            err: format!("{err:?}"),
+        }
+    }
+}
+
 impl From<lwk_signer::SignerError> for PaymentError {
     fn from(err: lwk_signer::SignerError) -> Self {
         PaymentError::SignerError {
@@ -221,6 +229,14 @@ impl From<SdkError> for PaymentError {
 impl From<crate::bitcoin::util::bip32::Error> for PaymentError {
     fn from(err: crate::bitcoin::util::bip32::Error) -> Self {
         Self::SignerError {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<secp256k1::Error> for PaymentError {
+    fn from(err: secp256k1::Error) -> Self {
+        Self::Generic {
             err: err.to_string(),
         }
     }
