@@ -421,6 +421,42 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun fetchPaymentProposedFees(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val fetchPaymentProposedFeesRequest =
+                    asFetchPaymentProposedFeesRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "FetchPaymentProposedFeesRequest")) }
+                val res = getBindingLiquidSdk().fetchPaymentProposedFees(fetchPaymentProposedFeesRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun acceptPaymentProposedFees(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val acceptPaymentProposedFeesRequest =
+                    asAcceptPaymentProposedFeesRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "AcceptPaymentProposedFeesRequest")) }
+                getBindingLiquidSdk().acceptPaymentProposedFees(acceptPaymentProposedFeesRequest)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun listRefundables(promise: Promise) {
         executor.execute {
             try {

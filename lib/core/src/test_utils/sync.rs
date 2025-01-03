@@ -161,6 +161,7 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
         timeout_block_height: 0,
         payer_amount_sat: 0,
         receiver_amount_sat: 0,
+        accepted_receiver_amount_sat: None,
         accept_zero_conf: accept_zero_conf.unwrap_or(true),
         created_at: 0,
         description: None,

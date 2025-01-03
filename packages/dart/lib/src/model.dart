@@ -154,6 +154,14 @@ class Config {
   /// Set this to false in order to prevent their use.
   final bool useDefaultExternalInputParsers;
 
+  /// For payments where the onchain fees can only be estimated on creation, this can be used
+  /// in order to automatically allow slightly more expensive fees. If the actual fee rate ends up
+  /// being above the sum of the initial estimate and this leeway, the payment will require
+  /// user fee acceptance. See [WaitingFeeAcceptance](PaymentState::WaitingFeeAcceptance).
+  ///
+  /// Defaults to zero.
+  final int? onchainFeeRateLeewaySatPerVbyte;
+
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
@@ -168,6 +176,7 @@ class Config {
     this.breezApiKey,
     this.externalInputParsers,
     required this.useDefaultExternalInputParsers,
+    this.onchainFeeRateLeewaySatPerVbyte,
   });
 
   @override
@@ -184,7 +193,8 @@ class Config {
       zeroConfMaxAmountSat.hashCode ^
       breezApiKey.hashCode ^
       externalInputParsers.hashCode ^
-      useDefaultExternalInputParsers.hashCode;
+      useDefaultExternalInputParsers.hashCode ^
+      onchainFeeRateLeewaySatPerVbyte.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -203,7 +213,8 @@ class Config {
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
           breezApiKey == other.breezApiKey &&
           externalInputParsers == other.externalInputParsers &&
-          useDefaultExternalInputParsers == other.useDefaultExternalInputParsers;
+          useDefaultExternalInputParsers == other.useDefaultExternalInputParsers &&
+          onchainFeeRateLeewaySatPerVbyte == other.onchainFeeRateLeewaySatPerVbyte;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -817,6 +828,19 @@ enum PaymentState {
   ///
   /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
   refundPending,
+
+  /// ## Chain Swaps
+  ///
+  /// This is the state when the user needs to accept new fees before the payment can proceed.
+  ///
+  /// Use [LiquidSdk::fetch_payment_proposed_fees](crate::sdk::LiquidSdk::fetch_payment_proposed_fees)
+  /// to find out the current fees and
+  /// [LiquidSdk::accept_payment_proposed_fees](crate::sdk::LiquidSdk::accept_payment_proposed_fees)
+  /// to accept them, allowing the payment to proceed.
+  ///
+  /// Otherwise, this payment can be immediately refunded using
+  /// [prepare_refund](crate::sdk::LiquidSdk::prepare_refund)/[refund](crate::sdk::LiquidSdk::refund).
+  waitingFeeAcceptance,
   ;
 }
 
@@ -1385,6 +1409,9 @@ sealed class SdkEvent with _$SdkEvent {
   const factory SdkEvent.paymentWaitingConfirmation({
     required Payment details,
   }) = SdkEvent_PaymentWaitingConfirmation;
+  const factory SdkEvent.paymentWaitingFeeAcceptance({
+    required Payment details,
+  }) = SdkEvent_PaymentWaitingFeeAcceptance;
   const factory SdkEvent.synced() = SdkEvent_Synced;
 }
 

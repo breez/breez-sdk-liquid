@@ -57,6 +57,10 @@ object Constants {
         "payment_sent_notification_text"
     const val PAYMENT_SENT_NOTIFICATION_TITLE =
         "payment_sent_notification_title"
+    const val PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE =
+        "payment_waiting_fee_acceptance_notification_title"
+    const val PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT =
+        "payment_waiting_fee_acceptance_text"
     const val SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT =
         "swap_confirmed_notification_failure_text"
     const val SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE =
@@ -102,6 +106,10 @@ object Constants {
         "Sent %d sats"
     const val DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE =
         "Payment Sent"
+    const val DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE =
+        "Payment requires fee acceptance"
+    const val DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT =
+        "Tap to review updated fees"
     const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT =
         "Tap to complete payment"
     const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE =

@@ -131,6 +131,8 @@ pub(crate) enum Command {
         /// Lightning payment hash
         payment_hash: String,
     },
+    /// Get and potentially accept proposed fees for WaitingFeeAcceptance Payment
+    ReviewPaymentProposedFees { swap_id: String },
     /// List refundable chain swaps
     ListRefundables,
     /// Prepare a refund transaction for an incomplete swap
@@ -518,6 +520,25 @@ pub(crate) async fn handle_command(
                     return Err(anyhow!("Payment not found."));
                 }
             }
+        }
+        Command::ReviewPaymentProposedFees { swap_id } => {
+            let fetch_response = sdk
+                .fetch_payment_proposed_fees(&FetchPaymentProposedFeesRequest { swap_id })
+                .await?;
+
+            let confirmation_msg = format!(
+                "Payer amount: {} sat. Fees: {} sat. Resulting received amount: {} sat. Are the fees acceptable? (y/N) ",
+                fetch_response.payer_amount_sat, fetch_response.fees_sat, fetch_response.receiver_amount_sat
+            );
+
+            wait_confirmation!(confirmation_msg, "Payment proposed fees review halted");
+
+            sdk.accept_payment_proposed_fees(&AcceptPaymentProposedFeesRequest {
+                response: fetch_response,
+            })
+            .await?;
+
+            command_result!("Proposed fees accepted successfully")
         }
         Command::ListRefundables => {
             let refundables = sdk.list_refundables().await?;

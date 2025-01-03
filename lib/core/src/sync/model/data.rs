@@ -21,6 +21,7 @@ pub(crate) struct ChainSyncData {
     pub(crate) timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    pub(crate) accepted_receiver_amount_sat: Option<u64>,
     pub(crate) accept_zero_conf: bool,
     pub(crate) created_at: u32,
     pub(crate) description: Option<String>,
@@ -31,6 +32,9 @@ impl ChainSyncData {
         for field in updated_fields {
             match field.as_str() {
                 "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
+                "accepted_receiver_amount_sat" => {
+                    self.accepted_receiver_amount_sat = other.accepted_receiver_amount_sat
+                }
                 _ => continue,
             }
         }
@@ -45,6 +49,9 @@ impl ChainSyncData {
                 let mut updated_fields = vec![];
                 if update.accept_zero_conf != swap.accept_zero_conf {
                     updated_fields.push("accept_zero_conf".to_string());
+                }
+                if update.accepted_receiver_amount_sat != swap.accepted_receiver_amount_sat {
+                    updated_fields.push("accepted_receiver_amount_sat".to_string());
                 }
                 Some(updated_fields)
             }
@@ -68,6 +75,7 @@ impl From<ChainSwap> for ChainSyncData {
             timeout_block_height: value.timeout_block_height,
             payer_amount_sat: value.payer_amount_sat,
             receiver_amount_sat: value.receiver_amount_sat,
+            accepted_receiver_amount_sat: value.accepted_receiver_amount_sat,
             accept_zero_conf: value.accept_zero_conf,
             created_at: value.created_at,
             description: value.description,
@@ -85,7 +93,9 @@ impl From<ChainSyncData> for ChainSwap {
             preimage: val.preimage,
             description: val.description,
             payer_amount_sat: val.payer_amount_sat,
+            actual_payer_amount_sat: None,
             receiver_amount_sat: val.receiver_amount_sat,
+            accepted_receiver_amount_sat: val.accepted_receiver_amount_sat,
             claim_fees_sat: val.claim_fees_sat,
             accept_zero_conf: val.accept_zero_conf,
             pair_fees_json: val.pair_fees_json,

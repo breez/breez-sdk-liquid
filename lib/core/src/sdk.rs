@@ -3,7 +3,7 @@ use std::ops::Not as _;
 use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::bitcoin::HybridBitcoinChainService;
@@ -559,6 +559,25 @@ impl LiquidSdk {
                                     .await?
                                 }
                             };
+                        }
+                        WaitingFeeAcceptance => {
+                            let swap_id = &payment
+                                .details
+                                .get_swap_id()
+                                .ok_or(anyhow!("Payment WaitingFeeAcceptance must have a swap"))?;
+
+                            ensure!(
+                                matches!(
+                                    self.persister.fetch_swap_by_id(swap_id)?,
+                                    Swap::Chain(ChainSwap { .. })
+                                ),
+                                "Swap in WaitingFeeAcceptance payment must be chain swap"
+                            );
+
+                            self.notify_event_listeners(SdkEvent::PaymentWaitingFeeAcceptance {
+                                details: payment,
+                            })
+                            .await?;
                         }
                         RefundPending => {
                             // The swap state has changed to RefundPending
@@ -1298,6 +1317,12 @@ impl LiquidSdk {
                         "Payment has already failed. Please try with another invoice",
                     ))
                 }
+                WaitingFeeAcceptance => {
+                    return Err(PaymentError::Generic {
+                        err: "Send swap payment cannot be in state WaitingFeeAcceptance"
+                            .to_string(),
+                    })
+                }
             },
             None => {
                 let keypair = utils::generate_keypair();
@@ -1619,7 +1644,9 @@ impl LiquidSdk {
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
+            actual_payer_amount_sat: None,
             receiver_amount_sat,
+            accepted_receiver_amount_sat: None,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
                 PaymentError::generic(&format!("Failed to serialize outgoing ChainPair: {e:?}"))
@@ -2061,7 +2088,9 @@ impl LiquidSdk {
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat: user_lockup_amount_sat.unwrap_or(0),
+            actual_payer_amount_sat: None,
             receiver_amount_sat,
+            accepted_receiver_amount_sat: None,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
                 PaymentError::generic(&format!("Failed to serialize incoming ChainPair: {e:?}"))
@@ -2487,7 +2516,11 @@ impl LiquidSdk {
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
         let payments = self.persister.get_payments(&ListPaymentsRequest {
-            states: Some(vec![PaymentState::Pending, PaymentState::RefundPending]),
+            states: Some(vec![
+                PaymentState::Pending,
+                PaymentState::RefundPending,
+                PaymentState::WaitingFeeAcceptance,
+            ]),
             ..Default::default()
         })?;
 
@@ -2539,6 +2572,102 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         Ok(self.persister.get_payment_by_request(req)?)
+    }
+
+    /// Fetches an up-to-date fees proposal for a [Payment] that is [WaitingFeeAcceptance].
+    ///
+    /// Use [LiquidSdk::accept_payment_proposed_fees] to accept the proposed fees and proceed
+    /// with the payment.
+    pub async fn fetch_payment_proposed_fees(
+        &self,
+        req: &FetchPaymentProposedFeesRequest,
+    ) -> SdkResult<FetchPaymentProposedFeesResponse> {
+        let chain_swap =
+            self.persister
+                .fetch_chain_swap_by_id(&req.swap_id)?
+                .ok_or(SdkError::Generic {
+                    err: format!("Could not find Swap {}", req.swap_id),
+                })?;
+
+        ensure_sdk!(
+            chain_swap.state == WaitingFeeAcceptance,
+            SdkError::Generic {
+                err: "Payment is not WaitingFeeAcceptance".to_string()
+            }
+        );
+
+        let server_lockup_quote = self
+            .swapper
+            .get_zero_amount_chain_swap_quote(&req.swap_id)?;
+
+        let actual_payer_amount_sat =
+            chain_swap
+                .actual_payer_amount_sat
+                .ok_or(SdkError::Generic {
+                    err: "No actual payer amount found when state is WaitingFeeAcceptance"
+                        .to_string(),
+                })?;
+        let fees_sat =
+            actual_payer_amount_sat - server_lockup_quote.to_sat() + chain_swap.claim_fees_sat;
+
+        Ok(FetchPaymentProposedFeesResponse {
+            swap_id: req.swap_id.clone(),
+            fees_sat,
+            payer_amount_sat: actual_payer_amount_sat,
+            receiver_amount_sat: actual_payer_amount_sat - fees_sat,
+        })
+    }
+
+    /// Accepts proposed fees for a [Payment] that is [WaitingFeeAcceptance].
+    ///
+    /// Use [LiquidSdk::fetch_payment_proposed_fees] to get an up-to-date fees proposal.
+    pub async fn accept_payment_proposed_fees(
+        &self,
+        req: &AcceptPaymentProposedFeesRequest,
+    ) -> Result<(), PaymentError> {
+        let FetchPaymentProposedFeesResponse {
+            swap_id,
+            fees_sat,
+            payer_amount_sat,
+            ..
+        } = req.clone().response;
+
+        let chain_swap =
+            self.persister
+                .fetch_chain_swap_by_id(&swap_id)?
+                .ok_or(SdkError::Generic {
+                    err: format!("Could not find Swap {}", swap_id),
+                })?;
+
+        ensure_sdk!(
+            chain_swap.state == WaitingFeeAcceptance,
+            PaymentError::Generic {
+                err: "Payment is not WaitingFeeAcceptance".to_string()
+            }
+        );
+
+        let server_lockup_quote = self.swapper.get_zero_amount_chain_swap_quote(&swap_id)?;
+
+        ensure_sdk!(
+            fees_sat == payer_amount_sat - server_lockup_quote.to_sat() + chain_swap.claim_fees_sat,
+            PaymentError::InvalidOrExpiredFees
+        );
+
+        self.persister
+            .update_accepted_receiver_amount(&swap_id, Some(payer_amount_sat - fees_sat))?;
+        self.swapper
+            .accept_zero_amount_chain_swap_quote(&swap_id, server_lockup_quote.to_sat())
+            .inspect_err(|e| {
+                error!("Failed to accept zero-amount swap {swap_id} quote: {e} - trying to erase the accepted receiver amount...");
+                let _ = self
+                    .persister
+                    .update_accepted_receiver_amount(&swap_id, None);
+            })?;
+        self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
+            swap_id,
+            to_state: Pending,
+            ..Default::default()
+        })
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].
@@ -3029,6 +3158,8 @@ mod tests {
     use lwk_wollet::{elements::Txid, hashes::hex::DisplayHex};
     use tokio::sync::Mutex;
 
+    use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
+    use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
     use crate::{
         model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
@@ -3049,6 +3180,7 @@ mod tests {
         accepts_zero_conf: bool,
         initial_payment_state: Option<PaymentState>,
         user_lockup_tx_id: Option<String>,
+        zero_amount: bool,
     }
 
     impl Default for NewSwapArgs {
@@ -3058,6 +3190,7 @@ mod tests {
                 initial_payment_state: None,
                 direction: Direction::Outgoing,
                 user_lockup_tx_id: None,
+                zero_amount: false,
             }
         }
     }
@@ -3082,6 +3215,11 @@ mod tests {
             self.initial_payment_state = Some(payment_state);
             self
         }
+
+        pub fn set_zero_amount(mut self, zero_amount: bool) -> Self {
+            self.zero_amount = zero_amount;
+            self
+        }
     }
 
     macro_rules! trigger_swap_update {
@@ -3101,6 +3239,7 @@ mod tests {
                         $args.initial_payment_state,
                         $args.accepts_zero_conf,
                         $args.user_lockup_tx_id,
+                        $args.zero_amount,
                     );
                     $persister.insert_or_update_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
@@ -3274,6 +3413,7 @@ mod tests {
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
+            None,
         )?);
 
         LiquidSdk::track_swap_updates(&sdk).await;
@@ -3460,6 +3600,139 @@ mod tests {
         })
         .await
         .unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_zero_amount_chain_swap_zero_leeway() -> Result<()> {
+        let user_lockup_sat = 50_000;
+
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::new());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
+
+        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            None,
+        )?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Verify that `TransactionLockupFailed` correctly:
+            // 1. does not affect state when swapper doesn't increase fees
+            // 2. triggers a change to WaitingFeeAcceptance when there is a fee increase > 0
+            for fee_increase in [0, 1] {
+                swapper.set_zero_amount_swap_mock_config(ZeroAmountSwapMockConfig {
+                    user_lockup_sat,
+                    onchain_fee_increase_sat: fee_increase,
+                });
+                bitcoin_chain_service
+                    .lock()
+                    .await
+                    .set_script_balance_sat(user_lockup_sat);
+                let persisted_swap = trigger_swap_update!(
+                    "chain",
+                    NewSwapArgs::default()
+                        .set_direction(Direction::Incoming)
+                        .set_accepts_zero_conf(false)
+                        .set_zero_amount(true),
+                    persister,
+                    status_stream,
+                    ChainSwapStates::TransactionLockupFailed,
+                    None,
+                    None
+                );
+                match fee_increase {
+                    0 => {
+                        assert_eq!(persisted_swap.state, PaymentState::Created);
+                    }
+                    1 => {
+                        assert_eq!(persisted_swap.state, PaymentState::WaitingFeeAcceptance);
+                    }
+                    _ => panic!("Unexpected fee_increase"),
+                }
+            }
+        })
+        .await?;
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_zero_amount_chain_swap_with_leeway() -> Result<()> {
+        let user_lockup_sat = 50_000;
+        let onchain_fee_rate_leeway_sat_per_vbyte = 5;
+
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::new());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
+
+        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            Some(onchain_fee_rate_leeway_sat_per_vbyte),
+        )?);
+
+        LiquidSdk::track_swap_updates(&sdk).await;
+
+        let max_fee_increase_for_auto_accept_sat =
+            onchain_fee_rate_leeway_sat_per_vbyte as u64 * ESTIMATED_BTC_LOCKUP_TX_VSIZE;
+
+        // We spawn a new thread since updates can only be sent when called via async runtimes
+        tokio::spawn(async move {
+            // Verify that `TransactionLockupFailed` correctly:
+            // 1. does not affect state when swapper increases fee by up to sat/vbyte leeway * tx size
+            // 2. triggers a change to WaitingFeeAcceptance when it is any higher
+            for fee_increase in [
+                max_fee_increase_for_auto_accept_sat,
+                max_fee_increase_for_auto_accept_sat + 1,
+            ] {
+                swapper.set_zero_amount_swap_mock_config(ZeroAmountSwapMockConfig {
+                    user_lockup_sat,
+                    onchain_fee_increase_sat: fee_increase,
+                });
+                bitcoin_chain_service
+                    .lock()
+                    .await
+                    .set_script_balance_sat(user_lockup_sat);
+                let persisted_swap = trigger_swap_update!(
+                    "chain",
+                    NewSwapArgs::default()
+                        .set_direction(Direction::Incoming)
+                        .set_accepts_zero_conf(false)
+                        .set_zero_amount(true),
+                    persister,
+                    status_stream,
+                    ChainSwapStates::TransactionLockupFailed,
+                    None,
+                    None
+                );
+                match fee_increase {
+                    val if val == max_fee_increase_for_auto_accept_sat => {
+                        assert_eq!(persisted_swap.state, PaymentState::Created);
+                    }
+                    val if val == (max_fee_increase_for_auto_accept_sat + 1) => {
+                        assert_eq!(persisted_swap.state, PaymentState::WaitingFeeAcceptance);
+                    }
+                    _ => panic!("Unexpected fee_increase"),
+                }
+            }
+        })
+        .await?;
 
         Ok(())
     }

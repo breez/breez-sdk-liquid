@@ -32,8 +32,9 @@ use crate::{
     wallet::OnchainWallet,
 };
 
-// Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L78
+// Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L68
 pub const ESTIMATED_BTC_CLAIM_TX_VSIZE: u64 = 111;
+pub const ESTIMATED_BTC_LOCKUP_TX_VSIZE: u64 = 154;
 
 pub(crate) struct ChainSwapHandler {
     config: Config,
@@ -332,7 +333,7 @@ impl ChainSwapHandler {
                 {
                     match self.handle_amountless_update(swap).await {
                         Ok(_) => {
-                            // We successfully accepted the quote, the swap should continue as normal
+                            // Either we accepted the quote, or we will be waiting for user fee acceptance
                             return Ok(()); // Break from TxLockupFailed branch
                         }
                         // In case of error, we continue and mark it as refundable
@@ -377,23 +378,59 @@ impl ChainSwapHandler {
     }
 
     async fn handle_amountless_update(&self, swap: &ChainSwap) -> Result<(), PaymentError> {
+        let id = swap.id.clone();
+
+        // Since we optimistically persist the accepted receiver amount, if accepting a quote with
+        //  the swapper fails, we might still think it's accepted, so now we should get rid of the
+        //  old invalid accepted amount.
+        if swap.accepted_receiver_amount_sat.is_some() {
+            info!("Handling amountless update for swap {id} with existing accepted receiver amount. Erasing the accepted amount now...");
+            self.persister.update_accepted_receiver_amount(&id, None)?;
+        }
+
         let quote = self
             .swapper
-            .get_zero_amount_chain_swap_quote(&swap.id)
+            .get_zero_amount_chain_swap_quote(&id)
             .map(|quote| quote.to_sat())?;
-        info!("Got quote of {quote} sat for swap {}", &swap.id);
+        info!("Got quote of {quote} sat for swap {}", &id);
 
-        self.validate_and_update_amountless_swap(swap, quote)
-            .await?;
-        self.swapper
-            .accept_zero_amount_chain_swap_quote(&swap.id, quote)
+        match self.validate_amountless_swap(swap, quote).await? {
+            ValidateAmountlessSwapResult::ReadyForAccepting {
+                user_lockup_amount_sat,
+                receiver_amount_sat,
+            } => {
+                debug!("Zero-amount swap validated. Auto-accepting...");
+                self.persister
+                    .update_actual_payer_amount(&id, user_lockup_amount_sat)?;
+                self.persister
+                    .update_accepted_receiver_amount(&id, Some(receiver_amount_sat))?;
+                self.swapper
+                    .accept_zero_amount_chain_swap_quote(&id, quote)
+                    .inspect_err(|e| {
+                        error!("Failed to accept zero-amount swap {id} quote: {e} - trying to erase the accepted receiver amount...");
+                        let _ = self.persister.update_accepted_receiver_amount(&id, None);
+                    })
+            }
+            ValidateAmountlessSwapResult::RequiresUserAction {
+                user_lockup_amount_sat,
+            } => {
+                debug!("Zero-amount swap validated. Fees are too high for automatic accepting. Moving to WaitingFeeAcceptance");
+                self.persister
+                    .update_actual_payer_amount(&id, user_lockup_amount_sat)?;
+                self.update_swap_info(&ChainSwapUpdate {
+                    swap_id: id,
+                    to_state: WaitingFeeAcceptance,
+                    ..Default::default()
+                })
+            }
+        }
     }
 
-    async fn validate_and_update_amountless_swap(
+    async fn validate_amountless_swap(
         &self,
         swap: &ChainSwap,
         quote_server_lockup_amount_sat: u64,
-    ) -> Result<(), PaymentError> {
+    ) -> Result<ValidateAmountlessSwapResult, PaymentError> {
         debug!("Validating {swap:?}");
 
         ensure_sdk!(
@@ -425,32 +462,42 @@ impl ChainSwapHandler {
         );
 
         let pair = swap.get_boltz_pair()?;
-        let swapper_service_feerate = pair.fees.percentage;
-        let swapper_server_fees_sat = pair.fees.server();
-        let service_fees_sat =
-            ((swapper_service_feerate / 100.0) * user_lockup_amount_sat as f64).ceil() as u64;
-        let fees_sat = swapper_server_fees_sat + service_fees_sat;
-        ensure_sdk!(
-            user_lockup_amount_sat > fees_sat,
-            PaymentError::generic(&format!("Invalid quote: fees ({fees_sat} sat) are higher than user lockup ({user_lockup_amount_sat} sat)"))
+
+        // Original server lockup quote estimate
+        let server_fees_estimate_sat = pair.fees.server();
+        let service_fees_sat = pair.fees.boltz(user_lockup_amount_sat);
+        let server_lockup_amount_estimate_sat =
+            user_lockup_amount_sat - server_fees_estimate_sat - service_fees_sat;
+
+        // Min auto accept server lockup quote
+        let server_fees_leeway_sat = self
+            .config
+            .onchain_fee_rate_leeway_sat_per_vbyte
+            .unwrap_or(0) as u64
+            * ESTIMATED_BTC_LOCKUP_TX_VSIZE;
+        let min_auto_accept_server_lockup_amount_sat =
+            server_lockup_amount_estimate_sat.saturating_sub(server_fees_leeway_sat);
+
+        debug!(
+            "user_lockup_amount_sat = {user_lockup_amount_sat}, \
+            service_fees_sat = {service_fees_sat}, \
+            server_fees_estimate_sat = {server_fees_estimate_sat}, \
+            server_fees_leeway_sat = {server_fees_leeway_sat}, \
+            min_auto_accept_server_lockup_amount_sat = {min_auto_accept_server_lockup_amount_sat}, \
+            quote_server_lockup_amount_sat = {quote_server_lockup_amount_sat}",
         );
 
-        let expected_server_lockup_amount_sat = user_lockup_amount_sat - fees_sat;
-        debug!("user_lockup_amount_sat = {}, service_fees_sat = {}, server_fees_sat = {}, expected_server_lockup_amount_sat = {}, quote_server_lockup_amount_sat = {}",
-            user_lockup_amount_sat, service_fees_sat, swapper_server_fees_sat, expected_server_lockup_amount_sat, quote_server_lockup_amount_sat);
-        ensure_sdk!(
-            expected_server_lockup_amount_sat <= quote_server_lockup_amount_sat,
-            PaymentError::generic(&format!("Invalid quote: expected at least {expected_server_lockup_amount_sat} sat, got {quote_server_lockup_amount_sat} sat"))
-        );
-
-        let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
-        self.persister.update_zero_amount_swap_values(
-            &swap.id,
-            user_lockup_amount_sat,
-            receiver_amount_sat,
-        )?;
-
-        Ok(())
+        if min_auto_accept_server_lockup_amount_sat > quote_server_lockup_amount_sat {
+            Ok(ValidateAmountlessSwapResult::RequiresUserAction {
+                user_lockup_amount_sat,
+            })
+        } else {
+            let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
+            Ok(ValidateAmountlessSwapResult::ReadyForAccepting {
+                user_lockup_amount_sat,
+                receiver_amount_sat,
+            })
+        }
     }
 
     async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
@@ -902,9 +949,9 @@ impl ChainSwapHandler {
         let id = &swap.id;
 
         ensure_sdk!(
-            swap.state == Refundable,
+            swap.state.is_refundable(),
             PaymentError::Generic {
-                err: format!("Chain Swap {id} was not marked as `Refundable`")
+                err: format!("Chain Swap {id} was not in refundable state")
             }
         );
 
@@ -1077,12 +1124,17 @@ impl ChainSwapHandler {
                 err: "Cannot transition to Created state".to_string(),
             }),
 
-            (Created | Pending, Pending) => Ok(()),
+            (Created | Pending | WaitingFeeAcceptance, Pending) => Ok(()),
             (_, Pending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Pending state"),
             }),
 
-            (Created | Pending | RefundPending, Complete) => Ok(()),
+            (Created | Pending | WaitingFeeAcceptance, WaitingFeeAcceptance) => Ok(()),
+            (_, WaitingFeeAcceptance) => Err(PaymentError::Generic {
+                err: format!("Cannot transition from {from_state:?} to WaitingFeeAcceptance state"),
+            }),
+
+            (Created | Pending | WaitingFeeAcceptance | RefundPending, Complete) => Ok(()),
             (_, Complete) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Complete state"),
             }),
@@ -1092,12 +1144,15 @@ impl ChainSwapHandler {
                 err: format!("Cannot transition from {from_state:?} to TimedOut state"),
             }),
 
-            (Created | Pending | RefundPending | Failed | Complete, Refundable) => Ok(()),
+            (
+                Created | Pending | WaitingFeeAcceptance | RefundPending | Failed | Complete,
+                Refundable,
+            ) => Ok(()),
             (_, Refundable) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to Refundable state"),
             }),
 
-            (Pending | Refundable, RefundPending) => Ok(()),
+            (Pending | WaitingFeeAcceptance | Refundable, RefundPending) => Ok(()),
             (_, RefundPending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to RefundPending state"),
             }),
@@ -1177,12 +1232,27 @@ impl ChainSwapHandler {
                 .unblind(&secp, liquid_swap_script.blinding_key.secret_key())?
                 .value;
         }
-        if value < claim_details.amount {
-            return Err(anyhow!(
-                "Transaction value {value} sats is less than {} sats",
-                claim_details.amount
-            ));
+        match chain_swap.accepted_receiver_amount_sat {
+            None => {
+                if value < claim_details.amount {
+                    return Err(anyhow!(
+                        "Transaction value {value} sats is less than {} sats",
+                        claim_details.amount
+                    ));
+                }
+            }
+            Some(accepted_receiver_amount_sat) => {
+                let expected_server_lockup_amount_sat =
+                    accepted_receiver_amount_sat + chain_swap.claim_fees_sat;
+                if value < expected_server_lockup_amount_sat {
+                    return Err(anyhow!(
+                        "Transaction value {value} sats is less than accepted {} sats",
+                        expected_server_lockup_amount_sat
+                    ));
+                }
+            }
         }
+
         Ok(())
     }
 
@@ -1299,6 +1369,16 @@ impl ChainSwapHandler {
     }
 }
 
+enum ValidateAmountlessSwapResult {
+    ReadyForAccepting {
+        user_lockup_amount_sat: u64,
+        receiver_amount_sat: u64,
+    },
+    RequiresUserAction {
+        user_lockup_amount_sat: u64,
+    },
+}
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
@@ -1322,15 +1402,47 @@ mod tests {
         let chain_swap_handler = new_chain_swap_handler(persister.clone())?;
 
         // Test valid combinations of states
-        let all_states = HashSet::from([Created, Pending, Complete, TimedOut, Failed]);
+        let all_states = HashSet::from([
+            Created,
+            Pending,
+            WaitingFeeAcceptance,
+            Complete,
+            TimedOut,
+            Failed,
+        ]);
         let valid_combinations = HashMap::from([
             (
                 Created,
-                HashSet::from([Pending, Complete, TimedOut, Refundable, Failed]),
+                HashSet::from([
+                    Pending,
+                    WaitingFeeAcceptance,
+                    Complete,
+                    TimedOut,
+                    Refundable,
+                    Failed,
+                ]),
             ),
             (
                 Pending,
-                HashSet::from([Pending, Complete, Refundable, RefundPending, Failed]),
+                HashSet::from([
+                    Pending,
+                    WaitingFeeAcceptance,
+                    Complete,
+                    Refundable,
+                    RefundPending,
+                    Failed,
+                ]),
+            ),
+            (
+                WaitingFeeAcceptance,
+                HashSet::from([
+                    Pending,
+                    WaitingFeeAcceptance,
+                    Complete,
+                    Refundable,
+                    RefundPending,
+                    Failed,
+                ]),
             ),
             (TimedOut, HashSet::from([Failed])),
             (Complete, HashSet::from([Refundable])),
@@ -1342,7 +1454,7 @@ mod tests {
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
                 let chain_swap =
-                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
+                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None, false);
                 persister.insert_or_update_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler
@@ -1369,7 +1481,7 @@ mod tests {
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
                 let chain_swap =
-                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None);
+                    new_chain_swap(Direction::Incoming, Some(*first_state), false, None, false);
                 persister.insert_or_update_chain_swap(&chain_swap)?;
 
                 assert!(chain_swap_handler

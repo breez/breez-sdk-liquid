@@ -570,6 +570,7 @@ mod tests {
             None,
             true,
             None,
+            false,
         ))?;
 
         sync_service.push().await?;
