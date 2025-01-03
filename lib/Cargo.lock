@@ -811,7 +811,6 @@ dependencies = [
  "glob",
  "hex",
  "lazy_static",
- "lightning 0.0.125",
  "log",
  "lwk_common",
  "lwk_signer",
@@ -3530,7 +3529,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=f77208acd34d74b571388889e856444908c59a85#f77208acd34d74b571388889e856444908c59a85"
+source = "git+https://github.com/breez/breez-sdk?rev=da61ce31e937fb7bad452aaf89ff53471b19bc3a#da61ce31e937fb7bad452aaf89ff53471b19bc3a"
 dependencies = [
  "aes 0.8.4",
  "anyhow",
@@ -3541,6 +3540,7 @@ dependencies = [
  "elements",
  "hex",
  "lightning 0.0.118",
+ "lightning 0.0.125",
  "lightning-invoice 0.26.0",
  "log",
  "percent-encoding",
