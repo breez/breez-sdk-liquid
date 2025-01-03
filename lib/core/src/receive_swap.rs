@@ -314,7 +314,7 @@ impl ReceiveSwapHandler {
                 // We attempt broadcasting via chain service, then fallback to Boltz
                 let liquid_chain_service = self.liquid_chain_service.lock().await;
                 let broadcast_res = liquid_chain_service
-                    .broadcast(&claim_tx, Some(&swap.id))
+                    .broadcast(&claim_tx)
                     .await
                     .map(|tx_id| tx_id.to_hex())
                     .or_else(|err| {

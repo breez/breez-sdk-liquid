@@ -201,12 +201,7 @@ impl SendSwapHandler {
 
         info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
 
-        let broadcast_result = self
-            .chain_service
-            .lock()
-            .await
-            .broadcast(&lockup_tx, Some(swap_id))
-            .await;
+        let broadcast_result = self.chain_service.lock().await.broadcast(&lockup_tx).await;
 
         if let Err(err) = broadcast_result {
             debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
@@ -465,7 +460,7 @@ impl SendSwapHandler {
             });
         };
         let refund_tx_id = liquid_chain_service
-            .broadcast(&refund_tx, Some(&swap.id))
+            .broadcast(&refund_tx)
             .await?
             .to_string();
 

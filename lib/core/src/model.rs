@@ -56,7 +56,7 @@ pub struct Config {
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
-    /// The Breez API key used for making requests to their mempool service
+    /// The Breez API key used for making requests to the sync service
     pub breez_api_key: Option<String>,
     /// A set of external input parsers that are used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input
     /// is not recognized. See [ExternalInputParser] for more details on how to configure

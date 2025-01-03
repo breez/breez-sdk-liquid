@@ -1234,7 +1234,7 @@ impl LiquidSdk {
         );
 
         let liquid_chain_service = self.liquid_chain_service.lock().await;
-        let tx_id = liquid_chain_service.broadcast(&tx, None).await?.to_string();
+        let tx_id = liquid_chain_service.broadcast(&tx).await?.to_string();
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
