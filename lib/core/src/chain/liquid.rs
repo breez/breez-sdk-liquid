@@ -6,11 +6,10 @@ use boltz_client::ToHex;
 use log::info;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
-    elements::{Address, BlockHash, OutPoint, Script, Transaction, Txid},
+    elements::{Address, OutPoint, Script, Transaction, Txid},
     hashes::{sha256, Hash},
     BlockchainBackend, ElectrumClient, ElectrumUrl, History,
 };
-use serde::Deserialize;
 
 use crate::prelude::Utxo;
 use crate::{model::Config, utils};
@@ -29,9 +28,7 @@ pub trait LiquidChainService: Send + Sync {
     /// Get a list of transactions
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
 
-    /// Get the transactions involved in a script.
-    ///
-    /// On mainnet, the data is fetched from Esplora. On testnet, it's fetched from Electrum.
+    /// Get the transactions involved in a script
     async fn get_script_history(&self, scripts: &Script) -> Result<Vec<History>>;
 
     /// Get the transactions involved in a list of scripts.
@@ -57,18 +54,6 @@ pub trait LiquidChainService: Send + Sync {
         tx_hex: &str,
         verify_confirmation: bool,
     ) -> Result<Transaction>;
-}
-
-#[derive(Deserialize)]
-struct EsploraTx {
-    txid: Txid,
-    status: Status,
-}
-
-#[derive(Deserialize)]
-struct Status {
-    block_height: Option<i32>,
-    block_hash: Option<BlockHash>,
 }
 
 pub(crate) struct HybridLiquidChainService {
@@ -209,18 +194,6 @@ impl LiquidChainService for HybridLiquidChainService {
                 "Liquid transaction was not found, txid={} waiting for broadcast",
                 tx_id,
             )),
-        }
-    }
-}
-
-impl From<EsploraTx> for History {
-    fn from(value: EsploraTx) -> Self {
-        let status = value.status;
-        History {
-            txid: value.txid,
-            height: status.block_height.unwrap_or_default(),
-            block_hash: status.block_hash,
-            block_timestamp: None,
         }
     }
 }

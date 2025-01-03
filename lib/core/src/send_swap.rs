@@ -13,7 +13,9 @@ use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActi
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::{BlockListener, Config, PaymentState::*, SendSwap};
+use crate::model::{
+    BlockListener, Config, PaymentState::*, SendSwap, LIQUID_FEE_RATE_MSAT_PER_VBYTE,
+};
 use crate::persist::model::PaymentTxDetails;
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::recover::recoverer::Recoverer;
@@ -192,7 +194,11 @@ impl SendSwapHandler {
 
         let lockup_tx = self
             .onchain_wallet
-            .build_tx_or_drain_tx(&create_response.address, create_response.expected_amount)
+            .build_tx_or_drain_tx(
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                &create_response.address,
+                create_response.expected_amount,
+            )
             .await?;
         let lockup_tx_id = lockup_tx.txid().to_string();
 

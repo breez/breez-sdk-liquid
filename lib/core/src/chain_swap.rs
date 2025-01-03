@@ -16,7 +16,7 @@ use lwk_wollet::{
 };
 use tokio::sync::{broadcast, Mutex};
 
-use crate::model::{BlockListener, ChainSwapUpdate};
+use crate::model::{BlockListener, ChainSwapUpdate, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     ensure_sdk,
@@ -734,7 +734,11 @@ impl ChainSwapHandler {
 
         let lockup_tx = self
             .onchain_wallet
-            .build_tx_or_drain_tx(&lockup_details.lockup_address, lockup_details.amount)
+            .build_tx_or_drain_tx(
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                &lockup_details.lockup_address,
+                lockup_details.amount,
+            )
             .await?;
 
         let lockup_tx_id = self

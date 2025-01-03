@@ -31,6 +31,7 @@ use crate::utils;
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
+pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
