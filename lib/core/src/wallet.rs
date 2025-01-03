@@ -44,7 +44,6 @@ pub trait OnchainWallet: Send + Sync {
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
         &self,
-        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
@@ -52,13 +51,11 @@ pub trait OnchainWallet: Send + Sync {
     /// Builds a drain tx.
     ///
     /// ### Arguments
-    /// - `fee_rate_sats_per_kvb`: custom drain tx feerate
     /// - `recipient_address`: drain tx recipient
     /// - `enforce_amount_sat`: if set, the drain tx will only be built if the amount transferred is
     ///   this amount, otherwise it will fail with a validation error
     async fn build_drain_tx(
         &self,
-        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         enforce_amount_sat: Option<u64>,
     ) -> Result<Transaction, PaymentError>;
@@ -68,7 +65,6 @@ pub trait OnchainWallet: Send + Sync {
     /// validating that the `amount_sat` matches the drain output.
     async fn build_tx_or_drain_tx(
         &self,
-        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
@@ -201,7 +197,6 @@ impl OnchainWallet for LiquidOnchainWallet {
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
         &self,
-        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
@@ -217,7 +212,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                 })?,
                 amount_sat,
             )?
-            .fee_rate(fee_rate_sats_per_kvb)
+            .enable_ct_discount()
             .finish(&lwk_wollet)?;
         self.signer
             .sign(&mut pset)
@@ -229,7 +224,6 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     async fn build_drain_tx(
         &self,
-        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         enforce_amount_sat: Option<u64>,
     ) -> Result<Transaction, PaymentError> {
@@ -245,7 +239,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             .tx_builder()
             .drain_lbtc_wallet()
             .drain_lbtc_to(address)
-            .fee_rate(fee_rate_sats_per_kvb)
+            .enable_ct_discount()
             .finish()?;
 
         if let Some(enforce_amount_sat) = enforce_amount_sat {
@@ -275,18 +269,14 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     async fn build_tx_or_drain_tx(
         &self,
-        fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
-        match self
-            .build_tx(fee_rate_sats_per_kvb, recipient_address, amount_sat)
-            .await
-        {
+        match self.build_tx(recipient_address, amount_sat).await {
             Ok(tx) => Ok(tx),
             Err(PaymentError::InsufficientFunds) => {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
-                self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
+                self.build_drain_tx(recipient_address, Some(amount_sat))
                     .await
             }
             Err(e) => Err(e),

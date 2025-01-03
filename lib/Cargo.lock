@@ -802,7 +802,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.1.3"
-source = "git+https://github.com/dangeross/boltz-rust?rev=3aebcb3cc25e59d32efd192c7567a7bc27fd6257#3aebcb3cc25e59d32efd192c7567a7bc27fd6257"
+source = "git+https://github.com/dangeross/boltz-rust?rev=8f64af8d3c7433d19fc8a99887beb341b150c38e#8f64af8d3c7433d19fc8a99887beb341b150c38e"
 dependencies = [
  "bip39",
  "bitcoin 0.32.4",

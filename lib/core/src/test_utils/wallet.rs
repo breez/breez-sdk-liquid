@@ -53,7 +53,6 @@ impl OnchainWallet for MockWallet {
 
     async fn build_tx(
         &self,
-        _fee_rate: Option<f32>,
         _recipient_address: &str,
         _amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
@@ -62,7 +61,6 @@ impl OnchainWallet for MockWallet {
 
     async fn build_drain_tx(
         &self,
-        _fee_rate_sats_per_kvb: Option<f32>,
         _recipient_address: &str,
         _enforce_amount_sat: Option<u64>,
     ) -> Result<Transaction, PaymentError> {
@@ -71,7 +69,6 @@ impl OnchainWallet for MockWallet {
 
     async fn build_tx_or_drain_tx(
         &self,
-        _fee_rate_sats_per_kvb: Option<f32>,
         _recipient_address: &str,
         _amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
