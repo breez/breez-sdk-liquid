@@ -3,7 +3,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{PaymentError, SdkResult};
 use anyhow::{anyhow, ensure, Result};
-use lightning::offers::invoice::Bolt12Invoice;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::elements::{
@@ -12,6 +11,7 @@ use lwk_wollet::elements::{
 };
 use sdk_common::bitcoin::bech32;
 use sdk_common::bitcoin::bech32::FromBase32;
+use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()
@@ -62,6 +62,6 @@ pub(crate) fn parse_bolt12_invoice(invoice: &str) -> Result<Bolt12Invoice> {
 
     let data = Vec::<u8>::from_base32(&data)?;
 
-    lightning::offers::invoice::Bolt12Invoice::try_from(data)
+    sdk_common::lightning_125::offers::invoice::Bolt12Invoice::try_from(data)
         .map_err(|e| anyhow!("Failed to parse BOLT12: {e:?}"))
 }
