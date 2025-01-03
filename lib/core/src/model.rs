@@ -1796,6 +1796,8 @@ pub struct FetchPaymentProposedFeesResponse {
     pub fees_sat: u64,
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
+    /// Amount that will be received if these fees are accepted
+    pub receiver_amount_sat: u64,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::accept_payment_proposed_fees].

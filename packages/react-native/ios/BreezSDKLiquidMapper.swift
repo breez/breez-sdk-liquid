@@ -633,8 +633,11 @@ enum BreezSDKLiquidMapper {
         guard let payerAmountSat = fetchPaymentProposedFeesResponse["payerAmountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "FetchPaymentProposedFeesResponse"))
         }
+        guard let receiverAmountSat = fetchPaymentProposedFeesResponse["receiverAmountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmountSat", typeName: "FetchPaymentProposedFeesResponse"))
+        }
 
-        return FetchPaymentProposedFeesResponse(swapId: swapId, feesSat: feesSat, payerAmountSat: payerAmountSat)
+        return FetchPaymentProposedFeesResponse(swapId: swapId, feesSat: feesSat, payerAmountSat: payerAmountSat, receiverAmountSat: receiverAmountSat)
     }
 
     static func dictionaryOf(fetchPaymentProposedFeesResponse: FetchPaymentProposedFeesResponse) -> [String: Any?] {
@@ -642,6 +645,7 @@ enum BreezSDKLiquidMapper {
             "swapId": fetchPaymentProposedFeesResponse.swapId,
             "feesSat": fetchPaymentProposedFeesResponse.feesSat,
             "payerAmountSat": fetchPaymentProposedFeesResponse.payerAmountSat,
+            "receiverAmountSat": fetchPaymentProposedFeesResponse.receiverAmountSat,
         ]
     }
 

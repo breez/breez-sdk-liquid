@@ -111,6 +111,7 @@ export interface FetchPaymentProposedFeesResponse {
     swapId: string
     feesSat: number
     payerAmountSat: number
+    receiverAmountSat: number
 }
 
 export interface FiatCurrency {

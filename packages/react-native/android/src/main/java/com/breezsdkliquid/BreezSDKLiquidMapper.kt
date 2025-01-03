@@ -552,6 +552,7 @@ fun asFetchPaymentProposedFeesResponse(fetchPaymentProposedFeesResponse: Readabl
                 "swapId",
                 "feesSat",
                 "payerAmountSat",
+                "receiverAmountSat",
             ),
         )
     ) {
@@ -560,7 +561,8 @@ fun asFetchPaymentProposedFeesResponse(fetchPaymentProposedFeesResponse: Readabl
     val swapId = fetchPaymentProposedFeesResponse.getString("swapId")!!
     val feesSat = fetchPaymentProposedFeesResponse.getDouble("feesSat").toULong()
     val payerAmountSat = fetchPaymentProposedFeesResponse.getDouble("payerAmountSat").toULong()
-    return FetchPaymentProposedFeesResponse(swapId, feesSat, payerAmountSat)
+    val receiverAmountSat = fetchPaymentProposedFeesResponse.getDouble("receiverAmountSat").toULong()
+    return FetchPaymentProposedFeesResponse(swapId, feesSat, payerAmountSat, receiverAmountSat)
 }
 
 fun readableMapOf(fetchPaymentProposedFeesResponse: FetchPaymentProposedFeesResponse): ReadableMap =
@@ -568,6 +570,7 @@ fun readableMapOf(fetchPaymentProposedFeesResponse: FetchPaymentProposedFeesResp
         "swapId" to fetchPaymentProposedFeesResponse.swapId,
         "feesSat" to fetchPaymentProposedFeesResponse.feesSat,
         "payerAmountSat" to fetchPaymentProposedFeesResponse.payerAmountSat,
+        "receiverAmountSat" to fetchPaymentProposedFeesResponse.receiverAmountSat,
     )
 
 fun asFetchPaymentProposedFeesResponseList(arr: ReadableArray): List<FetchPaymentProposedFeesResponse> {

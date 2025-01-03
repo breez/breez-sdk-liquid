@@ -2614,6 +2614,7 @@ impl LiquidSdk {
             swap_id: req.swap_id.clone(),
             fees_sat,
             payer_amount_sat: actual_payer_amount_sat,
+            receiver_amount_sat: actual_payer_amount_sat - fees_sat,
         })
     }
 
@@ -2628,6 +2629,7 @@ impl LiquidSdk {
             swap_id,
             fees_sat,
             payer_amount_sat,
+            ..
         } = req.clone().response;
 
         let chain_swap =

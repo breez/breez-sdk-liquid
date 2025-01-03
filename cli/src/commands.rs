@@ -527,8 +527,8 @@ pub(crate) async fn handle_command(
                 .await?;
 
             let confirmation_msg = format!(
-                "Payer amount: {} sat. Fees: {} sat. Are the fees acceptable? (y/N) ",
-                fetch_response.payer_amount_sat, fetch_response.fees_sat
+                "Payer amount: {} sat. Fees: {} sat. Resulting received amount: {} sat. Are the fees acceptable? (y/N) ",
+                fetch_response.payer_amount_sat, fetch_response.fees_sat, fetch_response.receiver_amount_sat
             );
 
             wait_confirmation!(confirmation_msg, "Payment proposed fees review halted");

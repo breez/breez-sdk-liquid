@@ -550,6 +550,7 @@ dictionary FetchPaymentProposedFeesResponse {
     string swap_id;
     u64 fees_sat;
     u64 payer_amount_sat;
+    u64 receiver_amount_sat;
 };
 
 dictionary AcceptPaymentProposedFeesRequest {
