@@ -5,6 +5,7 @@ try
 {
     var mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     var config = BreezSdkLiquidMethods.DefaultConfig(LiquidNetwork.Testnet, null);
+    config.syncServiceUrl = null;
 
     var connectReq = new ConnectRequest(config, mnemonic);
     BindingLiquidSdk sdk = BreezSdkLiquidMethods.Connect(connectReq);
