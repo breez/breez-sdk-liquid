@@ -150,8 +150,8 @@ impl Recoverer {
             &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
         )?;
 
-        let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
-        let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+        let bitcoin_tip = self.bitcoin_chain_service.lock().await.tip()?;
+        let liquid_tip = self.liquid_chain_service.lock().await.tip().await?;
 
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
@@ -161,8 +161,8 @@ impl Recoverer {
                         log::warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let is_expired = liquid_height
-                        >= send_swap.get_boltz_create_response()?.timeout_block_height as u32;
+                    let timeout_block_height = send_swap.timeout_block_height as u32;
+                    let is_expired = liquid_tip >= timeout_block_height;
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         send_swap.state = new_state;
                     }
@@ -183,10 +183,8 @@ impl Recoverer {
                         log::warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let is_expired = liquid_height
-                        >= receive_swap
-                            .get_boltz_create_response()?
-                            .timeout_block_height;
+                    let timeout_block_height = receive_swap.timeout_block_height;
+                    let is_expired = liquid_tip >= timeout_block_height;
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         receive_swap.state = new_state;
                     }
@@ -213,7 +211,8 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        let is_expired = bitcoin_height >= chain_swap.timeout_block_height;
+                        let is_expired =
+                            bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
                         if let Some(new_state) =
                             recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired)
@@ -245,7 +244,7 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        let is_expired = liquid_height >= chain_swap.timeout_block_height;
+                        let is_expired = liquid_tip >= chain_swap.timeout_block_height;
                         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                             chain_swap.state = new_state;
                         }
