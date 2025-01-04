@@ -107,7 +107,7 @@ impl Persister {
             true => {
                 self.commit_outgoing(&tx, &chain_swap.id, RecordType::Chain, updated_fields)?;
                 tx.commit()?;
-                self.sync_trigger.try_send(())?;
+                self.trigger_sync()?;
             }
             false => {
                 tx.commit()?;
@@ -272,11 +272,9 @@ impl Persister {
             Some(vec!["accept_zero_conf".to_string()]),
         )?;
         tx.commit()?;
-        self.sync_trigger
-            .try_send(())
-            .map_err(|err| PaymentError::Generic {
-                err: format!("Could not trigger manual sync: {err:?}"),
-            })?;
+        self.trigger_sync().map_err(|err| PaymentError::Generic {
+            err: format!("Could not trigger manual sync: {err:?}"),
+        })?;
 
         Ok(())
     }
@@ -316,11 +314,9 @@ impl Persister {
             ]),
         )?;
         tx.commit()?;
-        self.sync_trigger
-            .try_send(())
-            .map_err(|err| PaymentError::Generic {
-                err: format!("Could not trigger manual sync: {err:?}"),
-            })?;
+        self.trigger_sync().map_err(|err| PaymentError::Generic {
+            err: format!("Could not trigger manual sync: {err:?}"),
+        })?;
 
         Ok(())
     }
