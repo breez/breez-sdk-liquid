@@ -83,7 +83,7 @@ pub struct LiquidSdk {
     pub(crate) shutdown_sender: watch::Sender<()>,
     pub(crate) shutdown_receiver: watch::Receiver<()>,
     pub(crate) send_swap_handler: SendSwapHandler,
-    pub(crate) sync_service: Arc<SyncService>,
+    pub(crate) sync_service: Option<Arc<SyncService>>,
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
@@ -130,7 +130,7 @@ impl LiquidSdk {
         Ok(sdk)
     }
 
-    fn validate_api_key(api_key: &str) -> Result<()> {
+    fn validate_breez_api_key(api_key: &str) -> Result<()> {
         let api_key_decoded = lwk_wollet::bitcoin::base64::engine::general_purpose::STANDARD
             .decode(api_key.as_bytes())
             .map_err(|err| anyhow!("Could not base64 decode the Breez API key: {err:?}"))?;
@@ -160,13 +160,9 @@ impl LiquidSdk {
         swapper_proxy_url: Option<String>,
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Arc<Self>> {
-        match (config.network, &config.breez_api_key) {
-            (_, Some(api_key)) => Self::validate_api_key(api_key)?,
-            (LiquidNetwork::Mainnet, None) => {
-                return Err(anyhow!("Breez API key must be provided on mainnet."));
-            }
-            (LiquidNetwork::Testnet, None) => {}
-        };
+        if let Some(breez_api_key) = &config.breez_api_key {
+            Self::validate_breez_api_key(breez_api_key)?
+        }
 
         fs::create_dir_all(&config.working_dir)?;
         let fingerprint_hex: String =
@@ -177,12 +173,7 @@ impl LiquidSdk {
             &fingerprint_hex,
         )?;
 
-        let (sync_trigger_tx, sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(30);
-        let persister = Arc::new(Persister::new(
-            &working_dir,
-            config.network,
-            sync_trigger_tx,
-        )?);
+        let persister = Arc::new(Persister::new(&working_dir, config.network, None)?);
         persister.init()?;
 
         let liquid_chain_service =
@@ -204,15 +195,23 @@ impl LiquidSdk {
             bitcoin_chain_service.clone(),
         )?);
 
-        let syncer_client = Box::new(BreezSyncerClient::new(config.breez_api_key.clone()));
-        let sync_service = Arc::new(SyncService::new(
-            config.sync_service_url.clone(),
-            persister.clone(),
-            recoverer.clone(),
-            signer.clone(),
-            syncer_client,
-            sync_trigger_rx,
-        ));
+        let mut sync_service = None;
+        if let Some(sync_service_url) = config.sync_service_url.clone() {
+            if BREEZ_SYNC_SERVICE_URL == sync_service_url && config.breez_api_key.is_none() {
+                anyhow::bail!(
+                    "Cannot start the Breez real-time sync service without providing a valid API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key",
+                );
+            }
+
+            let syncer_client = Box::new(BreezSyncerClient::new(config.breez_api_key.clone()));
+            sync_service = Some(Arc::new(SyncService::new(
+                sync_service_url,
+                persister.clone(),
+                recoverer.clone(),
+                signer.clone(),
+                syncer_client,
+            )));
+        }
 
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
@@ -315,10 +314,9 @@ impl LiquidSdk {
             .clone()
             .start(reconnect_handler, self.shutdown_receiver.clone())
             .await;
-        self.sync_service
-            .clone()
-            .start(self.shutdown_receiver.clone())
-            .await?;
+        if let Some(sync_service) = self.sync_service.clone() {
+            sync_service.start(self.shutdown_receiver.clone()).await?;
+        }
         self.track_new_blocks().await;
         self.track_swap_updates().await;
 
@@ -929,12 +927,14 @@ impl LiquidSdk {
                 };
             }
             Ok(InputType::Bolt11 { invoice }) => {
-                self.sync_service
-                    .pull()
-                    .await
-                    .map_err(|err| PaymentError::Generic {
-                        err: format!("Could not pull real-time sync changes: {err:?}"),
-                    })?;
+                if let Some(sync_service) = &self.sync_service {
+                    sync_service
+                        .pull()
+                        .await
+                        .map_err(|err| PaymentError::Generic {
+                            err: format!("Could not pull real-time sync changes: {err:?}"),
+                        })?;
+                }
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
                 self.validate_bolt11_invoice(&invoice.bolt11)?;
 
@@ -2906,14 +2906,7 @@ impl LiquidSdk {
         breez_api_key: Option<String>,
     ) -> Result<Config, SdkError> {
         let config = match network {
-            LiquidNetwork::Mainnet => {
-                let Some(breez_api_key) = breez_api_key else {
-                    return Err(SdkError::Generic {
-                        err: "Breez API key must be provided on mainnet.".to_string(),
-                    });
-                };
-                Config::mainnet(breez_api_key)
-            }
+            LiquidNetwork::Mainnet => Config::mainnet(breez_api_key),
             LiquidNetwork::Testnet => Config::testnet(breez_api_key),
         };
         Ok(config)
