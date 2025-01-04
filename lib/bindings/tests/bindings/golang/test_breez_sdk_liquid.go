@@ -9,6 +9,7 @@ import (
 func main() {
 	mnemonic := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	config, err := breez_sdk_liquid.DefaultConfig(breez_sdk_liquid.LiquidNetworkTestnet, nil)
+	config.SyncServiceUrl = nil
 
 	if err != nil {
 		log.Fatalf("Config creation failed: %#v", err)
