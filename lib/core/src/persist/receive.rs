@@ -117,7 +117,7 @@ impl Persister {
             true => {
                 self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
                 tx.commit()?;
-                self.sync_trigger.try_send(())?;
+                self.trigger_sync()?;
             }
             false => {
                 tx.commit()?;

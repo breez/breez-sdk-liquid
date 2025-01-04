@@ -113,9 +113,9 @@ pub struct ApiKeyInterceptor {
 
 impl Interceptor for ApiKeyInterceptor {
     fn call(&mut self, mut req: Request<()>) -> Result<Request<()>, Status> {
-        if self.api_key_metadata.clone().is_some() {
+        if let Some(api_key_metadata) = &self.api_key_metadata {
             req.metadata_mut()
-                .insert("authorization", self.api_key_metadata.clone().unwrap());
+                .insert("authorization", api_key_metadata.clone());
         }
         Ok(req)
     }

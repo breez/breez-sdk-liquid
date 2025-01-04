@@ -94,7 +94,6 @@ pub(crate) fn new_sync_service(
     Arc<Mutex<HashMap<String, Record>>>,
     SyncService,
 )> {
-    let (_, sync_trigger_rx) = mpsc::channel::<()>(30);
     let (incoming_tx, incoming_rx) = mpsc::channel::<Record>(10);
     let outgoing_records = Arc::new(Mutex::new(HashMap::new()));
     let client = Box::new(MockSyncerClient::new(incoming_rx, outgoing_records.clone()));
@@ -104,7 +103,6 @@ pub(crate) fn new_sync_service(
         recoverer,
         signer.clone(),
         client,
-        sync_trigger_rx,
     );
 
     Ok((incoming_tx, outgoing_records, sync_service))

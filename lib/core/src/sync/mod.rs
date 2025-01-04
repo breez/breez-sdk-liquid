@@ -36,22 +36,28 @@ pub(crate) struct SyncService {
 }
 
 impl SyncService {
+    fn set_sync_trigger(persister: Arc<Persister>) -> Receiver<()> {
+        let (sync_trigger_tx, sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(30);
+        let mut persister_trigger = persister.sync_trigger.write().unwrap();
+        *persister_trigger = Some(sync_trigger_tx);
+        sync_trigger_rx
+    }
+
     pub(crate) fn new(
         remote_url: String,
         persister: Arc<Persister>,
         recoverer: Arc<Recoverer>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
-        sync_trigger: Receiver<()>,
     ) -> Self {
-        let sync_trigger = Mutex::new(sync_trigger);
+        let sync_trigger_rx = Self::set_sync_trigger(persister.clone());
         Self {
             remote_url,
             persister,
             recoverer,
             signer,
             client,
-            sync_trigger,
+            sync_trigger: Mutex::new(sync_trigger_rx),
         }
     }
 

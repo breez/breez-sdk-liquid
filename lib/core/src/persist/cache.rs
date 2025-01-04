@@ -159,7 +159,7 @@ impl Persister {
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
         self.set_last_derivation_index_inner(&tx, index)?;
         tx.commit()?;
-        self.sync_trigger.try_send(())?;
+        self.trigger_sync()?;
         Ok(())
     }
 
@@ -183,8 +183,7 @@ impl Persister {
             None => None,
         };
         tx.commit()?;
-        self.sync_trigger.try_send(())?;
-
+        self.trigger_sync()?;
         Ok(res)
     }
 }

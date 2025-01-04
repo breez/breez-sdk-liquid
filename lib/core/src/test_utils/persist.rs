@@ -147,7 +147,6 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
 
 macro_rules! create_persister {
     ($name:ident) => {
-        let (sync_trigger_tx, _sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(100);
         let temp_dir = tempdir::TempDir::new("liquid-sdk")?;
         let $name = std::sync::Arc::new(crate::persist::Persister::new(
             temp_dir
@@ -155,7 +154,7 @@ macro_rules! create_persister {
                 .to_str()
                 .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
             crate::model::LiquidNetwork::Testnet,
-            sync_trigger_tx,
+            None,
         )?);
         $name.init()?;
     };

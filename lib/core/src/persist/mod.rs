@@ -10,6 +10,7 @@ pub(crate) mod sync;
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Not;
+use std::sync::RwLock;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
@@ -33,7 +34,7 @@ const DEFAULT_DB_FILENAME: &str = "storage.sql";
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
     network: LiquidNetwork,
-    sync_trigger: Sender<()>,
+    pub(crate) sync_trigger: RwLock<Option<Sender<()>>>,
 }
 
 /// Builds a WHERE clause that checks if `state` is any of the given arguments
@@ -52,7 +53,7 @@ impl Persister {
     pub fn new(
         working_dir: &str,
         network: LiquidNetwork,
-        sync_trigger: Sender<()>,
+        sync_trigger: Option<Sender<()>>,
     ) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
@@ -61,7 +62,7 @@ impl Persister {
         Ok(Persister {
             main_db_dir,
             network,
-            sync_trigger,
+            sync_trigger: RwLock::new(sync_trigger),
         })
     }
 
@@ -238,9 +239,8 @@ impl Persister {
         }
 
         tx.commit()?;
-
         if trigger_sync {
-            self.sync_trigger.try_send(())?;
+            self.trigger_sync()?;
         }
 
         Ok(())
@@ -299,8 +299,7 @@ impl Persister {
             None,
         )?;
         tx.commit()?;
-
-        self.sync_trigger.try_send(())?;
+        self.trigger_sync()?;
 
         Ok(())
     }

@@ -311,7 +311,6 @@ fun asConfig(config: ReadableMap): Config? {
                 "network",
                 "paymentTimeoutSec",
                 "zeroConfMinFeeRateMsat",
-                "syncServiceUrl",
                 "useDefaultExternalInputParsers",
             ),
         )
@@ -325,7 +324,7 @@ fun asConfig(config: ReadableMap): Config? {
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val zeroConfMinFeeRateMsat = config.getInt("zeroConfMinFeeRateMsat").toUInt()
-    val syncServiceUrl = config.getString("syncServiceUrl")!!
+    val syncServiceUrl = if (hasNonNullKey(config, "syncServiceUrl")) config.getString("syncServiceUrl") else null
     val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
     val cacheDir = if (hasNonNullKey(config, "cacheDir")) config.getString("cacheDir") else null
     val zeroConfMaxAmountSat =
