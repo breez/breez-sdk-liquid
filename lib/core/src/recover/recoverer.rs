@@ -12,14 +12,13 @@ use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
+use super::model::*;
 use crate::prelude::{Direction, Swap};
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     recover::model::{BtcScript, HistoryTxId, LBtcScript},
 };
-
-use super::model::*;
 
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
@@ -213,11 +212,15 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
+                        chain_swap.actual_payer_amount_sat =
+                            Some(recovered_data.btc_user_lockup_amount_sat);
                         let is_expired = bitcoin_height >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
-                        if let Some(new_state) =
-                            recovered_data.derive_partial_state(min_lockup_amount_sat, is_expired)
-                        {
+                        if let Some(new_state) = recovered_data.derive_partial_state(
+                            min_lockup_amount_sat,
+                            is_expired,
+                            chain_swap.is_waiting_fee_acceptance(),
+                        ) {
                             chain_swap.state = new_state;
                         }
                         chain_swap.server_lockup_tx_id = recovered_data
@@ -654,7 +657,7 @@ impl Recoverer {
             };
 
             // Get the current confirmed amount available for the lockup script
-            let btc_user_lockup_amount_sat = history
+            let btc_user_lockup_address_balance_sat = history
                 .btc_lockup_script_balance
                 .map(|balance| balance.confirmed)
                 .unwrap_or_default();
@@ -686,6 +689,16 @@ impl Recoverer {
                         .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
                 })
                 .cloned();
+            let btc_user_lockup_amount_sat = btc_lockup_incoming_txs
+                .first()
+                .and_then(|tx| {
+                    tx.output
+                        .iter()
+                        .find(|out| out.script_pubkey == btc_lockup_script)
+                        .map(|out| out.value)
+                })
+                .unwrap_or_default()
+                .to_sat();
             let btc_outgoing_tx_ids: Vec<HistoryTxId> = btc_lockup_outgoing_txs
                 .iter()
                 .filter_map(|tx| {
@@ -723,6 +736,7 @@ impl Recoverer {
                     lbtc_claim_tx_id,
                     lbtc_claim_address,
                     btc_user_lockup_tx_id,
+                    btc_user_lockup_address_balance_sat,
                     btc_user_lockup_amount_sat,
                     btc_refund_tx_id,
                 },

@@ -180,7 +180,7 @@ impl Swapper for BoltzSwapper {
         Ok((pair_outgoing, pair_incoming))
     }
 
-    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError> {
+    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError> {
         self.client
             .get_quote(swap_id)
             .map(|r| Amount::from_sat(r.amount))

@@ -43,6 +43,13 @@ class SwapUpdatedTask : TaskProtocol {
                     self.notifySuccess(payment: payment)
                 }
                 break
+            case .paymentWaitingFeeAcceptance(details: let payment):
+                let swapId = self.getSwapId(details: payment.details)
+                if swapIdHash == swapId?.sha256() {
+                    self.logger.log(tag: TAG, line: "Received payment event: \(swapIdHash) \(payment.status)", level: "INFO")
+                    self.notifyPaymentWaitingFeeAcceptance(payment: payment)
+                }
+                break
             default:
                 break
             }
@@ -79,6 +86,20 @@ class SwapUpdatedTask : TaskProtocol {
                 fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
             self.notified = true
             self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
+        }
+    }
+    
+    func notifyPaymentWaitingFeeAcceptance(payment: Payment) {
+        if !self.notified {
+            self.logger.log(tag: TAG, line: "Payment \(self.getSwapId(details: payment.details) ?? "") requires fee acceptance", level: "INFO")
+            let notificationTitle = ResourceHelper.shared.getString(
+                key: Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE,
+                fallback: Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE)
+            let notificationBody = ResourceHelper.shared.getString(
+                key: Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT,
+                fallback: Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT)
+            self.notified = true
+            self.displayPushNotification(title: notificationTitle, body: notificationBody, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
         }
     }
 }

@@ -338,6 +338,7 @@ dictionary Config {
     u64? zero_conf_max_amount_sat;
     boolean use_default_external_input_parsers = true;
     sequence<ExternalInputParser>? external_input_parsers = null;
+    u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
 };
 
 enum LiquidNetwork {
@@ -541,6 +542,21 @@ interface GetPaymentRequest {
     Lightning(string payment_hash);
 };
 
+dictionary FetchPaymentProposedFeesRequest {
+    string swap_id;
+};
+
+dictionary FetchPaymentProposedFeesResponse {
+    string swap_id;
+    u64 fees_sat;
+    u64 payer_amount_sat;
+    u64 receiver_amount_sat;
+};
+
+dictionary AcceptPaymentProposedFeesRequest {
+    FetchPaymentProposedFeesResponse response;
+};
+
 dictionary LnUrlInfo {
     string? ln_address;
     string? lnurl_pay_comment;
@@ -584,6 +600,7 @@ enum PaymentState {
     "TimedOut",
     "Refundable",
     "RefundPending",
+    "WaitingFeeAcceptance",
 };
 
 dictionary RefundableSwap {
@@ -630,6 +647,7 @@ interface SdkEvent {
     PaymentRefundPending(Payment details);
     PaymentSucceeded(Payment details);
     PaymentWaitingConfirmation(Payment details);
+    PaymentWaitingFeeAcceptance(Payment details);
     Synced();
 };
 
@@ -754,6 +772,12 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     Payment? get_payment(GetPaymentRequest req);
+
+    [Throws=SdkError]
+    FetchPaymentProposedFeesResponse fetch_payment_proposed_fees(FetchPaymentProposedFeesRequest req);
+
+    [Throws=PaymentError]
+    void accept_payment_proposed_fees(AcceptPaymentProposedFeesRequest req);
 
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();

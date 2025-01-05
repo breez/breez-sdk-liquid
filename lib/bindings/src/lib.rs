@@ -170,6 +170,20 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.get_payment(&req))
     }
 
+    pub fn fetch_payment_proposed_fees(
+        &self,
+        req: FetchPaymentProposedFeesRequest,
+    ) -> SdkResult<FetchPaymentProposedFeesResponse> {
+        rt().block_on(self.sdk.fetch_payment_proposed_fees(&req))
+    }
+
+    pub fn accept_payment_proposed_fees(
+        &self,
+        req: AcceptPaymentProposedFeesRequest,
+    ) -> Result<(), PaymentError> {
+        rt().block_on(self.sdk.accept_payment_proposed_fees(&req))
+    }
+
     pub fn prepare_lnurl_pay(
         &self,
         req: PrepareLnUrlPayRequest,

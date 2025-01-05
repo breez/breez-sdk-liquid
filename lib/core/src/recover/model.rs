@@ -188,7 +188,9 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     pub(crate) lbtc_claim_address: Option<String>,
     /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
     pub(crate) btc_user_lockup_tx_id: Option<HistoryTxId>,
-    /// BTC total funds available at the swap funding address.
+    /// BTC total funds currently available at the swap funding address.
+    pub(crate) btc_user_lockup_address_balance_sat: u64,
+    /// BTC sent to lockup address as part of lockup tx.
     pub(crate) btc_user_lockup_amount_sat: u64,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
     pub(crate) btc_refund_tx_id: Option<HistoryTxId>,
@@ -199,9 +201,10 @@ impl RecoveredOnchainDataChainReceive {
         &self,
         min_lockup_amount_sat: u64,
         is_expired: bool,
+        is_waiting_fee_acceptance: bool,
     ) -> Option<PaymentState> {
-        let is_refundable = self.btc_user_lockup_amount_sat > 0
-            && (is_expired || self.btc_user_lockup_amount_sat < min_lockup_amount_sat);
+        let is_refundable = self.btc_user_lockup_address_balance_sat > 0
+            && (is_expired || self.btc_user_lockup_amount_sat < min_lockup_amount_sat); // TODO: this does not support accepting over/underpayments
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
@@ -232,7 +235,10 @@ impl RecoveredOnchainDataChainReceive {
                 }
                 (None, None) => match is_refundable {
                     true => Some(PaymentState::Refundable),
-                    false => Some(PaymentState::Pending),
+                    false => match is_waiting_fee_acceptance {
+                        true => Some(PaymentState::WaitingFeeAcceptance),
+                        false => Some(PaymentState::Pending),
+                    },
                 },
             },
             None => match is_expired {

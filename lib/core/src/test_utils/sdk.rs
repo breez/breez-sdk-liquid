@@ -40,6 +40,7 @@ pub(crate) fn new_liquid_sdk(
         status_stream,
         liquid_chain_service,
         bitcoin_chain_service,
+        None,
     )
 }
 
@@ -49,6 +50,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     status_stream: Arc<MockStatusStream>,
     liquid_chain_service: Arc<Mutex<MockLiquidChainService>>,
     bitcoin_chain_service: Arc<Mutex<MockBitcoinChainService>>,
+    onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
 ) -> Result<LiquidSdk> {
     let mut config = Config::testnet(None);
     config.working_dir = persister
@@ -56,6 +58,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         .to_str()
         .ok_or(anyhow!("An invalid SDK directory was specified"))?
         .to_string();
+    config.onchain_fee_rate_leeway_sat_per_vbyte = onchain_fee_rate_leeway_sat_per_vbyte;
 
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
     let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);

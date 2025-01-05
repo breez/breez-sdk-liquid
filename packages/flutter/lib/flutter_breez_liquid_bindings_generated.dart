@@ -1644,6 +1644,27 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
 
+  void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_fees(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_fees(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_feesPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_fees');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_fees =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_feesPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener(
     ffi.Pointer<ffi.Void> ptr,
     int listener,
@@ -1791,6 +1812,27 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits =
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limitsPtr
           .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_fees(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer req,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_fees(
+      ptr,
+      req,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_feesPtr =
+      _lookup<
+              ffi.NativeFunction<
+                  RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_fees');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_fees =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_feesPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info(
     ffi.Pointer<ffi.Void> ptr,
@@ -3421,6 +3463,17 @@ class FlutterBreezLiquidBindings {
   late final _uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger =
       _uniffi_breez_sdk_liquid_bindings_checksum_func_set_loggerPtr.asFunction<int Function()>();
 
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_fees() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_fees();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_feesPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_fees');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_fees =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_feesPtr
+          .asFunction<int Function()>();
+
   int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener();
   }
@@ -3507,6 +3560,17 @@ class FlutterBreezLiquidBindings {
           'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits');
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limitsPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_fees() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_fees();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_feesPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_fees');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_fees =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_feesPtr
           .asFunction<int Function()>();
 
   int uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info() {
@@ -4642,6 +4706,10 @@ final class wire_cst_SdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
 final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
@@ -4654,6 +4722,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
 
   external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+
+  external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
@@ -4708,6 +4778,8 @@ final class wire_cst_config extends ffi.Struct {
 
   @ffi.Bool()
   external bool use_default_external_input_parsers;
+
+  external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -5366,6 +5438,8 @@ typedef UniFfiRustFutureContinuationFunction = ffi.Void Function(ffi.Pointer<ffi
 typedef DartUniFfiRustFutureContinuationFunction = void Function(ffi.Pointer<ffi.Void>, int);
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
+
+const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 
 const double STANDARD_FEE_RATE_SAT_PER_VBYTE = 0.1;
 

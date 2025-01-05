@@ -11,8 +11,10 @@ use boltz_client::{
     Amount, PublicKey,
 };
 use sdk_common::invoice::parse_invoice;
+use std::sync::Mutex;
 
 use crate::{
+    ensure_sdk,
     error::{PaymentError, SdkError},
     model::{Direction, SendSwap, Swap, Transaction as SdkTransaction, Utxo},
     swapper::Swapper,
@@ -23,7 +25,15 @@ use crate::{
 use super::status_stream::MockStatusStream;
 
 #[derive(Default)]
-pub struct MockSwapper {}
+pub struct ZeroAmountSwapMockConfig {
+    pub user_lockup_sat: u64,
+    pub onchain_fee_increase_sat: u64,
+}
+
+#[derive(Default)]
+pub struct MockSwapper {
+    zero_amount_swap_mock_config: Mutex<ZeroAmountSwapMockConfig>,
+}
 
 impl MockSwapper {
     pub(crate) fn new() -> Self {
@@ -59,6 +69,26 @@ impl MockSwapper {
             claim_address: None,
             bip21: None,
         }
+    }
+
+    pub(crate) fn set_zero_amount_swap_mock_config(&self, config: ZeroAmountSwapMockConfig) {
+        *self.zero_amount_swap_mock_config.lock().unwrap() = config;
+    }
+
+    fn get_zero_amount_swap_server_lockup_sat(&self) -> u64 {
+        let zero_amount_swap_mock_config = self.zero_amount_swap_mock_config.lock().unwrap();
+
+        let pair = self
+            .get_chain_pair(Direction::Incoming)
+            .expect("mock get_chain_pair failed")
+            .expect("no chainpair in mock");
+
+        let fees = pair
+            .fees
+            .boltz(zero_amount_swap_mock_config.user_lockup_sat)
+            + pair.fees.server()
+            + zero_amount_swap_mock_config.onchain_fee_increase_sat;
+        zero_amount_swap_mock_config.user_lockup_sat - fees
     }
 }
 
@@ -314,15 +344,20 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
-    fn get_zero_amount_chain_swap_quote(&self, _swap_id: &str) -> Result<Amount, PaymentError> {
-        unimplemented!()
+    fn get_zero_amount_chain_swap_quote(&self, _swap_id: &str) -> Result<Amount, SdkError> {
+        let server_lockup_amount_sat = self.get_zero_amount_swap_server_lockup_sat();
+        Ok(Amount::from_sat(server_lockup_amount_sat))
     }
 
     fn accept_zero_amount_chain_swap_quote(
         &self,
         _swap_id: &str,
-        _server_lockup_sat: u64,
+        server_lockup_sat: u64,
     ) -> Result<(), PaymentError> {
-        unimplemented!()
+        ensure_sdk!(
+            server_lockup_sat == self.get_zero_amount_swap_server_lockup_sat(),
+            PaymentError::InvalidOrExpiredFees
+        );
+        Ok(())
     }
 }

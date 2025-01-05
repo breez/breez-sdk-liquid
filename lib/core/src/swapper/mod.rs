@@ -45,7 +45,7 @@ pub trait Swapper: Send + Sync {
     ///
     /// If the user locked-up funds in the valid range this will return that amount. In all other
     /// cases, this will return an error.
-    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, PaymentError>;
+    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError>;
 
     /// Accept a specific quote for a Zero-Amount Receive Chain Swap
     fn accept_zero_amount_chain_swap_quote(
