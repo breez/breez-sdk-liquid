@@ -20,3 +20,5 @@ comments:
   style: any
   length: full
 ignore-source-errors: true
+compiler-opts:
+  - '-Wno-nullability-completeness'
