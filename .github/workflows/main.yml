@@ -260,7 +260,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.22.3 # Pinned until resource linking issues on Android is resolved with 3.24
+          flutter-version: 3.27.1
       - run: flutter --version
 
       - name: Set up just
