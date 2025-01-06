@@ -23,10 +23,7 @@ use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkError, SdkResult};
 use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
-use crate::receive_swap::{
-    DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
-    DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
-};
+use crate::receive_swap::{DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE};
 use crate::utils;
 
 // Uses f64 for the maximum precision when converting between units
@@ -86,7 +83,7 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
@@ -105,7 +102,7 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key,

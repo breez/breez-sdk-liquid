@@ -795,13 +795,15 @@ impl LiquidSdk {
         amount_sat: u64,
         address: &str,
     ) -> Result<u64, PaymentError> {
-        Ok(self
+        let fee_sat = self
             .onchain_wallet
             .build_tx(Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE), address, amount_sat)
             .await?
             .all_fees()
             .values()
-            .sum())
+            .sum::<u64>();
+        info!("Estimated tx fee: {fee_sat} sat");
+        Ok(fee_sat)
     }
 
     fn get_temp_p2tr_addr(&self) -> &str {

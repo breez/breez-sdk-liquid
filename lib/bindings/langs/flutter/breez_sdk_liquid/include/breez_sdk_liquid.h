@@ -25,9 +25,7 @@ typedef struct _Dart_Handle* Dart_Handle;
 /**
  * The minimum acceptable fee rate when claiming using zero-conf
  */
-#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET 100
-
-#define DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET 10
+#define DEFAULT_ZERO_CONF_MIN_FEE_RATE 100
 
 /**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
