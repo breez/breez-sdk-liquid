@@ -1,5 +1,5 @@
 version '0.4.0-rc3' // generated; do not edit
-group 'com.example.flutter_breez_liquid'
+group 'technology.breez.flutter_breez_liquid'
 
 buildscript {
     ext.kotlin_version = '1.8.20'
@@ -27,21 +27,23 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace = "technology.breez.flutter_breez_liquid"
+    
     // Bumping the plugin compileSdkVersion requires all clients of this plugin
     // to bump the version in their app.
-    compileSdkVersion 34
+    compileSdkVersion 35
 
     // Bumping the plugin ndkVersion requires all clients of this plugin to bump
     // the version in their app and to download a newer version of the NDK.
     ndkVersion "21.1.6352462"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    
+
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "17"
     }
 
     sourceSets {
