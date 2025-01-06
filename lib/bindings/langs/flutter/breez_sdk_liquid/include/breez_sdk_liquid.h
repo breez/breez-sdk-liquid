@@ -32,7 +32,7 @@ typedef struct _Dart_Handle* Dart_Handle;
 /**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
  */
-#define DEFAULT_ZERO_CONF_MAX_SAT 100000
+#define DEFAULT_ZERO_CONF_MAX_SAT 1000000
 
 /**
  * Number of blocks to monitor a swap after its timeout block height
