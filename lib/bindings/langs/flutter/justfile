@@ -22,7 +22,7 @@ clean:
 # Install flutter_rust_bridge_codegen dependencies
 frb:
 	cargo install cargo-expand
-	cargo install flutter_rust_bridge_codegen --version 2.4.0
+	cargo install flutter_rust_bridge_codegen --version 2.7.0
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
