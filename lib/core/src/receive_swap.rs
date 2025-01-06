@@ -22,7 +22,7 @@ use crate::{
 pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET: u32 = 100;
 pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET: u32 = 10;
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
-pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 100_000;
+pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
 
 pub(crate) struct ReceiveSwapHandler {
     config: Config,
