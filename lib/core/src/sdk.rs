@@ -49,8 +49,7 @@ use crate::{
     persist::Persister,
     utils, *,
 };
-use ::lightning::offers::invoice::Bolt12Invoice;
-use ::lightning::offers::offer::Offer;
+use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
 
 use self::sync::client::BreezSyncerClient;
 use self::sync::SyncService;
@@ -2743,7 +2742,7 @@ impl LiquidSdk {
 
     /// Prepares to pay to an LNURL encoded pay request or lightning address.
     ///
-    /// This is the second step of LNURL-pay flow. The first step is [parse], which also validates the LNURL
+    /// This is the second step of LNURL-pay flow. The first step is [LiquidSdk::parse], which also validates the LNURL
     /// destination and generates the [LnUrlPayRequest] payload needed here.
     ///
     /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
@@ -2754,7 +2753,7 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PrepareLnUrlPayRequest] containing:
-    ///     * `data` - the [LnUrlPayRequestData] returned by [parse]
+    ///     * `data` - the [LnUrlPayRequestData] returned by [LiquidSdk::parse]
     ///     * `amount_msat` - the amount in millisatoshis for this payment
     ///     * `comment` - an optional comment for this payment
     ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
@@ -2913,7 +2912,7 @@ impl LiquidSdk {
         })
     }
 
-    /// Second step of LNURL-withdraw. The first step is [parse], which also validates the LNURL destination
+    /// Second step of LNURL-withdraw. The first step is [LiquidSdk::parse], which also validates the LNURL destination
     /// and generates the [LnUrlWithdrawRequest] payload needed here.
     ///
     /// This call will validate the given `amount_msat` against the parameters
@@ -2969,7 +2968,7 @@ impl LiquidSdk {
         Ok(res)
     }
 
-    /// Third and last step of LNURL-auth. The first step is [parse], which also validates the LNURL destination
+    /// Third and last step of LNURL-auth. The first step is [LiquidSdk::parse], which also validates the LNURL destination
     /// and generates the [LnUrlAuthRequestData] payload needed here. The second step is user approval of auth action.
     ///
     /// This call will sign `k1` of the LNURL endpoint (`req_data`) on `secp256k1` using `linkingPrivKey` and DER-encodes the signature.
@@ -3053,60 +3052,6 @@ impl LiquidSdk {
     ///
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
-        if let Ok(offer) = input.parse::<Offer>() {
-            // TODO This conversion (between lightning-v0.0.125 to -v0.0.118 Amount types)
-            //      won't be needed when Liquid SDK uses the same lightning crate version as sdk-common
-            let min_amount = offer
-                .amount()
-                .map(|amount| match amount {
-                    ::lightning::offers::offer::Amount::Bitcoin { amount_msats } => {
-                        Ok(Amount::Bitcoin {
-                            amount_msat: amount_msats,
-                        })
-                    }
-                    ::lightning::offers::offer::Amount::Currency {
-                        iso4217_code,
-                        amount,
-                    } => Ok(Amount::Currency {
-                        iso4217_code: String::from_utf8(iso4217_code.to_vec()).map_err(|_| {
-                            anyhow!("Expecting a valid ISO 4217 character sequence")
-                        })?,
-                        fractional_amount: amount,
-                    }),
-                })
-                .transpose()
-                .map_err(|e: anyhow::Error| {
-                    PaymentError::generic(&format!("Failed to reconstruct amount: {e:?}"))
-                })?;
-
-            return Ok(InputType::Bolt12Offer {
-                offer: LNOffer {
-                    offer: input.to_string(),
-                    chains: offer
-                        .chains()
-                        .iter()
-                        .map(|chain| chain.to_string())
-                        .collect(),
-                    min_amount,
-                    description: offer.description().map(|d| d.to_string()),
-                    absolute_expiry: offer.absolute_expiry().map(|expiry| expiry.as_secs()),
-                    issuer: offer.issuer().map(|s| s.to_string()),
-                    signing_pubkey: offer.signing_pubkey().map(|pk| pk.to_string()),
-                    paths: offer
-                        .paths()
-                        .iter()
-                        .map(|path| LnOfferBlindedPath {
-                            blinded_hops: path
-                                .blinded_hops()
-                                .iter()
-                                .map(|hop| hop.blinded_node_id.to_hex())
-                                .collect(),
-                        })
-                        .collect::<Vec<LnOfferBlindedPath>>(),
-                },
-            });
-        }
-
         let external_parsers = &self.external_input_parsers;
         parse(input, Some(external_parsers))
             .await
