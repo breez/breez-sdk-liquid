@@ -1480,10 +1480,7 @@ impl Payment {
         payment_type: PaymentType,
         payment_details: PaymentDetails,
     ) -> Payment {
-        let amount_sat = match payment_type {
-            PaymentType::Receive => swap.receiver_amount_sat,
-            PaymentType::Send => swap.payer_amount_sat,
-        };
+        let amount_sat = swap.receiver_amount_sat;
 
         Payment {
             destination: swap.bolt11.clone(),
@@ -1536,7 +1533,13 @@ impl Payment {
                 .timestamp
                 .or(swap.as_ref().map(|s| s.created_at))
                 .unwrap_or(utils::now()),
-            amount_sat: tx.amount_sat,
+            amount_sat: match tx.payment_type {
+                PaymentType::Receive => tx.amount_sat,
+                PaymentType::Send => match swap.as_ref() {
+                    Some(s) => s.receiver_amount_sat,
+                    None => tx.amount_sat,
+                },
+            },
             fees_sat: match swap.as_ref() {
                 Some(s) => s.payer_amount_sat - tx.amount_sat,
                 None => match tx.payment_type {
