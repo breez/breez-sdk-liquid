@@ -65,7 +65,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.7.0';
 
   @override
-  int get rustContentHash => -2032324171;
+  int get rustContentHash => 1264782025;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -75,6 +75,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<void> crateBindingsBindingLiquidSdkAcceptPaymentProposedFees(
+      {required BindingLiquidSdk that, required AcceptPaymentProposedFeesRequest req});
+
   Stream<SdkEvent> crateBindingsBindingLiquidSdkAddEventListener({required BindingLiquidSdk that});
 
   void crateBindingsBindingLiquidSdkBackup({required BindingLiquidSdk that, required BackupRequest req});
@@ -96,6 +99,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<OnchainPaymentLimitsResponse> crateBindingsBindingLiquidSdkFetchOnchainLimits(
       {required BindingLiquidSdk that});
+
+  Future<FetchPaymentProposedFeesResponse> crateBindingsBindingLiquidSdkFetchPaymentProposedFees(
+      {required BindingLiquidSdk that, required FetchPaymentProposedFeesRequest req});
 
   Future<GetInfoResponse> crateBindingsBindingLiquidSdkGetInfo({required BindingLiquidSdk that});
 
@@ -193,6 +199,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required super.generalizedFrbRustBinding,
     required super.portManager,
   });
+
+  @override
+  Future<void> crateBindingsBindingLiquidSdkAcceptPaymentProposedFees(
+      {required BindingLiquidSdk that, required AcceptPaymentProposedFeesRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_accept_payment_proposed_fees_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_unit,
+        decodeErrorData: dco_decode_payment_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkAcceptPaymentProposedFeesConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkAcceptPaymentProposedFeesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_accept_payment_proposed_fees",
+        argNames: ["that", "req"],
+      );
 
   @override
   Stream<SdkEvent> crateBindingsBindingLiquidSdkAddEventListener({required BindingLiquidSdk that}) {
@@ -418,6 +450,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchOnchainLimitsConstMeta => const TaskConstMeta(
         debugName: "BindingLiquidSdk_fetch_onchain_limits",
         argNames: ["that"],
+      );
+
+  @override
+  Future<FetchPaymentProposedFeesResponse> crateBindingsBindingLiquidSdkFetchPaymentProposedFees(
+      {required BindingLiquidSdk that, required FetchPaymentProposedFeesRequest req}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        var arg0 =
+            cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that);
+        var arg1 = cst_encode_box_autoadd_fetch_payment_proposed_fees_request(req);
+        return wire.wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees(port_, arg0, arg1);
+      },
+      codec: DcoCodec(
+        decodeSuccessData: dco_decode_fetch_payment_proposed_fees_response,
+        decodeErrorData: dco_decode_sdk_error,
+      ),
+      constMeta: kCrateBindingsBindingLiquidSdkFetchPaymentProposedFeesConstMeta,
+      argValues: [that, req],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkFetchPaymentProposedFeesConstMeta => const TaskConstMeta(
+        debugName: "BindingLiquidSdk_fetch_payment_proposed_fees",
+        argNames: ["that", "req"],
       );
 
   @override
@@ -1253,6 +1311,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AcceptPaymentProposedFeesRequest dco_decode_accept_payment_proposed_fees_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return AcceptPaymentProposedFeesRequest(
+      response: dco_decode_fetch_payment_proposed_fees_response(arr[0]),
+    );
+  }
+
+  @protected
   AesSuccessActionData dco_decode_aes_success_action_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1351,6 +1419,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AcceptPaymentProposedFeesRequest dco_decode_box_autoadd_accept_payment_proposed_fees_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_accept_payment_proposed_fees_request(raw);
+  }
+
+  @protected
   AesSuccessActionData dco_decode_box_autoadd_aes_success_action_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_aes_success_action_data(raw);
@@ -1420,6 +1494,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double dco_decode_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  FetchPaymentProposedFeesRequest dco_decode_box_autoadd_fetch_payment_proposed_fees_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_fetch_payment_proposed_fees_request(raw);
   }
 
   @protected
@@ -1761,6 +1841,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  FetchPaymentProposedFeesRequest dco_decode_fetch_payment_proposed_fees_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return FetchPaymentProposedFeesRequest(
+      swapId: dco_decode_String(arr[0]),
+    );
+  }
+
+  @protected
+  FetchPaymentProposedFeesResponse dco_decode_fetch_payment_proposed_fees_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FetchPaymentProposedFeesResponse(
+      swapId: dco_decode_String(arr[0]),
+      feesSat: dco_decode_u_64(arr[1]),
+      payerAmountSat: dco_decode_u_64(arr[2]),
+      receiverAmountSat: dco_decode_u_64(arr[3]),
+    );
   }
 
   @protected
@@ -3233,6 +3336,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AcceptPaymentProposedFeesRequest sse_decode_accept_payment_proposed_fees_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_response = sse_decode_fetch_payment_proposed_fees_response(deserializer);
+    return AcceptPaymentProposedFeesRequest(response: var_response);
+  }
+
+  @protected
   AesSuccessActionData sse_decode_aes_success_action_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_description = sse_decode_String(deserializer);
@@ -3321,6 +3432,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AcceptPaymentProposedFeesRequest sse_decode_box_autoadd_accept_payment_proposed_fees_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_accept_payment_proposed_fees_request(deserializer));
+  }
+
+  @protected
   AesSuccessActionData sse_decode_box_autoadd_aes_success_action_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_aes_success_action_data(deserializer));
@@ -3392,6 +3510,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_f_64(deserializer));
+  }
+
+  @protected
+  FetchPaymentProposedFeesRequest sse_decode_box_autoadd_fetch_payment_proposed_fees_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_fetch_payment_proposed_fees_request(deserializer));
   }
 
   @protected
@@ -3735,6 +3860,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  FetchPaymentProposedFeesRequest sse_decode_fetch_payment_proposed_fees_request(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapId = sse_decode_String(deserializer);
+    return FetchPaymentProposedFeesRequest(swapId: var_swapId);
+  }
+
+  @protected
+  FetchPaymentProposedFeesResponse sse_decode_fetch_payment_proposed_fees_response(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swapId = sse_decode_String(deserializer);
+    var var_feesSat = sse_decode_u_64(deserializer);
+    var var_payerAmountSat = sse_decode_u_64(deserializer);
+    var var_receiverAmountSat = sse_decode_u_64(deserializer);
+    return FetchPaymentProposedFeesResponse(
+        swapId: var_swapId,
+        feesSat: var_feesSat,
+        payerAmountSat: var_payerAmountSat,
+        receiverAmountSat: var_receiverAmountSat);
   }
 
   @protected
@@ -5404,6 +5552,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_accept_payment_proposed_fees_request(
+      AcceptPaymentProposedFeesRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_fetch_payment_proposed_fees_response(self.response, serializer);
+  }
+
+  @protected
   void sse_encode_aes_success_action_data(AesSuccessActionData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.description, serializer);
@@ -5472,6 +5627,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_accept_payment_proposed_fees_request(
+      AcceptPaymentProposedFeesRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_accept_payment_proposed_fees_request(self, serializer);
   }
 
   @protected
@@ -5546,6 +5708,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_f_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_fetch_payment_proposed_fees_request(
+      FetchPaymentProposedFeesRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_fetch_payment_proposed_fees_request(self, serializer);
   }
 
   @protected
@@ -5866,6 +6035,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_fetch_payment_proposed_fees_request(
+      FetchPaymentProposedFeesRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapId, serializer);
+  }
+
+  @protected
+  void sse_encode_fetch_payment_proposed_fees_response(
+      FetchPaymentProposedFeesResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.swapId, serializer);
+    sse_encode_u_64(self.feesSat, serializer);
+    sse_encode_u_64(self.payerAmountSat, serializer);
+    sse_encode_u_64(self.receiverAmountSat, serializer);
   }
 
   @protected
@@ -7105,6 +7291,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
     rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_BindingLiquidSdkPtr,
   );
 
+  Future<void> acceptPaymentProposedFees({required AcceptPaymentProposedFeesRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkAcceptPaymentProposedFees(that: this, req: req);
+
   Stream<SdkEvent> addEventListener() => RustLib.instance.api.crateBindingsBindingLiquidSdkAddEventListener(
         that: this,
       );
@@ -7139,6 +7328,10 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
       RustLib.instance.api.crateBindingsBindingLiquidSdkFetchOnchainLimits(
         that: this,
       );
+
+  Future<FetchPaymentProposedFeesResponse> fetchPaymentProposedFees(
+          {required FetchPaymentProposedFeesRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkFetchPaymentProposedFees(that: this, req: req);
 
   Future<GetInfoResponse> getInfo() => RustLib.instance.api.crateBindingsBindingLiquidSdkGetInfo(
         that: this,

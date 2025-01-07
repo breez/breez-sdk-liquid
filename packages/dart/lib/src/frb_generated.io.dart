@@ -51,6 +51,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  AcceptPaymentProposedFeesRequest dco_decode_accept_payment_proposed_fees_request(dynamic raw);
+
+  @protected
   AesSuccessActionData dco_decode_aes_success_action_data(dynamic raw);
 
   @protected
@@ -73,6 +76,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  AcceptPaymentProposedFeesRequest dco_decode_box_autoadd_accept_payment_proposed_fees_request(dynamic raw);
 
   @protected
   AesSuccessActionData dco_decode_box_autoadd_aes_success_action_data(dynamic raw);
@@ -109,6 +115,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
+
+  @protected
+  FetchPaymentProposedFeesRequest dco_decode_box_autoadd_fetch_payment_proposed_fees_request(dynamic raw);
 
   @protected
   GetPaymentRequest dco_decode_box_autoadd_get_payment_request(dynamic raw);
@@ -253,6 +262,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FetchPaymentProposedFeesRequest dco_decode_fetch_payment_proposed_fees_request(dynamic raw);
+
+  @protected
+  FetchPaymentProposedFeesResponse dco_decode_fetch_payment_proposed_fees_response(dynamic raw);
 
   @protected
   FiatCurrency dco_decode_fiat_currency(dynamic raw);
@@ -626,6 +641,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AcceptPaymentProposedFeesRequest sse_decode_accept_payment_proposed_fees_request(
+      SseDeserializer deserializer);
+
+  @protected
   AesSuccessActionData sse_decode_aes_success_action_data(SseDeserializer deserializer);
 
   @protected
@@ -648,6 +667,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  AcceptPaymentProposedFeesRequest sse_decode_box_autoadd_accept_payment_proposed_fees_request(
+      SseDeserializer deserializer);
 
   @protected
   AesSuccessActionData sse_decode_box_autoadd_aes_success_action_data(SseDeserializer deserializer);
@@ -686,6 +709,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  FetchPaymentProposedFeesRequest sse_decode_box_autoadd_fetch_payment_proposed_fees_request(
+      SseDeserializer deserializer);
 
   @protected
   GetPaymentRequest sse_decode_box_autoadd_get_payment_request(SseDeserializer deserializer);
@@ -830,6 +857,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FetchPaymentProposedFeesRequest sse_decode_fetch_payment_proposed_fees_request(
+      SseDeserializer deserializer);
+
+  @protected
+  FetchPaymentProposedFeesResponse sse_decode_fetch_payment_proposed_fees_response(
+      SseDeserializer deserializer);
 
   @protected
   FiatCurrency sse_decode_fiat_currency(SseDeserializer deserializer);
@@ -1211,6 +1246,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_accept_payment_proposed_fees_request>
+      cst_encode_box_autoadd_accept_payment_proposed_fees_request(AcceptPaymentProposedFeesRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_accept_payment_proposed_fees_request();
+    cst_api_fill_to_wire_accept_payment_proposed_fees_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_aes_success_action_data> cst_encode_box_autoadd_aes_success_action_data(
       AesSuccessActionData raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -1307,6 +1351,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Double> cst_encode_box_autoadd_f_64(double raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return wire.cst_new_box_autoadd_f_64(cst_encode_f_64(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request>
+      cst_encode_box_autoadd_fetch_payment_proposed_fees_request(FetchPaymentProposedFeesRequest raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_fetch_payment_proposed_fees_request();
+    cst_api_fill_to_wire_fetch_payment_proposed_fees_request(raw, ptr.ref);
+    return ptr;
   }
 
   @protected
@@ -1903,6 +1956,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_accept_payment_proposed_fees_request(
+      AcceptPaymentProposedFeesRequest apiObj, wire_cst_accept_payment_proposed_fees_request wireObj) {
+    cst_api_fill_to_wire_fetch_payment_proposed_fees_response(apiObj.response, wireObj.response);
+  }
+
+  @protected
   void cst_api_fill_to_wire_aes_success_action_data(
       AesSuccessActionData apiObj, wire_cst_aes_success_action_data wireObj) {
     wireObj.description = cst_encode_String(apiObj.description);
@@ -1974,6 +2033,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_accept_payment_proposed_fees_request(
+      AcceptPaymentProposedFeesRequest apiObj,
+      ffi.Pointer<wire_cst_accept_payment_proposed_fees_request> wireObj) {
+    cst_api_fill_to_wire_accept_payment_proposed_fees_request(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_aes_success_action_data(
       AesSuccessActionData apiObj, ffi.Pointer<wire_cst_aes_success_action_data> wireObj) {
     cst_api_fill_to_wire_aes_success_action_data(apiObj, wireObj.ref);
@@ -2030,6 +2096,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_box_autoadd_connect_request(
       ConnectRequest apiObj, ffi.Pointer<wire_cst_connect_request> wireObj) {
     cst_api_fill_to_wire_connect_request(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_fetch_payment_proposed_fees_request(
+      FetchPaymentProposedFeesRequest apiObj,
+      ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request> wireObj) {
+    cst_api_fill_to_wire_fetch_payment_proposed_fees_request(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2307,6 +2380,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.provider_id = cst_encode_String(apiObj.providerId);
     wireObj.input_regex = cst_encode_String(apiObj.inputRegex);
     wireObj.parser_url = cst_encode_String(apiObj.parserUrl);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_fetch_payment_proposed_fees_request(
+      FetchPaymentProposedFeesRequest apiObj, wire_cst_fetch_payment_proposed_fees_request wireObj) {
+    wireObj.swap_id = cst_encode_String(apiObj.swapId);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_fetch_payment_proposed_fees_response(
+      FetchPaymentProposedFeesResponse apiObj, wire_cst_fetch_payment_proposed_fees_response wireObj) {
+    wireObj.swap_id = cst_encode_String(apiObj.swapId);
+    wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
+    wireObj.payer_amount_sat = cst_encode_u_64(apiObj.payerAmountSat);
+    wireObj.receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
   }
 
   @protected
@@ -3416,6 +3504,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_accept_payment_proposed_fees_request(
+      AcceptPaymentProposedFeesRequest self, SseSerializer serializer);
+
+  @protected
   void sse_encode_aes_success_action_data(AesSuccessActionData self, SseSerializer serializer);
 
   @protected
@@ -3439,6 +3531,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_accept_payment_proposed_fees_request(
+      AcceptPaymentProposedFeesRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_aes_success_action_data(AesSuccessActionData self, SseSerializer serializer);
@@ -3477,6 +3573,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_fetch_payment_proposed_fees_request(
+      FetchPaymentProposedFeesRequest self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_get_payment_request(GetPaymentRequest self, SseSerializer serializer);
@@ -3627,6 +3727,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_fetch_payment_proposed_fees_request(
+      FetchPaymentProposedFeesRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_fetch_payment_proposed_fees_response(
+      FetchPaymentProposedFeesResponse self, SseSerializer serializer);
 
   @protected
   void sse_encode_fiat_currency(FiatCurrency self, SseSerializer serializer);
@@ -4012,6 +4120,27 @@ class RustLibWire implements BaseWire {
   late final _store_dart_post_cobject =
       _store_dart_post_cobjectPtr.asFunction<void Function(DartPostCObjectFnType)>();
 
+  void wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_accept_payment_proposed_fees_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_feesPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_accept_payment_proposed_fees_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees');
+  late final _wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees =
+      _wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_feesPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_accept_payment_proposed_fees_request>)>();
+
   void wire__crate__bindings__BindingLiquidSdk_add_event_listener(
     int port_,
     int that,
@@ -4167,6 +4296,27 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits');
   late final _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits =
       _wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limitsPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_feesPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(
+                  ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees');
+  late final _wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees =
+      _wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_feesPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_get_info(
     int port_,
@@ -4773,6 +4923,18 @@ class RustLibWire implements BaseWire {
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdkPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  ffi.Pointer<wire_cst_accept_payment_proposed_fees_request>
+      cst_new_box_autoadd_accept_payment_proposed_fees_request() {
+    return _cst_new_box_autoadd_accept_payment_proposed_fees_request();
+  }
+
+  late final _cst_new_box_autoadd_accept_payment_proposed_fees_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_accept_payment_proposed_fees_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_accept_payment_proposed_fees_request');
+  late final _cst_new_box_autoadd_accept_payment_proposed_fees_request =
+      _cst_new_box_autoadd_accept_payment_proposed_fees_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_accept_payment_proposed_fees_request> Function()>();
+
   ffi.Pointer<wire_cst_aes_success_action_data> cst_new_box_autoadd_aes_success_action_data() {
     return _cst_new_box_autoadd_aes_success_action_data();
   }
@@ -4903,6 +5065,18 @@ class RustLibWire implements BaseWire {
           'frbgen_breez_liquid_cst_new_box_autoadd_f_64');
   late final _cst_new_box_autoadd_f_64 =
       _cst_new_box_autoadd_f_64Ptr.asFunction<ffi.Pointer<ffi.Double> Function(double)>();
+
+  ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request>
+      cst_new_box_autoadd_fetch_payment_proposed_fees_request() {
+    return _cst_new_box_autoadd_fetch_payment_proposed_fees_request();
+  }
+
+  late final _cst_new_box_autoadd_fetch_payment_proposed_fees_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_fetch_payment_proposed_fees_request');
+  late final _cst_new_box_autoadd_fetch_payment_proposed_fees_request =
+      _cst_new_box_autoadd_fetch_payment_proposed_fees_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request> Function()>();
 
   ffi.Pointer<wire_cst_get_payment_request> cst_new_box_autoadd_get_payment_request() {
     return _cst_new_box_autoadd_get_payment_request();
@@ -5532,6 +5706,23 @@ final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_fetch_payment_proposed_fees_response extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
+
+  @ffi.Uint64()
+  external int fees_sat;
+
+  @ffi.Uint64()
+  external int payer_amount_sat;
+
+  @ffi.Uint64()
+  external int receiver_amount_sat;
+}
+
+final class wire_cst_accept_payment_proposed_fees_request extends ffi.Struct {
+  external wire_cst_fetch_payment_proposed_fees_response response;
+}
+
 final class wire_cst_backup_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> backup_path;
 }
@@ -5559,6 +5750,10 @@ final class wire_cst_check_message_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
+}
+
+final class wire_cst_fetch_payment_proposed_fees_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
 
 final class wire_cst_GetPaymentRequest_Lightning extends ffi.Struct {

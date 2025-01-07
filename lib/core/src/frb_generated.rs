@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.7.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -2032324171;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1264782025;
 
 // Section: executor
 
@@ -47,6 +47,56 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::AcceptPaymentProposedFeesRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_accept_payment_proposed_fees",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok =
+                            crate::bindings::BindingLiquidSdk::accept_payment_proposed_fees(
+                                &*api_that_guard,
+                                api_req,
+                            )
+                            .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_add_event_listener_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -429,6 +479,56 @@ fn wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits_impl(
                             &*api_that_guard,
                         )
                         .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::FetchPaymentProposedFeesRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_fetch_payment_proposed_fees",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok =
+                            crate::bindings::BindingLiquidSdk::fetch_payment_proposed_fees(
+                                &*api_that_guard,
+                                api_req,
+                            )
+                            .await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -2193,6 +2293,17 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for crate::model::AcceptPaymentProposedFeesRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_response =
+            <crate::model::FetchPaymentProposedFeesResponse>::sse_decode(deserializer);
+        return crate::model::AcceptPaymentProposedFeesRequest {
+            response: var_response,
+        };
+    }
+}
+
 impl SseDecode for crate::bindings::AesSuccessActionData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2452,6 +2563,32 @@ impl SseDecode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::model::FetchPaymentProposedFeesRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_swapId = <String>::sse_decode(deserializer);
+        return crate::model::FetchPaymentProposedFeesRequest {
+            swap_id: var_swapId,
+        };
+    }
+}
+
+impl SseDecode for crate::model::FetchPaymentProposedFeesResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_swapId = <String>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
+        let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+        return crate::model::FetchPaymentProposedFeesResponse {
+            swap_id: var_swapId,
+            fees_sat: var_feesSat,
+            payer_amount_sat: var_payerAmountSat,
+            receiver_amount_sat: var_receiverAmountSat,
+        };
     }
 }
 
@@ -4429,6 +4566,23 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<BindingLiquidSdk>> for Binding
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::AcceptPaymentProposedFeesRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.response.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::AcceptPaymentProposedFeesRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::AcceptPaymentProposedFeesRequest>
+    for crate::model::AcceptPaymentProposedFeesRequest
+{
+    fn into_into_dart(self) -> crate::model::AcceptPaymentProposedFeesRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::AesSuccessActionData> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4764,6 +4918,46 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::ExternalInput
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::ExternalInputParser> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::FetchPaymentProposedFeesRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.swap_id.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::FetchPaymentProposedFeesRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::FetchPaymentProposedFeesRequest>
+    for crate::model::FetchPaymentProposedFeesRequest
+{
+    fn into_into_dart(self) -> crate::model::FetchPaymentProposedFeesRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::FetchPaymentProposedFeesResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.swap_id.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
+            self.payer_amount_sat.into_into_dart().into_dart(),
+            self.receiver_amount_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::FetchPaymentProposedFeesResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::FetchPaymentProposedFeesResponse>
+    for crate::model::FetchPaymentProposedFeesResponse
+{
+    fn into_into_dart(self) -> crate::model::FetchPaymentProposedFeesResponse {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -6655,6 +6849,13 @@ impl SseEncode for String {
     }
 }
 
+impl SseEncode for crate::model::AcceptPaymentProposedFeesRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::FetchPaymentProposedFeesResponse>::sse_encode(self.response, serializer);
+    }
+}
+
 impl SseEncode for crate::bindings::AesSuccessActionData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6842,6 +7043,23 @@ impl SseEncode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::model::FetchPaymentProposedFeesRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.swap_id, serializer);
+    }
+}
+
+impl SseEncode for crate::model::FetchPaymentProposedFeesResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.swap_id, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
+        <u64>::sse_encode(self.payer_amount_sat, serializer);
+        <u64>::sse_encode(self.receiver_amount_sat, serializer);
     }
 }
 
@@ -8465,6 +8683,16 @@ mod io {
             String::from_utf8(vec).unwrap()
         }
     }
+    impl CstDecode<crate::model::AcceptPaymentProposedFeesRequest>
+        for wire_cst_accept_payment_proposed_fees_request
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AcceptPaymentProposedFeesRequest {
+            crate::model::AcceptPaymentProposedFeesRequest {
+                response: self.response.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::bindings::AesSuccessActionData> for wire_cst_aes_success_action_data {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::AesSuccessActionData {
@@ -8557,6 +8785,15 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::AcceptPaymentProposedFeesRequest>
+        for *mut wire_cst_accept_payment_proposed_fees_request
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AcceptPaymentProposedFeesRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::AcceptPaymentProposedFeesRequest>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::bindings::AesSuccessActionData> for *mut wire_cst_aes_success_action_data {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::AesSuccessActionData {
@@ -8641,6 +8878,15 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> f64 {
             unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
+        }
+    }
+    impl CstDecode<crate::model::FetchPaymentProposedFeesRequest>
+        for *mut wire_cst_fetch_payment_proposed_fees_request
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::FetchPaymentProposedFeesRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::FetchPaymentProposedFeesRequest>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::GetPaymentRequest> for *mut wire_cst_get_payment_request {
@@ -9006,6 +9252,29 @@ mod io {
                 provider_id: self.provider_id.cst_decode(),
                 input_regex: self.input_regex.cst_decode(),
                 parser_url: self.parser_url.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::FetchPaymentProposedFeesRequest>
+        for wire_cst_fetch_payment_proposed_fees_request
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::FetchPaymentProposedFeesRequest {
+            crate::model::FetchPaymentProposedFeesRequest {
+                swap_id: self.swap_id.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::FetchPaymentProposedFeesResponse>
+        for wire_cst_fetch_payment_proposed_fees_response
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::FetchPaymentProposedFeesResponse {
+            crate::model::FetchPaymentProposedFeesResponse {
+                swap_id: self.swap_id.cst_decode(),
+                fees_sat: self.fees_sat.cst_decode(),
+                payer_amount_sat: self.payer_amount_sat.cst_decode(),
+                receiver_amount_sat: self.receiver_amount_sat.cst_decode(),
             }
         }
     }
@@ -10321,6 +10590,18 @@ mod io {
             }
         }
     }
+    impl NewWithNullPtr for wire_cst_accept_payment_proposed_fees_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                response: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_accept_payment_proposed_fees_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_aes_success_action_data {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -10519,6 +10800,33 @@ mod io {
         }
     }
     impl Default for wire_cst_external_input_parser {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_fetch_payment_proposed_fees_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                swap_id: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_fetch_payment_proposed_fees_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_fetch_payment_proposed_fees_response {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                swap_id: core::ptr::null_mut(),
+                fees_sat: Default::default(),
+                payer_amount_sat: Default::default(),
+                receiver_amount_sat: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_fetch_payment_proposed_fees_response {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -11518,6 +11826,15 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees(
+        port_: i64,
+        that: usize,
+        req: *mut wire_cst_accept_payment_proposed_fees_request,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees_impl(port_, that, req)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(
         port_: i64,
         that: usize,
@@ -11588,6 +11905,15 @@ mod io {
         that: usize,
     ) {
         wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits_impl(port_, that)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees(
+        port_: i64,
+        that: usize,
+        req: *mut wire_cst_fetch_payment_proposed_fees_request,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees_impl(port_, that, req)
     }
 
     #[no_mangle]
@@ -11874,6 +12200,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_accept_payment_proposed_fees_request(
+    ) -> *mut wire_cst_accept_payment_proposed_fees_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_accept_payment_proposed_fees_request::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data(
     ) -> *mut wire_cst_aes_success_action_data {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -11958,6 +12292,14 @@ mod io {
     #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_f_64(value: f64) -> *mut f64 {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_fetch_payment_proposed_fees_request(
+    ) -> *mut wire_cst_fetch_payment_proposed_fees_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_fetch_payment_proposed_fees_request::new_with_null_ptr(),
+        )
     }
 
     #[no_mangle]
@@ -12439,6 +12781,11 @@ mod io {
 
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_accept_payment_proposed_fees_request {
+        response: wire_cst_fetch_payment_proposed_fees_response,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_aes_success_action_data {
         description: *mut wire_cst_list_prim_u_8_strict,
         ciphertext: *mut wire_cst_list_prim_u_8_strict,
@@ -12575,6 +12922,19 @@ mod io {
         provider_id: *mut wire_cst_list_prim_u_8_strict,
         input_regex: *mut wire_cst_list_prim_u_8_strict,
         parser_url: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_fetch_payment_proposed_fees_request {
+        swap_id: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_fetch_payment_proposed_fees_response {
+        swap_id: *mut wire_cst_list_prim_u_8_strict,
+        fees_sat: u64,
+        payer_amount_sat: u64,
+        receiver_amount_sat: u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

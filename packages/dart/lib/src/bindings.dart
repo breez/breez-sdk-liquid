@@ -29,6 +29,8 @@ LNInvoice parseInvoice({required String input}) =>
 
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
 abstract class BindingLiquidSdk implements RustOpaqueInterface {
+  Future<void> acceptPaymentProposedFees({required AcceptPaymentProposedFeesRequest req});
+
   Stream<SdkEvent> addEventListener();
 
   void backup({required BackupRequest req});
@@ -46,6 +48,9 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<LightningPaymentLimitsResponse> fetchLightningLimits();
 
   Future<OnchainPaymentLimitsResponse> fetchOnchainLimits();
+
+  Future<FetchPaymentProposedFeesResponse> fetchPaymentProposedFees(
+      {required FetchPaymentProposedFeesRequest req});
 
   Future<GetInfoResponse> getInfo();
 

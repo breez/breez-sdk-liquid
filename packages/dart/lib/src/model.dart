@@ -9,6 +9,25 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'model.freezed.dart';
 
+/// An argument when calling [crate::sdk::LiquidSdk::accept_payment_proposed_fees].
+class AcceptPaymentProposedFeesRequest {
+  final FetchPaymentProposedFeesResponse response;
+
+  const AcceptPaymentProposedFeesRequest({
+    required this.response,
+  });
+
+  @override
+  int get hashCode => response.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AcceptPaymentProposedFeesRequest &&
+          runtimeType == other.runtimeType &&
+          response == other.response;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
 class BackupRequest {
   /// Path to the backup.
@@ -237,6 +256,56 @@ class ConnectRequest {
           runtimeType == other.runtimeType &&
           config == other.config &&
           mnemonic == other.mnemonic;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
+class FetchPaymentProposedFeesRequest {
+  final String swapId;
+
+  const FetchPaymentProposedFeesRequest({
+    required this.swapId,
+  });
+
+  @override
+  int get hashCode => swapId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FetchPaymentProposedFeesRequest && runtimeType == other.runtimeType && swapId == other.swapId;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
+class FetchPaymentProposedFeesResponse {
+  final String swapId;
+  final BigInt feesSat;
+
+  /// Amount sent by the swap payer
+  final BigInt payerAmountSat;
+
+  /// Amount that will be received if these fees are accepted
+  final BigInt receiverAmountSat;
+
+  const FetchPaymentProposedFeesResponse({
+    required this.swapId,
+    required this.feesSat,
+    required this.payerAmountSat,
+    required this.receiverAmountSat,
+  });
+
+  @override
+  int get hashCode =>
+      swapId.hashCode ^ feesSat.hashCode ^ payerAmountSat.hashCode ^ receiverAmountSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FetchPaymentProposedFeesResponse &&
+          runtimeType == other.runtimeType &&
+          swapId == other.swapId &&
+          feesSat == other.feesSat &&
+          payerAmountSat == other.payerAmountSat &&
+          receiverAmountSat == other.receiverAmountSat;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
