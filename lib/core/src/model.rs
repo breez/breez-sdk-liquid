@@ -1538,7 +1538,13 @@ impl Payment {
                 .unwrap_or(utils::now()),
             amount_sat: tx.amount_sat,
             fees_sat: match swap.as_ref() {
-                Some(s) => s.payer_amount_sat - tx.amount_sat,
+                Some(s) => match tx.payment_type {
+                    // For receive swaps, to avoid some edge case issues related to potential past
+                    //  overpayments, we use the actual claim value as the final received amount
+                    //  for fee calculation.
+                    PaymentType::Receive => s.payer_amount_sat - tx.amount_sat,
+                    PaymentType::Send => s.payer_amount_sat - s.receiver_amount_sat,
+                },
                 None => match tx.payment_type {
                     PaymentType::Receive => 0,
                     PaymentType::Send => tx.fees_sat,
