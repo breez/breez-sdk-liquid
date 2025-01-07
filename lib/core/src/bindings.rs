@@ -183,6 +183,20 @@ impl BindingLiquidSdk {
         self.sdk.get_payment(&req).await
     }
 
+    pub async fn fetch_payment_proposed_fees(
+        &self,
+        req: FetchPaymentProposedFeesRequest,
+    ) -> Result<FetchPaymentProposedFeesResponse, SdkError> {
+        self.sdk.fetch_payment_proposed_fees(&req).await
+    }
+
+    pub async fn accept_payment_proposed_fees(
+        &self,
+        req: AcceptPaymentProposedFeesRequest,
+    ) -> Result<(), PaymentError> {
+        self.sdk.accept_payment_proposed_fees(&req).await
+    }
+
     pub async fn prepare_lnurl_pay(
         &self,
         req: PrepareLnUrlPayRequest,

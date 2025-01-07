@@ -44,6 +44,17 @@ typedef struct wire_cst_list_prim_u_8_strict {
   int32_t len;
 } wire_cst_list_prim_u_8_strict;
 
+typedef struct wire_cst_fetch_payment_proposed_fees_response {
+  struct wire_cst_list_prim_u_8_strict *swap_id;
+  uint64_t fees_sat;
+  uint64_t payer_amount_sat;
+  uint64_t receiver_amount_sat;
+} wire_cst_fetch_payment_proposed_fees_response;
+
+typedef struct wire_cst_accept_payment_proposed_fees_request {
+  struct wire_cst_fetch_payment_proposed_fees_response response;
+} wire_cst_accept_payment_proposed_fees_request;
+
 typedef struct wire_cst_backup_request {
   struct wire_cst_list_prim_u_8_strict *backup_path;
 } wire_cst_backup_request;
@@ -64,6 +75,10 @@ typedef struct wire_cst_check_message_request {
   struct wire_cst_list_prim_u_8_strict *pubkey;
   struct wire_cst_list_prim_u_8_strict *signature;
 } wire_cst_check_message_request;
+
+typedef struct wire_cst_fetch_payment_proposed_fees_request {
+  struct wire_cst_list_prim_u_8_strict *swap_id;
+} wire_cst_fetch_payment_proposed_fees_request;
 
 typedef struct wire_cst_GetPaymentRequest_Lightning {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
@@ -1076,6 +1091,10 @@ typedef struct wire_cst_sign_message_response {
   struct wire_cst_list_prim_u_8_strict *signature;
 } wire_cst_sign_message_response;
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees(int64_t port_,
+                                                                                              uintptr_t that,
+                                                                                              struct wire_cst_accept_payment_proposed_fees_request *req);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener(int64_t port_,
                                                                                     uintptr_t that,
                                                                                     struct wire_cst_list_prim_u_8_strict *listener);
@@ -1103,6 +1122,10 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits(int64_t port_,
                                                                                       uintptr_t that);
+
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees(int64_t port_,
+                                                                                             uintptr_t that,
+                                                                                             struct wire_cst_fetch_payment_proposed_fees_request *req);
 
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info(int64_t port_,
                                                                           uintptr_t that);
@@ -1218,6 +1241,8 @@ void frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust
 
 void frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(const void *ptr);
 
+struct wire_cst_accept_payment_proposed_fees_request *frbgen_breez_liquid_cst_new_box_autoadd_accept_payment_proposed_fees_request(void);
+
 struct wire_cst_aes_success_action_data *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data(void);
 
 struct wire_cst_aes_success_action_data_decrypted *frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted(void);
@@ -1241,6 +1266,8 @@ struct wire_cst_check_message_request *frbgen_breez_liquid_cst_new_box_autoadd_c
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
 double *frbgen_breez_liquid_cst_new_box_autoadd_f_64(double value);
+
+struct wire_cst_fetch_payment_proposed_fees_request *frbgen_breez_liquid_cst_new_box_autoadd_fetch_payment_proposed_fees_request(void);
 
 struct wire_cst_get_payment_request *frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request(void);
 
@@ -1349,6 +1376,7 @@ struct wire_cst_list_route_hint *frbgen_breez_liquid_cst_new_list_route_hint(int
 struct wire_cst_list_route_hint_hop *frbgen_breez_liquid_cst_new_list_route_hint_hop(int32_t len);
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_accept_payment_proposed_fees_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result);
@@ -1361,6 +1389,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_check_message_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_f_64);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_fetch_payment_proposed_fees_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_i_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_liquid_address_data);
@@ -1416,6 +1445,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_route_hint_hop);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_event_listener);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin);
@@ -1425,6 +1455,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_lightning_limits);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_onchain_limits);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_payment_proposed_fees);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_info);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_payment);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies);
