@@ -22,7 +22,7 @@ clean:
 # Install flutter_rust_bridge_codegen dependencies
 frb:
 	cargo install cargo-expand
-	cargo install flutter_rust_bridge_codegen --version 2.4.0
+	cargo install flutter_rust_bridge_codegen --version 2.7.0
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
@@ -78,7 +78,7 @@ build-ios-framework:
 
 # Generate FFI bindings
 ffigen:
-	cd ../../../../packages/flutter/ && flutter pub run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
+	cd ../../../../packages/flutter/ && dart run ffigen --config ffigen.yaml && dart format -l 110 ./lib/flutter_breez_liquid_bindings_generated.dart
 
 # (melos) Analyze & check the format of packages in workspace
 check:

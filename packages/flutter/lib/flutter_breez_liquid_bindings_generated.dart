@@ -10,7 +10,7 @@ import 'dart:ffi' as ffi;
 
 /// Bindings for `src/flutter_breez_liquid.h`.
 ///
-/// Regenerate bindings with `flutter pub run ffigen --config ffigen.yaml`.
+/// Regenerate bindings with `dart run ffigen --config ffigen.yaml`.
 ///
 class FlutterBreezLiquidBindings {
   /// Holds the symbol lookup function.

@@ -20,7 +20,7 @@ bip39 = "2.0.0"
 boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
 chrono = "0.4"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.4.0", features = [
+flutter_rust_bridge = { version = "=2.7.0", features = [
     "chrono",
 ], optional = true }
 log = { workspace = true }
@@ -30,7 +30,9 @@ lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-s
 #lwk_wollet = "0.7.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "e0f2548b4ba917e69c532eb9ff900b64ed9a3da3", features = ["liquid"] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "e0f2548b4ba917e69c532eb9ff900b64ed9a3da3", features = [
+    "liquid",
+] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
