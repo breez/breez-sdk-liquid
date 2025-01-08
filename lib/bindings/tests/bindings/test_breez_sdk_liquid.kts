@@ -18,7 +18,7 @@ try {
     sdk.removeEventListener(listenerId)
 
     println("$nodeInfo")
-    assert(nodeInfo.pubkey.equals("03d902f35f560e0470c63313c7369168d9d7df2d49bf295fd9fb7cb109ccee0494"))
+    assert(nodeInfo.walletInfo.pubkey.equals("03d902f35f560e0470c63313c7369168d9d7df2d49bf295fd9fb7cb109ccee0494"))
 } catch (ex: Exception) {
     throw RuntimeException(ex.toString())
 }

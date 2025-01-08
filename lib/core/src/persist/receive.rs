@@ -26,6 +26,7 @@ impl Persister {
                 create_response_json,
                 claim_private_key,
                 invoice,
+                timeout_block_height,
                 payment_hash,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -35,7 +36,7 @@ impl Persister {
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT DO NOTHING
             ",
             (
@@ -45,6 +46,7 @@ impl Persister {
                 &receive_swap.create_response_json,
                 &receive_swap.claim_private_key,
                 &receive_swap.invoice,
+                &receive_swap.timeout_block_height,
                 &receive_swap.payment_hash,
                 &receive_swap.payer_amount_sat,
                 &receive_swap.receiver_amount_sat,
@@ -126,6 +128,7 @@ impl Persister {
                 rs.claim_private_key,
                 rs.invoice,
                 rs.payment_hash,
+                rs.timeout_block_height,
                 rs.description,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -171,17 +174,18 @@ impl Persister {
             claim_private_key: row.get(3)?,
             invoice: row.get(4)?,
             payment_hash: row.get(5)?,
-            description: row.get(6)?,
-            payer_amount_sat: row.get(7)?,
-            receiver_amount_sat: row.get(8)?,
-            claim_fees_sat: row.get(9)?,
-            claim_tx_id: row.get(10)?,
-            lockup_tx_id: row.get(11)?,
-            mrh_address: row.get(12)?,
-            mrh_tx_id: row.get(13)?,
-            created_at: row.get(14)?,
-            state: row.get(15)?,
-            pair_fees_json: row.get(16)?,
+            timeout_block_height: row.get(6)?,
+            description: row.get(7)?,
+            payer_amount_sat: row.get(8)?,
+            receiver_amount_sat: row.get(9)?,
+            claim_fees_sat: row.get(10)?,
+            claim_tx_id: row.get(11)?,
+            lockup_tx_id: row.get(12)?,
+            mrh_address: row.get(13)?,
+            mrh_tx_id: row.get(14)?,
+            created_at: row.get(15)?,
+            state: row.get(16)?,
+            pair_fees_json: row.get(17)?,
         })
     }
 

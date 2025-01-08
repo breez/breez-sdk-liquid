@@ -4698,6 +4698,9 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
+  @ffi.Uint32()
+  external int liquid_expiration_blockheight;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
@@ -4723,6 +4726,10 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
+
+  external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 
@@ -5016,12 +5023,20 @@ final class wire_cst_list_refundable_swap extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_blockchain_info extends ffi.Struct {
+  @ffi.Uint32()
+  external int liquid_tip;
+
+  @ffi.Uint32()
+  external int bitcoin_tip;
+}
+
 final class wire_cst_check_message_response extends ffi.Struct {
   @ffi.Bool()
   external bool is_valid;
 }
 
-final class wire_cst_get_info_response extends ffi.Struct {
+final class wire_cst_wallet_info extends ffi.Struct {
   @ffi.Uint64()
   external int balance_sat;
 
@@ -5034,6 +5049,12 @@ final class wire_cst_get_info_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> fingerprint;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
+}
+
+final class wire_cst_get_info_response extends ffi.Struct {
+  external wire_cst_wallet_info wallet_info;
+
+  external wire_cst_blockchain_info blockchain_info;
 }
 
 final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {

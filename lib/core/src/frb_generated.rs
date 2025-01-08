@@ -2418,6 +2418,18 @@ impl SseDecode for crate::bindings::BitcoinAddressData {
     }
 }
 
+impl SseDecode for crate::model::BlockchainInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_liquidTip = <u32>::sse_decode(deserializer);
+        let mut var_bitcoinTip = <u32>::sse_decode(deserializer);
+        return crate::model::BlockchainInfo {
+            liquid_tip: var_liquidTip,
+            bitcoin_tip: var_bitcoinTip,
+        };
+    }
+}
+
 impl SseDecode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2607,17 +2619,11 @@ impl SseDecode for crate::bindings::FiatCurrency {
 impl SseDecode for crate::model::GetInfoResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_balanceSat = <u64>::sse_decode(deserializer);
-        let mut var_pendingSendSat = <u64>::sse_decode(deserializer);
-        let mut var_pendingReceiveSat = <u64>::sse_decode(deserializer);
-        let mut var_fingerprint = <String>::sse_decode(deserializer);
-        let mut var_pubkey = <String>::sse_decode(deserializer);
+        let mut var_walletInfo = <crate::model::WalletInfo>::sse_decode(deserializer);
+        let mut var_blockchainInfo = <crate::model::BlockchainInfo>::sse_decode(deserializer);
         return crate::model::GetInfoResponse {
-            balance_sat: var_balanceSat,
-            pending_send_sat: var_pendingSendSat,
-            pending_receive_sat: var_pendingReceiveSat,
-            fingerprint: var_fingerprint,
-            pubkey: var_pubkey,
+            wallet_info: var_walletInfo,
+            blockchain_info: var_blockchainInfo,
         };
     }
 }
@@ -3761,6 +3767,7 @@ impl SseDecode for crate::model::PaymentDetails {
             0 => {
                 let mut var_swapId = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_liquidExpirationBlockheight = <u32>::sse_decode(deserializer);
                 let mut var_preimage = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt11 = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt12Offer = <Option<String>>::sse_decode(deserializer);
@@ -3771,6 +3778,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 return crate::model::PaymentDetails::Lightning {
                     swap_id: var_swapId,
                     description: var_description,
+                    liquid_expiration_blockheight: var_liquidExpirationBlockheight,
                     preimage: var_preimage,
                     bolt11: var_bolt11,
                     bolt12_offer: var_bolt12Offer,
@@ -3791,11 +3799,15 @@ impl SseDecode for crate::model::PaymentDetails {
             2 => {
                 let mut var_swapId = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_liquidExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
+                let mut var_bitcoinExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Bitcoin {
                     swap_id: var_swapId,
                     description: var_description,
+                    liquid_expiration_blockheight: var_liquidExpirationBlockheight,
+                    bitcoin_expiration_blockheight: var_bitcoinExpirationBlockheight,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
                 };
@@ -4523,6 +4535,24 @@ impl SseDecode for usize {
     }
 }
 
+impl SseDecode for crate::model::WalletInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_balanceSat = <u64>::sse_decode(deserializer);
+        let mut var_pendingSendSat = <u64>::sse_decode(deserializer);
+        let mut var_pendingReceiveSat = <u64>::sse_decode(deserializer);
+        let mut var_fingerprint = <String>::sse_decode(deserializer);
+        let mut var_pubkey = <String>::sse_decode(deserializer);
+        return crate::model::WalletInfo {
+            balance_sat: var_balanceSat,
+            pending_send_sat: var_pendingSendSat,
+            pending_receive_sat: var_pendingReceiveSat,
+            fingerprint: var_fingerprint,
+            pubkey: var_pubkey,
+        };
+    }
+}
+
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -4738,6 +4768,24 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::BitcoinAddres
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::BitcoinAddressData> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::BlockchainInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.liquid_tip.into_into_dart().into_dart(),
+            self.bitcoin_tip.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::BlockchainInfo {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::BlockchainInfo>
+    for crate::model::BlockchainInfo
+{
+    fn into_into_dart(self) -> crate::model::BlockchainInfo {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -4985,11 +5033,8 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::FiatCurrency>
 impl flutter_rust_bridge::IntoDart for crate::model::GetInfoResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.balance_sat.into_into_dart().into_dart(),
-            self.pending_send_sat.into_into_dart().into_dart(),
-            self.pending_receive_sat.into_into_dart().into_dart(),
-            self.fingerprint.into_into_dart().into_dart(),
-            self.pubkey.into_into_dart().into_dart(),
+            self.wallet_info.into_into_dart().into_dart(),
+            self.blockchain_info.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5897,6 +5942,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Lightning {
                 swap_id,
                 description,
+                liquid_expiration_blockheight,
                 preimage,
                 bolt11,
                 bolt12_offer,
@@ -5908,6 +5954,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 0.into_dart(),
                 swap_id.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
+                liquid_expiration_blockheight.into_into_dart().into_dart(),
                 preimage.into_into_dart().into_dart(),
                 bolt11.into_into_dart().into_dart(),
                 bolt12_offer.into_into_dart().into_dart(),
@@ -5929,12 +5976,16 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
                 description,
+                liquid_expiration_blockheight,
+                bitcoin_expiration_blockheight,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => [
                 2.into_dart(),
                 swap_id.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
+                liquid_expiration_blockheight.into_into_dart().into_dart(),
+                bitcoin_expiration_blockheight.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
             ]
@@ -6798,6 +6849,25 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::UrlSuccessAct
         self.into()
     }
 }
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::WalletInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.balance_sat.into_into_dart().into_dart(),
+            self.pending_send_sat.into_into_dart().into_dart(),
+            self.pending_receive_sat.into_into_dart().into_dart(),
+            self.fingerprint.into_into_dart().into_dart(),
+            self.pubkey.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::WalletInfo {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::WalletInfo> for crate::model::WalletInfo {
+    fn into_into_dart(self) -> crate::model::WalletInfo {
+        self
+    }
+}
 
 impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -6940,6 +7010,14 @@ impl SseEncode for crate::bindings::BitcoinAddressData {
     }
 }
 
+impl SseEncode for crate::model::BlockchainInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.liquid_tip, serializer);
+        <u32>::sse_encode(self.bitcoin_tip, serializer);
+    }
+}
+
 impl SseEncode for bool {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7074,11 +7152,8 @@ impl SseEncode for crate::bindings::FiatCurrency {
 impl SseEncode for crate::model::GetInfoResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <u64>::sse_encode(self.balance_sat, serializer);
-        <u64>::sse_encode(self.pending_send_sat, serializer);
-        <u64>::sse_encode(self.pending_receive_sat, serializer);
-        <String>::sse_encode(self.fingerprint, serializer);
-        <String>::sse_encode(self.pubkey, serializer);
+        <crate::model::WalletInfo>::sse_encode(self.wallet_info, serializer);
+        <crate::model::BlockchainInfo>::sse_encode(self.blockchain_info, serializer);
     }
 }
 
@@ -7983,6 +8058,7 @@ impl SseEncode for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Lightning {
                 swap_id,
                 description,
+                liquid_expiration_blockheight,
                 preimage,
                 bolt11,
                 bolt12_offer,
@@ -7994,6 +8070,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(swap_id, serializer);
                 <String>::sse_encode(description, serializer);
+                <u32>::sse_encode(liquid_expiration_blockheight, serializer);
                 <Option<String>>::sse_encode(preimage, serializer);
                 <Option<String>>::sse_encode(bolt11, serializer);
                 <Option<String>>::sse_encode(bolt12_offer, serializer);
@@ -8013,12 +8090,16 @@ impl SseEncode for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
                 description,
+                liquid_expiration_blockheight,
+                bitcoin_expiration_blockheight,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(swap_id, serializer);
                 <String>::sse_encode(description, serializer);
+                <Option<u32>>::sse_encode(liquid_expiration_blockheight, serializer);
+                <Option<u32>>::sse_encode(bitcoin_expiration_blockheight, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
             }
@@ -8595,6 +8676,17 @@ impl SseEncode for usize {
     }
 }
 
+impl SseEncode for crate::model::WalletInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u64>::sse_encode(self.balance_sat, serializer);
+        <u64>::sse_encode(self.pending_send_sat, serializer);
+        <u64>::sse_encode(self.pending_receive_sat, serializer);
+        <String>::sse_encode(self.fingerprint, serializer);
+        <String>::sse_encode(self.pubkey, serializer);
+    }
+}
+
 #[cfg(not(target_family = "wasm"))]
 mod io {
     // This file is automatically generated, so please do not edit it.
@@ -8782,6 +8874,15 @@ mod io {
                 amount_sat: self.amount_sat.cst_decode(),
                 label: self.label.cst_decode(),
                 message: self.message.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::BlockchainInfo> for wire_cst_blockchain_info {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::BlockchainInfo {
+            crate::model::BlockchainInfo {
+                liquid_tip: self.liquid_tip.cst_decode(),
+                bitcoin_tip: self.bitcoin_tip.cst_decode(),
             }
         }
     }
@@ -9291,11 +9392,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::GetInfoResponse {
             crate::model::GetInfoResponse {
-                balance_sat: self.balance_sat.cst_decode(),
-                pending_send_sat: self.pending_send_sat.cst_decode(),
-                pending_receive_sat: self.pending_receive_sat.cst_decode(),
-                fingerprint: self.fingerprint.cst_decode(),
-                pubkey: self.pubkey.cst_decode(),
+                wallet_info: self.wallet_info.cst_decode(),
+                blockchain_info: self.blockchain_info.cst_decode(),
             }
         }
     }
@@ -10058,6 +10156,9 @@ mod io {
                     crate::model::PaymentDetails::Lightning {
                         swap_id: ans.swap_id.cst_decode(),
                         description: ans.description.cst_decode(),
+                        liquid_expiration_blockheight: ans
+                            .liquid_expiration_blockheight
+                            .cst_decode(),
                         preimage: ans.preimage.cst_decode(),
                         bolt11: ans.bolt11.cst_decode(),
                         bolt12_offer: ans.bolt12_offer.cst_decode(),
@@ -10079,6 +10180,12 @@ mod io {
                     crate::model::PaymentDetails::Bitcoin {
                         swap_id: ans.swap_id.cst_decode(),
                         description: ans.description.cst_decode(),
+                        liquid_expiration_blockheight: ans
+                            .liquid_expiration_blockheight
+                            .cst_decode(),
+                        bitcoin_expiration_blockheight: ans
+                            .bitcoin_expiration_blockheight
+                            .cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
                     }
@@ -10590,6 +10697,18 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::WalletInfo> for wire_cst_wallet_info {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::WalletInfo {
+            crate::model::WalletInfo {
+                balance_sat: self.balance_sat.cst_decode(),
+                pending_send_sat: self.pending_send_sat.cst_decode(),
+                pending_receive_sat: self.pending_receive_sat.cst_decode(),
+                fingerprint: self.fingerprint.cst_decode(),
+                pubkey: self.pubkey.cst_decode(),
+            }
+        }
+    }
     impl NewWithNullPtr for wire_cst_accept_payment_proposed_fees_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -10691,6 +10810,19 @@ mod io {
         }
     }
     impl Default for wire_cst_bitcoin_address_data {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_blockchain_info {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                liquid_tip: Default::default(),
+                bitcoin_tip: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_blockchain_info {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -10847,11 +10979,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_get_info_response {
         fn new_with_null_ptr() -> Self {
             Self {
-                balance_sat: Default::default(),
-                pending_send_sat: Default::default(),
-                pending_receive_sat: Default::default(),
-                fingerprint: core::ptr::null_mut(),
-                pubkey: core::ptr::null_mut(),
+                wallet_info: Default::default(),
+                blockchain_info: Default::default(),
             }
         }
     }
@@ -11820,6 +11949,22 @@ mod io {
         }
     }
     impl Default for wire_cst_url_success_action_data {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_wallet_info {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                balance_sat: Default::default(),
+                pending_send_sat: Default::default(),
+                pending_receive_sat: Default::default(),
+                fingerprint: core::ptr::null_mut(),
+                pubkey: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_wallet_info {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -12865,6 +13010,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_blockchain_info {
+        liquid_tip: u32,
+        bitcoin_tip: u32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_buy_bitcoin_request {
         prepare_response: wire_cst_prepare_buy_bitcoin_response,
         redirect_url: *mut wire_cst_list_prim_u_8_strict,
@@ -12945,11 +13096,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_get_info_response {
-        balance_sat: u64,
-        pending_send_sat: u64,
-        pending_receive_sat: u64,
-        fingerprint: *mut wire_cst_list_prim_u_8_strict,
-        pubkey: *mut wire_cst_list_prim_u_8_strict,
+        wallet_info: wire_cst_wallet_info,
+        blockchain_info: wire_cst_blockchain_info,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13602,6 +13750,7 @@ mod io {
     pub struct wire_cst_PaymentDetails_Lightning {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
+        liquid_expiration_blockheight: u32,
         preimage: *mut wire_cst_list_prim_u_8_strict,
         bolt11: *mut wire_cst_list_prim_u_8_strict,
         bolt12_offer: *mut wire_cst_list_prim_u_8_strict,
@@ -13621,6 +13770,8 @@ mod io {
     pub struct wire_cst_PaymentDetails_Bitcoin {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
+        liquid_expiration_blockheight: *mut u32,
+        bitcoin_expiration_blockheight: *mut u32,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
     }
@@ -14046,6 +14197,15 @@ mod io {
         description: *mut wire_cst_list_prim_u_8_strict,
         url: *mut wire_cst_list_prim_u_8_strict,
         matches_callback_domain: bool,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_wallet_info {
+        balance_sat: u64,
+        pending_send_sat: u64,
+        pending_receive_sat: u64,
+        fingerprint: *mut wire_cst_list_prim_u_8_strict,
+        pubkey: *mut wire_cst_list_prim_u_8_strict,
     }
 }
 #[cfg(not(target_family = "wasm"))]

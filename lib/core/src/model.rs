@@ -540,9 +540,14 @@ pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
-/// Returned when calling [crate::sdk::LiquidSdk::get_info].
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct BlockchainInfo {
+    pub liquid_tip: u32,
+    pub bitcoin_tip: u32,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct GetInfoResponse {
+pub struct WalletInfo {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
     /// Amount that is being used for ongoing Send swaps
@@ -553,6 +558,16 @@ pub struct GetInfoResponse {
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::get_info].
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetInfoResponse {
+    /// The wallet information, such as the balance, fingerprint and public key
+    pub wallet_info: WalletInfo,
+    /// The latest synced blockchain information, such as the Liquid/Bitcoin tips
+    #[serde(default)]
+    pub blockchain_info: BlockchainInfo,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::sign_message].
@@ -908,6 +923,7 @@ pub(crate) struct SendSwap {
     /// Persisted as soon as a refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
+    pub(crate) timeout_block_height: u64,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
 }
@@ -1001,6 +1017,7 @@ pub(crate) struct ReceiveSwap {
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
     /// Afterwards, it shows the lockup tx creation time.
     pub(crate) created_at: u32,
+    pub(crate) timeout_block_height: u32,
     pub(crate) state: PaymentState,
 }
 impl ReceiveSwap {
@@ -1164,6 +1181,7 @@ pub enum PaymentState {
     /// [prepare_refund](crate::sdk::LiquidSdk::prepare_refund)/[refund](crate::sdk::LiquidSdk::refund).
     WaitingFeeAcceptance = 7,
 }
+
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
@@ -1294,6 +1312,9 @@ pub struct PaymentSwapData {
     /// Swap creation timestamp
     pub created_at: u32,
 
+    /// The height of the block at which the swap will no longer be valid
+    pub expiration_blockheight: u32,
+
     pub preimage: Option<String>,
     pub bolt11: Option<String>,
     pub bolt12_offer: Option<String>,
@@ -1344,7 +1365,10 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+        /// The height of the block at which the swap will no longer be valid
+        liquid_expiration_blockheight: u32,
+
+        /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
 
         /// Represents the Bolt11 invoice associated with a payment
@@ -1380,6 +1404,14 @@ pub enum PaymentDetails {
 
         /// Represents the invoice description
         description: String,
+
+        /// The height of the Liquid block at which the swap will no longer be valid
+        /// It should always be populated in case of an outgoing chain swap
+        liquid_expiration_blockheight: Option<u32>,
+
+        /// The height of the Bitcoin block at which the swap will no longer be valid
+        /// It should always be populated in case of an incoming chain swap
+        bitcoin_expiration_blockheight: Option<u32>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,

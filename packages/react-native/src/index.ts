@@ -46,6 +46,11 @@ export interface BitcoinAddressData {
     message?: string
 }
 
+export interface BlockchainInfo {
+    liquidTip: number
+    bitcoinTip: number
+}
+
 export interface BuyBitcoinRequest {
     prepareResponse: PrepareBuyBitcoinResponse
     redirectUrl?: string
@@ -120,11 +125,8 @@ export interface FiatCurrency {
 }
 
 export interface GetInfoResponse {
-    balanceSat: number
-    pendingSendSat: number
-    pendingReceiveSat: number
-    fingerprint: string
-    pubkey: string
+    walletInfo: WalletInfo
+    blockchainInfo: BlockchainInfo
 }
 
 export interface LnInvoice {
@@ -454,6 +456,14 @@ export interface UrlSuccessActionData {
     matchesCallbackDomain: boolean
 }
 
+export interface WalletInfo {
+    balanceSat: number
+    pendingSendSat: number
+    pendingReceiveSat: number
+    fingerprint: string
+    pubkey: string
+}
+
 export enum AesSuccessActionDataResultVariant {
     DECRYPTED = "decrypted",
     ERROR_STATUS = "errorStatus"
@@ -632,6 +642,7 @@ export type PaymentDetails = {
     type: PaymentDetailsVariant.LIGHTNING,
     swapId: string
     description: string
+    liquidExpirationBlockheight: number
     preimage?: string
     bolt11?: string
     bolt12Offer?: string
@@ -647,6 +658,8 @@ export type PaymentDetails = {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string
     description: string
+    bitcoinExpirationBlockheight?: number
+    liquidExpirationBlockheight?: number
     refundTxId?: string
     refundTxAmountSat?: number
 }

@@ -489,6 +489,7 @@ typedef struct wire_cst_ln_url_info {
 typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   struct wire_cst_list_prim_u_8_strict *description;
+  uint32_t liquid_expiration_blockheight;
   struct wire_cst_list_prim_u_8_strict *preimage;
   struct wire_cst_list_prim_u_8_strict *bolt11;
   struct wire_cst_list_prim_u_8_strict *bolt12_offer;
@@ -506,6 +507,8 @@ typedef struct wire_cst_PaymentDetails_Liquid {
 typedef struct wire_cst_PaymentDetails_Bitcoin {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   struct wire_cst_list_prim_u_8_strict *description;
+  uint32_t *liquid_expiration_blockheight;
+  uint32_t *bitcoin_expiration_blockheight;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
 } wire_cst_PaymentDetails_Bitcoin;
@@ -710,16 +713,26 @@ typedef struct wire_cst_list_refundable_swap {
   int32_t len;
 } wire_cst_list_refundable_swap;
 
+typedef struct wire_cst_blockchain_info {
+  uint32_t liquid_tip;
+  uint32_t bitcoin_tip;
+} wire_cst_blockchain_info;
+
 typedef struct wire_cst_check_message_response {
   bool is_valid;
 } wire_cst_check_message_response;
 
-typedef struct wire_cst_get_info_response {
+typedef struct wire_cst_wallet_info {
   uint64_t balance_sat;
   uint64_t pending_send_sat;
   uint64_t pending_receive_sat;
   struct wire_cst_list_prim_u_8_strict *fingerprint;
   struct wire_cst_list_prim_u_8_strict *pubkey;
+} wire_cst_wallet_info;
+
+typedef struct wire_cst_get_info_response {
+  struct wire_cst_wallet_info wallet_info;
+  struct wire_cst_blockchain_info blockchain_info;
 } wire_cst_get_info_response;
 
 typedef struct wire_cst_InputType_BitcoinAddress {

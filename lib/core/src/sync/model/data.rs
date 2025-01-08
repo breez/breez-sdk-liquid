@@ -1,3 +1,4 @@
+use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -122,6 +123,8 @@ pub(crate) struct SendSyncData {
     pub(crate) refund_private_key: String,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    #[serde(default)]
+    pub(crate) timeout_block_height: u64,
     pub(crate) created_at: u32,
     pub(crate) preimage: Option<String>,
     pub(crate) bolt12_offer: Option<String>,
@@ -164,6 +167,7 @@ impl From<SendSwap> for SendSyncData {
             refund_private_key: value.refund_private_key,
             payer_amount_sat: value.payer_amount_sat,
             receiver_amount_sat: value.receiver_amount_sat,
+            timeout_block_height: value.timeout_block_height,
             created_at: value.created_at,
             preimage: value.preimage,
             description: value.description,
@@ -185,6 +189,7 @@ impl From<SendSyncData> for SendSwap {
             pair_fees_json: val.pair_fees_json,
             create_response_json: val.create_response_json,
             created_at: val.created_at,
+            timeout_block_height: val.timeout_block_height,
             refund_private_key: val.refund_private_key,
             bolt12_offer: val.bolt12_offer,
             state: PaymentState::Created,
@@ -206,6 +211,8 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) mrh_address: String,
+    #[serde(default)]
+    pub(crate) timeout_block_height: u32,
     pub(crate) created_at: u32,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
@@ -240,6 +247,7 @@ impl From<ReceiveSwap> for ReceiveSyncData {
             payer_amount_sat: value.payer_amount_sat,
             receiver_amount_sat: value.receiver_amount_sat,
             mrh_address: value.mrh_address,
+            timeout_block_height: value.timeout_block_height,
             created_at: value.created_at,
             description: value.description,
         }
@@ -261,6 +269,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             receiver_amount_sat: val.receiver_amount_sat,
             claim_fees_sat: val.claim_fees_sat,
             mrh_address: val.mrh_address,
+            timeout_block_height: val.timeout_block_height,
             created_at: val.created_at,
             state: PaymentState::Created,
             claim_tx_id: None,
@@ -282,7 +291,7 @@ impl PaymentDetailsSyncData {
     pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
         for field in updated_fields {
             match field.as_str() {
-                "destination" => self.destination = other.destination.clone(),
+                "destination" => self.destination.clone_from(&other.destination),
                 "description" => clone_if_set(&mut self.description, &other.description),
                 "lnurl_info" => clone_if_set(&mut self.lnurl_info, &other.lnurl_info),
                 _ => continue,
@@ -355,7 +364,7 @@ impl SyncData {
                 base.merge(other, updated_fields)
             }
             (SyncData::Receive(ref mut _base), SyncData::Receive(_other)) => {
-                log::warn!("Attempting to merge for unnecessary type SyncData::Receive");
+                bail!("Merge not supported for sync data of type Receive")
             }
             (
                 SyncData::LastDerivationIndex(our_index),

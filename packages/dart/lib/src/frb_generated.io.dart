@@ -75,6 +75,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw);
 
   @protected
+  BlockchainInfo dco_decode_blockchain_info(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
@@ -615,6 +618,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt dco_decode_usize(dynamic raw);
 
   @protected
+  WalletInfo dco_decode_wallet_info(dynamic raw);
+
+  @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
   @protected
@@ -664,6 +670,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer);
+
+  @protected
+  BlockchainInfo sse_decode_blockchain_info(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -1210,6 +1219,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  WalletInfo sse_decode_wallet_info(SseDeserializer deserializer);
 
   @protected
   ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(AnyhowException raw) {
@@ -2033,6 +2045,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_blockchain_info(BlockchainInfo apiObj, wire_cst_blockchain_info wireObj) {
+    wireObj.liquid_tip = cst_encode_u_32(apiObj.liquidTip);
+    wireObj.bitcoin_tip = cst_encode_u_32(apiObj.bitcoinTip);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_accept_payment_proposed_fees_request(
       AcceptPaymentProposedFeesRequest apiObj,
       ffi.Pointer<wire_cst_accept_payment_proposed_fees_request> wireObj) {
@@ -2405,11 +2423,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_get_info_response(GetInfoResponse apiObj, wire_cst_get_info_response wireObj) {
-    wireObj.balance_sat = cst_encode_u_64(apiObj.balanceSat);
-    wireObj.pending_send_sat = cst_encode_u_64(apiObj.pendingSendSat);
-    wireObj.pending_receive_sat = cst_encode_u_64(apiObj.pendingReceiveSat);
-    wireObj.fingerprint = cst_encode_String(apiObj.fingerprint);
-    wireObj.pubkey = cst_encode_String(apiObj.pubkey);
+    cst_api_fill_to_wire_wallet_info(apiObj.walletInfo, wireObj.wallet_info);
+    cst_api_fill_to_wire_blockchain_info(apiObj.blockchainInfo, wireObj.blockchain_info);
   }
 
   @protected
@@ -2928,6 +2943,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is PaymentDetails_Lightning) {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
       var pre_description = cst_encode_String(apiObj.description);
+      var pre_liquid_expiration_blockheight = cst_encode_u_32(apiObj.liquidExpirationBlockheight);
       var pre_preimage = cst_encode_opt_String(apiObj.preimage);
       var pre_bolt11 = cst_encode_opt_String(apiObj.bolt11);
       var pre_bolt12_offer = cst_encode_opt_String(apiObj.bolt12Offer);
@@ -2938,6 +2954,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 0;
       wireObj.kind.Lightning.swap_id = pre_swap_id;
       wireObj.kind.Lightning.description = pre_description;
+      wireObj.kind.Lightning.liquid_expiration_blockheight = pre_liquid_expiration_blockheight;
       wireObj.kind.Lightning.preimage = pre_preimage;
       wireObj.kind.Lightning.bolt11 = pre_bolt11;
       wireObj.kind.Lightning.bolt12_offer = pre_bolt12_offer;
@@ -2958,11 +2975,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is PaymentDetails_Bitcoin) {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
       var pre_description = cst_encode_String(apiObj.description);
+      var pre_liquid_expiration_blockheight =
+          cst_encode_opt_box_autoadd_u_32(apiObj.liquidExpirationBlockheight);
+      var pre_bitcoin_expiration_blockheight =
+          cst_encode_opt_box_autoadd_u_32(apiObj.bitcoinExpirationBlockheight);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
       wireObj.tag = 2;
       wireObj.kind.Bitcoin.swap_id = pre_swap_id;
       wireObj.kind.Bitcoin.description = pre_description;
+      wireObj.kind.Bitcoin.liquid_expiration_blockheight = pre_liquid_expiration_blockheight;
+      wireObj.kind.Bitcoin.bitcoin_expiration_blockheight = pre_bitcoin_expiration_blockheight;
       wireObj.kind.Bitcoin.refund_tx_id = pre_refund_tx_id;
       wireObj.kind.Bitcoin.refund_tx_amount_sat = pre_refund_tx_amount_sat;
       return;
@@ -3429,6 +3452,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_wallet_info(WalletInfo apiObj, wire_cst_wallet_info wireObj) {
+    wireObj.balance_sat = cst_encode_u_64(apiObj.balanceSat);
+    wireObj.pending_send_sat = cst_encode_u_64(apiObj.pendingSendSat);
+    wireObj.pending_receive_sat = cst_encode_u_64(apiObj.pendingReceiveSat);
+    wireObj.fingerprint = cst_encode_String(apiObj.fingerprint);
+    wireObj.pubkey = cst_encode_String(apiObj.pubkey);
+  }
+
+  @protected
   int cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
       BindingLiquidSdk raw);
 
@@ -3528,6 +3560,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_blockchain_info(BlockchainInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
@@ -4083,6 +4118,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_wallet_info(WalletInfo self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -6328,6 +6366,9 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
+  @ffi.Uint32()
+  external int liquid_expiration_blockheight;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
@@ -6353,6 +6394,10 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
+
+  external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 
@@ -6646,12 +6691,20 @@ final class wire_cst_list_refundable_swap extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_blockchain_info extends ffi.Struct {
+  @ffi.Uint32()
+  external int liquid_tip;
+
+  @ffi.Uint32()
+  external int bitcoin_tip;
+}
+
 final class wire_cst_check_message_response extends ffi.Struct {
   @ffi.Bool()
   external bool is_valid;
 }
 
-final class wire_cst_get_info_response extends ffi.Struct {
+final class wire_cst_wallet_info extends ffi.Struct {
   @ffi.Uint64()
   external int balance_sat;
 
@@ -6664,6 +6717,12 @@ final class wire_cst_get_info_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> fingerprint;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> pubkey;
+}
+
+final class wire_cst_get_info_response extends ffi.Struct {
+  external wire_cst_wallet_info wallet_info;
+
+  external wire_cst_blockchain_info blockchain_info;
 }
 
 final class wire_cst_InputType_BitcoinAddress extends ffi.Struct {

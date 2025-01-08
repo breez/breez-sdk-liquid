@@ -19,6 +19,6 @@ def test():
     sdk.remove_event_listener(listener_id)
 
     print(node_info)
-    assert node_info.pubkey == "03d902f35f560e0470c63313c7369168d9d7df2d49bf295fd9fb7cb109ccee0494"
+    assert node_info.wallet_info.pubkey == "03d902f35f560e0470c63313c7369168d9d7df2d49bf295fd9fb7cb109ccee0494"
 
 test()

@@ -49,6 +49,27 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
+class BlockchainInfo {
+  final int liquidTip;
+  final int bitcoinTip;
+
+  const BlockchainInfo({
+    required this.liquidTip,
+    required this.bitcoinTip,
+  });
+
+  @override
+  int get hashCode => liquidTip.hashCode ^ bitcoinTip.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BlockchainInfo &&
+          runtimeType == other.runtimeType &&
+          liquidTip == other.liquidTip &&
+          bitcoinTip == other.bitcoinTip;
+}
+
 /// An argument of [PrepareBuyBitcoinRequest] when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 enum BuyBitcoinProvider {
   moonpay,
@@ -310,47 +331,27 @@ class FetchPaymentProposedFeesResponse {
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
 class GetInfoResponse {
-  /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
-  final BigInt balanceSat;
+  /// The wallet information, such as the balance, fingerprint and public key
+  final WalletInfo walletInfo;
 
-  /// Amount that is being used for ongoing Send swaps
-  final BigInt pendingSendSat;
-
-  /// Incoming amount that is pending from ongoing Receive swaps
-  final BigInt pendingReceiveSat;
-
-  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
-  final String fingerprint;
-
-  /// The wallet's pubkey. Used to verify signed messages.
-  final String pubkey;
+  /// The latest synced blockchain information, such as the Liquid/Bitcoin tips
+  final BlockchainInfo blockchainInfo;
 
   const GetInfoResponse({
-    required this.balanceSat,
-    required this.pendingSendSat,
-    required this.pendingReceiveSat,
-    required this.fingerprint,
-    required this.pubkey,
+    required this.walletInfo,
+    required this.blockchainInfo,
   });
 
   @override
-  int get hashCode =>
-      balanceSat.hashCode ^
-      pendingSendSat.hashCode ^
-      pendingReceiveSat.hashCode ^
-      fingerprint.hashCode ^
-      pubkey.hashCode;
+  int get hashCode => walletInfo.hashCode ^ blockchainInfo.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is GetInfoResponse &&
           runtimeType == other.runtimeType &&
-          balanceSat == other.balanceSat &&
-          pendingSendSat == other.pendingSendSat &&
-          pendingReceiveSat == other.pendingReceiveSat &&
-          fingerprint == other.fingerprint &&
-          pubkey == other.pubkey;
+          walletInfo == other.walletInfo &&
+          blockchainInfo == other.blockchainInfo;
 }
 
 @freezed
@@ -778,7 +779,10 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
-    /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+    /// The height of the block at which the swap will no longer be valid
+    required int liquidExpirationBlockheight,
+
+    /// The preimage of the paid invoice (proof of payment).
     String? preimage,
 
     /// Represents the Bolt11 invoice associated with a payment
@@ -815,6 +819,14 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// Represents the invoice description
     required String description,
+
+    /// The height of the Liquid block at which the swap will no longer be valid
+    /// It should always be populated in case of an outgoing chain swap
+    int? liquidExpirationBlockheight,
+
+    /// The height of the Bitcoin block at which the swap will no longer be valid
+    /// It should always be populated in case of an incoming chain swap
+    int? bitcoinExpirationBlockheight,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
@@ -1568,4 +1580,48 @@ class SignMessageResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SignMessageResponse && runtimeType == other.runtimeType && signature == other.signature;
+}
+
+class WalletInfo {
+  /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
+  final BigInt balanceSat;
+
+  /// Amount that is being used for ongoing Send swaps
+  final BigInt pendingSendSat;
+
+  /// Incoming amount that is pending from ongoing Receive swaps
+  final BigInt pendingReceiveSat;
+
+  /// The wallet's fingerprint. It is used to build the working directory in [Config::get_wallet_dir].
+  final String fingerprint;
+
+  /// The wallet's pubkey. Used to verify signed messages.
+  final String pubkey;
+
+  const WalletInfo({
+    required this.balanceSat,
+    required this.pendingSendSat,
+    required this.pendingReceiveSat,
+    required this.fingerprint,
+    required this.pubkey,
+  });
+
+  @override
+  int get hashCode =>
+      balanceSat.hashCode ^
+      pendingSendSat.hashCode ^
+      pendingReceiveSat.hashCode ^
+      fingerprint.hashCode ^
+      pubkey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WalletInfo &&
+          runtimeType == other.runtimeType &&
+          balanceSat == other.balanceSat &&
+          pendingSendSat == other.pendingSendSat &&
+          pendingReceiveSat == other.pendingReceiveSat &&
+          fingerprint == other.fingerprint &&
+          pubkey == other.pubkey;
 }

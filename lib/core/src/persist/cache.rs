@@ -1,13 +1,14 @@
 use anyhow::Result;
-use rusqlite::{Transaction, TransactionBehavior};
+use rusqlite::{OptionalExtension, Transaction, TransactionBehavior};
 use std::str::FromStr;
 
 use crate::model::GetInfoResponse;
 use crate::sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, RecordType};
 
-use super::Persister;
+use super::{BlockchainInfo, Persister, WalletInfo};
 
 const KEY_WALLET_INFO: &str = "wallet_info";
+const KEY_BLOCKCHAIN_INFO: &str = "blockchain_info";
 const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
@@ -64,17 +65,48 @@ impl Persister {
         res
     }
 
-    pub fn set_wallet_info(&self, info: &GetInfoResponse) -> Result<()> {
+    pub fn set_wallet_info(&self, info: &WalletInfo) -> Result<()> {
         let serialized_info = serde_json::to_string(info)?;
         self.update_cached_item(KEY_WALLET_INFO, serialized_info)
     }
 
-    pub fn get_wallet_info(&self) -> Result<Option<GetInfoResponse>> {
-        let info_str = self.get_cached_item(KEY_WALLET_INFO)?;
-        Ok(match info_str {
-            Some(str) => serde_json::from_str(str.as_str())?,
-            None => None,
-        })
+    pub fn set_blockchain_info(&self, info: &BlockchainInfo) -> Result<()> {
+        let serialized_info = serde_json::to_string(info)?;
+        self.update_cached_item(KEY_BLOCKCHAIN_INFO, serialized_info)
+    }
+
+    pub fn get_info(&self) -> Result<Option<GetInfoResponse>> {
+        let con = self.get_connection()?;
+
+        let info: Option<(Option<String>, Option<String>)> = con
+            .query_row(
+                &format!(
+                    "
+            SELECT 
+                c1.value AS wallet_info,
+                COALESCE(c2.value, NULL) AS blockchain_info
+            FROM (SELECT value FROM cached_items WHERE key = '{KEY_WALLET_INFO}') c1
+            LEFT JOIN (SELECT value FROM cached_items WHERE key = '{KEY_BLOCKCHAIN_INFO}') c2
+        "
+                ),
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()?;
+
+        match info {
+            Some((Some(wallet_info), blockchain_info)) => {
+                let wallet_info = serde_json::from_str(&wallet_info)?;
+                let blockchain_info = blockchain_info
+                    .and_then(|info| serde_json::from_str(&info).ok())
+                    .unwrap_or_default();
+                Ok(Some(GetInfoResponse {
+                    wallet_info,
+                    blockchain_info,
+                }))
+            }
+            _ => Ok(None),
+        }
     }
 
     pub fn set_swapper_proxy_url(&self, swapper_proxy_url: String) -> Result<()> {

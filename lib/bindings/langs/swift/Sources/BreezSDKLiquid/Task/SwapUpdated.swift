@@ -59,9 +59,9 @@ class SwapUpdatedTask : TaskProtocol {
     func getSwapId(details: PaymentDetails?) -> String? {
         if let details = details {
             switch details {
-            case let .bitcoin(swapId, _, _, _):
+            case let .bitcoin(swapId, _, _, _, _, _):
                 return swapId
-            case let .lightning(swapId, _, _, _, _, _, _, _, _):
+            case let .lightning(swapId, _, _, _, _, _, _, _, _, _):
                 return swapId
             default:
                 break

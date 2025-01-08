@@ -169,6 +169,39 @@ fun asBitcoinAddressDataList(arr: ReadableArray): List<BitcoinAddressData> {
     return list
 }
 
+fun asBlockchainInfo(blockchainInfo: ReadableMap): BlockchainInfo? {
+    if (!validateMandatoryFields(
+            blockchainInfo,
+            arrayOf(
+                "liquidTip",
+                "bitcoinTip",
+            ),
+        )
+    ) {
+        return null
+    }
+    val liquidTip = blockchainInfo.getInt("liquidTip").toUInt()
+    val bitcoinTip = blockchainInfo.getInt("bitcoinTip").toUInt()
+    return BlockchainInfo(liquidTip, bitcoinTip)
+}
+
+fun readableMapOf(blockchainInfo: BlockchainInfo): ReadableMap =
+    readableMapOf(
+        "liquidTip" to blockchainInfo.liquidTip,
+        "bitcoinTip" to blockchainInfo.bitcoinTip,
+    )
+
+fun asBlockchainInfoList(arr: ReadableArray): List<BlockchainInfo> {
+    val list = ArrayList<BlockchainInfo>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBlockchainInfo(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBuyBitcoinRequest(buyBitcoinRequest: ReadableMap): BuyBitcoinRequest? {
     if (!validateMandatoryFields(
             buyBitcoinRequest,
@@ -621,31 +654,22 @@ fun asGetInfoResponse(getInfoResponse: ReadableMap): GetInfoResponse? {
     if (!validateMandatoryFields(
             getInfoResponse,
             arrayOf(
-                "balanceSat",
-                "pendingSendSat",
-                "pendingReceiveSat",
-                "fingerprint",
-                "pubkey",
+                "walletInfo",
+                "blockchainInfo",
             ),
         )
     ) {
         return null
     }
-    val balanceSat = getInfoResponse.getDouble("balanceSat").toULong()
-    val pendingSendSat = getInfoResponse.getDouble("pendingSendSat").toULong()
-    val pendingReceiveSat = getInfoResponse.getDouble("pendingReceiveSat").toULong()
-    val fingerprint = getInfoResponse.getString("fingerprint")!!
-    val pubkey = getInfoResponse.getString("pubkey")!!
-    return GetInfoResponse(balanceSat, pendingSendSat, pendingReceiveSat, fingerprint, pubkey)
+    val walletInfo = getInfoResponse.getMap("walletInfo")?.let { asWalletInfo(it) }!!
+    val blockchainInfo = getInfoResponse.getMap("blockchainInfo")?.let { asBlockchainInfo(it) }!!
+    return GetInfoResponse(walletInfo, blockchainInfo)
 }
 
 fun readableMapOf(getInfoResponse: GetInfoResponse): ReadableMap =
     readableMapOf(
-        "balanceSat" to getInfoResponse.balanceSat,
-        "pendingSendSat" to getInfoResponse.pendingSendSat,
-        "pendingReceiveSat" to getInfoResponse.pendingReceiveSat,
-        "fingerprint" to getInfoResponse.fingerprint,
-        "pubkey" to getInfoResponse.pubkey,
+        "walletInfo" to readableMapOf(getInfoResponse.walletInfo),
+        "blockchainInfo" to readableMapOf(getInfoResponse.blockchainInfo),
     )
 
 fun asGetInfoResponseList(arr: ReadableArray): List<GetInfoResponse> {
@@ -2697,6 +2721,48 @@ fun asUrlSuccessActionDataList(arr: ReadableArray): List<UrlSuccessActionData> {
     return list
 }
 
+fun asWalletInfo(walletInfo: ReadableMap): WalletInfo? {
+    if (!validateMandatoryFields(
+            walletInfo,
+            arrayOf(
+                "balanceSat",
+                "pendingSendSat",
+                "pendingReceiveSat",
+                "fingerprint",
+                "pubkey",
+            ),
+        )
+    ) {
+        return null
+    }
+    val balanceSat = walletInfo.getDouble("balanceSat").toULong()
+    val pendingSendSat = walletInfo.getDouble("pendingSendSat").toULong()
+    val pendingReceiveSat = walletInfo.getDouble("pendingReceiveSat").toULong()
+    val fingerprint = walletInfo.getString("fingerprint")!!
+    val pubkey = walletInfo.getString("pubkey")!!
+    return WalletInfo(balanceSat, pendingSendSat, pendingReceiveSat, fingerprint, pubkey)
+}
+
+fun readableMapOf(walletInfo: WalletInfo): ReadableMap =
+    readableMapOf(
+        "balanceSat" to walletInfo.balanceSat,
+        "pendingSendSat" to walletInfo.pendingSendSat,
+        "pendingReceiveSat" to walletInfo.pendingReceiveSat,
+        "fingerprint" to walletInfo.fingerprint,
+        "pubkey" to walletInfo.pubkey,
+    )
+
+fun asWalletInfoList(arr: ReadableArray): List<WalletInfo> {
+    val list = ArrayList<WalletInfo>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asWalletInfo(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asAesSuccessActionDataResult(aesSuccessActionDataResult: ReadableMap): AesSuccessActionDataResult? {
     val type = aesSuccessActionDataResult.getString("type")
 
@@ -3172,6 +3238,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
     if (type == "lightning") {
         val swapId = paymentDetails.getString("swapId")!!
         val description = paymentDetails.getString("description")!!
+        val liquidExpirationBlockheight = paymentDetails.getInt("liquidExpirationBlockheight").toUInt()
         val preimage = if (hasNonNullKey(paymentDetails, "preimage")) paymentDetails.getString("preimage") else null
         val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
         val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
@@ -3200,6 +3267,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         return PaymentDetails.Lightning(
             swapId,
             description,
+            liquidExpirationBlockheight,
             preimage,
             bolt11,
             bolt12Offer,
@@ -3217,6 +3285,26 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
         val description = paymentDetails.getString("description")!!
+        val bitcoinExpirationBlockheight =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "bitcoinExpirationBlockheight",
+                )
+            ) {
+                paymentDetails.getInt("bitcoinExpirationBlockheight").toUInt()
+            } else {
+                null
+            }
+        val liquidExpirationBlockheight =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "liquidExpirationBlockheight",
+                )
+            ) {
+                paymentDetails.getInt("liquidExpirationBlockheight").toUInt()
+            } else {
+                null
+            }
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
             if (hasNonNullKey(
@@ -3228,7 +3316,14 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Bitcoin(swapId, description, refundTxId, refundTxAmountSat)
+        return PaymentDetails.Bitcoin(
+            swapId,
+            description,
+            bitcoinExpirationBlockheight,
+            liquidExpirationBlockheight,
+            refundTxId,
+            refundTxAmountSat,
+        )
     }
     return null
 }
@@ -3240,6 +3335,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "type", "lightning")
             pushToMap(map, "swapId", paymentDetails.swapId)
             pushToMap(map, "description", paymentDetails.description)
+            pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
             pushToMap(map, "preimage", paymentDetails.preimage)
             pushToMap(map, "bolt11", paymentDetails.bolt11)
             pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
@@ -3257,6 +3353,8 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "type", "bitcoin")
             pushToMap(map, "swapId", paymentDetails.swapId)
             pushToMap(map, "description", paymentDetails.description)
+            pushToMap(map, "bitcoinExpirationBlockheight", paymentDetails.bitcoinExpirationBlockheight)
+            pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
         }

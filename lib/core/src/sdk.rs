@@ -355,11 +355,11 @@ impl LiquidSdk {
                     _ = interval.tick() => {
                         // Get the Liquid tip and process a new block
                         let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await;
-                        let is_new_liquid_block = match liquid_tip_res {
+                        let is_new_liquid_block = match &liquid_tip_res {
                             Ok(height) => {
                                 debug!("Got Liquid tip: {height}");
-                                let is_new_liquid_block = height > current_liquid_block;
-                                current_liquid_block = height;
+                                let is_new_liquid_block = *height > current_liquid_block;
+                                current_liquid_block = *height;
                                 is_new_liquid_block
                             },
                             Err(e) => {
@@ -369,17 +369,25 @@ impl LiquidSdk {
                         };
                         // Get the Bitcoin tip and process a new block
                         let bitcoin_tip_res = cloned.bitcoin_chain_service.lock().await.tip().map(|tip| tip.height as u32);
-                        let is_new_bitcoin_block = match bitcoin_tip_res {
+                        let is_new_bitcoin_block = match &bitcoin_tip_res {
                             Ok(height) => {
                                 debug!("Got Bitcoin tip: {height}");
-                                let is_new_bitcoin_block = height > current_bitcoin_block;
-                                current_bitcoin_block = height;
+                                let is_new_bitcoin_block = *height > current_bitcoin_block;
+                                current_bitcoin_block = *height;
                                 is_new_bitcoin_block
                             },
                             Err(e) => {
                                 error!("Failed to fetch Bitcoin tip {e}");
                                 false
                             }
+                        };
+
+                        if let (Ok(liquid_tip), Ok(bitcoin_tip)) = (liquid_tip_res, bitcoin_tip_res) {
+                            cloned.persister.set_blockchain_info(&BlockchainInfo {
+                                liquid_tip,
+                                bitcoin_tip
+                            })
+                            .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
                         };
 
                         // Only partial sync when there are no new Liquid or Bitcoin blocks
@@ -609,15 +617,15 @@ impl LiquidSdk {
         Ok(())
     }
 
-    /// Get the wallet info from persistant storage
+    /// Get the wallet and blockchain info from local storage
     pub async fn get_info(&self) -> SdkResult<GetInfoResponse> {
         self.ensure_is_started().await?;
-        let maybe_wallet_info = self.persister.get_wallet_info()?;
-        match maybe_wallet_info {
-            Some(wallet_info) => Ok(wallet_info),
+        let maybe_info = self.persister.get_info()?;
+        match maybe_info {
+            Some(info) => Ok(info),
             None => {
                 self.update_wallet_info().await?;
-                self.persister.get_wallet_info()?.ok_or(SdkError::Generic {
+                self.persister.get_info()?.ok_or(SdkError::Generic {
                     err: "Info not found".into(),
                 })
             }
@@ -919,8 +927,8 @@ impl LiquidSdk {
                 (receiver_amount_sat, fees_sat) = match amount {
                     PayAmount::Drain => {
                         ensure_sdk!(
-                            get_info_res.pending_receive_sat == 0
-                                && get_info_res.pending_send_sat == 0,
+                            get_info_res.wallet_info.pending_receive_sat == 0
+                                && get_info_res.wallet_info.pending_send_sat == 0,
                             PaymentError::Generic {
                                 err: "Cannot drain while there are pending payments".to_string(),
                             }
@@ -928,7 +936,8 @@ impl LiquidSdk {
                         let drain_fees_sat = self
                             .estimate_drain_tx_fee(None, Some(&liquid_address_data.address))
                             .await?;
-                        let drain_amount_sat = get_info_res.balance_sat - drain_fees_sat;
+                        let drain_amount_sat =
+                            get_info_res.wallet_info.balance_sat - drain_fees_sat;
                         info!("Drain amount: {drain_amount_sat} sat");
                         (drain_amount_sat, drain_fees_sat)
                     }
@@ -1025,7 +1034,7 @@ impl LiquidSdk {
 
         let payer_amount_sat = receiver_amount_sat + fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= get_info_res.balance_sat,
+            payer_amount_sat <= get_info_res.wallet_info.balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1089,7 +1098,7 @@ impl LiquidSdk {
 
                 let payer_amount_sat = amount_sat + fees_sat;
                 ensure_sdk!(
-                    payer_amount_sat <= self.get_info().await?.balance_sat,
+                    payer_amount_sat <= self.get_info().await?.wallet_info.balance_sat,
                     PaymentError::InsufficientFunds
                 );
 
@@ -1123,7 +1132,7 @@ impl LiquidSdk {
         let amount_sat = get_invoice_amount!(invoice);
         let payer_amount_sat = amount_sat + fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= self.get_info().await?.wallet_info.balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1180,7 +1189,7 @@ impl LiquidSdk {
         let receiver_amount_sat = invoice.amount_msats() / 1_000;
         let payer_amount_sat = receiver_amount_sat + fees_sat;
         ensure_sdk!(
-            payer_amount_sat <= self.get_info().await?.balance_sat,
+            payer_amount_sat <= self.get_info().await?.wallet_info.balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1359,6 +1368,7 @@ impl LiquidSdk {
                     invoice: invoice.to_string(),
                     bolt12_offer,
                     payment_hash: Some(payment_hash.to_string()),
+                    timeout_block_height: create_response.timeout_block_height,
                     description,
                     preimage: None,
                     payer_amount_sat,
@@ -1497,12 +1507,13 @@ impl LiquidSdk {
             }
             PayAmount::Drain => {
                 ensure_sdk!(
-                    get_info_res.pending_receive_sat == 0 && get_info_res.pending_send_sat == 0,
+                    get_info_res.wallet_info.pending_receive_sat == 0
+                        && get_info_res.wallet_info.pending_send_sat == 0,
                     PaymentError::Generic {
                         err: "Cannot drain while there are pending payments".to_string(),
                     }
                 );
-                let payer_amount_sat = get_info_res.balance_sat;
+                let payer_amount_sat = get_info_res.wallet_info.balance_sat;
                 let lockup_fees_sat = self.estimate_drain_tx_fee(None, None).await?;
 
                 let user_lockup_amount_sat = payer_amount_sat - lockup_fees_sat;
@@ -1524,7 +1535,7 @@ impl LiquidSdk {
         };
 
         ensure_sdk!(
-            payer_amount_sat <= get_info_res.balance_sat,
+            payer_amount_sat <= get_info_res.wallet_info.balance_sat,
             PaymentError::InsufficientFunds
         );
 
@@ -1556,7 +1567,7 @@ impl LiquidSdk {
         info!("Paying onchain, request = {req:?}");
 
         let claim_address = self.validate_bitcoin_address(&req.address).await?;
-        let balance_sat = self.get_info().await?.balance_sat;
+        let balance_sat = self.get_info().await?.wallet_info.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
         let pair = self.get_chain_pair(Direction::Outgoing)?;
         let claim_fees_sat = req.prepare_response.claim_fees_sat;
@@ -1984,6 +1995,7 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
             Bolt11InvoiceDescription::Hash(_) => None,
         };
+
         self.persister
             .insert_or_update_receive_swap(&ReceiveSwap {
                 id: swap_id.clone(),
@@ -1992,6 +2004,7 @@ impl LiquidSdk {
                 claim_private_key: keypair.display_secret().to_string(),
                 invoice: invoice.to_string(),
                 payment_hash: Some(preimage_hash),
+                timeout_block_height: create_response.timeout_block_height,
                 description: invoice_description,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -2533,7 +2546,7 @@ impl LiquidSdk {
             }
         }
 
-        let info_response = GetInfoResponse {
+        let info_response = WalletInfo {
             balance_sat: wallet_amount_sat as u64,
             pending_send_sat,
             pending_receive_sat,
