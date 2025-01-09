@@ -210,8 +210,10 @@ impl Recoverer {
                             log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        chain_swap.actual_payer_amount_sat =
-                            Some(recovered_data.btc_user_lockup_amount_sat);
+                        if recovered_data.btc_user_lockup_amount_sat > 0 {
+                            chain_swap.actual_payer_amount_sat =
+                                Some(recovered_data.btc_user_lockup_amount_sat);
+                        }
                         let is_expired =
                             bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
                         let min_lockup_amount_sat = chain_swap.payer_amount_sat;
