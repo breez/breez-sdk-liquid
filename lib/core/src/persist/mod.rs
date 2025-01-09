@@ -13,9 +13,9 @@ use std::ops::Not;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
+use crate::model::*;
 use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
-use crate::{get_invoice_destination_pubkey, model::*};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use lwk_wollet::WalletTx;
@@ -675,7 +675,7 @@ impl Persister {
                 payment_hash,
                 destination_pubkey: destination_pubkey.or_else(|| {
                     invoice.and_then(|invoice| {
-                        get_invoice_destination_pubkey!(&invoice, bolt12_offer.is_some())
+                        utils::get_invoice_destination_pubkey(&invoice, bolt12_offer.is_some()).ok()
                     })
                 }),
                 lnurl_info: maybe_payment_details_lnurl_info,

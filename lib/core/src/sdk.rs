@@ -1362,7 +1362,7 @@ impl LiquidSdk {
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
                 let destination_pubkey =
-                    get_invoice_destination_pubkey!(invoice, bolt12_offer.is_some());
+                    utils::get_invoice_destination_pubkey(invoice, bolt12_offer.is_some())?;
 
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
@@ -1370,7 +1370,7 @@ impl LiquidSdk {
                     invoice: invoice.to_string(),
                     bolt12_offer,
                     payment_hash: Some(payment_hash.to_string()),
-                    destination_pubkey,
+                    destination_pubkey: Some(destination_pubkey),
                     timeout_block_height: create_response.timeout_block_height,
                     description,
                     preimage: None,

@@ -3,6 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::error::{PaymentError, SdkResult};
 use anyhow::{anyhow, ensure, Result};
+use boltz_client::ToHex;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::elements::{
@@ -12,6 +13,7 @@ use lwk_wollet::elements::{
 use sdk_common::bitcoin::bech32;
 use sdk_common::bitcoin::bech32::FromBase32;
 use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
+use sdk_common::lightning_invoice::Bolt11Invoice;
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()
@@ -64,4 +66,18 @@ pub(crate) fn parse_bolt12_invoice(invoice: &str) -> Result<Bolt12Invoice> {
 
     sdk_common::lightning_125::offers::invoice::Bolt12Invoice::try_from(data)
         .map_err(|e| anyhow!("Failed to parse BOLT12: {e:?}"))
+}
+
+/// Parse and extract the destination pubkey from the invoice.
+/// The payee pubkey for Bolt11 and signing pubkey for Bolt12.
+pub(crate) fn get_invoice_destination_pubkey(invoice: &str, is_bolt12: bool) -> Result<String> {
+    if is_bolt12 {
+        parse_bolt12_invoice(invoice).map(|i| i.signing_pubkey().to_hex())
+    } else {
+        invoice
+            .trim()
+            .parse::<Bolt11Invoice>()
+            .map(|i| sdk_common::prelude::invoice_pubkey(&i))
+            .map_err(Into::into)
+    }
 }

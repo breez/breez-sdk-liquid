@@ -1878,23 +1878,6 @@ macro_rules! get_invoice_description {
 }
 
 #[macro_export]
-macro_rules! get_invoice_destination_pubkey {
-    ($invoice:expr, $is_bolt12:expr) => {
-        if $is_bolt12 {
-            utils::parse_bolt12_invoice($invoice)
-                .ok()
-                .map(|i| i.signing_pubkey().to_hex())
-        } else {
-            $invoice
-                .trim()
-                .parse::<Bolt11Invoice>()
-                .ok()
-                .map(|i| sdk_common::prelude::invoice_pubkey(&i))
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! get_updated_fields {
     ($($var:ident),* $(,)?) => {{
         let mut options = Vec::new();
