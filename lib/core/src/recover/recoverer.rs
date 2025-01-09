@@ -73,6 +73,14 @@ impl Recoverer {
             if let Ok(preimage) = Self::get_send_swap_preimage_from_claim_tx(swap_id, &claim_tx) {
                 preimages.insert(swap_id, preimage);
             }
+            match Self::get_send_swap_preimage_from_claim_tx(swap_id, &claim_tx) {
+                Ok(preimage) => {
+                    preimages.insert(swap_id, preimage);
+                }
+                Err(e) => {
+                    error!("Failed to get swap preimage from claim tx for swap {swap_id}: {e}");
+                }
+            }
         }
         Ok(preimages)
     }
@@ -115,11 +123,15 @@ impl Recoverer {
     /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
     pub(crate) async fn recover_from_onchain(&self, swaps: &mut [Swap]) -> Result<()> {
-        self.onchain_wallet.full_scan().await?;
-        let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
-
+        // We get the swaps histories before getting an updated tx map of the onchain wallet to
+        //  prevent the histories having txs the wallet does not know about. We accept the risk
+        //  of the tx map including txs that belong to the swaps histories but don't appear in them
+        //  due to race conditions
         let swaps_list = swaps.to_vec().try_into()?;
         let histories = self.fetch_swaps_histories(&swaps_list).await?;
+
+        self.onchain_wallet.full_scan().await?;
+        let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
 
         let recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
         let recovered_send_with_claim_tx = recovered_send_data
