@@ -491,9 +491,10 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *description;
   uint32_t liquid_expiration_blockheight;
   struct wire_cst_list_prim_u_8_strict *preimage;
-  struct wire_cst_list_prim_u_8_strict *bolt11;
+  struct wire_cst_list_prim_u_8_strict *invoice;
   struct wire_cst_list_prim_u_8_strict *bolt12_offer;
   struct wire_cst_list_prim_u_8_strict *payment_hash;
+  struct wire_cst_list_prim_u_8_strict *destination_pubkey;
   struct wire_cst_ln_url_info *lnurl_info;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;

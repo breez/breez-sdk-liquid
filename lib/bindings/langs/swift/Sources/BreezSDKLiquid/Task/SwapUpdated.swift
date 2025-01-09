@@ -61,7 +61,7 @@ class SwapUpdatedTask : TaskProtocol {
             switch details {
             case let .bitcoin(swapId, _, _, _, _, _):
                 return swapId
-            case let .lightning(swapId, _, _, _, _, _, _, _, _, _):
+            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _):
                 return swapId
             default:
                 break

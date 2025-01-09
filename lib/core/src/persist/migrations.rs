@@ -221,5 +221,9 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE receive_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE send_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
         ",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN destination_pubkey TEXT;
+        ALTER TABLE send_swaps ADD COLUMN destination_pubkey TEXT;
+        ",
     ]
 }
