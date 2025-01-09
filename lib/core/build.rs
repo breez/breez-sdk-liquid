@@ -1,7 +1,6 @@
 use anyhow::*;
 use glob::glob;
 use std::env;
-use std::os::unix::process::CommandExt as _;
 use std::process::Command;
 use std::result::Result::Ok;
 
@@ -43,7 +42,8 @@ fn compile_protos() -> Result<()> {
         .arg("--edition")
         .arg("2021")
         .arg("src/sync/model/sync.rs")
-        .exec();
+        .output()
+        .unwrap();
     Ok(())
 }
 
