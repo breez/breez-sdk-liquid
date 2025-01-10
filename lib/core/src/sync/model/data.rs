@@ -110,6 +110,7 @@ impl From<ChainSyncData> for ChainSwap {
             user_lockup_tx_id: None,
             claim_tx_id: None,
             refund_tx_id: None,
+            version: 0,
         }
     }
 }
@@ -198,6 +199,7 @@ impl From<SendSyncData> for SendSwap {
             state: PaymentState::Created,
             lockup_tx_id: None,
             refund_tx_id: None,
+            version: 0,
         }
     }
 }
@@ -281,6 +283,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             claim_tx_id: None,
             lockup_tx_id: None,
             mrh_tx_id: None,
+            version: 0,
         }
     }
 }

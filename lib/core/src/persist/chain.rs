@@ -72,9 +72,10 @@ impl Persister {
                 pair_fees_json = :pair_fees_json,
                 state = :state,
                 actual_payer_amount_sat = :actual_payer_amount_sat,
-                accepted_receiver_amount_sat = COALESCE(accepted_receiver_amount_sat, :accepted_receiver_amount_sat)
+                accepted_receiver_amount_sat = :accepted_receiver_amount_sat
             WHERE
-                id = :id",
+                id = :id AND
+                version = :version",
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
@@ -88,6 +89,7 @@ impl Persister {
                 ":state": &chain_swap.state,
                 ":actual_payer_amount_sat": &chain_swap.actual_payer_amount_sat,
                 ":accepted_receiver_amount_sat": &chain_swap.accepted_receiver_amount_sat,
+                ":version": &chain_swap.version,
             },
         )?;
 
@@ -153,7 +155,8 @@ impl Persister {
                 state,
                 pair_fees_json,
                 actual_payer_amount_sat,
-                accepted_receiver_amount_sat
+                accepted_receiver_amount_sat,
+                version
             FROM chain_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -205,6 +208,7 @@ impl Persister {
             pair_fees_json: row.get(20)?,
             actual_payer_amount_sat: row.get(21)?,
             accepted_receiver_amount_sat: row.get(22)?,
+            version: row.get(23)?,
         })
     }
 

@@ -65,7 +65,8 @@ impl Persister {
                 refund_tx_id = :refund_tx_id,
                 state = :state
             WHERE
-                id = :id",
+                id = :id AND
+                version = :version",
             named_params! {
                 ":id": &send_swap.id,
                 ":description": &send_swap.description,
@@ -73,6 +74,7 @@ impl Persister {
                 ":lockup_tx_id": &send_swap.lockup_tx_id,
                 ":refund_tx_id": &send_swap.refund_tx_id,
                 ":state": &send_swap.state,
+                ":version": &send_swap.version,
             },
         )?;
 
@@ -154,7 +156,8 @@ impl Persister {
                 refund_tx_id,
                 created_at,
                 state,
-                pair_fees_json
+                pair_fees_json,
+                version
             FROM send_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -197,6 +200,7 @@ impl Persister {
             created_at: row.get(14)?,
             state: row.get(15)?,
             pair_fees_json: row.get(16)?,
+            version: row.get(17)?,
         })
     }
 
