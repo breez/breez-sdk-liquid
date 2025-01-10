@@ -130,6 +130,7 @@ pub(crate) struct SendSyncData {
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
+    pub(crate) destination_pubkey: Option<String>,
 }
 
 impl SendSyncData {
@@ -172,6 +173,7 @@ impl From<SendSwap> for SendSyncData {
             preimage: value.preimage,
             description: value.description,
             bolt12_offer: value.bolt12_offer,
+            destination_pubkey: value.destination_pubkey,
         }
     }
 }
@@ -182,6 +184,7 @@ impl From<SendSyncData> for SendSwap {
             id: val.swap_id,
             invoice: val.invoice,
             payment_hash: val.payment_hash,
+            destination_pubkey: val.destination_pubkey,
             description: val.description,
             preimage: val.preimage,
             payer_amount_sat: val.payer_amount_sat,
@@ -216,6 +219,7 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) created_at: u32,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
+    pub(crate) destination_pubkey: Option<String>,
 }
 
 impl ReceiveSyncData {
@@ -250,6 +254,7 @@ impl From<ReceiveSwap> for ReceiveSyncData {
             timeout_block_height: value.timeout_block_height,
             created_at: value.created_at,
             description: value.description,
+            destination_pubkey: value.destination_pubkey,
         }
     }
 }
@@ -264,6 +269,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             claim_private_key: val.claim_private_key,
             invoice: val.invoice,
             payment_hash: val.payment_hash,
+            destination_pubkey: val.destination_pubkey,
             description: val.description,
             payer_amount_sat: val.payer_amount_sat,
             receiver_amount_sat: val.receiver_amount_sat,

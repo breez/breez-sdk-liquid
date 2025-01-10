@@ -4703,11 +4703,13 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt11;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination_pubkey;
 
   external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
 

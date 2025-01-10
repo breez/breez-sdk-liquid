@@ -644,9 +644,10 @@ export type PaymentDetails = {
     description: string
     liquidExpirationBlockheight: number
     preimage?: string
-    bolt11?: string
+    invoice?: string
     bolt12Offer?: string
     paymentHash?: string
+    destinationPubkey?: string
     lnurlInfo?: LnUrlInfo
     refundTxId?: string
     refundTxAmountSat?: number

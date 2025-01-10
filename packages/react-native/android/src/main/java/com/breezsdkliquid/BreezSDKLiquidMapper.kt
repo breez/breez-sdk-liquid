@@ -3240,9 +3240,19 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val description = paymentDetails.getString("description")!!
         val liquidExpirationBlockheight = paymentDetails.getInt("liquidExpirationBlockheight").toUInt()
         val preimage = if (hasNonNullKey(paymentDetails, "preimage")) paymentDetails.getString("preimage") else null
-        val bolt11 = if (hasNonNullKey(paymentDetails, "bolt11")) paymentDetails.getString("bolt11") else null
+        val invoice = if (hasNonNullKey(paymentDetails, "invoice")) paymentDetails.getString("invoice") else null
         val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
         val paymentHash = if (hasNonNullKey(paymentDetails, "paymentHash")) paymentDetails.getString("paymentHash") else null
+        val destinationPubkey =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "destinationPubkey",
+                )
+            ) {
+                paymentDetails.getString("destinationPubkey")
+            } else {
+                null
+            }
         val lnurlInfo =
             if (hasNonNullKey(
                     paymentDetails,
@@ -3269,9 +3279,10 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             description,
             liquidExpirationBlockheight,
             preimage,
-            bolt11,
+            invoice,
             bolt12Offer,
             paymentHash,
+            destinationPubkey,
             lnurlInfo,
             refundTxId,
             refundTxAmountSat,
@@ -3337,9 +3348,10 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
             pushToMap(map, "preimage", paymentDetails.preimage)
-            pushToMap(map, "bolt11", paymentDetails.bolt11)
+            pushToMap(map, "invoice", paymentDetails.invoice)
             pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
             pushToMap(map, "paymentHash", paymentDetails.paymentHash)
+            pushToMap(map, "destinationPubkey", paymentDetails.destinationPubkey)
             pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)

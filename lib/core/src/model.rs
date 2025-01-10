@@ -910,6 +910,7 @@ pub(crate) struct SendSwap {
     /// The bolt12 offer, if this swap sends to a Bolt12 offer
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
+    pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
@@ -999,6 +1000,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
     pub(crate) payment_hash: Option<String>,
+    pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
@@ -1316,9 +1318,10 @@ pub struct PaymentSwapData {
     pub expiration_blockheight: u32,
 
     pub preimage: Option<String>,
-    pub bolt11: Option<String>,
+    pub invoice: Option<String>,
     pub bolt12_offer: Option<String>,
     pub payment_hash: Option<String>,
+    pub destination_pubkey: Option<String>,
     pub description: String,
 
     /// Amount sent by the swap payer
@@ -1371,15 +1374,18 @@ pub enum PaymentDetails {
         /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
 
-        /// Represents the Bolt11 invoice associated with a payment
+        /// Represents the Bolt11/Bolt12 invoice associated with a payment
         /// In the case of a Send payment, this is the invoice paid by the swapper
         /// In the case of a Receive payment, this is the invoice paid by the user
-        bolt11: Option<String>,
+        invoice: Option<String>,
 
         bolt12_offer: Option<String>,
 
         /// The payment hash of the invoice
         payment_hash: Option<String>,
+
+        /// The invoice destination/payee pubkey
+        destination_pubkey: Option<String>,
 
         /// The payment LNURL info
         lnurl_info: Option<LnUrlInfo>,
@@ -1518,7 +1524,7 @@ impl Payment {
         };
 
         Payment {
-            destination: swap.bolt11.clone(),
+            destination: swap.invoice.clone(),
             tx_id: None,
             unblinding_data: None,
             timestamp: swap.created_at,
@@ -1545,15 +1551,15 @@ impl Payment {
             destination: match &swap {
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Receive,
-                    bolt11,
+                    invoice,
                     ..
-                }) => bolt11.clone(),
+                }) => invoice.clone(),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Send,
-                    bolt11,
+                    invoice,
                     bolt12_offer,
                     ..
-                }) => bolt11.clone().or(bolt12_offer.clone()),
+                }) => bolt12_offer.clone().or(invoice.clone()),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Chain,
                     claim_address,

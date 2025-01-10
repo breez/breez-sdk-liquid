@@ -25,6 +25,7 @@ impl Persister {
                 invoice,
                 bolt12_offer,
                 payment_hash,
+                destination_pubkey,
                 timeout_block_height,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -34,7 +35,7 @@ impl Persister {
                 state,
                 pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT DO NOTHING
             ",
             (
@@ -43,6 +44,7 @@ impl Persister {
                 &send_swap.invoice,
                 &send_swap.bolt12_offer,
                 &send_swap.payment_hash,
+                &send_swap.destination_pubkey,
                 &send_swap.timeout_block_height,
                 &send_swap.payer_amount_sat,
                 &send_swap.receiver_amount_sat,
@@ -140,6 +142,7 @@ impl Persister {
                 invoice,
                 bolt12_offer,
                 payment_hash,
+                destination_pubkey,
                 timeout_block_height,
                 description,
                 preimage,
@@ -181,18 +184,19 @@ impl Persister {
             invoice: row.get(1)?,
             bolt12_offer: row.get(2)?,
             payment_hash: row.get(3)?,
-            timeout_block_height: row.get(4)?,
-            description: row.get(5)?,
-            preimage: row.get(6)?,
-            payer_amount_sat: row.get(7)?,
-            receiver_amount_sat: row.get(8)?,
-            create_response_json: row.get(9)?,
-            refund_private_key: row.get(10)?,
-            lockup_tx_id: row.get(11)?,
-            refund_tx_id: row.get(12)?,
-            created_at: row.get(13)?,
-            state: row.get(14)?,
-            pair_fees_json: row.get(15)?,
+            destination_pubkey: row.get(4)?,
+            timeout_block_height: row.get(5)?,
+            description: row.get(6)?,
+            preimage: row.get(7)?,
+            payer_amount_sat: row.get(8)?,
+            receiver_amount_sat: row.get(9)?,
+            create_response_json: row.get(10)?,
+            refund_private_key: row.get(11)?,
+            lockup_tx_id: row.get(12)?,
+            refund_tx_id: row.get(13)?,
+            created_at: row.get(14)?,
+            state: row.get(15)?,
+            pair_fees_json: row.get(16)?,
         })
     }
 

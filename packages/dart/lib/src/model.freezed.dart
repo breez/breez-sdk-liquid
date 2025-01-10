@@ -793,9 +793,10 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String description,
       int liquidExpirationBlockheight,
       String? preimage,
-      String? bolt11,
+      String? invoice,
       String? bolt12Offer,
       String? paymentHash,
+      String? destinationPubkey,
       LnUrlInfo? lnurlInfo,
       String? refundTxId,
       BigInt? refundTxAmountSat});
@@ -818,9 +819,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? description = null,
     Object? liquidExpirationBlockheight = null,
     Object? preimage = freezed,
-    Object? bolt11 = freezed,
+    Object? invoice = freezed,
     Object? bolt12Offer = freezed,
     Object? paymentHash = freezed,
+    Object? destinationPubkey = freezed,
     Object? lnurlInfo = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
@@ -842,9 +844,9 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
           ? _value.preimage
           : preimage // ignore: cast_nullable_to_non_nullable
               as String?,
-      bolt11: freezed == bolt11
-          ? _value.bolt11
-          : bolt11 // ignore: cast_nullable_to_non_nullable
+      invoice: freezed == invoice
+          ? _value.invoice
+          : invoice // ignore: cast_nullable_to_non_nullable
               as String?,
       bolt12Offer: freezed == bolt12Offer
           ? _value.bolt12Offer
@@ -853,6 +855,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
       paymentHash: freezed == paymentHash
           ? _value.paymentHash
           : paymentHash // ignore: cast_nullable_to_non_nullable
+              as String?,
+      destinationPubkey: freezed == destinationPubkey
+          ? _value.destinationPubkey
+          : destinationPubkey // ignore: cast_nullable_to_non_nullable
               as String?,
       lnurlInfo: freezed == lnurlInfo
           ? _value.lnurlInfo
@@ -878,9 +884,10 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       required this.description,
       required this.liquidExpirationBlockheight,
       this.preimage,
-      this.bolt11,
+      this.invoice,
       this.bolt12Offer,
       this.paymentHash,
+      this.destinationPubkey,
       this.lnurlInfo,
       this.refundTxId,
       this.refundTxAmountSat})
@@ -901,17 +908,21 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final String? preimage;
 
-  /// Represents the Bolt11 invoice associated with a payment
+  /// Represents the Bolt11/Bolt12 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
   @override
-  final String? bolt11;
+  final String? invoice;
   @override
   final String? bolt12Offer;
 
   /// The payment hash of the invoice
   @override
   final String? paymentHash;
+
+  /// The invoice destination/payee pubkey
+  @override
+  final String? destinationPubkey;
 
   /// The payment LNURL info
   @override
@@ -927,7 +938,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, bolt11: $bolt11, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -940,9 +951,11 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.liquidExpirationBlockheight, liquidExpirationBlockheight) ||
                 other.liquidExpirationBlockheight == liquidExpirationBlockheight) &&
             (identical(other.preimage, preimage) || other.preimage == preimage) &&
-            (identical(other.bolt11, bolt11) || other.bolt11 == bolt11) &&
+            (identical(other.invoice, invoice) || other.invoice == invoice) &&
             (identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer) &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash) &&
+            (identical(other.destinationPubkey, destinationPubkey) ||
+                other.destinationPubkey == destinationPubkey) &&
             (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
@@ -951,7 +964,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   int get hashCode => Object.hash(runtimeType, swapId, description, liquidExpirationBlockheight, preimage,
-      bolt11, bolt12Offer, paymentHash, lnurlInfo, refundTxId, refundTxAmountSat);
+      invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -968,9 +981,10 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       required final String description,
       required final int liquidExpirationBlockheight,
       final String? preimage,
-      final String? bolt11,
+      final String? invoice,
       final String? bolt12Offer,
       final String? paymentHash,
+      final String? destinationPubkey,
       final LnUrlInfo? lnurlInfo,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
@@ -988,14 +1002,17 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
   /// The preimage of the paid invoice (proof of payment).
   String? get preimage;
 
-  /// Represents the Bolt11 invoice associated with a payment
+  /// Represents the Bolt11/Bolt12 invoice associated with a payment
   /// In the case of a Send payment, this is the invoice paid by the swapper
   /// In the case of a Receive payment, this is the invoice paid by the user
-  String? get bolt11;
+  String? get invoice;
   String? get bolt12Offer;
 
   /// The payment hash of the invoice
   String? get paymentHash;
+
+  /// The invoice destination/payee pubkey
+  String? get destinationPubkey;
 
   /// The payment LNURL info
   LnUrlInfo? get lnurlInfo;

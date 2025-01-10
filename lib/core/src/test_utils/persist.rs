@@ -8,6 +8,7 @@ use sdk_common::{
     },
     lightning::ln::PaymentSecret,
     lightning_invoice::{Currency, InvoiceBuilder},
+    prelude::invoice_pubkey,
 };
 
 use crate::{
@@ -35,12 +36,14 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         .min_final_cltv_expiry_delta(144)
         .build_signed(|hash| Secp256k1::new().sign_ecdsa_recoverable(hash, &private_key))
         .expect("Expected valid invoice");
+    let destination_pubkey = invoice_pubkey(&invoice);
 
     SendSwap {
         id: generate_random_string(4),
         invoice: invoice.to_string(),
         bolt12_offer: None,
         payment_hash: Some(payment_hash.to_string()),
+        destination_pubkey: Some(destination_pubkey),
         timeout_block_height: 1459611,
         description: Some("Send to BTC lightning".to_string()),
         preimage: None,
@@ -112,6 +115,7 @@ pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSw
         claim_private_key: "179dc5137d2c211fb84e2159252832658afb6d03e095fb5cf324a2b782d2a5ca".to_string(),
         invoice: "lntb10u1pngqdj3pp5ujsq2txha9nnjwm3sql0t3g8hy67d6qvrr0ykygtycej44jvdljqdpz2djkuepqw3hjqnpdgf2yxgrpv3j8yetnwvcqz95xqyp2xqrzjqf4rczme3t5y9s94fkx7xcgwhj6zy9t56rwqhez9gl8s52k0scz8gzzxeyqq28qqqqqqqqqqqqqqq9gq2ysp5fmynazrpmuz05vp8r5dxpu9cupkaus7hcd258saklp3v79azt6qs9qxpqysgq5sxknac9fwe69q5vzffgayjddskzhjeyu6h8vx45m4svchsy2e3rv6yc3puht7pjzvhwfl7ljamkzfy2dsa75fxd5j82ug0ty0y4xhgq82gc9k".to_string(),
         payment_hash: Some("e4a0052cd7e967393b71803ef5c507b935e6e80c18de4b110b26332ad64c6fe4".to_string()),
+        destination_pubkey: Some("03f060953bef5b777dc77e44afa3859d022fc1a77c55138deb232ad7255e869c00".to_string()),
         payer_amount_sat: 1000,
         receiver_amount_sat: 587,
         pair_fees_json: r#"{

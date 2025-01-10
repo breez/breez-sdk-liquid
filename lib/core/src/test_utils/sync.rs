@@ -128,6 +128,7 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
         preimage: "".to_string(),
         payment_hash: None,
         description: None,
+        destination_pubkey: None,
     }
 }
 
@@ -146,6 +147,7 @@ pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
         payment_hash: None,
         description: None,
         bolt12_offer: None,
+        destination_pubkey: None,
     }
 }
 
