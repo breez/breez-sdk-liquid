@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use boltz_client::swaps::boltz::{ChainSwapDetails, CreateChainResponse};
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -59,7 +59,7 @@ impl Persister {
             ),
         )?;
 
-        con.execute(
+        let rows_affected = con.execute(
             "UPDATE chain_swaps
             SET
                 description = :description,
@@ -92,6 +92,21 @@ impl Persister {
                 ":version": &chain_swap.version,
             },
         )?;
+
+        // If a row exists with this id but version didn't match, no rows would be affected
+        // We need to check if the row exists with a different version
+        if rows_affected == 0 {
+            let count: i64 = con.query_row(
+                "SELECT COUNT(*) FROM chain_swaps WHERE id = ?",
+                [&chain_swap.id],
+                |row| row.get(0),
+            )?;
+
+            if count > 0 {
+                // Row exists but version didn't match
+                bail!("Version mismatch for chain swap {}", chain_swap.id);
+            }
+        }
 
         Ok(())
     }
@@ -489,5 +504,39 @@ impl InternalCreateChainResponse {
             lockup_details: boltz_create_response.lockup_details.clone(),
         };
         Ok(res)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::Direction;
+    use crate::test_utils::chain_swap::new_chain_swap;
+    use crate::test_utils::persist::create_persister;
+    use anyhow::Result;
+
+    #[tokio::test]
+    async fn test_writing_stale_swap() -> Result<()> {
+        create_persister!(storage);
+
+        let chain_swap = new_chain_swap(Direction::Incoming, None, false, None, false);
+        storage.insert_or_update_chain_swap(&chain_swap)?;
+
+        // read - update - write works if there are no updates in between
+        let mut chain_swap = storage.fetch_chain_swap_by_id(&chain_swap.id)?.unwrap();
+        chain_swap.claim_tx_id = Some("tx_id".to_string());
+        storage.insert_or_update_chain_swap(&chain_swap)?;
+
+        // read - update - write works if there are no updates in between even if no field changes
+        let chain_swap = storage.fetch_chain_swap_by_id(&chain_swap.id)?.unwrap();
+        storage.insert_or_update_chain_swap(&chain_swap)?;
+
+        // read - update - write fails if there are any updates in between
+        let mut chain_swap = storage.fetch_chain_swap_by_id(&chain_swap.id)?.unwrap();
+        chain_swap.claim_tx_id = Some("tx_id_2".to_string());
+        // Concurrent update
+        storage.update_chain_swap_accept_zero_conf(&chain_swap.id, true)?;
+        assert!(storage.insert_or_update_chain_swap(&chain_swap).is_err());
+
+        Ok(())
     }
 }

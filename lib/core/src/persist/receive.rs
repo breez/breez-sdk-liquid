@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -60,7 +60,7 @@ impl Persister {
             ),
         )?;
 
-        con.execute(
+        let rows_affected = con.execute(
             "UPDATE receive_swaps
             SET
                 description = :description,
@@ -81,6 +81,21 @@ impl Persister {
                 ":version": &receive_swap.version,
             },
         )?;
+
+        // If a row exists with this id but version didn't match, no rows would be affected
+        // We need to check if the row exists with a different version
+        if rows_affected == 0 {
+            let count: i64 = con.query_row(
+                "SELECT COUNT(*) FROM receive_swaps WHERE id = ?",
+                [&receive_swap.id],
+                |row| row.get(0),
+            )?;
+
+            if count > 0 {
+                // Row exists but version didn't match
+                bail!("Version mismatch for receive swap {}", receive_swap.id);
+            }
+        }
 
         if receive_swap.mrh_tx_id.is_some() {
             Self::delete_reserved_address_inner(con, &receive_swap.mrh_address)?;
@@ -447,6 +462,34 @@ mod tests {
 
         assert_eq!(new_state, updated_receive_swap.state);
         assert_eq!(claim_tx_id, updated_receive_swap.claim_tx_id.as_deref());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_writing_stale_swap() -> Result<()> {
+        create_persister!(storage);
+
+        let receive_swap = new_receive_swap(None);
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write works if there are no updates in between
+        let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        receive_swap.lockup_tx_id = Some("tx_id".to_string());
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write works if there are no updates in between even if no field changes
+        let receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write fails if there are any updates in between
+        let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        receive_swap.lockup_tx_id = Some("tx_id_2".to_string());
+        // Concurrent update
+        storage.set_receive_swap_claim_tx_id(&receive_swap.id, "tx_id")?;
+        assert!(storage
+            .insert_or_update_receive_swap(&receive_swap)
+            .is_err());
 
         Ok(())
     }
