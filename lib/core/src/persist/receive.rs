@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -81,21 +81,10 @@ impl Persister {
                 ":version": &receive_swap.version,
             },
         )?;
-
-        // If a row exists with this id but version didn't match, no rows would be affected
-        // We need to check if the row exists with a different version
-        if rows_affected == 0 {
-            let count: i64 = con.query_row(
-                "SELECT COUNT(*) FROM receive_swaps WHERE id = ?",
-                [&receive_swap.id],
-                |row| row.get(0),
-            )?;
-
-            if count > 0 {
-                // Row exists but version didn't match
-                bail!("Version mismatch for receive swap {}", receive_swap.id);
-            }
-        }
+        ensure_sdk!(
+            rows_affected > 0,
+            anyhow!("Version mismatch for receive swap {}", receive_swap.id)
+        );
 
         if receive_swap.mrh_tx_id.is_some() {
             Self::delete_reserved_address_inner(con, &receive_swap.mrh_address)?;

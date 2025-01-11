@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::CreateSubmarineResponse;
 use rusqlite::{named_params, params, Connection, Row};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -77,21 +77,10 @@ impl Persister {
                 ":version": &send_swap.version,
             },
         )?;
-
-        // If a row exists with this id but version didn't match, no rows would be affected
-        // We need to check if the row exists with a different version
-        if rows_affected == 0 {
-            let count: i64 = con.query_row(
-                "SELECT COUNT(*) FROM send_swaps WHERE id = ?",
-                [&send_swap.id],
-                |row| row.get(0),
-            )?;
-
-            if count > 0 {
-                // Row exists but version didn't match
-                bail!("Version mismatch for send swap {}", send_swap.id);
-            }
-        }
+        ensure_sdk!(
+            rows_affected > 0,
+            anyhow!("Version mismatch for send swap {}", send_swap.id)
+        );
 
         Ok(())
     }
