@@ -442,7 +442,7 @@ mod tests {
 
     use crate::{
         persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
-        prelude::{Direction, PaymentState, Signer},
+        prelude::{Direction, Signer},
         sync::model::{data::LAST_DERIVATION_INDEX_DATA_ID, SyncState},
         test_utils::{
             chain_swap::new_chain_swap,
@@ -466,7 +466,7 @@ mod tests {
 
         let sync_data = vec![
             SyncData::Receive(new_receive_sync_data()),
-            SyncData::Send(new_send_sync_data(None)),
+            SyncData::Send(new_send_sync_data()),
             SyncData::Chain(new_chain_sync_data(None)),
         ];
         let incoming_records = vec![
@@ -504,28 +504,18 @@ mod tests {
             return Err(anyhow!("Chain swap not found"));
         }
 
-        let new_preimage = Some("preimage".to_string());
         let new_accept_zero_conf = false;
-        let sync_data = vec![
-            SyncData::Send(new_send_sync_data(new_preimage.clone())),
-            SyncData::Chain(new_chain_sync_data(Some(new_accept_zero_conf))),
-        ];
-        let incoming_records = vec![
-            Record::new(sync_data[0].clone(), 4, signer.clone())?,
-            Record::new(sync_data[1].clone(), 5, signer.clone())?,
-        ];
+        let sync_data = vec![SyncData::Chain(new_chain_sync_data(Some(
+            new_accept_zero_conf,
+        )))];
+        let incoming_records = vec![Record::new(sync_data[0].clone(), 4, signer.clone())?];
 
         for record in incoming_records {
             incoming_tx.send(record).await?;
         }
         sync_service.pull().await?;
 
-        if let Some(send_swap) = persister.fetch_send_swap_by_id(sync_data[0].id())? {
-            assert_eq!(send_swap.preimage, new_preimage);
-        } else {
-            return Err(anyhow!("Send swap not found"));
-        }
-        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(sync_data[1].id())? {
+        if let Some(chain_swap) = persister.fetch_chain_swap_by_id(sync_data[0].id())? {
             assert_eq!(chain_swap.accept_zero_conf, new_accept_zero_conf);
         } else {
             return Err(anyhow!("Chain swap not found"));
@@ -604,27 +594,29 @@ mod tests {
         drop(outgoing);
 
         // Test update before push
-        let swap = new_send_swap(None);
-        persister.insert_or_update_send_swap(&swap)?;
-        let new_preimage = Some("new-preimage");
-        persister.try_handle_send_swap_update(
-            &swap.id,
-            PaymentState::Pending,
-            new_preimage,
-            None,
-            None,
-        )?;
+        let swap = new_chain_swap(Direction::Incoming, None, false, None, true);
+        persister.insert_or_update_chain_swap(&swap)?;
+
+        let new_accept_zero_conf = true;
+        let new_accepted_receiver_amount_sat = Some(1000);
+        persister.update_chain_swap_accept_zero_conf(&swap.id, new_accept_zero_conf)?;
+        persister.update_accepted_receiver_amount(&swap.id, new_accepted_receiver_amount_sat)?;
 
         sync_service.push().await?;
 
         let outgoing = outgoing_records.lock().await;
 
-        let record = get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Send)?;
+        let record =
+            get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Chain)?;
         let decrypted_record = record.clone().decrypt(signer.clone())?;
         assert_eq!(decrypted_record.data.id(), &swap.id);
         match decrypted_record.data {
-            SyncData::Send(data) => {
-                assert_eq!(data.preimage, new_preimage.map(|p| p.to_string()));
+            SyncData::Chain(data) => {
+                assert_eq!(data.accept_zero_conf, new_accept_zero_conf);
+                assert_eq!(
+                    data.accepted_receiver_amount_sat,
+                    new_accepted_receiver_amount_sat
+                );
             }
             _ => {
                 return Err(anyhow::anyhow!("Unexpected sync data type received."));
@@ -633,29 +625,30 @@ mod tests {
         drop(outgoing);
 
         // Test update after push
-        let swap = new_send_swap(None);
-        persister.insert_or_update_send_swap(&swap)?;
+        let swap = new_chain_swap(Direction::Incoming, None, false, None, true);
+        persister.insert_or_update_chain_swap(&swap)?;
 
         sync_service.push().await?;
 
-        let new_preimage = Some("new-preimage");
-        persister.try_handle_send_swap_update(
-            &swap.id,
-            PaymentState::Pending,
-            new_preimage,
-            None,
-            None,
-        )?;
+        let new_accept_zero_conf = true;
+        let new_accepted_receiver_amount_sat = Some(1000);
+        persister.update_chain_swap_accept_zero_conf(&swap.id, new_accept_zero_conf)?;
+        persister.update_accepted_receiver_amount(&swap.id, new_accepted_receiver_amount_sat)?;
 
         sync_service.push().await?;
 
         let outgoing = outgoing_records.lock().await;
-        let record = get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Send)?;
+        let record =
+            get_outgoing_record(persister.clone(), &outgoing, &swap.id, RecordType::Chain)?;
         let decrypted_record = record.clone().decrypt(signer.clone())?;
         assert_eq!(decrypted_record.data.id(), &swap.id);
         match decrypted_record.data {
-            SyncData::Send(data) => {
-                assert_eq!(data.preimage, new_preimage.map(|p| p.to_string()),);
+            SyncData::Chain(data) => {
+                assert_eq!(data.accept_zero_conf, new_accept_zero_conf);
+                assert_eq!(
+                    data.accepted_receiver_amount_sat,
+                    new_accepted_receiver_amount_sat
+                );
             }
             _ => {
                 return Err(anyhow::anyhow!("Unexpected sync data type received."));
@@ -700,8 +693,8 @@ mod tests {
         assert_eq!(incoming_records.len(), 1); // Inapplicable records are stored for later
 
         // Clean outgoing
-        let swap = new_send_swap(None);
-        persister.insert_or_update_send_swap(&swap)?;
+        let swap = new_chain_swap(Direction::Incoming, None, false, None, true);
+        persister.insert_or_update_chain_swap(&swap)?;
         let outgoing_changes = persister.get_sync_outgoing_changes()?;
         assert_eq!(outgoing_changes.len(), 1); // Changes have been set
 
@@ -709,14 +702,8 @@ mod tests {
         let outgoing_changes = persister.get_sync_outgoing_changes()?;
         assert_eq!(outgoing_changes.len(), 0); // Changes have been cleaned
 
-        let new_preimage = Some("new-preimage");
-        persister.try_handle_send_swap_update(
-            &swap.id,
-            PaymentState::Pending,
-            new_preimage,
-            None,
-            None,
-        )?;
+        let new_accept_zero_conf = true;
+        persister.update_chain_swap_accept_zero_conf(&swap.id, new_accept_zero_conf)?;
         let outgoing_changes = persister.get_sync_outgoing_changes()?;
         assert_eq!(outgoing_changes.len(), 1); // Changes have been set
 

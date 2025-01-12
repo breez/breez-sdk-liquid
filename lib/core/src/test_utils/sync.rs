@@ -132,7 +132,7 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
     }
 }
 
-pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
+pub(crate) fn new_send_sync_data() -> SendSyncData {
     SendSyncData {
         swap_id: "send-swap".to_string(),
         invoice: "".to_string(),
@@ -143,7 +143,6 @@ pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
         receiver_amount_sat: 0,
         timeout_block_height: 1459611,
         created_at: 0,
-        preimage,
         payment_hash: None,
         description: None,
         bolt12_offer: None,

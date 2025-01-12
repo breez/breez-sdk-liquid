@@ -126,7 +126,6 @@ pub(crate) struct SendSyncData {
     #[serde(default)]
     pub(crate) timeout_block_height: u64,
     pub(crate) created_at: u32,
-    pub(crate) preimage: Option<String>,
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
@@ -134,22 +133,13 @@ pub(crate) struct SendSyncData {
 }
 
 impl SendSyncData {
-    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
-        for field in updated_fields {
-            match field.as_str() {
-                "preimage" => clone_if_set(&mut self.preimage, &other.preimage),
-                _ => continue,
-            }
-        }
-    }
-
-    pub(crate) fn updated_fields(swap: Option<SendSwap>, update: &SendSwap) -> Option<Vec<String>> {
+    pub(crate) fn updated_fields(
+        swap: Option<SendSwap>,
+        _update: &SendSwap,
+    ) -> Option<Vec<String>> {
         match swap {
-            Some(swap) => {
-                let mut updated_fields = vec![];
-                if update.preimage.is_some() && update.preimage != swap.preimage {
-                    updated_fields.push("preimage".to_string());
-                }
+            Some(_swap) => {
+                let updated_fields = vec![];
                 Some(updated_fields)
             }
             None => None,
@@ -170,7 +160,6 @@ impl From<SendSwap> for SendSyncData {
             receiver_amount_sat: value.receiver_amount_sat,
             timeout_block_height: value.timeout_block_height,
             created_at: value.created_at,
-            preimage: value.preimage,
             description: value.description,
             bolt12_offer: value.bolt12_offer,
             destination_pubkey: value.destination_pubkey,
@@ -186,7 +175,6 @@ impl From<SendSyncData> for SendSwap {
             payment_hash: val.payment_hash,
             destination_pubkey: val.destination_pubkey,
             description: val.description,
-            preimage: val.preimage,
             payer_amount_sat: val.payer_amount_sat,
             receiver_amount_sat: val.receiver_amount_sat,
             pair_fees_json: val.pair_fees_json,
@@ -198,6 +186,7 @@ impl From<SendSyncData> for SendSwap {
             state: PaymentState::Created,
             lockup_tx_id: None,
             refund_tx_id: None,
+            preimage: None,
         }
     }
 }
@@ -366,11 +355,9 @@ impl SyncData {
             (SyncData::Chain(ref mut base), SyncData::Chain(other)) => {
                 base.merge(other, updated_fields)
             }
-            (SyncData::Send(ref mut base), SyncData::Send(other)) => {
-                base.merge(other, updated_fields)
-            }
-            (SyncData::Receive(ref mut _base), SyncData::Receive(_other)) => {
-                bail!("Merge not supported for sync data of type Receive")
+            (SyncData::Send(_), SyncData::Send(_))
+            | (SyncData::Receive(_), SyncData::Receive(_)) => {
+                bail!("Merge not supported for sync data of type `Receive` and `Send`")
             }
             (
                 SyncData::LastDerivationIndex(our_index),
