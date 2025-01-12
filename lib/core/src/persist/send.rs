@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::CreateSubmarineResponse;
 use rusqlite::{named_params, params, Connection, Row};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -56,7 +56,7 @@ impl Persister {
             ),
         )?;
 
-        con.execute(
+        let rows_affected = con.execute(
             "UPDATE send_swaps 
             SET
                 description = :description,
@@ -65,7 +65,8 @@ impl Persister {
                 refund_tx_id = :refund_tx_id,
                 state = :state
             WHERE
-                id = :id",
+                id = :id AND
+                version = :version",
             named_params! {
                 ":id": &send_swap.id,
                 ":description": &send_swap.description,
@@ -73,8 +74,13 @@ impl Persister {
                 ":lockup_tx_id": &send_swap.lockup_tx_id,
                 ":refund_tx_id": &send_swap.refund_tx_id,
                 ":state": &send_swap.state,
+                ":version": &send_swap.version,
             },
         )?;
+        ensure_sdk!(
+            rows_affected > 0,
+            anyhow!("Version mismatch for send swap {}", send_swap.id)
+        );
 
         Ok(())
     }
@@ -154,7 +160,8 @@ impl Persister {
                 refund_tx_id,
                 created_at,
                 state,
-                pair_fees_json
+                pair_fees_json,
+                version
             FROM send_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -197,6 +204,7 @@ impl Persister {
             created_at: row.get(14)?,
             state: row.get(15)?,
             pair_fees_json: row.get(16)?,
+            version: row.get(17)?,
         })
     }
 
@@ -385,9 +393,8 @@ impl InternalCreateSubmarineResponse {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::{anyhow, Result};
-
     use crate::test_utils::persist::{create_persister, new_send_swap};
+    use anyhow::{anyhow, Result};
 
     use super::PaymentState;
 
@@ -472,6 +479,32 @@ mod tests {
             .fetch_send_swap_by_id(&send_swap.id)?
             .ok_or(anyhow!("Could not find Send swap in database"))?;
         assert_eq!(new_state, updated_send_swap.state);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_writing_stale_swap() -> Result<()> {
+        create_persister!(storage);
+
+        let send_swap = new_send_swap(None);
+        storage.insert_or_update_send_swap(&send_swap)?;
+
+        // read - update - write works if there are no updates in between
+        let mut send_swap = storage.fetch_send_swap_by_id(&send_swap.id)?.unwrap();
+        send_swap.refund_tx_id = Some("tx_id".to_string());
+        storage.insert_or_update_send_swap(&send_swap)?;
+
+        // read - update - write works if there are no updates in between even if no field changes
+        let send_swap = storage.fetch_send_swap_by_id(&send_swap.id)?.unwrap();
+        storage.insert_or_update_send_swap(&send_swap)?;
+
+        // read - update - write fails if there are any updates in between
+        let mut send_swap = storage.fetch_send_swap_by_id(&send_swap.id)?.unwrap();
+        send_swap.refund_tx_id = Some("tx_id_2".to_string());
+        // Concurrent update
+        storage.set_send_swap_lockup_tx_id(&send_swap.id, "tx_id")?;
+        assert!(storage.insert_or_update_send_swap(&send_swap).is_err());
 
         Ok(())
     }
