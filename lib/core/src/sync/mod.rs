@@ -4,12 +4,17 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
-use model::data::PaymentDetailsSyncData;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
 
+use self::client::SyncerClient;
+use self::model::{data::SyncData, sync::ListChangesRequest, RecordType, SyncState};
+use self::model::{DecryptionError, SyncOutgoingChanges};
 use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
+use crate::sync::model::data::{
+    ChainSyncData, PaymentDetailsSyncData, ReceiveSyncData, SendSyncData,
+};
 use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::sync::model::DecryptionInfo;
 use crate::utils;
@@ -17,14 +22,6 @@ use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
     prelude::Signer,
 };
-
-use self::client::SyncerClient;
-use self::model::{
-    data::{ChainSyncData, ReceiveSyncData, SendSyncData, SyncData},
-    sync::ListChangesRequest,
-    RecordType, SyncState,
-};
-use self::model::{DecryptionError, SyncOutgoingChanges};
 
 pub(crate) mod client;
 pub(crate) mod model;
@@ -286,7 +283,17 @@ impl SyncService {
         for decryption_info in swap_decryption_info {
             let record = &decryption_info.record;
             match TryInto::<Swap>::try_into(record.data.clone()) {
-                Ok(swap) => {
+                Ok(mut swap) => {
+                    // If there is a local swap, take its version to prevent races between the
+                    //  recovery of step 2 and other potential changes occurring in parallel
+                    //  (e.g. a refund tx being broadcasted)
+                    if let Ok(version) = self
+                        .persister
+                        .fetch_swap_by_id(&swap.id())
+                        .map(|s| s.version())
+                    {
+                        swap.set_version(version);
+                    }
                     succeded.push(decryption_info);
                     swaps.push(swap);
                 }

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::{ChainSwapDetails, CreateChainResponse};
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -59,7 +59,7 @@ impl Persister {
             ),
         )?;
 
-        con.execute(
+        let rows_affected = con.execute(
             "UPDATE chain_swaps
             SET
                 description = :description,
@@ -72,9 +72,10 @@ impl Persister {
                 pair_fees_json = :pair_fees_json,
                 state = :state,
                 actual_payer_amount_sat = :actual_payer_amount_sat,
-                accepted_receiver_amount_sat = COALESCE(accepted_receiver_amount_sat, :accepted_receiver_amount_sat)
+                accepted_receiver_amount_sat = :accepted_receiver_amount_sat
             WHERE
-                id = :id",
+                id = :id AND
+                version = :version",
             named_params! {
                 ":id": &chain_swap.id,
                 ":description": &chain_swap.description,
@@ -88,8 +89,13 @@ impl Persister {
                 ":state": &chain_swap.state,
                 ":actual_payer_amount_sat": &chain_swap.actual_payer_amount_sat,
                 ":accepted_receiver_amount_sat": &chain_swap.accepted_receiver_amount_sat,
+                ":version": &chain_swap.version,
             },
         )?;
+        ensure_sdk!(
+            rows_affected > 0,
+            anyhow!("Version mismatch for chain swap {}", chain_swap.id)
+        );
 
         Ok(())
     }
@@ -153,7 +159,8 @@ impl Persister {
                 state,
                 pair_fees_json,
                 actual_payer_amount_sat,
-                accepted_receiver_amount_sat
+                accepted_receiver_amount_sat,
+                version
             FROM chain_swaps
             {where_clause_str}
             ORDER BY created_at
@@ -205,6 +212,7 @@ impl Persister {
             pair_fees_json: row.get(20)?,
             actual_payer_amount_sat: row.get(21)?,
             accepted_receiver_amount_sat: row.get(22)?,
+            version: row.get(23)?,
         })
     }
 
@@ -485,5 +493,39 @@ impl InternalCreateChainResponse {
             lockup_details: boltz_create_response.lockup_details.clone(),
         };
         Ok(res)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::Direction;
+    use crate::test_utils::chain_swap::new_chain_swap;
+    use crate::test_utils::persist::create_persister;
+    use anyhow::Result;
+
+    #[tokio::test]
+    async fn test_writing_stale_swap() -> Result<()> {
+        create_persister!(storage);
+
+        let chain_swap = new_chain_swap(Direction::Incoming, None, false, None, false);
+        storage.insert_or_update_chain_swap(&chain_swap)?;
+
+        // read - update - write works if there are no updates in between
+        let mut chain_swap = storage.fetch_chain_swap_by_id(&chain_swap.id)?.unwrap();
+        chain_swap.claim_tx_id = Some("tx_id".to_string());
+        storage.insert_or_update_chain_swap(&chain_swap)?;
+
+        // read - update - write works if there are no updates in between even if no field changes
+        let chain_swap = storage.fetch_chain_swap_by_id(&chain_swap.id)?.unwrap();
+        storage.insert_or_update_chain_swap(&chain_swap)?;
+
+        // read - update - write fails if there are any updates in between
+        let mut chain_swap = storage.fetch_chain_swap_by_id(&chain_swap.id)?.unwrap();
+        chain_swap.claim_tx_id = Some("tx_id_2".to_string());
+        // Concurrent update
+        storage.update_chain_swap_accept_zero_conf(&chain_swap.id, true)?;
+        assert!(storage.insert_or_update_chain_swap(&chain_swap).is_err());
+
+        Ok(())
     }
 }

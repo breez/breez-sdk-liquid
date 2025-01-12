@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::CreateReverseResponse;
 use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
@@ -58,7 +58,7 @@ impl Persister {
             ),
         )?;
 
-        con.execute(
+        let rows_affected = con.execute(
             "UPDATE receive_swaps
             SET
                 description = :description,
@@ -67,7 +67,8 @@ impl Persister {
                 mrh_tx_id = :mrh_tx_id,
                 state = :state
             WHERE
-                id = :id",
+                id = :id AND
+                version = :version",
             named_params! {
                 ":id": &receive_swap.id,
                 ":description": &receive_swap.description,
@@ -75,8 +76,13 @@ impl Persister {
                 ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
                 ":state": &receive_swap.state,
+                ":version": &receive_swap.version,
             },
         )?;
+        ensure_sdk!(
+            rows_affected > 0,
+            anyhow!("Version mismatch for receive swap {}", receive_swap.id)
+        );
 
         if receive_swap.mrh_tx_id.is_some() {
             Self::delete_reserved_address_inner(con, &receive_swap.mrh_address)?;
@@ -139,7 +145,8 @@ impl Persister {
                 rs.mrh_tx_id,
                 rs.created_at,
                 rs.state,
-                rs.pair_fees_json
+                rs.pair_fees_json,
+                rs.version
             FROM receive_swaps AS rs
             {where_clause_str}
             ORDER BY rs.created_at
@@ -186,6 +193,7 @@ impl Persister {
             created_at: row.get(15)?,
             state: row.get(16)?,
             pair_fees_json: row.get(17)?,
+            version: row.get(18)?,
         })
     }
 
@@ -439,6 +447,34 @@ mod tests {
 
         assert_eq!(new_state, updated_receive_swap.state);
         assert_eq!(claim_tx_id, updated_receive_swap.claim_tx_id.as_deref());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_writing_stale_swap() -> Result<()> {
+        create_persister!(storage);
+
+        let receive_swap = new_receive_swap(None);
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write works if there are no updates in between
+        let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        receive_swap.lockup_tx_id = Some("tx_id".to_string());
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write works if there are no updates in between even if no field changes
+        let receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write fails if there are any updates in between
+        let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        receive_swap.lockup_tx_id = Some("tx_id_2".to_string());
+        // Concurrent update
+        storage.set_receive_swap_claim_tx_id(&receive_swap.id, "tx_id")?;
+        assert!(storage
+            .insert_or_update_receive_swap(&receive_swap)
+            .is_err());
 
         Ok(())
     }

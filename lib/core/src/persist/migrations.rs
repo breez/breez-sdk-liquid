@@ -221,5 +221,28 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE receive_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE send_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
         ",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE send_swaps ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE chain_swaps ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
+        CREATE TRIGGER IF NOT EXISTS update_receive_swaps_version
+        AFTER UPDATE ON receive_swaps
+        BEGIN
+            UPDATE receive_swaps SET version = version + 1
+            WHERE id = NEW.id;
+        END;
+        CREATE TRIGGER IF NOT EXISTS update_send_swaps_version
+        AFTER UPDATE ON send_swaps
+        BEGIN
+            UPDATE send_swaps SET version = version + 1
+            WHERE id = NEW.id;
+        END;
+        CREATE TRIGGER IF NOT EXISTS update_chain_swaps_version
+        AFTER UPDATE ON chain_swaps
+        BEGIN
+            UPDATE chain_swaps SET version = version + 1
+            WHERE id = NEW.id;
+        END;
+        ",
     ]
 }

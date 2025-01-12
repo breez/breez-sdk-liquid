@@ -670,6 +670,27 @@ impl Swap {
             | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
         }
     }
+
+    pub(crate) fn version(&self) -> u64 {
+        match self {
+            Swap::Chain(ChainSwap { version, .. })
+            | Swap::Send(SendSwap { version, .. })
+            | Swap::Receive(ReceiveSwap { version, .. }) => *version,
+        }
+    }
+    pub(crate) fn set_version(&mut self, version: u64) {
+        match self {
+            Swap::Chain(chain_swap) => {
+                chain_swap.version = version;
+            }
+            Swap::Send(send_swap) => {
+                send_swap.version = version;
+            }
+            Swap::Receive(receive_swap) => {
+                receive_swap.version = version;
+            }
+        }
+    }
 }
 impl From<ChainSwap> for Swap {
     fn from(swap: ChainSwap) -> Self {
@@ -771,6 +792,8 @@ pub(crate) struct ChainSwap {
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
+    /// Version used for optimistic concurrency control within local db
+    pub(crate) version: u64,
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
@@ -926,6 +949,8 @@ pub(crate) struct SendSwap {
     pub(crate) timeout_block_height: u64,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
+    /// Version used for optimistic concurrency control within local db
+    pub(crate) version: u64,
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
@@ -1019,6 +1044,8 @@ pub(crate) struct ReceiveSwap {
     pub(crate) created_at: u32,
     pub(crate) timeout_block_height: u32,
     pub(crate) state: PaymentState,
+    /// Version used for optimistic concurrency control within local db
+    pub(crate) version: u64,
 }
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
