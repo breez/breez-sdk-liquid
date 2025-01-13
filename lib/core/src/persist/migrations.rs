@@ -222,10 +222,6 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE send_swaps ADD COLUMN timeout_block_height INTEGER NOT NULL DEFAULT 0;
         ",
         "
-        ALTER TABLE receive_swaps ADD COLUMN destination_pubkey TEXT;
-        ALTER TABLE send_swaps ADD COLUMN destination_pubkey TEXT;
-        ",
-        "
         ALTER TABLE receive_swaps ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE send_swaps ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
         ALTER TABLE chain_swaps ADD COLUMN version INTEGER NOT NULL DEFAULT 0;
@@ -247,6 +243,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
             UPDATE chain_swaps SET version = version + 1
             WHERE id = NEW.id;
         END;
+        ",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN destination_pubkey TEXT;
+        ALTER TABLE send_swaps ADD COLUMN destination_pubkey TEXT;
         ",
     ]
 }
