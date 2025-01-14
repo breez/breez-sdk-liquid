@@ -4,7 +4,7 @@ use boltz_client::{
     boltz::SwapTxKind,
     elements::Transaction,
     util::{liquid_genesis_hash, secrets::Preimage},
-    Amount, Bolt11Invoice, ElementsAddress as Address, LBtcSwapTx,
+    Amount, ElementsAddress as Address, LBtcSwapTx,
 };
 use log::info;
 
@@ -15,6 +15,7 @@ use crate::{
         ChainSwap, Direction, LiquidNetwork, ReceiveSwap, Swap, Utxo,
         LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
     },
+    utils,
 };
 
 use super::BoltzSwapper;
@@ -26,30 +27,8 @@ impl BoltzSwapper {
         invoice: &str,
         preimage: &str,
     ) -> Result<(), PaymentError> {
-        Self::verify_payment_hash(preimage, invoice)?;
+        utils::verify_payment_hash(preimage, invoice)?;
         info!("Preimage is valid for Send Swap {swap_id}");
-        Ok(())
-    }
-
-    pub(crate) fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
-        let preimage = Preimage::from_str(preimage)?;
-        let preimage_hash = preimage.sha256.to_string();
-
-        let invoice_payment_hash = match Bolt11Invoice::from_str(invoice) {
-            Ok(invoice) => Ok(invoice.payment_hash().to_string()),
-            Err(_) => match crate::utils::parse_bolt12_invoice(invoice) {
-                Ok(invoice) => Ok(invoice.payment_hash().to_string()),
-                Err(e) => Err(PaymentError::Generic {
-                    err: format!("Could not parse invoice: {e:?}"),
-                }),
-            },
-        }?;
-
-        ensure_sdk!(
-            invoice_payment_hash == preimage_hash,
-            PaymentError::InvalidPreimage
-        );
-
         Ok(())
     }
 
