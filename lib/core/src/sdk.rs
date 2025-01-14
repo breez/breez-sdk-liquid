@@ -14,7 +14,6 @@ use futures_util::{StreamExt, TryFutureExt};
 use lnurl::auth::SdkLnurlAuthSigner;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
-use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::ThirtyTwoByteHash;
@@ -1882,7 +1881,7 @@ impl LiquidSdk {
                         address: address.to_string(),
                         network: self.config.network.into(),
                         amount_sat: Some(*amount_sat),
-                        asset_id: Some(AssetId::LIQUID_BTC.to_hex()),
+                        asset_id: Some(utils::lbtc_asset_id(self.config.network).to_string()),
                         label: None,
                         message: req.description.clone(),
                     }
@@ -2524,7 +2523,7 @@ impl LiquidSdk {
                 tx.balance
                     .into_iter()
                     .filter_map(|(asset_id, balance)| {
-                        if asset_id == lwk_wollet::elements::AssetId::LIQUID_BTC {
+                        if asset_id == utils::lbtc_asset_id(self.config.network) {
                             return Some(balance);
                         }
                         None

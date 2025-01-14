@@ -3,11 +3,14 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::ensure_sdk;
 use crate::error::{PaymentError, SdkResult};
+use crate::prelude::LiquidNetwork;
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::util::secrets::Preimage;
 use boltz_client::ToHex;
+use lazy_static::lazy_static;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
+use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements::{
     LockTime::{self, *},
     Transaction,
@@ -16,6 +19,12 @@ use sdk_common::bitcoin::bech32;
 use sdk_common::bitcoin::bech32::FromBase32;
 use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
 use sdk_common::lightning_invoice::Bolt11Invoice;
+
+lazy_static! {
+    static ref LBTC_TESTNET_ASSET_ID: AssetId =
+        AssetId::from_str("144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49")
+            .unwrap();
+}
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()
@@ -108,6 +117,13 @@ pub(crate) fn verify_payment_hash(
     );
 
     Ok(())
+}
+
+pub(crate) fn lbtc_asset_id(network: LiquidNetwork) -> AssetId {
+    match network {
+        LiquidNetwork::Mainnet => AssetId::LIQUID_BTC,
+        LiquidNetwork::Testnet => *LBTC_TESTNET_ASSET_ID,
+    }
 }
 
 #[cfg(test)]
