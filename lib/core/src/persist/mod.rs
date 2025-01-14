@@ -108,7 +108,7 @@ impl Persister {
             .balance
             .iter()
             .filter_map(|(asset_id, balance)| {
-                if *asset_id == lwk_wollet::elements::AssetId::LIQUID_BTC {
+                if *asset_id == utils::lbtc_asset_id(self.network) {
                     return Some(balance);
                 }
                 None
