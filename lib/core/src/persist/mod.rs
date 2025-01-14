@@ -1,4 +1,5 @@
 mod address;
+pub(crate) mod asset_metadata;
 mod backup;
 pub(crate) mod cache;
 pub(crate) mod chain;
@@ -435,7 +436,10 @@ impl Persister {
                 rtx.amount,
                 pd.destination,
                 pd.description,
-                pd.lnurl_info_json
+                pd.lnurl_info_json,
+                am.name,
+                am.ticker,
+                am.precision
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
                 SELECT * FROM receive_swaps
@@ -457,6 +461,8 @@ impl Persister {
                 ON rtx.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
             LEFT JOIN payment_details AS pd      -- Payment details
                 ON pd.tx_id = ptx.tx_id
+            LEFT JOIN asset_metadata AS am       -- Asset metadata
+                ON am.asset_id = ptx.asset_id
             WHERE                                
                 (ptx.tx_id IS NULL               -- Filter out refund txs from Chain/Send Swaps
                     OR ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
@@ -550,6 +556,10 @@ impl Persister {
         let maybe_payment_details_lnurl_info_json: Option<String> = row.get(52)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
+
+        let maybe_asset_metadata_name: Option<String> = row.get(53)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(54)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(55)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => {
@@ -740,17 +750,43 @@ impl Persister {
                     auto_accepted_fees,
                 }
             }
-            _ => PaymentDetails::Liquid {
-                asset_id: tx
+            _ => {
+                let (amount, asset_id) = tx
                     .clone()
-                    .map_or(utils::lbtc_asset_id(self.network).to_string(), |ptd| {
-                        ptd.asset_id
-                    }),
-                destination: maybe_payment_details_destination
-                    .unwrap_or("Destination unknown".to_string()),
-                description: maybe_payment_details_description
-                    .unwrap_or("Liquid transfer".to_string()),
-            },
+                    .map_or((0, utils::lbtc_asset_id(self.network).to_string()), |ptd| {
+                        (ptd.amount, ptd.asset_id)
+                    });
+                let asset_info = match (
+                    maybe_asset_metadata_name,
+                    maybe_asset_metadata_ticker,
+                    maybe_asset_metadata_precision,
+                ) {
+                    (Some(name), Some(ticker), Some(precision)) => {
+                        let asset_metadata = AssetMetadata {
+                            asset_id: asset_id.clone(),
+                            name: name.clone(),
+                            ticker: ticker.clone(),
+                            precision,
+                        };
+
+                        Some(AssetInfo {
+                            name,
+                            ticker,
+                            amount: asset_metadata.from_sat(amount),
+                        })
+                    }
+                    _ => None,
+                };
+
+                PaymentDetails::Liquid {
+                    destination: maybe_payment_details_destination
+                        .unwrap_or("Destination unknown".to_string()),
+                    description: maybe_payment_details_description
+                        .unwrap_or("Liquid transfer".to_string()),
+                    asset_id,
+                    asset_info,
+                }
+            }
         };
 
         match (tx, swap.clone()) {

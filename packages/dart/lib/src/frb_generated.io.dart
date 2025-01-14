@@ -69,6 +69,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AssetBalance dco_decode_asset_balance(dynamic raw);
 
   @protected
+  AssetInfo dco_decode_asset_info(dynamic raw);
+
+  @protected
+  AssetMetadata dco_decode_asset_metadata(dynamic raw);
+
+  @protected
   BackupRequest dco_decode_backup_request(dynamic raw);
 
   @protected
@@ -97,6 +103,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Amount dco_decode_box_autoadd_amount(dynamic raw);
+
+  @protected
+  AssetInfo dco_decode_box_autoadd_asset_info(dynamic raw);
 
   @protected
   BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw);
@@ -315,6 +324,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AssetBalance> dco_decode_list_asset_balance(dynamic raw);
 
   @protected
+  List<AssetMetadata> dco_decode_list_asset_metadata(dynamic raw);
+
+  @protected
   List<ExternalInputParser> dco_decode_list_external_input_parser(dynamic raw);
 
   @protected
@@ -441,6 +453,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Amount? dco_decode_opt_box_autoadd_amount(dynamic raw);
 
   @protected
+  AssetInfo? dco_decode_opt_box_autoadd_asset_info(dynamic raw);
+
+  @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
   @protected
@@ -478,6 +493,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  List<AssetMetadata>? dco_decode_opt_list_asset_metadata(dynamic raw);
 
   @protected
   List<ExternalInputParser>? dco_decode_opt_list_external_input_parser(dynamic raw);
@@ -681,6 +699,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AssetBalance sse_decode_asset_balance(SseDeserializer deserializer);
 
   @protected
+  AssetInfo sse_decode_asset_info(SseDeserializer deserializer);
+
+  @protected
+  AssetMetadata sse_decode_asset_metadata(SseDeserializer deserializer);
+
+  @protected
   BackupRequest sse_decode_backup_request(SseDeserializer deserializer);
 
   @protected
@@ -712,6 +736,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Amount sse_decode_box_autoadd_amount(SseDeserializer deserializer);
+
+  @protected
+  AssetInfo sse_decode_box_autoadd_asset_info(SseDeserializer deserializer);
 
   @protected
   BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer);
@@ -933,6 +960,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AssetBalance> sse_decode_list_asset_balance(SseDeserializer deserializer);
 
   @protected
+  List<AssetMetadata> sse_decode_list_asset_metadata(SseDeserializer deserializer);
+
+  @protected
   List<ExternalInputParser> sse_decode_list_external_input_parser(SseDeserializer deserializer);
 
   @protected
@@ -1059,6 +1089,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Amount? sse_decode_opt_box_autoadd_amount(SseDeserializer deserializer);
 
   @protected
+  AssetInfo? sse_decode_opt_box_autoadd_asset_info(SseDeserializer deserializer);
+
+  @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
   @protected
@@ -1096,6 +1129,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  List<AssetMetadata>? sse_decode_opt_list_asset_metadata(SseDeserializer deserializer);
 
   @protected
   List<ExternalInputParser>? sse_decode_opt_list_external_input_parser(SseDeserializer deserializer);
@@ -1328,6 +1364,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_amount();
     cst_api_fill_to_wire_amount(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_asset_info> cst_encode_box_autoadd_asset_info(AssetInfo raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_asset_info();
+    cst_api_fill_to_wire_asset_info(raw, ptr.ref);
     return ptr;
   }
 
@@ -1769,6 +1813,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_asset_metadata> cst_encode_list_asset_metadata(List<AssetMetadata> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_asset_metadata(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_asset_metadata(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_external_input_parser> cst_encode_list_external_input_parser(
       List<ExternalInputParser> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
@@ -1911,6 +1965,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_asset_info> cst_encode_opt_box_autoadd_asset_info(AssetInfo? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_asset_info(raw);
+  }
+
+  @protected
   ffi.Pointer<ffi.Bool> cst_encode_opt_box_autoadd_bool(bool? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_bool(raw);
@@ -1988,6 +2048,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ffi.Pointer<ffi.Uint64> cst_encode_opt_box_autoadd_u_64(BigInt? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_64(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_asset_metadata> cst_encode_opt_list_asset_metadata(List<AssetMetadata>? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_list_asset_metadata(raw);
   }
 
   @protected
@@ -2080,7 +2146,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_asset_balance(AssetBalance apiObj, wire_cst_asset_balance wireObj) {
     wireObj.asset_id = cst_encode_String(apiObj.assetId);
-    wireObj.balance = cst_encode_u_64(apiObj.balance);
+    wireObj.balance_sat = cst_encode_u_64(apiObj.balanceSat);
+    wireObj.name = cst_encode_opt_String(apiObj.name);
+    wireObj.ticker = cst_encode_opt_String(apiObj.ticker);
+    wireObj.balance = cst_encode_opt_box_autoadd_f_64(apiObj.balance);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_asset_info(AssetInfo apiObj, wire_cst_asset_info wireObj) {
+    wireObj.name = cst_encode_String(apiObj.name);
+    wireObj.ticker = cst_encode_String(apiObj.ticker);
+    wireObj.amount = cst_encode_f_64(apiObj.amount);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_asset_metadata(AssetMetadata apiObj, wire_cst_asset_metadata wireObj) {
+    wireObj.asset_id = cst_encode_String(apiObj.assetId);
+    wireObj.name = cst_encode_String(apiObj.name);
+    wireObj.ticker = cst_encode_String(apiObj.ticker);
+    wireObj.precision = cst_encode_u_8(apiObj.precision);
   }
 
   @protected
@@ -2138,6 +2222,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_box_autoadd_amount(Amount apiObj, ffi.Pointer<wire_cst_amount> wireObj) {
     cst_api_fill_to_wire_amount(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_asset_info(
+      AssetInfo apiObj, ffi.Pointer<wire_cst_asset_info> wireObj) {
+    cst_api_fill_to_wire_asset_info(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2439,6 +2529,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.use_default_external_input_parsers = cst_encode_bool(apiObj.useDefaultExternalInputParsers);
     wireObj.onchain_fee_rate_leeway_sat_per_vbyte =
         cst_encode_opt_box_autoadd_u_32(apiObj.onchainFeeRateLeewaySatPerVbyte);
+    wireObj.asset_metadata = cst_encode_opt_list_asset_metadata(apiObj.assetMetadata);
   }
 
   @protected
@@ -2588,6 +2679,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.address = cst_encode_String(apiObj.address);
     wireObj.network = cst_encode_network(apiObj.network);
     wireObj.asset_id = cst_encode_opt_String(apiObj.assetId);
+    wireObj.amount = cst_encode_opt_box_autoadd_f_64(apiObj.amount);
     wireObj.amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.amountSat);
     wireObj.label = cst_encode_opt_String(apiObj.label);
     wireObj.message = cst_encode_opt_String(apiObj.message);
@@ -2982,7 +3074,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is PayAmount_Asset) {
       var pre_asset_id = cst_encode_String(apiObj.assetId);
-      var pre_receiver_amount = cst_encode_u_64(apiObj.receiverAmount);
+      var pre_receiver_amount = cst_encode_f_64(apiObj.receiverAmount);
       wireObj.tag = 1;
       wireObj.kind.Asset.asset_id = pre_asset_id;
       wireObj.kind.Asset.receiver_amount = pre_receiver_amount;
@@ -3047,10 +3139,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_destination = cst_encode_String(apiObj.destination);
       var pre_description = cst_encode_String(apiObj.description);
       var pre_asset_id = cst_encode_String(apiObj.assetId);
+      var pre_asset_info = cst_encode_opt_box_autoadd_asset_info(apiObj.assetInfo);
       wireObj.tag = 1;
       wireObj.kind.Liquid.destination = pre_destination;
       wireObj.kind.Liquid.description = pre_description;
       wireObj.kind.Liquid.asset_id = pre_asset_id;
+      wireObj.kind.Liquid.asset_info = pre_asset_info;
       return;
     }
     if (apiObj is PaymentDetails_Bitcoin) {
@@ -3099,87 +3193,93 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.AmountMissing.err = pre_err;
       return;
     }
-    if (apiObj is PaymentError_InvalidNetwork) {
+    if (apiObj is PaymentError_AssetError) {
       var pre_err = cst_encode_String(apiObj.err);
       wireObj.tag = 5;
+      wireObj.kind.AssetError.err = pre_err;
+      return;
+    }
+    if (apiObj is PaymentError_InvalidNetwork) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 6;
       wireObj.kind.InvalidNetwork.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_Generic) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       wireObj.kind.Generic.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidOrExpiredFees) {
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       return;
     }
     if (apiObj is PaymentError_InsufficientFunds) {
-      wireObj.tag = 8;
+      wireObj.tag = 9;
       return;
     }
     if (apiObj is PaymentError_InvalidDescription) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 9;
+      wireObj.tag = 10;
       wireObj.kind.InvalidDescription.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidInvoice) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 10;
+      wireObj.tag = 11;
       wireObj.kind.InvalidInvoice.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_InvalidPreimage) {
-      wireObj.tag = 11;
+      wireObj.tag = 12;
       return;
     }
     if (apiObj is PaymentError_LwkError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 12;
+      wireObj.tag = 13;
       wireObj.kind.LwkError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_PairsNotFound) {
-      wireObj.tag = 13;
-      return;
-    }
-    if (apiObj is PaymentError_PaymentTimeout) {
       wireObj.tag = 14;
       return;
     }
-    if (apiObj is PaymentError_PersistError) {
+    if (apiObj is PaymentError_PaymentTimeout) {
       wireObj.tag = 15;
+      return;
+    }
+    if (apiObj is PaymentError_PersistError) {
+      wireObj.tag = 16;
       return;
     }
     if (apiObj is PaymentError_ReceiveError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 16;
+      wireObj.tag = 17;
       wireObj.kind.ReceiveError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_Refunded) {
       var pre_err = cst_encode_String(apiObj.err);
       var pre_refund_tx_id = cst_encode_String(apiObj.refundTxId);
-      wireObj.tag = 17;
+      wireObj.tag = 18;
       wireObj.kind.Refunded.err = pre_err;
       wireObj.kind.Refunded.refund_tx_id = pre_refund_tx_id;
       return;
     }
     if (apiObj is PaymentError_SelfTransferNotSupported) {
-      wireObj.tag = 18;
+      wireObj.tag = 19;
       return;
     }
     if (apiObj is PaymentError_SendError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 19;
+      wireObj.tag = 20;
       wireObj.kind.SendError.err = pre_err;
       return;
     }
     if (apiObj is PaymentError_SignerError) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 20;
+      wireObj.tag = 21;
       wireObj.kind.SignerError.err = pre_err;
       return;
     }
@@ -3298,7 +3398,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is ReceiveAmount_Asset) {
       var pre_asset_id = cst_encode_String(apiObj.assetId);
-      var pre_payer_amount = cst_encode_opt_box_autoadd_u_64(apiObj.payerAmount);
+      var pre_payer_amount = cst_encode_opt_box_autoadd_f_64(apiObj.payerAmount);
       wireObj.tag = 1;
       wireObj.kind.Asset.asset_id = pre_asset_id;
       wireObj.kind.Asset.payer_amount = pre_payer_amount;
@@ -3665,6 +3765,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_asset_balance(AssetBalance self, SseSerializer serializer);
 
   @protected
+  void sse_encode_asset_info(AssetInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_asset_metadata(AssetMetadata self, SseSerializer serializer);
+
+  @protected
   void sse_encode_backup_request(BackupRequest self, SseSerializer serializer);
 
   @protected
@@ -3696,6 +3802,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_amount(Amount self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_asset_info(AssetInfo self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer);
@@ -3924,6 +4033,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_asset_balance(List<AssetBalance> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_asset_metadata(List<AssetMetadata> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_external_input_parser(List<ExternalInputParser> self, SseSerializer serializer);
 
   @protected
@@ -4051,6 +4163,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_amount(Amount? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_asset_info(AssetInfo? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
 
   @protected
@@ -4089,6 +4204,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_asset_metadata(List<AssetMetadata>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_external_input_parser(List<ExternalInputParser>? self, SseSerializer serializer);
@@ -5140,6 +5258,16 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_amount =
       _cst_new_box_autoadd_amountPtr.asFunction<ffi.Pointer<wire_cst_amount> Function()>();
 
+  ffi.Pointer<wire_cst_asset_info> cst_new_box_autoadd_asset_info() {
+    return _cst_new_box_autoadd_asset_info();
+  }
+
+  late final _cst_new_box_autoadd_asset_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_asset_info> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_asset_info');
+  late final _cst_new_box_autoadd_asset_info =
+      _cst_new_box_autoadd_asset_infoPtr.asFunction<ffi.Pointer<wire_cst_asset_info> Function()>();
+
   ffi.Pointer<wire_cst_backup_request> cst_new_box_autoadd_backup_request() {
     return _cst_new_box_autoadd_backup_request();
   }
@@ -5686,6 +5814,20 @@ class RustLibWire implements BaseWire {
   late final _cst_new_list_asset_balance =
       _cst_new_list_asset_balancePtr.asFunction<ffi.Pointer<wire_cst_list_asset_balance> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_asset_metadata> cst_new_list_asset_metadata(
+    int len,
+  ) {
+    return _cst_new_list_asset_metadata(
+      len,
+    );
+  }
+
+  late final _cst_new_list_asset_metadataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_asset_metadata> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_asset_metadata');
+  late final _cst_new_list_asset_metadata =
+      _cst_new_list_asset_metadataPtr.asFunction<ffi.Pointer<wire_cst_list_asset_metadata> Function(int)>();
+
   ffi.Pointer<wire_cst_list_external_input_parser> cst_new_list_external_input_parser(
     int len,
   ) {
@@ -6030,6 +6172,8 @@ final class wire_cst_liquid_address_data extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
+  external ffi.Pointer<ffi.Double> amount;
+
   external ffi.Pointer<ffi.Uint64> amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
@@ -6351,8 +6495,8 @@ final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
 final class wire_cst_PayAmount_Asset extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
-  @ffi.Uint64()
-  external int receiver_amount;
+  @ffi.Double()
+  external double receiver_amount;
 }
 
 final class PayAmountKind extends ffi.Union {
@@ -6382,7 +6526,7 @@ final class wire_cst_ReceiveAmount_Bitcoin extends ffi.Struct {
 final class wire_cst_ReceiveAmount_Asset extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
-  external ffi.Pointer<ffi.Uint64> payer_amount;
+  external ffi.Pointer<ffi.Double> payer_amount;
 }
 
 final class ReceiveAmountKind extends ffi.Union {
@@ -6571,12 +6715,23 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
 }
 
+final class wire_cst_asset_info extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  @ffi.Double()
+  external double amount;
+}
+
 final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<wire_cst_asset_info> asset_info;
 }
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
@@ -6710,6 +6865,24 @@ final class wire_cst_list_external_input_parser extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_asset_metadata extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  @ffi.Uint8()
+  external int precision;
+}
+
+final class wire_cst_list_asset_metadata extends ffi.Struct {
+  external ffi.Pointer<wire_cst_asset_metadata> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
 
@@ -6742,6 +6915,8 @@ final class wire_cst_config extends ffi.Struct {
   external bool use_default_external_input_parsers;
 
   external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
+
+  external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -6797,7 +6972,13 @@ final class wire_cst_asset_balance extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
   @ffi.Uint64()
-  external int balance;
+  external int balance_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  external ffi.Pointer<ffi.Double> balance;
 }
 
 final class wire_cst_list_asset_balance extends ffi.Struct {
@@ -7259,6 +7440,10 @@ final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_AssetError extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_InvalidNetwork extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -7299,6 +7484,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 
 final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_AmountMissing AmountMissing;
+
+  external wire_cst_PaymentError_AssetError AssetError;
 
   external wire_cst_PaymentError_InvalidNetwork InvalidNetwork;
 

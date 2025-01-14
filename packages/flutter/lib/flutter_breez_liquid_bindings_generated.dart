@@ -916,6 +916,17 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_amountPtr
           .asFunction<ffi.Pointer<wire_cst_amount> Function()>();
 
+  ffi.Pointer<wire_cst_asset_info> frbgen_breez_liquid_cst_new_box_autoadd_asset_info() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_asset_info();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_asset_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_asset_info> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_asset_info');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_asset_info =
+      _frbgen_breez_liquid_cst_new_box_autoadd_asset_infoPtr
+          .asFunction<ffi.Pointer<wire_cst_asset_info> Function()>();
+
   ffi.Pointer<wire_cst_backup_request> frbgen_breez_liquid_cst_new_box_autoadd_backup_request() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_backup_request();
   }
@@ -1518,6 +1529,21 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_list_asset_balance =
       _frbgen_breez_liquid_cst_new_list_asset_balancePtr
           .asFunction<ffi.Pointer<wire_cst_list_asset_balance> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_asset_metadata> frbgen_breez_liquid_cst_new_list_asset_metadata(
+    int len,
+  ) {
+    return _frbgen_breez_liquid_cst_new_list_asset_metadata(
+      len,
+    );
+  }
+
+  late final _frbgen_breez_liquid_cst_new_list_asset_metadataPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_list_asset_metadata> Function(ffi.Int32)>>(
+          'frbgen_breez_liquid_cst_new_list_asset_metadata');
+  late final _frbgen_breez_liquid_cst_new_list_asset_metadata =
+      _frbgen_breez_liquid_cst_new_list_asset_metadataPtr
+          .asFunction<ffi.Pointer<wire_cst_list_asset_metadata> Function(int)>();
 
   ffi.Pointer<wire_cst_list_external_input_parser> frbgen_breez_liquid_cst_new_list_external_input_parser(
     int len,
@@ -4240,6 +4266,8 @@ final class wire_cst_liquid_address_data extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
+  external ffi.Pointer<ffi.Double> amount;
+
   external ffi.Pointer<ffi.Uint64> amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> label;
@@ -4561,8 +4589,8 @@ final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
 final class wire_cst_PayAmount_Asset extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
-  @ffi.Uint64()
-  external int receiver_amount;
+  @ffi.Double()
+  external double receiver_amount;
 }
 
 final class PayAmountKind extends ffi.Union {
@@ -4592,7 +4620,7 @@ final class wire_cst_ReceiveAmount_Bitcoin extends ffi.Struct {
 final class wire_cst_ReceiveAmount_Asset extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
-  external ffi.Pointer<ffi.Uint64> payer_amount;
+  external ffi.Pointer<ffi.Double> payer_amount;
 }
 
 final class ReceiveAmountKind extends ffi.Union {
@@ -4781,12 +4809,23 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
 }
 
+final class wire_cst_asset_info extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  @ffi.Double()
+  external double amount;
+}
+
 final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<wire_cst_asset_info> asset_info;
 }
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
@@ -4920,6 +4959,24 @@ final class wire_cst_list_external_input_parser extends ffi.Struct {
   external int len;
 }
 
+final class wire_cst_asset_metadata extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  @ffi.Uint8()
+  external int precision;
+}
+
+final class wire_cst_list_asset_metadata extends ffi.Struct {
+  external ffi.Pointer<wire_cst_asset_metadata> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
 final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
 
@@ -4952,6 +5009,8 @@ final class wire_cst_config extends ffi.Struct {
   external bool use_default_external_input_parsers;
 
   external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
+
+  external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -5007,7 +5066,13 @@ final class wire_cst_asset_balance extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
   @ffi.Uint64()
-  external int balance;
+  external int balance_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  external ffi.Pointer<ffi.Double> balance;
 }
 
 final class wire_cst_list_asset_balance extends ffi.Struct {
@@ -5469,6 +5534,10 @@ final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_PaymentError_AssetError extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_PaymentError_InvalidNetwork extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -5509,6 +5578,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 
 final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_AmountMissing AmountMissing;
+
+  external wire_cst_PaymentError_AssetError AssetError;
 
   external wire_cst_PaymentError_InvalidNetwork InvalidNetwork;
 

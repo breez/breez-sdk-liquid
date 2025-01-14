@@ -36,7 +36,23 @@ export interface AesSuccessActionDataDecrypted {
 
 export interface AssetBalance {
     assetId: string
-    balance: number
+    balanceSat: number
+    name?: string
+    ticker?: string
+    balance?: number
+}
+
+export interface AssetInfo {
+    name: string
+    ticker: string
+    amount: number
+}
+
+export interface AssetMetadata {
+    assetId: string
+    name: string
+    ticker: string
+    precision: number
 }
 
 export interface BackupRequest {
@@ -86,6 +102,7 @@ export interface Config {
     useDefaultExternalInputParsers: boolean
     externalInputParsers?: ExternalInputParser[]
     onchainFeeRateLeewaySatPerVbyte?: number
+    assetMetadata?: AssetMetadata[]
 }
 
 export interface ConnectRequest {
@@ -175,6 +192,7 @@ export interface LiquidAddressData {
     address: string
     network: Network
     assetId?: string
+    amount?: number
     amountSat?: number
     label?: string
     message?: string
@@ -670,6 +688,7 @@ export type PaymentDetails = {
     assetId: string
     destination: string
     description: string
+    assetInfo?: AssetInfo
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string

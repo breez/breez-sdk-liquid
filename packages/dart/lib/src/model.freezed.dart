@@ -717,7 +717,7 @@ abstract class _$$PayAmount_AssetImplCopyWith<$Res> {
           _$PayAmount_AssetImpl value, $Res Function(_$PayAmount_AssetImpl) then) =
       __$$PayAmount_AssetImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String assetId, BigInt receiverAmount});
+  $Res call({String assetId, double receiverAmount});
 }
 
 /// @nodoc
@@ -743,7 +743,7 @@ class __$$PayAmount_AssetImplCopyWithImpl<$Res> extends _$PayAmountCopyWithImpl<
       receiverAmount: null == receiverAmount
           ? _value.receiverAmount
           : receiverAmount // ignore: cast_nullable_to_non_nullable
-              as BigInt,
+              as double,
     ));
   }
 }
@@ -756,7 +756,7 @@ class _$PayAmount_AssetImpl extends PayAmount_Asset {
   @override
   final String assetId;
   @override
-  final BigInt receiverAmount;
+  final double receiverAmount;
 
   @override
   String toString() {
@@ -785,12 +785,12 @@ class _$PayAmount_AssetImpl extends PayAmount_Asset {
 }
 
 abstract class PayAmount_Asset extends PayAmount {
-  const factory PayAmount_Asset({required final String assetId, required final BigInt receiverAmount}) =
+  const factory PayAmount_Asset({required final String assetId, required final double receiverAmount}) =
       _$PayAmount_AssetImpl;
   const PayAmount_Asset._() : super._();
 
   String get assetId;
-  BigInt get receiverAmount;
+  double get receiverAmount;
 
   /// Create a copy of PayAmount
   /// with the given fields replaced by the non-null parameter values.
@@ -1142,7 +1142,7 @@ abstract class _$$PaymentDetails_LiquidImplCopyWith<$Res> implements $PaymentDet
       __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String destination, String description, String assetId});
+  $Res call({String destination, String description, String assetId, AssetInfo? assetInfo});
 }
 
 /// @nodoc
@@ -1161,6 +1161,7 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
     Object? destination = null,
     Object? description = null,
     Object? assetId = null,
+    Object? assetInfo = freezed,
   }) {
     return _then(_$PaymentDetails_LiquidImpl(
       destination: null == destination
@@ -1175,6 +1176,10 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
           ? _value.assetId
           : assetId // ignore: cast_nullable_to_non_nullable
               as String,
+      assetInfo: freezed == assetInfo
+          ? _value.assetInfo
+          : assetInfo // ignore: cast_nullable_to_non_nullable
+              as AssetInfo?,
     ));
   }
 }
@@ -1183,7 +1188,7 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
 
 class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
   const _$PaymentDetails_LiquidImpl(
-      {required this.destination, required this.description, required this.assetId})
+      {required this.destination, required this.description, required this.assetId, this.assetInfo})
       : super._();
 
   /// Represents either a Liquid BIP21 URI or pure address
@@ -1198,9 +1203,13 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
   @override
   final String assetId;
 
+  /// The asset info derived from the [AssetMetadata]
+  @override
+  final AssetInfo? assetInfo;
+
   @override
   String toString() {
-    return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId)';
+    return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo)';
   }
 
   @override
@@ -1210,11 +1219,12 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
             other is _$PaymentDetails_LiquidImpl &&
             (identical(other.destination, destination) || other.destination == destination) &&
             (identical(other.description, description) || other.description == description) &&
-            (identical(other.assetId, assetId) || other.assetId == assetId));
+            (identical(other.assetId, assetId) || other.assetId == assetId) &&
+            (identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, destination, description, assetId);
+  int get hashCode => Object.hash(runtimeType, destination, description, assetId, assetInfo);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1229,7 +1239,8 @@ abstract class PaymentDetails_Liquid extends PaymentDetails {
   const factory PaymentDetails_Liquid(
       {required final String destination,
       required final String description,
-      required final String assetId}) = _$PaymentDetails_LiquidImpl;
+      required final String assetId,
+      final AssetInfo? assetInfo}) = _$PaymentDetails_LiquidImpl;
   const PaymentDetails_Liquid._() : super._();
 
   /// Represents either a Liquid BIP21 URI or pure address
@@ -1241,6 +1252,9 @@ abstract class PaymentDetails_Liquid extends PaymentDetails {
 
   /// The asset id
   String get assetId;
+
+  /// The asset info derived from the [AssetMetadata]
+  AssetInfo? get assetInfo;
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1552,7 +1566,7 @@ abstract class _$$ReceiveAmount_AssetImplCopyWith<$Res> {
           _$ReceiveAmount_AssetImpl value, $Res Function(_$ReceiveAmount_AssetImpl) then) =
       __$$ReceiveAmount_AssetImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String assetId, BigInt? payerAmount});
+  $Res call({String assetId, double? payerAmount});
 }
 
 /// @nodoc
@@ -1579,7 +1593,7 @@ class __$$ReceiveAmount_AssetImplCopyWithImpl<$Res>
       payerAmount: freezed == payerAmount
           ? _value.payerAmount
           : payerAmount // ignore: cast_nullable_to_non_nullable
-              as BigInt?,
+              as double?,
     ));
   }
 }
@@ -1592,7 +1606,7 @@ class _$ReceiveAmount_AssetImpl extends ReceiveAmount_Asset {
   @override
   final String assetId;
   @override
-  final BigInt? payerAmount;
+  final double? payerAmount;
 
   @override
   String toString() {
@@ -1621,12 +1635,12 @@ class _$ReceiveAmount_AssetImpl extends ReceiveAmount_Asset {
 }
 
 abstract class ReceiveAmount_Asset extends ReceiveAmount {
-  const factory ReceiveAmount_Asset({required final String assetId, final BigInt? payerAmount}) =
+  const factory ReceiveAmount_Asset({required final String assetId, final double? payerAmount}) =
       _$ReceiveAmount_AssetImpl;
   const ReceiveAmount_Asset._() : super._();
 
   String get assetId;
-  BigInt? get payerAmount;
+  double? get payerAmount;
 
   /// Create a copy of ReceiveAmount
   /// with the given fields replaced by the non-null parameter values.

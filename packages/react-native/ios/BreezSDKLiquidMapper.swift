@@ -112,17 +112,41 @@ enum BreezSDKLiquidMapper {
         guard let assetId = assetBalance["assetId"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "assetId", typeName: "AssetBalance"))
         }
-        guard let balance = assetBalance["balance"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "balance", typeName: "AssetBalance"))
+        guard let balanceSat = assetBalance["balanceSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "balanceSat", typeName: "AssetBalance"))
+        }
+        var name: String?
+        if hasNonNilKey(data: assetBalance, key: "name") {
+            guard let nameTmp = assetBalance["name"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "name"))
+            }
+            name = nameTmp
+        }
+        var ticker: String?
+        if hasNonNilKey(data: assetBalance, key: "ticker") {
+            guard let tickerTmp = assetBalance["ticker"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "ticker"))
+            }
+            ticker = tickerTmp
+        }
+        var balance: Double?
+        if hasNonNilKey(data: assetBalance, key: "balance") {
+            guard let balanceTmp = assetBalance["balance"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "balance"))
+            }
+            balance = balanceTmp
         }
 
-        return AssetBalance(assetId: assetId, balance: balance)
+        return AssetBalance(assetId: assetId, balanceSat: balanceSat, name: name, ticker: ticker, balance: balance)
     }
 
     static func dictionaryOf(assetBalance: AssetBalance) -> [String: Any?] {
         return [
             "assetId": assetBalance.assetId,
-            "balance": assetBalance.balance,
+            "balanceSat": assetBalance.balanceSat,
+            "name": assetBalance.name == nil ? nil : assetBalance.name,
+            "ticker": assetBalance.ticker == nil ? nil : assetBalance.ticker,
+            "balance": assetBalance.balance == nil ? nil : assetBalance.balance,
         ]
     }
 
@@ -141,6 +165,88 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(assetBalanceList: [AssetBalance]) -> [Any] {
         return assetBalanceList.map { v -> [String: Any?] in return dictionaryOf(assetBalance: v) }
+    }
+
+    static func asAssetInfo(assetInfo: [String: Any?]) throws -> AssetInfo {
+        guard let name = assetInfo["name"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "name", typeName: "AssetInfo"))
+        }
+        guard let ticker = assetInfo["ticker"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "ticker", typeName: "AssetInfo"))
+        }
+        guard let amount = assetInfo["amount"] as? Double else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amount", typeName: "AssetInfo"))
+        }
+
+        return AssetInfo(name: name, ticker: ticker, amount: amount)
+    }
+
+    static func dictionaryOf(assetInfo: AssetInfo) -> [String: Any?] {
+        return [
+            "name": assetInfo.name,
+            "ticker": assetInfo.ticker,
+            "amount": assetInfo.amount,
+        ]
+    }
+
+    static func asAssetInfoList(arr: [Any]) throws -> [AssetInfo] {
+        var list = [AssetInfo]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var assetInfo = try asAssetInfo(assetInfo: val)
+                list.append(assetInfo)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "AssetInfo"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(assetInfoList: [AssetInfo]) -> [Any] {
+        return assetInfoList.map { v -> [String: Any?] in return dictionaryOf(assetInfo: v) }
+    }
+
+    static func asAssetMetadata(assetMetadata: [String: Any?]) throws -> AssetMetadata {
+        guard let assetId = assetMetadata["assetId"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "assetId", typeName: "AssetMetadata"))
+        }
+        guard let name = assetMetadata["name"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "name", typeName: "AssetMetadata"))
+        }
+        guard let ticker = assetMetadata["ticker"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "ticker", typeName: "AssetMetadata"))
+        }
+        guard let precision = assetMetadata["precision"] as? UInt8 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "precision", typeName: "AssetMetadata"))
+        }
+
+        return AssetMetadata(assetId: assetId, name: name, ticker: ticker, precision: precision)
+    }
+
+    static func dictionaryOf(assetMetadata: AssetMetadata) -> [String: Any?] {
+        return [
+            "assetId": assetMetadata.assetId,
+            "name": assetMetadata.name,
+            "ticker": assetMetadata.ticker,
+            "precision": assetMetadata.precision,
+        ]
+    }
+
+    static func asAssetMetadataList(arr: [Any]) throws -> [AssetMetadata] {
+        var list = [AssetMetadata]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var assetMetadata = try asAssetMetadata(assetMetadata: val)
+                list.append(assetMetadata)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "AssetMetadata"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(assetMetadataList: [AssetMetadata]) -> [Any] {
+        return assetMetadataList.map { v -> [String: Any?] in return dictionaryOf(assetMetadata: v) }
     }
 
     static func asBackupRequest(backupRequest: [String: Any?]) throws -> BackupRequest {
@@ -452,8 +558,12 @@ enum BreezSDKLiquidMapper {
             }
             onchainFeeRateLeewaySatPerVbyte = onchainFeeRateLeewaySatPerVbyteTmp
         }
+        var assetMetadata: [AssetMetadata]?
+        if let assetMetadataTmp = config["assetMetadata"] as? [[String: Any?]] {
+            assetMetadata = try asAssetMetadataList(arr: assetMetadataTmp)
+        }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -472,6 +582,7 @@ enum BreezSDKLiquidMapper {
             "useDefaultExternalInputParsers": config.useDefaultExternalInputParsers,
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
             "onchainFeeRateLeewaySatPerVbyte": config.onchainFeeRateLeewaySatPerVbyte == nil ? nil : config.onchainFeeRateLeewaySatPerVbyte,
+            "assetMetadata": config.assetMetadata == nil ? nil : arrayOf(assetMetadataList: config.assetMetadata!),
         ]
     }
 
@@ -1077,6 +1188,13 @@ enum BreezSDKLiquidMapper {
             }
             assetId = assetIdTmp
         }
+        var amount: Double?
+        if hasNonNilKey(data: liquidAddressData, key: "amount") {
+            guard let amountTmp = liquidAddressData["amount"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "amount"))
+            }
+            amount = amountTmp
+        }
         var amountSat: UInt64?
         if hasNonNilKey(data: liquidAddressData, key: "amountSat") {
             guard let amountSatTmp = liquidAddressData["amountSat"] as? UInt64 else {
@@ -1099,7 +1217,7 @@ enum BreezSDKLiquidMapper {
             message = messageTmp
         }
 
-        return LiquidAddressData(address: address, network: network, assetId: assetId, amountSat: amountSat, label: label, message: message)
+        return LiquidAddressData(address: address, network: network, assetId: assetId, amount: amount, amountSat: amountSat, label: label, message: message)
     }
 
     static func dictionaryOf(liquidAddressData: LiquidAddressData) -> [String: Any?] {
@@ -1107,6 +1225,7 @@ enum BreezSDKLiquidMapper {
             "address": liquidAddressData.address,
             "network": valueOf(network: liquidAddressData.network),
             "assetId": liquidAddressData.assetId == nil ? nil : liquidAddressData.assetId,
+            "amount": liquidAddressData.amount == nil ? nil : liquidAddressData.amount,
             "amountSat": liquidAddressData.amountSat == nil ? nil : liquidAddressData.amountSat,
             "label": liquidAddressData.label == nil ? nil : liquidAddressData.label,
             "message": liquidAddressData.message == nil ? nil : liquidAddressData.message,
@@ -3955,7 +4074,7 @@ enum BreezSDKLiquidMapper {
             guard let _assetId = payAmount["assetId"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "assetId", typeName: "PayAmount"))
             }
-            guard let _receiverAmount = payAmount["receiverAmount"] as? UInt64 else {
+            guard let _receiverAmount = payAmount["receiverAmount"] as? Double else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmount", typeName: "PayAmount"))
             }
             return PayAmount.asset(assetId: _assetId, receiverAmount: _receiverAmount)
@@ -4053,7 +4172,12 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
-            return PaymentDetails.liquid(assetId: _assetId, destination: _destination, description: _description)
+            var _assetInfo: AssetInfo?
+            if let assetInfoTmp = paymentDetails["assetInfo"] as? [String: Any?] {
+                _assetInfo = try asAssetInfo(assetInfo: assetInfoTmp)
+            }
+
+            return PaymentDetails.liquid(assetId: _assetId, destination: _destination, description: _description, assetInfo: _assetInfo)
         }
         if type == "bitcoin" {
             guard let _swapId = paymentDetails["swapId"] as? String else {
@@ -4100,13 +4224,14 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .liquid(
-            assetId, destination, description
+            assetId, destination, description, assetInfo
         ):
             return [
                 "type": "liquid",
                 "assetId": assetId,
                 "destination": destination,
                 "description": description,
+                "assetInfo": assetInfo == nil ? nil : dictionaryOf(assetInfo: assetInfo!),
             ]
 
         case let .bitcoin(
@@ -4313,7 +4438,7 @@ enum BreezSDKLiquidMapper {
             guard let _assetId = receiveAmount["assetId"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "assetId", typeName: "ReceiveAmount"))
             }
-            let _payerAmount = receiveAmount["payerAmount"] as? UInt64
+            let _payerAmount = receiveAmount["payerAmount"] as? Double
 
             return ReceiveAmount.asset(assetId: _assetId, payerAmount: _payerAmount)
         }

@@ -31,15 +31,22 @@ class AcceptPaymentProposedFeesRequest {
 /// An asset balance to denote the balance for each asset.
 class AssetBalance {
   final String assetId;
-  final BigInt balance;
+  final BigInt balanceSat;
+  final String? name;
+  final String? ticker;
+  final double? balance;
 
   const AssetBalance({
     required this.assetId,
-    required this.balance,
+    required this.balanceSat,
+    this.name,
+    this.ticker,
+    this.balance,
   });
 
   @override
-  int get hashCode => assetId.hashCode ^ balance.hashCode;
+  int get hashCode =>
+      assetId.hashCode ^ balanceSat.hashCode ^ name.hashCode ^ ticker.hashCode ^ balance.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -47,7 +54,79 @@ class AssetBalance {
       other is AssetBalance &&
           runtimeType == other.runtimeType &&
           assetId == other.assetId &&
+          balanceSat == other.balanceSat &&
+          name == other.name &&
+          ticker == other.ticker &&
           balance == other.balance;
+}
+
+/// Represents the Liquid payment asset info. The asset info is derived from
+/// the available [AssetMetadata] that is set in the [Config].
+class AssetInfo {
+  /// The name of the asset
+  final String name;
+
+  /// The ticker of the asset
+  final String ticker;
+
+  /// The amount calculated from the satoshi amount for the transaction, shifted of the left by the [precision](AssetMetadata::precision)
+  final double amount;
+
+  const AssetInfo({
+    required this.name,
+    required this.ticker,
+    required this.amount,
+  });
+
+  @override
+  int get hashCode => name.hashCode ^ ticker.hashCode ^ amount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetInfo &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          ticker == other.ticker &&
+          amount == other.amount;
+}
+
+/// Configuration for asset metadata. Each asset metadata item represents an entry in the
+/// [Liquid Asset Registry](https://docs.liquid.net/docs/blockstream-liquid-asset-registry).
+/// An example Liquid Asset in the registry would be [Tether USD](https://assets.blockstream.info/ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2.json>).
+class AssetMetadata {
+  /// The asset id of the registered asset
+  final String assetId;
+
+  /// The name of the asset
+  final String name;
+
+  /// The ticker of the asset
+  final String ticker;
+
+  /// The precision used to display the asset amount.
+  /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
+  final int precision;
+
+  const AssetMetadata({
+    required this.assetId,
+    required this.name,
+    required this.ticker,
+    required this.precision,
+  });
+
+  @override
+  int get hashCode => assetId.hashCode ^ name.hashCode ^ ticker.hashCode ^ precision.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetMetadata &&
+          runtimeType == other.runtimeType &&
+          assetId == other.assetId &&
+          name == other.name &&
+          ticker == other.ticker &&
+          precision == other.precision;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
@@ -225,6 +304,12 @@ class Config {
   /// Defaults to zero.
   final int? onchainFeeRateLeewaySatPerVbyte;
 
+  /// A set of asset metadata used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input is a
+  /// [LiquidAddressData] and the [asset_id](LiquidAddressData::asset_id) differs from the Liquid Bitcoin asset.
+  /// See [AssetMetadata] for more details on how define asset metadata.
+  /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
+  final List<AssetMetadata>? assetMetadata;
+
   const Config({
     required this.liquidElectrumUrl,
     required this.bitcoinElectrumUrl,
@@ -240,6 +325,7 @@ class Config {
     this.externalInputParsers,
     required this.useDefaultExternalInputParsers,
     this.onchainFeeRateLeewaySatPerVbyte,
+    this.assetMetadata,
   });
 
   @override
@@ -257,7 +343,8 @@ class Config {
       breezApiKey.hashCode ^
       externalInputParsers.hashCode ^
       useDefaultExternalInputParsers.hashCode ^
-      onchainFeeRateLeewaySatPerVbyte.hashCode;
+      onchainFeeRateLeewaySatPerVbyte.hashCode ^
+      assetMetadata.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -277,7 +364,8 @@ class Config {
           breezApiKey == other.breezApiKey &&
           externalInputParsers == other.externalInputParsers &&
           useDefaultExternalInputParsers == other.useDefaultExternalInputParsers &&
-          onchainFeeRateLeewaySatPerVbyte == other.onchainFeeRateLeewaySatPerVbyte;
+          onchainFeeRateLeewaySatPerVbyte == other.onchainFeeRateLeewaySatPerVbyte &&
+          assetMetadata == other.assetMetadata;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -676,7 +764,7 @@ sealed class PayAmount with _$PayAmount {
   /// The amount of an asset that will be received
   const factory PayAmount.asset({
     required String assetId,
-    required BigInt receiverAmount,
+    required double receiverAmount,
   }) = PayAmount_Asset;
 
   /// Indicates that all available Bitcoin funds should be sent
@@ -715,7 +803,7 @@ class Payment {
   final String? txId;
 
   /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
-  /// See: https://docs.liquid.net/docs/unblinding-transactions
+  /// See: <https://docs.liquid.net/docs/unblinding-transactions>
   final String? unblindingData;
 
   /// Composite timestamp that can be used for sorting or displaying the payment.
@@ -855,6 +943,9 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// The asset id
     required String assetId,
+
+    /// The asset info derived from the [AssetMetadata]
+    AssetInfo? assetInfo,
   }) = PaymentDetails_Liquid;
 
   /// Swapping to or from the Bitcoin chain
@@ -1358,7 +1449,7 @@ sealed class ReceiveAmount with _$ReceiveAmount {
   /// The amount of an asset that should be paid
   const factory ReceiveAmount.asset({
     required String assetId,
-    BigInt? payerAmount,
+    double? payerAmount,
   }) = ReceiveAmount_Asset;
 }
 

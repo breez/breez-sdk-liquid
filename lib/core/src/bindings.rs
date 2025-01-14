@@ -406,6 +406,7 @@ pub struct _LiquidAddressData {
     pub address: String,
     pub network: Network,
     pub asset_id: Option<String>,
+    pub amount: Option<f64>,
     pub amount_sat: Option<u64>,
     pub label: Option<String>,
     pub message: Option<String>,

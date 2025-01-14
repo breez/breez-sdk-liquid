@@ -22,27 +22,32 @@ pub(crate) enum Command {
     /// Send a payment directly or via a swap
     SendPayment {
         /// Invoice which has to be paid (BOLT11)
-        #[arg(long)]
+        #[arg(short, long)]
         invoice: Option<String>,
 
         /// BOLT12 offer. If specified, amount_sat must also be set.
-        #[arg(long)]
+        #[arg(short, long)]
         offer: Option<String>,
 
         /// Either BIP21 URI or Liquid address we intend to pay to
-        #[arg(long)]
+        #[arg(short, long)]
         address: Option<String>,
 
-        /// The amount to pay, in case of a direct Liquid address or amount-less BIP21.
-        /// If an asset id is provided, it is the base unit of that asset depending on its
-        /// precision, otherwise in satoshi.
-        #[arg(short, long)]
-        receiver_amount: Option<u64>,
+        /// The amount to pay, in satoshi. The amount is optional if it is already provided in the
+        /// invoice or BIP21 URI.
+        #[arg(long)]
+        amount_sat: Option<u64>,
 
         /// Optional id of the asset, in case of a direct Liquid address
         /// or amount-less BIP21
         #[clap(long = "asset")]
         asset_id: Option<String>,
+
+        /// The amount to pay, in case of a Liquid payment. The amount is optional if it is already
+        /// provided in the BIP21 URI.
+        /// The asset id must also be provided.
+        #[arg(long)]
+        amount: Option<f64>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[arg(short, long)]
@@ -78,16 +83,6 @@ pub(crate) enum Command {
         #[arg(short = 'm', long = "method")]
         payment_method: Option<PaymentMethod>,
 
-        /// The amount the payer should send. If an asset id is provided, it is the base
-        /// unit of that asset depending on its precision, otherwise in satoshi.
-        /// If not specified, it will generate a BIP21 URI/address with no amount.
-        #[arg(short, long)]
-        payer_amount: Option<u64>,
-
-        /// Optional id of the asset to receive when the 'payment_method' is "liquid"
-        #[clap(long = "asset")]
-        asset_id: Option<String>,
-
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
         description: Option<String>,
@@ -95,6 +90,21 @@ pub(crate) enum Command {
         /// Optional if true uses the hash of the description
         #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
         use_description_hash: Option<bool>,
+
+        /// The amount the payer should send, in satoshi. If not specified, it will generate a
+        /// BIP21 URI/address with no amount.
+        #[arg(long)]
+        amount_sat: Option<u64>,
+
+        /// Optional id of the asset to receive when the 'payment_method' is "liquid"
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
+
+        /// The amount the payer should send, in asset units. If not specified, it will
+        /// generate a BIP21 URI/address with no amount.
+        /// The asset id must also be provided.
+        #[arg(long)]
+        amount: Option<f64>,
     },
     /// Generates an URL to buy bitcoin from a 3rd party provider
     BuyBitcoin {
@@ -285,7 +295,8 @@ pub(crate) async fn handle_command(
     Ok(match command {
         Command::ReceivePayment {
             payment_method,
-            payer_amount,
+            amount_sat,
+            amount,
             asset_id,
             description,
             use_description_hash,
@@ -293,10 +304,10 @@ pub(crate) async fn handle_command(
             let amount = match asset_id {
                 Some(asset_id) => Some(ReceiveAmount::Asset {
                     asset_id,
-                    payer_amount,
+                    payer_amount: amount,
                 }),
                 None => {
-                    payer_amount.map(|payer_amount_sat| ReceiveAmount::Bitcoin { payer_amount_sat })
+                    amount_sat.map(|payer_amount_sat| ReceiveAmount::Bitcoin { payer_amount_sat })
                 }
             };
             let prepare_response = sdk
@@ -333,7 +344,7 @@ pub(crate) async fn handle_command(
             let mut result = command_result!(&response);
             result.push('\n');
 
-            match parse(&response.destination, None).await? {
+            match sdk.parse(&response.destination).await? {
                 InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
                 InputType::LiquidAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
@@ -361,14 +372,15 @@ pub(crate) async fn handle_command(
             invoice,
             offer,
             address,
-            receiver_amount,
+            amount,
+            amount_sat,
             asset_id,
             drain,
             delay,
         } => {
             let destination = match (invoice, offer, address) {
                 (Some(invoice), None, None) => Ok(invoice),
-                (None, Some(offer), None) => match receiver_amount {
+                (None, Some(offer), None) => match amount_sat {
                     Some(_) => Ok(offer),
                     None => Err(anyhow!(
                         "Must specify an amount for a BOLT12 offer."
@@ -384,15 +396,15 @@ pub(crate) async fn handle_command(
                     "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
                 ))
             }?;
-            let amount = match (asset_id, receiver_amount, drain.unwrap_or(false)) {
-                (Some(asset_id), Some(receiver_amount), _) => Some(PayAmount::Asset {
+            let amount = match (asset_id, amount, amount_sat, drain.unwrap_or(false)) {
+                (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
                     asset_id,
                     receiver_amount,
                 }),
-                (None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
+                (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
                     receiver_amount_sat,
                 }),
-                (_, _, true) => Some(PayAmount::Drain),
+                (_, _, _, true) => Some(PayAmount::Drain),
                 _ => None,
             };
 
@@ -717,7 +729,7 @@ pub(crate) async fn handle_command(
         Command::LnurlAuth { lnurl } => {
             let lnurl_endpoint = lnurl.trim();
 
-            let res = match parse(lnurl_endpoint, None).await? {
+            let res = match sdk.parse(lnurl_endpoint).await? {
                 InputType::LnUrlAuth { data: ad } => {
                     let auth_res = sdk.lnurl_auth(ad).await?;
                     serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())
