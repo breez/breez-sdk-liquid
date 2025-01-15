@@ -12,7 +12,7 @@ use tonic::{
     Request, Status,
 };
 
-use super::model::sync::{
+use super::model::{
     syncer_client::SyncerClient as ProtoSyncerClient, ListChangesReply, ListChangesRequest,
     SetRecordReply, SetRecordRequest,
 };

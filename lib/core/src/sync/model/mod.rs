@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use self::{data::SyncData, sync::Record};
+tonic::include_proto!("sync");
+
+use self::data::SyncData;
 use crate::prelude::Signer;
 use anyhow::Result;
 use lazy_static::lazy_static;
@@ -14,7 +16,6 @@ use semver::Version;
 
 pub(crate) mod client;
 pub(crate) mod data;
-pub(crate) mod sync;
 
 const MESSAGE_PREFIX: &[u8; 13] = b"realtimesync:";
 lazy_static! {
