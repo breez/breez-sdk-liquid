@@ -8,8 +8,8 @@ use rusqlite::{
 use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentTxDetails, Persister, Swap};
 use crate::{
     sync::model::{
-        data::LAST_DERIVATION_INDEX_DATA_ID, sync::Record, RecordType, SyncOutgoingChanges,
-        SyncSettings, SyncState,
+        data::LAST_DERIVATION_INDEX_DATA_ID, Record, RecordType, SyncOutgoingChanges, SyncSettings,
+        SyncState,
     },
     utils,
 };
