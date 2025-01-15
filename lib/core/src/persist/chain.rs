@@ -160,8 +160,12 @@ impl Persister {
                 pair_fees_json,
                 actual_payer_amount_sat,
                 accepted_receiver_amount_sat,
-                version
+                version,
+
+                -- Used for filtering
+                sync_state.is_local
             FROM chain_swaps
+            LEFT JOIN sync_state ON chain_swaps.id = sync_state.data_id
             {where_clause_str}
             ORDER BY created_at
         "
@@ -265,6 +269,14 @@ impl Persister {
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
         self.list_chain_swaps_by_state(vec![PaymentState::Refundable])
+    }
+
+    pub(crate) fn list_local_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
+        let con = self.get_connection()?;
+        self.list_chain_swaps_where(
+            &con,
+            vec!["sync_state.is_local = 1 OR sync_state.is_local IS NULL".to_string()],
+        )
     }
 
     pub(crate) fn update_chain_swap_accept_zero_conf(
@@ -499,6 +511,7 @@ impl InternalCreateChainResponse {
 #[cfg(test)]
 mod tests {
     use crate::model::Direction;
+    use crate::sync::model::SyncState;
     use crate::test_utils::chain_swap::new_chain_swap;
     use crate::test_utils::persist::create_persister;
     use anyhow::Result;
@@ -525,6 +538,48 @@ mod tests {
         // Concurrent update
         storage.update_chain_swap_accept_zero_conf(&chain_swap.id, true)?;
         assert!(storage.insert_or_update_chain_swap(&chain_swap).is_err());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_list_local_swaps() -> Result<()> {
+        create_persister!(storage);
+
+        let chain_swap_local_with_sync_state =
+            new_chain_swap(Direction::Incoming, None, false, None, false);
+        storage.insert_or_update_chain_swap(&chain_swap_local_with_sync_state)?;
+        storage.set_sync_state(SyncState {
+            data_id: chain_swap_local_with_sync_state.id.clone(),
+            record_id: "record".to_string(),
+            record_revision: 0,
+            is_local: true,
+        })?;
+
+        let chain_swap_local_no_sync_state =
+            new_chain_swap(Direction::Incoming, None, false, None, false);
+        storage.insert_or_update_chain_swap(&chain_swap_local_no_sync_state)?;
+
+        let chain_swap_not_local = new_chain_swap(Direction::Incoming, None, false, None, false);
+        storage.insert_or_update_chain_swap(&chain_swap_not_local)?;
+        storage.set_sync_state(SyncState {
+            data_id: chain_swap_not_local.id,
+            record_id: "record".to_string(),
+            record_revision: 0,
+            is_local: false,
+        })?;
+
+        let swaps = storage.list_chain_swaps()?;
+        assert_eq!(swaps.len(), 3);
+        let local_swap_ids: Vec<String> = storage
+            .list_local_chain_swaps()?
+            .iter()
+            .map(|s| s.id.clone())
+            .collect();
+        assert_eq!(local_swap_ids.len(), 2);
+
+        assert!(local_swap_ids.contains(&chain_swap_local_with_sync_state.id));
+        assert!(local_swap_ids.contains(&chain_swap_local_no_sync_state.id));
 
         Ok(())
     }

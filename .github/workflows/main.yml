@@ -129,6 +129,12 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup dotnet
+        if: ${{ !inputs.skip-tests }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
       - name: Build bindings
         working-directory: lib/bindings
         run: cargo build

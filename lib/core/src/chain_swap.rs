@@ -121,7 +121,7 @@ impl ChainSwapHandler {
     async fn claim_incoming(&self, height: u32) -> Result<()> {
         let chain_swaps: Vec<ChainSwap> = self
             .persister
-            .list_chain_swaps()?
+            .list_local_chain_swaps()?
             .into_iter()
             .filter(|s| {
                 s.direction == Direction::Incoming && s.state == Pending && s.claim_tx_id.is_none()
@@ -146,7 +146,7 @@ impl ChainSwapHandler {
     async fn claim_outgoing(&self, height: u32) -> Result<()> {
         let chain_swaps: Vec<ChainSwap> = self
             .persister
-            .list_chain_swaps()?
+            .list_local_chain_swaps()?
             .into_iter()
             .filter(|s| {
                 s.direction == Direction::Outgoing && s.state == Pending && s.claim_tx_id.is_none()
