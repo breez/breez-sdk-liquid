@@ -8,15 +8,15 @@ use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
 
 use self::client::SyncerClient;
-use self::model::{data::SyncData, sync::ListChangesRequest, RecordType, SyncState};
+use self::model::{data::SyncData, ListChangesRequest, RecordType, SyncState};
 use self::model::{DecryptionError, SyncOutgoingChanges};
 use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
 use crate::sync::model::data::{
     ChainSyncData, PaymentDetailsSyncData, ReceiveSyncData, SendSyncData,
 };
-use crate::sync::model::sync::{Record, SetRecordRequest, SetRecordStatus};
 use crate::sync::model::DecryptionInfo;
+use crate::sync::model::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
 use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
@@ -462,7 +462,7 @@ mod tests {
         },
     };
 
-    use super::model::{data::SyncData, sync::Record, RecordType};
+    use super::model::{data::SyncData, Record, RecordType};
 
     #[tokio::test]
     async fn test_incoming_sync_create_and_update() -> Result<()> {

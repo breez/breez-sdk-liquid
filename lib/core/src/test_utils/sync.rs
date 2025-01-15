@@ -10,10 +10,8 @@ use crate::{
         client::SyncerClient,
         model::{
             data::{ChainSyncData, ReceiveSyncData, SendSyncData},
-            sync::{
-                ListChangesReply, ListChangesRequest, Record, SetRecordReply, SetRecordRequest,
-                SetRecordStatus,
-            },
+            ListChangesReply, ListChangesRequest, Record, SetRecordReply, SetRecordRequest,
+            SetRecordStatus,
         },
         SyncService,
     },

@@ -17,10 +17,12 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "3bbc0ddb068df7f12a1b8b37cfbb353f4db36fe5" }
 chrono = "0.4"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.7.0", features = ["chrono"], optional = true }
+flutter_rust_bridge = { version = "=2.7.0", features = [
+    "chrono",
+], optional = true }
 log = { workspace = true }
 lwk_common = "0.7.0"
 lwk_signer = "0.7.0"

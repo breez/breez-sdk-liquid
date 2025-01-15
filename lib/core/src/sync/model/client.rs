@@ -8,10 +8,7 @@ use crate::{
     utils,
 };
 
-use super::{
-    sync::{ListChangesRequest, Record, SetRecordRequest},
-    CURRENT_SCHEMA_VERSION, MESSAGE_PREFIX,
-};
+use super::{ListChangesRequest, Record, SetRecordRequest, CURRENT_SCHEMA_VERSION, MESSAGE_PREFIX};
 
 fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, SignerError> {
     let msg = [MESSAGE_PREFIX, msg].concat();
