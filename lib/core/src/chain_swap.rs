@@ -2,7 +2,6 @@ use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
-use boltz_client::bitcoin::consensus::deserialize;
 use boltz_client::{
     boltz::{self},
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
@@ -213,7 +212,7 @@ impl ChainSwapHandler {
                 }
                 if let Some(transaction) = update.transaction.clone() {
                     let actual_payer_amount =
-                        self.get_actual_payer_amount_from_swap_update(swap, &transaction)?;
+                        self.fetch_incoming_swap_actual_payer_amount(swap).await?;
                     self.persister
                         .update_actual_payer_amount(&swap.id, actual_payer_amount)?;
 
@@ -1171,27 +1170,37 @@ impl ChainSwapHandler {
         }
     }
 
-    fn get_actual_payer_amount_from_swap_update(
-        &self,
-        chain_swap: &ChainSwap,
-        swap_update_tx: &SwapUpdateTxDetails,
-    ) -> Result<u64> {
-        let tx: boltz_client::bitcoin::Transaction =
-            deserialize(&hex::decode(swap_update_tx.clone().hex)?)?;
+    async fn fetch_incoming_swap_actual_payer_amount(&self, chain_swap: &ChainSwap) -> Result<u64> {
         let swap_script = chain_swap.get_lockup_swap_script()?;
         let address = swap_script
             .as_bitcoin_script()?
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let script_pubkey = address.script_pubkey();
-        tx.output
-            .iter()
-            .find(|out| out.script_pubkey == script_pubkey)
-            .map(|out| out.value.to_sat())
-            .ok_or(anyhow!(
-                "Failed to find user lockup output in tx sent by swap provider - Txid: {}",
-                tx.txid()
-            ))
+        let get_balance_res = self
+            .bitcoin_chain_service
+            .lock()
+            .await
+            .script_get_balance_with_retry(&script_pubkey, 10)
+            .await?;
+        debug!(
+            "Found user lockup balance for swap {}: {get_balance_res:?}",
+            chain_swap.id
+        );
+        let actual_payer_amount = match get_balance_res.confirmed > 0 {
+            true => get_balance_res.confirmed,
+            false => match get_balance_res.unconfirmed > 0 {
+                true => get_balance_res.unconfirmed.unsigned_abs(),
+                false => 0,
+            },
+        };
+        match actual_payer_amount {
+            0 => Err(anyhow!(
+                "Balance of user lockup script is zero for swap {}",
+                chain_swap.id
+            )),
+            amount => Ok(amount),
+        }
     }
 
     async fn verify_server_lockup_tx(
