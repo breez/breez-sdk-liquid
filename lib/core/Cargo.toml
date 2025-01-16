@@ -17,7 +17,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "3bbc0ddb068df7f12a1b8b37cfbb353f4db36fe5" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "5869f2444280890716b756adaeaef2942b8041a3" }
 chrono = "0.4"
 env_logger = "0.11"
 flutter_rust_bridge = { version = "=2.7.0", features = [

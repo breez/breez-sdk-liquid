@@ -178,6 +178,10 @@ impl Swapper for MockSwapper {
         Ok((test_pair.clone(), test_pair))
     }
 
+    fn get_submarine_preimage(&self, _swap_id: &str) -> Result<String, PaymentError> {
+        Ok(Preimage::new().to_string().unwrap())
+    }
+
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
         Ok(Some(SubmarinePair {
             hash: generate_random_string(10),

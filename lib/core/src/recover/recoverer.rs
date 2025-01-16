@@ -14,6 +14,7 @@ use tokio::sync::Mutex;
 
 use super::model::*;
 use crate::prelude::{Direction, Swap};
+use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -23,6 +24,7 @@ use crate::{
 
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
+    swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
     bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
@@ -31,6 +33,7 @@ pub(crate) struct Recoverer {
 impl Recoverer {
     pub(crate) fn new(
         master_blinding_key: Vec<u8>,
+        swapper: Arc<dyn Swapper>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
         bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
@@ -39,18 +42,42 @@ impl Recoverer {
             master_blinding_key: MasterBlindingKey::from_hex(
                 &master_blinding_key.to_lower_hex_string(),
             )?,
+            swapper,
             onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
         })
     }
 
-    async fn recover_preimages(
+    fn recover_cooperative_preimages(
         &self,
-        claim_tx_ids_by_swap_id: HashMap<&String, Txid>,
-    ) -> Result<HashMap<String, String>> {
-        let claim_tx_ids: Vec<Txid> = claim_tx_ids_by_swap_id.values().copied().collect();
+        recovered_send_data: &mut HashMap<String, RecoveredOnchainDataSend>,
+    ) -> HashMap<String, Txid> {
+        let mut failed = HashMap::new();
+        for (swap_id, recovered_data) in recovered_send_data {
+            let Some(claim_tx_id) = &recovered_data.claim_tx_id else {
+                continue;
+            };
 
+            match self.swapper.get_submarine_preimage(swap_id) {
+                Ok(preimage) => recovered_data.preimage = Some(preimage),
+                Err(err) => {
+                    log::error!(
+                        "Could not recover Send swap {swap_id} preimage cooperatively: {err:?}"
+                    );
+                    failed.insert(swap_id.clone(), claim_tx_id.txid);
+                }
+            }
+        }
+        failed
+    }
+
+    async fn recover_non_cooperative_preimages(
+        &self,
+        recovered_send_data: &mut HashMap<String, RecoveredOnchainDataSend>,
+        failed_cooperative: HashMap<String, Txid>,
+    ) -> Result<()> {
+        let claim_tx_ids: Vec<Txid> = failed_cooperative.values().cloned().collect();
         let claim_txs = self
             .liquid_chain_service
             .lock()
@@ -66,25 +93,40 @@ impl Recoverer {
             anyhow!("Got {claim_txs_len} send claim transactions, expected {claim_tx_ids_len}")
         );
 
-        let claim_txs_by_swap_id: HashMap<&String, lwk_wollet::elements::Transaction> =
-            claim_tx_ids_by_swap_id.into_keys().zip(claim_txs).collect();
+        let claim_txs_by_swap_id: HashMap<String, lwk_wollet::elements::Transaction> =
+            failed_cooperative.into_keys().zip(claim_txs).collect();
 
-        let mut preimages = HashMap::new();
         for (swap_id, claim_tx) in claim_txs_by_swap_id {
-            match Self::get_send_swap_preimage_from_claim_tx(swap_id, &claim_tx) {
-                Ok(preimage) => {
-                    preimages.insert(swap_id.to_string(), preimage);
-                }
+            let Some(recovered_data) = recovered_send_data.get_mut(&swap_id) else {
+                continue;
+            };
+
+            match Self::get_send_swap_preimage_from_claim_tx(&swap_id, &claim_tx) {
+                Ok(preimage) => recovered_data.preimage = Some(preimage),
                 Err(e) => {
-                    debug!(
-                        "Couldn't get swap preimage from claim tx {} for swap {swap_id}: {e} - \
-                        could be a cooperative claim tx",
+                    error!(
+                        "Couldn't get non-cooperative swap preimage from claim tx {} for swap {swap_id}: {e}",
                         claim_tx.txid()
                     );
+                    // Keep only claim tx for which there is a recovered or synced preimage
+                    recovered_data.claim_tx_id = None;
                 }
             }
         }
-        Ok(preimages)
+
+        Ok(())
+    }
+
+    async fn recover_preimages(
+        &self,
+        recovered_send_data: &mut HashMap<String, RecoveredOnchainDataSend>,
+    ) -> Result<()> {
+        // Recover the preimages by querying the swapper, only if there is a claim_tx_id
+        let failed_cooperative = self.recover_cooperative_preimages(recovered_send_data);
+
+        // For those which failed, recover the preimages by querying onchain (non-cooperative case)
+        self.recover_non_cooperative_preimages(recovered_send_data, failed_cooperative)
+            .await
     }
 
     pub(crate) fn get_send_swap_preimage_from_claim_tx(
@@ -132,44 +174,7 @@ impl Recoverer {
         let histories = self.fetch_swaps_histories(&swaps_list).await?;
 
         let mut recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
-        let recovered_send_with_claim_tx = recovered_send_data
-            .iter()
-            .filter_map(|(swap_id, send_data)| {
-                send_data
-                    .claim_tx_id
-                    .clone()
-                    .map(|claim_tx_id| (swap_id, claim_tx_id.txid))
-            })
-            .collect::<HashMap<&String, Txid>>();
-        let mut recovered_preimages = self.recover_preimages(recovered_send_with_claim_tx).await?;
-        // Keep only verified preimages
-        recovered_preimages.retain(|swap_id, preimage| {
-            if let Some(Swap::Send(send_swap)) = swaps.iter().find(|s| s.id() == *swap_id) {
-                match utils::verify_payment_hash(preimage, &send_swap.invoice) {
-                    Ok(_) => true,
-                    Err(e) => {
-                        error!("Failed to verify recovered preimage for swap {swap_id}: {e}");
-                        false
-                    }
-                }
-            } else {
-                false
-            }
-        });
-        // Keep only claim tx for which there is a recovered or synced preimage
-        for (swap_id, send_data) in recovered_send_data.iter_mut() {
-            if let Some(Swap::Send(send_swap)) = swaps.iter().find(|s| s.id() == *swap_id) {
-                if send_data.claim_tx_id.is_some()
-                    && !recovered_preimages.contains_key(swap_id)
-                    && send_swap.preimage.is_none()
-                {
-                    error!(
-                        "Seemingly found a claim tx but no preimage for swap {swap_id}. Ignoring claim tx."
-                    );
-                    send_data.claim_tx_id = None;
-                }
-            }
-        }
+        self.recover_preimages(&mut recovered_send_data).await?;
 
         let recovered_receive_data = self.recover_receive_swap_tx_ids(
             &tx_map,
@@ -211,8 +216,22 @@ impl Recoverer {
                         .refund_tx_id
                         .clone()
                         .map(|h| h.txid.to_string());
-                    if let Some(preimage) = recovered_preimages.remove(swap_id) {
-                        send_swap.preimage = Some(preimage);
+
+                    match (&send_swap.preimage, &recovered_data.preimage) {
+                        // Update the preimage only if we don't have one already (e.g. from
+                        // real-time sync)
+                        (Some(_), _) | (None, None) => {}
+
+                        // Keep only verified preimages
+                        (None, Some(recovered_preimage)) => {
+                            match utils::verify_payment_hash(recovered_preimage, &send_swap.invoice)
+                            {
+                                Ok(_) => send_swap.preimage = Some(recovered_preimage.clone()),
+                                Err(e) => {
+                                    error!("Failed to verify recovered preimage for swap {swap_id}: {e}");
+                                }
+                            }
+                        }
                     }
                 }
                 Swap::Receive(receive_swap) => {
@@ -441,6 +460,7 @@ impl Recoverer {
                     lockup_tx_id,
                     claim_tx_id,
                     refund_tx_id,
+                    preimage: None,
                 },
             );
         }
