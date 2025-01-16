@@ -85,10 +85,10 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  Webhook for receiving payments
 - [x]  Offline receive via notifications
 - [x]  Offline swaps via notifications
-- [ ]  Real-time sync
-- [ ]  External input parsers
-- [ ]  Bolt12
-- [ ]  Amountless BTC swaps
+- [x]  Real-time sync
+- [x]  External input parsers
+- [x]  Bolt12
+- [x]  Amountless BTC swaps
 - [ ]  Support USTD as an asset
 - [ ]  TLV support
 - [ ]  WebAssembly 
