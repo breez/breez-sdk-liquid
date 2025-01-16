@@ -2514,6 +2514,7 @@ impl LiquidSdk {
         let transactions = self.onchain_wallet.transactions().await?;
         let wallet_amount_sat = transactions
             .into_iter()
+            .filter(|tx| tx.height.is_some())
             .map(|tx| {
                 tx.balance
                     .into_iter()
