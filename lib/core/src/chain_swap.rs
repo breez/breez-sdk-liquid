@@ -1,7 +1,8 @@
 use std::{str::FromStr, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
+use boltz_client::bitcoin::consensus::deserialize;
 use boltz_client::{
     boltz::{self},
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
@@ -211,6 +212,11 @@ impl ChainSwapHandler {
                         .update_chain_swap_accept_zero_conf(&id, !zero_conf_rejected)?;
                 }
                 if let Some(transaction) = update.transaction.clone() {
+                    let actual_payer_amount =
+                        self.get_actual_payer_amount_from_swap_update(swap, &transaction)?;
+                    self.persister
+                        .update_actual_payer_amount(&swap.id, actual_payer_amount)?;
+
                     self.update_swap_info(&ChainSwapUpdate {
                         swap_id: id,
                         to_state: Pending,
@@ -319,7 +325,7 @@ impl ChainSwapHandler {
 
             // If swap state is unrecoverable, either:
             // 1. The transaction failed
-            // 2. Lockup failed (too little funds were sent)
+            // 2. Lockup failed (too little/too much funds were sent)
             // 3. The claim lockup was refunded
             // 4. The swap has expired (>24h)
             // We initiate a cooperative refund, and then fallback to a regular one
@@ -1165,6 +1171,29 @@ impl ChainSwapHandler {
         }
     }
 
+    fn get_actual_payer_amount_from_swap_update(
+        &self,
+        chain_swap: &ChainSwap,
+        swap_update_tx: &SwapUpdateTxDetails,
+    ) -> Result<u64> {
+        let tx: boltz_client::bitcoin::Transaction =
+            deserialize(&hex::decode(swap_update_tx.clone().hex)?)?;
+        let swap_script = chain_swap.get_lockup_swap_script()?;
+        let address = swap_script
+            .as_bitcoin_script()?
+            .to_address(self.config.network.as_bitcoin_chain())
+            .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
+        let script_pubkey = address.script_pubkey();
+        tx.output
+            .iter()
+            .find(|out| out.script_pubkey == script_pubkey)
+            .map(|out| out.value.to_sat())
+            .ok_or(anyhow!(
+                "Failed to find user lockup output in tx sent by swap provider - Txid: {}",
+                tx.txid()
+            ))
+    }
+
     async fn verify_server_lockup_tx(
         &self,
         chain_swap: &ChainSwap,
@@ -1218,9 +1247,22 @@ impl ChainSwapHandler {
         // Verify RBF
         let rbf_explicit = tx.input.iter().any(|tx_in| tx_in.sequence.is_rbf());
         if !verify_confirmation && rbf_explicit {
-            return Err(anyhow!("Transaction signals RBF"));
+            bail!("Transaction signals RBF");
         }
         // Verify amount
+        if chain_swap.payer_amount_sat > 0 {
+            // For non-amountless swaps, make sure user locked up agreed amount
+            match chain_swap.actual_payer_amount_sat {
+                None => {
+                    bail!("Trying to verify incoming server lockup tx when user lockup tx isn't yet known for swap {}", chain_swap.id);
+                }
+                Some(actual_payer_amount_sat) => {
+                    if chain_swap.payer_amount_sat != actual_payer_amount_sat {
+                        bail!("Invalid server lockup tx - user lockup amount ({actual_payer_amount_sat} sat) differs from agreed ({} sat)", chain_swap.payer_amount_sat);
+                    }
+                }
+            }
+        }
         let secp = Secp256k1::new();
         let to_address_output = tx
             .output
@@ -1235,20 +1277,20 @@ impl ChainSwapHandler {
         match chain_swap.accepted_receiver_amount_sat {
             None => {
                 if value < claim_details.amount {
-                    return Err(anyhow!(
+                    bail!(
                         "Transaction value {value} sats is less than {} sats",
                         claim_details.amount
-                    ));
+                    );
                 }
             }
             Some(accepted_receiver_amount_sat) => {
                 let expected_server_lockup_amount_sat =
                     accepted_receiver_amount_sat + chain_swap.claim_fees_sat;
                 if value < expected_server_lockup_amount_sat {
-                    return Err(anyhow!(
+                    bail!(
                         "Transaction value {value} sats is less than accepted {} sats",
                         expected_server_lockup_amount_sat
-                    ));
+                    );
                 }
             }
         }

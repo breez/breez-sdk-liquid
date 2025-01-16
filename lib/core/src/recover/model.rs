@@ -199,12 +199,15 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
 impl RecoveredOnchainDataChainReceive {
     pub(crate) fn derive_partial_state(
         &self,
-        min_lockup_amount_sat: u64,
+        expected_lockup_amount_sat: Option<u64>,
         is_expired: bool,
         is_waiting_fee_acceptance: bool,
     ) -> Option<PaymentState> {
         let is_refundable = self.btc_user_lockup_address_balance_sat > 0
-            && (is_expired || self.btc_user_lockup_amount_sat < min_lockup_amount_sat); // TODO: this does not support accepting over/underpayments
+            && (is_expired
+                || expected_lockup_amount_sat.map_or(false, |expected_lockup_amount_sat| {
+                    expected_lockup_amount_sat != self.btc_user_lockup_amount_sat
+                }));
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
@@ -366,6 +369,7 @@ pub(crate) struct ReceiveChainSwapImmutableData {
     swap_id: String,
     pub(crate) lockup_script: BtcScript,
     claim_script: LBtcScript,
+    pub(crate) payer_amount_sat: u64,
 }
 
 impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
@@ -391,11 +395,13 @@ impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
             .map(|addr| addr.script_pubkey());
 
         let swap_id = swap.id;
+        let payer_amount_sat = swap.payer_amount_sat;
         match (maybe_lockup_script, maybe_claim_script) {
             (Some(lockup_script), Some(claim_script)) => Ok(ReceiveChainSwapImmutableData {
                 swap_id,
                 lockup_script,
                 claim_script,
+                payer_amount_sat
             }),
             (lockup_script, claim_script) => Err(anyhow!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}")),
         }
