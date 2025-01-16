@@ -67,6 +67,8 @@ impl Persister {
                 claim_tx_id = :claim_tx_id,
                 lockup_tx_id = :lockup_tx_id,
                 mrh_tx_id = :mrh_tx_id,
+                payer_amount_sat = :payer_amount_sat,
+                receiver_amount_sat = :receiver_amount_sat,
                 state = :state
             WHERE
                 id = :id AND
@@ -77,6 +79,11 @@ impl Persister {
                 ":claim_tx_id": &receive_swap.claim_tx_id,
                 ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
+                // When the swap is paid via MRH, the recoverer sets the
+                // payer/receiver amount to the MRH tx amount.
+                // This is to show no fees in the payment.
+                ":payer_amount_sat": &receive_swap.payer_amount_sat,
+                ":receiver_amount_sat": &receive_swap.receiver_amount_sat,
                 ":state": &receive_swap.state,
                 ":version": &receive_swap.version,
             },
