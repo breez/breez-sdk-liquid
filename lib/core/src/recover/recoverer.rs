@@ -662,7 +662,7 @@ impl Recoverer {
         Ok(res)
     }
 
-    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data data
+    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data
     fn recover_receive_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -678,7 +678,7 @@ impl Recoverer {
         for (swap_id, history) in chain_receive_histories_by_swap_id {
             debug!("[Recover Chain Receive] Checking swap {swap_id}");
 
-            let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id, lbtc_claim_address) = match history
+            let (mut lbtc_server_lockup_tx_id, lbtc_claim_tx_id, lbtc_claim_address) = match history
                 .lbtc_claim_script_history
                 .len()
             {
@@ -803,6 +803,19 @@ impl Recoverer {
                 },
                 false => btc_last_outgoing_tx_id,
             };
+
+            // Verify amount - if not expected, ignore any potential server lockup tx
+            let payer_amount_sat = receive_chain_swap_immutable_data_by_swap_id
+                .get(&swap_id)
+                .map(|imm| imm.payer_amount_sat)
+                .ok_or_else(|| {
+                    anyhow!("Initial payer amount not found for Onchain Receive Swap {swap_id}")
+                })?;
+            let not_claimed = lbtc_claim_tx_id.is_none();
+            if payer_amount_sat > 0 && btc_user_lockup_amount_sat != payer_amount_sat && not_claimed
+            {
+                lbtc_server_lockup_tx_id = None
+            }
 
             res.insert(
                 swap_id,

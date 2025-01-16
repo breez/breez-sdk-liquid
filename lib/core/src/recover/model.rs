@@ -370,6 +370,7 @@ pub(crate) struct ReceiveChainSwapImmutableData {
     swap_id: String,
     pub(crate) lockup_script: BtcScript,
     claim_script: LBtcScript,
+    pub(crate) payer_amount_sat: u64,
 }
 
 impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
@@ -395,11 +396,13 @@ impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
             .map(|addr| addr.script_pubkey());
 
         let swap_id = swap.id;
+        let payer_amount_sat = swap.payer_amount_sat;
         match (maybe_lockup_script, maybe_claim_script) {
             (Some(lockup_script), Some(claim_script)) => Ok(ReceiveChainSwapImmutableData {
                 swap_id,
                 lockup_script,
                 claim_script,
+                payer_amount_sat
             }),
             (lockup_script, claim_script) => Err(anyhow!("Failed to get lockup or claim script for swap {swap_id}. Lockup script: {lockup_script:?}. Claim script: {claim_script:?}")),
         }
