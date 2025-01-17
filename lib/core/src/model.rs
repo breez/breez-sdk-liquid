@@ -13,6 +13,7 @@ use boltz_client::{
     ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
+use derivative::Derivative;
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -755,7 +756,8 @@ impl FromSql for Direction {
 /// A chain swap
 ///
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
@@ -793,6 +795,7 @@ pub(crate) struct ChainSwap {
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
     /// Version used for optimistic concurrency control within local db
+    #[derivative(PartialEq = "ignore")]
     pub(crate) version: u64,
 }
 impl ChainSwap {
@@ -925,7 +928,8 @@ pub(crate) struct ChainSwapUpdate {
 }
 
 /// A submarine swap, used for Send
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
@@ -950,6 +954,7 @@ pub(crate) struct SendSwap {
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
     /// Version used for optimistic concurrency control within local db
+    #[derivative(PartialEq = "ignore")]
     pub(crate) version: u64,
 }
 impl SendSwap {
@@ -1015,7 +1020,8 @@ impl SendSwap {
 }
 
 /// A reverse swap, used for Receive
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
 pub(crate) struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
@@ -1045,6 +1051,7 @@ pub(crate) struct ReceiveSwap {
     pub(crate) timeout_block_height: u32,
     pub(crate) state: PaymentState,
     /// Version used for optimistic concurrency control within local db
+    #[derivative(PartialEq = "ignore")]
     pub(crate) version: u64,
 }
 impl ReceiveSwap {
