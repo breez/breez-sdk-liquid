@@ -128,6 +128,7 @@ impl LiquidChainService for MockLiquidChainService {
 
 pub(crate) struct MockBitcoinChainService {
     history: Vec<MockHistory>,
+    txs: Vec<boltz_client::bitcoin::Transaction>,
     script_balance_sat: u64,
 }
 
@@ -135,12 +136,21 @@ impl MockBitcoinChainService {
     pub(crate) fn new() -> Self {
         MockBitcoinChainService {
             history: vec![],
+            txs: vec![],
             script_balance_sat: 0,
         }
     }
 
     pub(crate) fn set_history(&mut self, history: Vec<MockHistory>) -> &mut Self {
         self.history = history;
+        self
+    }
+
+    pub(crate) fn set_transactions(&mut self, txs: &[&str]) -> &mut Self {
+        self.txs = txs
+            .iter()
+            .map(|tx_hex| deserialize(&Vec::<u8>::from_hex(tx_hex).unwrap()).unwrap())
+            .collect();
         self
     }
 
@@ -170,7 +180,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _txids: &[boltz_client::bitcoin::Txid],
     ) -> Result<Vec<boltz_client::bitcoin::Transaction>> {
-        Ok(vec![])
+        Ok(self.txs.clone())
     }
 
     fn get_script_history(&self, _script: &Script) -> Result<Vec<lwk_wollet::History>> {

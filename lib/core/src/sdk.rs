@@ -3127,13 +3127,17 @@ mod tests {
     use tokio::sync::Mutex;
 
     use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
+    use crate::test_utils::chain_swap::{
+        TEST_BITCOIN_OUTGOING_SERVER_LOCKUP_TX, TEST_LIQUID_INCOMING_SERVER_LOCKUP_TX,
+        TEST_LIQUID_OUTGOING_USER_LOCKUP_TX,
+    };
     use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
     use crate::{
         model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
             chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
-            chain_swap::{new_chain_swap, TEST_BITCOIN_TX},
+            chain_swap::{new_chain_swap, TEST_BITCOIN_INCOMING_USER_LOCKUP_TX},
             persist::{create_persister, new_receive_swap, new_send_swap},
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
             status_stream::MockStatusStream,
@@ -3149,6 +3153,7 @@ mod tests {
         initial_payment_state: Option<PaymentState>,
         user_lockup_tx_id: Option<String>,
         zero_amount: bool,
+        set_actual_payer_amount: bool,
     }
 
     impl Default for NewSwapArgs {
@@ -3159,6 +3164,7 @@ mod tests {
                 direction: Direction::Outgoing,
                 user_lockup_tx_id: None,
                 zero_amount: false,
+                set_actual_payer_amount: false,
             }
         }
     }
@@ -3188,6 +3194,11 @@ mod tests {
             self.zero_amount = zero_amount;
             self
         }
+
+        pub fn set_set_actual_payer_amount(mut self, set_actual_payer_amount: bool) -> Self {
+            self.set_actual_payer_amount = set_actual_payer_amount;
+            self
+        }
     }
 
     macro_rules! trigger_swap_update {
@@ -3208,6 +3219,7 @@ mod tests {
                         $args.accepts_zero_conf,
                         $args.user_lockup_tx_id,
                         $args.zero_amount,
+                        $args.set_actual_payer_amount,
                     );
                     $persister.insert_or_update_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
@@ -3410,16 +3422,33 @@ mod tests {
                     assert_eq!(persisted_swap.state, PaymentState::Failed);
                 }
 
-                let (mock_tx_hex, mock_tx_id) = match direction {
+                let (mock_user_lockup_tx_hex, mock_user_lockup_tx_id) = match direction {
+                    Direction::Outgoing => {
+                        let tx = TEST_LIQUID_OUTGOING_USER_LOCKUP_TX.clone();
+                        (
+                            lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string(),
+                            tx.txid().to_string(),
+                        )
+                    }
                     Direction::Incoming => {
-                        let tx = TEST_LIQUID_TX.clone();
+                        let tx = TEST_BITCOIN_INCOMING_USER_LOCKUP_TX.clone();
+                        (
+                            sdk_common::bitcoin::consensus::serialize(&tx).to_lower_hex_string(),
+                            tx.txid().to_string(),
+                        )
+                    }
+                };
+
+                let (mock_server_lockup_tx_hex, mock_server_lockup_tx_id) = match direction {
+                    Direction::Incoming => {
+                        let tx = TEST_LIQUID_INCOMING_SERVER_LOCKUP_TX.clone();
                         (
                             lwk_wollet::elements::encode::serialize(&tx).to_lower_hex_string(),
                             tx.txid().to_string(),
                         )
                     }
                     Direction::Outgoing => {
-                        let tx = TEST_BITCOIN_TX.clone();
+                        let tx = TEST_BITCOIN_OUTGOING_SERVER_LOCKUP_TX.clone();
                         (
                             sdk_common::bitcoin::consensus::serialize(&tx).to_lower_hex_string(),
                             tx.txid().to_string(),
@@ -3430,7 +3459,7 @@ mod tests {
                 // Verify that `TransactionLockupFailed` correctly sets the state as
                 // `RefundPending`/`Refundable` or as `Failed` depending on whether or not
                 // `user_lockup_tx_id` is present
-                for user_lockup_tx_id in &[None, Some(mock_tx_id.clone())] {
+                for user_lockup_tx_id in &[None, Some(mock_user_lockup_tx_id.clone())] {
                     if let Some(user_lockup_tx_id) = user_lockup_tx_id {
                         match direction {
                             Direction::Incoming => {
@@ -3486,6 +3515,21 @@ mod tests {
                     ChainSwapStates::TransactionMempool,
                     ChainSwapStates::TransactionConfirmed,
                 ] {
+                    if direction == Direction::Incoming {
+                        bitcoin_chain_service
+                            .lock()
+                            .await
+                            .set_history(vec![MockHistory {
+                                txid: Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
+                                height: 0,
+                                block_hash: None,
+                                block_timestamp: None,
+                            }]);
+                        bitcoin_chain_service
+                            .lock()
+                            .await
+                            .set_transactions(&[&mock_user_lockup_tx_hex]);
+                    }
                     let persisted_swap = trigger_swap_update!(
                         "chain",
                         NewSwapArgs::default().set_direction(direction),
@@ -3493,12 +3537,15 @@ mod tests {
                         status_stream,
                         status,
                         Some(SwapUpdateTxDetails {
-                            id: mock_tx_id.clone(),
-                            hex: mock_tx_hex.clone(),
+                            id: mock_user_lockup_tx_id.clone(),
+                            hex: mock_user_lockup_tx_hex.clone(),
                         }), // sets `update.transaction`
                         Some(true) // sets `update.zero_conf_rejected`
                     );
-                    assert_eq!(persisted_swap.user_lockup_tx_id, Some(mock_tx_id.clone()));
+                    assert_eq!(
+                        persisted_swap.user_lockup_tx_id,
+                        Some(mock_user_lockup_tx_id.clone())
+                    );
                     assert!(!persisted_swap.accept_zero_conf);
                 }
 
@@ -3512,13 +3559,14 @@ mod tests {
                         "chain",
                         NewSwapArgs::default()
                             .set_direction(direction)
-                            .set_accepts_zero_conf(accepts_zero_conf),
+                            .set_accepts_zero_conf(accepts_zero_conf)
+                            .set_set_actual_payer_amount(true),
                         persister,
                         status_stream,
                         ChainSwapStates::TransactionServerMempool,
                         Some(SwapUpdateTxDetails {
-                            id: mock_tx_id.clone(),
-                            hex: mock_tx_hex.clone(),
+                            id: mock_server_lockup_tx_id.clone(),
+                            hex: mock_server_lockup_tx_hex.clone(),
                         }),
                         None
                     );
@@ -3538,13 +3586,15 @@ mod tests {
                 // sets the payment as `Pending` and creates `claim_tx_id`
                 let persisted_swap = trigger_swap_update!(
                     "chain",
-                    NewSwapArgs::default().set_direction(direction),
+                    NewSwapArgs::default()
+                        .set_direction(direction)
+                        .set_set_actual_payer_amount(true),
                     persister,
                     status_stream,
                     ChainSwapStates::TransactionServerConfirmed,
                     Some(SwapUpdateTxDetails {
-                        id: mock_tx_id,
-                        hex: mock_tx_hex,
+                        id: mock_server_lockup_tx_id,
+                        hex: mock_server_lockup_tx_hex,
                     }),
                     None
                 );

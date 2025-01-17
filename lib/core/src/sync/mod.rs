@@ -589,6 +589,7 @@ mod tests {
             true,
             None,
             false,
+            false,
         ))?;
 
         sync_service.push().await?;
