@@ -2214,9 +2214,11 @@ enum BreezSDKLiquidMapper {
         }
         let data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
 
-        guard let amountMsat = prepareLnUrlPayRequest["amountMsat"] as? UInt64 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountMsat", typeName: "PrepareLnUrlPayRequest"))
+        guard let amountTmp = prepareLnUrlPayRequest["amount"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amount", typeName: "PrepareLnUrlPayRequest"))
         }
+        let amount = try asPayAmount(payAmount: amountTmp)
+
         var comment: String?
         if hasNonNilKey(data: prepareLnUrlPayRequest, key: "comment") {
             guard let commentTmp = prepareLnUrlPayRequest["comment"] as? String else {
@@ -2232,13 +2234,13 @@ enum BreezSDKLiquidMapper {
             validateSuccessActionUrl = validateSuccessActionUrlTmp
         }
 
-        return PrepareLnUrlPayRequest(data: data, amountMsat: amountMsat, comment: comment, validateSuccessActionUrl: validateSuccessActionUrl)
+        return PrepareLnUrlPayRequest(data: data, amount: amount, comment: comment, validateSuccessActionUrl: validateSuccessActionUrl)
     }
 
     static func dictionaryOf(prepareLnUrlPayRequest: PrepareLnUrlPayRequest) -> [String: Any?] {
         return [
             "data": dictionaryOf(lnUrlPayRequestData: prepareLnUrlPayRequest.data),
-            "amountMsat": prepareLnUrlPayRequest.amountMsat,
+            "amount": dictionaryOf(payAmount: prepareLnUrlPayRequest.amount),
             "comment": prepareLnUrlPayRequest.comment == nil ? nil : prepareLnUrlPayRequest.comment,
             "validateSuccessActionUrl": prepareLnUrlPayRequest.validateSuccessActionUrl == nil ? nil : prepareLnUrlPayRequest.validateSuccessActionUrl,
         ]

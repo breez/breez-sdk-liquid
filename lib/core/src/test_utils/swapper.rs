@@ -187,13 +187,13 @@ impl Swapper for MockSwapper {
             hash: generate_random_string(10),
             rate: 0.0,
             limits: PairLimits {
-                maximal: u64::MAX,
-                minimal: 0,
-                maximal_zero_conf: 100_000,
+                maximal: 25_000_000,
+                minimal: 1_000,
+                maximal_zero_conf: 250_000,
             },
             fees: SubmarineFees {
                 percentage: 0.1,
-                miner_fees: 100,
+                miner_fees: 14,
             },
         }))
     }
@@ -310,14 +310,14 @@ impl Swapper for MockSwapper {
             hash: "".to_string(),
             rate: 0.0,
             limits: ReverseLimits {
-                maximal: u64::MAX,
-                minimal: 0,
+                maximal: 25_000_000,
+                minimal: 1_000,
             },
             fees: ReverseFees {
-                percentage: 0.1,
+                percentage: 0.25,
                 miner_fees: PairMinerFees {
                     lockup: 14,
-                    claim: 100,
+                    claim: 26,
                 },
             },
         }))

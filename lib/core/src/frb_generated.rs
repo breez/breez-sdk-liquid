@@ -4116,12 +4116,12 @@ impl SseDecode for crate::model::PrepareLnUrlPayRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
-        let mut var_amountMsat = <u64>::sse_decode(deserializer);
+        let mut var_amount = <crate::model::PayAmount>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_validateSuccessActionUrl = <Option<bool>>::sse_decode(deserializer);
         return crate::model::PrepareLnUrlPayRequest {
             data: var_data,
-            amount_msat: var_amountMsat,
+            amount: var_amount,
             comment: var_comment,
             validate_success_action_url: var_validateSuccessActionUrl,
         };
@@ -6429,7 +6429,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.data.into_into_dart().into_dart(),
-            self.amount_msat.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
             self.validate_success_action_url
                 .into_into_dart()
@@ -8675,7 +8675,7 @@ impl SseEncode for crate::model::PrepareLnUrlPayRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
-        <u64>::sse_encode(self.amount_msat, serializer);
+        <crate::model::PayAmount>::sse_encode(self.amount, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<bool>>::sse_encode(self.validate_success_action_url, serializer);
     }
@@ -10819,7 +10819,7 @@ mod io {
         fn cst_decode(self) -> crate::model::PrepareLnUrlPayRequest {
             crate::model::PrepareLnUrlPayRequest {
                 data: self.data.cst_decode(),
-                amount_msat: self.amount_msat.cst_decode(),
+                amount: self.amount.cst_decode(),
                 comment: self.comment.cst_decode(),
                 validate_success_action_url: self.validate_success_action_url.cst_decode(),
             }
@@ -12134,7 +12134,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 data: Default::default(),
-                amount_msat: Default::default(),
+                amount: Default::default(),
                 comment: core::ptr::null_mut(),
                 validate_success_action_url: core::ptr::null_mut(),
             }
@@ -14578,7 +14578,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_ln_url_pay_request {
         data: wire_cst_ln_url_pay_request_data,
-        amount_msat: u64,
+        amount: wire_cst_pay_amount,
         comment: *mut wire_cst_list_prim_u_8_strict,
         validate_success_action_url: *mut bool,
     }

@@ -1879,14 +1879,14 @@ fun asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: ReadableMap): PrepareLnUrlP
             prepareLnUrlPayRequest,
             arrayOf(
                 "data",
-                "amountMsat",
+                "amount",
             ),
         )
     ) {
         return null
     }
     val data = prepareLnUrlPayRequest.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
-    val amountMsat = prepareLnUrlPayRequest.getDouble("amountMsat").toULong()
+    val amount = prepareLnUrlPayRequest.getMap("amount")?.let { asPayAmount(it) }!!
     val comment = if (hasNonNullKey(prepareLnUrlPayRequest, "comment")) prepareLnUrlPayRequest.getString("comment") else null
     val validateSuccessActionUrl =
         if (hasNonNullKey(
@@ -1898,13 +1898,13 @@ fun asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: ReadableMap): PrepareLnUrlP
         } else {
             null
         }
-    return PrepareLnUrlPayRequest(data, amountMsat, comment, validateSuccessActionUrl)
+    return PrepareLnUrlPayRequest(data, amount, comment, validateSuccessActionUrl)
 }
 
 fun readableMapOf(prepareLnUrlPayRequest: PrepareLnUrlPayRequest): ReadableMap =
     readableMapOf(
         "data" to readableMapOf(prepareLnUrlPayRequest.data),
-        "amountMsat" to prepareLnUrlPayRequest.amountMsat,
+        "amount" to readableMapOf(prepareLnUrlPayRequest.amount),
         "comment" to prepareLnUrlPayRequest.comment,
         "validateSuccessActionUrl" to prepareLnUrlPayRequest.validateSuccessActionUrl,
     )

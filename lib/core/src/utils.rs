@@ -5,6 +5,7 @@ use crate::ensure_sdk;
 use crate::error::{PaymentError, SdkResult};
 use crate::prelude::LiquidNetwork;
 use anyhow::{anyhow, ensure, Result};
+use boltz_client::boltz::SubmarinePair;
 use boltz_client::util::secrets::Preimage;
 use boltz_client::ToHex;
 use lazy_static::lazy_static;
@@ -123,6 +124,26 @@ pub(crate) fn lbtc_asset_id(network: LiquidNetwork) -> AssetId {
     match network {
         LiquidNetwork::Mainnet => AssetId::LIQUID_BTC,
         LiquidNetwork::Testnet => *LBTC_TESTNET_ASSET_ID,
+    }
+}
+
+/// Increments the inversely calculated invoice amount up to the maximum drainable amount,
+/// as calculating the inverse invoice amount in some cases has rounding down errors
+pub(crate) fn increment_invoice_amount_up_to_drain_amount(
+    invoice_amount_sat: u64,
+    lbtc_pair: &SubmarinePair,
+    drain_amount_sat: u64,
+) -> u64 {
+    let incremented_amount_sat = invoice_amount_sat + 1;
+    let fees_sat = lbtc_pair.fees.total(incremented_amount_sat);
+    if incremented_amount_sat + fees_sat <= drain_amount_sat {
+        increment_invoice_amount_up_to_drain_amount(
+            incremented_amount_sat,
+            lbtc_pair,
+            drain_amount_sat,
+        )
+    } else {
+        invoice_amount_sat
     }
 }
 

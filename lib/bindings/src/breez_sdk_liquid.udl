@@ -405,7 +405,7 @@ dictionary CheckMessageResponse {
 
 dictionary PrepareLnUrlPayRequest {
     LnUrlPayRequestData data;
-    u64 amount_msat;
+    PayAmount amount;
     string? comment = null;
     boolean? validate_success_action_url = null;
 };

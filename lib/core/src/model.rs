@@ -491,6 +491,7 @@ pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+/// Used to specify the amount to sent or to send all funds.
 #[derive(Debug, Serialize, Clone)]
 pub enum PayAmount {
     /// The amount in satoshi that will be received
@@ -509,6 +510,7 @@ pub enum PayAmount {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
+    /// The amount to send
     pub amount: PayAmount,
     /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.
     pub fee_rate_sat_per_vbyte: Option<u32>,
@@ -1889,8 +1891,8 @@ impl From<SwapTree> for InternalSwapTree {
 pub struct PrepareLnUrlPayRequest {
     /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
     pub data: LnUrlPayRequestData,
-    /// The amount in millisatoshis for this payment
-    pub amount_msat: u64,
+    /// The amount to send
+    pub amount: PayAmount,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// Validates that, if there is a URL success action, the URL domain matches

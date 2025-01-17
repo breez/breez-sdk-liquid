@@ -2935,7 +2935,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return PrepareLnUrlPayRequest(
       data: dco_decode_ln_url_pay_request_data(arr[0]),
-      amountMsat: dco_decode_u_64(arr[1]),
+      amount: dco_decode_pay_amount(arr[1]),
       comment: dco_decode_opt_String(arr[2]),
       validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[3]),
     );
@@ -5260,12 +5260,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareLnUrlPayRequest sse_decode_prepare_ln_url_pay_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_data = sse_decode_ln_url_pay_request_data(deserializer);
-    var var_amountMsat = sse_decode_u_64(deserializer);
+    var var_amount = sse_decode_pay_amount(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
     var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
     return PrepareLnUrlPayRequest(
         data: var_data,
-        amountMsat: var_amountMsat,
+        amount: var_amount,
         comment: var_comment,
         validateSuccessActionUrl: var_validateSuccessActionUrl);
   }
@@ -7392,7 +7392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_prepare_ln_url_pay_request(PrepareLnUrlPayRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ln_url_pay_request_data(self.data, serializer);
-    sse_encode_u_64(self.amountMsat, serializer);
+    sse_encode_pay_amount(self.amount, serializer);
     sse_encode_opt_String(self.comment, serializer);
     sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);
   }

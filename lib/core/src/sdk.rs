@@ -1043,44 +1043,82 @@ impl LiquidSdk {
                 self.ensure_send_is_not_self_transfer(&invoice.bolt11)?;
                 self.validate_bolt11_invoice(&invoice.bolt11)?;
 
-                receiver_amount_sat = invoice.amount_msat.ok_or(PaymentError::amount_missing(
-                    "Expected invoice with an amount",
-                ))? / 1000;
+                let invoice_amount_sat = invoice.amount_msat.ok_or(
+                    PaymentError::amount_missing("Expected invoice with an amount"),
+                )? / 1000;
 
                 if let Some(PayAmount::Bitcoin {
                     receiver_amount_sat: amount_sat,
                 }) = req.amount
                 {
                     ensure_sdk!(
-                        receiver_amount_sat == amount_sat,
+                        invoice_amount_sat == amount_sat,
                         PaymentError::Generic {
                             err: "Receiver amount and invoice amount do not match".to_string()
                         }
                     );
                 }
 
-                let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat)?;
-
+                let lbtc_pair = self.validate_submarine_pairs(invoice_amount_sat)?;
+                let mrh_address = self
+                    .swapper
+                    .check_for_mrh(&invoice.bolt11)?
+                    .map(|(address, _)| address);
                 asset_id = self.config.lbtc_asset_id();
-                fees_sat = match self.swapper.check_for_mrh(&invoice.bolt11)? {
-                    Some((lbtc_address, _)) => {
-                        self.estimate_onchain_tx_or_drain_tx_fee(
-                            receiver_amount_sat,
-                            &lbtc_address,
-                            &asset_id,
-                        )
-                        .await?
-                    }
-                    None => {
-                        let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
-                        let user_lockup_amount_sat = receiver_amount_sat + boltz_fees_total;
-                        let lockup_fees_sat = self
-                            .estimate_lockup_tx_or_drain_tx_fee(user_lockup_amount_sat)
-                            .await?;
-                        boltz_fees_total + lockup_fees_sat
-                    }
-                };
-                payment_destination = SendDestination::Bolt11 { invoice };
+                (receiver_amount_sat, fees_sat, payment_destination) =
+                    match (mrh_address.clone(), req.amount.clone()) {
+                        (Some(lbtc_address), Some(PayAmount::Drain)) => {
+                            // The BOLT11 invoice has an MRH and it is requested that the wallet balance is to be drained,
+                            // therefore we use the MRH address and drain the balance (overpaying the invoice if neccessary)
+                            let drain_fees_sat = self
+                                .estimate_drain_tx_fee(None, Some(&lbtc_address))
+                                .await?;
+                            let drain_amount_sat =
+                                get_info_res.wallet_info.balance_sat - drain_fees_sat;
+                            let payment_destination = SendDestination::LiquidAddress {
+                                address_data: LiquidAddressData {
+                                    address: lbtc_address,
+                                    asset_id: Some(asset_id.clone()),
+                                    amount: None,
+                                    amount_sat: Some(drain_amount_sat),
+                                    network: self.config.network.into(),
+                                    label: None,
+                                    message: None,
+                                },
+                            };
+                            (drain_amount_sat, drain_fees_sat, payment_destination)
+                        }
+                        (Some(lbtc_address), _) => {
+                            // The BOLT11 invoice has an MRH but no drain is requested,
+                            // so we calculate the fees of a direct Liquid transaction
+                            let fees_sat = self
+                                .estimate_onchain_tx_or_drain_tx_fee(
+                                    invoice_amount_sat,
+                                    &lbtc_address,
+                                    &asset_id,
+                                )
+                                .await?;
+                            (
+                                invoice_amount_sat,
+                                fees_sat,
+                                SendDestination::Bolt11 { invoice },
+                            )
+                        }
+                        (None, _) => {
+                            // The BOLT11 invoice has no MRH, so we calculate the fees using a swap
+                            let boltz_fees_total = lbtc_pair.fees.total(invoice_amount_sat);
+                            let user_lockup_amount_sat = invoice_amount_sat + boltz_fees_total;
+                            let lockup_fees_sat = self
+                                .estimate_lockup_tx_or_drain_tx_fee(user_lockup_amount_sat)
+                                .await?;
+                            let fees_sat = boltz_fees_total + lockup_fees_sat;
+                            (
+                                invoice_amount_sat,
+                                fees_sat,
+                                SendDestination::Bolt11 { invoice },
+                            )
+                        }
+                    };
             }
             Ok(InputType::Bolt12Offer { offer }) => {
                 receiver_amount_sat = match req.amount {
@@ -3009,7 +3047,9 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareLnUrlPayRequest] containing:
     ///     * `data` - the [LnUrlPayRequestData] returned by [LiquidSdk::parse]
-    ///     * `amount_msat` - the amount in millisatoshis for this payment
+    ///     * `amount` - The optional amount of type [PayAmount].
+    ///        - [PayAmount::Drain] which uses all funds
+    ///        - [PayAmount::Receiver] which sets the amount the receiver should receive
     ///     * `comment` - an optional comment for this payment
     ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
     ///       the LNURL callback domain. Defaults to 'true'
@@ -3022,8 +3062,60 @@ impl LiquidSdk {
         &self,
         req: PrepareLnUrlPayRequest,
     ) -> Result<PrepareLnUrlPayResponse, LnUrlPayError> {
+        let amount_msat = match req.amount {
+            PayAmount::Drain => {
+                let get_info_res = self
+                    .get_info()
+                    .await
+                    .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
+                ensure_sdk!(
+                    get_info_res.wallet_info.pending_receive_sat == 0
+                        && get_info_res.wallet_info.pending_send_sat == 0,
+                    LnUrlPayError::Generic {
+                        err: "Cannot drain while there are pending payments".to_string(),
+                    }
+                );
+                let lbtc_pair = self
+                    .swapper
+                    .get_submarine_pairs()?
+                    .ok_or(PaymentError::PairsNotFound)?;
+                let drain_fees_sat = self.estimate_drain_tx_fee(None, None).await?;
+                let drain_amount_sat = get_info_res.wallet_info.balance_sat - drain_fees_sat;
+                // Get the inverse invoice amount by calculating a dummy amount then increment up to the drain amount
+                let dummy_fees_sat = lbtc_pair.fees.total(drain_amount_sat);
+                let dummy_amount_sat = drain_amount_sat - dummy_fees_sat;
+                let invoice_amount_sat = utils::increment_invoice_amount_up_to_drain_amount(
+                    dummy_amount_sat,
+                    &lbtc_pair,
+                    drain_amount_sat,
+                );
+                lbtc_pair
+                    .limits
+                    .within(invoice_amount_sat)
+                    .map_err(|e| LnUrlPayError::Generic { err: e.message() })?;
+                // Validate if we can actually drain the wallet with a swap
+                let pair_fees_sat = lbtc_pair.fees.total(invoice_amount_sat);
+                ensure_sdk!(
+                    invoice_amount_sat + pair_fees_sat == drain_amount_sat,
+                    LnUrlPayError::Generic {
+                        err: "Cannot drain without leaving a remainder".to_string(),
+                    }
+                );
+
+                invoice_amount_sat * 1000
+            }
+            PayAmount::Bitcoin {
+                receiver_amount_sat,
+            } => receiver_amount_sat * 1000,
+            PayAmount::Asset { .. } => {
+                return Err(LnUrlPayError::Generic {
+                    err: "Cannot send an asset to a Bitcoin address".to_string(),
+                })
+            }
+        };
+
         match validate_lnurl_pay(
-            req.amount_msat,
+            amount_msat,
             &req.comment,
             &req.data,
             self.config.network.into(),
@@ -3038,7 +3130,7 @@ impl LiquidSdk {
                 let prepare_response = self
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
-                        amount: None,
+                        amount: Some(req.amount),
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
