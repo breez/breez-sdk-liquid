@@ -1267,18 +1267,21 @@ impl ChainSwapHandler {
             bail!("Transaction signals RBF");
         }
         // Verify amount
-        if chain_swap.payer_amount_sat > 0 {
-            // For non-amountless swaps, make sure user locked up agreed amount
-            match chain_swap.actual_payer_amount_sat {
-                None => {
-                    bail!("Trying to verify incoming server lockup tx when user lockup tx isn't yet known for swap {}", chain_swap.id);
-                }
-                Some(actual_payer_amount_sat) => {
-                    if chain_swap.payer_amount_sat != actual_payer_amount_sat {
-                        bail!("Invalid server lockup tx - user lockup amount ({actual_payer_amount_sat} sat) differs from agreed ({} sat)", chain_swap.payer_amount_sat);
-                    }
-                }
+        let actual_payer_amount_sat = match chain_swap.actual_payer_amount_sat {
+            Some(amount) => amount,
+            None => {
+                let actual_payer_amount_sat = self
+                    .fetch_incoming_swap_actual_payer_amount(chain_swap)
+                    .await?;
+                self.persister
+                    .update_actual_payer_amount(&chain_swap.id, actual_payer_amount_sat)?;
+                actual_payer_amount_sat
             }
+        };
+        // For non-amountless swaps, make sure user locked up agreed amount
+        if chain_swap.payer_amount_sat > 0 && chain_swap.payer_amount_sat != actual_payer_amount_sat
+        {
+            bail!("Invalid server lockup tx - user lockup amount ({actual_payer_amount_sat} sat) differs from agreed ({} sat)", chain_swap.payer_amount_sat);
         }
         let secp = Secp256k1::new();
         let to_address_output = tx
