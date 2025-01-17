@@ -3512,6 +3512,21 @@ mod tests {
                     ChainSwapStates::TransactionMempool,
                     ChainSwapStates::TransactionConfirmed,
                 ] {
+                    if direction == Direction::Incoming {
+                        bitcoin_chain_service
+                            .lock()
+                            .await
+                            .set_history(vec![MockHistory {
+                                txid: Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
+                                height: 0,
+                                block_hash: None,
+                                block_timestamp: None,
+                            }]);
+                        bitcoin_chain_service
+                            .lock()
+                            .await
+                            .set_transactions(&[&mock_user_lockup_tx_hex]);
+                    }
                     let persisted_swap = trigger_swap_update!(
                         "chain",
                         NewSwapArgs::default().set_direction(direction),
