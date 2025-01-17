@@ -1504,7 +1504,8 @@ pub struct AssetInfo {
     pub name: String,
     /// The ticker of the asset
     pub ticker: String,
-    /// The amount calculated from the satoshi amount for the transaction, shifted of the left by the [precision](AssetMetadata::precision)
+    /// The amount calculated from the satoshi amount of the transaction, having its
+    /// decimal shifted to the left by the [precision](AssetMetadata::precision)
     pub amount: f64,
 }
 

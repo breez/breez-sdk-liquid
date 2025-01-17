@@ -69,7 +69,8 @@ class AssetInfo {
   /// The ticker of the asset
   final String ticker;
 
-  /// The amount calculated from the satoshi amount for the transaction, shifted of the left by the [precision](AssetMetadata::precision)
+  /// The amount calculated from the satoshi amount of the transaction, having its
+  /// decimal shifted to the left by the [precision](AssetMetadata::precision)
   final double amount;
 
   const AssetInfo({
