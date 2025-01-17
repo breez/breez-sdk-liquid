@@ -1172,35 +1172,43 @@ impl ChainSwapHandler {
 
     async fn fetch_incoming_swap_actual_payer_amount(&self, chain_swap: &ChainSwap) -> Result<u64> {
         let swap_script = chain_swap.get_lockup_swap_script()?;
-        let address = swap_script
+        let script_pubkey = swap_script
             .as_bitcoin_script()?
             .to_address(self.config.network.as_bitcoin_chain())
-            .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
-        let script_pubkey = address.script_pubkey();
-        let get_balance_res = self
+            .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?
+            .script_pubkey();
+
+        let history = self.fetch_bitcoin_script_history(&swap_script).await?;
+
+        // User lockup tx is by definition the first
+        let first_tx_id = history
+            .first()
+            .ok_or(anyhow!(
+                "No history found for user lockup script for swap {}",
+                chain_swap.id
+            ))?
+            .txid
+            .to_raw_hash()
+            .into();
+
+        // Get full transaction
+        let txs = self
             .bitcoin_chain_service
             .lock()
             .await
-            .script_get_balance_with_retry(&script_pubkey, 10)
-            .await?;
-        debug!(
-            "Found user lockup balance for swap {}: {get_balance_res:?}",
+            .get_transactions(&[first_tx_id])?;
+        let user_lockup_tx = txs.first().ok_or(anyhow!(
+            "No transactions found for user lockup script for swap {}",
             chain_swap.id
-        );
-        let actual_payer_amount = match get_balance_res.confirmed > 0 {
-            true => get_balance_res.confirmed,
-            false => match get_balance_res.unconfirmed > 0 {
-                true => get_balance_res.unconfirmed.unsigned_abs(),
-                false => 0,
-            },
-        };
-        match actual_payer_amount {
-            0 => Err(anyhow!(
-                "Balance of user lockup script is zero for swap {}",
-                chain_swap.id
-            )),
-            amount => Ok(amount),
-        }
+        ))?;
+
+        // Find output paying to our script and get amount
+        user_lockup_tx
+            .output
+            .iter()
+            .find(|out| out.script_pubkey == script_pubkey)
+            .map(|out| out.value.to_sat())
+            .ok_or(anyhow!("No output found paying to user lockup script"))
     }
 
     async fn verify_server_lockup_tx(
