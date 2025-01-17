@@ -1550,7 +1550,9 @@ impl Payment {
             unblinding_data: None,
             timestamp: swap.created_at,
             amount_sat,
-            fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
+            fees_sat: swap
+                .payer_amount_sat
+                .saturating_sub(swap.receiver_amount_sat),
             swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
@@ -1601,8 +1603,8 @@ impl Payment {
                     // For receive swaps, to avoid some edge case issues related to potential past
                     //  overpayments, we use the actual claim value as the final received amount
                     //  for fee calculation.
-                    PaymentType::Receive => s.payer_amount_sat - tx.amount_sat,
-                    PaymentType::Send => s.payer_amount_sat - s.receiver_amount_sat,
+                    PaymentType::Receive => s.payer_amount_sat.saturating_sub(tx.amount_sat),
+                    PaymentType::Send => s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
                 },
                 None => match tx.payment_type {
                     PaymentType::Receive => 0,
