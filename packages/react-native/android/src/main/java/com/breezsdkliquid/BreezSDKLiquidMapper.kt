@@ -102,6 +102,39 @@ fun asAesSuccessActionDataDecryptedList(arr: ReadableArray): List<AesSuccessActi
     return list
 }
 
+fun asAssetBalance(assetBalance: ReadableMap): AssetBalance? {
+    if (!validateMandatoryFields(
+            assetBalance,
+            arrayOf(
+                "assetId",
+                "balance",
+            ),
+        )
+    ) {
+        return null
+    }
+    val assetId = assetBalance.getString("assetId")!!
+    val balance = assetBalance.getDouble("balance").toULong()
+    return AssetBalance(assetId, balance)
+}
+
+fun readableMapOf(assetBalance: AssetBalance): ReadableMap =
+    readableMapOf(
+        "assetId" to assetBalance.assetId,
+        "balance" to assetBalance.balance,
+    )
+
+fun asAssetBalanceList(arr: ReadableArray): List<AssetBalance> {
+    val list = ArrayList<AssetBalance>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAssetBalance(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBackupRequest(backupRequest: ReadableMap): BackupRequest? {
     if (!validateMandatoryFields(
             backupRequest,
@@ -1927,23 +1960,21 @@ fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveR
         return null
     }
     val paymentMethod = prepareReceiveRequest.getString("paymentMethod")?.let { asPaymentMethod(it) }!!
-    val payerAmountSat =
-        if (hasNonNullKey(
-                prepareReceiveRequest,
-                "payerAmountSat",
-            )
-        ) {
-            prepareReceiveRequest.getDouble("payerAmountSat").toULong()
+    val amount =
+        if (hasNonNullKey(prepareReceiveRequest, "amount")) {
+            prepareReceiveRequest.getMap("amount")?.let {
+                asReceiveAmount(it)
+            }
         } else {
             null
         }
-    return PrepareReceiveRequest(paymentMethod, payerAmountSat)
+    return PrepareReceiveRequest(paymentMethod, amount)
 }
 
 fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
     readableMapOf(
         "paymentMethod" to prepareReceiveRequest.paymentMethod.name.lowercase(),
-        "payerAmountSat" to prepareReceiveRequest.payerAmountSat,
+        "amount" to prepareReceiveRequest.amount?.let { readableMapOf(it) },
     )
 
 fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest> {
@@ -1970,13 +2001,11 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
     }
     val paymentMethod = prepareReceiveResponse.getString("paymentMethod")?.let { asPaymentMethod(it) }!!
     val feesSat = prepareReceiveResponse.getDouble("feesSat").toULong()
-    val payerAmountSat =
-        if (hasNonNullKey(
-                prepareReceiveResponse,
-                "payerAmountSat",
-            )
-        ) {
-            prepareReceiveResponse.getDouble("payerAmountSat").toULong()
+    val amount =
+        if (hasNonNullKey(prepareReceiveResponse, "amount")) {
+            prepareReceiveResponse.getMap("amount")?.let {
+                asReceiveAmount(it)
+            }
         } else {
             null
         }
@@ -2010,14 +2039,14 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
-    return PrepareReceiveResponse(paymentMethod, feesSat, payerAmountSat, minPayerAmountSat, maxPayerAmountSat, swapperFeerate)
+    return PrepareReceiveResponse(paymentMethod, feesSat, amount, minPayerAmountSat, maxPayerAmountSat, swapperFeerate)
 }
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
     readableMapOf(
         "paymentMethod" to prepareReceiveResponse.paymentMethod.name.lowercase(),
         "feesSat" to prepareReceiveResponse.feesSat,
-        "payerAmountSat" to prepareReceiveResponse.payerAmountSat,
+        "amount" to prepareReceiveResponse.amount?.let { readableMapOf(it) },
         "minPayerAmountSat" to prepareReceiveResponse.minPayerAmountSat,
         "maxPayerAmountSat" to prepareReceiveResponse.maxPayerAmountSat,
         "swapperFeerate" to prepareReceiveResponse.swapperFeerate,
@@ -2742,6 +2771,7 @@ fun asWalletInfo(walletInfo: ReadableMap): WalletInfo? {
                 "pendingReceiveSat",
                 "fingerprint",
                 "pubkey",
+                "assetBalances",
             ),
         )
     ) {
@@ -2752,7 +2782,8 @@ fun asWalletInfo(walletInfo: ReadableMap): WalletInfo? {
     val pendingReceiveSat = walletInfo.getDouble("pendingReceiveSat").toULong()
     val fingerprint = walletInfo.getString("fingerprint")!!
     val pubkey = walletInfo.getString("pubkey")!!
-    return WalletInfo(balanceSat, pendingSendSat, pendingReceiveSat, fingerprint, pubkey)
+    val assetBalances = walletInfo.getArray("assetBalances")?.let { asAssetBalanceList(it) }!!
+    return WalletInfo(balanceSat, pendingSendSat, pendingReceiveSat, fingerprint, pubkey, assetBalances)
 }
 
 fun readableMapOf(walletInfo: WalletInfo): ReadableMap =
@@ -2762,6 +2793,7 @@ fun readableMapOf(walletInfo: WalletInfo): ReadableMap =
         "pendingReceiveSat" to walletInfo.pendingReceiveSat,
         "fingerprint" to walletInfo.fingerprint,
         "pubkey" to walletInfo.pubkey,
+        "assetBalances" to readableArrayOf(walletInfo.assetBalances),
     )
 
 fun asWalletInfoList(arr: ReadableArray): List<WalletInfo> {
@@ -3023,11 +3055,12 @@ fun asListPaymentDetails(listPaymentDetails: ReadableMap): ListPaymentDetails? {
     val type = listPaymentDetails.getString("type")
 
     if (type == "liquid") {
-        val destination = listPaymentDetails.getString("destination")!!
-        return ListPaymentDetails.Liquid(destination)
+        val assetId = if (hasNonNullKey(listPaymentDetails, "assetId")) listPaymentDetails.getString("assetId") else null
+        val destination = if (hasNonNullKey(listPaymentDetails, "destination")) listPaymentDetails.getString("destination") else null
+        return ListPaymentDetails.Liquid(assetId, destination)
     }
     if (type == "bitcoin") {
-        val address = listPaymentDetails.getString("address")!!
+        val address = if (hasNonNullKey(listPaymentDetails, "address")) listPaymentDetails.getString("address") else null
         return ListPaymentDetails.Bitcoin(address)
     }
     return null
@@ -3038,6 +3071,7 @@ fun readableMapOf(listPaymentDetails: ListPaymentDetails): ReadableMap? {
     when (listPaymentDetails) {
         is ListPaymentDetails.Liquid -> {
             pushToMap(map, "type", "liquid")
+            pushToMap(map, "assetId", listPaymentDetails.assetId)
             pushToMap(map, "destination", listPaymentDetails.destination)
         }
         is ListPaymentDetails.Bitcoin -> {
@@ -3209,9 +3243,14 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
 fun asPayAmount(payAmount: ReadableMap): PayAmount? {
     val type = payAmount.getString("type")
 
-    if (type == "receiver") {
-        val amountSat = payAmount.getDouble("amountSat").toULong()
-        return PayAmount.Receiver(amountSat)
+    if (type == "bitcoin") {
+        val receiverAmountSat = payAmount.getDouble("receiverAmountSat").toULong()
+        return PayAmount.Bitcoin(receiverAmountSat)
+    }
+    if (type == "asset") {
+        val assetId = payAmount.getString("assetId")!!
+        val receiverAmount = payAmount.getDouble("receiverAmount").toULong()
+        return PayAmount.Asset(assetId, receiverAmount)
     }
     if (type == "drain") {
         return PayAmount.Drain
@@ -3222,9 +3261,14 @@ fun asPayAmount(payAmount: ReadableMap): PayAmount? {
 fun readableMapOf(payAmount: PayAmount): ReadableMap? {
     val map = Arguments.createMap()
     when (payAmount) {
-        is PayAmount.Receiver -> {
-            pushToMap(map, "type", "receiver")
-            pushToMap(map, "amountSat", payAmount.amountSat)
+        is PayAmount.Bitcoin -> {
+            pushToMap(map, "type", "bitcoin")
+            pushToMap(map, "receiverAmountSat", payAmount.receiverAmountSat)
+        }
+        is PayAmount.Asset -> {
+            pushToMap(map, "type", "asset")
+            pushToMap(map, "assetId", payAmount.assetId)
+            pushToMap(map, "receiverAmount", payAmount.receiverAmount)
         }
         is PayAmount.Drain -> {
             pushToMap(map, "type", "drain")
@@ -3301,9 +3345,10 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         )
     }
     if (type == "liquid") {
+        val assetId = paymentDetails.getString("assetId")!!
         val destination = paymentDetails.getString("destination")!!
         val description = paymentDetails.getString("description")!!
-        return PaymentDetails.Liquid(destination, description)
+        return PaymentDetails.Liquid(assetId, destination, description)
     }
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
@@ -3372,6 +3417,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
         }
         is PaymentDetails.Liquid -> {
             pushToMap(map, "type", "liquid")
+            pushToMap(map, "assetId", paymentDetails.assetId)
             pushToMap(map, "destination", paymentDetails.destination)
             pushToMap(map, "description", paymentDetails.description)
         }
@@ -3433,6 +3479,48 @@ fun asPaymentTypeList(arr: ReadableArray): List<PaymentType> {
     for (value in arr.toList()) {
         when (value) {
             is String -> list.add(asPaymentType(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asReceiveAmount(receiveAmount: ReadableMap): ReceiveAmount? {
+    val type = receiveAmount.getString("type")
+
+    if (type == "bitcoin") {
+        val payerAmountSat = receiveAmount.getDouble("payerAmountSat").toULong()
+        return ReceiveAmount.Bitcoin(payerAmountSat)
+    }
+    if (type == "asset") {
+        val assetId = receiveAmount.getString("assetId")!!
+        val payerAmount = if (hasNonNullKey(receiveAmount, "payerAmount")) receiveAmount.getDouble("payerAmount").toULong() else null
+        return ReceiveAmount.Asset(assetId, payerAmount)
+    }
+    return null
+}
+
+fun readableMapOf(receiveAmount: ReceiveAmount): ReadableMap? {
+    val map = Arguments.createMap()
+    when (receiveAmount) {
+        is ReceiveAmount.Bitcoin -> {
+            pushToMap(map, "type", "bitcoin")
+            pushToMap(map, "payerAmountSat", receiveAmount.payerAmountSat)
+        }
+        is ReceiveAmount.Asset -> {
+            pushToMap(map, "type", "asset")
+            pushToMap(map, "assetId", receiveAmount.assetId)
+            pushToMap(map, "payerAmount", receiveAmount.payerAmount)
+        }
+    }
+    return map
+}
+
+fun asReceiveAmountList(arr: ReadableArray): List<ReceiveAmount> {
+    val list = ArrayList<ReceiveAmount>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asReceiveAmount(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -3709,6 +3797,7 @@ fun pushToArray(
 ) {
     when (value) {
         null -> array.pushNull()
+        is AssetBalance -> array.pushMap(readableMapOf(value))
         is ExternalInputParser -> array.pushMap(readableMapOf(value))
         is FiatCurrency -> array.pushMap(readableMapOf(value))
         is LnOfferBlindedPath -> array.pushMap(readableMapOf(value))

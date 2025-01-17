@@ -45,7 +45,8 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             }
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
-            let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.lightning, payerAmountSat: amountSat))
+            let amount = ReceiveAmount.bitcoin(payerAmountSat: amountSat)
+            let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.lightning, amount: amount))
             let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true))
             self.replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: []), replyURL: request!.reply_url)
         } catch let e {

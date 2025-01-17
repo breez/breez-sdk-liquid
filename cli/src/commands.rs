@@ -33,10 +33,16 @@ pub(crate) enum Command {
         #[arg(long)]
         address: Option<String>,
 
-        /// The amount in satoshi to pay, in case of a direct Liquid address
-        /// or amount-less BIP21
+        /// The amount to pay, in case of a direct Liquid address or amount-less BIP21.
+        /// If an asset id is provided, it is the base unit of that asset depending on its
+        /// precision, otherwise in satoshi.
         #[arg(short, long)]
-        amount_sat: Option<u64>,
+        receiver_amount: Option<u64>,
+
+        /// Optional id of the asset, in case of a direct Liquid address
+        /// or amount-less BIP21
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[arg(short, long)]
@@ -72,10 +78,15 @@ pub(crate) enum Command {
         #[arg(short = 'm', long = "method")]
         payment_method: Option<PaymentMethod>,
 
-        /// Amount the payer will send, in satoshi
-        /// If not specified, it will generate a BIP21 URI/Liquid address with no amount
+        /// The amount the payer should send. If an asset id is provided, it is the base
+        /// unit of that asset depending on its precision, otherwise in satoshi.
+        /// If not specified, it will generate a BIP21 URI/address with no amount.
         #[arg(short, long)]
-        payer_amount_sat: Option<u64>,
+        payer_amount: Option<u64>,
+
+        /// Optional id of the asset to receive when the 'payment_method' is "liquid"
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
 
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
@@ -117,6 +128,10 @@ pub(crate) enum Command {
         /// Optional offset in payments
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
+
+        /// Optional id of the asset for Liquid payment method
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
 
         /// Optional Liquid BIP21 URI/address for Liquid payment method
         #[clap(short = 'd', long = "destination")]
@@ -270,19 +285,29 @@ pub(crate) async fn handle_command(
     Ok(match command {
         Command::ReceivePayment {
             payment_method,
-            payer_amount_sat,
+            payer_amount,
+            asset_id,
             description,
             use_description_hash,
         } => {
+            let amount = match asset_id {
+                Some(asset_id) => Some(ReceiveAmount::Asset {
+                    asset_id,
+                    payer_amount,
+                }),
+                None => {
+                    payer_amount.map(|payer_amount_sat| ReceiveAmount::Bitcoin { payer_amount_sat })
+                }
+            };
             let prepare_response = sdk
                 .prepare_receive_payment(&PrepareReceiveRequest {
-                    payer_amount_sat,
                     payment_method: payment_method.unwrap_or(PaymentMethod::Lightning),
+                    amount: amount.clone(),
                 })
                 .await?;
 
             let fees = prepare_response.fees_sat;
-            let confirmation_msg = match payer_amount_sat {
+            let confirmation_msg = match amount {
                 Some(_) => format!("Fees: {fees} sat. Are the fees acceptable? (y/N)"),
                 None => {
                     let min = prepare_response.min_payer_amount_sat;
@@ -336,13 +361,14 @@ pub(crate) async fn handle_command(
             invoice,
             offer,
             address,
-            amount_sat,
+            receiver_amount,
+            asset_id,
             drain,
             delay,
         } => {
             let destination = match (invoice, offer, address) {
                 (Some(invoice), None, None) => Ok(invoice),
-                (None, Some(offer), None) => match amount_sat {
+                (None, Some(offer), None) => match receiver_amount {
                     Some(_) => Ok(offer),
                     None => Err(anyhow!(
                         "Must specify an amount for a BOLT12 offer."
@@ -358,10 +384,16 @@ pub(crate) async fn handle_command(
                     "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
                 ))
             }?;
-            let amount = match (amount_sat, drain.unwrap_or(false)) {
-                (Some(amount_sat), _) => Some(PayAmount::Receiver { amount_sat }),
-                (_, true) => Some(PayAmount::Drain),
-                (_, _) => None,
+            let amount = match (asset_id, receiver_amount, drain.unwrap_or(false)) {
+                (Some(asset_id), Some(receiver_amount), _) => Some(PayAmount::Asset {
+                    asset_id,
+                    receiver_amount,
+                }),
+                (None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
+                    receiver_amount_sat,
+                }),
+                (_, _, true) => Some(PayAmount::Drain),
+                _ => None,
             };
 
             let prepare_response = sdk
@@ -404,8 +436,8 @@ pub(crate) async fn handle_command(
         } => {
             let amount = match drain.unwrap_or(false) {
                 true => PayAmount::Drain,
-                false => PayAmount::Receiver {
-                    amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
+                false => PayAmount::Bitcoin {
+                    receiver_amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
                         "Must specify `receiver_amount_sat` if not draining"
                     ))?,
                 },
@@ -492,13 +524,21 @@ pub(crate) async fn handle_command(
             to_timestamp,
             limit,
             offset,
+            asset_id,
             destination,
             address,
             sort_ascending,
         } => {
-            let details = match (destination, address) {
-                (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
-                (None, Some(address)) => Some(ListPaymentDetails::Bitcoin { address }),
+            let details = match (asset_id.clone(), destination.clone(), address) {
+                (None, Some(_), None) | (Some(_), None, None) | (Some(_), Some(_), None) => {
+                    Some(ListPaymentDetails::Liquid {
+                        asset_id,
+                        destination,
+                    })
+                }
+                (None, None, Some(address)) => Some(ListPaymentDetails::Bitcoin {
+                    address: Some(address),
+                }),
                 _ => None,
             };
 

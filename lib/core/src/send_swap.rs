@@ -197,6 +197,7 @@ impl SendSwapHandler {
             .build_tx_or_drain_tx(
                 Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
                 &create_response.address,
+                &self.config.lbtc_asset_id(),
                 create_response.expected_amount,
             )
             .await?;
@@ -225,7 +226,8 @@ impl SendSwapHandler {
             PaymentTxData {
                 tx_id: lockup_tx_id.clone(),
                 timestamp: Some(utils::now()),
-                amount_sat: swap.payer_amount_sat,
+                asset_id: self.config.lbtc_asset_id(),
+                amount: create_response.expected_amount,
                 fees_sat: lockup_tx_fees_sat,
                 payment_type: PaymentType::Send,
                 is_confirmed: false,

@@ -83,7 +83,12 @@ impl Persister {
     }
 
     fn migrate_main_db(&self) -> Result<()> {
-        let migrations = Migrations::new(current_migrations().into_iter().map(M::up).collect());
+        let migrations = Migrations::new(
+            current_migrations(self.network.eq(&LiquidNetwork::Mainnet))
+                .into_iter()
+                .map(M::up)
+                .collect(),
+        );
         let mut conn = self.get_connection()?;
         migrations.to_latest(&mut conn)?;
         Ok(())
@@ -105,20 +110,35 @@ impl Persister {
     pub(crate) fn insert_or_update_payment_with_wallet_tx(&self, tx: &WalletTx) -> Result<()> {
         let tx_id = tx.txid.to_string();
         let is_tx_confirmed = tx.height.is_some();
-        let amount_sat = tx
-            .balance
-            .iter()
-            .filter_map(|(asset_id, balance)| {
-                if *asset_id == utils::lbtc_asset_id(self.network) {
-                    return Some(balance);
-                }
-                None
-            })
-            .sum::<i64>();
-        if amount_sat == 0 {
-            log::warn!("Attempted to persist a payment with no output amount: tx_id {tx_id}");
-            return Ok(());
+        let mut tx_balances = tx.balance.clone();
+        // Remove the Liquid Bitcoin asset balance
+        let lbtc_asset_id = utils::lbtc_asset_id(self.network);
+        let mut balance = tx_balances
+            .remove(&lbtc_asset_id)
+            .map(|balance| (lbtc_asset_id.to_string(), balance));
+        // If the balances are still not empty pop the asset balance
+        if tx_balances.is_empty().not() {
+            balance = tx_balances
+                .pop_first()
+                .map(|(asset_id, balance)| (asset_id.to_hex(), balance));
         }
+        let (asset_id, payment_type, amount) = match balance {
+            Some((asset_id, asset_amount)) => {
+                let payment_type = match asset_amount >= 0 {
+                    true => PaymentType::Receive,
+                    false => PaymentType::Send,
+                };
+                let mut amount = asset_amount.unsigned_abs();
+                if payment_type == PaymentType::Send && asset_id.eq(&lbtc_asset_id.to_string()) {
+                    amount = amount.saturating_sub(tx.fee);
+                }
+                (asset_id, payment_type, amount)
+            }
+            None => {
+                log::warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
+                return Ok(());
+            }
+        };
         let maybe_script_pubkey = tx
             .outputs
             .iter()
@@ -131,12 +151,10 @@ impl Persister {
             PaymentTxData {
                 tx_id: tx_id.clone(),
                 timestamp: tx.timestamp,
-                amount_sat: amount_sat.unsigned_abs(),
+                asset_id,
+                amount,
                 fees_sat: tx.fee,
-                payment_type: match amount_sat >= 0 {
-                    true => PaymentType::Receive,
-                    false => PaymentType::Send,
-                },
+                payment_type,
                 is_confirmed: is_tx_confirmed,
                 unblinding_data: Some(unblinding_data),
             },
@@ -154,7 +172,8 @@ impl Persister {
         let mut stmt = con.prepare(
             "SELECT tx_id, 
                         timestamp, 
-                        amount_sat, 
+                        asset_id, 
+                        amount, 
                         fees_sat, 
                         payment_type, 
                         is_confirmed,
@@ -167,11 +186,12 @@ impl Persister {
                 Ok(PaymentTxData {
                     tx_id: row.get(0)?,
                     timestamp: row.get(1)?,
-                    amount_sat: row.get(2)?,
-                    fees_sat: row.get(3)?,
-                    payment_type: row.get(4)?,
-                    is_confirmed: row.get(5)?,
-                    unblinding_data: row.get(6)?,
+                    asset_id: row.get(2)?,
+                    amount: row.get(3)?,
+                    fees_sat: row.get(4)?,
+                    payment_type: row.get(5)?,
+                    is_confirmed: row.get(6)?,
+                    unblinding_data: row.get(7)?,
                 })
             })?
             .map(|i| i.unwrap())
@@ -191,16 +211,18 @@ impl Persister {
             "INSERT INTO payment_tx_data (
            tx_id,
            timestamp,
-           amount_sat,
+           asset_id,
+           amount,
            fees_sat,
            payment_type,
            is_confirmed,
            unblinding_data
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (tx_id)
         DO UPDATE SET timestamp = CASE WHEN excluded.is_confirmed = 1 THEN excluded.timestamp ELSE timestamp END,
-                      amount_sat = excluded.amount_sat,
+                      asset_id = excluded.asset_id,
+                      amount = excluded.amount,
                       fees_sat = excluded.fees_sat,
                       payment_type = excluded.payment_type,
                       is_confirmed = excluded.is_confirmed,
@@ -209,7 +231,8 @@ impl Persister {
             (
                 &ptx.tx_id,
                 ptx.timestamp.or(Some(utils::now())),
-                ptx.amount_sat,
+                ptx.asset_id,
+                ptx.amount,
                 ptx.fees_sat,
                 ptx.payment_type,
                 ptx.is_confirmed,
@@ -362,7 +385,8 @@ impl Persister {
             SELECT
                 ptx.tx_id,
                 ptx.timestamp,
-                ptx.amount_sat,
+                ptx.asset_id,
+                ptx.amount,
                 ptx.fees_sat,
                 ptx.payment_type,
                 ptx.is_confirmed,
@@ -408,7 +432,7 @@ impl Persister {
                 cs.actual_payer_amount_sat,
                 cs.accepted_receiver_amount_sat,
                 cs.auto_accepted_fees,
-                rtx.amount_sat,
+                rtx.amount,
                 pd.destination,
                 pd.description,
                 pd.lnurl_info_json
@@ -459,70 +483,71 @@ impl Persister {
             Ok(ref tx_id) => Some(PaymentTxData {
                 tx_id: tx_id.to_string(),
                 timestamp: row.get(1)?,
-                amount_sat: row.get(2)?,
-                fees_sat: row.get(3)?,
-                payment_type: row.get(4)?,
-                is_confirmed: row.get(5)?,
-                unblinding_data: row.get(6)?,
+                asset_id: row.get(2)?,
+                amount: row.get(3)?,
+                fees_sat: row.get(4)?,
+                payment_type: row.get(5)?,
+                is_confirmed: row.get(6)?,
+                unblinding_data: row.get(7)?,
             }),
             _ => None,
         };
 
-        let maybe_receive_swap_id: Option<String> = row.get(7)?;
-        let maybe_receive_swap_created_at: Option<u32> = row.get(8)?;
-        let maybe_receive_swap_timeout_block_height: Option<u32> = row.get(9)?;
-        let maybe_receive_swap_invoice: Option<String> = row.get(10)?;
-        let maybe_receive_swap_payment_hash: Option<String> = row.get(11)?;
-        let maybe_receive_swap_destination_pubkey: Option<String> = row.get(12)?;
-        let maybe_receive_swap_description: Option<String> = row.get(13)?;
-        let maybe_receive_swap_preimage: Option<String> = row.get(14)?;
-        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(15)?;
-        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(16)?;
-        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(17)?;
-        let maybe_receive_swap_pair_fees_json: Option<String> = row.get(18)?;
+        let maybe_receive_swap_id: Option<String> = row.get(8)?;
+        let maybe_receive_swap_created_at: Option<u32> = row.get(9)?;
+        let maybe_receive_swap_timeout_block_height: Option<u32> = row.get(10)?;
+        let maybe_receive_swap_invoice: Option<String> = row.get(11)?;
+        let maybe_receive_swap_payment_hash: Option<String> = row.get(12)?;
+        let maybe_receive_swap_destination_pubkey: Option<String> = row.get(13)?;
+        let maybe_receive_swap_description: Option<String> = row.get(14)?;
+        let maybe_receive_swap_preimage: Option<String> = row.get(15)?;
+        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(16)?;
+        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(17)?;
+        let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(18)?;
+        let maybe_receive_swap_pair_fees_json: Option<String> = row.get(19)?;
         let maybe_receive_swap_pair_fees: Option<ReversePair> =
             maybe_receive_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_send_swap_id: Option<String> = row.get(19)?;
-        let maybe_send_swap_created_at: Option<u32> = row.get(20)?;
-        let maybe_send_swap_timeout_block_height: Option<u32> = row.get(21)?;
-        let maybe_send_swap_invoice: Option<String> = row.get(22)?;
-        let maybe_send_swap_bolt12_offer: Option<String> = row.get(23)?;
-        let maybe_send_swap_payment_hash: Option<String> = row.get(24)?;
-        let maybe_send_swap_destination_pubkey: Option<String> = row.get(25)?;
-        let maybe_send_swap_description: Option<String> = row.get(26)?;
-        let maybe_send_swap_preimage: Option<String> = row.get(27)?;
-        let maybe_send_swap_refund_tx_id: Option<String> = row.get(28)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(29)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(30)?;
-        let maybe_send_swap_state: Option<PaymentState> = row.get(31)?;
-        let maybe_send_swap_pair_fees_json: Option<String> = row.get(32)?;
+        let maybe_send_swap_id: Option<String> = row.get(20)?;
+        let maybe_send_swap_created_at: Option<u32> = row.get(21)?;
+        let maybe_send_swap_timeout_block_height: Option<u32> = row.get(22)?;
+        let maybe_send_swap_invoice: Option<String> = row.get(23)?;
+        let maybe_send_swap_bolt12_offer: Option<String> = row.get(24)?;
+        let maybe_send_swap_payment_hash: Option<String> = row.get(25)?;
+        let maybe_send_swap_destination_pubkey: Option<String> = row.get(26)?;
+        let maybe_send_swap_description: Option<String> = row.get(27)?;
+        let maybe_send_swap_preimage: Option<String> = row.get(28)?;
+        let maybe_send_swap_refund_tx_id: Option<String> = row.get(29)?;
+        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(30)?;
+        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(31)?;
+        let maybe_send_swap_state: Option<PaymentState> = row.get(32)?;
+        let maybe_send_swap_pair_fees_json: Option<String> = row.get(33)?;
         let maybe_send_swap_pair_fees: Option<SubmarinePair> =
             maybe_send_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
 
-        let maybe_chain_swap_id: Option<String> = row.get(33)?;
-        let maybe_chain_swap_created_at: Option<u32> = row.get(34)?;
-        let maybe_chain_swap_timeout_block_height: Option<u32> = row.get(35)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(36)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(37)?;
-        let maybe_chain_swap_description: Option<String> = row.get(38)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(39)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(40)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(41)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(42)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(43)?;
-        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(44)?;
+        let maybe_chain_swap_id: Option<String> = row.get(34)?;
+        let maybe_chain_swap_created_at: Option<u32> = row.get(35)?;
+        let maybe_chain_swap_timeout_block_height: Option<u32> = row.get(36)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(37)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(38)?;
+        let maybe_chain_swap_description: Option<String> = row.get(39)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(40)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(41)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(42)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(43)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(44)?;
+        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(45)?;
         let maybe_chain_swap_pair_fees: Option<ChainPair> =
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
-        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(45)?;
-        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(46)?;
-        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(47)?;
+        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(46)?;
+        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(47)?;
+        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(48)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(48)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(49)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(49)?;
-        let maybe_payment_details_description: Option<String> = row.get(50)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(51)?;
+        let maybe_payment_details_destination: Option<String> = row.get(50)?;
+        let maybe_payment_details_description: Option<String> = row.get(51)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(52)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
@@ -716,6 +741,11 @@ impl Persister {
                 }
             }
             _ => PaymentDetails::Liquid {
+                asset_id: tx
+                    .clone()
+                    .map_or(utils::lbtc_asset_id(self.network).to_string(), |ptd| {
+                        ptd.asset_id
+                    }),
                 destination: maybe_payment_details_destination
                     .unwrap_or("Destination unknown".to_string()),
                 description: maybe_payment_details_description
@@ -881,17 +911,30 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
     if let Some(details) = &req.details {
         match details {
             ListPaymentDetails::Bitcoin { address } => {
-                // Use the lockup address if it's incoming, else use the claim address
-                where_clause.push(
-                    "(cs.direction = 0 AND cs.lockup_address = ? OR cs.direction = 1 AND cs.claim_address = ?)"
-                        .to_string(),
-                );
-                where_params.push(Box::new(address));
-                where_params.push(Box::new(address));
+                where_clause.push("cs.id IS NOT NULL".to_string());
+                if let Some(address) = address {
+                    // Use the lockup address if it's incoming, else use the claim address
+                    where_clause.push(
+                        "(cs.direction = 0 AND cs.lockup_address = ? OR cs.direction = 1 AND cs.claim_address = ?)"
+                            .to_string(),
+                    );
+                    where_params.push(Box::new(address));
+                    where_params.push(Box::new(address));
+                }
             }
-            ListPaymentDetails::Liquid { destination } => {
-                where_clause.push("pd.destination = ?".to_string());
-                where_params.push(Box::new(destination));
+            ListPaymentDetails::Liquid {
+                asset_id,
+                destination,
+            } => {
+                where_clause.push("COALESCE(rs.id, ss.id, cs.id) IS NULL".to_string());
+                if let Some(asset_id) = asset_id {
+                    where_clause.push("ptx.asset_id = ?".to_string());
+                    where_params.push(Box::new(asset_id));
+                }
+                if let Some(destination) = destination {
+                    where_clause.push("pd.destination = ?".to_string());
+                    where_params.push(Box::new(destination));
+                }
             }
         }
     }
@@ -904,6 +947,7 @@ mod tests {
     use anyhow::Result;
 
     use crate::{
+        model::LiquidNetwork,
         persist::PaymentTxDetails,
         prelude::ListPaymentsRequest,
         test_utils::persist::{
@@ -917,7 +961,7 @@ mod tests {
     fn test_get_payments() -> Result<()> {
         create_persister!(storage);
 
-        let payment_tx_data = new_payment_tx_data(PaymentType::Send);
+        let payment_tx_data = new_payment_tx_data(LiquidNetwork::Testnet, PaymentType::Send);
         storage.insert_or_update_payment(
             payment_tx_data.clone(),
             Some(PaymentTxDetails {

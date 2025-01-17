@@ -34,6 +34,11 @@ export interface AesSuccessActionDataDecrypted {
     plaintext: string
 }
 
+export interface AssetBalance {
+    assetId: string
+    balance: number
+}
+
 export interface BackupRequest {
     backupPath?: string
 }
@@ -337,13 +342,13 @@ export interface PreparePayOnchainResponse {
 
 export interface PrepareReceiveRequest {
     paymentMethod: PaymentMethod
-    payerAmountSat?: number
+    amount?: ReceiveAmount
 }
 
 export interface PrepareReceiveResponse {
     paymentMethod: PaymentMethod
     feesSat: number
-    payerAmountSat?: number
+    amount?: ReceiveAmount
     minPayerAmountSat?: number
     maxPayerAmountSat?: number
     swapperFeerate?: number
@@ -464,6 +469,7 @@ export interface WalletInfo {
     pendingReceiveSat: number
     fingerprint: string
     pubkey: string
+    assetBalances: AssetBalance[]
 }
 
 export enum AesSuccessActionDataResultVariant {
@@ -563,10 +569,11 @@ export enum ListPaymentDetailsVariant {
 
 export type ListPaymentDetails = {
     type: ListPaymentDetailsVariant.LIQUID,
-    destination: string
+    assetId?: string
+    destination?: string
 } | {
     type: ListPaymentDetailsVariant.BITCOIN,
-    address: string
+    address?: string
 }
 
 export enum LnUrlCallbackStatusVariant {
@@ -623,13 +630,18 @@ export enum Network {
 }
 
 export enum PayAmountVariant {
-    RECEIVER = "receiver",
+    BITCOIN = "bitcoin",
+    ASSET = "asset",
     DRAIN = "drain"
 }
 
 export type PayAmount = {
-    type: PayAmountVariant.RECEIVER,
-    amountSat: number
+    type: PayAmountVariant.BITCOIN,
+    receiverAmountSat: number
+} | {
+    type: PayAmountVariant.ASSET,
+    assetId: string
+    receiverAmount: number
 } | {
     type: PayAmountVariant.DRAIN
 }
@@ -655,6 +667,7 @@ export type PaymentDetails = {
     refundTxAmountSat?: number
 } | {
     type: PaymentDetailsVariant.LIQUID,
+    assetId: string
     destination: string
     description: string
 } | {
@@ -688,6 +701,20 @@ export enum PaymentState {
 export enum PaymentType {
     RECEIVE = "receive",
     SEND = "send"
+}
+
+export enum ReceiveAmountVariant {
+    BITCOIN = "bitcoin",
+    ASSET = "asset"
+}
+
+export type ReceiveAmount = {
+    type: ReceiveAmountVariant.BITCOIN,
+    payerAmountSat: number
+} | {
+    type: ReceiveAmountVariant.ASSET,
+    assetId: string
+    payerAmount?: number
 }
 
 export enum SdkEventVariant {

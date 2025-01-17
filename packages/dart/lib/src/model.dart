@@ -28,6 +28,28 @@ class AcceptPaymentProposedFeesRequest {
           response == other.response;
 }
 
+/// An asset balance to denote the balance for each asset.
+class AssetBalance {
+  final String assetId;
+  final BigInt balance;
+
+  const AssetBalance({
+    required this.assetId,
+    required this.balance,
+  });
+
+  @override
+  int get hashCode => assetId.hashCode ^ balance.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetBalance &&
+          runtimeType == other.runtimeType &&
+          assetId == other.assetId &&
+          balance == other.balance;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
 class BackupRequest {
   /// Path to the backup.
@@ -430,14 +452,19 @@ enum LiquidNetwork {
 sealed class ListPaymentDetails with _$ListPaymentDetails {
   const ListPaymentDetails._();
 
-  /// The Liquid BIP21 URI or address of the payment
+  /// A Liquid payment
   const factory ListPaymentDetails.liquid({
-    required String destination,
+    /// Optional asset id
+    String? assetId,
+
+    /// Optional BIP21 URI or address
+    String? destination,
   }) = ListPaymentDetails_Liquid;
 
-  /// The Bitcoin address of the payment
+  /// A Bitcoin payment
   const factory ListPaymentDetails.bitcoin({
-    required String address,
+    /// Optional address
+    String? address,
   }) = ListPaymentDetails_Bitcoin;
 }
 
@@ -642,11 +669,17 @@ sealed class PayAmount with _$PayAmount {
   const PayAmount._();
 
   /// The amount in satoshi that will be received
-  const factory PayAmount.receiver({
-    required BigInt amountSat,
-  }) = PayAmount_Receiver;
+  const factory PayAmount.bitcoin({
+    required BigInt receiverAmountSat,
+  }) = PayAmount_Bitcoin;
 
-  /// Indicates that all available funds should be sent
+  /// The amount of an asset that will be received
+  const factory PayAmount.asset({
+    required String assetId,
+    required BigInt receiverAmount,
+  }) = PayAmount_Asset;
+
+  /// Indicates that all available Bitcoin funds should be sent
   const factory PayAmount.drain() = PayAmount_Drain;
 }
 
@@ -819,6 +852,9 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// Represents the BIP21 `message` field
     required String description,
+
+    /// The asset id
+    required String assetId,
   }) = PaymentDetails_Liquid;
 
   /// Swapping to or from the Bitcoin chain
@@ -1121,30 +1157,32 @@ class PreparePayOnchainResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceiveRequest {
-  final BigInt? payerAmountSat;
   final PaymentMethod paymentMethod;
 
+  /// The amount to be paid in either Bitcoin or another asset
+  final ReceiveAmount? amount;
+
   const PrepareReceiveRequest({
-    this.payerAmountSat,
     required this.paymentMethod,
+    this.amount,
   });
 
   @override
-  int get hashCode => payerAmountSat.hashCode ^ paymentMethod.hashCode;
+  int get hashCode => paymentMethod.hashCode ^ amount.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is PrepareReceiveRequest &&
           runtimeType == other.runtimeType &&
-          payerAmountSat == other.payerAmountSat &&
-          paymentMethod == other.paymentMethod;
+          paymentMethod == other.paymentMethod &&
+          amount == other.amount;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceiveResponse {
   final PaymentMethod paymentMethod;
-  final BigInt? payerAmountSat;
+  final ReceiveAmount? amount;
 
   /// Generally represents the total fees that would be paid to send or receive this payment.
   ///
@@ -1173,7 +1211,7 @@ class PrepareReceiveResponse {
 
   const PrepareReceiveResponse({
     required this.paymentMethod,
-    this.payerAmountSat,
+    this.amount,
     required this.feesSat,
     this.minPayerAmountSat,
     this.maxPayerAmountSat,
@@ -1183,7 +1221,7 @@ class PrepareReceiveResponse {
   @override
   int get hashCode =>
       paymentMethod.hashCode ^
-      payerAmountSat.hashCode ^
+      amount.hashCode ^
       feesSat.hashCode ^
       minPayerAmountSat.hashCode ^
       maxPayerAmountSat.hashCode ^
@@ -1195,7 +1233,7 @@ class PrepareReceiveResponse {
       other is PrepareReceiveResponse &&
           runtimeType == other.runtimeType &&
           paymentMethod == other.paymentMethod &&
-          payerAmountSat == other.payerAmountSat &&
+          amount == other.amount &&
           feesSat == other.feesSat &&
           minPayerAmountSat == other.minPayerAmountSat &&
           maxPayerAmountSat == other.maxPayerAmountSat &&
@@ -1306,6 +1344,22 @@ class PrepareSendResponse {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           feesSat == other.feesSat;
+}
+
+@freezed
+sealed class ReceiveAmount with _$ReceiveAmount {
+  const ReceiveAmount._();
+
+  /// The amount in satoshi that should be paid
+  const factory ReceiveAmount.bitcoin({
+    required BigInt payerAmountSat,
+  }) = ReceiveAmount_Bitcoin;
+
+  /// The amount of an asset that should be paid
+  const factory ReceiveAmount.asset({
+    required String assetId,
+    BigInt? payerAmount,
+  }) = ReceiveAmount_Asset;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -1622,12 +1676,16 @@ class WalletInfo {
   /// The wallet's pubkey. Used to verify signed messages.
   final String pubkey;
 
+  /// Asset balances of non Liquid Bitcoin assets
+  final List<AssetBalance> assetBalances;
+
   const WalletInfo({
     required this.balanceSat,
     required this.pendingSendSat,
     required this.pendingReceiveSat,
     required this.fingerprint,
     required this.pubkey,
+    required this.assetBalances,
   });
 
   @override
@@ -1636,7 +1694,8 @@ class WalletInfo {
       pendingSendSat.hashCode ^
       pendingReceiveSat.hashCode ^
       fingerprint.hashCode ^
-      pubkey.hashCode;
+      pubkey.hashCode ^
+      assetBalances.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1647,5 +1706,6 @@ class WalletInfo {
           pendingSendSat == other.pendingSendSat &&
           pendingReceiveSat == other.pendingReceiveSat &&
           fingerprint == other.fingerprint &&
-          pubkey == other.pubkey;
+          pubkey == other.pubkey &&
+          assetBalances == other.assetBalances;
 }
