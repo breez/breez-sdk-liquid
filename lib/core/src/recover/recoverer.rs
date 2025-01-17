@@ -62,9 +62,7 @@ impl Recoverer {
             match self.swapper.get_submarine_preimage(swap_id) {
                 Ok(preimage) => recovered_data.preimage = Some(preimage),
                 Err(err) => {
-                    log::error!(
-                        "Could not recover Send swap {swap_id} preimage cooperatively: {err:?}"
-                    );
+                    warn!("Could not recover Send swap {swap_id} preimage cooperatively: {err:?}");
                     failed.insert(swap_id.clone(), claim_tx_id.txid);
                 }
             }
@@ -211,15 +209,10 @@ impl Recoverer {
             let swap_id = &swap.id();
             match swap {
                 Swap::Send(send_swap) => {
-                    let Some(recovered_data) = recovered_send_data.get(swap_id) else {
+                    let Some(recovered_data) = recovered_send_data.get_mut(swap_id) else {
                         log::warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let timeout_block_height = send_swap.timeout_block_height as u32;
-                    let is_expired = liquid_tip >= timeout_block_height;
-                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                        send_swap.state = new_state;
-                    }
                     send_swap.lockup_tx_id = recovered_data
                         .lockup_tx_id
                         .clone()
@@ -228,7 +221,6 @@ impl Recoverer {
                         .refund_tx_id
                         .clone()
                         .map(|h| h.txid.to_string());
-
                     match (&send_swap.preimage, &recovered_data.preimage) {
                         // Update the preimage only if we don't have one already (e.g. from
                         // real-time sync)
@@ -241,9 +233,16 @@ impl Recoverer {
                                 Ok(_) => send_swap.preimage = Some(recovered_preimage.clone()),
                                 Err(e) => {
                                     error!("Failed to verify recovered preimage for swap {swap_id}: {e}");
+                                    recovered_data.claim_tx_id = None;
                                 }
                             }
                         }
+                    }
+                    // Set the state only AFTER the preimage and claim_tx_id have been verified
+                    let timeout_block_height = send_swap.timeout_block_height as u32;
+                    let is_expired = liquid_tip >= timeout_block_height;
+                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+                        send_swap.state = new_state;
                     }
                 }
                 Swap::Receive(receive_swap) => {
