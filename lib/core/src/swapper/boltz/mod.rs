@@ -202,6 +202,11 @@ impl Swapper for BoltzSwapper {
         Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
     }
 
+    /// Get a submarine swap's preimage
+    fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError> {
+        Ok(self.client.get_submarine_preimage(swap_id)?.preimage)
+    }
+
     /// Get claim tx details which includes the preimage as a proof of payment.
     /// It is used to validate the preimage before claiming which is the reason why we need to separate
     /// the claim into two steps.
