@@ -88,7 +88,7 @@ impl BoltzSwapper {
     pub(crate) fn new_lbtc_refund_wrapper(
         &self,
         swap: &Swap,
-        refund_address: &String,
+        refund_address: &str,
     ) -> Result<LBtcSwapTx, SdkError> {
         let refund_wrapper = match swap {
             Swap::Chain(swap) => match swap.direction {
