@@ -51,7 +51,7 @@ impl Recoverer {
 
     fn recover_cooperative_preimages(
         &self,
-        recovered_send_data: &mut HashMap<String, RecoveredOnchainDataSend>,
+        recovered_send_data: &mut HashMap<String, &mut RecoveredOnchainDataSend>,
     ) -> HashMap<String, Txid> {
         let mut failed = HashMap::new();
         for (swap_id, recovered_data) in recovered_send_data {
@@ -74,7 +74,7 @@ impl Recoverer {
 
     async fn recover_non_cooperative_preimages(
         &self,
-        recovered_send_data: &mut HashMap<String, RecoveredOnchainDataSend>,
+        recovered_send_data: &mut HashMap<String, &mut RecoveredOnchainDataSend>,
         failed_cooperative: HashMap<String, Txid>,
     ) -> Result<()> {
         let claim_tx_ids: Vec<Txid> = failed_cooperative.values().cloned().collect();
@@ -119,13 +119,13 @@ impl Recoverer {
 
     async fn recover_preimages(
         &self,
-        recovered_send_data: &mut HashMap<String, RecoveredOnchainDataSend>,
+        mut recovered_send_data: HashMap<String, &mut RecoveredOnchainDataSend>,
     ) -> Result<()> {
         // Recover the preimages by querying the swapper, only if there is a claim_tx_id
-        let failed_cooperative = self.recover_cooperative_preimages(recovered_send_data);
+        let failed_cooperative = self.recover_cooperative_preimages(&mut recovered_send_data);
 
         // For those which failed, recover the preimages by querying onchain (non-cooperative case)
-        self.recover_non_cooperative_preimages(recovered_send_data, failed_cooperative)
+        self.recover_non_cooperative_preimages(&mut recovered_send_data, failed_cooperative)
             .await
     }
 
@@ -174,7 +174,19 @@ impl Recoverer {
         let histories = self.fetch_swaps_histories(&swaps_list).await?;
 
         let mut recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
-        self.recover_preimages(&mut recovered_send_data).await?;
+        let recovered_send_data_without_preimage = recovered_send_data
+            .iter_mut()
+            .filter_map(|(swap_id, recovered_data)| {
+                if let Some(Swap::Send(send_swap)) = swaps.iter().find(|s| s.id() == *swap_id) {
+                    if send_swap.preimage.is_none() {
+                        return Some((swap_id.clone(), recovered_data));
+                    }
+                }
+                None
+            })
+            .collect::<HashMap<String, &mut RecoveredOnchainDataSend>>();
+        self.recover_preimages(recovered_send_data_without_preimage)
+            .await?;
 
         let recovered_receive_data = self.recover_receive_swap_tx_ids(
             &tx_map,
