@@ -65,6 +65,7 @@ pub(crate) struct RecoveredOnchainDataSend {
     pub(crate) lockup_tx_id: Option<HistoryTxId>,
     pub(crate) claim_tx_id: Option<HistoryTxId>,
     pub(crate) refund_tx_id: Option<HistoryTxId>,
+    pub(crate) preimage: Option<String>,
 }
 
 impl RecoveredOnchainDataSend {

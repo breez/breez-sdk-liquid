@@ -195,8 +195,19 @@ impl LiquidSdk {
             signer.clone(),
         )?);
 
+        let event_manager = Arc::new(EventManager::new());
+        let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
+
+        if let Some(swapper_proxy_url) = swapper_proxy_url {
+            persister.set_swapper_proxy_url(swapper_proxy_url)?;
+        }
+        let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
+        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
+        let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
+
         let recoverer = Arc::new(Recoverer::new(
             signer.slip77_master_blinding_key()?,
+            swapper.clone(),
             onchain_wallet.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
@@ -211,16 +222,6 @@ impl LiquidSdk {
             syncer_client,
             sync_trigger_rx,
         ));
-
-        let event_manager = Arc::new(EventManager::new());
-        let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
-
-        if let Some(swapper_proxy_url) = swapper_proxy_url {
-            persister.set_swapper_proxy_url(swapper_proxy_url)?;
-        }
-        let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
-        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
-        let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
         let send_swap_handler = SendSwapHandler::new(
             config.clone(),

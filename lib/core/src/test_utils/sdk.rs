@@ -90,6 +90,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
 
     let recoverer = Arc::new(Recoverer::new(
         signer.slip77_master_blinding_key()?,
+        swapper.clone(),
         onchain_wallet.clone(),
         liquid_chain_service.clone(),
         bitcoin_chain_service.clone(),
