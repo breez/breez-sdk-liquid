@@ -87,8 +87,10 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  Offline swaps via notifications
 - [x]  Real-time sync
 - [x]  External input parsers
-- [x]  Bolt12
+- [x]  Bolt12 send
+- [x]  BIP353 DNS payment instructions
 - [x]  Amountless BTC swaps
+- [ ]  Bolt12 receive
 - [ ]  Support USTD as an asset
 - [ ]  TLV support
 - [ ]  WebAssembly 
