@@ -597,7 +597,7 @@ impl Persister {
                                     maybe_chain_swap_actual_payer_amount_sat,
                                     maybe_chain_swap_payer_amount_sat,
                                 ) {
-                                    (Some(actual), Some(expected)) if actual != expected => actual, // For over/underpaid chain swaps WaitingFeeAcceptance, show zero fees
+                                    (Some(actual), Some(0)) => actual, // For amountless chain swaps WaitingFeeAcceptance, show zero fees
                                     _ => maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
                                 },
                             };
