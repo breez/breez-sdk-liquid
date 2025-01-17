@@ -774,7 +774,7 @@ pub(crate) struct ChainSwap {
     pub(crate) actual_payer_amount_sat: Option<u64>,
     /// Receiver amount defined at swap creation
     pub(crate) receiver_amount_sat: u64,
-    /// The final receiver amount, in case of an over/underpayment that has been accepted
+    /// The final receiver amount, in case of an amountless swap for which fees have been accepted
     pub(crate) accepted_receiver_amount_sat: Option<u64>,
     pub(crate) claim_fees_sat: u64,
     /// The [ChainPair] chosen on swap creation
@@ -904,15 +904,8 @@ impl ChainSwap {
         Ok(create_response_json)
     }
 
-    pub(crate) fn is_amount_mismatch(&self) -> bool {
-        match self.actual_payer_amount_sat {
-            Some(actual_amount) => actual_amount != self.payer_amount_sat,
-            None => false,
-        }
-    }
-
     pub(crate) fn is_waiting_fee_acceptance(&self) -> bool {
-        self.is_amount_mismatch() && self.accepted_receiver_amount_sat.is_none()
+        self.payer_amount_sat == 0 && self.accepted_receiver_amount_sat.is_none()
     }
 }
 
