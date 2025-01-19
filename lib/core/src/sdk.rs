@@ -2519,21 +2519,17 @@ impl LiquidSdk {
 
     async fn update_wallet_info(&self) -> Result<()> {
         let transactions = self.onchain_wallet.transactions().await?;
-        let wallet_amount_sat = transactions
-            .into_iter()
-            .filter(|tx| tx.height.is_some())
-            .map(|tx| {
-                tx.balance
-                    .into_iter()
-                    .filter_map(|(asset_id, balance)| {
-                        if asset_id == utils::lbtc_asset_id(self.config.network) {
-                            return Some(balance);
-                        }
-                        None
-                    })
-                    .sum::<i64>()
+        let mut wallet_amount_sat: i64 = 0;
+        transactions.into_iter().for_each(|tx| {
+            tx.balance.into_iter().for_each(|(asset_id, balance)| {
+                if asset_id == utils::lbtc_asset_id(self.config.network) {
+                    //consider only confirmed unspent outputs (confirmed transactions output reduced by unconfirmed spent outputs)
+                    if tx.height.is_some() || balance < 0 {
+                        wallet_amount_sat += balance;
+                    }
+                }
             })
-            .sum::<i64>();
+        });
         debug!("Onchain wallet balance: {wallet_amount_sat} sats");
 
         let mut pending_send_sat = 0;
