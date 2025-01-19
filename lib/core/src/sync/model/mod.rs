@@ -1,11 +1,11 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use self::{data::SyncData, sync::Record};
 use crate::prelude::Signer;
 use anyhow::Result;
 use lazy_static::lazy_static;
-use lwk_wollet::hashes::hex::DisplayHex;
-use openssl::sha::sha256;
+use lwk_wollet::hashes::hex::DisplayHex as _;
+use sdk_common::bitcoin::hashes::sha256;
 use rusqlite::{
     types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef},
     ToSql,
@@ -147,7 +147,9 @@ impl Record {
     }
 
     fn id(prefix: String, data_id: &str) -> String {
-        sha256((prefix + ":" + data_id).as_bytes()).to_lower_hex_string()
+        sha256::Hash::from_str(&(prefix + ":" + data_id))
+            .unwrap()
+            .to_lower_hex_string()
     }
 
     pub(crate) fn get_id_from_sync_data(data: &SyncData) -> String {

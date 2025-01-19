@@ -17,29 +17,25 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
 chrono = "0.4"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.7.0", features = ["chrono"], optional = true }
+flutter_rust_bridge = { version = "=2.7.0", features = [
+    "chrono",
+], optional = true }
 log = { workspace = true }
 lwk_common = "0.7.0"
-lwk_signer = "0.7.0"
-lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-scan-to-index" }
-#lwk_wollet = "0.7.0"
+lwk_signer = { version = "0.7.0", default-features = false }
+# lwk_wollet = { version = "0.7.0", default-features = false, features = [
+#     "esplora_wasm",
+# ] }
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f3256140944e52eb10e80608be804a0e43084c35", features = [
-    "liquid",
-] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
 strum_macros = "0.25"
 thiserror = { workspace = true }
-tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
-openssl = { version = "0.10", features = ["vendored"] }
-tokio = { version = "1", features = ["rt", "macros"] }
-tokio-stream = { version = "0.1.14", features = ["sync"] }
 url = "2.5.0"
 futures-util = { version = "0.3.28", default-features = false, features = [
     "sink",
@@ -47,16 +43,40 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 ] }
 async-trait = "0.1.80"
 hex = "0.4"
-reqwest = { version = "=0.11.20", features = ["json"] }
-electrum-client = { version = "0.19.0" }
+reqwest = { version = "0.12", default-features = false, features = [
+    "charset",
+    "http2",
+    "json",
+    "blocking",
+    "rustls-tls",
+] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
 prost = "0.13.3"
-ecies = "0.2.7"
 semver = "1.0.23"
 lazy_static = "1.5.0"
+ecies = { version = "0.2.7", default-features = false, features = [
+    "pure",
+    "std",
+] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+electrum-client = { version = "0.19.0" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
+tokio-stream = { version = "0.1.14", features = ["sync"] }
+tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f3256140944e52eb10e80608be804a0e43084c35", features = [
+    "liquid",
+] }
+lwk_wollet = { git = "https://github.com/dangeross/lwk", default-features = true, branch = "savage-full-scan-to-index" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4.50"
+lwk_wollet = { git = "https://github.com/dangeross/lwk", default-features = false, branch = "savage-full-scan-to-index", features = [
+    "esplora_wasm",
+] }
 
 [dev-dependencies]
 paste = "1.0.15"

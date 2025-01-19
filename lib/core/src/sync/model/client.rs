@@ -1,6 +1,6 @@
 use anyhow::Result;
 use lwk_wollet::hashes::hex::DisplayHex as _;
-use openssl::sha::sha256;
+use sdk_common::bitcoin::hashes::{sha256, Hash};
 use std::sync::Arc;
 
 use crate::{
@@ -15,7 +15,12 @@ use super::{
 
 fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, SignerError> {
     let msg = [MESSAGE_PREFIX, msg].concat();
-    let digest = sha256(&sha256(&msg));
+    let msg_hash = sha256::Hash::from_slice(&msg)
+        .map_err(|err| anyhow::anyhow!("Could not hash message: {err:?}"))?
+        .to_vec();
+    let digest = sha256::Hash::from_slice(&msg_hash)
+        .map_err(|err| anyhow::anyhow!("Could not hash message: {err:?}"))?
+        .to_lower_hex_string();
     signer
         .sign_ecdsa_recoverable(digest.into())
         .map(|bytes| zbase32::encode_full_bytes(&bytes))

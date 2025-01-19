@@ -1,13 +1,13 @@
 [profile.release]
 lto = true
-opt-level = "z" # Optimize for size.
+opt-level = "z"   # Optimize for size.
 codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
-panic = "abort" # Abort on panic, as unwinding code does require extra binary size
+panic = "abort"   # Abort on panic, as unwinding code does require extra binary size
 rpath = true
 
 [profile.frb]
 inherits = "release"
-strip = true # Automatically strip symbols from the binary.
+strip = true                 # Automatically strip symbols from the binary.
 opt-level = 3
 lto = "thin"
 debug = 0
@@ -16,15 +16,11 @@ incremental = false
 
 [profile.frb-min]
 inherits = "frb"
-opt-level = "z" # Optimize for size.
+opt-level = "z"  # Optimize for size.
 lto = true
 
 [workspace]
-members = [
-    "bindings",
-    "bindings/langs/react-native",
-    "core",
-]
+members = ["bindings", "bindings/langs/react-native", "core", "wasm"]
 resolver = "2"
 
 [workspace.package]
@@ -43,4 +39,4 @@ uniffi = "0.25.0"
 
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits
-secp256k1-zkp = {git = "https://github.com/sanket1729/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d"}
+secp256k1-zkp = { git = "https://github.com/sanket1729/rust-secp256k1-zkp.git", rev = "60e631c24588a0c9e271badd61959294848c665d" }
