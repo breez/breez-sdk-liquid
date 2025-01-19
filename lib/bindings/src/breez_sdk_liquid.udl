@@ -539,6 +539,7 @@ dictionary ListPaymentsRequest {
     u32? offset = null;
     u32? limit = null;
     ListPaymentDetails? details = null;
+    boolean? sort_ascending = null;
 };
 
 [Enum]

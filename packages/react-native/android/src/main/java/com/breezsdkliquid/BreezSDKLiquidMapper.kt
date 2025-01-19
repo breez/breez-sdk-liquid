@@ -957,7 +957,8 @@ fun asListPaymentsRequest(listPaymentsRequest: ReadableMap): ListPaymentsRequest
         } else {
             null
         }
-    return ListPaymentsRequest(filters, states, fromTimestamp, toTimestamp, offset, limit, details)
+    val sortAscending = if (hasNonNullKey(listPaymentsRequest, "sortAscending")) listPaymentsRequest.getBoolean("sortAscending") else null
+    return ListPaymentsRequest(filters, states, fromTimestamp, toTimestamp, offset, limit, details, sortAscending)
 }
 
 fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
@@ -969,6 +970,7 @@ fun readableMapOf(listPaymentsRequest: ListPaymentsRequest): ReadableMap =
         "offset" to listPaymentsRequest.offset,
         "limit" to listPaymentsRequest.limit,
         "details" to listPaymentsRequest.details?.let { readableMapOf(it) },
+        "sortAscending" to listPaymentsRequest.sortAscending,
     )
 
 fun asListPaymentsRequestList(arr: ReadableArray): List<ListPaymentsRequest> {

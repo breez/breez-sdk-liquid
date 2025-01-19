@@ -183,6 +183,7 @@ export interface ListPaymentsRequest {
     offset?: number
     limit?: number
     details?: ListPaymentDetails
+    sortAscending?: boolean
 }
 
 export interface LnOfferBlindedPath {

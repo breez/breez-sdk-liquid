@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use breez_sdk_liquid::prelude::*;
-use clap::{arg, Parser};
+use clap::{arg, ArgAction, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;
@@ -125,6 +125,10 @@ pub(crate) enum Command {
         /// Optional Liquid/Bitcoin address for Bitcoin payment method
         #[clap(short = 'a', long = "address")]
         address: Option<String>,
+
+        /// Whether or not to sort the payments by ascending timestamp
+        #[clap(long = "ascending", action = ArgAction::SetTrue)]
+        sort_ascending: Option<bool>,
     },
     /// Retrieve a payment
     GetPayment {
@@ -490,6 +494,7 @@ pub(crate) async fn handle_command(
             offset,
             destination,
             address,
+            sort_ascending,
         } => {
             let details = match (destination, address) {
                 (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
@@ -506,6 +511,7 @@ pub(crate) async fn handle_command(
                     limit,
                     offset,
                     details,
+                    sort_ascending,
                 })
                 .await?;
             command_result!(payments)

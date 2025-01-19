@@ -4190,6 +4190,8 @@ final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<ffi.Uint32> limit;
 
   external ffi.Pointer<wire_cst_list_payment_details> details;
+
+  external ffi.Pointer<ffi.Bool> sort_ascending;
 }
 
 final class wire_cst_ln_url_auth_request_data extends ffi.Struct {

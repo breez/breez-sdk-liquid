@@ -127,6 +127,7 @@ typedef struct wire_cst_list_payments_request {
   uint32_t *offset;
   uint32_t *limit;
   struct wire_cst_list_payment_details *details;
+  bool *sort_ascending;
 } wire_cst_list_payments_request;
 
 typedef struct wire_cst_ln_url_auth_request_data {

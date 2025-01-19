@@ -620,6 +620,7 @@ pub struct ListPaymentsRequest {
     pub offset: Option<u32>,
     pub limit: Option<u32>,
     pub details: Option<ListPaymentDetails>,
+    pub sort_ascending: Option<bool>,
 }
 
 /// An argument of [ListPaymentsRequest] when calling [crate::sdk::LiquidSdk::list_payments].
