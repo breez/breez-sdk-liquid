@@ -1,0 +1,16 @@
+[package]
+name = "breez-sdk-liquid-wasm"
+edition = "2021"
+version.workspace = true
+
+[lib]
+name = "breez_sdk_liquid_wasm"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+breez-sdk-liquid = { path = "../core" }
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
