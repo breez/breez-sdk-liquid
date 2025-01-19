@@ -19,8 +19,7 @@ use crate::{
 };
 
 /// The minimum acceptable fee rate when claiming using zero-conf
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET: u32 = 100;
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET: u32 = 10;
+pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE: u32 = 100;
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
 
@@ -158,7 +157,8 @@ impl ReceiveSwapHandler {
                 // If the fees are higher than our estimated value
                 let tx_fees: u64 = lockup_tx.all_fees().values().sum();
                 let min_fee_rate = self.config.zero_conf_min_fee_rate_msat as f32 / 1000.0;
-                let lower_bound_estimated_fees = lockup_tx.vsize() as f32 * min_fee_rate * 0.8;
+                let lower_bound_estimated_fees =
+                    lockup_tx.discount_vsize() as f32 * min_fee_rate * 0.8;
 
                 if lower_bound_estimated_fees > tx_fees as f32 {
                     warn!("[Receive Swap {id}] Lockup tx fees are too low: Expected at least {lower_bound_estimated_fees} sat, got {tx_fees} sat. Waiting for confirmation...");
@@ -314,7 +314,7 @@ impl ReceiveSwapHandler {
                 // We attempt broadcasting via chain service, then fallback to Boltz
                 let liquid_chain_service = self.liquid_chain_service.lock().await;
                 let broadcast_res = liquid_chain_service
-                    .broadcast(&claim_tx, Some(&swap.id))
+                    .broadcast(&claim_tx)
                     .await
                     .map(|tx_id| tx_id.to_hex())
                     .or_else(|err| {

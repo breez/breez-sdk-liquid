@@ -17,7 +17,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "5869f2444280890716b756adaeaef2942b8041a3" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
@@ -25,15 +25,13 @@ flutter_rust_bridge = { version = "=2.7.0", features = [
     "chrono",
 ], optional = true }
 log = { workspace = true }
-lwk_common = "0.7.0"
-lwk_signer = "0.7.0"
-lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-scan-to-index" }
-#lwk_wollet = "0.7.0"
+lwk_common = "0.8.0"
+lwk_signer = "0.8.0"
+lwk_wollet = { git = "https://github.com/dangeross/lwk", branch = "savage-full-scan-to-index-0.8.0" }
+#lwk_wollet = "0.8.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "f3256140944e52eb10e80608be804a0e43084c35", features = [
-    "liquid",
-] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "db5e6dbac3568ebd62b44a879ce5dab30b02d394", features = ["liquid"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -51,7 +49,10 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 async-trait = "0.1.80"
 hex = "0.4"
 reqwest = { version = "=0.11.20", features = ["json"] }
-electrum-client = { version = "0.19.0" }
+electrum-client = { version = "0.21.0", default-features=false, features = [
+    "use-rustls-ring",
+    "proxy",
+] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"

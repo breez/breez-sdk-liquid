@@ -23,15 +23,12 @@ use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkError, SdkResult};
 use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
-use crate::receive_swap::{
-    DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
-    DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
-};
+use crate::receive_swap::{DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE};
 use crate::utils;
 
-// Both use f64 for the maximum precision when converting between units
-pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
-pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
+// Uses f64 for the maximum precision when converting between units
+pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
+pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
@@ -57,7 +54,7 @@ pub struct Config {
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
-    /// The Breez API key used for making requests to their mempool service
+    /// The Breez API key used for making requests to the sync service
     pub breez_api_key: Option<String>,
     /// A set of external input parsers that are used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input
     /// is not recognized. See [ExternalInputParser] for more details on how to configure
@@ -86,7 +83,7 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key: Some(breez_api_key),
@@ -105,7 +102,7 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
             zero_conf_max_amount_sat: None,
             breez_api_key,
@@ -136,13 +133,6 @@ impl Config {
     pub fn zero_conf_max_amount_sat(&self) -> u64 {
         self.zero_conf_max_amount_sat
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
-    }
-
-    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f32> {
-        match self.network {
-            LiquidNetwork::Mainnet => Some((LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32),
-            LiquidNetwork::Testnet => None,
-        }
     }
 
     pub(crate) fn get_all_external_input_parsers(&self) -> Vec<ExternalInputParser> {
@@ -1807,7 +1797,7 @@ impl Transaction {
     pub(crate) fn txid(&self) -> String {
         match self {
             Transaction::Liquid(tx) => tx.txid().to_hex(),
-            Transaction::Bitcoin(tx) => tx.txid().to_hex(),
+            Transaction::Bitcoin(tx) => tx.compute_txid().to_hex(),
         }
     }
 }
