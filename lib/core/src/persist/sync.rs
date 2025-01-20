@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::HashMap};
 
 use anyhow::Result;
 use rusqlite::{
@@ -249,7 +249,7 @@ impl Persister {
         record_type: RecordType,
         updated_fields: Option<Vec<String>>,
     ) -> Result<()> {
-        if self.sync_trigger.read().unwrap().is_none() {
+        if self.sync_trigger.try_read().is_ok_and(|t| t.is_none()) {
             return Ok(());
         }
 
@@ -499,8 +499,10 @@ impl Persister {
     }
 
     pub(crate) fn trigger_sync(&self) -> Result<()> {
-        if let Some(trigger) = self.sync_trigger.read().unwrap().deref() {
-            return Ok(trigger.try_send(())?);
+        if let Ok(lock) = self.sync_trigger.try_read() {
+            if let Some(trigger) = lock.clone() {
+                trigger.try_send(())?;
+            }
         }
         Ok(())
     }
