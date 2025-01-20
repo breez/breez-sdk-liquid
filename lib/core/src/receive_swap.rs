@@ -1,15 +1,16 @@
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use boltz_client::swaps::boltz::RevSwapStates;
-use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
-use boltz_client::{Serialize, ToHex};
+use boltz_client::{boltz, Serialize, ToHex};
 use log::{debug, error, info, warn};
+use lwk_wollet::elements::Txid;
 use lwk_wollet::hashes::hex::DisplayHex;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::model::PaymentState::*;
+use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::{Swap, Transaction};
 use crate::{ensure_sdk, utils};
@@ -30,6 +31,17 @@ pub(crate) struct ReceiveSwapHandler {
     swapper: Arc<dyn Swapper>,
     subscription_notifier: broadcast::Sender<String>,
     liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+}
+
+#[async_trait]
+impl BlockListener for ReceiveSwapHandler {
+    async fn on_bitcoin_block(&self, _height: u32) {}
+
+    async fn on_liquid_block(&self, height: u32) {
+        if let Err(e) = self.claim_confirmed_lockups(height).await {
+            error!("Error claiming confirmed lockups: {e:?}");
+        }
+    }
 }
 
 impl ReceiveSwapHandler {
@@ -116,7 +128,7 @@ impl ReceiveSwapHandler {
 
                 // looking for lockup script history to verify lockup was broadcasted
                 if let Err(e) = self
-                    .verify_lockup_tx(&receive_swap, &transaction, false)
+                    .verify_lockup_tx(&receive_swap, &transaction.id, &transaction.hex, false)
                     .await
                 {
                     return Err(anyhow!(
@@ -193,7 +205,7 @@ impl ReceiveSwapHandler {
 
                 // looking for lockup script history to verify lockup was broadcasted and confirmed
                 if let Err(e) = self
-                    .verify_lockup_tx(&receive_swap, &transaction, true)
+                    .verify_lockup_tx(&receive_swap, &transaction.id, &transaction.hex, true)
                     .await
                 {
                     return Err(anyhow!(
@@ -369,6 +381,52 @@ impl ReceiveSwapHandler {
         }
     }
 
+    async fn claim_confirmed_lockups(&self, height: u32) -> Result<()> {
+        let receive_swaps: Vec<ReceiveSwap> = self
+            .persister
+            .list_ongoing_receive_swaps(Some(true))?
+            .into_iter()
+            .filter(|s| s.lockup_tx_id.is_some() && s.claim_tx_id.is_none())
+            .collect();
+        info!(
+            "Rescanning {} Receive Swap(s) lockup txs at height {}",
+            receive_swaps.len(),
+            height
+        );
+        for swap in receive_swaps {
+            if let Err(e) = self.claim_confirmed_lockup(&swap).await {
+                error!(
+                    "Error rescanning server lockup of incoming Chain Swap {}: {e:?}",
+                    swap.id,
+                );
+            }
+        }
+        Ok(())
+    }
+
+    async fn claim_confirmed_lockup(&self, receive_swap: &ReceiveSwap) -> Result<()> {
+        let Some(tx_id) = receive_swap.lockup_tx_id.clone() else {
+            // Skip the rescan if there is no lockup_tx_id yet
+            return Ok(());
+        };
+        let swap_id = &receive_swap.id;
+        let tx_hex = self
+            .liquid_chain_service
+            .lock()
+            .await
+            .get_transaction_hex(&Txid::from_str(&tx_id)?)
+            .await?
+            .ok_or(anyhow!("Lockup tx not found for Receive swap {swap_id}"))?
+            .serialize()
+            .to_lower_hex_string();
+        self.verify_lockup_tx(receive_swap, &tx_id, &tx_hex, true)
+            .await?;
+        info!("Receive Swap {swap_id} lockup tx is confirmed");
+        self.claim(swap_id)
+            .await
+            .map_err(|e| anyhow!("Could not claim Receive Swap {swap_id}: {e:?}"))
+    }
+
     fn validate_state_transition(
         from_state: PaymentState,
         to_state: PaymentState,
@@ -415,7 +473,8 @@ impl ReceiveSwapHandler {
     async fn verify_lockup_tx(
         &self,
         receive_swap: &ReceiveSwap,
-        swap_update_tx: &SwapUpdateTxDetails,
+        tx_id: &str,
+        tx_hex: &str,
         verify_confirmation: bool,
     ) -> Result<()> {
         // Looking for lockup script history to verify lockup was broadcasted
@@ -429,12 +488,7 @@ impl ReceiveSwapHandler {
         self.liquid_chain_service
             .lock()
             .await
-            .verify_tx(
-                &address,
-                &swap_update_tx.id,
-                &swap_update_tx.hex,
-                verify_confirmation,
-            )
+            .verify_tx(&address, tx_id, tx_hex, verify_confirmation)
             .await?;
         Ok(())
     }

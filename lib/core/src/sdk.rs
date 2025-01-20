@@ -395,10 +395,12 @@ impl LiquidSdk {
                         // Update swap handlers
                         if is_new_liquid_block {
                             cloned.chain_swap_handler.on_liquid_block(current_liquid_block).await;
+                            cloned.receive_swap_handler.on_liquid_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_liquid_block(current_liquid_block).await;
                         }
                         if is_new_bitcoin_block {
                             cloned.chain_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
+                            cloned.receive_swap_handler.on_bitcoin_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
                         }
                     }

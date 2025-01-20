@@ -156,8 +156,12 @@ impl Persister {
                 rs.created_at,
                 rs.state,
                 rs.pair_fees_json,
-                rs.version
+                rs.version,
+
+                -- Used for filtering
+                sync_state.is_local
             FROM receive_swaps AS rs
+            LEFT JOIN sync_state ON rs.id = sync_state.data_id
             {where_clause_str}
             ORDER BY rs.created_at
         "
@@ -222,12 +226,21 @@ impl Persister {
         Ok(ongoing_receive)
     }
 
-    pub(crate) fn list_ongoing_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
+    pub(crate) fn list_ongoing_receive_swaps(
+        &self,
+        is_local: Option<bool>,
+    ) -> Result<Vec<ReceiveSwap>> {
         let con = self.get_connection()?;
-        let where_clause = vec![get_where_clause_state_in(&[
+        let mut where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
+        if let Some(is_local) = is_local {
+            where_clause.push(format!(
+                "(sync_state.is_local = {} OR sync_state.is_local IS NULL)",
+                is_local as i8
+            ));
+        }
 
         self.list_receive_swaps_where(&con, where_clause)
     }
@@ -426,7 +439,7 @@ mod tests {
 
         // List ongoing receive swaps
         storage.insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
-        let ongoing_swaps = storage.list_ongoing_receive_swaps()?;
+        let ongoing_swaps = storage.list_ongoing_receive_swaps(None)?;
         assert_eq!(ongoing_swaps.len(), 4);
 
         Ok(())
