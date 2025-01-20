@@ -200,12 +200,15 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
 impl RecoveredOnchainDataChainReceive {
     pub(crate) fn derive_partial_state(
         &self,
-        min_lockup_amount_sat: u64,
+        expected_user_lockup_amount_sat: Option<u64>,
         is_expired: bool,
         is_waiting_fee_acceptance: bool,
     ) -> Option<PaymentState> {
         let is_refundable = self.btc_user_lockup_address_balance_sat > 0
-            && (is_expired || self.btc_user_lockup_amount_sat < min_lockup_amount_sat); // TODO: this does not support accepting over/underpayments
+            && (is_expired
+                || expected_user_lockup_amount_sat.map_or(false, |expected_lockup_amount_sat| {
+                    expected_lockup_amount_sat != self.btc_user_lockup_amount_sat
+                }));
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
