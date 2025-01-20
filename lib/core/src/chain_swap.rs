@@ -235,6 +235,11 @@ impl ChainSwapHandler {
                             return Err(anyhow!("Unexpected payload from Boltz status stream"));
                         };
 
+                        if let Err(e) = self.verify_user_lockup_tx(swap).await {
+                            warn!("User lockup transaction for incoming Chain Swap {} could not be verified. err: {}", swap.id, e);
+                            return Err(anyhow!("Could not verify user lockup transaction: {e}",));
+                        }
+
                         if let Err(e) = self
                             .verify_server_lockup_tx(swap, &transaction, false)
                             .await
@@ -349,7 +354,7 @@ impl ChainSwapHandler {
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
-                        match self.verify_user_lockup_tx(swap).await {
+                        match self.verify_user_lockup_tx_exists(swap).await {
                             Ok(_) => {
                                 info!("Chain Swap {id} user lockup tx was broadcast. Setting the swap to refundable.");
                                 self.update_swap_info(&ChainSwapUpdate {
@@ -580,6 +585,11 @@ impl ChainSwapHandler {
                         let Some(transaction) = update.transaction.clone() else {
                             return Err(anyhow!("Unexpected payload from Boltz status stream"));
                         };
+
+                        if let Err(e) = self.verify_user_lockup_tx(swap).await {
+                            warn!("User lockup transaction for outgoing Chain Swap {} could not be verified. err: {}", swap.id, e);
+                            return Err(anyhow!("Could not verify user lockup transaction: {e}",));
+                        }
 
                         if let Err(e) = self
                             .verify_server_lockup_tx(swap, &transaction, false)
@@ -1267,22 +1277,6 @@ impl ChainSwapHandler {
             bail!("Transaction signals RBF");
         }
         // Verify amount
-        let actual_payer_amount_sat = match chain_swap.actual_payer_amount_sat {
-            Some(amount) => amount,
-            None => {
-                let actual_payer_amount_sat = self
-                    .fetch_incoming_swap_actual_payer_amount(chain_swap)
-                    .await?;
-                self.persister
-                    .update_actual_payer_amount(&chain_swap.id, actual_payer_amount_sat)?;
-                actual_payer_amount_sat
-            }
-        };
-        // For non-amountless swaps, make sure user locked up agreed amount
-        if chain_swap.payer_amount_sat > 0 && chain_swap.payer_amount_sat != actual_payer_amount_sat
-        {
-            bail!("Invalid server lockup tx - user lockup amount ({actual_payer_amount_sat} sat) differs from agreed ({} sat)", chain_swap.payer_amount_sat);
-        }
         let secp = Secp256k1::new();
         let to_address_output = tx
             .output
@@ -1363,7 +1357,7 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    async fn verify_user_lockup_tx(&self, chain_swap: &ChainSwap) -> Result<String> {
+    async fn verify_user_lockup_tx_exists(&self, chain_swap: &ChainSwap) -> Result<()> {
         let swap_script = chain_swap.get_lockup_swap_script()?;
         let script_history = match chain_swap.direction {
             Direction::Incoming => self.fetch_bitcoin_script_history(&swap_script).await,
@@ -1376,7 +1370,6 @@ impl ChainSwapHandler {
                     .iter()
                     .find(|h| h.txid.to_hex() == user_lockup_tx_id)
                     .ok_or(anyhow!("Transaction was not found in script history"))?;
-                Ok(user_lockup_tx_id)
             }
             None => {
                 let txid = script_history
@@ -1390,9 +1383,37 @@ impl ChainSwapHandler {
                     user_lockup_tx_id: Some(txid.clone()),
                     ..Default::default()
                 })?;
-                Ok(txid)
             }
         }
+
+        Ok(())
+    }
+
+    async fn verify_user_lockup_tx(&self, chain_swap: &ChainSwap) -> Result<()> {
+        self.verify_user_lockup_tx_exists(chain_swap).await?;
+
+        // Verify amount for incoming chain swaps
+        if chain_swap.direction == Direction::Incoming {
+            let actual_payer_amount_sat = match chain_swap.actual_payer_amount_sat {
+                Some(amount) => amount,
+                None => {
+                    let actual_payer_amount_sat = self
+                        .fetch_incoming_swap_actual_payer_amount(chain_swap)
+                        .await?;
+                    self.persister
+                        .update_actual_payer_amount(&chain_swap.id, actual_payer_amount_sat)?;
+                    actual_payer_amount_sat
+                }
+            };
+            // For non-amountless swaps, make sure user locked up the agreed amount
+            if chain_swap.payer_amount_sat > 0
+                && chain_swap.payer_amount_sat != actual_payer_amount_sat
+            {
+                bail!("Invalid user lockup tx - user lockup amount ({actual_payer_amount_sat} sat) differs from agreed ({} sat)", chain_swap.payer_amount_sat);
+            }
+        }
+
+        Ok(())
     }
 
     async fn fetch_bitcoin_script_history(
