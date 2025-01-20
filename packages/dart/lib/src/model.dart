@@ -175,7 +175,7 @@ class Config {
   final int zeroConfMinFeeRateMsat;
 
   /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
-  /// Setting this field to `None` will disable the serivce
+  /// Setting this field to `None` will disable the service
   final String? syncServiceUrl;
 
   /// Maximum amount in satoshi to accept zero-conf payments with

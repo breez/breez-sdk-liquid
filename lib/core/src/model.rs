@@ -50,7 +50,7 @@ pub struct Config {
     /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     pub zero_conf_min_fee_rate_msat: u32,
     /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
-    /// Setting this field to `None` will disable the serivce
+    /// Setting this field to `None` will disable the service
     pub sync_service_url: Option<String>,
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
