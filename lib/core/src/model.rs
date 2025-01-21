@@ -62,7 +62,7 @@ pub struct Config {
     /// external parsing.
     pub external_input_parsers: Option<Vec<ExternalInputParser>>,
     /// The SDK includes some default external input parsers
-    /// ([DEFAULT_EXTERNAL_INPUT_PARSERS](crate::sdk::DEFAULT_EXTERNAL_INPUT_PARSERS)).
+    /// ([DEFAULT_EXTERNAL_INPUT_PARSERS].
     /// Set this to false in order to prevent their use.
     pub use_default_external_input_parsers: bool,
     /// For payments where the onchain fees can only be estimated on creation, this can be used
@@ -1320,7 +1320,7 @@ pub struct PaymentTxData {
     pub is_confirmed: bool,
 
     /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
-    /// See: https://docs.liquid.net/docs/unblinding-transactions
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
     pub unblinding_data: Option<String>,
 }
 
@@ -1490,7 +1490,7 @@ pub struct Payment {
     pub tx_id: Option<String>,
 
     /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
-    /// See: https://docs.liquid.net/docs/unblinding-transactions
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
     pub unblinding_data: Option<String>,
 
     /// Composite timestamp that can be used for sorting or displaying the payment.
