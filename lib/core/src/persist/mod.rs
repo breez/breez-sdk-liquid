@@ -845,15 +845,32 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
 
     if let Some(states) = &req.states {
         if !states.is_empty() {
-            let states_hash: HashSet<i8> = HashSet::from_iter(states.iter().map(|s| *s as i8));
-            where_clause.push(format!(
-                "COALESCE(rs.state, ss.state, cs.state) in ({})",
-                states_hash
-                    .iter()
-                    .map(|t| format!("{}", t))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ));
+            let deduped_states: Vec<PaymentState> = states
+                .clone()
+                .into_iter()
+                .collect::<HashSet<PaymentState>>()
+                .into_iter()
+                .collect();
+            let states_param = deduped_states
+                .iter()
+                .map(|t| (*t as i8).to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            let tx_comfirmed_param = deduped_states
+                .iter()
+                .filter_map(|state| match state {
+                    PaymentState::Pending | PaymentState::Complete => {
+                        Some(((*state == PaymentState::Complete) as i8).to_string())
+                    }
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            let states_query = match tx_comfirmed_param.is_empty() {
+                true => format!("COALESCE(rs.state, ss.state, cs.state) in ({states_param})"),
+                false => format!("(COALESCE(rs.id, ss.id, cs.id) IS NULL AND ptx.is_confirmed in ({tx_comfirmed_param}) OR COALESCE(rs.state, ss.state, cs.state) in ({states_param}))"),
+            };
+            where_clause.push(states_query);
         }
     }
 
