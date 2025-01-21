@@ -545,6 +545,10 @@ typedef struct wire_cst_SdkEvent_PaymentPending {
   struct wire_cst_payment *details;
 } wire_cst_SdkEvent_PaymentPending;
 
+typedef struct wire_cst_SdkEvent_PaymentRefundable {
+  struct wire_cst_payment *details;
+} wire_cst_SdkEvent_PaymentRefundable;
+
 typedef struct wire_cst_SdkEvent_PaymentRefunded {
   struct wire_cst_payment *details;
 } wire_cst_SdkEvent_PaymentRefunded;
@@ -568,6 +572,7 @@ typedef struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
 typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentFailed PaymentFailed;
   struct wire_cst_SdkEvent_PaymentPending PaymentPending;
+  struct wire_cst_SdkEvent_PaymentRefundable PaymentRefundable;
   struct wire_cst_SdkEvent_PaymentRefunded PaymentRefunded;
   struct wire_cst_SdkEvent_PaymentRefundPending PaymentRefundPending;
   struct wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;

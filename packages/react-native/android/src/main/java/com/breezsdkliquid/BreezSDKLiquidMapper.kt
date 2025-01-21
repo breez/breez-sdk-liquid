@@ -3436,6 +3436,10 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
         val details = sdkEvent.getMap("details")?.let { asPayment(it) }!!
         return SdkEvent.PaymentPending(details)
     }
+    if (type == "paymentRefundable") {
+        val details = sdkEvent.getMap("details")?.let { asPayment(it) }!!
+        return SdkEvent.PaymentRefundable(details)
+    }
     if (type == "paymentRefunded") {
         val details = sdkEvent.getMap("details")?.let { asPayment(it) }!!
         return SdkEvent.PaymentRefunded(details)
@@ -3471,6 +3475,10 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
         }
         is SdkEvent.PaymentPending -> {
             pushToMap(map, "type", "paymentPending")
+            pushToMap(map, "details", readableMapOf(sdkEvent.details))
+        }
+        is SdkEvent.PaymentRefundable -> {
+            pushToMap(map, "type", "paymentRefundable")
             pushToMap(map, "details", readableMapOf(sdkEvent.details))
         }
         is SdkEvent.PaymentRefunded -> {

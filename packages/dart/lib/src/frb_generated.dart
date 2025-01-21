@@ -3105,26 +3105,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 2:
-        return SdkEvent_PaymentRefunded(
+        return SdkEvent_PaymentRefundable(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 3:
-        return SdkEvent_PaymentRefundPending(
+        return SdkEvent_PaymentRefunded(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 4:
-        return SdkEvent_PaymentSucceeded(
+        return SdkEvent_PaymentRefundPending(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 5:
-        return SdkEvent_PaymentWaitingConfirmation(
+        return SdkEvent_PaymentSucceeded(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 6:
-        return SdkEvent_PaymentWaitingFeeAcceptance(
+        return SdkEvent_PaymentWaitingConfirmation(
           details: dco_decode_box_autoadd_payment(raw[1]),
         );
       case 7:
+        return SdkEvent_PaymentWaitingFeeAcceptance(
+          details: dco_decode_box_autoadd_payment(raw[1]),
+        );
+      case 8:
         return SdkEvent_Synced();
       default:
         throw Exception("unreachable");
@@ -5265,20 +5269,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SdkEvent_PaymentPending(details: var_details);
       case 2:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
-        return SdkEvent_PaymentRefunded(details: var_details);
+        return SdkEvent_PaymentRefundable(details: var_details);
       case 3:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
-        return SdkEvent_PaymentRefundPending(details: var_details);
+        return SdkEvent_PaymentRefunded(details: var_details);
       case 4:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
-        return SdkEvent_PaymentSucceeded(details: var_details);
+        return SdkEvent_PaymentRefundPending(details: var_details);
       case 5:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
-        return SdkEvent_PaymentWaitingConfirmation(details: var_details);
+        return SdkEvent_PaymentSucceeded(details: var_details);
       case 6:
         var var_details = sse_decode_box_autoadd_payment(deserializer);
-        return SdkEvent_PaymentWaitingFeeAcceptance(details: var_details);
+        return SdkEvent_PaymentWaitingConfirmation(details: var_details);
       case 7:
+        var var_details = sse_decode_box_autoadd_payment(deserializer);
+        return SdkEvent_PaymentWaitingFeeAcceptance(details: var_details);
+      case 8:
         return SdkEvent_Synced();
       default:
         throw UnimplementedError('');
@@ -7195,23 +7202,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SdkEvent_PaymentPending(details: final details):
         sse_encode_i_32(1, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_PaymentRefunded(details: final details):
+      case SdkEvent_PaymentRefundable(details: final details):
         sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_PaymentRefundPending(details: final details):
+      case SdkEvent_PaymentRefunded(details: final details):
         sse_encode_i_32(3, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_PaymentSucceeded(details: final details):
+      case SdkEvent_PaymentRefundPending(details: final details):
         sse_encode_i_32(4, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_PaymentWaitingConfirmation(details: final details):
+      case SdkEvent_PaymentSucceeded(details: final details):
         sse_encode_i_32(5, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_PaymentWaitingFeeAcceptance(details: final details):
+      case SdkEvent_PaymentWaitingConfirmation(details: final details):
         sse_encode_i_32(6, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_Synced():
+      case SdkEvent_PaymentWaitingFeeAcceptance(details: final details):
         sse_encode_i_32(7, serializer);
+        sse_encode_box_autoadd_payment(details, serializer);
+      case SdkEvent_Synced():
+        sse_encode_i_32(8, serializer);
     }
   }
 

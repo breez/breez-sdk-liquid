@@ -654,6 +654,7 @@ dictionary RefundResponse {
 interface SdkEvent {
     PaymentFailed(Payment details);
     PaymentPending(Payment details);
+    PaymentRefundable(Payment details);
     PaymentRefunded(Payment details);
     PaymentRefundPending(Payment details);
     PaymentSucceeded(Payment details);
