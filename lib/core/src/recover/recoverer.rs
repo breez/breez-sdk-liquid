@@ -662,7 +662,7 @@ impl Recoverer {
         Ok(res)
     }
 
-    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data data
+    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data
     fn recover_receive_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,

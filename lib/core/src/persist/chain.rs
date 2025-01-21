@@ -516,7 +516,7 @@ mod tests {
     async fn test_writing_stale_swap() -> Result<()> {
         create_persister!(storage);
 
-        let chain_swap = new_chain_swap(Direction::Incoming, None, false, None, false);
+        let chain_swap = new_chain_swap(Direction::Incoming, None, false, None, false, false);
         storage.insert_or_update_chain_swap(&chain_swap)?;
 
         // read - update - write works if there are no updates in between
@@ -543,7 +543,7 @@ mod tests {
         create_persister!(storage);
 
         let chain_swap_local_with_sync_state =
-            new_chain_swap(Direction::Incoming, None, false, None, false);
+            new_chain_swap(Direction::Incoming, None, false, None, false, false);
         storage.insert_or_update_chain_swap(&chain_swap_local_with_sync_state)?;
         storage.set_sync_state(SyncState {
             data_id: chain_swap_local_with_sync_state.id.clone(),
@@ -553,10 +553,11 @@ mod tests {
         })?;
 
         let chain_swap_local_no_sync_state =
-            new_chain_swap(Direction::Incoming, None, false, None, false);
+            new_chain_swap(Direction::Incoming, None, false, None, false, false);
         storage.insert_or_update_chain_swap(&chain_swap_local_no_sync_state)?;
 
-        let chain_swap_not_local = new_chain_swap(Direction::Incoming, None, false, None, false);
+        let chain_swap_not_local =
+            new_chain_swap(Direction::Incoming, None, false, None, false, false);
         storage.insert_or_update_chain_swap(&chain_swap_not_local)?;
         storage.set_sync_state(SyncState {
             data_id: chain_swap_not_local.id,
