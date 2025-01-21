@@ -241,6 +241,7 @@ pub trait EventListener: Send + Sync {
 pub enum SdkEvent {
     PaymentFailed { details: Payment },
     PaymentPending { details: Payment },
+    PaymentRefundable { details: Payment },
     PaymentRefunded { details: Payment },
     PaymentRefundPending { details: Payment },
     PaymentSucceeded { details: Payment },

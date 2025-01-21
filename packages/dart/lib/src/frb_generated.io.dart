@@ -3309,38 +3309,44 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.PaymentPending.details = pre_details;
       return;
     }
-    if (apiObj is SdkEvent_PaymentRefunded) {
+    if (apiObj is SdkEvent_PaymentRefundable) {
       var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
       wireObj.tag = 2;
+      wireObj.kind.PaymentRefundable.details = pre_details;
+      return;
+    }
+    if (apiObj is SdkEvent_PaymentRefunded) {
+      var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
+      wireObj.tag = 3;
       wireObj.kind.PaymentRefunded.details = pre_details;
       return;
     }
     if (apiObj is SdkEvent_PaymentRefundPending) {
       var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
-      wireObj.tag = 3;
+      wireObj.tag = 4;
       wireObj.kind.PaymentRefundPending.details = pre_details;
       return;
     }
     if (apiObj is SdkEvent_PaymentSucceeded) {
       var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
-      wireObj.tag = 4;
+      wireObj.tag = 5;
       wireObj.kind.PaymentSucceeded.details = pre_details;
       return;
     }
     if (apiObj is SdkEvent_PaymentWaitingConfirmation) {
       var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
-      wireObj.tag = 5;
+      wireObj.tag = 6;
       wireObj.kind.PaymentWaitingConfirmation.details = pre_details;
       return;
     }
     if (apiObj is SdkEvent_PaymentWaitingFeeAcceptance) {
       var pre_details = cst_encode_box_autoadd_payment(apiObj.details);
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       wireObj.kind.PaymentWaitingFeeAcceptance.details = pre_details;
       return;
     }
     if (apiObj is SdkEvent_Synced) {
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       return;
     }
   }
@@ -6461,6 +6467,10 @@ final class wire_cst_SdkEvent_PaymentPending extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_PaymentRefundable extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
 final class wire_cst_SdkEvent_PaymentRefunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
@@ -6485,6 +6495,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
   external wire_cst_SdkEvent_PaymentPending PaymentPending;
+
+  external wire_cst_SdkEvent_PaymentRefundable PaymentRefundable;
 
   external wire_cst_SdkEvent_PaymentRefunded PaymentRefunded;
 

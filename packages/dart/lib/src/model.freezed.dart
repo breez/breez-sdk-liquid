@@ -1484,6 +1484,86 @@ abstract class SdkEvent_PaymentPending extends SdkEvent {
 }
 
 /// @nodoc
+abstract class _$$SdkEvent_PaymentRefundableImplCopyWith<$Res> {
+  factory _$$SdkEvent_PaymentRefundableImplCopyWith(
+          _$SdkEvent_PaymentRefundableImpl value, $Res Function(_$SdkEvent_PaymentRefundableImpl) then) =
+      __$$SdkEvent_PaymentRefundableImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({Payment details});
+}
+
+/// @nodoc
+class __$$SdkEvent_PaymentRefundableImplCopyWithImpl<$Res>
+    extends _$SdkEventCopyWithImpl<$Res, _$SdkEvent_PaymentRefundableImpl>
+    implements _$$SdkEvent_PaymentRefundableImplCopyWith<$Res> {
+  __$$SdkEvent_PaymentRefundableImplCopyWithImpl(
+      _$SdkEvent_PaymentRefundableImpl _value, $Res Function(_$SdkEvent_PaymentRefundableImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? details = null,
+  }) {
+    return _then(_$SdkEvent_PaymentRefundableImpl(
+      details: null == details
+          ? _value.details
+          : details // ignore: cast_nullable_to_non_nullable
+              as Payment,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$SdkEvent_PaymentRefundableImpl extends SdkEvent_PaymentRefundable {
+  const _$SdkEvent_PaymentRefundableImpl({required this.details}) : super._();
+
+  @override
+  final Payment details;
+
+  @override
+  String toString() {
+    return 'SdkEvent.paymentRefundable(details: $details)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SdkEvent_PaymentRefundableImpl &&
+            (identical(other.details, details) || other.details == details));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, details);
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SdkEvent_PaymentRefundableImplCopyWith<_$SdkEvent_PaymentRefundableImpl> get copyWith =>
+      __$$SdkEvent_PaymentRefundableImplCopyWithImpl<_$SdkEvent_PaymentRefundableImpl>(this, _$identity);
+}
+
+abstract class SdkEvent_PaymentRefundable extends SdkEvent {
+  const factory SdkEvent_PaymentRefundable({required final Payment details}) =
+      _$SdkEvent_PaymentRefundableImpl;
+  const SdkEvent_PaymentRefundable._() : super._();
+
+  Payment get details;
+
+  /// Create a copy of SdkEvent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SdkEvent_PaymentRefundableImplCopyWith<_$SdkEvent_PaymentRefundableImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$SdkEvent_PaymentRefundedImplCopyWith<$Res> {
   factory _$$SdkEvent_PaymentRefundedImplCopyWith(
           _$SdkEvent_PaymentRefundedImpl value, $Res Function(_$SdkEvent_PaymentRefundedImpl) then) =

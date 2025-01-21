@@ -4790,6 +4790,10 @@ final class wire_cst_SdkEvent_PaymentPending extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_PaymentRefundable extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
 final class wire_cst_SdkEvent_PaymentRefunded extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
@@ -4814,6 +4818,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
   external wire_cst_SdkEvent_PaymentPending PaymentPending;
+
+  external wire_cst_SdkEvent_PaymentRefundable PaymentRefundable;
 
   external wire_cst_SdkEvent_PaymentRefunded PaymentRefunded;
 

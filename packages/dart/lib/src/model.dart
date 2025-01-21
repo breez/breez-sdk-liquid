@@ -1486,6 +1486,9 @@ sealed class SdkEvent with _$SdkEvent {
   const factory SdkEvent.paymentPending({
     required Payment details,
   }) = SdkEvent_PaymentPending;
+  const factory SdkEvent.paymentRefundable({
+    required Payment details,
+  }) = SdkEvent_PaymentRefundable;
   const factory SdkEvent.paymentRefunded({
     required Payment details,
   }) = SdkEvent_PaymentRefunded;

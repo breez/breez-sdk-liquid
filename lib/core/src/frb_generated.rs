@@ -4304,35 +4304,41 @@ impl SseDecode for crate::model::SdkEvent {
             }
             2 => {
                 let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
-                return crate::model::SdkEvent::PaymentRefunded {
+                return crate::model::SdkEvent::PaymentRefundable {
                     details: var_details,
                 };
             }
             3 => {
                 let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
-                return crate::model::SdkEvent::PaymentRefundPending {
+                return crate::model::SdkEvent::PaymentRefunded {
                     details: var_details,
                 };
             }
             4 => {
                 let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
-                return crate::model::SdkEvent::PaymentSucceeded {
+                return crate::model::SdkEvent::PaymentRefundPending {
                     details: var_details,
                 };
             }
             5 => {
                 let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
-                return crate::model::SdkEvent::PaymentWaitingConfirmation {
+                return crate::model::SdkEvent::PaymentSucceeded {
                     details: var_details,
                 };
             }
             6 => {
                 let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
-                return crate::model::SdkEvent::PaymentWaitingFeeAcceptance {
+                return crate::model::SdkEvent::PaymentWaitingConfirmation {
                     details: var_details,
                 };
             }
             7 => {
+                let mut var_details = <crate::model::Payment>::sse_decode(deserializer);
+                return crate::model::SdkEvent::PaymentWaitingFeeAcceptance {
+                    details: var_details,
+                };
+            }
+            8 => {
                 return crate::model::SdkEvent::Synced;
             }
             _ => {
@@ -6622,22 +6628,25 @@ impl flutter_rust_bridge::IntoDart for crate::model::SdkEvent {
             crate::model::SdkEvent::PaymentPending { details } => {
                 [1.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::PaymentRefunded { details } => {
+            crate::model::SdkEvent::PaymentRefundable { details } => {
                 [2.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::PaymentRefundPending { details } => {
+            crate::model::SdkEvent::PaymentRefunded { details } => {
                 [3.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::PaymentSucceeded { details } => {
+            crate::model::SdkEvent::PaymentRefundPending { details } => {
                 [4.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::PaymentWaitingConfirmation { details } => {
+            crate::model::SdkEvent::PaymentSucceeded { details } => {
                 [5.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
+            crate::model::SdkEvent::PaymentWaitingConfirmation { details } => {
                 [6.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::Synced => [7.into_dart()].into_dart(),
+            crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
+                [7.into_dart(), details.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::SdkEvent::Synced => [8.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -8493,28 +8502,32 @@ impl SseEncode for crate::model::SdkEvent {
                 <i32>::sse_encode(1, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::PaymentRefunded { details } => {
+            crate::model::SdkEvent::PaymentRefundable { details } => {
                 <i32>::sse_encode(2, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::PaymentRefundPending { details } => {
+            crate::model::SdkEvent::PaymentRefunded { details } => {
                 <i32>::sse_encode(3, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::PaymentSucceeded { details } => {
+            crate::model::SdkEvent::PaymentRefundPending { details } => {
                 <i32>::sse_encode(4, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::PaymentWaitingConfirmation { details } => {
+            crate::model::SdkEvent::PaymentSucceeded { details } => {
                 <i32>::sse_encode(5, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
+            crate::model::SdkEvent::PaymentWaitingConfirmation { details } => {
                 <i32>::sse_encode(6, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::Synced => {
+            crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
                 <i32>::sse_encode(7, serializer);
+                <crate::model::Payment>::sse_encode(details, serializer);
+            }
+            crate::model::SdkEvent::Synced => {
+                <i32>::sse_encode(8, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -10543,36 +10556,42 @@ mod io {
                     }
                 }
                 2 => {
+                    let ans = unsafe { self.kind.PaymentRefundable };
+                    crate::model::SdkEvent::PaymentRefundable {
+                        details: ans.details.cst_decode(),
+                    }
+                }
+                3 => {
                     let ans = unsafe { self.kind.PaymentRefunded };
                     crate::model::SdkEvent::PaymentRefunded {
                         details: ans.details.cst_decode(),
                     }
                 }
-                3 => {
+                4 => {
                     let ans = unsafe { self.kind.PaymentRefundPending };
                     crate::model::SdkEvent::PaymentRefundPending {
                         details: ans.details.cst_decode(),
                     }
                 }
-                4 => {
+                5 => {
                     let ans = unsafe { self.kind.PaymentSucceeded };
                     crate::model::SdkEvent::PaymentSucceeded {
                         details: ans.details.cst_decode(),
                     }
                 }
-                5 => {
+                6 => {
                     let ans = unsafe { self.kind.PaymentWaitingConfirmation };
                     crate::model::SdkEvent::PaymentWaitingConfirmation {
                         details: ans.details.cst_decode(),
                     }
                 }
-                6 => {
+                7 => {
                     let ans = unsafe { self.kind.PaymentWaitingFeeAcceptance };
                     crate::model::SdkEvent::PaymentWaitingFeeAcceptance {
                         details: ans.details.cst_decode(),
                     }
                 }
-                7 => crate::model::SdkEvent::Synced,
+                8 => crate::model::SdkEvent::Synced,
                 _ => unreachable!(),
             }
         }
@@ -14048,6 +14067,7 @@ mod io {
     pub union SdkEventKind {
         PaymentFailed: wire_cst_SdkEvent_PaymentFailed,
         PaymentPending: wire_cst_SdkEvent_PaymentPending,
+        PaymentRefundable: wire_cst_SdkEvent_PaymentRefundable,
         PaymentRefunded: wire_cst_SdkEvent_PaymentRefunded,
         PaymentRefundPending: wire_cst_SdkEvent_PaymentRefundPending,
         PaymentSucceeded: wire_cst_SdkEvent_PaymentSucceeded,
@@ -14063,6 +14083,11 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_SdkEvent_PaymentPending {
+        details: *mut wire_cst_payment,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SdkEvent_PaymentRefundable {
         details: *mut wire_cst_payment,
     }
     #[repr(C)]

@@ -691,6 +691,7 @@ export enum PaymentType {
 export enum SdkEventVariant {
     PAYMENT_FAILED = "paymentFailed",
     PAYMENT_PENDING = "paymentPending",
+    PAYMENT_REFUNDABLE = "paymentRefundable",
     PAYMENT_REFUNDED = "paymentRefunded",
     PAYMENT_REFUND_PENDING = "paymentRefundPending",
     PAYMENT_SUCCEEDED = "paymentSucceeded",
@@ -704,6 +705,9 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.PAYMENT_PENDING,
+    details: Payment
+} | {
+    type: SdkEventVariant.PAYMENT_REFUNDABLE,
     details: Payment
 } | {
     type: SdkEventVariant.PAYMENT_REFUNDED,

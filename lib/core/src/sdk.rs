@@ -584,6 +584,12 @@ impl LiquidSdk {
                             })
                             .await?;
                         }
+                        Refundable => {
+                            self.notify_event_listeners(SdkEvent::PaymentRefundable {
+                                details: payment,
+                            })
+                            .await?
+                        }
                         RefundPending => {
                             // The swap state has changed to RefundPending
                             self.notify_event_listeners(SdkEvent::PaymentRefundPending {

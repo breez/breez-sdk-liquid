@@ -4249,6 +4249,14 @@ enum BreezSDKLiquidMapper {
 
             return SdkEvent.paymentPending(details: _details)
         }
+        if type == "paymentRefundable" {
+            guard let detailsTmp = sdkEvent["details"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "SdkEvent"))
+            }
+            let _details = try asPayment(payment: detailsTmp)
+
+            return SdkEvent.paymentRefundable(details: _details)
+        }
         if type == "paymentRefunded" {
             guard let detailsTmp = sdkEvent["details"] as? [String: Any?] else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "SdkEvent"))
@@ -4311,6 +4319,14 @@ enum BreezSDKLiquidMapper {
         ):
             return [
                 "type": "paymentPending",
+                "details": dictionaryOf(payment: details),
+            ]
+
+        case let .paymentRefundable(
+            details
+        ):
+            return [
+                "type": "paymentRefundable",
                 "details": dictionaryOf(payment: details),
             ]
 
