@@ -453,6 +453,7 @@ class ListPaymentsRequest {
   final int? offset;
   final int? limit;
   final ListPaymentDetails? details;
+  final bool? sortAscending;
 
   const ListPaymentsRequest({
     this.filters,
@@ -462,6 +463,7 @@ class ListPaymentsRequest {
     this.offset,
     this.limit,
     this.details,
+    this.sortAscending,
   });
 
   @override
@@ -472,7 +474,8 @@ class ListPaymentsRequest {
       toTimestamp.hashCode ^
       offset.hashCode ^
       limit.hashCode ^
-      details.hashCode;
+      details.hashCode ^
+      sortAscending.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -485,7 +488,8 @@ class ListPaymentsRequest {
           toTimestamp == other.toTimestamp &&
           offset == other.offset &&
           limit == other.limit &&
-          details == other.details;
+          details == other.details &&
+          sortAscending == other.sortAscending;
 }
 
 /// Represents the payment LNURL info

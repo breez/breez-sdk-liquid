@@ -2928,6 +2928,7 @@ impl SseDecode for crate::model::ListPaymentsRequest {
         let mut var_offset = <Option<u32>>::sse_decode(deserializer);
         let mut var_limit = <Option<u32>>::sse_decode(deserializer);
         let mut var_details = <Option<crate::model::ListPaymentDetails>>::sse_decode(deserializer);
+        let mut var_sortAscending = <Option<bool>>::sse_decode(deserializer);
         return crate::model::ListPaymentsRequest {
             filters: var_filters,
             states: var_states,
@@ -2936,6 +2937,7 @@ impl SseDecode for crate::model::ListPaymentsRequest {
             offset: var_offset,
             limit: var_limit,
             details: var_details,
+            sort_ascending: var_sortAscending,
         };
     }
 }
@@ -5243,6 +5245,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::ListPaymentsRequest {
             self.offset.into_into_dart().into_dart(),
             self.limit.into_into_dart().into_dart(),
             self.details.into_into_dart().into_dart(),
+            self.sort_ascending.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7405,6 +7408,7 @@ impl SseEncode for crate::model::ListPaymentsRequest {
         <Option<u32>>::sse_encode(self.offset, serializer);
         <Option<u32>>::sse_encode(self.limit, serializer);
         <Option<crate::model::ListPaymentDetails>>::sse_encode(self.details, serializer);
+        <Option<bool>>::sse_encode(self.sort_ascending, serializer);
     }
 }
 
@@ -9644,6 +9648,7 @@ mod io {
                 offset: self.offset.cst_decode(),
                 limit: self.limit.cst_decode(),
                 details: self.details.cst_decode(),
+                sort_ascending: self.sort_ascending.cst_decode(),
             }
         }
     }
@@ -11089,6 +11094,7 @@ mod io {
                 offset: core::ptr::null_mut(),
                 limit: core::ptr::null_mut(),
                 details: core::ptr::null_mut(),
+                sort_ascending: core::ptr::null_mut(),
             }
         }
     }
@@ -13304,6 +13310,7 @@ mod io {
         offset: *mut u32,
         limit: *mut u32,
         details: *mut wire_cst_list_payment_details,
+        sort_ascending: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

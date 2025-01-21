@@ -2554,6 +2554,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.offset = cst_encode_opt_box_autoadd_u_32(apiObj.offset);
     wireObj.limit = cst_encode_opt_box_autoadd_u_32(apiObj.limit);
     wireObj.details = cst_encode_opt_box_autoadd_list_payment_details(apiObj.details);
+    wireObj.sort_ascending = cst_encode_opt_box_autoadd_bool(apiObj.sortAscending);
   }
 
   @protected
@@ -5860,6 +5861,8 @@ final class wire_cst_list_payments_request extends ffi.Struct {
   external ffi.Pointer<ffi.Uint32> limit;
 
   external ffi.Pointer<wire_cst_list_payment_details> details;
+
+  external ffi.Pointer<ffi.Bool> sort_ascending;
 }
 
 final class wire_cst_ln_url_auth_request_data extends ffi.Struct {

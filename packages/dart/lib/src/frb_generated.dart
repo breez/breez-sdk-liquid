@@ -2092,7 +2092,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ListPaymentsRequest dco_decode_list_payments_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return ListPaymentsRequest(
       filters: dco_decode_opt_list_payment_type(arr[0]),
       states: dco_decode_opt_list_payment_state(arr[1]),
@@ -2101,6 +2101,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       offset: dco_decode_opt_box_autoadd_u_32(arr[4]),
       limit: dco_decode_opt_box_autoadd_u_32(arr[5]),
       details: dco_decode_opt_box_autoadd_list_payment_details(arr[6]),
+      sortAscending: dco_decode_opt_box_autoadd_bool(arr[7]),
     );
   }
 
@@ -4179,6 +4180,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_offset = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_limit = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_details = sse_decode_opt_box_autoadd_list_payment_details(deserializer);
+    var var_sortAscending = sse_decode_opt_box_autoadd_bool(deserializer);
     return ListPaymentsRequest(
         filters: var_filters,
         states: var_states,
@@ -4186,7 +4188,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         toTimestamp: var_toTimestamp,
         offset: var_offset,
         limit: var_limit,
-        details: var_details);
+        details: var_details,
+        sortAscending: var_sortAscending);
   }
 
   @protected
@@ -6321,6 +6324,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_32(self.offset, serializer);
     sse_encode_opt_box_autoadd_u_32(self.limit, serializer);
     sse_encode_opt_box_autoadd_list_payment_details(self.details, serializer);
+    sse_encode_opt_box_autoadd_bool(self.sortAscending, serializer);
   }
 
   @protected

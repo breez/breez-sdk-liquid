@@ -1135,7 +1135,15 @@ enum BreezSDKLiquidMapper {
             details = try asListPaymentDetails(listPaymentDetails: detailsTmp)
         }
 
-        return ListPaymentsRequest(filters: filters, states: states, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details)
+        var sortAscending: Bool?
+        if hasNonNilKey(data: listPaymentsRequest, key: "sortAscending") {
+            guard let sortAscendingTmp = listPaymentsRequest["sortAscending"] as? Bool else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "sortAscending"))
+            }
+            sortAscending = sortAscendingTmp
+        }
+
+        return ListPaymentsRequest(filters: filters, states: states, fromTimestamp: fromTimestamp, toTimestamp: toTimestamp, offset: offset, limit: limit, details: details, sortAscending: sortAscending)
     }
 
     static func dictionaryOf(listPaymentsRequest: ListPaymentsRequest) -> [String: Any?] {
@@ -1147,6 +1155,7 @@ enum BreezSDKLiquidMapper {
             "offset": listPaymentsRequest.offset == nil ? nil : listPaymentsRequest.offset,
             "limit": listPaymentsRequest.limit == nil ? nil : listPaymentsRequest.limit,
             "details": listPaymentsRequest.details == nil ? nil : dictionaryOf(listPaymentDetails: listPaymentsRequest.details!),
+            "sortAscending": listPaymentsRequest.sortAscending == nil ? nil : listPaymentsRequest.sortAscending,
         ]
     }
 

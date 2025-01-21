@@ -356,6 +356,7 @@ impl Persister {
         where_clause: Option<&str>,
         offset: Option<u32>,
         limit: Option<u32>,
+        sort_ascending: Option<bool>,
     ) -> String {
         format!(
             "
@@ -438,11 +439,15 @@ impl Persister {
                     AND ptx.tx_id NOT IN (SELECT refund_tx_id FROM chain_swaps WHERE refund_tx_id NOT NULL))
             AND {}
             ORDER BY                             -- Order by swap creation time or tx timestamp (in case of direct tx)
-                COALESCE(rs.created_at, ss.created_at, cs.created_at, ptx.timestamp) DESC
+                COALESCE(rs.created_at, ss.created_at, cs.created_at, ptx.timestamp) {}
             LIMIT {}
             OFFSET {}
             ",
             where_clause.unwrap_or("true"),
+            match sort_ascending.unwrap_or(false) {
+                true => "ASC",
+                false => "DESC",
+            },
             limit.unwrap_or(u32::MAX),
             offset.unwrap_or(0),
         )
@@ -735,6 +740,7 @@ impl Persister {
                     Some("(ptx.tx_id = ?1 OR COALESCE(rs.id, ss.id, cs.id) = ?1)"),
                     None,
                     None,
+                    None,
                 ),
                 params![id],
                 |row| self.sql_row_to_payment(row),
@@ -752,7 +758,7 @@ impl Persister {
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(Some(where_clause), None, None),
+                &self.select_payment_query(Some(where_clause), None, None, None),
                 params![param],
                 |row| self.sql_row_to_payment(row),
             )
@@ -768,8 +774,12 @@ impl Persister {
 
         // Assumes there is no swap chaining (send swap lockup tx = receive swap claim tx)
         let con = self.get_connection()?;
-        let mut stmt =
-            con.prepare(&self.select_payment_query(maybe_where_clause, req.offset, req.limit))?;
+        let mut stmt = con.prepare(&self.select_payment_query(
+            maybe_where_clause,
+            req.offset,
+            req.limit,
+            req.sort_ascending,
+        ))?;
         let payments: Vec<Payment> = stmt
             .query_map(params_from_iter(where_params), |row| {
                 self.sql_row_to_payment(row)
