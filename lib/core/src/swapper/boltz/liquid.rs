@@ -3,8 +3,9 @@ use std::str::FromStr;
 use boltz_client::{
     boltz::SwapTxKind,
     elements::Transaction,
+    fees::Fee,
     util::{liquid_genesis_hash, secrets::Preimage},
-    Amount, ElementsAddress as Address, LBtcSwapTx,
+    ElementsAddress as Address, LBtcSwapTx,
 };
 use log::info;
 
@@ -47,8 +48,9 @@ impl BoltzSwapper {
         let signed_tx = claim_tx_wrapper.sign_claim(
             &swap.get_claim_keypair()?,
             &Preimage::from_str(&swap.preimage)?,
-            Amount::from_sat(swap.claim_fees_sat),
+            Fee::Absolute(swap.claim_fees_sat),
             self.get_cooperative_details(swap.id.clone(), None, None),
+            true,
         )?;
 
         Ok(signed_tx)
@@ -74,8 +76,9 @@ impl BoltzSwapper {
         let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
-            Amount::from_sat(swap.claim_fees_sat),
+            Fee::Absolute(swap.claim_fees_sat),
             self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            true,
         )?;
 
         Ok(signed_tx)
@@ -192,8 +195,9 @@ impl BoltzSwapper {
 
         let signed_tx = refund_tx.sign_refund(
             &refund_keypair,
-            Amount::from_sat(broadcast_fees_sat),
+            Fee::Absolute(broadcast_fees_sat),
             cooperative,
+            true,
         )?;
         Ok(signed_tx)
     }
