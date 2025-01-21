@@ -17,7 +17,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", branch = "trunk" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "540b5cb6505a97f1d02d846bf544bd5c1f800b25" }
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
@@ -49,7 +49,7 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 async-trait = "0.1.80"
 hex = "0.4"
 reqwest = { version = "=0.11.20", features = ["json"] }
-electrum-client = { version = "0.21.0", default-features=false, features = [
+electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
     "proxy",
 ] }
