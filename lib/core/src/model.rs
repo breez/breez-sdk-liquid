@@ -502,7 +502,10 @@ pub struct PayOnchainRequest {
 pub struct PrepareRefundRequest {
     /// The address where the swap funds are locked up
     pub swap_address: String,
-    /// The address to refund the swap funds to
+    /// The Bitcoin address to refund to. To ensure a valid address is
+    /// provided, user input should be validated using
+    /// [LiquidSdk::parse](crate::sdk::LiquidSdk::parse), and `refund_address`
+    /// should be obtained from the [BitcoinAddressData] in [InputType::BitcoinAddress].
     pub refund_address: String,
     /// The fee rate in sat/vB for the refund transaction
     pub fee_rate_sat_per_vbyte: u32,
@@ -521,7 +524,10 @@ pub struct PrepareRefundResponse {
 pub struct RefundRequest {
     /// The address where the swap funds are locked up
     pub swap_address: String,
-    /// The address to refund the swap funds to
+    /// The Bitcoin address to refund to. To ensure a valid address is
+    /// provided, user input should be validated using
+    /// [LiquidSdk::parse](crate::sdk::LiquidSdk::parse), and `refund_address`
+    /// should be obtained from the [BitcoinAddressData] in [InputType::BitcoinAddress].
     pub refund_address: String,
     /// The fee rate in sat/vB for the refund transaction
     pub fee_rate_sat_per_vbyte: u32,

@@ -2203,7 +2203,9 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PrepareRefundRequest] containing:
     ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
-    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `refund_address` - the Bitcoin address to refund to. To ensure a valid address is
+    /// provided, user input should be validated using [LiquidSdk::parse], and `refund_address`
+    /// should be obtained from the [BitcoinAddressData] in [InputType::BitcoinAddress].
     ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn prepare_refund(
         &self,
@@ -2230,7 +2232,9 @@ impl LiquidSdk {
     ///
     /// * `req` - the [RefundRequest] containing:
     ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
-    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `refund_address` - the Bitcoin address to refund to. To ensure a valid address is
+    /// provided, user input should be validated using [LiquidSdk::parse], and `refund_address`
+    /// should be obtained from the [BitcoinAddressData] in [InputType::BitcoinAddress].
     ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
         let refund_tx_id = self
