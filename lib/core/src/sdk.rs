@@ -2043,35 +2043,37 @@ impl LiquidSdk {
                 self.receive_onchain(amount_sat, *fees_sat).await
             }
             PaymentMethod::LiquidAddress => {
+                let lbtc_asset_id = self.config.lbtc_asset_id();
                 let (asset_id, amount, amount_sat) = match amount.clone() {
                     Some(ReceiveAmount::Asset {
                         asset_id,
                         payer_amount,
                     }) => (asset_id, payer_amount, None),
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => {
-                        (self.config.lbtc_asset_id(), None, Some(payer_amount_sat))
+                        (lbtc_asset_id.clone(), None, Some(payer_amount_sat))
                     }
-                    None => (self.config.lbtc_asset_id(), None, None),
+                    None => (lbtc_asset_id.clone(), None, None),
                 };
 
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                let receive_destination = if amount.is_some() || amount_sat.is_some() {
-                    LiquidAddressData {
-                        address: address.to_string(),
-                        network: self.config.network.into(),
-                        amount,
-                        amount_sat,
-                        asset_id: Some(asset_id.clone()),
-                        label: None,
-                        message: req.description.clone(),
-                    }
-                    .to_uri()
-                    .map_err(|e| PaymentError::Generic {
-                        err: format!("Could not build BIP21 URI: {e:?}"),
-                    })?
-                } else {
-                    address
-                };
+                let receive_destination =
+                    if asset_id.ne(&lbtc_asset_id) || amount.is_some() || amount_sat.is_some() {
+                        LiquidAddressData {
+                            address: address.to_string(),
+                            network: self.config.network.into(),
+                            amount,
+                            amount_sat,
+                            asset_id: Some(asset_id),
+                            label: None,
+                            message: req.description.clone(),
+                        }
+                        .to_uri()
+                        .map_err(|e| PaymentError::Generic {
+                            err: format!("Could not build BIP21 URI: {e:?}"),
+                        })?
+                    } else {
+                        address
+                    };
 
                 Ok(ReceivePaymentResponse {
                     destination: receive_destination,
@@ -3305,7 +3307,7 @@ impl LiquidSdk {
 
         let res = match input_type {
             InputType::LiquidAddress { ref address } => match &address.asset_id {
-                Some(asset_id) if asset_id.eq(&self.config.lbtc_asset_id()).not() => {
+                Some(asset_id) if asset_id.ne(&self.config.lbtc_asset_id()) => {
                     let asset_metadata = self.persister.get_asset_metadata(asset_id)?.ok_or(
                         PaymentError::AssetError {
                             err: format!("Asset {asset_id} is not supported"),
