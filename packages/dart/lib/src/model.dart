@@ -174,8 +174,9 @@ class Config {
   /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
   final int zeroConfMinFeeRateMsat;
 
-  /// The url of the real-time sync service
-  final String syncServiceUrl;
+  /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
+  /// Setting this field to `None` will disable the service
+  final String? syncServiceUrl;
 
   /// Maximum amount in satoshi to accept zero-conf payments with
   /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
@@ -211,7 +212,7 @@ class Config {
     required this.network,
     required this.paymentTimeoutSec,
     required this.zeroConfMinFeeRateMsat,
-    required this.syncServiceUrl,
+    this.syncServiceUrl,
     this.zeroConfMaxAmountSat,
     this.breezApiKey,
     this.externalInputParsers,

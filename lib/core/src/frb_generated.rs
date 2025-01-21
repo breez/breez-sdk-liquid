@@ -2496,7 +2496,7 @@ impl SseDecode for crate::model::Config {
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_zeroConfMinFeeRateMsat = <u32>::sse_decode(deserializer);
-        let mut var_syncServiceUrl = <String>::sse_decode(deserializer);
+        let mut var_syncServiceUrl = <Option<String>>::sse_decode(deserializer);
         let mut var_zeroConfMaxAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_breezApiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_externalInputParsers =
@@ -7082,7 +7082,7 @@ impl SseEncode for crate::model::Config {
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <u32>::sse_encode(self.zero_conf_min_fee_rate_msat, serializer);
-        <String>::sse_encode(self.sync_service_url, serializer);
+        <Option<String>>::sse_encode(self.sync_service_url, serializer);
         <Option<u64>>::sse_encode(self.zero_conf_max_amount_sat, serializer);
         <Option<String>>::sse_encode(self.breez_api_key, serializer);
         <Option<Vec<crate::bindings::ExternalInputParser>>>::sse_encode(

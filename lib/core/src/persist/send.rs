@@ -102,7 +102,7 @@ impl Persister {
             true => {
                 self.commit_outgoing(&tx, &send_swap.id, RecordType::Send, updated_fields)?;
                 tx.commit()?;
-                self.sync_trigger.try_send(())?;
+                self.trigger_sync()?;
             }
             false => {
                 tx.commit()?;
@@ -298,11 +298,10 @@ impl Persister {
         let updated_fields = get_updated_fields!(preimage);
         self.commit_outgoing(&tx, swap_id, RecordType::Send, updated_fields)?;
         tx.commit()?;
-        self.sync_trigger
-            .try_send(())
-            .map_err(|err| PaymentError::Generic {
-                err: format!("Could not trigger manual sync: {err:?}"),
-            })?;
+
+        self.trigger_sync().map_err(|err| PaymentError::Generic {
+            err: format!("Could not trigger manual sync: {err:?}"),
+        })?;
 
         Ok(())
     }

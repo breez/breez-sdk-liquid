@@ -29,7 +29,7 @@ use crate::utils;
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
-const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
+pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
@@ -49,8 +49,9 @@ pub struct Config {
     pub payment_timeout_sec: u64,
     /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     pub zero_conf_min_fee_rate_msat: u32,
-    /// The url of the real-time sync service
-    pub sync_service_url: String,
+    /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
+    /// Setting this field to `None` will disable the service
+    pub sync_service_url: Option<String>,
     /// Maximum amount in satoshi to accept zero-conf payments with
     /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
@@ -74,7 +75,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn mainnet(breez_api_key: String) -> Self {
+    pub fn mainnet(breez_api_key: Option<String>) -> Self {
         Config {
             liquid_electrum_url: "elements-mainnet.breez.technology:50002".to_string(),
             bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
@@ -84,9 +85,9 @@ impl Config {
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
-            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
             zero_conf_max_amount_sat: None,
-            breez_api_key: Some(breez_api_key),
+            breez_api_key,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
@@ -103,7 +104,7 @@ impl Config {
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
-            sync_service_url: BREEZ_SYNC_SERVICE_URL.to_string(),
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key,
             external_input_parsers: None,

@@ -106,7 +106,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
 
     let (_incoming_tx, _outgoing_records, sync_service) =
         new_sync_service(persister.clone(), recoverer.clone(), signer.clone())?;
-    let sync_service = Arc::new(sync_service);
+    let sync_service = Some(Arc::new(sync_service));
 
     Ok(LiquidSdk {
         config,

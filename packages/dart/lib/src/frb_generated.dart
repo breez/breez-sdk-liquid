@@ -1800,7 +1800,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       network: dco_decode_liquid_network(arr[5]),
       paymentTimeoutSec: dco_decode_u_64(arr[6]),
       zeroConfMinFeeRateMsat: dco_decode_u_32(arr[7]),
-      syncServiceUrl: dco_decode_String(arr[8]),
+      syncServiceUrl: dco_decode_opt_String(arr[8]),
       zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[9]),
       breezApiKey: dco_decode_opt_String(arr[10]),
       externalInputParsers: dco_decode_opt_list_external_input_parser(arr[11]),
@@ -3830,7 +3830,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_network = sse_decode_liquid_network(deserializer);
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
     var var_zeroConfMinFeeRateMsat = sse_decode_u_32(deserializer);
-    var var_syncServiceUrl = sse_decode_String(deserializer);
+    var var_syncServiceUrl = sse_decode_opt_String(deserializer);
     var var_zeroConfMaxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_breezApiKey = sse_decode_opt_String(deserializer);
     var var_externalInputParsers = sse_decode_opt_list_external_input_parser(deserializer);
@@ -6056,7 +6056,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_liquid_network(self.network, serializer);
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
     sse_encode_u_32(self.zeroConfMinFeeRateMsat, serializer);
-    sse_encode_String(self.syncServiceUrl, serializer);
+    sse_encode_opt_String(self.syncServiceUrl, serializer);
     sse_encode_opt_box_autoadd_u_64(self.zeroConfMaxAmountSat, serializer);
     sse_encode_opt_String(self.breezApiKey, serializer);
     sse_encode_opt_list_external_input_parser(self.externalInputParsers, serializer);

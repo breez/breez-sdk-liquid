@@ -374,8 +374,12 @@ enum BreezSDKLiquidMapper {
         guard let zeroConfMinFeeRateMsat = config["zeroConfMinFeeRateMsat"] as? UInt32 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "zeroConfMinFeeRateMsat", typeName: "Config"))
         }
-        guard let syncServiceUrl = config["syncServiceUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "syncServiceUrl", typeName: "Config"))
+        var syncServiceUrl: String?
+        if hasNonNilKey(data: config, key: "syncServiceUrl") {
+            guard let syncServiceUrlTmp = config["syncServiceUrl"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "syncServiceUrl"))
+            }
+            syncServiceUrl = syncServiceUrlTmp
         }
         var breezApiKey: String?
         if hasNonNilKey(data: config, key: "breezApiKey") {
@@ -426,7 +430,7 @@ enum BreezSDKLiquidMapper {
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
-            "syncServiceUrl": config.syncServiceUrl,
+            "syncServiceUrl": config.syncServiceUrl == nil ? nil : config.syncServiceUrl,
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "cacheDir": config.cacheDir == nil ? nil : config.cacheDir,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,

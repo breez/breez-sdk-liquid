@@ -249,6 +249,10 @@ impl Persister {
         record_type: RecordType,
         updated_fields: Option<Vec<String>>,
     ) -> Result<()> {
+        if self.sync_trigger.try_read().is_ok_and(|t| t.is_none()) {
+            return Ok(());
+        }
+
         let record_id = Record::get_id_from_record_type(record_type, data_id);
         let updated_fields = updated_fields
             .map(|fields| {
@@ -491,6 +495,15 @@ impl Persister {
 
         tx.commit()?;
 
+        Ok(())
+    }
+
+    pub(crate) fn trigger_sync(&self) -> Result<()> {
+        if let Ok(lock) = self.sync_trigger.try_read() {
+            if let Some(trigger) = lock.clone() {
+                trigger.try_send(())?;
+            }
+        }
         Ok(())
     }
 }
