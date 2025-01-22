@@ -1,12 +1,14 @@
 use std::{str::FromStr, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use boltz_client::swaps::boltz::RevSwapStates;
 use boltz_client::{boltz, Serialize, ToHex};
 use log::{debug, error, info, warn};
+use lwk_wollet::elements::secp256k1_zkp::Secp256k1;
 use lwk_wollet::elements::Txid;
 use lwk_wollet::hashes::hex::DisplayHex;
+use lwk_wollet::secp256k1::SecretKey;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
@@ -479,17 +481,39 @@ impl ReceiveSwapHandler {
     ) -> Result<()> {
         // Looking for lockup script history to verify lockup was broadcasted
         let script = receive_swap.get_swap_script()?;
-        let address =
-            script
-                .to_address(self.config.network.into())
-                .map_err(|e| PaymentError::Generic {
-                    err: format!("Failed to get swap script address {e:?}"),
-                })?;
-        self.liquid_chain_service
+        let address = script
+            .to_address(self.config.network.into())
+            .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
+        let lockup_tx = self
+            .liquid_chain_service
             .lock()
             .await
             .verify_tx(&address, tx_id, tx_hex, verify_confirmation)
             .await?;
+        // Verify amount
+        let secp = Secp256k1::new();
+        let blinding_key = receive_swap
+            .get_boltz_create_response()?
+            .blinding_key
+            .ok_or(anyhow!("Missing blinding key"))?;
+        let tx_out = lockup_tx
+            .output
+            .iter()
+            .find(|tx_out| tx_out.script_pubkey == address.script_pubkey())
+            .ok_or(anyhow!("Failed to get tx output"))?;
+        let lockup_amount_sat = tx_out
+            .unblind(&secp, SecretKey::from_str(&blinding_key)?)
+            .map(|o| o.value)?;
+        let expected_lockup_amount_sat =
+            receive_swap.receiver_amount_sat + receive_swap.claim_fees_sat;
+        if expected_lockup_amount_sat != lockup_amount_sat {
+            bail!(
+                "Failed to verify lockup amount for Receive Swap {}: {} sat vs {} sat",
+                receive_swap.id,
+                expected_lockup_amount_sat,
+                lockup_amount_sat
+            );
+        }
         Ok(())
     }
 }
