@@ -2209,11 +2209,18 @@ impl LiquidSdk {
         &self,
         req: &PrepareRefundRequest,
     ) -> SdkResult<PrepareRefundResponse> {
+        let refund_address = self
+            .validate_bitcoin_address(&req.refund_address)
+            .await
+            .map_err(|e| SdkError::Generic {
+                err: format!("Failed to validate refund address: {e}"),
+            })?;
+
         let (tx_vsize, tx_fee_sat, refund_tx_id) = self
             .chain_swap_handler
             .prepare_refund(
                 &req.swap_address,
-                &req.refund_address,
+                &refund_address,
                 req.fee_rate_sat_per_vbyte,
             )
             .await?;
@@ -2233,11 +2240,18 @@ impl LiquidSdk {
     ///     * `refund_address` - the Bitcoin address to refund to
     ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     pub async fn refund(&self, req: &RefundRequest) -> Result<RefundResponse, PaymentError> {
+        let refund_address = self
+            .validate_bitcoin_address(&req.refund_address)
+            .await
+            .map_err(|e| SdkError::Generic {
+                err: format!("Failed to validate refund address: {e}"),
+            })?;
+
         let refund_tx_id = self
             .chain_swap_handler
             .refund_incoming_swap(
                 &req.swap_address,
-                &req.refund_address,
+                &refund_address,
                 req.fee_rate_sat_per_vbyte,
                 true,
             )
@@ -2245,7 +2259,7 @@ impl LiquidSdk {
                 warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
                 self.chain_swap_handler.refund_incoming_swap(
                     &req.swap_address,
-                    &req.refund_address,
+                    &refund_address,
                     req.fee_rate_sat_per_vbyte,
                     false,
                 )
