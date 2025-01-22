@@ -678,7 +678,7 @@ class PayOnchainRequest {
 class Payment {
   /// The destination associated with the payment, if it was created via our SDK.
   /// Can be either a Liquid/Bitcoin address, a Liquid BIP21 URI or an invoice
-  final String? destination;
+  final String destination;
   final String? txId;
 
   /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
@@ -731,7 +731,7 @@ class Payment {
   final PaymentDetails details;
 
   const Payment({
-    this.destination,
+    required this.destination,
     this.txId,
     this.unblindingData,
     required this.timestamp,
@@ -787,13 +787,11 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The height of the block at which the swap will no longer be valid
     required int liquidExpirationBlockheight,
 
+    /// Represents the Bolt11/Bolt12 invoice associated with a payment
+    required String invoice,
+
     /// The preimage of the paid invoice (proof of payment).
     String? preimage,
-
-    /// Represents the Bolt11/Bolt12 invoice associated with a payment
-    /// In the case of a Send payment, this is the invoice paid by the swapper
-    /// In the case of a Receive payment, this is the invoice paid by the user
-    String? invoice,
     String? bolt12Offer,
 
     /// The payment hash of the invoice

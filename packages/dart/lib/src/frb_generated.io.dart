@@ -2927,7 +2927,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_payment(Payment apiObj, wire_cst_payment wireObj) {
-    wireObj.destination = cst_encode_opt_String(apiObj.destination);
+    wireObj.destination = cst_encode_String(apiObj.destination);
     wireObj.tx_id = cst_encode_opt_String(apiObj.txId);
     wireObj.unblinding_data = cst_encode_opt_String(apiObj.unblindingData);
     wireObj.timestamp = cst_encode_u_32(apiObj.timestamp);
@@ -2945,8 +2945,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
       var pre_description = cst_encode_String(apiObj.description);
       var pre_liquid_expiration_blockheight = cst_encode_u_32(apiObj.liquidExpirationBlockheight);
+      var pre_invoice = cst_encode_String(apiObj.invoice);
       var pre_preimage = cst_encode_opt_String(apiObj.preimage);
-      var pre_invoice = cst_encode_opt_String(apiObj.invoice);
       var pre_bolt12_offer = cst_encode_opt_String(apiObj.bolt12Offer);
       var pre_payment_hash = cst_encode_opt_String(apiObj.paymentHash);
       var pre_destination_pubkey = cst_encode_opt_String(apiObj.destinationPubkey);
@@ -2957,8 +2957,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Lightning.swap_id = pre_swap_id;
       wireObj.kind.Lightning.description = pre_description;
       wireObj.kind.Lightning.liquid_expiration_blockheight = pre_liquid_expiration_blockheight;
-      wireObj.kind.Lightning.preimage = pre_preimage;
       wireObj.kind.Lightning.invoice = pre_invoice;
+      wireObj.kind.Lightning.preimage = pre_preimage;
       wireObj.kind.Lightning.bolt12_offer = pre_bolt12_offer;
       wireObj.kind.Lightning.payment_hash = pre_payment_hash;
       wireObj.kind.Lightning.destination_pubkey = pre_destination_pubkey;
@@ -6380,9 +6380,9 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   @ffi.Uint32()
   external int liquid_expiration_blockheight;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
 

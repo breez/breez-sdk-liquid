@@ -2669,7 +2669,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     final arr = raw as List<dynamic>;
     if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
     return Payment(
-      destination: dco_decode_opt_String(arr[0]),
+      destination: dco_decode_String(arr[0]),
       txId: dco_decode_opt_String(arr[1]),
       unblindingData: dco_decode_opt_String(arr[2]),
       timestamp: dco_decode_u_32(arr[3]),
@@ -2691,8 +2691,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           swapId: dco_decode_String(raw[1]),
           description: dco_decode_String(raw[2]),
           liquidExpirationBlockheight: dco_decode_u_32(raw[3]),
-          preimage: dco_decode_opt_String(raw[4]),
-          invoice: dco_decode_opt_String(raw[5]),
+          invoice: dco_decode_String(raw[4]),
+          preimage: dco_decode_opt_String(raw[5]),
           bolt12Offer: dco_decode_opt_String(raw[6]),
           paymentHash: dco_decode_opt_String(raw[7]),
           destinationPubkey: dco_decode_opt_String(raw[8]),
@@ -4838,7 +4838,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Payment sse_decode_payment(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_destination = sse_decode_opt_String(deserializer);
+    var var_destination = sse_decode_String(deserializer);
     var var_txId = sse_decode_opt_String(deserializer);
     var var_unblindingData = sse_decode_opt_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
@@ -4871,8 +4871,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_swapId = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
         var var_liquidExpirationBlockheight = sse_decode_u_32(deserializer);
+        var var_invoice = sse_decode_String(deserializer);
         var var_preimage = sse_decode_opt_String(deserializer);
-        var var_invoice = sse_decode_opt_String(deserializer);
         var var_bolt12Offer = sse_decode_opt_String(deserializer);
         var var_paymentHash = sse_decode_opt_String(deserializer);
         var var_destinationPubkey = sse_decode_opt_String(deserializer);
@@ -4883,8 +4883,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             swapId: var_swapId,
             description: var_description,
             liquidExpirationBlockheight: var_liquidExpirationBlockheight,
-            preimage: var_preimage,
             invoice: var_invoice,
+            preimage: var_preimage,
             bolt12Offer: var_bolt12Offer,
             paymentHash: var_paymentHash,
             destinationPubkey: var_destinationPubkey,
@@ -6860,7 +6860,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_payment(Payment self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_opt_String(self.destination, serializer);
+    sse_encode_String(self.destination, serializer);
     sse_encode_opt_String(self.txId, serializer);
     sse_encode_opt_String(self.unblindingData, serializer);
     sse_encode_u_32(self.timestamp, serializer);
@@ -6880,8 +6880,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           swapId: final swapId,
           description: final description,
           liquidExpirationBlockheight: final liquidExpirationBlockheight,
-          preimage: final preimage,
           invoice: final invoice,
+          preimage: final preimage,
           bolt12Offer: final bolt12Offer,
           paymentHash: final paymentHash,
           destinationPubkey: final destinationPubkey,
@@ -6893,8 +6893,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(swapId, serializer);
         sse_encode_String(description, serializer);
         sse_encode_u_32(liquidExpirationBlockheight, serializer);
+        sse_encode_String(invoice, serializer);
         sse_encode_opt_String(preimage, serializer);
-        sse_encode_opt_String(invoice, serializer);
         sse_encode_opt_String(bolt12Offer, serializer);
         sse_encode_opt_String(paymentHash, serializer);
         sse_encode_opt_String(destinationPubkey, serializer);

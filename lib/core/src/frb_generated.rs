@@ -3736,7 +3736,7 @@ impl SseDecode for crate::model::PayOnchainRequest {
 impl SseDecode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_destination = <Option<String>>::sse_decode(deserializer);
+        let mut var_destination = <String>::sse_decode(deserializer);
         let mut var_txId = <Option<String>>::sse_decode(deserializer);
         let mut var_unblindingData = <Option<String>>::sse_decode(deserializer);
         let mut var_timestamp = <u32>::sse_decode(deserializer);
@@ -3770,8 +3770,8 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_swapId = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_liquidExpirationBlockheight = <u32>::sse_decode(deserializer);
+                let mut var_invoice = <String>::sse_decode(deserializer);
                 let mut var_preimage = <Option<String>>::sse_decode(deserializer);
-                let mut var_invoice = <Option<String>>::sse_decode(deserializer);
                 let mut var_bolt12Offer = <Option<String>>::sse_decode(deserializer);
                 let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
                 let mut var_destinationPubkey = <Option<String>>::sse_decode(deserializer);
@@ -3782,8 +3782,8 @@ impl SseDecode for crate::model::PaymentDetails {
                     swap_id: var_swapId,
                     description: var_description,
                     liquid_expiration_blockheight: var_liquidExpirationBlockheight,
-                    preimage: var_preimage,
                     invoice: var_invoice,
+                    preimage: var_preimage,
                     bolt12_offer: var_bolt12Offer,
                     payment_hash: var_paymentHash,
                     destination_pubkey: var_destinationPubkey,
@@ -5954,8 +5954,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 swap_id,
                 description,
                 liquid_expiration_blockheight,
-                preimage,
                 invoice,
+                preimage,
                 bolt12_offer,
                 payment_hash,
                 destination_pubkey,
@@ -5967,8 +5967,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 swap_id.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
                 liquid_expiration_blockheight.into_into_dart().into_dart(),
-                preimage.into_into_dart().into_dart(),
                 invoice.into_into_dart().into_dart(),
+                preimage.into_into_dart().into_dart(),
                 bolt12_offer.into_into_dart().into_dart(),
                 payment_hash.into_into_dart().into_dart(),
                 destination_pubkey.into_into_dart().into_dart(),
@@ -8055,7 +8055,7 @@ impl SseEncode for crate::model::PayOnchainRequest {
 impl SseEncode for crate::model::Payment {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Option<String>>::sse_encode(self.destination, serializer);
+        <String>::sse_encode(self.destination, serializer);
         <Option<String>>::sse_encode(self.tx_id, serializer);
         <Option<String>>::sse_encode(self.unblinding_data, serializer);
         <u32>::sse_encode(self.timestamp, serializer);
@@ -8076,8 +8076,8 @@ impl SseEncode for crate::model::PaymentDetails {
                 swap_id,
                 description,
                 liquid_expiration_blockheight,
-                preimage,
                 invoice,
+                preimage,
                 bolt12_offer,
                 payment_hash,
                 destination_pubkey,
@@ -8089,8 +8089,8 @@ impl SseEncode for crate::model::PaymentDetails {
                 <String>::sse_encode(swap_id, serializer);
                 <String>::sse_encode(description, serializer);
                 <u32>::sse_encode(liquid_expiration_blockheight, serializer);
+                <String>::sse_encode(invoice, serializer);
                 <Option<String>>::sse_encode(preimage, serializer);
-                <Option<String>>::sse_encode(invoice, serializer);
                 <Option<String>>::sse_encode(bolt12_offer, serializer);
                 <Option<String>>::sse_encode(payment_hash, serializer);
                 <Option<String>>::sse_encode(destination_pubkey, serializer);
@@ -10183,8 +10183,8 @@ mod io {
                         liquid_expiration_blockheight: ans
                             .liquid_expiration_blockheight
                             .cst_decode(),
-                        preimage: ans.preimage.cst_decode(),
                         invoice: ans.invoice.cst_decode(),
+                        preimage: ans.preimage.cst_decode(),
                         bolt12_offer: ans.bolt12_offer.cst_decode(),
                         payment_hash: ans.payment_hash.cst_decode(),
                         destination_pubkey: ans.destination_pubkey.cst_decode(),
@@ -13784,8 +13784,8 @@ mod io {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
         liquid_expiration_blockheight: u32,
-        preimage: *mut wire_cst_list_prim_u_8_strict,
         invoice: *mut wire_cst_list_prim_u_8_strict,
+        preimage: *mut wire_cst_list_prim_u_8_strict,
         bolt12_offer: *mut wire_cst_list_prim_u_8_strict,
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
         destination_pubkey: *mut wire_cst_list_prim_u_8_strict,

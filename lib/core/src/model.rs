@@ -1243,14 +1243,6 @@ pub enum PaymentType {
     Receive = 0,
     Send = 1,
 }
-impl From<Direction> for PaymentType {
-    fn from(value: Direction) -> Self {
-        match value {
-            Direction::Incoming => Self::Receive,
-            Direction::Outgoing => Self::Send,
-        }
-    }
-}
 impl ToSql for PaymentType {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
@@ -1325,44 +1317,165 @@ pub enum PaymentSwapType {
     Chain,
 }
 
+/// A wrapper for the swap information which is common to every swap type
 #[derive(Debug, Clone, Serialize)]
-pub struct PaymentSwapData {
-    pub swap_id: String,
-
-    pub swap_type: PaymentSwapType,
-
+pub(crate) struct SwapInfo {
+    pub(crate) swap_id: String,
     /// Swap creation timestamp
-    pub created_at: u32,
-
+    pub(crate) created_at: u32,
     /// The height of the block at which the swap will no longer be valid
-    pub expiration_blockheight: u32,
-
-    pub preimage: Option<String>,
-    pub invoice: Option<String>,
-    pub bolt12_offer: Option<String>,
-    pub payment_hash: Option<String>,
-    pub destination_pubkey: Option<String>,
-    pub description: String,
-
+    pub(crate) expiration_blockheight: u32,
+    /// Description of the payment, either from the invoice or set during prepare
+    pub(crate) description: String,
     /// Amount sent by the swap payer
-    pub payer_amount_sat: u64,
-
+    pub(crate) payer_amount_sat: u64,
     /// Amount received by the swap receiver
-    pub receiver_amount_sat: u64,
-
+    pub(crate) receiver_amount_sat: u64,
     /// The swapper service fee
-    pub swapper_fees_sat: u64,
-
-    pub refund_tx_id: Option<String>,
-    pub refund_tx_amount_sat: Option<u64>,
-
-    /// Present only for chain swaps.
-    /// In case of an outgoing chain swap, it's the Bitcoin address which will receive the funds
-    /// In case of an incoming chain swap, it's the Liquid address which will receive the funds
-    pub claim_address: Option<String>,
-
+    pub(crate) swapper_fees_sat: u64,
     /// Payment status derived from the swap status
-    pub status: PaymentState,
+    pub(crate) status: PaymentState,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) enum PaymentSwapData {
+    Send {
+        swap_info: SwapInfo,
+        preimage: Option<String>,
+        invoice: String,
+        payment_hash: Option<String>,
+        bolt12_offer: Option<String>,
+        destination_pubkey: Option<String>,
+        refund_tx_id: Option<String>,
+        refund_tx_amount_sat: Option<u64>,
+    },
+    Receive {
+        swap_info: SwapInfo,
+        preimage: String,
+        invoice: String,
+        payment_hash: Option<String>,
+        destination_pubkey: Option<String>,
+    },
+    Chain {
+        swap_info: SwapInfo,
+        direction: Direction,
+        preimage: String,
+        refund_tx_id: Option<String>,
+        refund_tx_amount_sat: Option<u64>,
+        claim_address: Option<String>,
+    },
+}
+
+impl PaymentSwapData {
+    pub(crate) fn payment_type(&self) -> PaymentType {
+        match self {
+            PaymentSwapData::Send { .. }
+            | PaymentSwapData::Chain {
+                direction: Direction::Outgoing,
+                ..
+            } => PaymentType::Send,
+
+            PaymentSwapData::Receive { .. }
+            | PaymentSwapData::Chain {
+                direction: Direction::Incoming,
+                ..
+            } => PaymentType::Receive,
+        }
+    }
+
+    pub(crate) fn destination(&self) -> String {
+        match self {
+            PaymentSwapData::Send { invoice, .. } | PaymentSwapData::Receive { invoice, .. } => {
+                invoice.clone()
+            }
+            // TODO: Reserve a claim address at swap creation in case of incoming chain swap
+            // so we can populate the field correctly
+            PaymentSwapData::Chain { claim_address, .. } => claim_address
+                .clone()
+                .unwrap_or("Destination unknown".to_string()),
+        }
+    }
+
+    pub(crate) fn info(&self) -> &SwapInfo {
+        match self {
+            PaymentSwapData::Send { swap_info, .. }
+            | PaymentSwapData::Receive { swap_info, .. }
+            | PaymentSwapData::Chain { swap_info, .. } => swap_info,
+        }
+    }
+
+    pub(crate) fn into_payment_details(self, lnurl_info: Option<LnUrlInfo>) -> PaymentDetails {
+        match self {
+            PaymentSwapData::Send {
+                swap_info,
+                invoice,
+                bolt12_offer,
+                payment_hash,
+                destination_pubkey,
+                refund_tx_id,
+                preimage,
+                refund_tx_amount_sat,
+                ..
+            } => PaymentDetails::Lightning {
+                swap_id: swap_info.swap_id,
+                preimage,
+                destination_pubkey: destination_pubkey.or_else(|| {
+                    utils::get_invoice_destination_pubkey(&invoice, bolt12_offer.is_some()).ok()
+                }),
+                invoice,
+                bolt12_offer,
+                payment_hash,
+                lnurl_info,
+                refund_tx_id,
+                refund_tx_amount_sat,
+                description: swap_info.description,
+                liquid_expiration_blockheight: swap_info.expiration_blockheight,
+            },
+            PaymentSwapData::Receive {
+                swap_info,
+                invoice,
+                payment_hash,
+                destination_pubkey,
+                preimage,
+                ..
+            } => PaymentDetails::Lightning {
+                swap_id: swap_info.swap_id,
+                preimage: Some(preimage),
+                destination_pubkey: destination_pubkey
+                    .or_else(|| utils::get_invoice_destination_pubkey(&invoice, false).ok()),
+                invoice,
+                bolt12_offer: None,
+                payment_hash,
+                lnurl_info,
+                refund_tx_id: None,
+                refund_tx_amount_sat: None,
+                description: swap_info.description,
+                liquid_expiration_blockheight: swap_info.expiration_blockheight,
+            },
+            PaymentSwapData::Chain {
+                swap_info,
+                direction,
+                refund_tx_id,
+                refund_tx_amount_sat,
+                ..
+            } => {
+                let (bitcoin_expiration_blockheight, liquid_expiration_blockheight) =
+                    match direction {
+                        Direction::Incoming => (Some(swap_info.expiration_blockheight), None),
+                        Direction::Outgoing => (None, Some(swap_info.expiration_blockheight)),
+                    };
+
+                PaymentDetails::Bitcoin {
+                    swap_id: swap_info.swap_id,
+                    refund_tx_id,
+                    refund_tx_amount_sat,
+                    description: swap_info.description,
+                    liquid_expiration_blockheight,
+                    bitcoin_expiration_blockheight,
+                }
+            }
+        }
+    }
 }
 
 /// Represents the payment LNURL info
@@ -1391,13 +1504,11 @@ pub enum PaymentDetails {
         /// The height of the block at which the swap will no longer be valid
         liquid_expiration_blockheight: u32,
 
+        /// Represents the Bolt11/Bolt12 invoice associated with a payment
+        invoice: String,
+
         /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
-
-        /// Represents the Bolt11/Bolt12 invoice associated with a payment
-        /// In the case of a Send payment, this is the invoice paid by the swapper
-        /// In the case of a Receive payment, this is the invoice paid by the user
-        invoice: Option<String>,
 
         bolt12_offer: Option<String>,
 
@@ -1470,6 +1581,14 @@ impl PaymentDetails {
             Self::Liquid { .. } => None,
         }
     }
+
+    pub(crate) fn destination(&self) -> Option<String> {
+        match self {
+            Self::Lightning { invoice, .. } => Some(invoice.clone()),
+            Self::Liquid { destination, .. } => Some(destination.clone()),
+            _ => None,
+        }
+    }
 }
 
 /// Represents an SDK payment.
@@ -1479,7 +1598,7 @@ impl PaymentDetails {
 pub struct Payment {
     /// The destination associated with the payment, if it was created via our SDK.
     /// Can be either a Liquid/Bitcoin address, a Liquid BIP21 URI or an invoice
-    pub destination: Option<String>,
+    pub destination: String,
 
     pub tx_id: Option<String>,
 
@@ -1533,71 +1652,57 @@ pub struct Payment {
     pub details: PaymentDetails,
 }
 impl Payment {
-    pub(crate) fn from_pending_swap(
-        swap: PaymentSwapData,
-        payment_type: PaymentType,
-        payment_details: PaymentDetails,
-    ) -> Payment {
+    pub(crate) fn from_pending_swap(swap: PaymentSwapData, details: PaymentDetails) -> Payment {
+        let payment_type = swap.payment_type();
+        let destination = swap.destination();
+        let info = swap.info();
         let amount_sat = match payment_type {
-            PaymentType::Receive => swap.receiver_amount_sat,
-            PaymentType::Send => swap.payer_amount_sat,
+            PaymentType::Receive => info.receiver_amount_sat,
+            PaymentType::Send => info.payer_amount_sat,
         };
 
         Payment {
-            destination: swap.invoice.clone(),
+            destination,
             tx_id: None,
             unblinding_data: None,
-            timestamp: swap.created_at,
+            timestamp: info.created_at,
             amount_sat,
-            fees_sat: swap
+            fees_sat: info
                 .payer_amount_sat
-                .saturating_sub(swap.receiver_amount_sat),
-            swapper_fees_sat: Some(swap.swapper_fees_sat),
+                .saturating_sub(info.receiver_amount_sat),
+            swapper_fees_sat: Some(info.swapper_fees_sat),
             payment_type,
-            status: swap.status,
-            details: payment_details,
+            status: info.status,
+            details,
         }
     }
 
     pub(crate) fn from_tx_data(
         tx: PaymentTxData,
-        swap: Option<PaymentSwapData>,
+        maybe_swap: Option<PaymentSwapData>,
         details: PaymentDetails,
     ) -> Payment {
+        // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
+        // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
+        // If it's neither, we try to select the Liquid address (BIP21 or pure) set in `payment_details.address`
+        let destination = maybe_swap
+            .as_ref()
+            .map(|s| s.destination())
+            .or(details.destination())
+            .unwrap_or("Unknown".to_string());
+
+        let swap_info = maybe_swap.map(|s| s.info().clone());
+
         Payment {
             tx_id: Some(tx.tx_id),
             unblinding_data: tx.unblinding_data,
-            // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
-            // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
-            // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.
-            destination: match &swap {
-                Some(PaymentSwapData {
-                    swap_type: PaymentSwapType::Receive,
-                    invoice,
-                    ..
-                }) => invoice.clone(),
-                Some(PaymentSwapData {
-                    swap_type: PaymentSwapType::Send,
-                    invoice,
-                    bolt12_offer,
-                    ..
-                }) => bolt12_offer.clone().or(invoice.clone()),
-                Some(PaymentSwapData {
-                    swap_type: PaymentSwapType::Chain,
-                    claim_address,
-                    ..
-                }) => claim_address.clone(),
-                _ => match &details {
-                    PaymentDetails::Liquid { destination, .. } => Some(destination.clone()),
-                    _ => None,
-                },
-            },
+            destination,
             timestamp: tx
                 .timestamp
-                .or(swap.as_ref().map(|s| s.created_at))
+                .or(swap_info.as_ref().map(|s| s.created_at))
                 .unwrap_or(utils::now()),
             amount_sat: tx.amount_sat,
-            fees_sat: match swap.as_ref() {
+            fees_sat: match swap_info.as_ref() {
                 Some(s) => match tx.payment_type {
                     // For receive swaps, to avoid some edge case issues related to potential past
                     //  overpayments, we use the actual claim value as the final received amount
@@ -1610,10 +1715,10 @@ impl Payment {
                     PaymentType::Send => tx.fees_sat,
                 },
             },
-            swapper_fees_sat: swap.as_ref().map(|s| s.swapper_fees_sat),
+            swapper_fees_sat: swap_info.as_ref().map(|s| s.swapper_fees_sat),
             payment_type: tx.payment_type,
-            status: match &swap {
-                Some(swap) => swap.status,
+            status: match &swap_info {
+                Some(info) => info.status,
                 None => match tx.is_confirmed {
                     true => PaymentState::Complete,
                     false => PaymentState::Pending,

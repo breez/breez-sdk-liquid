@@ -2910,13 +2910,11 @@ impl LiquidSdk {
             Some(_) => None,
             None => Some(prepare_response.data.domain),
         };
-        if let (Some(tx_id), Some(destination)) =
-            (payment.tx_id.clone(), payment.destination.clone())
-        {
+        if let Some(tx_id) = payment.tx_id.clone() {
             self.persister
                 .insert_or_update_payment_details(PaymentTxDetails {
                     tx_id,
-                    destination,
+                    destination: payment.destination.clone(),
                     description: prepare_response.comment.clone(),
                     lnurl_info: Some(LnUrlInfo {
                         ln_address: prepare_response.data.ln_address,

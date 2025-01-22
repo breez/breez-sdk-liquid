@@ -4703,9 +4703,9 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   @ffi.Uint32()
   external int liquid_expiration_blockheight;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
 

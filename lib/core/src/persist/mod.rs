@@ -524,24 +524,19 @@ impl Persister {
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
-        let (swap, payment_type) = match maybe_receive_swap_id {
+        let swap = match maybe_receive_swap_id {
             Some(receive_swap_id) => {
                 let payer_amount_sat = maybe_receive_swap_payer_amount_sat.unwrap_or(0);
 
-                (
-                    Some(PaymentSwapData {
+                Some(PaymentSwapData::Receive {
+                    swap_info: SwapInfo {
                         swap_id: receive_swap_id,
-                        swap_type: PaymentSwapType::Receive,
                         created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                         expiration_blockheight: maybe_receive_swap_timeout_block_height
                             .unwrap_or(0),
-                        preimage: maybe_receive_swap_preimage,
-                        invoice: maybe_receive_swap_invoice.clone(),
-                        bolt12_offer: None, // Bolt12 not supported for Receive Swaps
-                        payment_hash: maybe_receive_swap_payment_hash,
-                        destination_pubkey: maybe_receive_swap_destination_pubkey,
                         description: maybe_receive_swap_description.unwrap_or_else(|| {
                             maybe_receive_swap_invoice
+                                .clone()
                                 .and_then(|bolt11| get_invoice_description!(bolt11))
                                 .unwrap_or("Lightning payment".to_string())
                         }),
@@ -550,29 +545,23 @@ impl Persister {
                         swapper_fees_sat: maybe_receive_swap_pair_fees
                             .map(|pair| pair.fees.boltz(payer_amount_sat))
                             .unwrap_or(0),
-                        refund_tx_id: None,
-                        refund_tx_amount_sat: None,
-                        claim_address: None,
                         status: maybe_receive_swap_receiver_state.unwrap_or(PaymentState::Created),
-                    }),
-                    PaymentType::Receive,
-                )
+                    },
+                    preimage: maybe_receive_swap_preimage.unwrap_or("".to_string()),
+                    invoice: maybe_receive_swap_invoice.unwrap_or("".to_string()),
+                    payment_hash: maybe_receive_swap_payment_hash,
+                    destination_pubkey: maybe_receive_swap_destination_pubkey,
+                })
             }
             None => match maybe_send_swap_id {
                 Some(send_swap_id) => {
                     let receiver_amount_sat = maybe_send_swap_receiver_amount_sat.unwrap_or(0);
-                    (
-                        Some(PaymentSwapData {
+                    Some(PaymentSwapData::Send {
+                        swap_info: SwapInfo {
                             swap_id: send_swap_id,
-                            swap_type: PaymentSwapType::Send,
                             created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                             expiration_blockheight: maybe_send_swap_timeout_block_height
                                 .unwrap_or(0),
-                            preimage: maybe_send_swap_preimage,
-                            invoice: maybe_send_swap_invoice,
-                            bolt12_offer: maybe_send_swap_bolt12_offer,
-                            payment_hash: maybe_send_swap_payment_hash,
-                            destination_pubkey: maybe_send_swap_destination_pubkey,
                             description: maybe_send_swap_description
                                 .unwrap_or("Lightning payment".to_string()),
                             payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
@@ -580,13 +569,16 @@ impl Persister {
                             swapper_fees_sat: maybe_send_swap_pair_fees
                                 .map(|pair| pair.fees.boltz(receiver_amount_sat))
                                 .unwrap_or(0),
-                            refund_tx_id: maybe_send_swap_refund_tx_id,
-                            refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
-                            claim_address: None,
                             status: maybe_send_swap_state.unwrap_or(PaymentState::Created),
-                        }),
-                        PaymentType::Send,
-                    )
+                        },
+                        preimage: maybe_send_swap_preimage,
+                        invoice: maybe_send_swap_invoice.unwrap_or("".to_string()),
+                        bolt12_offer: maybe_send_swap_bolt12_offer,
+                        payment_hash: maybe_send_swap_payment_hash,
+                        destination_pubkey: maybe_send_swap_destination_pubkey,
+                        refund_tx_id: maybe_send_swap_refund_tx_id,
+                        refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                    })
                 }
                 None => match maybe_chain_swap_id {
                     Some(chain_swap_id) => {
@@ -610,124 +602,44 @@ impl Persister {
                             .map(|fr| ((fr / 100.0) * payer_amount_sat as f64).ceil() as u64)
                             .unwrap_or(0);
 
-                        (
-                            Some(PaymentSwapData {
+                        Some(PaymentSwapData::Chain {
+                            swap_info: SwapInfo {
                                 swap_id: chain_swap_id,
-                                swap_type: PaymentSwapType::Chain,
+                                description: maybe_chain_swap_description
+                                    .unwrap_or("Bitcoin transfer".to_string()),
                                 created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
                                 expiration_blockheight: maybe_chain_swap_timeout_block_height
                                     .unwrap_or(0),
-                                preimage: maybe_chain_swap_preimage,
-                                invoice: None,
-                                bolt12_offer: None, // Bolt12 not supported for Chain Swaps
-                                payment_hash: None,
-                                destination_pubkey: None,
-                                description: maybe_chain_swap_description
-                                    .unwrap_or("Bitcoin transfer".to_string()),
                                 payer_amount_sat,
                                 receiver_amount_sat,
                                 swapper_fees_sat,
-                                refund_tx_id: maybe_chain_swap_refund_tx_id,
-                                refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
-                                claim_address: maybe_chain_swap_claim_address,
                                 status: maybe_chain_swap_state.unwrap_or(PaymentState::Created),
-                            }),
-                            maybe_chain_swap_direction
-                                .unwrap_or(Direction::Outgoing)
-                                .into(),
-                        )
+                            },
+                            direction: maybe_chain_swap_direction.unwrap_or(Direction::Outgoing),
+                            preimage: maybe_chain_swap_preimage.unwrap_or("".to_string()),
+                            refund_tx_id: maybe_chain_swap_refund_tx_id,
+                            refund_tx_amount_sat: maybe_swap_refund_tx_amount_sat,
+                            claim_address: maybe_chain_swap_claim_address,
+                        })
                     }
-                    None => (None, PaymentType::Send),
+                    None => None,
                 },
             },
         };
 
-        let description = swap.as_ref().map(|s| s.description.clone());
         let payment_details = match swap.clone() {
-            Some(
-                PaymentSwapData {
-                    swap_type: PaymentSwapType::Receive,
-                    swap_id,
-                    invoice,
-                    bolt12_offer,
-                    payment_hash,
-                    destination_pubkey,
-                    refund_tx_id,
-                    preimage,
-                    refund_tx_amount_sat,
-                    expiration_blockheight,
-                    ..
-                }
-                | PaymentSwapData {
-                    swap_type: PaymentSwapType::Send,
-                    swap_id,
-                    invoice,
-                    bolt12_offer,
-                    payment_hash,
-                    destination_pubkey,
-                    preimage,
-                    refund_tx_id,
-                    refund_tx_amount_sat,
-                    expiration_blockheight,
-                    ..
-                },
-            ) => PaymentDetails::Lightning {
-                swap_id,
-                preimage,
-                invoice: invoice.clone(),
-                bolt12_offer: bolt12_offer.clone(),
-                payment_hash,
-                destination_pubkey: destination_pubkey.or_else(|| {
-                    invoice.and_then(|invoice| {
-                        utils::get_invoice_destination_pubkey(&invoice, bolt12_offer.is_some()).ok()
-                    })
-                }),
-                lnurl_info: maybe_payment_details_lnurl_info,
-                refund_tx_id,
-                refund_tx_amount_sat,
-                description: description.unwrap_or("Lightning transfer".to_string()),
-                liquid_expiration_blockheight: expiration_blockheight,
-            },
-            Some(PaymentSwapData {
-                swap_type: PaymentSwapType::Chain,
-                swap_id,
-                refund_tx_id,
-                refund_tx_amount_sat,
-                expiration_blockheight,
-                ..
-            }) => {
-                let (bitcoin_expiration_blockheight, liquid_expiration_blockheight) =
-                    match maybe_chain_swap_direction {
-                        Some(Direction::Incoming) => (Some(expiration_blockheight), None),
-                        Some(Direction::Outgoing) | None => (None, Some(expiration_blockheight)),
-                    };
-
-                PaymentDetails::Bitcoin {
-                    swap_id,
-                    refund_tx_id,
-                    refund_tx_amount_sat,
-                    description: description.unwrap_or("Bitcoin transfer".to_string()),
-                    liquid_expiration_blockheight,
-                    bitcoin_expiration_blockheight,
-                }
-            }
-            _ => PaymentDetails::Liquid {
-                destination: maybe_payment_details_destination
-                    .unwrap_or("Destination unknown".to_string()),
+            Some(swap) => swap.into_payment_details(maybe_payment_details_lnurl_info),
+            None => PaymentDetails::Liquid {
+                destination: maybe_payment_details_destination.unwrap_or("Unknown".to_string()),
                 description: maybe_payment_details_description
                     .unwrap_or("Liquid transfer".to_string()),
             },
         };
 
-        match (tx, swap.clone()) {
+        match (tx, swap) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
-            (None, Some(swap)) => Ok(Payment::from_pending_swap(
-                swap,
-                payment_type,
-                payment_details,
-            )),
-            (Some(tx), None) => Ok(Payment::from_tx_data(tx, None, payment_details)),
-            (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap), payment_details)),
+            (None, Some(swap)) => Ok(Payment::from_pending_swap(swap, payment_details)),
+            (Some(tx), maybe_swap) => Ok(Payment::from_tx_data(tx, maybe_swap, payment_details)),
         }
     }
 
