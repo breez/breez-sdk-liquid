@@ -2399,7 +2399,8 @@ fun asRefundableSwap(refundableSwap: ReadableMap): RefundableSwap? {
     val swapAddress = refundableSwap.getString("swapAddress")!!
     val timestamp = refundableSwap.getInt("timestamp").toUInt()
     val amountSat = refundableSwap.getDouble("amountSat").toULong()
-    return RefundableSwap(swapAddress, timestamp, amountSat)
+    val refundTxId = if (hasNonNullKey(refundableSwap, "refundTxId")) refundableSwap.getString("refundTxId") else null
+    return RefundableSwap(swapAddress, timestamp, amountSat, refundTxId)
 }
 
 fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
@@ -2407,6 +2408,7 @@ fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
         "swapAddress" to refundableSwap.swapAddress,
         "timestamp" to refundableSwap.timestamp,
         "amountSat" to refundableSwap.amountSat,
+        "refundTxId" to refundableSwap.refundTxId,
     )
 
 fun asRefundableSwapList(arr: ReadableArray): List<RefundableSwap> {

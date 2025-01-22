@@ -1439,15 +1439,17 @@ class RefundableSwap {
 
   /// Amount that is refundable, from all UTXOs
   final BigInt amountSat;
+  final String? refundTxId;
 
   const RefundableSwap({
     required this.swapAddress,
     required this.timestamp,
     required this.amountSat,
+    this.refundTxId,
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode;
+  int get hashCode => swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ refundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1456,7 +1458,8 @@ class RefundableSwap {
           runtimeType == other.runtimeType &&
           swapAddress == other.swapAddress &&
           timestamp == other.timestamp &&
-          amountSat == other.amountSat;
+          amountSat == other.amountSat &&
+          refundTxId == other.refundTxId;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::restore].

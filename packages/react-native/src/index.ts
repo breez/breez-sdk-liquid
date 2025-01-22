@@ -408,6 +408,7 @@ export interface RefundableSwap {
     swapAddress: string
     timestamp: number
     amountSat: number
+    refundTxId?: string
 }
 
 export interface RestoreRequest {

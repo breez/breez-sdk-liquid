@@ -618,6 +618,7 @@ dictionary RefundableSwap {
     string swap_address;
     u32 timestamp;
     u64 amount_sat;
+    string? refund_tx_id;
 };
 
 dictionary RecommendedFees {

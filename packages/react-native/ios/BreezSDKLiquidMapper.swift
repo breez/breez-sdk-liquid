@@ -2750,8 +2750,15 @@ enum BreezSDKLiquidMapper {
         guard let amountSat = refundableSwap["amountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "RefundableSwap"))
         }
+        var refundTxId: String?
+        if hasNonNilKey(data: refundableSwap, key: "refundTxId") {
+            guard let refundTxIdTmp = refundableSwap["refundTxId"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "refundTxId"))
+            }
+            refundTxId = refundTxIdTmp
+        }
 
-        return RefundableSwap(swapAddress: swapAddress, timestamp: timestamp, amountSat: amountSat)
+        return RefundableSwap(swapAddress: swapAddress, timestamp: timestamp, amountSat: amountSat, refundTxId: refundTxId)
     }
 
     static func dictionaryOf(refundableSwap: RefundableSwap) -> [String: Any?] {
@@ -2759,6 +2766,7 @@ enum BreezSDKLiquidMapper {
             "swapAddress": refundableSwap.swapAddress,
             "timestamp": refundableSwap.timestamp,
             "amountSat": refundableSwap.amountSat,
+            "refundTxId": refundableSwap.refundTxId == nil ? nil : refundableSwap.refundTxId,
         ]
     }
 
