@@ -206,7 +206,7 @@ impl RecoveredOnchainDataChainReceive {
     ) -> Option<PaymentState> {
         let is_refundable = self.btc_user_lockup_address_balance_sat > 0
             && (is_expired
-                || expected_user_lockup_amount_sat.map_or(false, |expected_lockup_amount_sat| {
+                || expected_user_lockup_amount_sat.is_some_and(|expected_lockup_amount_sat| {
                     expected_lockup_amount_sat != self.btc_user_lockup_amount_sat
                 }));
         match &self.btc_user_lockup_tx_id {
