@@ -1231,16 +1231,18 @@ class PrepareRefundRequest {
 class PrepareRefundResponse {
   final int txVsize;
   final BigInt txFeeSat;
-  final String? refundTxId;
+
+  /// The txid of an existing pending refund tx, if any
+  final String? pendingRefundTxId;
 
   const PrepareRefundResponse({
     required this.txVsize,
     required this.txFeeSat,
-    this.refundTxId,
+    this.pendingRefundTxId,
   });
 
   @override
-  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ refundTxId.hashCode;
+  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ pendingRefundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1249,7 +1251,7 @@ class PrepareRefundResponse {
           runtimeType == other.runtimeType &&
           txVsize == other.txVsize &&
           txFeeSat == other.txFeeSat &&
-          refundTxId == other.refundTxId;
+          pendingRefundTxId == other.pendingRefundTxId;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
@@ -1439,17 +1441,20 @@ class RefundableSwap {
 
   /// Amount that is refundable, from all UTXOs
   final BigInt amountSat;
-  final String? refundTxId;
+
+  /// The txid of an existing pending refund tx, if any
+  final String? pendingRefundTxId;
 
   const RefundableSwap({
     required this.swapAddress,
     required this.timestamp,
     required this.amountSat,
-    this.refundTxId,
+    this.pendingRefundTxId,
   });
 
   @override
-  int get hashCode => swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ refundTxId.hashCode;
+  int get hashCode =>
+      swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ pendingRefundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1459,7 +1464,7 @@ class RefundableSwap {
           swapAddress == other.swapAddress &&
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
-          refundTxId == other.refundTxId;
+          pendingRefundTxId == other.pendingRefundTxId;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::restore].

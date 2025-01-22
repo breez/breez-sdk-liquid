@@ -5025,7 +5025,7 @@ final class wire_cst_refundable_swap extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pending_refund_tx_id;
 }
 
 final class wire_cst_list_refundable_swap extends ffi.Struct {
@@ -5461,7 +5461,7 @@ final class wire_cst_prepare_refund_response extends ffi.Struct {
   @ffi.Uint64()
   external int tx_fee_sat;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pending_refund_tx_id;
 }
 
 final class wire_cst_receive_payment_response extends ffi.Struct {

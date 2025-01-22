@@ -358,7 +358,7 @@ export interface PrepareRefundRequest {
 export interface PrepareRefundResponse {
     txVsize: number
     txFeeSat: number
-    refundTxId?: string
+    pendingRefundTxId?: string
 }
 
 export interface PrepareSendRequest {
@@ -408,7 +408,7 @@ export interface RefundableSwap {
     swapAddress: string
     timestamp: number
     amountSat: number
-    refundTxId?: string
+    pendingRefundTxId?: string
 }
 
 export interface RestoreRequest {

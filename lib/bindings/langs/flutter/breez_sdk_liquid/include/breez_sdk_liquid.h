@@ -711,7 +711,7 @@ typedef struct wire_cst_refundable_swap {
   struct wire_cst_list_prim_u_8_strict *swap_address;
   uint32_t timestamp;
   uint64_t amount_sat;
-  struct wire_cst_list_prim_u_8_strict *refund_tx_id;
+  struct wire_cst_list_prim_u_8_strict *pending_refund_tx_id;
 } wire_cst_refundable_swap;
 
 typedef struct wire_cst_list_refundable_swap {
@@ -1065,7 +1065,7 @@ typedef struct wire_cst_payment_error {
 typedef struct wire_cst_prepare_refund_response {
   uint32_t tx_vsize;
   uint64_t tx_fee_sat;
-  struct wire_cst_list_prim_u_8_strict *refund_tx_id;
+  struct wire_cst_list_prim_u_8_strict *pending_refund_tx_id;
 } wire_cst_prepare_refund_response;
 
 typedef struct wire_cst_receive_payment_response {

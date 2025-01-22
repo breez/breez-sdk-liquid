@@ -3185,7 +3185,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       PrepareRefundResponse apiObj, wire_cst_prepare_refund_response wireObj) {
     wireObj.tx_vsize = cst_encode_u_32(apiObj.txVsize);
     wireObj.tx_fee_sat = cst_encode_u_64(apiObj.txFeeSat);
-    wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
+    wireObj.pending_refund_tx_id = cst_encode_opt_String(apiObj.pendingRefundTxId);
   }
 
   @protected
@@ -3248,7 +3248,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.swap_address = cst_encode_String(apiObj.swapAddress);
     wireObj.timestamp = cst_encode_u_32(apiObj.timestamp);
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
-    wireObj.refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
+    wireObj.pending_refund_tx_id = cst_encode_opt_String(apiObj.pendingRefundTxId);
   }
 
   @protected
@@ -6703,7 +6703,7 @@ final class wire_cst_refundable_swap extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pending_refund_tx_id;
 }
 
 final class wire_cst_list_refundable_swap extends ffi.Struct {
@@ -7139,7 +7139,7 @@ final class wire_cst_prepare_refund_response extends ffi.Struct {
   @ffi.Uint64()
   external int tx_fee_sat;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> pending_refund_tx_id;
 }
 
 final class wire_cst_receive_payment_response extends ffi.Struct {

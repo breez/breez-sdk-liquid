@@ -2928,7 +2928,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return PrepareRefundResponse(
       txVsize: dco_decode_u_32(arr[0]),
       txFeeSat: dco_decode_u_64(arr[1]),
-      refundTxId: dco_decode_opt_String(arr[2]),
+      pendingRefundTxId: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -3032,7 +3032,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       swapAddress: dco_decode_String(arr[0]),
       timestamp: dco_decode_u_32(arr[1]),
       amountSat: dco_decode_u_64(arr[2]),
-      refundTxId: dco_decode_opt_String(arr[3]),
+      pendingRefundTxId: dco_decode_opt_String(arr[3]),
     );
   }
 
@@ -5110,8 +5110,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_txVsize = sse_decode_u_32(deserializer);
     var var_txFeeSat = sse_decode_u_64(deserializer);
-    var var_refundTxId = sse_decode_opt_String(deserializer);
-    return PrepareRefundResponse(txVsize: var_txVsize, txFeeSat: var_txFeeSat, refundTxId: var_refundTxId);
+    var var_pendingRefundTxId = sse_decode_opt_String(deserializer);
+    return PrepareRefundResponse(
+        txVsize: var_txVsize, txFeeSat: var_txFeeSat, pendingRefundTxId: var_pendingRefundTxId);
   }
 
   @protected
@@ -5198,12 +5199,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_swapAddress = sse_decode_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
-    var var_refundTxId = sse_decode_opt_String(deserializer);
+    var var_pendingRefundTxId = sse_decode_opt_String(deserializer);
     return RefundableSwap(
         swapAddress: var_swapAddress,
         timestamp: var_timestamp,
         amountSat: var_amountSat,
-        refundTxId: var_refundTxId);
+        pendingRefundTxId: var_pendingRefundTxId);
   }
 
   @protected
@@ -7087,7 +7088,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.txVsize, serializer);
     sse_encode_u_64(self.txFeeSat, serializer);
-    sse_encode_opt_String(self.refundTxId, serializer);
+    sse_encode_opt_String(self.pendingRefundTxId, serializer);
   }
 
   @protected
@@ -7155,7 +7156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.swapAddress, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
-    sse_encode_opt_String(self.refundTxId, serializer);
+    sse_encode_opt_String(self.pendingRefundTxId, serializer);
   }
 
   @protected

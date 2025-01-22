@@ -4093,11 +4093,11 @@ impl SseDecode for crate::model::PrepareRefundResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_txVsize = <u32>::sse_decode(deserializer);
         let mut var_txFeeSat = <u64>::sse_decode(deserializer);
-        let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
+        let mut var_pendingRefundTxId = <Option<String>>::sse_decode(deserializer);
         return crate::model::PrepareRefundResponse {
             tx_vsize: var_txVsize,
             tx_fee_sat: var_txFeeSat,
-            refund_tx_id: var_refundTxId,
+            pending_refund_tx_id: var_pendingRefundTxId,
         };
     }
 }
@@ -4211,12 +4211,12 @@ impl SseDecode for crate::model::RefundableSwap {
         let mut var_swapAddress = <String>::sse_decode(deserializer);
         let mut var_timestamp = <u32>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
-        let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
+        let mut var_pendingRefundTxId = <Option<String>>::sse_decode(deserializer);
         return crate::model::RefundableSwap {
             swap_address: var_swapAddress,
             timestamp: var_timestamp,
             amount_sat: var_amountSat,
-            refund_tx_id: var_refundTxId,
+            pending_refund_tx_id: var_pendingRefundTxId,
         };
     }
 }
@@ -6345,7 +6345,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareRefundResponse {
         [
             self.tx_vsize.into_into_dart().into_dart(),
             self.tx_fee_sat.into_into_dart().into_dart(),
-            self.refund_tx_id.into_into_dart().into_dart(),
+            self.pending_refund_tx_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6524,7 +6524,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::RefundableSwap {
             self.swap_address.into_into_dart().into_dart(),
             self.timestamp.into_into_dart().into_dart(),
             self.amount_sat.into_into_dart().into_dart(),
-            self.refund_tx_id.into_into_dart().into_dart(),
+            self.pending_refund_tx_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -8361,7 +8361,7 @@ impl SseEncode for crate::model::PrepareRefundResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.tx_vsize, serializer);
         <u64>::sse_encode(self.tx_fee_sat, serializer);
-        <Option<String>>::sse_encode(self.refund_tx_id, serializer);
+        <Option<String>>::sse_encode(self.pending_refund_tx_id, serializer);
     }
 }
 
@@ -8438,7 +8438,7 @@ impl SseEncode for crate::model::RefundableSwap {
         <String>::sse_encode(self.swap_address, serializer);
         <u32>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.amount_sat, serializer);
-        <Option<String>>::sse_encode(self.refund_tx_id, serializer);
+        <Option<String>>::sse_encode(self.pending_refund_tx_id, serializer);
     }
 }
 
@@ -10402,7 +10402,7 @@ mod io {
             crate::model::PrepareRefundResponse {
                 tx_vsize: self.tx_vsize.cst_decode(),
                 tx_fee_sat: self.tx_fee_sat.cst_decode(),
-                refund_tx_id: self.refund_tx_id.cst_decode(),
+                pending_refund_tx_id: self.pending_refund_tx_id.cst_decode(),
             }
         }
     }
@@ -10488,7 +10488,7 @@ mod io {
                 swap_address: self.swap_address.cst_decode(),
                 timestamp: self.timestamp.cst_decode(),
                 amount_sat: self.amount_sat.cst_decode(),
-                refund_tx_id: self.refund_tx_id.cst_decode(),
+                pending_refund_tx_id: self.pending_refund_tx_id.cst_decode(),
             }
         }
     }
@@ -11676,7 +11676,7 @@ mod io {
             Self {
                 tx_vsize: Default::default(),
                 tx_fee_sat: Default::default(),
-                refund_tx_id: core::ptr::null_mut(),
+                pending_refund_tx_id: core::ptr::null_mut(),
             }
         }
     }
@@ -11798,7 +11798,7 @@ mod io {
                 swap_address: core::ptr::null_mut(),
                 timestamp: Default::default(),
                 amount_sat: Default::default(),
-                refund_tx_id: core::ptr::null_mut(),
+                pending_refund_tx_id: core::ptr::null_mut(),
             }
         }
     }
@@ -13958,7 +13958,7 @@ mod io {
     pub struct wire_cst_prepare_refund_response {
         tx_vsize: u32,
         tx_fee_sat: u64,
-        refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
+        pending_refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14017,7 +14017,7 @@ mod io {
         swap_address: *mut wire_cst_list_prim_u_8_strict,
         timestamp: u32,
         amount_sat: u64,
-        refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
+        pending_refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
