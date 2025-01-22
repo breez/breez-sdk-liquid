@@ -1011,7 +1011,7 @@ impl LiquidSdk {
                                 err: format!("Asset {asset_id} is not supported"),
                             },
                         )?;
-                        let receiver_amount_sat = asset_metadata.to_sat(receiver_amount);
+                        let receiver_amount_sat = asset_metadata.amount_to_sat(receiver_amount);
                         let fees_sat = self
                             .estimate_onchain_tx_or_drain_tx_fee(
                                 receiver_amount_sat,
@@ -1378,7 +1378,7 @@ impl LiquidSdk {
             .map(|ref am| AssetInfo {
                 name: am.name.clone(),
                 ticker: am.ticker.clone(),
-                amount: am.from_sat(receiver_amount_sat),
+                amount: am.amount_from_sat(receiver_amount_sat),
             });
         let payment_details = PaymentDetails::Liquid {
             asset_id,
@@ -2748,7 +2748,7 @@ impl LiquidSdk {
                     balance_sat,
                     name: maybe_asset_metadata.map(|am| am.name.clone()),
                     ticker: maybe_asset_metadata.map(|am| am.ticker.clone()),
-                    balance: maybe_asset_metadata.map(|am| am.from_sat(balance_sat)),
+                    balance: maybe_asset_metadata.map(|am| am.amount_from_sat(balance_sat)),
                 }
             })
             .collect::<Vec<AssetBalance>>();

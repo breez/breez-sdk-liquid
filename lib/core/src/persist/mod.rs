@@ -772,7 +772,7 @@ impl Persister {
                         Some(AssetInfo {
                             name,
                             ticker,
-                            amount: asset_metadata.from_sat(amount),
+                            amount: asset_metadata.amount_from_sat(amount),
                         })
                     }
                     _ => None,

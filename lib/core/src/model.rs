@@ -1487,11 +1487,11 @@ pub struct AssetMetadata {
 }
 
 impl AssetMetadata {
-    pub fn to_sat(&self, amount: f64) -> u64 {
+    pub fn amount_to_sat(&self, amount: f64) -> u64 {
         (amount * (10_u64.pow(self.precision.into()) as f64)) as u64
     }
 
-    pub fn from_sat(&self, amount_sat: u64) -> f64 {
+    pub fn amount_from_sat(&self, amount_sat: u64) -> f64 {
         amount_sat as f64 / (10_u64.pow(self.precision.into()) as f64)
     }
 }
