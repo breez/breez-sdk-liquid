@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use anyhow::anyhow;
+use boltz_client::boltz::PairLimits;
 use boltz_client::ElementsAddress;
 use electrum_client::GetBalanceRes;
 use lwk_wollet::elements::Txid;
@@ -201,14 +202,20 @@ impl RecoveredOnchainDataChainReceive {
     pub(crate) fn derive_partial_state(
         &self,
         expected_user_lockup_amount_sat: Option<u64>,
+        swap_limits: Option<PairLimits>,
         is_expired: bool,
         is_waiting_fee_acceptance: bool,
     ) -> Option<PaymentState> {
+        let unexpected_amount =
+            expected_user_lockup_amount_sat.is_some_and(|expected_lockup_amount_sat| {
+                expected_lockup_amount_sat != self.btc_user_lockup_amount_sat
+            });
+        let amount_out_of_bounds = swap_limits.is_some_and(|limits| {
+            self.btc_user_lockup_amount_sat < limits.minimal
+                || self.btc_user_lockup_amount_sat > limits.maximal
+        });
         let is_refundable = self.btc_user_lockup_address_balance_sat > 0
-            && (is_expired
-                || expected_user_lockup_amount_sat.is_some_and(|expected_lockup_amount_sat| {
-                    expected_lockup_amount_sat != self.btc_user_lockup_amount_sat
-                }));
+            && (is_expired || unexpected_amount || amount_out_of_bounds);
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
