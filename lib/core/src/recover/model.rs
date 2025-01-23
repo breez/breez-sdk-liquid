@@ -110,9 +110,9 @@ impl RecoveredOnchainDataReceive {
         is_expired: bool,
     ) -> Option<PaymentState> {
         let is_refundable = is_expired
-            || self.lockup_amount_sat.map_or(false, |lockup_amount_sat| {
-                expected_lockup_amount_sat != lockup_amount_sat
-            });
+            || self
+                .lockup_amount_sat
+                .is_some_and(|lockup_amount_sat| lockup_amount_sat < expected_lockup_amount_sat);
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
                 Some(claim_tx_id) => match claim_tx_id.confirmed() {

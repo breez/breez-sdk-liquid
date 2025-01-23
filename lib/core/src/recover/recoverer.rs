@@ -261,7 +261,7 @@ impl Recoverer {
                     {
                         let lockup_amount_sat =
                             recovered_data.lockup_amount_sat.unwrap_or_default();
-                        if expected_lockup_amount_sat != lockup_amount_sat {
+                        if lockup_amount_sat < expected_lockup_amount_sat {
                             error!(
                                 "Failed to verify lockup amount for Receive Swap {}: {} sat vs {} sat",
                                 swap_id, expected_lockup_amount_sat, lockup_amount_sat

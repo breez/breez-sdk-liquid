@@ -506,7 +506,7 @@ impl ReceiveSwapHandler {
             .map(|o| o.value)?;
         let expected_lockup_amount_sat =
             receive_swap.receiver_amount_sat + receive_swap.claim_fees_sat;
-        if expected_lockup_amount_sat != lockup_amount_sat {
+        if lockup_amount_sat < expected_lockup_amount_sat {
             bail!(
                 "Failed to verify lockup amount for Receive Swap {}: {} sat vs {} sat",
                 receive_swap.id,
