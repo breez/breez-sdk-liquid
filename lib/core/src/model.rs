@@ -788,6 +788,7 @@ pub(crate) struct ChainSwap {
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
+    pub(crate) auto_accepted_fees: bool,
     /// Version used for optimistic concurrency control within local db
     #[derivative(PartialEq = "ignore")]
     pub(crate) version: u64,
@@ -1450,6 +1451,11 @@ pub enum PaymentDetails {
 
         /// For a Send swap which was refunded, this is the refund amount
         refund_tx_amount_sat: Option<u64>,
+
+        /// For an amountless receive swap, this indicates if fees were automatically accepted.
+        /// Fees are auto accepted when the swapper proposes fees that are within the initial
+        /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+        auto_accepted_fees: bool,
     },
 }
 

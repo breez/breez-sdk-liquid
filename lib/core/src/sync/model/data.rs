@@ -26,6 +26,7 @@ pub(crate) struct ChainSyncData {
     pub(crate) accept_zero_conf: bool,
     pub(crate) created_at: u32,
     pub(crate) description: Option<String>,
+    pub(crate) auto_accepted_fees: bool,
 }
 
 impl ChainSyncData {
@@ -35,6 +36,9 @@ impl ChainSyncData {
                 "accept_zero_conf" => self.accept_zero_conf = other.accept_zero_conf,
                 "accepted_receiver_amount_sat" => {
                     self.accepted_receiver_amount_sat = other.accepted_receiver_amount_sat
+                }
+                "auto_accepted_fees" => {
+                    self.auto_accepted_fees = other.auto_accepted_fees;
                 }
                 _ => continue,
             }
@@ -53,6 +57,9 @@ impl ChainSyncData {
                 }
                 if update.accepted_receiver_amount_sat != swap.accepted_receiver_amount_sat {
                     updated_fields.push("accepted_receiver_amount_sat".to_string());
+                }
+                if update.auto_accepted_fees != swap.auto_accepted_fees {
+                    updated_fields.push("auto_accepted_fees".to_string());
                 }
                 Some(updated_fields)
             }
@@ -80,6 +87,7 @@ impl From<ChainSwap> for ChainSyncData {
             accept_zero_conf: value.accept_zero_conf,
             created_at: value.created_at,
             description: value.description,
+            auto_accepted_fees: value.auto_accepted_fees,
         }
     }
 }
@@ -110,6 +118,7 @@ impl From<ChainSyncData> for ChainSwap {
             user_lockup_tx_id: None,
             claim_tx_id: None,
             refund_tx_id: None,
+            auto_accepted_fees: val.auto_accepted_fees,
             version: 0,
         }
     }

@@ -3339,6 +3339,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
+        val autoAcceptedFees = paymentDetails.getBoolean("autoAcceptedFees")
         return PaymentDetails.Bitcoin(
             swapId,
             description,
@@ -3346,6 +3347,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             liquidExpirationBlockheight,
             refundTxId,
             refundTxAmountSat,
+            autoAcceptedFees,
         )
     }
     return null
@@ -3381,6 +3383,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
+            pushToMap(map, "autoAcceptedFees", paymentDetails.autoAcceptedFees)
         }
     }
     return map

@@ -665,6 +665,7 @@ export type PaymentDetails = {
     liquidExpirationBlockheight?: number
     refundTxId?: string
     refundTxAmountSat?: number
+    autoAcceptedFees: boolean
 }
 
 export enum PaymentMethod {

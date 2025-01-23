@@ -841,6 +841,11 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// For a Send swap which was refunded, this is the refund amount
     BigInt? refundTxAmountSat,
+
+    /// For an amountless receive swap, this indicates if fees were automatically accepted.
+    /// Fees are auto accepted when the swapper proposes fees that are within the initial
+    /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+    required bool autoAcceptedFees,
   }) = PaymentDetails_Bitcoin;
 }
 

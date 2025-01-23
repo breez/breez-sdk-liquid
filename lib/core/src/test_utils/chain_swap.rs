@@ -144,6 +144,7 @@ pub(crate) fn new_chain_swap(
                 }
             }"#
             .to_string(),
+            auto_accepted_fees: false,
             version: 0
         };
     }
@@ -228,6 +229,7 @@ pub(crate) fn new_chain_swap(
                 }
               }
             }"#.to_string(),
+            auto_accepted_fees: false,
             version: 0,
         },
         Direction::Outgoing => ChainSwap {
@@ -310,6 +312,7 @@ pub(crate) fn new_chain_swap(
                 }
               }
             }"#.to_string(),
+            auto_accepted_fees: false,
             version: 0
         }
     }

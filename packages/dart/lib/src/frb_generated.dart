@@ -2713,6 +2713,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[4]),
           refundTxId: dco_decode_opt_String(raw[5]),
           refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[6]),
+          autoAcceptedFees: dco_decode_bool(raw[7]),
         );
       default:
         throw Exception("unreachable");
@@ -4903,13 +4904,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+        var var_autoAcceptedFees = sse_decode_bool(deserializer);
         return PaymentDetails_Bitcoin(
             swapId: var_swapId,
             description: var_description,
             liquidExpirationBlockheight: var_liquidExpirationBlockheight,
             bitcoinExpirationBlockheight: var_bitcoinExpirationBlockheight,
             refundTxId: var_refundTxId,
-            refundTxAmountSat: var_refundTxAmountSat);
+            refundTxAmountSat: var_refundTxAmountSat,
+            autoAcceptedFees: var_autoAcceptedFees);
       default:
         throw UnimplementedError('');
     }
@@ -6918,7 +6921,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           liquidExpirationBlockheight: final liquidExpirationBlockheight,
           bitcoinExpirationBlockheight: final bitcoinExpirationBlockheight,
           refundTxId: final refundTxId,
-          refundTxAmountSat: final refundTxAmountSat
+          refundTxAmountSat: final refundTxAmountSat,
+          autoAcceptedFees: final autoAcceptedFees
         ):
         sse_encode_i_32(2, serializer);
         sse_encode_String(swapId, serializer);
@@ -6927,6 +6931,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_box_autoadd_u_32(bitcoinExpirationBlockheight, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
+        sse_encode_bool(autoAcceptedFees, serializer);
     }
   }
 

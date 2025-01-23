@@ -1142,7 +1142,8 @@ abstract class _$$PaymentDetails_BitcoinImplCopyWith<$Res> implements $PaymentDe
       int? liquidExpirationBlockheight,
       int? bitcoinExpirationBlockheight,
       String? refundTxId,
-      BigInt? refundTxAmountSat});
+      BigInt? refundTxAmountSat,
+      bool autoAcceptedFees});
 }
 
 /// @nodoc
@@ -1164,6 +1165,7 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
     Object? bitcoinExpirationBlockheight = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
+    Object? autoAcceptedFees = null,
   }) {
     return _then(_$PaymentDetails_BitcoinImpl(
       swapId: null == swapId
@@ -1190,6 +1192,10 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
           ? _value.refundTxAmountSat
           : refundTxAmountSat // ignore: cast_nullable_to_non_nullable
               as BigInt?,
+      autoAcceptedFees: null == autoAcceptedFees
+          ? _value.autoAcceptedFees
+          : autoAcceptedFees // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -1203,7 +1209,8 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
       this.liquidExpirationBlockheight,
       this.bitcoinExpirationBlockheight,
       this.refundTxId,
-      this.refundTxAmountSat})
+      this.refundTxAmountSat,
+      required this.autoAcceptedFees})
       : super._();
 
   @override
@@ -1231,9 +1238,15 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   @override
   final BigInt? refundTxAmountSat;
 
+  /// For an amountless receive swap, this indicates if fees were automatically accepted.
+  /// Fees are auto accepted when the swapper proposes fees that are within the initial
+  /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+  @override
+  final bool autoAcceptedFees;
+
   @override
   String toString() {
-    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat, autoAcceptedFees: $autoAcceptedFees)';
   }
 
   @override
@@ -1249,12 +1262,14 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
                 other.bitcoinExpirationBlockheight == bitcoinExpirationBlockheight) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
-                other.refundTxAmountSat == refundTxAmountSat));
+                other.refundTxAmountSat == refundTxAmountSat) &&
+            (identical(other.autoAcceptedFees, autoAcceptedFees) ||
+                other.autoAcceptedFees == autoAcceptedFees));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, swapId, description, liquidExpirationBlockheight,
-      bitcoinExpirationBlockheight, refundTxId, refundTxAmountSat);
+      bitcoinExpirationBlockheight, refundTxId, refundTxAmountSat, autoAcceptedFees);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1272,7 +1287,8 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
       final int? liquidExpirationBlockheight,
       final int? bitcoinExpirationBlockheight,
       final String? refundTxId,
-      final BigInt? refundTxAmountSat}) = _$PaymentDetails_BitcoinImpl;
+      final BigInt? refundTxAmountSat,
+      required final bool autoAcceptedFees}) = _$PaymentDetails_BitcoinImpl;
   const PaymentDetails_Bitcoin._() : super._();
 
   String get swapId;
@@ -1294,6 +1310,11 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
 
   /// For a Send swap which was refunded, this is the refund amount
   BigInt? get refundTxAmountSat;
+
+  /// For an amountless receive swap, this indicates if fees were automatically accepted.
+  /// Fees are auto accepted when the swapper proposes fees that are within the initial
+  /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+  bool get autoAcceptedFees;
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.

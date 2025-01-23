@@ -419,7 +419,8 @@ impl ChainSwapHandler {
                     .inspect_err(|e| {
                         error!("Failed to accept zero-amount swap {id} quote: {e} - trying to erase the accepted receiver amount...");
                         let _ = self.persister.update_accepted_receiver_amount(&id, None);
-                    })
+                    })?;
+                self.persister.set_chain_swap_auto_accepted_fees(&id)
             }
             ValidateAmountlessSwapResult::RequiresUserAction {
                 user_lockup_amount_sat,

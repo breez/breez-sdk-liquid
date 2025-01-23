@@ -407,6 +407,7 @@ impl Persister {
                 cs.pair_fees_json,
                 cs.actual_payer_amount_sat,
                 cs.accepted_receiver_amount_sat,
+                cs.auto_accepted_fees,
                 rtx.amount_sat,
                 pd.destination,
                 pd.description,
@@ -515,12 +516,13 @@ impl Persister {
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
         let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(45)?;
         let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(46)?;
+        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(47)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(47)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(48)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(48)?;
-        let maybe_payment_details_description: Option<String> = row.get(49)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(50)?;
+        let maybe_payment_details_destination: Option<String> = row.get(49)?;
+        let maybe_payment_details_description: Option<String> = row.get(50)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(51)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
 
@@ -701,6 +703,7 @@ impl Persister {
                         Some(Direction::Incoming) => (Some(expiration_blockheight), None),
                         Some(Direction::Outgoing) | None => (None, Some(expiration_blockheight)),
                     };
+                let auto_accepted_fees = maybe_chain_swap_auto_accepted_fees.unwrap_or(false);
 
                 PaymentDetails::Bitcoin {
                     swap_id,
@@ -709,6 +712,7 @@ impl Persister {
                     description: description.unwrap_or("Bitcoin transfer".to_string()),
                     liquid_expiration_blockheight,
                     bitcoin_expiration_blockheight,
+                    auto_accepted_fees,
                 }
             }
             _ => PaymentDetails::Liquid {

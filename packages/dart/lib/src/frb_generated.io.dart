@@ -2984,6 +2984,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
           cst_encode_opt_box_autoadd_u_32(apiObj.bitcoinExpirationBlockheight);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
+      var pre_auto_accepted_fees = cst_encode_bool(apiObj.autoAcceptedFees);
       wireObj.tag = 2;
       wireObj.kind.Bitcoin.swap_id = pre_swap_id;
       wireObj.kind.Bitcoin.description = pre_description;
@@ -2991,6 +2992,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Bitcoin.bitcoin_expiration_blockheight = pre_bitcoin_expiration_blockheight;
       wireObj.kind.Bitcoin.refund_tx_id = pre_refund_tx_id;
       wireObj.kind.Bitcoin.refund_tx_amount_sat = pre_refund_tx_amount_sat;
+      wireObj.kind.Bitcoin.auto_accepted_fees = pre_auto_accepted_fees;
       return;
     }
   }
@@ -6416,6 +6418,9 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
 
   external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
+
+  @ffi.Bool()
+  external bool auto_accepted_fees;
 }
 
 final class PaymentDetailsKind extends ffi.Union {

@@ -4013,7 +4013,10 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            guard let _autoAcceptedFees = paymentDetails["autoAcceptedFees"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "autoAcceptedFees", typeName: "PaymentDetails"))
+            }
+            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat, autoAcceptedFees: _autoAcceptedFees)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -4049,7 +4052,7 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bitcoin(
-            swapId, description, bitcoinExpirationBlockheight, liquidExpirationBlockheight, refundTxId, refundTxAmountSat
+            swapId, description, bitcoinExpirationBlockheight, liquidExpirationBlockheight, refundTxId, refundTxAmountSat, autoAcceptedFees
         ):
             return [
                 "type": "bitcoin",
@@ -4059,6 +4062,7 @@ enum BreezSDKLiquidMapper {
                 "liquidExpirationBlockheight": liquidExpirationBlockheight == nil ? nil : liquidExpirationBlockheight,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
+                "autoAcceptedFees": autoAcceptedFees,
             ]
         }
     }
