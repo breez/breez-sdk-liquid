@@ -410,7 +410,7 @@ mod tests {
     fn test_fetch_receive_swap() -> Result<()> {
         create_persister!(storage);
 
-        let receive_swap = new_receive_swap(None);
+        let receive_swap = new_receive_swap(None, None);
 
         storage.insert_or_update_receive_swap(&receive_swap)?;
         // Fetch swap by id
@@ -430,7 +430,7 @@ mod tests {
         // List general receive swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_or_update_receive_swap(&new_receive_swap(None))?;
+            storage.insert_or_update_receive_swap(&new_receive_swap(None, None))?;
         }
 
         let con = storage.get_connection()?;
@@ -438,7 +438,8 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing receive swaps
-        storage.insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+        storage
+            .insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending), None))?;
         let ongoing_swaps = storage.list_ongoing_receive_swaps(None)?;
         assert_eq!(ongoing_swaps.len(), 4);
 
@@ -449,7 +450,7 @@ mod tests {
     fn test_update_receive_swap() -> Result<()> {
         create_persister!(storage);
 
-        let receive_swap = new_receive_swap(None);
+        let receive_swap = new_receive_swap(None, None);
         storage.insert_or_update_receive_swap(&receive_swap)?;
 
         // Update metadata
@@ -479,7 +480,7 @@ mod tests {
     async fn test_writing_stale_swap() -> Result<()> {
         create_persister!(storage);
 
-        let receive_swap = new_receive_swap(None);
+        let receive_swap = new_receive_swap(None, None);
         storage.insert_or_update_receive_swap(&receive_swap)?;
 
         // read - update - write works if there are no updates in between
