@@ -1901,7 +1901,7 @@ impl LiquidSdk {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::generic(
-                            "Cannot receive an asset the payment method is Bitcoin",
+                            "Cannot receive an asset when the payment method is Bitcoin",
                         ));
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
@@ -2007,7 +2007,7 @@ impl LiquidSdk {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::generic(
-                            "Cannot receive an asset the payment method is Bitcoin",
+                            "Cannot receive an asset when the payment method is Bitcoin",
                         ));
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
