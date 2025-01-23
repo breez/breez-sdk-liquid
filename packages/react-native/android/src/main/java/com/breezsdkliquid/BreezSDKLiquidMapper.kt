@@ -1628,6 +1628,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     if (!validateMandatoryFields(
             payment,
             arrayOf(
+                "destination",
                 "timestamp",
                 "amountSat",
                 "feesSat",
@@ -1639,6 +1640,7 @@ fun asPayment(payment: ReadableMap): Payment? {
     ) {
         return null
     }
+    val destination = payment.getString("destination")!!
     val timestamp = payment.getInt("timestamp").toUInt()
     val amountSat = payment.getDouble("amountSat").toULong()
     val feesSat = payment.getDouble("feesSat").toULong()
@@ -1646,14 +1648,14 @@ fun asPayment(payment: ReadableMap): Payment? {
     val status = payment.getString("status")?.let { asPaymentState(it) }!!
     val details = payment.getMap("details")?.let { asPaymentDetails(it) }!!
     val swapperFeesSat = if (hasNonNullKey(payment, "swapperFeesSat")) payment.getDouble("swapperFeesSat").toULong() else null
-    val destination = if (hasNonNullKey(payment, "destination")) payment.getString("destination") else null
     val txId = if (hasNonNullKey(payment, "txId")) payment.getString("txId") else null
     val unblindingData = if (hasNonNullKey(payment, "unblindingData")) payment.getString("unblindingData") else null
-    return Payment(timestamp, amountSat, feesSat, paymentType, status, details, swapperFeesSat, destination, txId, unblindingData)
+    return Payment(destination, timestamp, amountSat, feesSat, paymentType, status, details, swapperFeesSat, txId, unblindingData)
 }
 
 fun readableMapOf(payment: Payment): ReadableMap =
     readableMapOf(
+        "destination" to payment.destination,
         "timestamp" to payment.timestamp,
         "amountSat" to payment.amountSat,
         "feesSat" to payment.feesSat,
@@ -1661,7 +1663,6 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "status" to payment.status.name.lowercase(),
         "details" to readableMapOf(payment.details),
         "swapperFeesSat" to payment.swapperFeesSat,
-        "destination" to payment.destination,
         "txId" to payment.txId,
         "unblindingData" to payment.unblindingData,
     )
@@ -3240,8 +3241,8 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val swapId = paymentDetails.getString("swapId")!!
         val description = paymentDetails.getString("description")!!
         val liquidExpirationBlockheight = paymentDetails.getInt("liquidExpirationBlockheight").toUInt()
+        val invoice = paymentDetails.getString("invoice")!!
         val preimage = if (hasNonNullKey(paymentDetails, "preimage")) paymentDetails.getString("preimage") else null
-        val invoice = if (hasNonNullKey(paymentDetails, "invoice")) paymentDetails.getString("invoice") else null
         val bolt12Offer = if (hasNonNullKey(paymentDetails, "bolt12Offer")) paymentDetails.getString("bolt12Offer") else null
         val paymentHash = if (hasNonNullKey(paymentDetails, "paymentHash")) paymentDetails.getString("paymentHash") else null
         val destinationPubkey =
@@ -3279,8 +3280,8 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             swapId,
             description,
             liquidExpirationBlockheight,
-            preimage,
             invoice,
+            preimage,
             bolt12Offer,
             paymentHash,
             destinationPubkey,
@@ -3348,8 +3349,8 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "swapId", paymentDetails.swapId)
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
-            pushToMap(map, "preimage", paymentDetails.preimage)
             pushToMap(map, "invoice", paymentDetails.invoice)
+            pushToMap(map, "preimage", paymentDetails.preimage)
             pushToMap(map, "bolt12Offer", paymentDetails.bolt12Offer)
             pushToMap(map, "paymentHash", paymentDetails.paymentHash)
             pushToMap(map, "destinationPubkey", paymentDetails.destinationPubkey)

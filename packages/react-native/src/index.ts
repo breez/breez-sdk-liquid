@@ -286,6 +286,7 @@ export interface PayOnchainRequest {
 }
 
 export interface Payment {
+    destination: string
     timestamp: number
     amountSat: number
     feesSat: number
@@ -293,7 +294,6 @@ export interface Payment {
     status: PaymentState
     details: PaymentDetails
     swapperFeesSat?: number
-    destination?: string
     txId?: string
     unblindingData?: string
 }
@@ -644,8 +644,8 @@ export type PaymentDetails = {
     swapId: string
     description: string
     liquidExpirationBlockheight: number
+    invoice: string
     preimage?: string
-    invoice?: string
     bolt12Offer?: string
     paymentHash?: string
     destinationPubkey?: string
