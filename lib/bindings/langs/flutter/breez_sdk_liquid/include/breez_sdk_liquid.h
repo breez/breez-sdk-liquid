@@ -507,11 +507,11 @@ typedef struct wire_cst_PaymentDetails_Liquid {
 typedef struct wire_cst_PaymentDetails_Bitcoin {
   struct wire_cst_list_prim_u_8_strict *swap_id;
   struct wire_cst_list_prim_u_8_strict *description;
+  bool auto_accepted_fees;
   uint32_t *liquid_expiration_blockheight;
   uint32_t *bitcoin_expiration_blockheight;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
-  bool auto_accepted_fees;
 } wire_cst_PaymentDetails_Bitcoin;
 
 typedef union PaymentDetailsKind {

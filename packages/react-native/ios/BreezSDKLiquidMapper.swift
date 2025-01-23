@@ -4005,6 +4005,9 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
+            guard let _autoAcceptedFees = paymentDetails["autoAcceptedFees"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "autoAcceptedFees", typeName: "PaymentDetails"))
+            }
             let _bitcoinExpirationBlockheight = paymentDetails["bitcoinExpirationBlockheight"] as? UInt32
 
             let _liquidExpirationBlockheight = paymentDetails["liquidExpirationBlockheight"] as? UInt32
@@ -4013,10 +4016,7 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            guard let _autoAcceptedFees = paymentDetails["autoAcceptedFees"] as? Bool else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "autoAcceptedFees", typeName: "PaymentDetails"))
-            }
-            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat, autoAcceptedFees: _autoAcceptedFees)
+            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -4052,17 +4052,17 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bitcoin(
-            swapId, description, bitcoinExpirationBlockheight, liquidExpirationBlockheight, refundTxId, refundTxAmountSat, autoAcceptedFees
+            swapId, description, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "bitcoin",
                 "swapId": swapId,
                 "description": description,
+                "autoAcceptedFees": autoAcceptedFees,
                 "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight == nil ? nil : bitcoinExpirationBlockheight,
                 "liquidExpirationBlockheight": liquidExpirationBlockheight == nil ? nil : liquidExpirationBlockheight,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
-                "autoAcceptedFees": autoAcceptedFees,
             ]
         }
     }

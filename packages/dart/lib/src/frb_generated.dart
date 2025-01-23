@@ -2709,11 +2709,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PaymentDetails_Bitcoin(
           swapId: dco_decode_String(raw[1]),
           description: dco_decode_String(raw[2]),
-          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[3]),
-          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[4]),
-          refundTxId: dco_decode_opt_String(raw[5]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[6]),
-          autoAcceptedFees: dco_decode_bool(raw[7]),
+          autoAcceptedFees: dco_decode_bool(raw[3]),
+          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[4]),
+          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[5]),
+          refundTxId: dco_decode_opt_String(raw[6]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[7]),
         );
       default:
         throw Exception("unreachable");
@@ -4900,19 +4900,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         var var_swapId = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
+        var var_autoAcceptedFees = sse_decode_bool(deserializer);
         var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-        var var_autoAcceptedFees = sse_decode_bool(deserializer);
         return PaymentDetails_Bitcoin(
             swapId: var_swapId,
             description: var_description,
+            autoAcceptedFees: var_autoAcceptedFees,
             liquidExpirationBlockheight: var_liquidExpirationBlockheight,
             bitcoinExpirationBlockheight: var_bitcoinExpirationBlockheight,
             refundTxId: var_refundTxId,
-            refundTxAmountSat: var_refundTxAmountSat,
-            autoAcceptedFees: var_autoAcceptedFees);
+            refundTxAmountSat: var_refundTxAmountSat);
       default:
         throw UnimplementedError('');
     }
@@ -6918,20 +6918,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case PaymentDetails_Bitcoin(
           swapId: final swapId,
           description: final description,
+          autoAcceptedFees: final autoAcceptedFees,
           liquidExpirationBlockheight: final liquidExpirationBlockheight,
           bitcoinExpirationBlockheight: final bitcoinExpirationBlockheight,
           refundTxId: final refundTxId,
-          refundTxAmountSat: final refundTxAmountSat,
-          autoAcceptedFees: final autoAcceptedFees
+          refundTxAmountSat: final refundTxAmountSat
         ):
         sse_encode_i_32(2, serializer);
         sse_encode_String(swapId, serializer);
         sse_encode_String(description, serializer);
+        sse_encode_bool(autoAcceptedFees, serializer);
         sse_encode_opt_box_autoadd_u_32(liquidExpirationBlockheight, serializer);
         sse_encode_opt_box_autoadd_u_32(bitcoinExpirationBlockheight, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
-        sse_encode_bool(autoAcceptedFees, serializer);
     }
   }
 

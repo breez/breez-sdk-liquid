@@ -1438,6 +1438,11 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
+        /// For an amountless receive swap, this indicates if fees were automatically accepted.
+        /// Fees are auto accepted when the swapper proposes fees that are within the initial
+        /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+        auto_accepted_fees: bool,
+
         /// The height of the Liquid block at which the swap will no longer be valid
         /// It should always be populated in case of an outgoing chain swap
         liquid_expiration_blockheight: Option<u32>,
@@ -1451,11 +1456,6 @@ pub enum PaymentDetails {
 
         /// For a Send swap which was refunded, this is the refund amount
         refund_tx_amount_sat: Option<u64>,
-
-        /// For an amountless receive swap, this indicates if fees were automatically accepted.
-        /// Fees are auto accepted when the swapper proposes fees that are within the initial
-        /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
-        auto_accepted_fees: bool,
     },
 }
 
