@@ -5,7 +5,6 @@ use anyhow::anyhow;
 use boltz_client::ElementsAddress;
 use electrum_client::GetBalanceRes;
 use lwk_wollet::elements::Txid;
-use lwk_wollet::secp256k1::SecretKey;
 use lwk_wollet::History;
 use lwk_wollet::WalletTx;
 
@@ -97,22 +96,13 @@ impl RecoveredOnchainDataSend {
 
 pub(crate) struct RecoveredOnchainDataReceive {
     pub(crate) lockup_tx_id: Option<HistoryTxId>,
-    pub(crate) lockup_amount_sat: Option<u64>,
     pub(crate) claim_tx_id: Option<HistoryTxId>,
     pub(crate) mrh_tx_id: Option<HistoryTxId>,
     pub(crate) mrh_amount_sat: Option<u64>,
 }
 
 impl RecoveredOnchainDataReceive {
-    pub(crate) fn derive_partial_state(
-        &self,
-        expected_lockup_amount_sat: u64,
-        is_expired: bool,
-    ) -> Option<PaymentState> {
-        let is_refundable = is_expired
-            || self
-                .lockup_amount_sat
-                .is_some_and(|lockup_amount_sat| lockup_amount_sat < expected_lockup_amount_sat);
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
         match &self.lockup_tx_id {
             Some(_) => match &self.claim_tx_id {
                 Some(claim_tx_id) => match claim_tx_id.confirmed() {
@@ -131,7 +121,7 @@ impl RecoveredOnchainDataReceive {
                 },
                 // We have no onchain data to support deriving the state as the swap could
                 // potentially be Created. In this case we return None.
-                None => match is_refundable {
+                None => match is_expired {
                     true => Some(PaymentState::Failed),
                     false => None,
                 },
@@ -295,7 +285,6 @@ pub(crate) struct ReceiveSwapImmutableData {
     pub(crate) swap_id: String,
     pub(crate) swap_timestamp: u32,
     pub(crate) timeout_block_height: u32,
-    pub(crate) blinding_key: SecretKey,
     pub(crate) claim_script: LBtcScript,
     pub(crate) mrh_script: Option<LBtcScript>,
 }
@@ -314,15 +303,10 @@ impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
         ))?;
 
         let swap_id = swap.id;
-        let blinding_key = create_response
-            .blinding_key
-            .and_then(|b| SecretKey::from_str(&b).ok())
-            .ok_or(anyhow!("Missing blinding key"))?;
         Ok(ReceiveSwapImmutableData {
             swap_id,
             swap_timestamp: swap.created_at,
             timeout_block_height: create_response.timeout_block_height,
-            blinding_key,
             claim_script: funding_address.script_pubkey(),
             mrh_script: mrh_address.map(|s| s.script_pubkey()),
         })
@@ -331,7 +315,6 @@ impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
 
 pub(crate) struct ReceiveSwapHistory {
     pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
-    pub(crate) lbtc_claim_script_txs: Vec<boltz_client::elements::Transaction>,
     pub(crate) lbtc_mrh_script_history: Vec<HistoryTxId>,
 }
 
@@ -552,7 +535,6 @@ impl SwapsList {
     pub(crate) fn receive_histories_by_swap_id(
         &self,
         lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-        lbtc_script_to_txs_map: &HashMap<LBtcScript, Vec<boltz_client::elements::Transaction>>,
     ) -> HashMap<String, ReceiveSwapHistory> {
         let receive_swaps_by_claim_script = self.receive_swaps_by_claim_script();
         let receive_swaps_by_mrh_script = self.receive_swaps_by_mrh_script();
@@ -562,11 +544,6 @@ impl SwapsList {
             .iter()
             .for_each(|(lbtc_script, lbtc_script_history)| {
                 if let Some(imm) = receive_swaps_by_claim_script.get(lbtc_script) {
-                    let claim_script_txs = lbtc_script_to_txs_map
-                        .get(&imm.claim_script)
-                        .cloned()
-                        .unwrap_or_default();
-
                     // The MRH script history filtered by the swap timeout block height
                     let mrh_script_history = imm
                         .mrh_script
@@ -586,7 +563,6 @@ impl SwapsList {
                         imm.swap_id.clone(),
                         ReceiveSwapHistory {
                             lbtc_claim_script_history: lbtc_script_history.clone(),
-                            lbtc_claim_script_txs: claim_script_txs,
                             lbtc_mrh_script_history: mrh_script_history,
                         },
                     );
@@ -596,11 +572,6 @@ impl SwapsList {
                         .get(&imm.claim_script)
                         .cloned()
                         .unwrap_or_default();
-                    let claim_script_txs = lbtc_script_to_txs_map
-                        .get(&imm.claim_script)
-                        .cloned()
-                        .unwrap_or_default();
-
                     // The MRH script history filtered by the swap timeout block height
                     let mrh_script_history = lbtc_script_history
                         .iter()
@@ -611,7 +582,6 @@ impl SwapsList {
                         imm.swap_id.clone(),
                         ReceiveSwapHistory {
                             lbtc_claim_script_history: claim_script_history,
-                            lbtc_claim_script_txs: claim_script_txs,
                             lbtc_mrh_script_history: mrh_script_history,
                         },
                     );

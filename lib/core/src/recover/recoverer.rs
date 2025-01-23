@@ -5,7 +5,7 @@ use boltz_client::{ElementsAddress, ToHex as _};
 use electrum_client::GetBalanceRes;
 use log::{debug, error, warn};
 use lwk_wollet::bitcoin::Witness;
-use lwk_wollet::elements::{secp256k1_zkp::Secp256k1, AddressParams, Txid};
+use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use lwk_wollet::hashes::{sha256, Hash as _};
@@ -187,7 +187,7 @@ impl Recoverer {
         self.recover_preimages(recovered_send_data_without_preimage)
             .await?;
 
-        let mut recovered_receive_data = self.recover_receive_swap_tx_ids(
+        let recovered_receive_data = self.recover_receive_swap_tx_ids(
             &tx_map,
             histories.receive,
             &swaps_list.receive_swap_immutable_data_by_swap_id,
@@ -247,27 +247,14 @@ impl Recoverer {
                     }
                 }
                 Swap::Receive(receive_swap) => {
-                    let Some(recovered_data) = recovered_receive_data.get_mut(swap_id) else {
+                    let Some(recovered_data) = recovered_receive_data.get(swap_id) else {
                         log::warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    if let Some(mrh_amount_sat) = recovered_data.mrh_amount_sat {
-                        receive_swap.payer_amount_sat = mrh_amount_sat;
-                        receive_swap.receiver_amount_sat = mrh_amount_sat;
-                    }
-                    let expected_lockup_amount_sat =
-                        receive_swap.receiver_amount_sat + receive_swap.claim_fees_sat;
-                    if receive_swap.lockup_tx_id.is_none() && recovered_data.lockup_tx_id.is_some()
-                    {
-                        let lockup_amount_sat =
-                            recovered_data.lockup_amount_sat.unwrap_or_default();
-                        if lockup_amount_sat < expected_lockup_amount_sat {
-                            error!(
-                                "Failed to verify lockup amount for Receive Swap {}: {} sat vs {} sat",
-                                swap_id, expected_lockup_amount_sat, lockup_amount_sat
-                            );
-                            recovered_data.lockup_tx_id = None;
-                        }
+                    let timeout_block_height = receive_swap.timeout_block_height;
+                    let is_expired = liquid_tip >= timeout_block_height;
+                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+                        receive_swap.state = new_state;
                     }
                     receive_swap.claim_tx_id = recovered_data
                         .claim_tx_id
@@ -281,12 +268,9 @@ impl Recoverer {
                         .lockup_tx_id
                         .clone()
                         .map(|history_tx_id| history_tx_id.txid.to_string());
-                    let timeout_block_height = receive_swap.timeout_block_height;
-                    let is_expired = liquid_tip >= timeout_block_height;
-                    if let Some(new_state) =
-                        recovered_data.derive_partial_state(expected_lockup_amount_sat, is_expired)
-                    {
-                        receive_swap.state = new_state;
+                    if let Some(mrh_amount_sat) = recovered_data.mrh_amount_sat {
+                        receive_swap.payer_amount_sat = mrh_amount_sat;
+                        receive_swap.receiver_amount_sat = mrh_amount_sat;
                     }
                 }
                 Swap::Chain(chain_swap) => match chain_swap.direction {
@@ -367,37 +351,13 @@ impl Recoverer {
 
     /// For a given [SwapList], this fetches the script histories from the chain services
     async fn fetch_swaps_histories(&self, swaps_list: &SwapsList) -> Result<SwapsHistories> {
-        let liquid_chain_service = self.liquid_chain_service.lock().await;
         let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts();
-        let lbtc_script_histories = liquid_chain_service
+        let lbtc_script_histories = self
+            .liquid_chain_service
+            .lock()
+            .await
             .get_scripts_history(&swap_lbtc_scripts.iter().collect::<Vec<&LBtcScript>>())
             .await?;
-        let lbtc_script_tx_ids: Vec<lwk_wollet::elements::Txid> = lbtc_script_histories
-            .iter()
-            .flatten()
-            .map(|h| h.txid.to_raw_hash())
-            .map(lwk_wollet::elements::Txid::from_raw_hash)
-            .collect::<Vec<lwk_wollet::elements::Txid>>();
-        let lbtc_script_txs = liquid_chain_service
-            .get_transactions(&lbtc_script_tx_ids)
-            .await?;
-        let lbtc_script_to_txs_map: HashMap<LBtcScript, Vec<boltz_client::elements::Transaction>> =
-            swap_lbtc_scripts
-                .clone()
-                .into_iter()
-                .zip(lbtc_script_histories.iter())
-                .map(|(script, history)| {
-                    let relevant_tx_ids: Vec<Txid> = history.iter().map(|h| h.txid).collect();
-                    let relevant_txs: Vec<boltz_client::elements::Transaction> = lbtc_script_txs
-                        .iter()
-                        .filter(|&tx| relevant_tx_ids.contains(&tx.txid().to_raw_hash().into()))
-                        .cloned()
-                        .collect();
-
-                    (script, relevant_txs)
-                })
-                .collect();
-
         let lbtc_swap_scripts_len = swap_lbtc_scripts.len();
         let lbtc_script_histories_len = lbtc_script_histories.len();
         ensure!(
@@ -464,8 +424,7 @@ impl Recoverer {
 
         Ok(SwapsHistories {
             send: swaps_list.send_histories_by_swap_id(&lbtc_script_to_history_map),
-            receive: swaps_list
-                .receive_histories_by_swap_id(&lbtc_script_to_history_map, &lbtc_script_to_txs_map),
+            receive: swaps_list.receive_histories_by_swap_id(&lbtc_script_to_history_map),
             send_chain: swaps_list.send_chain_histories_by_swap_id(
                 &lbtc_script_to_history_map,
                 &btc_script_to_history_map,
@@ -533,53 +492,15 @@ impl Recoverer {
         receive_histories_by_swap_id: HashMap<String, ReceiveSwapHistory>,
         receive_swap_immutable_data_by_swap_id: &HashMap<String, ReceiveSwapImmutableData>,
     ) -> Result<HashMap<String, RecoveredOnchainDataReceive>> {
-        let secp = Secp256k1::new();
         let mut res: HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
         for (swap_id, history) in receive_histories_by_swap_id {
             debug!("[Recover Receive] Checking swap {swap_id}");
-            let receive_swap_immutable_data = receive_swap_immutable_data_by_swap_id
-                .get(&swap_id)
-                .ok_or(anyhow!("Claim script not found for Receive Swap {swap_id}"))?;
-            let claim_script = receive_swap_immutable_data.claim_script.clone();
-            let (incoming_txs, outgoing_txs): (Vec<_>, Vec<_>) =
-                history.lbtc_claim_script_txs.iter().partition(|tx| {
-                    tx.output
-                        .iter()
-                        .any(|out| matches!(&out.script_pubkey, x if x == &claim_script))
-                });
-            let lockup_tx = incoming_txs.first();
-            let lockup_tx_id = lockup_tx
-                .and_then(|tx| {
-                    history
-                        .lbtc_claim_script_history
-                        .iter()
-                        .find(|h| h.txid.as_raw_hash() == tx.txid().as_raw_hash())
-                })
-                .cloned();
-            let lockup_amount_sat = lockup_tx.and_then(|tx| {
-                tx.output
-                    .iter()
-                    .find(|out| out.script_pubkey == claim_script)
-                    .and_then(|out| {
-                        out.unblind(&secp, receive_swap_immutable_data.blinding_key)
-                            .map(|o| o.value)
-                            .ok()
-                    })
-            });
-            // The possible refund/claim tx, verified against the wallet's incoming txs to be the claim tx
-            let claim_tx_id = outgoing_txs
-                .first()
-                .and_then(|tx| tx_map.incoming_tx_map.get(&tx.txid()))
-                .and_then(|tx| {
-                    history
-                        .lbtc_claim_script_history
-                        .iter()
-                        .find(|h| h.txid.as_raw_hash() == tx.txid.as_raw_hash())
-                })
-                .cloned();
 
             // The MRH script history txs filtered by the swap timestamp
-            let swap_timestamp = receive_swap_immutable_data.swap_timestamp;
+            let swap_timestamp = receive_swap_immutable_data_by_swap_id
+                .get(&swap_id)
+                .map(|imm: &ReceiveSwapImmutableData| imm.swap_timestamp)
+                .ok_or_else(|| anyhow!("Swap timestamp not found for Receive Swap {swap_id}"))?;
             let mrh_txs: HashMap<Txid, WalletTx> = history
                 .lbtc_mrh_script_history
                 .iter()
@@ -597,19 +518,61 @@ impl Recoverer {
                 .and_then(|h| mrh_txs.get(&h.txid))
                 .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
 
+            let (lockup_tx_id, claim_tx_id) = match history.lbtc_claim_script_history.len() {
+                // Only lockup tx available
+                1 => (Some(history.lbtc_claim_script_history[0].clone()), None),
+
+                2 => {
+                    let first = history.lbtc_claim_script_history[0].clone();
+                    let second = history.lbtc_claim_script_history[1].clone();
+
+                    if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
+                        // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
+                        (Some(second), Some(first))
+                    } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
+                        // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
+                        (Some(first), Some(second))
+                    } else {
+                        // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
+                        // If so, we expect them to be confirmed at different heights
+                        let first_conf_height = first.height;
+                        let second_conf_height = second.height;
+                        match (first.confirmed(), second.confirmed()) {
+                            // If they're both confirmed, the one with the lowest confirmation height is the lockup
+                            (true, true) => match first_conf_height < second_conf_height {
+                                true => (Some(first), None),
+                                false => (Some(second), None),
+                            },
+
+                            // If only one tx is confirmed, then that is the lockup
+                            (true, false) => (Some(first), None),
+                            (false, true) => (Some(second), None),
+
+                            // If neither is confirmed, this is an edge-case
+                            (false, false) => {
+                                warn!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
+                                (None, None)
+                            }
+                        }
+                    }
+                }
+                n => {
+                    warn!("Script history with length {n} found while recovering data for Receive Swap {swap_id}");
+                    (None, None)
+                }
+            };
+
             // Take only the lockup_tx_id and claim_tx_id if either are set,
             // otherwise take the mrh_tx_id and mrh_amount_sat
             let recovered_onchain_data = match (lockup_tx_id.as_ref(), claim_tx_id.as_ref()) {
                 (Some(_), None) | (Some(_), Some(_)) => RecoveredOnchainDataReceive {
                     lockup_tx_id,
-                    lockup_amount_sat,
                     claim_tx_id,
                     mrh_tx_id: None,
                     mrh_amount_sat: None,
                 },
                 _ => RecoveredOnchainDataReceive {
                     lockup_tx_id: None,
-                    lockup_amount_sat: None,
                     claim_tx_id: None,
                     mrh_tx_id,
                     mrh_amount_sat,
@@ -710,7 +673,7 @@ impl Recoverer {
             ReceiveChainSwapImmutableData,
         >,
     ) -> Result<HashMap<String, RecoveredOnchainDataChainReceive>> {
-        let secp = Secp256k1::new();
+        let secp = secp256k1_zkp::Secp256k1::new();
 
         let mut res: HashMap<String, RecoveredOnchainDataChainReceive> = HashMap::new();
         for (swap_id, history) in chain_receive_histories_by_swap_id {
