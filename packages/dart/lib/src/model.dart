@@ -1232,17 +1232,17 @@ class PrepareRefundResponse {
   final int txVsize;
   final BigInt txFeeSat;
 
-  /// The txid of an existing pending refund tx, if any
-  final String? pendingRefundTxId;
+  /// The txid of the last broadcasted refund tx, if any
+  final String? lastRefundTxId;
 
   const PrepareRefundResponse({
     required this.txVsize,
     required this.txFeeSat,
-    this.pendingRefundTxId,
+    this.lastRefundTxId,
   });
 
   @override
-  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ pendingRefundTxId.hashCode;
+  int get hashCode => txVsize.hashCode ^ txFeeSat.hashCode ^ lastRefundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1251,7 +1251,7 @@ class PrepareRefundResponse {
           runtimeType == other.runtimeType &&
           txVsize == other.txVsize &&
           txFeeSat == other.txFeeSat &&
-          pendingRefundTxId == other.pendingRefundTxId;
+          lastRefundTxId == other.lastRefundTxId;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_send_payment].
@@ -1442,19 +1442,19 @@ class RefundableSwap {
   /// Amount that is refundable, from all UTXOs
   final BigInt amountSat;
 
-  /// The txid of an existing pending refund tx, if any
-  final String? pendingRefundTxId;
+  /// The txid of the last broadcasted refund tx, if any
+  final String? lastRefundTxId;
 
   const RefundableSwap({
     required this.swapAddress,
     required this.timestamp,
     required this.amountSat,
-    this.pendingRefundTxId,
+    this.lastRefundTxId,
   });
 
   @override
   int get hashCode =>
-      swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ pendingRefundTxId.hashCode;
+      swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ lastRefundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1464,7 +1464,7 @@ class RefundableSwap {
           swapAddress == other.swapAddress &&
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
-          pendingRefundTxId == other.pendingRefundTxId;
+          lastRefundTxId == other.lastRefundTxId;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::restore].

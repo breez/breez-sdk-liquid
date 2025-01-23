@@ -2399,22 +2399,22 @@ enum BreezSDKLiquidMapper {
         guard let txFeeSat = prepareRefundResponse["txFeeSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "txFeeSat", typeName: "PrepareRefundResponse"))
         }
-        var pendingRefundTxId: String?
-        if hasNonNilKey(data: prepareRefundResponse, key: "pendingRefundTxId") {
-            guard let pendingRefundTxIdTmp = prepareRefundResponse["pendingRefundTxId"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "pendingRefundTxId"))
+        var lastRefundTxId: String?
+        if hasNonNilKey(data: prepareRefundResponse, key: "lastRefundTxId") {
+            guard let lastRefundTxIdTmp = prepareRefundResponse["lastRefundTxId"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lastRefundTxId"))
             }
-            pendingRefundTxId = pendingRefundTxIdTmp
+            lastRefundTxId = lastRefundTxIdTmp
         }
 
-        return PrepareRefundResponse(txVsize: txVsize, txFeeSat: txFeeSat, pendingRefundTxId: pendingRefundTxId)
+        return PrepareRefundResponse(txVsize: txVsize, txFeeSat: txFeeSat, lastRefundTxId: lastRefundTxId)
     }
 
     static func dictionaryOf(prepareRefundResponse: PrepareRefundResponse) -> [String: Any?] {
         return [
             "txVsize": prepareRefundResponse.txVsize,
             "txFeeSat": prepareRefundResponse.txFeeSat,
-            "pendingRefundTxId": prepareRefundResponse.pendingRefundTxId == nil ? nil : prepareRefundResponse.pendingRefundTxId,
+            "lastRefundTxId": prepareRefundResponse.lastRefundTxId == nil ? nil : prepareRefundResponse.lastRefundTxId,
         ]
     }
 
@@ -2750,15 +2750,15 @@ enum BreezSDKLiquidMapper {
         guard let amountSat = refundableSwap["amountSat"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amountSat", typeName: "RefundableSwap"))
         }
-        var pendingRefundTxId: String?
-        if hasNonNilKey(data: refundableSwap, key: "pendingRefundTxId") {
-            guard let pendingRefundTxIdTmp = refundableSwap["pendingRefundTxId"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "pendingRefundTxId"))
+        var lastRefundTxId: String?
+        if hasNonNilKey(data: refundableSwap, key: "lastRefundTxId") {
+            guard let lastRefundTxIdTmp = refundableSwap["lastRefundTxId"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "lastRefundTxId"))
             }
-            pendingRefundTxId = pendingRefundTxIdTmp
+            lastRefundTxId = lastRefundTxIdTmp
         }
 
-        return RefundableSwap(swapAddress: swapAddress, timestamp: timestamp, amountSat: amountSat, pendingRefundTxId: pendingRefundTxId)
+        return RefundableSwap(swapAddress: swapAddress, timestamp: timestamp, amountSat: amountSat, lastRefundTxId: lastRefundTxId)
     }
 
     static func dictionaryOf(refundableSwap: RefundableSwap) -> [String: Any?] {
@@ -2766,7 +2766,7 @@ enum BreezSDKLiquidMapper {
             "swapAddress": refundableSwap.swapAddress,
             "timestamp": refundableSwap.timestamp,
             "amountSat": refundableSwap.amountSat,
-            "pendingRefundTxId": refundableSwap.pendingRefundTxId == nil ? nil : refundableSwap.pendingRefundTxId,
+            "lastRefundTxId": refundableSwap.lastRefundTxId == nil ? nil : refundableSwap.lastRefundTxId,
         ]
     }
 

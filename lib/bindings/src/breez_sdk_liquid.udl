@@ -618,7 +618,7 @@ dictionary RefundableSwap {
     string swap_address;
     u32 timestamp;
     u64 amount_sat;
-    string? pending_refund_tx_id;
+    string? last_refund_tx_id;
 };
 
 dictionary RecommendedFees {
@@ -638,7 +638,7 @@ dictionary PrepareRefundRequest {
 dictionary PrepareRefundResponse {
     u32 tx_vsize;
     u64 tx_fee_sat;
-    string? pending_refund_tx_id = null;
+    string? last_refund_tx_id = null;
 };
 
 dictionary RefundRequest {
