@@ -246,7 +246,7 @@ impl RecoveredOnchainDataChainReceive {
                 }
                 (None, None) => match is_refundable {
                     true => Some(PaymentState::Refundable),
-                    false => match is_waiting_fee_acceptance {
+                    false => match is_waiting_fee_acceptance && !amount_out_of_bounds {
                         true => Some(PaymentState::WaitingFeeAcceptance),
                         false => Some(PaymentState::Pending),
                     },
