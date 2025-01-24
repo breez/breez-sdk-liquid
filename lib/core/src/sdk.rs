@@ -1923,13 +1923,18 @@ impl LiquidSdk {
                 debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
             }
             PaymentMethod::LiquidAddress => {
-                let payer_amount_sat = match req.amount {
-                    Some(ReceiveAmount::Asset { payer_amount, .. }) => payer_amount,
-                    Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
-                    None => None,
+                let (asset_id, amount_sat) = match req.amount.clone() {
+                    Some(ReceiveAmount::Asset {
+                        payer_amount,
+                        asset_id,
+                    }) => (asset_id, payer_amount),
+                    Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => {
+                        (self.config.lbtc_asset_id(), Some(payer_amount_sat))
+                    }
+                    None => (self.config.lbtc_asset_id(), None),
                 };
                 fees_sat = 0;
-                debug!("Preparing Liquid Receive with: amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
+                debug!("Preparing Liquid Receive with: asset_id {asset_id}, amount_sat {amount_sat:?}, fees_sat {fees_sat}");
             }
         };
 
