@@ -284,12 +284,14 @@ impl Recoverer {
                         }
                         let is_expired =
                             bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
-                        let expected_user_lockup_amount_sat = match chain_swap.payer_amount_sat {
-                            0 => None,
-                            expected => Some(expected),
-                        };
+                        let (expected_user_lockup_amount_sat, swap_limits) =
+                            match chain_swap.payer_amount_sat {
+                                0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
+                                expected => (Some(expected), None),
+                            };
                         if let Some(new_state) = recovered_data.derive_partial_state(
                             expected_user_lockup_amount_sat,
+                            swap_limits,
                             is_expired,
                             chain_swap.is_waiting_fee_acceptance(),
                         ) {
