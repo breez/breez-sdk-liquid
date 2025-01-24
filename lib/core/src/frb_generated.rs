@@ -2379,6 +2379,18 @@ impl SseDecode for crate::bindings::Amount {
     }
 }
 
+impl SseDecode for crate::model::AssetBalance {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_assetId = <String>::sse_decode(deserializer);
+        let mut var_balance = <u64>::sse_decode(deserializer);
+        return crate::model::AssetBalance {
+            asset_id: var_assetId,
+            balance: var_balance,
+        };
+    }
+}
+
 impl SseDecode for crate::model::BackupRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2794,6 +2806,18 @@ impl SseDecode for Vec<String> {
     }
 }
 
+impl SseDecode for Vec<crate::model::AssetBalance> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::AssetBalance>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::bindings::ExternalInputParser> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2876,13 +2900,15 @@ impl SseDecode for crate::model::ListPaymentDetails {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                let mut var_destination = <String>::sse_decode(deserializer);
+                let mut var_assetId = <Option<String>>::sse_decode(deserializer);
+                let mut var_destination = <Option<String>>::sse_decode(deserializer);
                 return crate::model::ListPaymentDetails::Liquid {
+                    asset_id: var_assetId,
                     destination: var_destination,
                 };
             }
             1 => {
-                let mut var_address = <String>::sse_decode(deserializer);
+                let mut var_address = <Option<String>>::sse_decode(deserializer);
                 return crate::model::ListPaymentDetails::Bitcoin {
                     address: var_address,
                 };
@@ -3607,6 +3633,17 @@ impl SseDecode for Option<crate::model::Payment> {
     }
 }
 
+impl SseDecode for Option<crate::model::ReceiveAmount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::model::ReceiveAmount>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::bindings::SuccessAction> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3705,12 +3742,20 @@ impl SseDecode for crate::model::PayAmount {
         let mut tag_ = <i32>::sse_decode(deserializer);
         match tag_ {
             0 => {
-                let mut var_amountSat = <u64>::sse_decode(deserializer);
-                return crate::model::PayAmount::Receiver {
-                    amount_sat: var_amountSat,
+                let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+                return crate::model::PayAmount::Bitcoin {
+                    receiver_amount_sat: var_receiverAmountSat,
                 };
             }
             1 => {
+                let mut var_assetId = <String>::sse_decode(deserializer);
+                let mut var_receiverAmount = <u64>::sse_decode(deserializer);
+                return crate::model::PayAmount::Asset {
+                    asset_id: var_assetId,
+                    receiver_amount: var_receiverAmount,
+                };
+            }
+            2 => {
                 return crate::model::PayAmount::Drain;
             }
             _ => {
@@ -3795,9 +3840,11 @@ impl SseDecode for crate::model::PaymentDetails {
             1 => {
                 let mut var_destination = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_assetId = <String>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Liquid {
                     destination: var_destination,
                     description: var_description,
+                    asset_id: var_assetId,
                 };
             }
             2 => {
@@ -4047,11 +4094,11 @@ impl SseDecode for crate::model::PreparePayOnchainResponse {
 impl SseDecode for crate::model::PrepareReceiveRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_payerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_paymentMethod = <crate::model::PaymentMethod>::sse_decode(deserializer);
+        let mut var_amount = <Option<crate::model::ReceiveAmount>>::sse_decode(deserializer);
         return crate::model::PrepareReceiveRequest {
-            payer_amount_sat: var_payerAmountSat,
             payment_method: var_paymentMethod,
+            amount: var_amount,
         };
     }
 }
@@ -4060,14 +4107,14 @@ impl SseDecode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_paymentMethod = <crate::model::PaymentMethod>::sse_decode(deserializer);
-        let mut var_payerAmountSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_amount = <Option<crate::model::ReceiveAmount>>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_minPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_maxPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_swapperFeerate = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
             payment_method: var_paymentMethod,
-            payer_amount_sat: var_payerAmountSat,
+            amount: var_amount,
             fees_sat: var_feesSat,
             min_payer_amount_sat: var_minPayerAmountSat,
             max_payer_amount_sat: var_maxPayerAmountSat,
@@ -4137,6 +4184,32 @@ impl SseDecode for crate::bindings::Rate {
             coin: var_coin,
             value: var_value,
         };
+    }
+}
+
+impl SseDecode for crate::model::ReceiveAmount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
+                return crate::model::ReceiveAmount::Bitcoin {
+                    payer_amount_sat: var_payerAmountSat,
+                };
+            }
+            1 => {
+                let mut var_assetId = <String>::sse_decode(deserializer);
+                let mut var_payerAmount = <Option<u64>>::sse_decode(deserializer);
+                return crate::model::ReceiveAmount::Asset {
+                    asset_id: var_assetId,
+                    payer_amount: var_payerAmount,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -4557,12 +4630,14 @@ impl SseDecode for crate::model::WalletInfo {
         let mut var_pendingReceiveSat = <u64>::sse_decode(deserializer);
         let mut var_fingerprint = <String>::sse_decode(deserializer);
         let mut var_pubkey = <String>::sse_decode(deserializer);
+        let mut var_assetBalances = <Vec<crate::model::AssetBalance>>::sse_decode(deserializer);
         return crate::model::WalletInfo {
             balance_sat: var_balanceSat,
             pending_send_sat: var_pendingSendSat,
             pending_receive_sat: var_pendingReceiveSat,
             fingerprint: var_fingerprint,
             pubkey: var_pubkey,
+            asset_balances: var_assetBalances,
         };
     }
 }
@@ -4727,6 +4802,22 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Amount>>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::Amount> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::AssetBalance {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.asset_id.into_into_dart().into_dart(),
+            self.balance.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::AssetBalance {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::AssetBalance> for crate::model::AssetBalance {
+    fn into_into_dart(self) -> crate::model::AssetBalance {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -5221,9 +5312,15 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::LiquidNetwork>
 impl flutter_rust_bridge::IntoDart for crate::model::ListPaymentDetails {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::model::ListPaymentDetails::Liquid { destination } => {
-                [0.into_dart(), destination.into_into_dart().into_dart()].into_dart()
-            }
+            crate::model::ListPaymentDetails::Liquid {
+                asset_id,
+                destination,
+            } => [
+                0.into_dart(),
+                asset_id.into_into_dart().into_dart(),
+                destination.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::model::ListPaymentDetails::Bitcoin { address } => {
                 [1.into_dart(), address.into_into_dart().into_dart()].into_dart()
             }
@@ -5889,10 +5986,23 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::OnchainPaymentLimitsRespons
 impl flutter_rust_bridge::IntoDart for crate::model::PayAmount {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::model::PayAmount::Receiver { amount_sat } => {
-                [0.into_dart(), amount_sat.into_into_dart().into_dart()].into_dart()
-            }
-            crate::model::PayAmount::Drain => [1.into_dart()].into_dart(),
+            crate::model::PayAmount::Bitcoin {
+                receiver_amount_sat,
+            } => [
+                0.into_dart(),
+                receiver_amount_sat.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::model::PayAmount::Asset {
+                asset_id,
+                receiver_amount,
+            } => [
+                1.into_dart(),
+                asset_id.into_into_dart().into_dart(),
+                receiver_amount.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::model::PayAmount::Drain => [2.into_dart()].into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -5984,10 +6094,12 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Liquid {
                 destination,
                 description,
+                asset_id,
             } => [
                 1.into_dart(),
                 destination.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
+                asset_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::model::PaymentDetails::Bitcoin {
@@ -6279,8 +6391,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PreparePayOnchainResponse>
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.payer_amount_sat.into_into_dart().into_dart(),
             self.payment_method.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6301,7 +6413,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.payment_method.into_into_dart().into_dart(),
-            self.payer_amount_sat.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.min_payer_amount_sat.into_into_dart().into_dart(),
             self.max_payer_amount_sat.into_into_dart().into_dart(),
@@ -6426,6 +6538,36 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Rate>>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::Rate> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ReceiveAmount {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::ReceiveAmount::Bitcoin { payer_amount_sat } => {
+                [0.into_dart(), payer_amount_sat.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::ReceiveAmount::Asset {
+                asset_id,
+                payer_amount,
+            } => [
+                1.into_dart(),
+                asset_id.into_into_dart().into_dart(),
+                payer_amount.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::ReceiveAmount {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceiveAmount>
+    for crate::model::ReceiveAmount
+{
+    fn into_into_dart(self) -> crate::model::ReceiveAmount {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -6881,6 +7023,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::WalletInfo {
             self.pending_receive_sat.into_into_dart().into_dart(),
             self.fingerprint.into_into_dart().into_dart(),
             self.pubkey.into_into_dart().into_dart(),
+            self.asset_balances.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7005,6 +7148,14 @@ impl SseEncode for crate::bindings::Amount {
                 unimplemented!("");
             }
         }
+    }
+}
+
+impl SseEncode for crate::model::AssetBalance {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.asset_id, serializer);
+        <u64>::sse_encode(self.balance, serializer);
     }
 }
 
@@ -7315,6 +7466,16 @@ impl SseEncode for Vec<String> {
     }
 }
 
+impl SseEncode for Vec<crate::model::AssetBalance> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::AssetBalance>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::bindings::ExternalInputParser> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7379,13 +7540,17 @@ impl SseEncode for crate::model::ListPaymentDetails {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::model::ListPaymentDetails::Liquid { destination } => {
+            crate::model::ListPaymentDetails::Liquid {
+                asset_id,
+                destination,
+            } => {
                 <i32>::sse_encode(0, serializer);
-                <String>::sse_encode(destination, serializer);
+                <Option<String>>::sse_encode(asset_id, serializer);
+                <Option<String>>::sse_encode(destination, serializer);
             }
             crate::model::ListPaymentDetails::Bitcoin { address } => {
                 <i32>::sse_encode(1, serializer);
-                <String>::sse_encode(address, serializer);
+                <Option<String>>::sse_encode(address, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -7953,6 +8118,16 @@ impl SseEncode for Option<crate::model::Payment> {
     }
 }
 
+impl SseEncode for Option<crate::model::ReceiveAmount> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::model::ReceiveAmount>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::bindings::SuccessAction> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -8037,12 +8212,22 @@ impl SseEncode for crate::model::PayAmount {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::model::PayAmount::Receiver { amount_sat } => {
+            crate::model::PayAmount::Bitcoin {
+                receiver_amount_sat,
+            } => {
                 <i32>::sse_encode(0, serializer);
-                <u64>::sse_encode(amount_sat, serializer);
+                <u64>::sse_encode(receiver_amount_sat, serializer);
+            }
+            crate::model::PayAmount::Asset {
+                asset_id,
+                receiver_amount,
+            } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(asset_id, serializer);
+                <u64>::sse_encode(receiver_amount, serializer);
             }
             crate::model::PayAmount::Drain => {
-                <i32>::sse_encode(1, serializer);
+                <i32>::sse_encode(2, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -8108,10 +8293,12 @@ impl SseEncode for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Liquid {
                 destination,
                 description,
+                asset_id,
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(destination, serializer);
                 <String>::sse_encode(description, serializer);
+                <String>::sse_encode(asset_id, serializer);
             }
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
@@ -8336,8 +8523,8 @@ impl SseEncode for crate::model::PreparePayOnchainResponse {
 impl SseEncode for crate::model::PrepareReceiveRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Option<u64>>::sse_encode(self.payer_amount_sat, serializer);
         <crate::model::PaymentMethod>::sse_encode(self.payment_method, serializer);
+        <Option<crate::model::ReceiveAmount>>::sse_encode(self.amount, serializer);
     }
 }
 
@@ -8345,7 +8532,7 @@ impl SseEncode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::PaymentMethod>::sse_encode(self.payment_method, serializer);
-        <Option<u64>>::sse_encode(self.payer_amount_sat, serializer);
+        <Option<crate::model::ReceiveAmount>>::sse_encode(self.amount, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
         <Option<u64>>::sse_encode(self.min_payer_amount_sat, serializer);
         <Option<u64>>::sse_encode(self.max_payer_amount_sat, serializer);
@@ -8392,6 +8579,29 @@ impl SseEncode for crate::bindings::Rate {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.coin, serializer);
         <f64>::sse_encode(self.value, serializer);
+    }
+}
+
+impl SseEncode for crate::model::ReceiveAmount {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::ReceiveAmount::Bitcoin { payer_amount_sat } => {
+                <i32>::sse_encode(0, serializer);
+                <u64>::sse_encode(payer_amount_sat, serializer);
+            }
+            crate::model::ReceiveAmount::Asset {
+                asset_id,
+                payer_amount,
+            } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(asset_id, serializer);
+                <Option<u64>>::sse_encode(payer_amount, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -8717,6 +8927,7 @@ impl SseEncode for crate::model::WalletInfo {
         <u64>::sse_encode(self.pending_receive_sat, serializer);
         <String>::sse_encode(self.fingerprint, serializer);
         <String>::sse_encode(self.pubkey, serializer);
+        <Vec<crate::model::AssetBalance>>::sse_encode(self.asset_balances, serializer);
     }
 }
 
@@ -8879,6 +9090,15 @@ mod io {
                     }
                 }
                 _ => unreachable!(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::AssetBalance> for wire_cst_asset_balance {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AssetBalance {
+            crate::model::AssetBalance {
+                asset_id: self.asset_id.cst_decode(),
+                balance: self.balance.cst_decode(),
             }
         }
     }
@@ -9222,6 +9442,13 @@ mod io {
             CstDecode::<crate::model::PrepareSendRequest>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::ReceiveAmount> for *mut wire_cst_receive_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::ReceiveAmount {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::ReceiveAmount>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::model::ReceivePaymentRequest> for *mut wire_cst_receive_payment_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::ReceivePaymentRequest {
@@ -9556,6 +9783,16 @@ mod io {
             vec.into_iter().map(CstDecode::cst_decode).collect()
         }
     }
+    impl CstDecode<Vec<crate::model::AssetBalance>> for *mut wire_cst_list_asset_balance {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<crate::model::AssetBalance> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
     impl CstDecode<Vec<crate::bindings::ExternalInputParser>>
         for *mut wire_cst_list_external_input_parser
     {
@@ -9627,6 +9864,7 @@ mod io {
                 0 => {
                     let ans = unsafe { self.kind.Liquid };
                     crate::model::ListPaymentDetails::Liquid {
+                        asset_id: ans.asset_id.cst_decode(),
                         destination: ans.destination.cst_decode(),
                     }
                 }
@@ -10145,12 +10383,19 @@ mod io {
         fn cst_decode(self) -> crate::model::PayAmount {
             match self.tag {
                 0 => {
-                    let ans = unsafe { self.kind.Receiver };
-                    crate::model::PayAmount::Receiver {
-                        amount_sat: ans.amount_sat.cst_decode(),
+                    let ans = unsafe { self.kind.Bitcoin };
+                    crate::model::PayAmount::Bitcoin {
+                        receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
                     }
                 }
-                1 => crate::model::PayAmount::Drain,
+                1 => {
+                    let ans = unsafe { self.kind.Asset };
+                    crate::model::PayAmount::Asset {
+                        asset_id: ans.asset_id.cst_decode(),
+                        receiver_amount: ans.receiver_amount.cst_decode(),
+                    }
+                }
+                2 => crate::model::PayAmount::Drain,
                 _ => unreachable!(),
             }
         }
@@ -10208,6 +10453,7 @@ mod io {
                     crate::model::PaymentDetails::Liquid {
                         destination: ans.destination.cst_decode(),
                         description: ans.description.cst_decode(),
+                        asset_id: ans.asset_id.cst_decode(),
                     }
                 }
                 2 => {
@@ -10375,8 +10621,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PrepareReceiveRequest {
             crate::model::PrepareReceiveRequest {
-                payer_amount_sat: self.payer_amount_sat.cst_decode(),
                 payment_method: self.payment_method.cst_decode(),
+                amount: self.amount.cst_decode(),
             }
         }
     }
@@ -10385,7 +10631,7 @@ mod io {
         fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
             crate::model::PrepareReceiveResponse {
                 payment_method: self.payment_method.cst_decode(),
-                payer_amount_sat: self.payer_amount_sat.cst_decode(),
+                amount: self.amount.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
                 max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
@@ -10437,6 +10683,27 @@ mod io {
             crate::bindings::Rate {
                 coin: self.coin.cst_decode(),
                 value: self.value.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::ReceiveAmount> for wire_cst_receive_amount {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::ReceiveAmount {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Bitcoin };
+                    crate::model::ReceiveAmount::Bitcoin {
+                        payer_amount_sat: ans.payer_amount_sat.cst_decode(),
+                    }
+                }
+                1 => {
+                    let ans = unsafe { self.kind.Asset };
+                    crate::model::ReceiveAmount::Asset {
+                        asset_id: ans.asset_id.cst_decode(),
+                        payer_amount: ans.payer_amount.cst_decode(),
+                    }
+                }
+                _ => unreachable!(),
             }
         }
     }
@@ -10749,6 +11016,7 @@ mod io {
                 pending_receive_sat: self.pending_receive_sat.cst_decode(),
                 fingerprint: self.fingerprint.cst_decode(),
                 pubkey: self.pubkey.cst_decode(),
+                asset_balances: self.asset_balances.cst_decode(),
             }
         }
     }
@@ -10813,6 +11081,19 @@ mod io {
         }
     }
     impl Default for wire_cst_amount {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_asset_balance {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                asset_id: core::ptr::null_mut(),
+                balance: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_asset_balance {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -11637,8 +11918,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_prepare_receive_request {
         fn new_with_null_ptr() -> Self {
             Self {
-                payer_amount_sat: core::ptr::null_mut(),
                 payment_method: Default::default(),
+                amount: core::ptr::null_mut(),
             }
         }
     }
@@ -11651,7 +11932,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 payment_method: Default::default(),
-                payer_amount_sat: core::ptr::null_mut(),
+                amount: core::ptr::null_mut(),
                 fees_sat: Default::default(),
                 min_payer_amount_sat: core::ptr::null_mut(),
                 max_payer_amount_sat: core::ptr::null_mut(),
@@ -11727,6 +12008,19 @@ mod io {
         }
     }
     impl Default for wire_cst_rate {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_receive_amount {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: ReceiveAmountKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_receive_amount {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -12006,6 +12300,7 @@ mod io {
                 pending_receive_sat: Default::default(),
                 fingerprint: core::ptr::null_mut(),
                 pubkey: core::ptr::null_mut(),
+                asset_balances: core::ptr::null_mut(),
             }
         }
     }
@@ -12700,6 +12995,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_receive_amount(
+    ) -> *mut wire_cst_receive_amount {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_receive_amount::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_receive_payment_request(
     ) -> *mut wire_cst_receive_payment_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -12791,6 +13094,20 @@ mod io {
         let wrap = wire_cst_list_String {
             ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
                 <*mut wire_cst_list_prim_u_8_strict>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_asset_balance(
+        len: i32,
+    ) -> *mut wire_cst_list_asset_balance {
+        let wrap = wire_cst_list_asset_balance {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <wire_cst_asset_balance>::new_with_null_ptr(),
                 len,
             ),
             len,
@@ -13036,6 +13353,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_asset_balance {
+        asset_id: *mut wire_cst_list_prim_u_8_strict,
+        balance: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_backup_request {
         backup_path: *mut wire_cst_list_prim_u_8_strict,
     }
@@ -13263,6 +13586,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_list_asset_balance {
+        ptr: *mut wire_cst_asset_balance,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_list_external_input_parser {
         ptr: *mut wire_cst_external_input_parser,
         len: i32,
@@ -13313,6 +13642,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_ListPaymentDetails_Liquid {
+        asset_id: *mut wire_cst_list_prim_u_8_strict,
         destination: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
@@ -13749,13 +14079,20 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub union PayAmountKind {
-        Receiver: wire_cst_PayAmount_Receiver,
+        Bitcoin: wire_cst_PayAmount_Bitcoin,
+        Asset: wire_cst_PayAmount_Asset,
         nil__: (),
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_PayAmount_Receiver {
-        amount_sat: u64,
+    pub struct wire_cst_PayAmount_Bitcoin {
+        receiver_amount_sat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PayAmount_Asset {
+        asset_id: *mut wire_cst_list_prim_u_8_strict,
+        receiver_amount: u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13811,6 +14148,7 @@ mod io {
     pub struct wire_cst_PaymentDetails_Liquid {
         destination: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
+        asset_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13941,14 +14279,14 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_receive_request {
-        payer_amount_sat: *mut u64,
         payment_method: i32,
+        amount: *mut wire_cst_receive_amount,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_receive_response {
         payment_method: i32,
-        payer_amount_sat: *mut u64,
+        amount: *mut wire_cst_receive_amount,
         fees_sat: u64,
         min_payer_amount_sat: *mut u64,
         max_payer_amount_sat: *mut u64,
@@ -13985,6 +14323,30 @@ mod io {
     pub struct wire_cst_rate {
         coin: *mut wire_cst_list_prim_u_8_strict,
         value: f64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_receive_amount {
+        tag: i32,
+        kind: ReceiveAmountKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union ReceiveAmountKind {
+        Bitcoin: wire_cst_ReceiveAmount_Bitcoin,
+        Asset: wire_cst_ReceiveAmount_Asset,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_ReceiveAmount_Bitcoin {
+        payer_amount_sat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_ReceiveAmount_Asset {
+        asset_id: *mut wire_cst_list_prim_u_8_strict,
+        payer_amount: *mut u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14261,6 +14623,7 @@ mod io {
         pending_receive_sat: u64,
         fingerprint: *mut wire_cst_list_prim_u_8_strict,
         pubkey: *mut wire_cst_list_prim_u_8_strict,
+        asset_balances: *mut wire_cst_list_asset_balance,
     }
 }
 #[cfg(not(target_family = "wasm"))]

@@ -12,7 +12,7 @@ use sdk_common::{
 };
 
 use crate::{
-    model::{PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
+    model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
     test_utils::generate_random_string,
     utils,
 };
@@ -161,11 +161,15 @@ macro_rules! create_persister {
 }
 pub(crate) use create_persister;
 
-pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
+pub(crate) fn new_payment_tx_data(
+    network: LiquidNetwork,
+    payment_type: PaymentType,
+) -> PaymentTxData {
     PaymentTxData {
         tx_id: generate_random_string(4),
         timestamp: None,
-        amount_sat: 0,
+        asset_id: utils::lbtc_asset_id(network).to_string(),
+        amount: 0,
         fees_sat: 0,
         payment_type,
         is_confirmed: false,

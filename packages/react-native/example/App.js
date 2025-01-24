@@ -18,6 +18,7 @@ import {
     removeEventListener,
     prepareReceivePayment,
     prepareSendPayment,
+    ReceiveAmountVariant,
     receivePayment,
     sendPayment,
     PaymentMethod
@@ -84,8 +85,8 @@ const App = () => {
                 addLine("addEventListener", listenerId)
 
                 /* Receive lightning payment */
-
-                let prepareReceiveRes = await prepareReceivePayment({ payerAmountSat: 1000, paymentMethod: PaymentMethod.LIGHTNING })
+                let amount = { type: ReceiveAmountVariant.BITCOIN, payerAmountSat: 1000 }
+                let prepareReceiveRes = await prepareReceivePayment({ amount, paymentMethod: PaymentMethod.LIGHTNING })
                 addLine("prepareReceivePayment", JSON.stringify(prepareReceiveRes))
                 // Get the fees required for this payment
                 addLine("Payment fees", `${prepareReceiveRes.feesSat}`)

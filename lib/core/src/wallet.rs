@@ -10,7 +10,7 @@ use boltz_client::ElementsAddress;
 use log::{debug, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
-use lwk_wollet::elements::Txid;
+use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
@@ -46,6 +46,7 @@ pub trait OnchainWallet: Send + Sync {
         &self,
         fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
+        asset_id: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
 
@@ -70,6 +71,7 @@ pub trait OnchainWallet: Send + Sync {
         &self,
         fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
+        asset_id: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
 
@@ -203,23 +205,26 @@ impl OnchainWallet for LiquidOnchainWallet {
         &self,
         fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
+        asset_id: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
         let lwk_wollet = self.wallet.lock().await;
-        let mut pset = lwk_wollet::TxBuilder::new(self.config.network.into())
-            .add_lbtc_recipient(
-                &ElementsAddress::from_str(recipient_address).map_err(|e| {
-                    PaymentError::Generic {
-                        err: format!(
-                      "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
-                  ),
-                    }
-                })?,
-                amount_sat,
-            )?
+        let address =
+            ElementsAddress::from_str(recipient_address).map_err(|e| PaymentError::Generic {
+                err: format!(
+                    "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
+                ),
+            })?;
+        let mut tx_builder = lwk_wollet::TxBuilder::new(self.config.network.into())
             .fee_rate(fee_rate_sats_per_kvb)
-            .enable_ct_discount()
-            .finish(&lwk_wollet)?;
+            .enable_ct_discount();
+        if asset_id.eq(&self.config.lbtc_asset_id()) {
+            tx_builder = tx_builder.add_lbtc_recipient(&address, amount_sat)?;
+        } else {
+            let asset = AssetId::from_str(asset_id)?;
+            tx_builder = tx_builder.add_recipient(&address, amount_sat, asset)?;
+        }
+        let mut pset = tx_builder.finish(&lwk_wollet)?;
         self.signer
             .sign(&mut pset)
             .map_err(|e| PaymentError::Generic {
@@ -279,14 +284,20 @@ impl OnchainWallet for LiquidOnchainWallet {
         &self,
         fee_rate_sats_per_kvb: Option<f32>,
         recipient_address: &str,
+        asset_id: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
         match self
-            .build_tx(fee_rate_sats_per_kvb, recipient_address, amount_sat)
+            .build_tx(
+                fee_rate_sats_per_kvb,
+                recipient_address,
+                asset_id,
+                amount_sat,
+            )
             .await
         {
             Ok(tx) => Ok(tx),
-            Err(PaymentError::InsufficientFunds) => {
+            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
                 self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
                     .await

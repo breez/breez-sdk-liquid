@@ -136,6 +136,10 @@ impl Config {
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
 
+    pub(crate) fn lbtc_asset_id(&self) -> String {
+        utils::lbtc_asset_id(self.network).to_string()
+    }
+
     pub(crate) fn get_all_external_input_parsers(&self) -> Vec<ExternalInputParser> {
         let mut external_input_parsers = Vec::new();
         if self.use_default_external_input_parsers {
@@ -337,18 +341,32 @@ pub enum PaymentMethod {
     LiquidAddress,
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub enum ReceiveAmount {
+    /// The amount in satoshi that should be paid
+    Bitcoin { payer_amount_sat: u64 },
+
+    /// The amount of an asset that should be paid
+    Asset {
+        asset_id: String,
+        payer_amount: Option<u64>,
+    },
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveRequest {
-    pub payer_amount_sat: Option<u64>,
     pub payment_method: PaymentMethod,
+
+    /// The amount to be paid in either Bitcoin or another asset
+    pub amount: Option<ReceiveAmount>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
-    pub payer_amount_sat: Option<u64>,
+    pub amount: Option<ReceiveAmount>,
 
     /// Generally represents the total fees that would be paid to send or receive this payment.
     ///
@@ -469,8 +487,15 @@ pub struct SendPaymentResponse {
 #[derive(Debug, Serialize, Clone)]
 pub enum PayAmount {
     /// The amount in satoshi that will be received
-    Receiver { amount_sat: u64 },
-    /// Indicates that all available funds should be sent
+    Bitcoin { receiver_amount_sat: u64 },
+
+    /// The amount of an asset that will be received
+    Asset {
+        asset_id: String,
+        receiver_amount: u64,
+    },
+
+    /// Indicates that all available Bitcoin funds should be sent
     Drain,
 }
 
@@ -534,6 +559,13 @@ pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
+/// An asset balance to denote the balance for each asset.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AssetBalance {
+    pub asset_id: String,
+    pub balance: u64,
+}
+
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct BlockchainInfo {
     pub liquid_tip: u32,
@@ -552,6 +584,39 @@ pub struct WalletInfo {
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
+    /// Asset balances of non Liquid Bitcoin assets
+    #[serde(default)]
+    pub asset_balances: Vec<AssetBalance>,
+}
+
+impl WalletInfo {
+    pub(crate) fn validate_sufficient_funds(
+        &self,
+        network: LiquidNetwork,
+        amount_sat: u64,
+        fees_sat: u64,
+        asset_id: &str,
+    ) -> Result<(), PaymentError> {
+        if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
+            ensure_sdk!(
+                amount_sat + fees_sat <= self.balance_sat,
+                PaymentError::InsufficientFunds
+            );
+        } else {
+            match self
+                .asset_balances
+                .iter()
+                .find(|ab| ab.asset_id.eq(asset_id))
+            {
+                Some(asset_balance) => ensure_sdk!(
+                    amount_sat <= asset_balance.balance && fees_sat <= self.balance_sat,
+                    PaymentError::InsufficientFunds
+                ),
+                None => return Err(PaymentError::InsufficientFunds),
+            }
+        }
+        Ok(())
+    }
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
@@ -629,11 +694,19 @@ pub struct ListPaymentsRequest {
 /// An argument of [ListPaymentsRequest] when calling [crate::sdk::LiquidSdk::list_payments].
 #[derive(Debug, Serialize)]
 pub enum ListPaymentDetails {
-    /// The Liquid BIP21 URI or address of the payment
-    Liquid { destination: String },
+    /// A Liquid payment
+    Liquid {
+        /// Optional asset id
+        asset_id: Option<String>,
+        /// Optional BIP21 URI or address
+        destination: Option<String>,
+    },
 
-    /// The Bitcoin address of the payment
-    Bitcoin { address: String },
+    /// A Bitcoin payment
+    Bitcoin {
+        /// Optional address
+        address: Option<String>,
+    },
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::get_payment].
@@ -1307,10 +1380,13 @@ pub struct PaymentTxData {
     /// The point in time when the underlying tx was included in a block.
     pub timestamp: Option<u32>,
 
+    /// The asset id
+    pub asset_id: String,
+
     /// The onchain tx amount.
     ///
     /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
-    pub amount_sat: u64,
+    pub amount: u64,
 
     /// The onchain fees of this tx
     pub fees_sat: u64,
@@ -1430,6 +1506,9 @@ pub enum PaymentDetails {
 
         /// Represents the BIP21 `message` field
         description: String,
+
+        /// The asset id
+        asset_id: String,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {
@@ -1480,6 +1559,15 @@ impl PaymentDetails {
                 ..
             } => *refund_tx_amount_sat,
             Self::Liquid { .. } => None,
+        }
+    }
+
+    pub(crate) fn is_lbtc_asset_id(&self, network: LiquidNetwork) -> bool {
+        match self {
+            Self::Liquid { asset_id, .. } => {
+                asset_id.eq(&utils::lbtc_asset_id(network).to_string())
+            }
+            _ => true,
         }
     }
 }
@@ -1608,13 +1696,13 @@ impl Payment {
                 .timestamp
                 .or(swap.as_ref().map(|s| s.created_at))
                 .unwrap_or(utils::now()),
-            amount_sat: tx.amount_sat,
+            amount_sat: tx.amount,
             fees_sat: match swap.as_ref() {
                 Some(s) => match tx.payment_type {
                     // For receive swaps, to avoid some edge case issues related to potential past
                     //  overpayments, we use the actual claim value as the final received amount
                     //  for fee calculation.
-                    PaymentType::Receive => s.payer_amount_sat.saturating_sub(tx.amount_sat),
+                    PaymentType::Receive => s.payer_amount_sat.saturating_sub(tx.amount),
                     PaymentType::Send => s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
                 },
                 None => match tx.payment_type {

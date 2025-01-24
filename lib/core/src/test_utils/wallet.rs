@@ -55,6 +55,7 @@ impl OnchainWallet for MockWallet {
         &self,
         _fee_rate: Option<f32>,
         _recipient_address: &str,
+        _asset_id: &str,
         _amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
         Ok(TEST_LIQUID_TX.clone())
@@ -73,6 +74,7 @@ impl OnchainWallet for MockWallet {
         &self,
         _fee_rate_sats_per_kvb: Option<f32>,
         _recipient_address: &str,
+        _asset_id: &str,
         _amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
         Ok(TEST_LIQUID_TX.clone())

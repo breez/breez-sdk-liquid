@@ -333,7 +333,8 @@ impl ReceiveSwapHandler {
                             PaymentTxData {
                                 tx_id: claim_tx_id.clone(),
                                 timestamp: Some(utils::now()),
-                                amount_sat: swap.receiver_amount_sat,
+                                asset_id: self.config.lbtc_asset_id(),
+                                amount: swap.receiver_amount_sat,
                                 fees_sat: 0,
                                 payment_type: PaymentType::Receive,
                                 is_confirmed: false,

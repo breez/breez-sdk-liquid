@@ -1,4 +1,9 @@
-pub(crate) fn current_migrations() -> Vec<&'static str> {
+pub(crate) fn current_migrations(is_mainnet: bool) -> Vec<&'static str> {
+    let alter_payment_tx_data_add_asset_id = if is_mainnet {
+        "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d';"
+    } else {
+        "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49';"
+    };
     vec![
         "CREATE TABLE IF NOT EXISTS receive_swaps (
             id TEXT NOT NULL PRIMARY KEY,
@@ -249,5 +254,10 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE send_swaps ADD COLUMN destination_pubkey TEXT;
         ",
         "ALTER TABLE chain_swaps ADD COLUMN auto_accepted_fees INTEGER NOT NULL DEFAULT 0;",
+        alter_payment_tx_data_add_asset_id,
+        "
+        ALTER TABLE payment_tx_data RENAME COLUMN amount_sat TO amount;
+        UPDATE payment_tx_data SET amount = amount - fees_sat WHERE payment_type = 1;
+        ",
     ]
 }

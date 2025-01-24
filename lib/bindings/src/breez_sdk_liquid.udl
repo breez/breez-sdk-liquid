@@ -355,6 +355,11 @@ dictionary ConnectWithSignerRequest {
   Config config;  
 };
 
+dictionary AssetBalance {
+    string asset_id;
+    u64 balance;
+};
+
 dictionary BlockchainInfo {
     u32 liquid_tip;
     u32 bitcoin_tip;
@@ -366,6 +371,7 @@ dictionary WalletInfo {
     u64 pending_receive_sat;
     string fingerprint;
     string pubkey;
+    sequence<AssetBalance> asset_balances;
 };
 
 dictionary GetInfoResponse {
@@ -441,15 +447,21 @@ enum PaymentMethod {
     "LiquidAddress",
 };
 
+[Enum]
+interface ReceiveAmount {
+    Bitcoin(u64 payer_amount_sat);
+    Asset(string asset_id, u64? payer_amount);
+};
+
 dictionary PrepareReceiveRequest {
     PaymentMethod payment_method;
-    u64? payer_amount_sat = null;
+    ReceiveAmount? amount = null;
 };
 
 dictionary PrepareReceiveResponse {
     PaymentMethod payment_method;
     u64 fees_sat;
-    u64? payer_amount_sat;
+    ReceiveAmount? amount;
     u64? min_payer_amount_sat;
     u64? max_payer_amount_sat;
     f64? swapper_feerate;
@@ -483,7 +495,8 @@ dictionary OnchainPaymentLimitsResponse {
 
 [Enum]
 interface PayAmount {
-    Receiver(u64 amount_sat);
+    Bitcoin(u64 receiver_amount_sat);
+    Asset(string asset_id, u64 receiver_amount);
     Drain();
 };
 
@@ -544,8 +557,8 @@ dictionary ListPaymentsRequest {
 
 [Enum]
 interface ListPaymentDetails {
-    Liquid(string destination);
-    Bitcoin(string address);
+    Liquid(string? asset_id, string? destination);
+    Bitcoin(string? address);
 };
 
 [Enum]
@@ -581,7 +594,7 @@ dictionary LnUrlInfo {
 [Enum]
 interface PaymentDetails {
     Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? refund_tx_id, u64? refund_tx_amount_sat);
-    Liquid(string destination, string description);
+    Liquid(string asset_id, string destination, string description);
     Bitcoin(string swap_id, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 

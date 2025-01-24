@@ -538,9 +538,9 @@ impl ChainSwapHandler {
                         self.persister.insert_or_update_payment(PaymentTxData {
                             tx_id: lockup_tx_id.clone(),
                             timestamp: Some(utils::now()),
-                            amount_sat: swap.receiver_amount_sat,
-                            // This should be: boltz fee + lockup fee + claim fee
-                            fees_sat: lockup_tx_fees_sat + swap.claim_fees_sat,
+                            asset_id: self.config.lbtc_asset_id().to_string(),
+                            amount: create_response.lockup_details.amount,
+                            fees_sat: lockup_tx_fees_sat,
                             payment_type: PaymentType::Send,
                             is_confirmed: false,
                             unblinding_data: None,
@@ -753,6 +753,7 @@ impl ChainSwapHandler {
             .build_tx_or_drain_tx(
                 Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
                 &lockup_details.lockup_address,
+                &self.config.lbtc_asset_id().to_string(),
                 lockup_details.amount,
             )
             .await?;
@@ -877,7 +878,8 @@ impl ChainSwapHandler {
                                     PaymentTxData {
                                         tx_id: claim_tx_id.clone(),
                                         timestamp: Some(utils::now()),
-                                        amount_sat: swap.receiver_amount_sat,
+                                        asset_id: self.config.lbtc_asset_id().to_string(),
+                                        amount: swap.receiver_amount_sat,
                                         fees_sat: 0,
                                         payment_type: PaymentType::Receive,
                                         is_confirmed: false,
