@@ -142,6 +142,7 @@ typedef struct wire_cst_liquid_address_data {
   struct wire_cst_list_prim_u_8_strict *address;
   int32_t network;
   struct wire_cst_list_prim_u_8_strict *asset_id;
+  double *amount;
   uint64_t *amount_sat;
   struct wire_cst_list_prim_u_8_strict *label;
   struct wire_cst_list_prim_u_8_strict *message;
@@ -360,7 +361,7 @@ typedef struct wire_cst_PayAmount_Bitcoin {
 
 typedef struct wire_cst_PayAmount_Asset {
   struct wire_cst_list_prim_u_8_strict *asset_id;
-  uint64_t receiver_amount;
+  double receiver_amount;
 } wire_cst_PayAmount_Asset;
 
 typedef union PayAmountKind {
@@ -384,7 +385,7 @@ typedef struct wire_cst_ReceiveAmount_Bitcoin {
 
 typedef struct wire_cst_ReceiveAmount_Asset {
   struct wire_cst_list_prim_u_8_strict *asset_id;
-  uint64_t *payer_amount;
+  double *payer_amount;
 } wire_cst_ReceiveAmount_Asset;
 
 typedef union ReceiveAmountKind {
@@ -525,10 +526,17 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   uint64_t *refund_tx_amount_sat;
 } wire_cst_PaymentDetails_Lightning;
 
+typedef struct wire_cst_asset_info {
+  struct wire_cst_list_prim_u_8_strict *name;
+  struct wire_cst_list_prim_u_8_strict *ticker;
+  double amount;
+} wire_cst_asset_info;
+
 typedef struct wire_cst_PaymentDetails_Liquid {
   struct wire_cst_list_prim_u_8_strict *destination;
   struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *asset_id;
+  struct wire_cst_asset_info *asset_info;
 } wire_cst_PaymentDetails_Liquid;
 
 typedef struct wire_cst_PaymentDetails_Bitcoin {
@@ -624,6 +632,18 @@ typedef struct wire_cst_list_external_input_parser {
   int32_t len;
 } wire_cst_list_external_input_parser;
 
+typedef struct wire_cst_asset_metadata {
+  struct wire_cst_list_prim_u_8_strict *asset_id;
+  struct wire_cst_list_prim_u_8_strict *name;
+  struct wire_cst_list_prim_u_8_strict *ticker;
+  uint8_t precision;
+} wire_cst_asset_metadata;
+
+typedef struct wire_cst_list_asset_metadata {
+  struct wire_cst_asset_metadata *ptr;
+  int32_t len;
+} wire_cst_list_asset_metadata;
+
 typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *liquid_electrum_url;
   struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
@@ -639,6 +659,7 @@ typedef struct wire_cst_config {
   struct wire_cst_list_external_input_parser *external_input_parsers;
   bool use_default_external_input_parsers;
   uint32_t *onchain_fee_rate_leeway_sat_per_vbyte;
+  struct wire_cst_list_asset_metadata *asset_metadata;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {
@@ -681,7 +702,10 @@ typedef struct wire_cst_symbol {
 
 typedef struct wire_cst_asset_balance {
   struct wire_cst_list_prim_u_8_strict *asset_id;
-  uint64_t balance;
+  uint64_t balance_sat;
+  struct wire_cst_list_prim_u_8_strict *name;
+  struct wire_cst_list_prim_u_8_strict *ticker;
+  double *balance;
 } wire_cst_asset_balance;
 
 typedef struct wire_cst_list_asset_balance {
@@ -1046,6 +1070,10 @@ typedef struct wire_cst_PaymentError_AmountMissing {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_AmountMissing;
 
+typedef struct wire_cst_PaymentError_AssetError {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_PaymentError_AssetError;
+
 typedef struct wire_cst_PaymentError_InvalidNetwork {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_InvalidNetwork;
@@ -1085,6 +1113,7 @@ typedef struct wire_cst_PaymentError_SignerError {
 
 typedef union PaymentErrorKind {
   struct wire_cst_PaymentError_AmountMissing AmountMissing;
+  struct wire_cst_PaymentError_AssetError AssetError;
   struct wire_cst_PaymentError_InvalidNetwork InvalidNetwork;
   struct wire_cst_PaymentError_Generic Generic;
   struct wire_cst_PaymentError_InvalidDescription InvalidDescription;
@@ -1309,6 +1338,8 @@ struct wire_cst_aes_success_action_data_result *frbgen_breez_liquid_cst_new_box_
 
 struct wire_cst_amount *frbgen_breez_liquid_cst_new_box_autoadd_amount(void);
 
+struct wire_cst_asset_info *frbgen_breez_liquid_cst_new_box_autoadd_asset_info(void);
+
 struct wire_cst_backup_request *frbgen_breez_liquid_cst_new_box_autoadd_backup_request(void);
 
 struct wire_cst_binding_event_listener *frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener(void);
@@ -1411,6 +1442,8 @@ struct wire_cst_list_String *frbgen_breez_liquid_cst_new_list_String(int32_t len
 
 struct wire_cst_list_asset_balance *frbgen_breez_liquid_cst_new_list_asset_balance(int32_t len);
 
+struct wire_cst_list_asset_metadata *frbgen_breez_liquid_cst_new_list_asset_metadata(int32_t len);
+
 struct wire_cst_list_external_input_parser *frbgen_breez_liquid_cst_new_list_external_input_parser(int32_t len);
 
 struct wire_cst_list_fiat_currency *frbgen_breez_liquid_cst_new_list_fiat_currency(int32_t len);
@@ -1443,6 +1476,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_decrypted);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_aes_success_action_data_result);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_amount);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_asset_info);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_backup_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_bitcoin_address_data);
@@ -1494,6 +1528,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_url_success_action_data);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_String);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_asset_balance);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_asset_metadata);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_external_input_parser);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_fiat_currency);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path);

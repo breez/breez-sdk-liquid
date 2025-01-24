@@ -292,6 +292,85 @@ abstract class PaymentError_AmountMissing extends PaymentError {
 }
 
 /// @nodoc
+abstract class _$$PaymentError_AssetErrorImplCopyWith<$Res> {
+  factory _$$PaymentError_AssetErrorImplCopyWith(
+          _$PaymentError_AssetErrorImpl value, $Res Function(_$PaymentError_AssetErrorImpl) then) =
+      __$$PaymentError_AssetErrorImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String err});
+}
+
+/// @nodoc
+class __$$PaymentError_AssetErrorImplCopyWithImpl<$Res>
+    extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AssetErrorImpl>
+    implements _$$PaymentError_AssetErrorImplCopyWith<$Res> {
+  __$$PaymentError_AssetErrorImplCopyWithImpl(
+      _$PaymentError_AssetErrorImpl _value, $Res Function(_$PaymentError_AssetErrorImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? err = null,
+  }) {
+    return _then(_$PaymentError_AssetErrorImpl(
+      err: null == err
+          ? _value.err
+          : err // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$PaymentError_AssetErrorImpl extends PaymentError_AssetError {
+  const _$PaymentError_AssetErrorImpl({required this.err}) : super._();
+
+  @override
+  final String err;
+
+  @override
+  String toString() {
+    return 'PaymentError.assetError(err: $err)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PaymentError_AssetErrorImpl &&
+            (identical(other.err, err) || other.err == err));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, err);
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PaymentError_AssetErrorImplCopyWith<_$PaymentError_AssetErrorImpl> get copyWith =>
+      __$$PaymentError_AssetErrorImplCopyWithImpl<_$PaymentError_AssetErrorImpl>(this, _$identity);
+}
+
+abstract class PaymentError_AssetError extends PaymentError {
+  const factory PaymentError_AssetError({required final String err}) = _$PaymentError_AssetErrorImpl;
+  const PaymentError_AssetError._() : super._();
+
+  String get err;
+
+  /// Create a copy of PaymentError
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$PaymentError_AssetErrorImplCopyWith<_$PaymentError_AssetErrorImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 abstract class _$$PaymentError_InvalidNetworkImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidNetworkImplCopyWith(
           _$PaymentError_InvalidNetworkImpl value, $Res Function(_$PaymentError_InvalidNetworkImpl) then) =

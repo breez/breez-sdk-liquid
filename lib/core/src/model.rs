@@ -72,6 +72,11 @@ pub struct Config {
     ///
     /// Defaults to zero.
     pub onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
+    /// A set of asset metadata used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input is a
+    /// [LiquidAddressData] and the [asset_id](LiquidAddressData::asset_id) differs from the Liquid Bitcoin asset.
+    /// See [AssetMetadata] for more details on how define asset metadata.
+    /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
+    pub asset_metadata: Option<Vec<AssetMetadata>>,
 }
 
 impl Config {
@@ -91,6 +96,7 @@ impl Config {
             external_input_parsers: None,
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
         }
     }
 
@@ -110,6 +116,7 @@ impl Config {
             external_input_parsers: None,
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
         }
     }
 
@@ -349,7 +356,7 @@ pub enum ReceiveAmount {
     /// The amount of an asset that should be paid
     Asset {
         asset_id: String,
-        payer_amount: Option<u64>,
+        payer_amount: Option<f64>,
     },
 }
 
@@ -492,7 +499,7 @@ pub enum PayAmount {
     /// The amount of an asset that will be received
     Asset {
         asset_id: String,
-        receiver_amount: u64,
+        receiver_amount: f64,
     },
 
     /// Indicates that all available Bitcoin funds should be sent
@@ -560,10 +567,13 @@ pub struct RefundResponse {
 }
 
 /// An asset balance to denote the balance for each asset.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct AssetBalance {
     pub asset_id: String,
-    pub balance: u64,
+    pub balance_sat: u64,
+    pub name: Option<String>,
+    pub ticker: Option<String>,
+    pub balance: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -609,7 +619,7 @@ impl WalletInfo {
                 .find(|ab| ab.asset_id.eq(asset_id))
             {
                 Some(asset_balance) => ensure_sdk!(
-                    amount_sat <= asset_balance.balance && fees_sat <= self.balance_sat,
+                    amount_sat <= asset_balance.balance_sat && fees_sat <= self.balance_sat,
                     PaymentError::InsufficientFunds
                 ),
                 None => return Err(PaymentError::InsufficientFunds),
@@ -1397,7 +1407,7 @@ pub struct PaymentTxData {
     pub is_confirmed: bool,
 
     /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
-    /// See: https://docs.liquid.net/docs/unblinding-transactions
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
     pub unblinding_data: Option<String>,
 }
 
@@ -1460,6 +1470,45 @@ pub struct LnUrlInfo {
     pub lnurl_withdraw_endpoint: Option<String>,
 }
 
+/// Configuration for asset metadata. Each asset metadata item represents an entry in the
+/// [Liquid Asset Registry](https://docs.liquid.net/docs/blockstream-liquid-asset-registry).
+/// An example Liquid Asset in the registry would be [Tether USD](https://assets.blockstream.info/ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2.json>).
+#[derive(Debug, Clone, Serialize)]
+pub struct AssetMetadata {
+    /// The asset id of the registered asset
+    pub asset_id: String,
+    /// The name of the asset
+    pub name: String,
+    /// The ticker of the asset
+    pub ticker: String,
+    /// The precision used to display the asset amount.
+    /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
+    pub precision: u8,
+}
+
+impl AssetMetadata {
+    pub fn amount_to_sat(&self, amount: f64) -> u64 {
+        (amount * (10_u64.pow(self.precision.into()) as f64)) as u64
+    }
+
+    pub fn amount_from_sat(&self, amount_sat: u64) -> f64 {
+        amount_sat as f64 / (10_u64.pow(self.precision.into()) as f64)
+    }
+}
+
+/// Represents the Liquid payment asset info. The asset info is derived from
+/// the available [AssetMetadata] that is set in the [Config].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct AssetInfo {
+    /// The name of the asset
+    pub name: String,
+    /// The ticker of the asset
+    pub ticker: String,
+    /// The amount calculated from the satoshi amount of the transaction, having its
+    /// decimal shifted to the left by the [precision](AssetMetadata::precision)
+    pub amount: f64,
+}
+
 /// The specific details of a payment, depending on its type
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[allow(clippy::large_enum_variant)]
@@ -1509,6 +1558,9 @@ pub enum PaymentDetails {
 
         /// The asset id
         asset_id: String,
+
+        /// The asset info derived from the [AssetMetadata]
+        asset_info: Option<AssetInfo>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {
@@ -1584,7 +1636,7 @@ pub struct Payment {
     pub tx_id: Option<String>,
 
     /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
-    /// See: https://docs.liquid.net/docs/unblinding-transactions
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
     pub unblinding_data: Option<String>,
 
     /// Composite timestamp that can be used for sorting or displaying the payment.

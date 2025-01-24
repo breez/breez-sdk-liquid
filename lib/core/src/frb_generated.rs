@@ -1966,6 +1966,7 @@ const _: fn() = || {
         let _: String = LiquidAddressData.address;
         let _: crate::bindings::Network = LiquidAddressData.network;
         let _: Option<String> = LiquidAddressData.asset_id;
+        let _: Option<f64> = LiquidAddressData.amount;
         let _: Option<u64> = LiquidAddressData.amount_sat;
         let _: Option<String> = LiquidAddressData.label;
         let _: Option<String> = LiquidAddressData.message;
@@ -2383,10 +2384,46 @@ impl SseDecode for crate::model::AssetBalance {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_assetId = <String>::sse_decode(deserializer);
-        let mut var_balance = <u64>::sse_decode(deserializer);
+        let mut var_balanceSat = <u64>::sse_decode(deserializer);
+        let mut var_name = <Option<String>>::sse_decode(deserializer);
+        let mut var_ticker = <Option<String>>::sse_decode(deserializer);
+        let mut var_balance = <Option<f64>>::sse_decode(deserializer);
         return crate::model::AssetBalance {
             asset_id: var_assetId,
+            balance_sat: var_balanceSat,
+            name: var_name,
+            ticker: var_ticker,
             balance: var_balance,
+        };
+    }
+}
+
+impl SseDecode for crate::model::AssetInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_ticker = <String>::sse_decode(deserializer);
+        let mut var_amount = <f64>::sse_decode(deserializer);
+        return crate::model::AssetInfo {
+            name: var_name,
+            ticker: var_ticker,
+            amount: var_amount,
+        };
+    }
+}
+
+impl SseDecode for crate::model::AssetMetadata {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_assetId = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        let mut var_ticker = <String>::sse_decode(deserializer);
+        let mut var_precision = <u8>::sse_decode(deserializer);
+        return crate::model::AssetMetadata {
+            asset_id: var_assetId,
+            name: var_name,
+            ticker: var_ticker,
+            precision: var_precision,
         };
     }
 }
@@ -2515,6 +2552,8 @@ impl SseDecode for crate::model::Config {
             <Option<Vec<crate::bindings::ExternalInputParser>>>::sse_decode(deserializer);
         let mut var_useDefaultExternalInputParsers = <bool>::sse_decode(deserializer);
         let mut var_onchainFeeRateLeewaySatPerVbyte = <Option<u32>>::sse_decode(deserializer);
+        let mut var_assetMetadata =
+            <Option<Vec<crate::model::AssetMetadata>>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_electrum_url: var_liquidElectrumUrl,
             bitcoin_electrum_url: var_bitcoinElectrumUrl,
@@ -2530,6 +2569,7 @@ impl SseDecode for crate::model::Config {
             external_input_parsers: var_externalInputParsers,
             use_default_external_input_parsers: var_useDefaultExternalInputParsers,
             onchain_fee_rate_leeway_sat_per_vbyte: var_onchainFeeRateLeewaySatPerVbyte,
+            asset_metadata: var_assetMetadata,
         };
     }
 }
@@ -2768,6 +2808,7 @@ impl SseDecode for crate::bindings::LiquidAddressData {
         let mut var_address = <String>::sse_decode(deserializer);
         let mut var_network = <crate::bindings::Network>::sse_decode(deserializer);
         let mut var_assetId = <Option<String>>::sse_decode(deserializer);
+        let mut var_amount = <Option<f64>>::sse_decode(deserializer);
         let mut var_amountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_label = <Option<String>>::sse_decode(deserializer);
         let mut var_message = <Option<String>>::sse_decode(deserializer);
@@ -2775,6 +2816,7 @@ impl SseDecode for crate::bindings::LiquidAddressData {
             address: var_address,
             network: var_network,
             asset_id: var_assetId,
+            amount: var_amount,
             amount_sat: var_amountSat,
             label: var_label,
             message: var_message,
@@ -2813,6 +2855,18 @@ impl SseDecode for Vec<crate::model::AssetBalance> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<crate::model::AssetBalance>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::model::AssetMetadata> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::AssetMetadata>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3556,6 +3610,17 @@ impl SseDecode for Option<crate::bindings::Amount> {
     }
 }
 
+impl SseDecode for Option<crate::model::AssetInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::model::AssetInfo>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<bool> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3701,6 +3766,17 @@ impl SseDecode for Option<u64> {
     }
 }
 
+impl SseDecode for Option<Vec<crate::model::AssetMetadata>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<crate::model::AssetMetadata>>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<Vec<crate::bindings::ExternalInputParser>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3749,7 +3825,7 @@ impl SseDecode for crate::model::PayAmount {
             }
             1 => {
                 let mut var_assetId = <String>::sse_decode(deserializer);
-                let mut var_receiverAmount = <u64>::sse_decode(deserializer);
+                let mut var_receiverAmount = <f64>::sse_decode(deserializer);
                 return crate::model::PayAmount::Asset {
                     asset_id: var_assetId,
                     receiver_amount: var_receiverAmount,
@@ -3841,10 +3917,12 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_destination = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_assetId = <String>::sse_decode(deserializer);
+                let mut var_assetInfo = <Option<crate::model::AssetInfo>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Liquid {
                     destination: var_destination,
                     description: var_description,
                     asset_id: var_assetId,
+                    asset_info: var_assetInfo,
                 };
             }
             2 => {
@@ -3895,47 +3973,51 @@ impl SseDecode for crate::error::PaymentError {
             }
             5 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::InvalidNetwork { err: var_err };
+                return crate::error::PaymentError::AssetError { err: var_err };
             }
             6 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::Generic { err: var_err };
+                return crate::error::PaymentError::InvalidNetwork { err: var_err };
             }
             7 => {
-                return crate::error::PaymentError::InvalidOrExpiredFees;
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::Generic { err: var_err };
             }
             8 => {
-                return crate::error::PaymentError::InsufficientFunds;
+                return crate::error::PaymentError::InvalidOrExpiredFees;
             }
             9 => {
-                let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::InvalidDescription { err: var_err };
+                return crate::error::PaymentError::InsufficientFunds;
             }
             10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::error::PaymentError::InvalidInvoice { err: var_err };
+                return crate::error::PaymentError::InvalidDescription { err: var_err };
             }
             11 => {
-                return crate::error::PaymentError::InvalidPreimage;
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::error::PaymentError::InvalidInvoice { err: var_err };
             }
             12 => {
+                return crate::error::PaymentError::InvalidPreimage;
+            }
+            13 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::LwkError { err: var_err };
             }
-            13 => {
+            14 => {
                 return crate::error::PaymentError::PairsNotFound;
             }
-            14 => {
+            15 => {
                 return crate::error::PaymentError::PaymentTimeout;
             }
-            15 => {
+            16 => {
                 return crate::error::PaymentError::PersistError;
             }
-            16 => {
+            17 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::ReceiveError { err: var_err };
             }
-            17 => {
+            18 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 let mut var_refundTxId = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::Refunded {
@@ -3943,14 +4025,14 @@ impl SseDecode for crate::error::PaymentError {
                     refund_tx_id: var_refundTxId,
                 };
             }
-            18 => {
+            19 => {
                 return crate::error::PaymentError::SelfTransferNotSupported;
             }
-            19 => {
+            20 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SendError { err: var_err };
             }
-            20 => {
+            21 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::error::PaymentError::SignerError { err: var_err };
             }
@@ -4200,7 +4282,7 @@ impl SseDecode for crate::model::ReceiveAmount {
             }
             1 => {
                 let mut var_assetId = <String>::sse_decode(deserializer);
-                let mut var_payerAmount = <Option<u64>>::sse_decode(deserializer);
+                let mut var_payerAmount = <Option<f64>>::sse_decode(deserializer);
                 return crate::model::ReceiveAmount::Asset {
                     asset_id: var_assetId,
                     payer_amount: var_payerAmount,
@@ -4809,6 +4891,9 @@ impl flutter_rust_bridge::IntoDart for crate::model::AssetBalance {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.asset_id.into_into_dart().into_dart(),
+            self.balance_sat.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.ticker.into_into_dart().into_dart(),
             self.balance.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -4817,6 +4902,43 @@ impl flutter_rust_bridge::IntoDart for crate::model::AssetBalance {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::AssetBalance {}
 impl flutter_rust_bridge::IntoIntoDart<crate::model::AssetBalance> for crate::model::AssetBalance {
     fn into_into_dart(self) -> crate::model::AssetBalance {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::AssetInfo {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.name.into_into_dart().into_dart(),
+            self.ticker.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::AssetInfo {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::AssetInfo> for crate::model::AssetInfo {
+    fn into_into_dart(self) -> crate::model::AssetInfo {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::AssetMetadata {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.asset_id.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+            self.ticker.into_into_dart().into_dart(),
+            self.precision.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::AssetMetadata {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::AssetMetadata>
+    for crate::model::AssetMetadata
+{
+    fn into_into_dart(self) -> crate::model::AssetMetadata {
         self
     }
 }
@@ -4997,6 +5119,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.onchain_fee_rate_leeway_sat_per_vbyte
                 .into_into_dart()
                 .into_dart(),
+            self.asset_metadata.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5272,6 +5395,7 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::LiquidAddress
             self.0.address.into_into_dart().into_dart(),
             self.0.network.into_into_dart().into_dart(),
             self.0.asset_id.into_into_dart().into_dart(),
+            self.0.amount.into_into_dart().into_dart(),
             self.0.amount_sat.into_into_dart().into_dart(),
             self.0.label.into_into_dart().into_dart(),
             self.0.message.into_into_dart().into_dart(),
@@ -6095,11 +6219,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 destination,
                 description,
                 asset_id,
+                asset_info,
             } => [
                 1.into_dart(),
                 destination.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
                 asset_id.into_into_dart().into_dart(),
+                asset_info.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::model::PaymentDetails::Bitcoin {
@@ -6146,42 +6272,45 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             crate::error::PaymentError::AmountMissing { err } => {
                 [4.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidNetwork { err } => {
+            crate::error::PaymentError::AssetError { err } => {
                 [5.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::Generic { err } => {
+            crate::error::PaymentError::InvalidNetwork { err } => {
                 [6.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidOrExpiredFees => [7.into_dart()].into_dart(),
-            crate::error::PaymentError::InsufficientFunds => [8.into_dart()].into_dart(),
-            crate::error::PaymentError::InvalidDescription { err } => {
-                [9.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            crate::error::PaymentError::Generic { err } => {
+                [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidInvoice { err } => {
+            crate::error::PaymentError::InvalidOrExpiredFees => [8.into_dart()].into_dart(),
+            crate::error::PaymentError::InsufficientFunds => [9.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidDescription { err } => {
                 [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::InvalidPreimage => [11.into_dart()].into_dart(),
-            crate::error::PaymentError::LwkError { err } => {
-                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            crate::error::PaymentError::InvalidInvoice { err } => {
+                [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::error::PaymentError::PairsNotFound => [13.into_dart()].into_dart(),
-            crate::error::PaymentError::PaymentTimeout => [14.into_dart()].into_dart(),
-            crate::error::PaymentError::PersistError => [15.into_dart()].into_dart(),
+            crate::error::PaymentError::InvalidPreimage => [12.into_dart()].into_dart(),
+            crate::error::PaymentError::LwkError { err } => {
+                [13.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::error::PaymentError::PairsNotFound => [14.into_dart()].into_dart(),
+            crate::error::PaymentError::PaymentTimeout => [15.into_dart()].into_dart(),
+            crate::error::PaymentError::PersistError => [16.into_dart()].into_dart(),
             crate::error::PaymentError::ReceiveError { err } => {
-                [16.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [17.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::Refunded { err, refund_tx_id } => [
-                17.into_dart(),
+                18.into_dart(),
                 err.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::error::PaymentError::SelfTransferNotSupported => [18.into_dart()].into_dart(),
+            crate::error::PaymentError::SelfTransferNotSupported => [19.into_dart()].into_dart(),
             crate::error::PaymentError::SendError { err } => {
-                [19.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [20.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::SignerError { err } => {
-                [20.into_dart(), err.into_into_dart().into_dart()].into_dart()
+                [21.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -7155,7 +7284,29 @@ impl SseEncode for crate::model::AssetBalance {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.asset_id, serializer);
-        <u64>::sse_encode(self.balance, serializer);
+        <u64>::sse_encode(self.balance_sat, serializer);
+        <Option<String>>::sse_encode(self.name, serializer);
+        <Option<String>>::sse_encode(self.ticker, serializer);
+        <Option<f64>>::sse_encode(self.balance, serializer);
+    }
+}
+
+impl SseEncode for crate::model::AssetInfo {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.name, serializer);
+        <String>::sse_encode(self.ticker, serializer);
+        <f64>::sse_encode(self.amount, serializer);
+    }
+}
+
+impl SseEncode for crate::model::AssetMetadata {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.asset_id, serializer);
+        <String>::sse_encode(self.name, serializer);
+        <String>::sse_encode(self.ticker, serializer);
+        <u8>::sse_encode(self.precision, serializer);
     }
 }
 
@@ -7258,6 +7409,7 @@ impl SseEncode for crate::model::Config {
         );
         <bool>::sse_encode(self.use_default_external_input_parsers, serializer);
         <Option<u32>>::sse_encode(self.onchain_fee_rate_leeway_sat_per_vbyte, serializer);
+        <Option<Vec<crate::model::AssetMetadata>>>::sse_encode(self.asset_metadata, serializer);
     }
 }
 
@@ -7434,6 +7586,7 @@ impl SseEncode for crate::bindings::LiquidAddressData {
         <String>::sse_encode(self.address, serializer);
         <crate::bindings::Network>::sse_encode(self.network, serializer);
         <Option<String>>::sse_encode(self.asset_id, serializer);
+        <Option<f64>>::sse_encode(self.amount, serializer);
         <Option<u64>>::sse_encode(self.amount_sat, serializer);
         <Option<String>>::sse_encode(self.label, serializer);
         <Option<String>>::sse_encode(self.message, serializer);
@@ -7472,6 +7625,16 @@ impl SseEncode for Vec<crate::model::AssetBalance> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::model::AssetBalance>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::model::AssetMetadata> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::AssetMetadata>::sse_encode(item, serializer);
         }
     }
 }
@@ -8048,6 +8211,16 @@ impl SseEncode for Option<crate::bindings::Amount> {
     }
 }
 
+impl SseEncode for Option<crate::model::AssetInfo> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::model::AssetInfo>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<bool> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -8178,6 +8351,16 @@ impl SseEncode for Option<u64> {
     }
 }
 
+impl SseEncode for Option<Vec<crate::model::AssetMetadata>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<crate::model::AssetMetadata>>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<Vec<crate::bindings::ExternalInputParser>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -8224,7 +8407,7 @@ impl SseEncode for crate::model::PayAmount {
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(asset_id, serializer);
-                <u64>::sse_encode(receiver_amount, serializer);
+                <f64>::sse_encode(receiver_amount, serializer);
             }
             crate::model::PayAmount::Drain => {
                 <i32>::sse_encode(2, serializer);
@@ -8294,11 +8477,13 @@ impl SseEncode for crate::model::PaymentDetails {
                 destination,
                 description,
                 asset_id,
+                asset_info,
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(destination, serializer);
                 <String>::sse_encode(description, serializer);
                 <String>::sse_encode(asset_id, serializer);
+                <Option<crate::model::AssetInfo>>::sse_encode(asset_info, serializer);
             }
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
@@ -8345,62 +8530,66 @@ impl SseEncode for crate::error::PaymentError {
                 <i32>::sse_encode(4, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::InvalidNetwork { err } => {
+            crate::error::PaymentError::AssetError { err } => {
                 <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::Generic { err } => {
+            crate::error::PaymentError::InvalidNetwork { err } => {
                 <i32>::sse_encode(6, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::InvalidOrExpiredFees => {
+            crate::error::PaymentError::Generic { err } => {
                 <i32>::sse_encode(7, serializer);
-            }
-            crate::error::PaymentError::InsufficientFunds => {
-                <i32>::sse_encode(8, serializer);
-            }
-            crate::error::PaymentError::InvalidDescription { err } => {
-                <i32>::sse_encode(9, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::InvalidInvoice { err } => {
+            crate::error::PaymentError::InvalidOrExpiredFees => {
+                <i32>::sse_encode(8, serializer);
+            }
+            crate::error::PaymentError::InsufficientFunds => {
+                <i32>::sse_encode(9, serializer);
+            }
+            crate::error::PaymentError::InvalidDescription { err } => {
                 <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::error::PaymentError::InvalidPreimage => {
+            crate::error::PaymentError::InvalidInvoice { err } => {
                 <i32>::sse_encode(11, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            crate::error::PaymentError::InvalidPreimage => {
+                <i32>::sse_encode(12, serializer);
             }
             crate::error::PaymentError::LwkError { err } => {
-                <i32>::sse_encode(12, serializer);
+                <i32>::sse_encode(13, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::PairsNotFound => {
-                <i32>::sse_encode(13, serializer);
-            }
-            crate::error::PaymentError::PaymentTimeout => {
                 <i32>::sse_encode(14, serializer);
             }
-            crate::error::PaymentError::PersistError => {
+            crate::error::PaymentError::PaymentTimeout => {
                 <i32>::sse_encode(15, serializer);
             }
-            crate::error::PaymentError::ReceiveError { err } => {
+            crate::error::PaymentError::PersistError => {
                 <i32>::sse_encode(16, serializer);
+            }
+            crate::error::PaymentError::ReceiveError { err } => {
+                <i32>::sse_encode(17, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::Refunded { err, refund_tx_id } => {
-                <i32>::sse_encode(17, serializer);
+                <i32>::sse_encode(18, serializer);
                 <String>::sse_encode(err, serializer);
                 <String>::sse_encode(refund_tx_id, serializer);
             }
             crate::error::PaymentError::SelfTransferNotSupported => {
-                <i32>::sse_encode(18, serializer);
+                <i32>::sse_encode(19, serializer);
             }
             crate::error::PaymentError::SendError { err } => {
-                <i32>::sse_encode(19, serializer);
+                <i32>::sse_encode(20, serializer);
                 <String>::sse_encode(err, serializer);
             }
             crate::error::PaymentError::SignerError { err } => {
-                <i32>::sse_encode(20, serializer);
+                <i32>::sse_encode(21, serializer);
                 <String>::sse_encode(err, serializer);
             }
             _ => {
@@ -8596,7 +8785,7 @@ impl SseEncode for crate::model::ReceiveAmount {
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(asset_id, serializer);
-                <Option<u64>>::sse_encode(payer_amount, serializer);
+                <Option<f64>>::sse_encode(payer_amount, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9098,7 +9287,31 @@ mod io {
         fn cst_decode(self) -> crate::model::AssetBalance {
             crate::model::AssetBalance {
                 asset_id: self.asset_id.cst_decode(),
+                balance_sat: self.balance_sat.cst_decode(),
+                name: self.name.cst_decode(),
+                ticker: self.ticker.cst_decode(),
                 balance: self.balance.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::AssetInfo> for wire_cst_asset_info {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AssetInfo {
+            crate::model::AssetInfo {
+                name: self.name.cst_decode(),
+                ticker: self.ticker.cst_decode(),
+                amount: self.amount.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::AssetMetadata> for wire_cst_asset_metadata {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AssetMetadata {
+            crate::model::AssetMetadata {
+                asset_id: self.asset_id.cst_decode(),
+                name: self.name.cst_decode(),
+                ticker: self.ticker.cst_decode(),
+                precision: self.precision.cst_decode(),
             }
         }
     }
@@ -9178,6 +9391,13 @@ mod io {
         fn cst_decode(self) -> crate::bindings::Amount {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::bindings::Amount>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::model::AssetInfo> for *mut wire_cst_asset_info {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AssetInfo {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::AssetInfo>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::BackupRequest> for *mut wire_cst_backup_request {
@@ -9580,6 +9800,7 @@ mod io {
                 onchain_fee_rate_leeway_sat_per_vbyte: self
                     .onchain_fee_rate_leeway_sat_per_vbyte
                     .cst_decode(),
+                asset_metadata: self.asset_metadata.cst_decode(),
             }
         }
     }
@@ -9767,6 +9988,7 @@ mod io {
                 address: self.address.cst_decode(),
                 network: self.network.cst_decode(),
                 asset_id: self.asset_id.cst_decode(),
+                amount: self.amount.cst_decode(),
                 amount_sat: self.amount_sat.cst_decode(),
                 label: self.label.cst_decode(),
                 message: self.message.cst_decode(),
@@ -9786,6 +10008,16 @@ mod io {
     impl CstDecode<Vec<crate::model::AssetBalance>> for *mut wire_cst_list_asset_balance {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::model::AssetBalance> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
+    impl CstDecode<Vec<crate::model::AssetMetadata>> for *mut wire_cst_list_asset_metadata {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<crate::model::AssetMetadata> {
             let vec = unsafe {
                 let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -10454,6 +10686,7 @@ mod io {
                         destination: ans.destination.cst_decode(),
                         description: ans.description.cst_decode(),
                         asset_id: ans.asset_id.cst_decode(),
+                        asset_info: ans.asset_info.cst_decode(),
                     }
                 }
                 2 => {
@@ -10491,62 +10724,68 @@ mod io {
                     }
                 }
                 5 => {
+                    let ans = unsafe { self.kind.AssetError };
+                    crate::error::PaymentError::AssetError {
+                        err: ans.err.cst_decode(),
+                    }
+                }
+                6 => {
                     let ans = unsafe { self.kind.InvalidNetwork };
                     crate::error::PaymentError::InvalidNetwork {
                         err: ans.err.cst_decode(),
                     }
                 }
-                6 => {
+                7 => {
                     let ans = unsafe { self.kind.Generic };
                     crate::error::PaymentError::Generic {
                         err: ans.err.cst_decode(),
                     }
                 }
-                7 => crate::error::PaymentError::InvalidOrExpiredFees,
-                8 => crate::error::PaymentError::InsufficientFunds,
-                9 => {
+                8 => crate::error::PaymentError::InvalidOrExpiredFees,
+                9 => crate::error::PaymentError::InsufficientFunds,
+                10 => {
                     let ans = unsafe { self.kind.InvalidDescription };
                     crate::error::PaymentError::InvalidDescription {
                         err: ans.err.cst_decode(),
                     }
                 }
-                10 => {
+                11 => {
                     let ans = unsafe { self.kind.InvalidInvoice };
                     crate::error::PaymentError::InvalidInvoice {
                         err: ans.err.cst_decode(),
                     }
                 }
-                11 => crate::error::PaymentError::InvalidPreimage,
-                12 => {
+                12 => crate::error::PaymentError::InvalidPreimage,
+                13 => {
                     let ans = unsafe { self.kind.LwkError };
                     crate::error::PaymentError::LwkError {
                         err: ans.err.cst_decode(),
                     }
                 }
-                13 => crate::error::PaymentError::PairsNotFound,
-                14 => crate::error::PaymentError::PaymentTimeout,
-                15 => crate::error::PaymentError::PersistError,
-                16 => {
+                14 => crate::error::PaymentError::PairsNotFound,
+                15 => crate::error::PaymentError::PaymentTimeout,
+                16 => crate::error::PaymentError::PersistError,
+                17 => {
                     let ans = unsafe { self.kind.ReceiveError };
                     crate::error::PaymentError::ReceiveError {
                         err: ans.err.cst_decode(),
                     }
                 }
-                17 => {
+                18 => {
                     let ans = unsafe { self.kind.Refunded };
                     crate::error::PaymentError::Refunded {
                         err: ans.err.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                     }
                 }
-                18 => crate::error::PaymentError::SelfTransferNotSupported,
-                19 => {
+                19 => crate::error::PaymentError::SelfTransferNotSupported,
+                20 => {
                     let ans = unsafe { self.kind.SendError };
                     crate::error::PaymentError::SendError {
                         err: ans.err.cst_decode(),
                     }
                 }
-                20 => {
+                21 => {
                     let ans = unsafe { self.kind.SignerError };
                     crate::error::PaymentError::SignerError {
                         err: ans.err.cst_decode(),
@@ -11089,11 +11328,43 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 asset_id: core::ptr::null_mut(),
-                balance: Default::default(),
+                balance_sat: Default::default(),
+                name: core::ptr::null_mut(),
+                ticker: core::ptr::null_mut(),
+                balance: core::ptr::null_mut(),
             }
         }
     }
     impl Default for wire_cst_asset_balance {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_asset_info {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                name: core::ptr::null_mut(),
+                ticker: core::ptr::null_mut(),
+                amount: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_asset_info {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_asset_metadata {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                asset_id: core::ptr::null_mut(),
+                name: core::ptr::null_mut(),
+                ticker: core::ptr::null_mut(),
+                precision: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_asset_metadata {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -11207,6 +11478,7 @@ mod io {
                 external_input_parsers: core::ptr::null_mut(),
                 use_default_external_input_parsers: Default::default(),
                 onchain_fee_rate_leeway_sat_per_vbyte: core::ptr::null_mut(),
+                asset_metadata: core::ptr::null_mut(),
             }
         }
     }
@@ -11372,6 +11644,7 @@ mod io {
                 address: core::ptr::null_mut(),
                 network: Default::default(),
                 asset_id: core::ptr::null_mut(),
+                amount: core::ptr::null_mut(),
                 amount_sat: core::ptr::null_mut(),
                 label: core::ptr::null_mut(),
                 message: core::ptr::null_mut(),
@@ -12722,6 +12995,14 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_asset_info(
+    ) -> *mut wire_cst_asset_info {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_asset_info::new_with_null_ptr(),
+        )
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_backup_request(
     ) -> *mut wire_cst_backup_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -13116,6 +13397,20 @@ mod io {
     }
 
     #[no_mangle]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_asset_metadata(
+        len: i32,
+    ) -> *mut wire_cst_list_asset_metadata {
+        let wrap = wire_cst_list_asset_metadata {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <wire_cst_asset_metadata>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[no_mangle]
     pub extern "C" fn frbgen_breez_liquid_cst_new_list_external_input_parser(
         len: i32,
     ) -> *mut wire_cst_list_external_input_parser {
@@ -13355,7 +13650,25 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_asset_balance {
         asset_id: *mut wire_cst_list_prim_u_8_strict,
-        balance: u64,
+        balance_sat: u64,
+        name: *mut wire_cst_list_prim_u_8_strict,
+        ticker: *mut wire_cst_list_prim_u_8_strict,
+        balance: *mut f64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_asset_info {
+        name: *mut wire_cst_list_prim_u_8_strict,
+        ticker: *mut wire_cst_list_prim_u_8_strict,
+        amount: f64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_asset_metadata {
+        asset_id: *mut wire_cst_list_prim_u_8_strict,
+        name: *mut wire_cst_list_prim_u_8_strict,
+        ticker: *mut wire_cst_list_prim_u_8_strict,
+        precision: u8,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13417,6 +13730,7 @@ mod io {
         external_input_parsers: *mut wire_cst_list_external_input_parser,
         use_default_external_input_parsers: bool,
         onchain_fee_rate_leeway_sat_per_vbyte: *mut u32,
+        asset_metadata: *mut wire_cst_list_asset_metadata,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13574,6 +13888,7 @@ mod io {
         address: *mut wire_cst_list_prim_u_8_strict,
         network: i32,
         asset_id: *mut wire_cst_list_prim_u_8_strict,
+        amount: *mut f64,
         amount_sat: *mut u64,
         label: *mut wire_cst_list_prim_u_8_strict,
         message: *mut wire_cst_list_prim_u_8_strict,
@@ -13588,6 +13903,12 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_asset_balance {
         ptr: *mut wire_cst_asset_balance,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_list_asset_metadata {
+        ptr: *mut wire_cst_asset_metadata,
         len: i32,
     }
     #[repr(C)]
@@ -14092,7 +14413,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_PayAmount_Asset {
         asset_id: *mut wire_cst_list_prim_u_8_strict,
-        receiver_amount: u64,
+        receiver_amount: f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14149,6 +14470,7 @@ mod io {
         destination: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
         asset_id: *mut wire_cst_list_prim_u_8_strict,
+        asset_info: *mut wire_cst_asset_info,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14171,6 +14493,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub union PaymentErrorKind {
         AmountMissing: wire_cst_PaymentError_AmountMissing,
+        AssetError: wire_cst_PaymentError_AssetError,
         InvalidNetwork: wire_cst_PaymentError_InvalidNetwork,
         Generic: wire_cst_PaymentError_Generic,
         InvalidDescription: wire_cst_PaymentError_InvalidDescription,
@@ -14185,6 +14508,11 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_PaymentError_AmountMissing {
+        err: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentError_AssetError {
         err: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
@@ -14346,7 +14674,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_ReceiveAmount_Asset {
         asset_id: *mut wire_cst_list_prim_u_8_strict,
-        payer_amount: *mut u64,
+        payer_amount: *mut f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

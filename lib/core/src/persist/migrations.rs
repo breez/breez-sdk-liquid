@@ -4,6 +4,21 @@ pub(crate) fn current_migrations(is_mainnet: bool) -> Vec<&'static str> {
     } else {
         "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49';"
     };
+    let insert_default_asset_metadata = if is_mainnet {
+        "
+        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default) 
+            VALUES 
+            ('6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', 'Bitcoin', 'BTC', 8, 1),
+            ('ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2', 'Tether USD', 'USDt', 8, 1);
+        "
+    } else {
+        "
+        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default) 
+            VALUES 
+            ('144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49', 'Testnet Bitcoin', 'BTC', 8, 1),
+            ('b612eb46313a2cd6ebabd8b7a8eed5696e29898b87a43bff41c94f51acef9d73', 'Testnet Tether USD', 'USDt', 8, 1);
+        "
+    };
     vec![
         "CREATE TABLE IF NOT EXISTS receive_swaps (
             id TEXT NOT NULL PRIMARY KEY,
@@ -259,5 +274,16 @@ pub(crate) fn current_migrations(is_mainnet: bool) -> Vec<&'static str> {
         ALTER TABLE payment_tx_data RENAME COLUMN amount_sat TO amount;
         UPDATE payment_tx_data SET amount = amount - fees_sat WHERE payment_type = 1;
         ",
+        "
+        DELETE FROM cached_items WHERE key = 'wallet_info';
+        CREATE TABLE IF NOT EXISTS asset_metadata(
+            asset_id TEXT NOT NULL PRIMARY KEY,
+            name TEXT NOT NULL,
+            ticker TEXT NOT NULL,
+            precision INTEGER NOT NULL DEFAULT 8,
+            is_default INTEGER NOT NULL DEFAULT 0
+        ) STRICT;
+        ",
+        insert_default_asset_metadata,
     ]
 }

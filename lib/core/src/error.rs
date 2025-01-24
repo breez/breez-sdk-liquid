@@ -76,6 +76,9 @@ pub enum PaymentError {
     #[error("Amount is missing: {err}")]
     AmountMissing { err: String },
 
+    #[error("Asset error: {err}")]
+    AssetError { err: String },
+
     #[error("Invalid network: {err}")]
     InvalidNetwork { err: String },
 
@@ -125,6 +128,12 @@ pub enum PaymentError {
     SignerError { err: String },
 }
 impl PaymentError {
+    pub(crate) fn asset_error(err: &str) -> Self {
+        Self::AssetError {
+            err: err.to_string(),
+        }
+    }
+
     pub(crate) fn generic(err: &str) -> Self {
         Self::Generic {
             err: err.to_string(),

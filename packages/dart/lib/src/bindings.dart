@@ -350,6 +350,7 @@ class LiquidAddressData {
   final String address;
   final Network network;
   final String? assetId;
+  final double? amount;
   final BigInt? amountSat;
   final String? label;
   final String? message;
@@ -358,6 +359,7 @@ class LiquidAddressData {
     required this.address,
     required this.network,
     this.assetId,
+    this.amount,
     this.amountSat,
     this.label,
     this.message,
@@ -368,6 +370,7 @@ class LiquidAddressData {
       address.hashCode ^
       network.hashCode ^
       assetId.hashCode ^
+      amount.hashCode ^
       amountSat.hashCode ^
       label.hashCode ^
       message.hashCode;
@@ -380,6 +383,7 @@ class LiquidAddressData {
           address == other.address &&
           network == other.network &&
           assetId == other.assetId &&
+          amount == other.amount &&
           amountSat == other.amountSat &&
           label == other.label &&
           message == other.message;

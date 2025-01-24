@@ -85,6 +85,7 @@ dictionary LiquidAddressData {
     string address;
     Network network;
     string? asset_id;
+    f64? amount;
     u64? amount_sat;
     string? label;
     string? message;
@@ -306,6 +307,7 @@ enum PaymentError {
     "PaymentInProgress",
     "AmountOutOfRange",
     "AmountMissing",
+    "AssetError",
     "Generic",
     "InvalidOrExpiredFees",
     "InsufficientFunds",
@@ -339,6 +341,7 @@ dictionary Config {
     boolean use_default_external_input_parsers = true;
     sequence<ExternalInputParser>? external_input_parsers = null;
     u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
+    sequence<AssetMetadata>? asset_metadata = null;
 };
 
 enum LiquidNetwork {
@@ -357,7 +360,10 @@ dictionary ConnectWithSignerRequest {
 
 dictionary AssetBalance {
     string asset_id;
-    u64 balance;
+    u64 balance_sat;
+    string? name;
+    string? ticker;
+    f64? balance;
 };
 
 dictionary BlockchainInfo {
@@ -450,7 +456,7 @@ enum PaymentMethod {
 [Enum]
 interface ReceiveAmount {
     Bitcoin(u64 payer_amount_sat);
-    Asset(string asset_id, u64? payer_amount);
+    Asset(string asset_id, f64? payer_amount);
 };
 
 dictionary PrepareReceiveRequest {
@@ -496,7 +502,7 @@ dictionary OnchainPaymentLimitsResponse {
 [Enum]
 interface PayAmount {
     Bitcoin(u64 receiver_amount_sat);
-    Asset(string asset_id, u64 receiver_amount);
+    Asset(string asset_id, f64 receiver_amount);
     Drain();
 };
 
@@ -591,10 +597,16 @@ dictionary LnUrlInfo {
     string? lnurl_withdraw_endpoint;
 };
 
+dictionary AssetInfo {
+    string name;
+    string ticker;
+    f64 amount;
+};
+
 [Enum]
 interface PaymentDetails {
     Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? refund_tx_id, u64? refund_tx_amount_sat);
-    Liquid(string asset_id, string destination, string description);
+    Liquid(string asset_id, string destination, string description, AssetInfo? asset_info);
     Bitcoin(string swap_id, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
@@ -694,6 +706,13 @@ dictionary ExternalInputParser {
     string provider_id;
     string input_regex;
     string parser_url;
+};
+
+dictionary AssetMetadata {
+    string asset_id;
+    string name;
+    string ticker;
+    u8 precision;
 };
 
 namespace breez_sdk_liquid {

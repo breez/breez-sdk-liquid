@@ -174,6 +174,7 @@ impl LiquidSdk {
 
         let persister = Arc::new(Persister::new(&working_dir, config.network, None)?);
         persister.init()?;
+        persister.replace_asset_metadata(config.asset_metadata.clone())?;
 
         let liquid_chain_service =
             Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
@@ -928,16 +929,12 @@ impl LiquidSdk {
                 address: mut liquid_address_data,
             }) => {
                 let amount = match (
+                    liquid_address_data.amount,
                     liquid_address_data.amount_sat,
                     liquid_address_data.asset_id,
                     req.amount.clone(),
                 ) {
-                    (None, _, None) => {
-                        return Err(PaymentError::AmountMissing {
-                            err: "Amount must be set when paying to a Liquid address".to_string(),
-                        });
-                    }
-                    (Some(amount_sat), Some(asset_id), None) => {
+                    (Some(amount), Some(amount_sat), Some(asset_id), None) => {
                         if asset_id.eq(&self.config.lbtc_asset_id()) {
                             PayAmount::Bitcoin {
                                 receiver_amount_sat: amount_sat,
@@ -945,14 +942,19 @@ impl LiquidSdk {
                         } else {
                             PayAmount::Asset {
                                 asset_id,
-                                receiver_amount: amount_sat,
+                                receiver_amount: amount,
                             }
                         }
                     }
-                    (Some(amount_sat), None, None) => PayAmount::Bitcoin {
+                    (_, Some(amount_sat), None, None) => PayAmount::Bitcoin {
                         receiver_amount_sat: amount_sat,
                     },
-                    (_, _, Some(amount)) => amount,
+                    (_, _, _, Some(amount)) => amount,
+                    _ => {
+                        return Err(PaymentError::AmountMissing {
+                            err: "Amount must be set when paying to a Liquid address".to_string(),
+                        });
+                    }
                 };
 
                 ensure_sdk!(
@@ -1004,14 +1006,20 @@ impl LiquidSdk {
                         asset_id,
                         receiver_amount,
                     } => {
+                        let asset_metadata = self.persister.get_asset_metadata(&asset_id)?.ok_or(
+                            PaymentError::AssetError {
+                                err: format!("Asset {asset_id} is not supported"),
+                            },
+                        )?;
+                        let receiver_amount_sat = asset_metadata.amount_to_sat(receiver_amount);
                         let fees_sat = self
                             .estimate_onchain_tx_or_drain_tx_fee(
-                                receiver_amount,
+                                receiver_amount_sat,
                                 &liquid_address_data.address,
                                 &asset_id,
                             )
                             .await?;
-                        (asset_id, receiver_amount, fees_sat)
+                        (asset_id, receiver_amount_sat, fees_sat)
                     }
                 };
 
@@ -1160,10 +1168,14 @@ impl LiquidSdk {
                 address_data: liquid_address_data,
             } => {
                 let Some(amount_sat) = liquid_address_data.amount_sat else {
-                    return Err(PaymentError::AmountMissing { err: "`amount_sat` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
+                    return Err(PaymentError::AmountMissing {
+                        err: "Amount must be set when paying to a Liquid address".to_string(),
+                    });
                 };
                 let Some(ref asset_id) = liquid_address_data.asset_id else {
-                    return Err(PaymentError::Generic { err: "`asset_id` must be present when paying to a `SendDestination::LiquidAddress`".to_string() });
+                    return Err(PaymentError::asset_error(
+                        "Asset must be set when paying to a Liquid address",
+                    ));
                 };
 
                 ensure_sdk!(
@@ -1234,6 +1246,7 @@ impl LiquidSdk {
                         address,
                         network: self.config.network.into(),
                         asset_id: None,
+                        amount: None,
                         amount_sat: None,
                         label: None,
                         message: None,
@@ -1359,10 +1372,19 @@ impl LiquidSdk {
         )?;
         self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
 
+        let asset_info = self
+            .persister
+            .get_asset_metadata(&asset_id)?
+            .map(|ref am| AssetInfo {
+                name: am.name.clone(),
+                ticker: am.ticker.clone(),
+                amount: am.amount_from_sat(receiver_amount_sat),
+            });
         let payment_details = PaymentDetails::Liquid {
             asset_id,
             destination,
             description: description.unwrap_or("Liquid transfer".to_string()),
+            asset_info,
         };
 
         Ok(SendPaymentResponse {
@@ -1621,7 +1643,7 @@ impl LiquidSdk {
                 (payer_amount_sat, receiver_amount_sat, total_fees_sat)
             }
             PayAmount::Asset { .. } => {
-                return Err(PaymentError::generic(
+                return Err(PaymentError::asset_error(
                     "Cannot send an asset to a Bitcoin address",
                 ))
             }
@@ -1864,7 +1886,7 @@ impl LiquidSdk {
             PaymentMethod::Lightning => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::generic(
+                        return Err(PaymentError::asset_error(
                             "Cannot receive an asset when the payment method is Lightning",
                         ));
                     }
@@ -1900,7 +1922,7 @@ impl LiquidSdk {
             PaymentMethod::BitcoinAddress => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::generic(
+                        return Err(PaymentError::asset_error(
                             "Cannot receive an asset when the payment method is Bitcoin",
                         ));
                     }
@@ -1923,18 +1945,18 @@ impl LiquidSdk {
                 debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
             }
             PaymentMethod::LiquidAddress => {
-                let (asset_id, amount_sat) = match req.amount.clone() {
+                let (asset_id, payer_amount, payer_amount_sat) = match req.amount.clone() {
                     Some(ReceiveAmount::Asset {
                         payer_amount,
                         asset_id,
-                    }) => (asset_id, payer_amount),
+                    }) => (asset_id, payer_amount, None),
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => {
-                        (self.config.lbtc_asset_id(), Some(payer_amount_sat))
+                        (self.config.lbtc_asset_id(), None, Some(payer_amount_sat))
                     }
-                    None => (self.config.lbtc_asset_id(), None),
+                    None => (self.config.lbtc_asset_id(), None, None),
                 };
                 fees_sat = 0;
-                debug!("Preparing Liquid Receive with: asset_id {asset_id}, amount_sat {amount_sat:?}, fees_sat {fees_sat}");
+                debug!("Preparing Liquid Receive with: asset_id {asset_id}, amount {payer_amount:?}, amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
             }
         };
 
@@ -1979,7 +2001,7 @@ impl LiquidSdk {
             PaymentMethod::Lightning => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::generic(
+                        return Err(PaymentError::asset_error(
                             "Cannot receive an asset when the payment method is Lightning",
                         ));
                     }
@@ -2011,7 +2033,7 @@ impl LiquidSdk {
             PaymentMethod::BitcoinAddress => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::generic(
+                        return Err(PaymentError::asset_error(
                             "Cannot receive an asset when the payment method is Bitcoin",
                         ));
                     }
@@ -2021,33 +2043,37 @@ impl LiquidSdk {
                 self.receive_onchain(amount_sat, *fees_sat).await
             }
             PaymentMethod::LiquidAddress => {
-                let (asset_id, amount_sat) = match amount.clone() {
+                let lbtc_asset_id = self.config.lbtc_asset_id();
+                let (asset_id, amount, amount_sat) = match amount.clone() {
                     Some(ReceiveAmount::Asset {
                         asset_id,
                         payer_amount,
-                    }) => (asset_id, payer_amount),
+                    }) => (asset_id, payer_amount, None),
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => {
-                        (self.config.lbtc_asset_id(), Some(payer_amount_sat))
+                        (lbtc_asset_id.clone(), None, Some(payer_amount_sat))
                     }
-                    None => (self.config.lbtc_asset_id(), None),
+                    None => (lbtc_asset_id.clone(), None, None),
                 };
 
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                let receive_destination = match amount_sat {
-                    Some(amount_sat) => LiquidAddressData {
-                        address: address.to_string(),
-                        network: self.config.network.into(),
-                        amount_sat: Some(amount_sat),
-                        asset_id: Some(asset_id.clone()),
-                        label: None,
-                        message: req.description.clone(),
-                    }
-                    .to_uri()
-                    .map_err(|e| PaymentError::Generic {
-                        err: format!("Could not build BIP21 URI: {e:?}"),
-                    })?,
-                    None => address,
-                };
+                let receive_destination =
+                    if asset_id.ne(&lbtc_asset_id) || amount.is_some() || amount_sat.is_some() {
+                        LiquidAddressData {
+                            address: address.to_string(),
+                            network: self.config.network.into(),
+                            amount,
+                            amount_sat,
+                            asset_id: Some(asset_id),
+                            label: None,
+                            message: req.description.clone(),
+                        }
+                        .to_uri()
+                        .map_err(|e| PaymentError::Generic {
+                            err: format!("Could not build BIP21 URI: {e:?}"),
+                        })?
+                    } else {
+                        address
+                    };
 
                 Ok(ReceivePaymentResponse {
                     destination: receive_destination,
@@ -2694,6 +2720,12 @@ impl LiquidSdk {
     }
 
     async fn update_wallet_info(&self) -> Result<()> {
+        let asset_metadata: HashMap<String, AssetMetadata> = self
+            .persister
+            .list_asset_metadata()?
+            .into_iter()
+            .map(|am| (am.asset_id.clone(), am))
+            .collect();
         let transactions = self.onchain_wallet.transactions().await?;
         let asset_balances = transactions
             .into_iter()
@@ -2707,16 +2739,24 @@ impl LiquidSdk {
                 acc
             })
             .into_iter()
-            .map(|(asset_id, balance)| AssetBalance {
-                asset_id: asset_id.to_hex(),
-                balance: balance.unsigned_abs(),
+            .map(|(asset_id, balance)| {
+                let asset_id = asset_id.to_hex();
+                let balance_sat = balance.unsigned_abs();
+                let maybe_asset_metadata = asset_metadata.get(&asset_id);
+                AssetBalance {
+                    asset_id,
+                    balance_sat,
+                    name: maybe_asset_metadata.map(|am| am.name.clone()),
+                    ticker: maybe_asset_metadata.map(|am| am.ticker.clone()),
+                    balance: maybe_asset_metadata.map(|am| am.amount_from_sat(balance_sat)),
+                }
             })
             .collect::<Vec<AssetBalance>>();
         let balance_sat = asset_balances
             .clone()
             .into_iter()
             .find(|ab| ab.asset_id.eq(&self.config.lbtc_asset_id()))
-            .map_or(0, |ab| ab.balance);
+            .map_or(0, |ab| ab.balance_sat);
         debug!("Onchain wallet balance: {balance_sat} sats");
 
         let mut pending_send_sat = 0;
@@ -3261,9 +3301,27 @@ impl LiquidSdk {
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
         let external_parsers = &self.external_input_parsers;
-        parse(input, Some(external_parsers))
+        let input_type = parse(input, Some(external_parsers))
             .await
-            .map_err(|e| PaymentError::generic(&e.to_string()))
+            .map_err(|e| PaymentError::generic(&e.to_string()))?;
+
+        let res = match input_type {
+            InputType::LiquidAddress { ref address } => match &address.asset_id {
+                Some(asset_id) if asset_id.ne(&self.config.lbtc_asset_id()) => {
+                    let asset_metadata = self.persister.get_asset_metadata(asset_id)?.ok_or(
+                        PaymentError::AssetError {
+                            err: format!("Asset {asset_id} is not supported"),
+                        },
+                    )?;
+                    let mut address = address.clone();
+                    address.set_amount_precision(asset_metadata.precision.into());
+                    InputType::LiquidAddress { address }
+                }
+                _ => input_type,
+            },
+            _ => input_type,
+        };
+        Ok(res)
     }
 
     /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
