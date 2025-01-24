@@ -26,6 +26,7 @@ pub(crate) struct ChainSyncData {
     pub(crate) accept_zero_conf: bool,
     pub(crate) created_at: u32,
     pub(crate) description: Option<String>,
+    #[serde(default)]
     pub(crate) auto_accepted_fees: bool,
 }
 
