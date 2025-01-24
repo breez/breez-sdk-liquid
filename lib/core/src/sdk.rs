@@ -1681,6 +1681,7 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
+            auto_accepted_fees: false,
             version: 0,
         };
         self.persister.insert_or_update_chain_swap(&swap)?;
@@ -2132,6 +2133,7 @@ impl LiquidSdk {
             refund_tx_id: None,
             created_at: utils::now(),
             state: PaymentState::Created,
+            auto_accepted_fees: false,
             version: 0,
         };
         self.persister.insert_or_update_chain_swap(&swap)?;

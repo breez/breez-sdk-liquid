@@ -165,5 +165,6 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
         accept_zero_conf: accept_zero_conf.unwrap_or(true),
         created_at: 0,
         description: None,
+        auto_accepted_fees: false,
     }
 }

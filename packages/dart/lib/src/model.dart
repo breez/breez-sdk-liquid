@@ -828,6 +828,11 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// Represents the invoice description
     required String description,
 
+    /// For an amountless receive swap, this indicates if fees were automatically accepted.
+    /// Fees are auto accepted when the swapper proposes fees that are within the initial
+    /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+    required bool autoAcceptedFees,
+
     /// The height of the Liquid block at which the swap will no longer be valid
     /// It should always be populated in case of an outgoing chain swap
     int? liquidExpirationBlockheight,

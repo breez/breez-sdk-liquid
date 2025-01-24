@@ -248,5 +248,6 @@ pub(crate) fn current_migrations() -> Vec<&'static str> {
         ALTER TABLE receive_swaps ADD COLUMN destination_pubkey TEXT;
         ALTER TABLE send_swaps ADD COLUMN destination_pubkey TEXT;
         ",
+        "ALTER TABLE chain_swaps ADD COLUMN auto_accepted_fees INTEGER NOT NULL DEFAULT 0;",
     ]
 }

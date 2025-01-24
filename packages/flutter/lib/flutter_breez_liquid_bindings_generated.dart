@@ -4731,6 +4731,9 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
+  @ffi.Bool()
+  external bool auto_accepted_fees;
+
   external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
 
   external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;

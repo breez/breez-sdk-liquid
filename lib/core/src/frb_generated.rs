@@ -3803,6 +3803,7 @@ impl SseDecode for crate::model::PaymentDetails {
             2 => {
                 let mut var_swapId = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
+                let mut var_autoAcceptedFees = <bool>::sse_decode(deserializer);
                 let mut var_liquidExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
                 let mut var_bitcoinExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
@@ -3810,6 +3811,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 return crate::model::PaymentDetails::Bitcoin {
                     swap_id: var_swapId,
                     description: var_description,
+                    auto_accepted_fees: var_autoAcceptedFees,
                     liquid_expiration_blockheight: var_liquidExpirationBlockheight,
                     bitcoin_expiration_blockheight: var_bitcoinExpirationBlockheight,
                     refund_tx_id: var_refundTxId,
@@ -5991,6 +5993,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
                 description,
+                auto_accepted_fees,
                 liquid_expiration_blockheight,
                 bitcoin_expiration_blockheight,
                 refund_tx_id,
@@ -5999,6 +6002,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 2.into_dart(),
                 swap_id.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
+                auto_accepted_fees.into_into_dart().into_dart(),
                 liquid_expiration_blockheight.into_into_dart().into_dart(),
                 bitcoin_expiration_blockheight.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
@@ -8112,6 +8116,7 @@ impl SseEncode for crate::model::PaymentDetails {
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
                 description,
+                auto_accepted_fees,
                 liquid_expiration_blockheight,
                 bitcoin_expiration_blockheight,
                 refund_tx_id,
@@ -8120,6 +8125,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(swap_id, serializer);
                 <String>::sse_encode(description, serializer);
+                <bool>::sse_encode(auto_accepted_fees, serializer);
                 <Option<u32>>::sse_encode(liquid_expiration_blockheight, serializer);
                 <Option<u32>>::sse_encode(bitcoin_expiration_blockheight, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
@@ -10209,6 +10215,7 @@ mod io {
                     crate::model::PaymentDetails::Bitcoin {
                         swap_id: ans.swap_id.cst_decode(),
                         description: ans.description.cst_decode(),
+                        auto_accepted_fees: ans.auto_accepted_fees.cst_decode(),
                         liquid_expiration_blockheight: ans
                             .liquid_expiration_blockheight
                             .cst_decode(),
@@ -13810,6 +13817,7 @@ mod io {
     pub struct wire_cst_PaymentDetails_Bitcoin {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
+        auto_accepted_fees: bool,
         liquid_expiration_blockheight: *mut u32,
         bitcoin_expiration_blockheight: *mut u32,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,

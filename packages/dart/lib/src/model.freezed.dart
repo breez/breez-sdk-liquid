@@ -1139,6 +1139,7 @@ abstract class _$$PaymentDetails_BitcoinImplCopyWith<$Res> implements $PaymentDe
   $Res call(
       {String swapId,
       String description,
+      bool autoAcceptedFees,
       int? liquidExpirationBlockheight,
       int? bitcoinExpirationBlockheight,
       String? refundTxId,
@@ -1160,6 +1161,7 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
   $Res call({
     Object? swapId = null,
     Object? description = null,
+    Object? autoAcceptedFees = null,
     Object? liquidExpirationBlockheight = freezed,
     Object? bitcoinExpirationBlockheight = freezed,
     Object? refundTxId = freezed,
@@ -1174,6 +1176,10 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
           ? _value.description
           : description // ignore: cast_nullable_to_non_nullable
               as String,
+      autoAcceptedFees: null == autoAcceptedFees
+          ? _value.autoAcceptedFees
+          : autoAcceptedFees // ignore: cast_nullable_to_non_nullable
+              as bool,
       liquidExpirationBlockheight: freezed == liquidExpirationBlockheight
           ? _value.liquidExpirationBlockheight
           : liquidExpirationBlockheight // ignore: cast_nullable_to_non_nullable
@@ -1200,6 +1206,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   const _$PaymentDetails_BitcoinImpl(
       {required this.swapId,
       required this.description,
+      required this.autoAcceptedFees,
       this.liquidExpirationBlockheight,
       this.bitcoinExpirationBlockheight,
       this.refundTxId,
@@ -1212,6 +1219,12 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   /// Represents the invoice description
   @override
   final String description;
+
+  /// For an amountless receive swap, this indicates if fees were automatically accepted.
+  /// Fees are auto accepted when the swapper proposes fees that are within the initial
+  /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+  @override
+  final bool autoAcceptedFees;
 
   /// The height of the Liquid block at which the swap will no longer be valid
   /// It should always be populated in case of an outgoing chain swap
@@ -1233,7 +1246,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   String toString() {
-    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1243,6 +1256,8 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
             other is _$PaymentDetails_BitcoinImpl &&
             (identical(other.swapId, swapId) || other.swapId == swapId) &&
             (identical(other.description, description) || other.description == description) &&
+            (identical(other.autoAcceptedFees, autoAcceptedFees) ||
+                other.autoAcceptedFees == autoAcceptedFees) &&
             (identical(other.liquidExpirationBlockheight, liquidExpirationBlockheight) ||
                 other.liquidExpirationBlockheight == liquidExpirationBlockheight) &&
             (identical(other.bitcoinExpirationBlockheight, bitcoinExpirationBlockheight) ||
@@ -1253,8 +1268,8 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, swapId, description, liquidExpirationBlockheight,
-      bitcoinExpirationBlockheight, refundTxId, refundTxAmountSat);
+  int get hashCode => Object.hash(runtimeType, swapId, description, autoAcceptedFees,
+      liquidExpirationBlockheight, bitcoinExpirationBlockheight, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1269,6 +1284,7 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   const factory PaymentDetails_Bitcoin(
       {required final String swapId,
       required final String description,
+      required final bool autoAcceptedFees,
       final int? liquidExpirationBlockheight,
       final int? bitcoinExpirationBlockheight,
       final String? refundTxId,
@@ -1280,6 +1296,11 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   /// Represents the invoice description
   @override
   String get description;
+
+  /// For an amountless receive swap, this indicates if fees were automatically accepted.
+  /// Fees are auto accepted when the swapper proposes fees that are within the initial
+  /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+  bool get autoAcceptedFees;
 
   /// The height of the Liquid block at which the swap will no longer be valid
   /// It should always be populated in case of an outgoing chain swap

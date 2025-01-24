@@ -160,6 +160,7 @@ impl Persister {
                 pair_fees_json,
                 actual_payer_amount_sat,
                 accepted_receiver_amount_sat,
+                auto_accepted_fees,
                 version,
 
                 -- Used for filtering
@@ -216,7 +217,8 @@ impl Persister {
             pair_fees_json: row.get(20)?,
             actual_payer_amount_sat: row.get(21)?,
             accepted_receiver_amount_sat: row.get(22)?,
-            version: row.get(23)?,
+            auto_accepted_fees: row.get(23)?,
+            version: row.get(24)?,
         })
     }
 
@@ -369,6 +371,36 @@ impl Persister {
             err: format!("Could not trigger manual sync: {err:?}"),
         })?;
 
+        Ok(())
+    }
+
+    pub(crate) fn set_chain_swap_auto_accepted_fees(
+        &self,
+        swap_id: &str,
+    ) -> Result<(), PaymentError> {
+        log::info!("Setting chain swap {swap_id}: auto_accepted_fees to TRUE");
+
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        tx.execute(
+            "UPDATE chain_swaps
+            SET auto_accepted_fees = 1
+            WHERE id = :id",
+            named_params! {
+                ":id": swap_id,
+            },
+        )?;
+        self.commit_outgoing(
+            &tx,
+            swap_id,
+            RecordType::Chain,
+            Some(vec!["auto_accepted_fees".to_string()]),
+        )?;
+        tx.commit()?;
+        self.trigger_sync().map_err(|err| PaymentError::Generic {
+            err: format!("Could not trigger manual sync: {err:?}"),
+        })?;
         Ok(())
     }
 

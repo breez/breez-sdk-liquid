@@ -2978,6 +2978,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is PaymentDetails_Bitcoin) {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
       var pre_description = cst_encode_String(apiObj.description);
+      var pre_auto_accepted_fees = cst_encode_bool(apiObj.autoAcceptedFees);
       var pre_liquid_expiration_blockheight =
           cst_encode_opt_box_autoadd_u_32(apiObj.liquidExpirationBlockheight);
       var pre_bitcoin_expiration_blockheight =
@@ -2987,6 +2988,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 2;
       wireObj.kind.Bitcoin.swap_id = pre_swap_id;
       wireObj.kind.Bitcoin.description = pre_description;
+      wireObj.kind.Bitcoin.auto_accepted_fees = pre_auto_accepted_fees;
       wireObj.kind.Bitcoin.liquid_expiration_blockheight = pre_liquid_expiration_blockheight;
       wireObj.kind.Bitcoin.bitcoin_expiration_blockheight = pre_bitcoin_expiration_blockheight;
       wireObj.kind.Bitcoin.refund_tx_id = pre_refund_tx_id;
@@ -6408,6 +6410,9 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  @ffi.Bool()
+  external bool auto_accepted_fees;
 
   external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
 
