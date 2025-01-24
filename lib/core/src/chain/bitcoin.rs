@@ -2,14 +2,13 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use boltz_client::Amount;
 use electrum_client::{
     bitcoin::{
         consensus::{deserialize, serialize},
         hashes::{sha256, Hash},
-        Address, OutPoint, Script, Transaction, TxOut, Txid,
+        Address, OutPoint, Script, Transaction, Txid,
     },
-    Client, ElectrumApi, GetBalanceRes, HeaderNotification, ListUnspentRes,
+    Client, ElectrumApi, GetBalanceRes, HeaderNotification,
 };
 use log::info;
 use lwk_wollet::{ElectrumOptions, ElectrumUrl, Error, History};
@@ -188,27 +187,46 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        let utxos = self
-            .client
-            .script_list_unspent(script)?
-            .iter()
-            .map(
-                |ListUnspentRes {
-                     tx_hash,
-                     tx_pos,
-                     value,
-                     ..
-                 }| {
-                    Utxo::Bitcoin((
-                        OutPoint::new(*tx_hash, *tx_pos as u32),
-                        TxOut {
-                            value: Amount::from_sat(*value),
-                            script_pubkey: script.into(),
-                        },
-                    ))
-                },
-            )
+        // Get confirmed transactions involving our script
+        let history: Vec<_> = self
+            .get_script_history(script)?
+            .into_iter()
+            .filter(|h| h.height > 0)
             .collect();
+        let txs = self.get_transactions(
+            &history
+                .iter()
+                .map(|h| h.txid.to_raw_hash().into())
+                .collect::<Vec<_>>(),
+        )?;
+
+        // Find all unspent outputs paying to our script
+        let utxos = txs
+            .iter()
+            .flat_map(|tx| {
+                tx.output
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, output)| output.script_pubkey == *script)
+                    .filter(|(vout, _)| {
+                        // Check if output is unspent
+                        !txs.iter().any(|spending_tx| {
+                            // Check if any input spends our output
+                            spending_tx.input.iter().any(|input| {
+                                input.previous_output.txid == tx.compute_txid()
+                                    && input.previous_output.vout == *vout as u32
+                            })
+                        })
+                    })
+                    .map(|(vout, output)| {
+                        Utxo::Bitcoin((
+                            OutPoint::new(tx.compute_txid(), vout as u32),
+                            output.clone(),
+                        ))
+                    })
+            })
+            .collect();
+
         Ok(utxos)
     }
 

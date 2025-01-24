@@ -1167,7 +1167,7 @@ impl ChainSwapHandler {
                 err: format!("Cannot transition from {from_state:?} to Refundable state"),
             }),
 
-            (Pending | WaitingFeeAcceptance | Refundable, RefundPending) => Ok(()),
+            (Pending | WaitingFeeAcceptance | Refundable | RefundPending, RefundPending) => Ok(()),
             (_, RefundPending) => Err(PaymentError::Generic {
                 err: format!("Cannot transition from {from_state:?} to RefundPending state"),
             }),
@@ -1530,7 +1530,10 @@ mod tests {
             (TimedOut, HashSet::from([Failed])),
             (Complete, HashSet::from([Refundable])),
             (Refundable, HashSet::from([RefundPending, Failed])),
-            (RefundPending, HashSet::from([Refundable, Complete, Failed])),
+            (
+                RefundPending,
+                HashSet::from([Refundable, Complete, Failed, RefundPending]),
+            ),
             (Failed, HashSet::from([Failed, Refundable])),
         ]);
 

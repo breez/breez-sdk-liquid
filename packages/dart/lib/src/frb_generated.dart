@@ -2928,7 +2928,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return PrepareRefundResponse(
       txVsize: dco_decode_u_32(arr[0]),
       txFeeSat: dco_decode_u_64(arr[1]),
-      refundTxId: dco_decode_opt_String(arr[2]),
+      lastRefundTxId: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -3027,11 +3027,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RefundableSwap dco_decode_refundable_swap(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return RefundableSwap(
       swapAddress: dco_decode_String(arr[0]),
       timestamp: dco_decode_u_32(arr[1]),
       amountSat: dco_decode_u_64(arr[2]),
+      lastRefundTxId: dco_decode_opt_String(arr[3]),
     );
   }
 
@@ -5109,8 +5110,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_txVsize = sse_decode_u_32(deserializer);
     var var_txFeeSat = sse_decode_u_64(deserializer);
-    var var_refundTxId = sse_decode_opt_String(deserializer);
-    return PrepareRefundResponse(txVsize: var_txVsize, txFeeSat: var_txFeeSat, refundTxId: var_refundTxId);
+    var var_lastRefundTxId = sse_decode_opt_String(deserializer);
+    return PrepareRefundResponse(
+        txVsize: var_txVsize, txFeeSat: var_txFeeSat, lastRefundTxId: var_lastRefundTxId);
   }
 
   @protected
@@ -5197,7 +5199,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_swapAddress = sse_decode_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
-    return RefundableSwap(swapAddress: var_swapAddress, timestamp: var_timestamp, amountSat: var_amountSat);
+    var var_lastRefundTxId = sse_decode_opt_String(deserializer);
+    return RefundableSwap(
+        swapAddress: var_swapAddress,
+        timestamp: var_timestamp,
+        amountSat: var_amountSat,
+        lastRefundTxId: var_lastRefundTxId);
   }
 
   @protected
@@ -7081,7 +7088,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.txVsize, serializer);
     sse_encode_u_64(self.txFeeSat, serializer);
-    sse_encode_opt_String(self.refundTxId, serializer);
+    sse_encode_opt_String(self.lastRefundTxId, serializer);
   }
 
   @protected
@@ -7149,6 +7156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.swapAddress, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_opt_String(self.lastRefundTxId, serializer);
   }
 
   @protected

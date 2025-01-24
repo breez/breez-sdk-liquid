@@ -2227,7 +2227,7 @@ impl LiquidSdk {
         Ok(PrepareRefundResponse {
             tx_vsize,
             tx_fee_sat,
-            refund_tx_id,
+            last_refund_tx_id: refund_tx_id,
         })
     }
 

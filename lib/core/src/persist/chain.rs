@@ -268,7 +268,7 @@ impl Persister {
     }
 
     pub(crate) fn list_refundable_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
-        self.list_chain_swaps_by_state(vec![PaymentState::Refundable])
+        self.list_chain_swaps_by_state(vec![PaymentState::Refundable, PaymentState::RefundPending])
     }
 
     pub(crate) fn list_local_chain_swaps(&self) -> Result<Vec<ChainSwap>> {

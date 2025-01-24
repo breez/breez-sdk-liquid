@@ -2083,15 +2083,24 @@ fun asPrepareRefundResponse(prepareRefundResponse: ReadableMap): PrepareRefundRe
     }
     val txVsize = prepareRefundResponse.getInt("txVsize").toUInt()
     val txFeeSat = prepareRefundResponse.getDouble("txFeeSat").toULong()
-    val refundTxId = if (hasNonNullKey(prepareRefundResponse, "refundTxId")) prepareRefundResponse.getString("refundTxId") else null
-    return PrepareRefundResponse(txVsize, txFeeSat, refundTxId)
+    val lastRefundTxId =
+        if (hasNonNullKey(
+                prepareRefundResponse,
+                "lastRefundTxId",
+            )
+        ) {
+            prepareRefundResponse.getString("lastRefundTxId")
+        } else {
+            null
+        }
+    return PrepareRefundResponse(txVsize, txFeeSat, lastRefundTxId)
 }
 
 fun readableMapOf(prepareRefundResponse: PrepareRefundResponse): ReadableMap =
     readableMapOf(
         "txVsize" to prepareRefundResponse.txVsize,
         "txFeeSat" to prepareRefundResponse.txFeeSat,
-        "refundTxId" to prepareRefundResponse.refundTxId,
+        "lastRefundTxId" to prepareRefundResponse.lastRefundTxId,
     )
 
 fun asPrepareRefundResponseList(arr: ReadableArray): List<PrepareRefundResponse> {
@@ -2399,7 +2408,8 @@ fun asRefundableSwap(refundableSwap: ReadableMap): RefundableSwap? {
     val swapAddress = refundableSwap.getString("swapAddress")!!
     val timestamp = refundableSwap.getInt("timestamp").toUInt()
     val amountSat = refundableSwap.getDouble("amountSat").toULong()
-    return RefundableSwap(swapAddress, timestamp, amountSat)
+    val lastRefundTxId = if (hasNonNullKey(refundableSwap, "lastRefundTxId")) refundableSwap.getString("lastRefundTxId") else null
+    return RefundableSwap(swapAddress, timestamp, amountSat, lastRefundTxId)
 }
 
 fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
@@ -2407,6 +2417,7 @@ fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
         "swapAddress" to refundableSwap.swapAddress,
         "timestamp" to refundableSwap.timestamp,
         "amountSat" to refundableSwap.amountSat,
+        "lastRefundTxId" to refundableSwap.lastRefundTxId,
     )
 
 fun asRefundableSwapList(arr: ReadableArray): List<RefundableSwap> {

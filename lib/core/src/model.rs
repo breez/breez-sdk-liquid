@@ -513,7 +513,8 @@ pub struct PrepareRefundRequest {
 pub struct PrepareRefundResponse {
     pub tx_vsize: u32,
     pub tx_fee_sat: u64,
-    pub refund_tx_id: Option<String>,
+    /// The txid of the last broadcasted refund tx, if any
+    pub last_refund_tx_id: Option<String>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::refund].
@@ -874,6 +875,7 @@ impl ChainSwap {
             swap_address: self.lockup_address.clone(),
             timestamp: self.created_at,
             amount_sat: refundable_amount_sat,
+            last_refund_tx_id: self.refund_tx_id.clone(),
         }
     }
 
@@ -1119,6 +1121,8 @@ pub struct RefundableSwap {
     pub timestamp: u32,
     /// Amount that is refundable, from all UTXOs
     pub amount_sat: u64,
+    /// The txid of the last broadcasted refund tx, if any
+    pub last_refund_tx_id: Option<String>,
 }
 
 /// The payment state of an individual payment.
@@ -1232,7 +1236,9 @@ impl PaymentState {
     pub(crate) fn is_refundable(&self) -> bool {
         matches!(
             self,
-            PaymentState::Refundable | PaymentState::WaitingFeeAcceptance
+            PaymentState::Refundable
+                | PaymentState::RefundPending
+                | PaymentState::WaitingFeeAcceptance
         )
     }
 }
