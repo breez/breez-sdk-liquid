@@ -1716,6 +1716,22 @@ impl Payment {
         swap: Option<PaymentSwapData>,
         details: PaymentDetails,
     ) -> Payment {
+        let (amount_sat, fees_sat) = match swap.as_ref() {
+            Some(s) => match tx.payment_type {
+                // For receive swaps, to avoid some edge case issues related to potential past
+                // overpayments, we use the actual claim value as the final received amount
+                // for fee calculation.
+                PaymentType::Receive => (tx.amount, s.payer_amount_sat.saturating_sub(tx.amount)),
+                PaymentType::Send => (
+                    s.receiver_amount_sat,
+                    s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
+                ),
+            },
+            None => match tx.payment_type {
+                PaymentType::Receive => (tx.amount, 0),
+                PaymentType::Send => (tx.amount, tx.fees_sat),
+            },
+        };
         Payment {
             tx_id: Some(tx.tx_id),
             unblinding_data: tx.unblinding_data,
@@ -1748,20 +1764,8 @@ impl Payment {
                 .timestamp
                 .or(swap.as_ref().map(|s| s.created_at))
                 .unwrap_or(utils::now()),
-            amount_sat: tx.amount,
-            fees_sat: match swap.as_ref() {
-                Some(s) => match tx.payment_type {
-                    // For receive swaps, to avoid some edge case issues related to potential past
-                    //  overpayments, we use the actual claim value as the final received amount
-                    //  for fee calculation.
-                    PaymentType::Receive => s.payer_amount_sat.saturating_sub(tx.amount),
-                    PaymentType::Send => s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
-                },
-                None => match tx.payment_type {
-                    PaymentType::Receive => 0,
-                    PaymentType::Send => tx.fees_sat,
-                },
-            },
+            amount_sat,
+            fees_sat,
             swapper_fees_sat: swap.as_ref().map(|s| s.swapper_fees_sat),
             payment_type: tx.payment_type,
             status: match &swap {
