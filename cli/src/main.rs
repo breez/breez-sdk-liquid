@@ -16,6 +16,9 @@ pub(crate) struct Args {
     #[clap(short, long)]
     pub(crate) data_dir: Option<String>,
 
+    #[clap(long, action)]
+    pub(crate) no_data_sync: bool,
+
     #[clap(short, long)]
     pub(crate) cache_dir: Option<String>,
 
@@ -61,6 +64,9 @@ async fn main() -> Result<()> {
 
     LiquidSdk::init_logging(&data_dir_str, None)?;
 
+    let data_sync_url = std::env::var_os("SYNC_SERVICE_URL")
+        .map(|var| var.into_string().expect("Expected valid sync service url"));
+
     let persistence = CliPersistence { data_dir };
     let history_file = &persistence.history_file();
 
@@ -80,8 +86,11 @@ async fn main() -> Result<()> {
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
     config.working_dir = data_dir_str;
     config.cache_dir = args.cache_dir;
-    config.sync_service_url = std::env::var_os("SYNC_SERVICE_URL")
-        .map(|var| var.into_string().expect("Expected valid sync service url"));
+    if args.no_data_sync {
+        config.sync_service_url = None;
+    } else if data_sync_url.is_some() {
+        config.sync_service_url = data_sync_url;
+    }
     let sdk = LiquidSdk::connect(ConnectRequest {
         mnemonic: mnemonic.to_string(),
         config,
