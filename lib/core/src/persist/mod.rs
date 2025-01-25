@@ -357,7 +357,7 @@ impl Persister {
             .map(Swap::Send)
             .collect();
         let ongoing_receive_swaps: Vec<Swap> = self
-            .list_ongoing_receive_swaps()?
+            .list_ongoing_receive_swaps(None)?
             .into_iter()
             .map(Swap::Receive)
             .collect();
@@ -1022,8 +1022,9 @@ mod tests {
     fn test_list_ongoing_swaps() -> Result<()> {
         create_persister!(storage);
 
-        storage.insert_or_update_send_swap(&new_send_swap(None))?;
-        storage.insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_send_swap(&new_send_swap(None, None))?;
+        storage
+            .insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending), None))?;
 
         assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
 

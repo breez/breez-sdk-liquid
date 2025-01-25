@@ -1549,6 +1549,7 @@ mod tests {
                     None,
                     false,
                     false,
+                    None,
                 );
                 persister.insert_or_update_chain_swap(&chain_swap)?;
 
@@ -1582,6 +1583,7 @@ mod tests {
                     None,
                     false,
                     false,
+                    None,
                 );
                 persister.insert_or_update_chain_swap(&chain_swap)?;
 

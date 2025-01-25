@@ -633,7 +633,7 @@ mod tests {
 
         for (first_state, allowed_states) in valid_combinations.iter() {
             for allowed_state in allowed_states {
-                let send_swap = new_send_swap(Some(*first_state));
+                let send_swap = new_send_swap(Some(*first_state), None);
                 storage.insert_or_update_send_swap(&send_swap)?;
 
                 assert!(send_swap_handler
@@ -656,7 +656,7 @@ mod tests {
 
         for (first_state, disallowed_states) in invalid_combinations.iter() {
             for disallowed_state in disallowed_states {
-                let send_swap = new_send_swap(Some(*first_state));
+                let send_swap = new_send_swap(Some(*first_state), None);
                 storage.insert_or_update_send_swap(&send_swap)?;
 
                 assert!(send_swap_handler

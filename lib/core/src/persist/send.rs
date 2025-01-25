@@ -400,7 +400,7 @@ mod tests {
     #[test]
     fn test_fetch_send_swap() -> Result<()> {
         create_persister!(storage);
-        let send_swap = new_send_swap(None);
+        let send_swap = new_send_swap(None, None);
 
         storage.insert_or_update_send_swap(&send_swap)?;
         // Fetch swap by id
@@ -420,7 +420,7 @@ mod tests {
         // List general send swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_or_update_send_swap(&new_send_swap(None))?;
+            storage.insert_or_update_send_swap(&new_send_swap(None, None))?;
         }
 
         let con = storage.get_connection()?;
@@ -428,7 +428,7 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing send swaps
-        storage.insert_or_update_send_swap(&new_send_swap(Some(PaymentState::Pending)))?;
+        storage.insert_or_update_send_swap(&new_send_swap(Some(PaymentState::Pending), None))?;
         let ongoing_swaps = storage.list_ongoing_send_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
@@ -443,7 +443,7 @@ mod tests {
     fn test_update_send_swap() -> Result<()> {
         create_persister!(storage);
 
-        let mut send_swap = new_send_swap(None);
+        let mut send_swap = new_send_swap(None, None);
         storage.insert_or_update_send_swap(&send_swap)?;
 
         // Update metadata
@@ -486,7 +486,7 @@ mod tests {
     async fn test_writing_stale_swap() -> Result<()> {
         create_persister!(storage);
 
-        let send_swap = new_send_swap(None);
+        let send_swap = new_send_swap(None, None);
         storage.insert_or_update_send_swap(&send_swap)?;
 
         // read - update - write works if there are no updates in between

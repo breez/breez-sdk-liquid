@@ -13,6 +13,7 @@ use lwk_wollet::WalletTx;
 use tokio::sync::Mutex;
 
 use super::model::*;
+
 use crate::prelude::{Direction, Swap};
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;

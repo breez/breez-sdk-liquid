@@ -397,10 +397,12 @@ impl LiquidSdk {
                         // Update swap handlers
                         if is_new_liquid_block {
                             cloned.chain_swap_handler.on_liquid_block(current_liquid_block).await;
+                            cloned.receive_swap_handler.on_liquid_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_liquid_block(current_liquid_block).await;
                         }
                         if is_new_bitcoin_block {
                             cloned.chain_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
+                            cloned.receive_swap_handler.on_bitcoin_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
                         }
                     }
@@ -3375,6 +3377,7 @@ mod tests {
         TEST_LIQUID_OUTGOING_USER_LOCKUP_TX,
     };
     use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
+    use crate::test_utils::wallet::TEST_LIQUID_RECEIVE_LOCKUP_TX;
     use crate::{
         model::{Direction, PaymentState, Swap},
         sdk::LiquidSdk,
@@ -3385,7 +3388,6 @@ mod tests {
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
             status_stream::MockStatusStream,
             swapper::MockSwapper,
-            wallet::TEST_LIQUID_TX,
         },
     };
     use paste::paste;
@@ -3394,6 +3396,7 @@ mod tests {
         direction: Direction,
         accepts_zero_conf: bool,
         initial_payment_state: Option<PaymentState>,
+        receiver_amount_sat: Option<u64>,
         user_lockup_tx_id: Option<String>,
         zero_amount: bool,
         set_actual_payer_amount: bool,
@@ -3405,6 +3408,7 @@ mod tests {
                 accepts_zero_conf: false,
                 initial_payment_state: None,
                 direction: Direction::Outgoing,
+                receiver_amount_sat: None,
                 user_lockup_tx_id: None,
                 zero_amount: false,
                 set_actual_payer_amount: false,
@@ -3420,6 +3424,11 @@ mod tests {
 
         pub fn set_accepts_zero_conf(mut self, accepts_zero_conf: bool) -> Self {
             self.accepts_zero_conf = accepts_zero_conf;
+            self
+        }
+
+        pub fn set_receiver_amount_sat(mut self, receiver_amount_sat: Option<u64>) -> Self {
+            self.receiver_amount_sat = receiver_amount_sat;
             self
         }
 
@@ -3463,17 +3472,20 @@ mod tests {
                         $args.user_lockup_tx_id,
                         $args.zero_amount,
                         $args.set_actual_payer_amount,
+                        $args.receiver_amount_sat,
                     );
                     $persister.insert_or_update_chain_swap(&swap).unwrap();
                     Swap::Chain(swap)
                 }
                 "send" => {
-                    let swap = new_send_swap($args.initial_payment_state);
+                    let swap =
+                        new_send_swap($args.initial_payment_state, $args.receiver_amount_sat);
                     $persister.insert_or_update_send_swap(&swap).unwrap();
                     Swap::Send(swap)
                 }
                 "receive" => {
-                    let swap = new_receive_swap($args.initial_payment_state);
+                    let swap =
+                        new_receive_swap($args.initial_payment_state, $args.receiver_amount_sat);
                     $persister.insert_or_update_receive_swap(&swap).unwrap();
                     Swap::Receive(swap)
                 }
@@ -3505,11 +3517,16 @@ mod tests {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
-        let sdk = Arc::new(new_liquid_sdk(
+        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
             persister.clone(),
             swapper.clone(),
             status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            None,
         )?);
 
         LiquidSdk::track_swap_updates(&sdk).await;
@@ -3543,7 +3560,21 @@ mod tests {
                 RevSwapStates::TransactionMempool,
                 RevSwapStates::TransactionConfirmed,
             ] {
-                let mock_tx = TEST_LIQUID_TX.clone();
+                let mock_tx = TEST_LIQUID_RECEIVE_LOCKUP_TX.clone();
+                let mock_tx_id = mock_tx.txid();
+                let height = (serde_json::to_string(&status).unwrap()
+                    == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
+                    as i32;
+                liquid_chain_service
+                    .lock()
+                    .await
+                    .set_history(vec![MockHistory {
+                        txid: mock_tx_id,
+                        height,
+                        block_hash: None,
+                        block_timestamp: None,
+                    }]);
+
                 let persisted_swap = trigger_swap_update!(
                     "receive",
                     NewSwapArgs::default(),
@@ -3551,13 +3582,50 @@ mod tests {
                     status_stream,
                     status,
                     Some(SwapUpdateTxDetails {
-                        id: mock_tx.txid().to_string(),
+                        id: mock_tx_id.to_string(),
                         hex: lwk_wollet::elements::encode::serialize(&mock_tx)
                             .to_lower_hex_string(),
                     }),
                     None
                 );
                 assert!(persisted_swap.claim_tx_id.is_some());
+            }
+
+            // Check that `TransactionMempool` and `TransactionConfirmed` checks the lockup amount
+            // and doesn't claim if not verified
+            for status in [
+                RevSwapStates::TransactionMempool,
+                RevSwapStates::TransactionConfirmed,
+            ] {
+                let mock_tx = TEST_LIQUID_RECEIVE_LOCKUP_TX.clone();
+                let mock_tx_id = mock_tx.txid();
+                let height = (serde_json::to_string(&status).unwrap()
+                    == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
+                    as i32;
+                liquid_chain_service
+                    .lock()
+                    .await
+                    .set_history(vec![MockHistory {
+                        txid: mock_tx_id,
+                        height,
+                        block_hash: None,
+                        block_timestamp: None,
+                    }]);
+
+                let persisted_swap = trigger_swap_update!(
+                    "receive",
+                    NewSwapArgs::default().set_receiver_amount_sat(Some(1000)),
+                    persister,
+                    status_stream,
+                    status,
+                    Some(SwapUpdateTxDetails {
+                        id: mock_tx_id.to_string(),
+                        hex: lwk_wollet::elements::encode::serialize(&mock_tx)
+                            .to_lower_hex_string(),
+                    }),
+                    None
+                );
+                assert!(persisted_swap.claim_tx_id.is_none());
             }
         })
         .await

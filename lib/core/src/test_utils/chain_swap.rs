@@ -54,6 +54,7 @@ pub(crate) fn new_chain_swap(
     user_lockup_tx_id: Option<String>,
     zero_amount: bool,
     set_actual_payer_amount: bool,
+    receiver_amount_sat: Option<u64>,
 ) -> ChainSwap {
     if zero_amount {
         if direction == Direction::Outgoing {
@@ -114,7 +115,7 @@ pub(crate) fn new_chain_swap(
                 true => {Some(10000)}
                 false => {None}
             },
-            receiver_amount_sat: 0,
+            receiver_amount_sat: receiver_amount_sat.unwrap_or(0),
             accepted_receiver_amount_sat: None,
             claim_fees_sat: 144,
             server_lockup_tx_id: None,
