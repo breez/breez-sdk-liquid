@@ -393,7 +393,7 @@ impl SendSwapHandler {
         ensure_sdk!(
             history.len() <= 2,
             PaymentError::Generic {
-                err: "Lockup address history for Send Swap {id} has more than 2 txs".to_string()
+                err: format!("Lockup address history for Send Swap {id} has more than 2 txs")
             }
         );
 
@@ -557,7 +557,7 @@ impl SendSwapHandler {
         match (from_state, to_state) {
             (TimedOut, Created) => Ok(()),
             (_, Created) => Err(PaymentError::Generic {
-                err: "Cannot transition from {from_state:?} to Created state".to_string(),
+                err: format!("Cannot transition from {from_state:?} to Created state"),
             }),
 
             (Created | Pending, Pending) => Ok(()),
