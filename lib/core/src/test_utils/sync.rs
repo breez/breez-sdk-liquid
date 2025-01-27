@@ -10,8 +10,8 @@ use crate::{
         client::SyncerClient,
         model::{
             data::{ChainSyncData, ReceiveSyncData, SendSyncData},
-            ListChangesReply, ListChangesRequest, Record, SetRecordReply, SetRecordRequest,
-            SetRecordStatus,
+            ListChangesReply, ListChangesRequest, ListenChangesRequest, Notification, Record,
+            SetRecordReply, SetRecordRequest, SetRecordStatus,
         },
         SyncService,
     },
@@ -22,6 +22,7 @@ use tokio::sync::{
     mpsc::{self, Receiver, Sender},
     Mutex,
 };
+use tonic::Streaming;
 
 pub(crate) struct MockSyncerClient {
     pub(crate) incoming_rx: Mutex<Receiver<Record>>,
@@ -77,6 +78,10 @@ impl SyncerClient for MockSyncerClient {
         let mut changes = Vec::with_capacity(3);
         rx.recv_many(&mut changes, 3).await;
         Ok(ListChangesReply { changes })
+    }
+
+    async fn listen(&self, _req: ListenChangesRequest) -> Result<Streaming<Notification>> {
+        todo!()
     }
 
     async fn disconnect(&self) -> Result<()> {

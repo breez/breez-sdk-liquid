@@ -7,10 +7,12 @@ use futures_util::TryFutureExt;
 use log::trace;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
+use tokio_stream::StreamExt as _;
+use tonic::Streaming;
 
 use self::client::SyncerClient;
 use self::model::{data::SyncData, ListChangesRequest, RecordType, SyncState};
-use self::model::{DecryptionError, SyncOutgoingChanges};
+use self::model::{DecryptionError, ListenChangesRequest, Notification, SyncOutgoingChanges};
 use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
 use crate::sync::model::data::{
@@ -80,6 +82,11 @@ impl SyncService {
         }
     }
 
+    async fn new_listener(&self) -> Result<Streaming<Notification>> {
+        let req = ListenChangesRequest::new(self.signer.clone())?;
+        self.client.listen(req).await
+    }
+
     pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
         tokio::spawn(async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
@@ -91,13 +98,26 @@ impl SyncService {
                 return;
             }
 
-            let mut sync_trigger = self.sync_trigger.lock().await;
+            let mut local_sync_trigger = self.sync_trigger.lock().await;
+            let mut remote_sync_trigger = match self.new_listener().await {
+                Ok(trigger) => trigger,
+                Err(err) => {
+                    log::warn!("Could not start remote sync trigger: {err:?}");
+                    return;
+                }
+            };
             let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
+
+            log::debug!("Starting real-time sync event loop");
 
             loop {
                 tokio::select! {
                     _ = event_loop_interval.tick() => self.run_event_loop().await,
-                    Some(_) = sync_trigger.recv() => {
+                    Some(_) = local_sync_trigger.recv() => {
+                        self.run_event_loop().await;
+                        event_loop_interval.reset();
+                    },
+                    Some(Ok(_)) = remote_sync_trigger.next() => {
                         self.run_event_loop().await;
                         event_loop_interval.reset();
                     }
