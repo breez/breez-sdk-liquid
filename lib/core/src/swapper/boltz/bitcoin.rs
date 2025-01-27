@@ -3,6 +3,7 @@ use std::str::FromStr;
 use boltz_client::{
     bitcoin::{address::Address, Transaction},
     boltz::SwapTxKind,
+    fees::Fee,
     util::secrets::Preimage,
     BtcSwapTx,
 };
@@ -94,7 +95,11 @@ impl BoltzSwapper {
             false => None,
         };
 
-        let signed_tx = refund_tx.sign_refund(&refund_keypair, broadcast_fees_sat, cooperative)?;
+        let signed_tx = refund_tx.sign_refund(
+            &refund_keypair,
+            Fee::Absolute(broadcast_fees_sat),
+            cooperative,
+        )?;
         Ok(signed_tx)
     }
 
@@ -118,7 +123,7 @@ impl BoltzSwapper {
         let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
-            swap.claim_fees_sat,
+            Fee::Absolute(swap.claim_fees_sat),
             self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
         )?;
 
