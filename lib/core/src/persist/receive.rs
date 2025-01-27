@@ -308,28 +308,17 @@ impl Persister {
         mrh_tx_id: Option<&str>,
         mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite claim_tx_id or lockup_tx_id
+        // Do not overwrite claim_tx_id, lockup_tx_id, mrh_tx_id
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
 
         tx.execute(
             "UPDATE receive_swaps
             SET
-                claim_tx_id =
-                    CASE
-                        WHEN claim_tx_id IS NULL THEN :claim_tx_id
-                        ELSE claim_tx_id
-                    END,
-                lockup_tx_id = 
-                    CASE
-                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
-                        ELSE lockup_tx_id
-                    END,
-                mrh_tx_id = 
-                    CASE
-                        WHEN mrh_tx_id IS NULL THEN :mrh_tx_id
-                        ELSE mrh_tx_id
-                    END,
+                claim_tx_id = COALESCE(claim_tx_id, :claim_tx_id),
+                lockup_tx_id = COALESCE(lockup_tx_id, :lockup_tx_id),
+                mrh_tx_id = COALESCE(mrh_tx_id, :mrh_tx_id),
+
                 payer_amount_sat = COALESCE(:mrh_amount_sat, payer_amount_sat),
                 receiver_amount_sat = COALESCE(:mrh_amount_sat, receiver_amount_sat),
                 state = :state

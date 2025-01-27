@@ -265,24 +265,9 @@ impl Persister {
         tx.execute(
             "UPDATE send_swaps
             SET
-                preimage =
-                    CASE
-                        WHEN preimage IS NULL THEN :preimage
-                        ELSE preimage
-                    END,
-
-                lockup_tx_id =
-                    CASE
-                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
-                        ELSE lockup_tx_id
-                    END,
-
-                refund_tx_id =
-                    CASE
-                        WHEN refund_tx_id IS NULL THEN :refund_tx_id
-                        ELSE refund_tx_id
-                    END,
-
+                preimage = COALESCE(preimage, :preimage),
+                lockup_tx_id = COALESCE(lockup_tx_id, :lockup_tx_id),
+                refund_tx_id = COALESCE(refund_tx_id, :refund_tx_id),
                 state = :state
             WHERE
                 id = :id",
