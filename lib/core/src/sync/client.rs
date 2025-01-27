@@ -9,12 +9,12 @@ use tonic::{
     metadata::{errors::InvalidMetadataValue, Ascii, MetadataValue},
     service::{interceptor::InterceptedService, Interceptor},
     transport::{Channel, ClientTlsConfig, Endpoint},
-    Request, Status,
+    Request, Status, Streaming,
 };
 
 use super::model::{
     syncer_client::SyncerClient as ProtoSyncerClient, ListChangesReply, ListChangesRequest,
-    SetRecordReply, SetRecordRequest,
+    ListenChangesRequest, Notification, SetRecordReply, SetRecordRequest,
 };
 
 #[async_trait]
@@ -22,6 +22,7 @@ pub(crate) trait SyncerClient: Send + Sync {
     async fn connect(&self, connect_url: String) -> Result<()>;
     async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply>;
     async fn pull(&self, req: ListChangesRequest) -> Result<ListChangesReply>;
+    async fn listen(&self, req: ListenChangesRequest) -> Result<Streaming<Notification>>;
     async fn disconnect(&self) -> Result<()>;
 }
 
@@ -95,6 +96,15 @@ impl SyncerClient for BreezSyncerClient {
             .get_client()
             .await?
             .list_changes(req)
+            .await?
+            .into_inner())
+    }
+
+    async fn listen(&self, req: ListenChangesRequest) -> Result<Streaming<Notification>> {
+        Ok(self
+            .get_client()
+            .await?
+            .listen_changes(req)
             .await?
             .into_inner())
     }

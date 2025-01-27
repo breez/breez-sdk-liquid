@@ -8,7 +8,10 @@ use lwk_wollet::hashes::hex::DisplayHex as _;
 use openssl::sha::sha256;
 use std::sync::Arc;
 
-use super::{ListChangesRequest, Record, SetRecordRequest, CURRENT_SCHEMA_VERSION, MESSAGE_PREFIX};
+use super::{
+    ListChangesRequest, ListenChangesRequest, Record, SetRecordRequest, CURRENT_SCHEMA_VERSION,
+    MESSAGE_PREFIX,
+};
 
 fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, SignerError> {
     let msg = [MESSAGE_PREFIX, msg].concat();
@@ -51,6 +54,17 @@ impl SetRecordRequest {
         trace!("Got signature: {}", signature);
         Ok(Self {
             record: Some(record),
+            request_time,
+            signature,
+        })
+    }
+}
+impl ListenChangesRequest {
+    pub(crate) fn new(signer: Arc<Box<dyn Signer>>) -> Result<Self, SignerError> {
+        let request_time = utils::now();
+        let msg = format!("{}", request_time);
+        let signature = sign_message(msg.as_bytes(), signer)?;
+        Ok(Self {
             request_time,
             signature,
         })
