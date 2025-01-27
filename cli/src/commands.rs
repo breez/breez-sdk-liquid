@@ -677,10 +677,11 @@ pub(crate) async fn handle_command(
                     let amount = match drain.unwrap_or(false) {
                         true => PayAmount::Drain,
                         false => {
+                            let min_sendable = (pd.min_sendable as f64 / 1000.0).ceil() as u64;
+                            let max_sendable = pd.max_sendable / 1000;
                             let prompt = format!(
                                 "Amount to pay (min {} sat, max {} sat): ",
-                                pd.min_sendable / 1000,
-                                pd.max_sendable / 1000
+                                min_sendable, max_sendable
                             );
                             let amount_sat = rl.readline(&prompt)?;
                             PayAmount::Bitcoin {
