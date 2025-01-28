@@ -352,8 +352,13 @@ impl LiquidSdk {
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
+                      info!("Track blocks loop ticked");
                         // Get the Liquid tip and process a new block
+                        let t0 = Instant::now();
                         let liquid_tip_res = cloned.liquid_chain_service.tip().await;
+                        let duration_ms = Instant::now().duration_since(t0).as_millis();
+                        info!("Fetched liquid tip at ({duration_ms} ms)");
+
                         let is_new_liquid_block = match &liquid_tip_res {
                             Ok(height) => {
                                 debug!("Got Liquid tip: {height}");
@@ -367,7 +372,10 @@ impl LiquidSdk {
                             }
                         };
                         // Get the Bitcoin tip and process a new block
+                        let t0 = Instant::now();
                         let bitcoin_tip_res = cloned.bitcoin_chain_service.lock().await.tip().map(|tip| tip.height as u32);
+                        let duration_ms = Instant::now().duration_since(t0).as_millis();
+                        info!("Fetched bitcoin tip at ({duration_ms} ms)");
                         let is_new_bitcoin_block = match &bitcoin_tip_res {
                             Ok(height) => {
                                 debug!("Got Bitcoin tip: {height}");
