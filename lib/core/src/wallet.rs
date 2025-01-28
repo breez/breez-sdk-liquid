@@ -365,7 +365,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             let electrum_url = ElectrumUrl::new(&self.config.liquid_electrum_url, true, true)?;
             *electrum_client = Some(ElectrumClient::new(&electrum_url)?);
         }
-        let client = electrum_client.as_mut().unwrap();
+        let client = electrum_client
+            .as_mut()
+            .ok_or_else(|| PaymentError::Generic {
+                err: "Electrum client not initialized".to_string(),
+            })?;
 
         // Use the cached derivation index with a buffer of 5 to perform the scan
         let index = self
