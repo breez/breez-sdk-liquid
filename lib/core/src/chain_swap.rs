@@ -41,7 +41,7 @@ pub(crate) struct ChainSwapHandler {
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     subscription_notifier: broadcast::Sender<String>,
 }
@@ -70,7 +70,7 @@ impl ChainSwapHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+        liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     ) -> Result<Self> {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
@@ -759,9 +759,7 @@ impl ChainSwapHandler {
             .await?;
 
         let lockup_tx_id = self
-            .liquid_chain_service
-            .lock()
-            .await
+            .liquid_chain_service            
             .broadcast(&lockup_tx)
             .await?
             .to_string();
@@ -843,9 +841,8 @@ impl ChainSwapHandler {
             Ok(_) => {
                 let broadcast_res = match claim_tx {
                     // We attempt broadcasting via chain service, then fallback to Boltz
-                    SdkTransaction::Liquid(tx) => {
-                        let liquid_chain_service = self.liquid_chain_service.lock().await;
-                        liquid_chain_service
+                    SdkTransaction::Liquid(tx) => {                        
+                        self.liquid_chain_service
                             .broadcast(&tx)
                             .await
                             .map(|tx_id| tx_id.to_hex())
@@ -1043,13 +1040,13 @@ impl ChainSwapHandler {
             });
         };
 
-        let liquid_chain_service = self.liquid_chain_service.lock().await;
+        
         let script_pk = swap_script
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .to_unconfidential()
             .script_pubkey();
-        let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
+        let utxos = self.liquid_chain_service.get_script_utxos(&script_pk).await?;
 
         let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
@@ -1067,7 +1064,7 @@ impl ChainSwapHandler {
                 ),
             });
         };
-        let refund_tx_id = liquid_chain_service
+        let refund_tx_id = self.liquid_chain_service
             .broadcast(&refund_tx)
             .await?
             .to_string();
@@ -1264,9 +1261,7 @@ impl ChainSwapHandler {
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let tx = self
-            .liquid_chain_service
-            .lock()
-            .await
+            .liquid_chain_service            
             .verify_tx(
                 &address,
                 &swap_update_tx.id,
@@ -1447,9 +1442,7 @@ impl ChainSwapHandler {
             .to_unconfidential();
         let script = Script::from_hex(hex::encode(address.script_pubkey().as_bytes()).as_str())
             .map_err(|e| anyhow!("Failed to get script from address {e:?}"))?;
-        self.liquid_chain_service
-            .lock()
-            .await
+        self.liquid_chain_service            
             .get_script_history_with_retry(&script, 5)
             .await
     }

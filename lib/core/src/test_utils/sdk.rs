@@ -31,7 +31,7 @@ pub(crate) fn new_liquid_sdk(
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
 ) -> Result<LiquidSdk> {
-    let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+    let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
     new_liquid_sdk_with_chain_services(
@@ -48,7 +48,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     persister: Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
-    liquid_chain_service: Arc<Mutex<MockLiquidChainService>>,
+    liquid_chain_service: Arc<MockLiquidChainService>,
     bitcoin_chain_service: Arc<Mutex<MockBitcoinChainService>>,
     onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
 ) -> Result<LiquidSdk> {

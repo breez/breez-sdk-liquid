@@ -27,7 +27,7 @@ pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
 }
 
@@ -36,7 +36,7 @@ impl Recoverer {
         master_blinding_key: Vec<u8>,
         swapper: Arc<dyn Swapper>,
         onchain_wallet: Arc<dyn OnchainWallet>,
-        liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+        liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     ) -> Result<Self> {
         Ok(Self {
@@ -79,8 +79,6 @@ impl Recoverer {
         let claim_tx_ids: Vec<Txid> = failed_cooperative.values().cloned().collect();
         let claim_txs = self
             .liquid_chain_service
-            .lock()
-            .await
             .get_transactions(claim_tx_ids.as_slice())
             .await
             .map_err(|e| anyhow!("Failed to fetch claim txs from recovery: {e}"))?;
@@ -166,6 +164,20 @@ impl Recoverer {
     /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
     pub(crate) async fn recover_from_onchain(&self, swaps: &mut [Swap]) -> Result<()> {
+        //println!("swaps: {:?}", swaps.iter().map(|s|s.).collect::<Vec<_>>());
+        for swap in swaps.iter() {
+            match swap {
+                Swap::Send(send_swap) => {
+                    println!("send_swap: {:?}", send_swap.id);
+                }
+                Swap::Receive(receive_swap) => {
+                    println!("receive_swap: {:?}", receive_swap.id);
+                }
+                Swap::Chain(chain_swap) => {
+                    println!("chain_swap: {:?}", chain_swap.id);
+                }
+            }
+        }
         let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
 
         let swaps_list = swaps.to_vec().try_into()?;
@@ -203,7 +215,7 @@ impl Recoverer {
         )?;
 
         let bitcoin_tip = self.bitcoin_chain_service.lock().await.tip()?;
-        let liquid_tip = self.liquid_chain_service.lock().await.tip().await?;
+        let liquid_tip = self.liquid_chain_service.tip().await?;
 
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
@@ -355,8 +367,6 @@ impl Recoverer {
         let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts();
         let lbtc_script_histories = self
             .liquid_chain_service
-            .lock()
-            .await
             .get_scripts_history(&swap_lbtc_scripts.iter().collect::<Vec<&LBtcScript>>())
             .await?;
         let lbtc_swap_scripts_len = swap_lbtc_scripts.len();

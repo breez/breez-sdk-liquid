@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+use std::sync::Mutex;
+
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{
@@ -47,7 +49,7 @@ impl From<MockHistory> for lwk_wollet::History {
 
 #[derive(Default)]
 pub(crate) struct MockLiquidChainService {
-    history: Vec<MockHistory>,
+    history: Mutex<Vec<MockHistory>>,
 }
 
 impl MockLiquidChainService {
@@ -55,15 +57,19 @@ impl MockLiquidChainService {
         MockLiquidChainService::default()
     }
 
-    pub(crate) fn set_history(&mut self, history: Vec<MockHistory>) -> &mut Self {
-        self.history = history;
+    pub(crate) fn set_history(&self, history: Vec<MockHistory>) -> &Self {
+        *self.history.lock().unwrap() = history;
         self
+    }
+
+    pub(crate) fn get_history(&self) -> Vec<MockHistory> {
+        self.history.lock().unwrap().clone()
     }
 }
 
 #[async_trait]
 impl LiquidChainService for MockLiquidChainService {
-    async fn tip(&mut self) -> Result<u32> {
+    async fn tip(&self) -> Result<u32> {
         Ok(0)
     }
 
@@ -92,7 +98,7 @@ impl LiquidChainService for MockLiquidChainService {
         &self,
         _scripts: &ElementsScript,
     ) -> Result<Vec<lwk_wollet::History>> {
-        Ok(self.history.clone().into_iter().map(Into::into).collect())
+        Ok(self.get_history().into_iter().map(Into::into).collect())
     }
 
     async fn get_script_history_with_retry(
@@ -100,7 +106,7 @@ impl LiquidChainService for MockLiquidChainService {
         _script: &ElementsScript,
         _retries: u64,
     ) -> Result<Vec<lwk_wollet::History>> {
-        Ok(self.history.clone().into_iter().map(Into::into).collect())
+        Ok(self.get_history().into_iter().map(Into::into).collect())
     }
 
     async fn get_scripts_history(&self, _scripts: &[&ElementsScript]) -> Result<Vec<Vec<History>>> {

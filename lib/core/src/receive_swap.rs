@@ -9,7 +9,7 @@ use lwk_wollet::elements::secp256k1_zkp::Secp256k1;
 use lwk_wollet::elements::{Transaction, Txid};
 use lwk_wollet::hashes::hex::DisplayHex;
 use lwk_wollet::secp256k1::SecretKey;
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::broadcast;
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{BlockListener, PaymentState::*};
@@ -32,7 +32,7 @@ pub(crate) struct ReceiveSwapHandler {
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
     subscription_notifier: broadcast::Sender<String>,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    liquid_chain_service: Arc<dyn LiquidChainService>,
 }
 
 #[async_trait]
@@ -52,7 +52,7 @@ impl ReceiveSwapHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+        liquid_chain_service: Arc<dyn LiquidChainService>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -354,8 +354,7 @@ impl ReceiveSwapHandler {
         match self.persister.set_receive_swap_claim_tx_id(swap_id, &tx_id) {
             Ok(_) => {
                 // We attempt broadcasting via chain service, then fallback to Boltz
-                let liquid_chain_service = self.liquid_chain_service.lock().await;
-                let broadcast_res = liquid_chain_service
+                let broadcast_res = self.liquid_chain_service
                     .broadcast(&claim_tx)
                     .await
                     .map(|tx_id| tx_id.to_hex())
@@ -440,8 +439,6 @@ impl ReceiveSwapHandler {
         let swap_id = &receive_swap.id;
         let tx_hex = self
             .liquid_chain_service
-            .lock()
-            .await
             .get_transaction_hex(&Txid::from_str(&tx_id)?)
             .await?
             .ok_or(anyhow!("Lockup tx not found for Receive swap {swap_id}"))?
@@ -516,8 +513,6 @@ impl ReceiveSwapHandler {
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         self.liquid_chain_service
-            .lock()
-            .await
             .verify_tx(&address, tx_id, tx_hex, verify_confirmation)
             .await
     }

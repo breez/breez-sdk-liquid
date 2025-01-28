@@ -8,7 +8,6 @@ use crate::{
     send_swap::SendSwapHandler,
 };
 use anyhow::Result;
-use tokio::sync::Mutex;
 
 use super::{
     chain::MockLiquidChainService,
@@ -21,7 +20,7 @@ pub(crate) fn new_send_swap_handler(persister: Arc<Persister>) -> Result<SendSwa
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
     let onchain_wallet = Arc::new(MockWallet::new(signer)?);
     let swapper = Arc::new(MockSwapper::default());
-    let chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+    let chain_service = Arc::new(MockLiquidChainService::new());
 
     Ok(SendSwapHandler::new(
         config,

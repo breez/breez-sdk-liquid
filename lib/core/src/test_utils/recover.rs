@@ -14,7 +14,7 @@ pub(crate) fn new_recoverer(
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
 ) -> Result<Recoverer> {
-    let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+    let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
     Recoverer::new(

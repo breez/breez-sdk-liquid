@@ -34,7 +34,7 @@ pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainS
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
     let onchain_wallet = Arc::new(MockWallet::new(signer)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
-    let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+    let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
     ChainSwapHandler::new(

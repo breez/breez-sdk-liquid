@@ -75,7 +75,7 @@ pub struct LiquidSdk {
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
     pub(crate) swapper: Arc<dyn Swapper>,
     pub(crate) recoverer: Arc<Recoverer>,
-    pub(crate) liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    pub(crate) liquid_chain_service: Arc<dyn LiquidChainService>,
     pub(crate) bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
     pub(crate) fiat_api: Arc<dyn FiatAPI>,
     pub(crate) is_started: RwLock<bool>,
@@ -176,8 +176,7 @@ impl LiquidSdk {
         persister.init()?;
         persister.replace_asset_metadata(config.asset_metadata.clone())?;
 
-        let liquid_chain_service =
-            Arc::new(Mutex::new(HybridLiquidChainService::new(config.clone())?));
+        let liquid_chain_service = Arc::new(HybridLiquidChainService::new(config.clone())?);
         let bitcoin_chain_service =
             Arc::new(Mutex::new(HybridBitcoinChainService::new(config.clone())?));
 
@@ -354,7 +353,7 @@ impl LiquidSdk {
                 tokio::select! {
                     _ = interval.tick() => {
                         // Get the Liquid tip and process a new block
-                        let liquid_tip_res = cloned.liquid_chain_service.lock().await.tip().await;
+                        let liquid_tip_res = cloned.liquid_chain_service.tip().await;
                         let is_new_liquid_block = match &liquid_tip_res {
                             Ok(height) => {
                                 debug!("Got Liquid tip: {height}");
@@ -1348,8 +1347,7 @@ impl LiquidSdk {
             "Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
         );
 
-        let liquid_chain_service = self.liquid_chain_service.lock().await;
-        let tx_id = liquid_chain_service.broadcast(&tx).await?.to_string();
+        let tx_id = self.liquid_chain_service.broadcast(&tx).await?.to_string();
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -2571,7 +2569,7 @@ impl LiquidSdk {
         match partial_sync {
             false => {
                 let bitcoin_height = self.bitcoin_chain_service.lock().await.tip()?.height as u32;
-                let liquid_height = self.liquid_chain_service.lock().await.tip().await?;
+                let liquid_height = self.liquid_chain_service.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
                 let send_swaps = self
@@ -3521,7 +3519,7 @@ mod tests {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
-        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
         let sdk = Arc::new(new_liquid_sdk_with_chain_services(
@@ -3569,15 +3567,12 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service
-                    .lock()
-                    .await
-                    .set_history(vec![MockHistory {
-                        txid: mock_tx_id,
-                        height,
-                        block_hash: None,
-                        block_timestamp: None,
-                    }]);
+                liquid_chain_service.set_history(vec![MockHistory {
+                    txid: mock_tx_id,
+                    height,
+                    block_hash: None,
+                    block_timestamp: None,
+                }]);
 
                 let persisted_swap = trigger_swap_update!(
                     "receive",
@@ -3606,15 +3601,12 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service
-                    .lock()
-                    .await
-                    .set_history(vec![MockHistory {
-                        txid: mock_tx_id,
-                        height,
-                        block_hash: None,
-                        block_timestamp: None,
-                    }]);
+                liquid_chain_service.set_history(vec![MockHistory {
+                    txid: mock_tx_id,
+                    height,
+                    block_hash: None,
+                    block_timestamp: None,
+                }]);
 
                 let persisted_swap = trigger_swap_update!(
                     "receive",
@@ -3699,7 +3691,7 @@ mod tests {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
-        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
         let sdk = Arc::new(new_liquid_sdk_with_chain_services(
@@ -3789,15 +3781,12 @@ mod tests {
                                     }]);
                             }
                             Direction::Outgoing => {
-                                liquid_chain_service
-                                    .lock()
-                                    .await
-                                    .set_history(vec![MockHistory {
-                                        txid: Txid::from_str(user_lockup_tx_id).unwrap(),
-                                        height: 0,
-                                        block_hash: None,
-                                        block_timestamp: None,
-                                    }]);
+                                liquid_chain_service.set_history(vec![MockHistory {
+                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                    height: 0,
+                                    block_hash: None,
+                                    block_timestamp: None,
+                                }]);
                             }
                         }
                     }
@@ -3944,7 +3933,7 @@ mod tests {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::new());
         let status_stream = Arc::new(MockStatusStream::new());
-        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
         let sdk = Arc::new(new_liquid_sdk_with_chain_services(
@@ -4008,7 +3997,7 @@ mod tests {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::new());
         let status_stream = Arc::new(MockStatusStream::new());
-        let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
 
         let sdk = Arc::new(new_liquid_sdk_with_chain_services(
