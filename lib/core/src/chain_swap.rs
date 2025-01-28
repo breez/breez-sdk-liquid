@@ -454,7 +454,7 @@ impl ChainSwapHandler {
 
         let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
         let script_balance = self
-            .bitcoin_chain_service           
+            .bitcoin_chain_service
             .script_get_balance_with_retry(script_pubkey.as_script(), 10)
             .await?;
         debug!("Found lockup balance {script_balance:?}");
@@ -757,7 +757,7 @@ impl ChainSwapHandler {
             .await?;
 
         let lockup_tx_id = self
-            .liquid_chain_service            
+            .liquid_chain_service
             .broadcast(&lockup_tx)
             .await?
             .to_string();
@@ -839,7 +839,7 @@ impl ChainSwapHandler {
             Ok(_) => {
                 let broadcast_res = match claim_tx {
                     // We attempt broadcasting via chain service, then fallback to Boltz
-                    SdkTransaction::Liquid(tx) => {                        
+                    SdkTransaction::Liquid(tx) => {
                         self.liquid_chain_service
                             .broadcast(&tx)
                             .await
@@ -852,7 +852,7 @@ impl ChainSwapHandler {
                                 self.swapper.broadcast_tx(self.config.network.into(), &claim_tx_hex)
                             })
                     }
-                    SdkTransaction::Bitcoin(tx) => {                        
+                    SdkTransaction::Bitcoin(tx) => {
                         self.bitcoin_chain_service
                             .broadcast(&tx)
                             .map(|tx_id| tx_id.to_hex())
@@ -974,12 +974,15 @@ impl ChainSwapHandler {
                 err: "Unexpected swap script type found".to_string(),
             });
         };
-        
+
         let script_pk = swap_script
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .script_pubkey();
-        let utxos = self.bitcoin_chain_service.get_script_utxos(&script_pk).await?;
+        let utxos = self
+            .bitcoin_chain_service
+            .get_script_utxos(&script_pk)
+            .await?;
 
         let SdkTransaction::Bitcoin(refund_tx) = self.swapper.create_refund_tx(
             Swap::Chain(swap.clone()),
@@ -993,7 +996,10 @@ impl ChainSwapHandler {
                 err: format!("Unexpected refund tx type returned for incoming Chain swap {id}",),
             });
         };
-        let refund_tx_id = self.bitcoin_chain_service.broadcast(&refund_tx)?.to_string();
+        let refund_tx_id = self
+            .bitcoin_chain_service
+            .broadcast(&refund_tx)?
+            .to_string();
 
         info!("Successfully broadcast refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}");
 
@@ -1036,13 +1042,15 @@ impl ChainSwapHandler {
             });
         };
 
-        
         let script_pk = swap_script
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .to_unconfidential()
             .script_pubkey();
-        let utxos = self.liquid_chain_service.get_script_utxos(&script_pk).await?;
+        let utxos = self
+            .liquid_chain_service
+            .get_script_utxos(&script_pk)
+            .await?;
 
         let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
@@ -1060,7 +1068,8 @@ impl ChainSwapHandler {
                 ),
             });
         };
-        let refund_tx_id = self.liquid_chain_service
+        let refund_tx_id = self
+            .liquid_chain_service
             .broadcast(&refund_tx)
             .await?
             .to_string();
@@ -1199,7 +1208,7 @@ impl ChainSwapHandler {
 
         // Get full transaction
         let txs = self
-            .bitcoin_chain_service            
+            .bitcoin_chain_service
             .get_transactions(&[first_tx_id])?;
         let user_lockup_tx = txs.first().ok_or(anyhow!(
             "No transactions found for user lockup script for swap {}",
@@ -1255,7 +1264,7 @@ impl ChainSwapHandler {
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let tx = self
-            .liquid_chain_service            
+            .liquid_chain_service
             .verify_tx(
                 &address,
                 &swap_update_tx.id,
@@ -1318,7 +1327,7 @@ impl ChainSwapHandler {
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let tx = self
-            .bitcoin_chain_service           
+            .bitcoin_chain_service
             .verify_tx(
                 &address,
                 &swap_update_tx.id,
@@ -1416,7 +1425,7 @@ impl ChainSwapHandler {
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let script_pubkey = address.script_pubkey();
         let script = script_pubkey.as_script();
-        self.bitcoin_chain_service           
+        self.bitcoin_chain_service
             .get_script_history_with_retry(script, 5)
             .await
     }
@@ -1432,7 +1441,7 @@ impl ChainSwapHandler {
             .to_unconfidential();
         let script = Script::from_hex(hex::encode(address.script_pubkey().as_bytes()).as_str())
             .map_err(|e| anyhow!("Failed to get script from address {e:?}"))?;
-        self.liquid_chain_service            
+        self.liquid_chain_service
             .get_script_history_with_retry(&script, 5)
             .await
     }
