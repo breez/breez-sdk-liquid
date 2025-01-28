@@ -1544,6 +1544,9 @@ pub enum PaymentDetails {
         /// The payment LNURL info
         lnurl_info: Option<LnUrlInfo>,
 
+        /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+        claim_tx_id: Option<String>,
+
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
 
@@ -1583,6 +1586,9 @@ pub enum PaymentDetails {
         /// The height of the Bitcoin block at which the swap will no longer be valid
         /// It should always be populated in case of an incoming chain swap
         bitcoin_expiration_blockheight: Option<u32>,
+
+        /// The claim tx id in case it has already been broadcast
+        claim_tx_id: Option<String>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,

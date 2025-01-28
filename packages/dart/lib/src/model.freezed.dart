@@ -958,6 +958,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String? paymentHash,
       String? destinationPubkey,
       LnUrlInfo? lnurlInfo,
+      String? claimTxId,
       String? refundTxId,
       BigInt? refundTxAmountSat});
 }
@@ -984,6 +985,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? paymentHash = freezed,
     Object? destinationPubkey = freezed,
     Object? lnurlInfo = freezed,
+    Object? claimTxId = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
   }) {
@@ -1024,6 +1026,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
           ? _value.lnurlInfo
           : lnurlInfo // ignore: cast_nullable_to_non_nullable
               as LnUrlInfo?,
+      claimTxId: freezed == claimTxId
+          ? _value.claimTxId
+          : claimTxId // ignore: cast_nullable_to_non_nullable
+              as String?,
       refundTxId: freezed == refundTxId
           ? _value.refundTxId
           : refundTxId // ignore: cast_nullable_to_non_nullable
@@ -1049,6 +1055,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       this.paymentHash,
       this.destinationPubkey,
       this.lnurlInfo,
+      this.claimTxId,
       this.refundTxId,
       this.refundTxAmountSat})
       : super._();
@@ -1088,6 +1095,10 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final LnUrlInfo? lnurlInfo;
 
+  /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+  @override
+  final String? claimTxId;
+
   /// For a Send swap which was refunded, this is the refund tx id
   @override
   final String? refundTxId;
@@ -1098,7 +1109,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1117,14 +1128,27 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.destinationPubkey, destinationPubkey) ||
                 other.destinationPubkey == destinationPubkey) &&
             (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
+            (identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
                 other.refundTxAmountSat == refundTxAmountSat));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, swapId, description, liquidExpirationBlockheight, preimage,
-      invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, refundTxId, refundTxAmountSat);
+  int get hashCode => Object.hash(
+      runtimeType,
+      swapId,
+      description,
+      liquidExpirationBlockheight,
+      preimage,
+      invoice,
+      bolt12Offer,
+      paymentHash,
+      destinationPubkey,
+      lnurlInfo,
+      claimTxId,
+      refundTxId,
+      refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1146,6 +1170,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       final String? paymentHash,
       final String? destinationPubkey,
       final LnUrlInfo? lnurlInfo,
+      final String? claimTxId,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
   const PaymentDetails_Lightning._() : super._();
@@ -1176,6 +1201,9 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
 
   /// The payment LNURL info
   LnUrlInfo? get lnurlInfo;
+
+  /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+  String? get claimTxId;
 
   /// For a Send swap which was refunded, this is the refund tx id
   String? get refundTxId;
@@ -1333,6 +1361,7 @@ abstract class _$$PaymentDetails_BitcoinImplCopyWith<$Res> implements $PaymentDe
       bool autoAcceptedFees,
       int? liquidExpirationBlockheight,
       int? bitcoinExpirationBlockheight,
+      String? claimTxId,
       String? refundTxId,
       BigInt? refundTxAmountSat});
 }
@@ -1355,6 +1384,7 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
     Object? autoAcceptedFees = null,
     Object? liquidExpirationBlockheight = freezed,
     Object? bitcoinExpirationBlockheight = freezed,
+    Object? claimTxId = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
   }) {
@@ -1379,6 +1409,10 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
           ? _value.bitcoinExpirationBlockheight
           : bitcoinExpirationBlockheight // ignore: cast_nullable_to_non_nullable
               as int?,
+      claimTxId: freezed == claimTxId
+          ? _value.claimTxId
+          : claimTxId // ignore: cast_nullable_to_non_nullable
+              as String?,
       refundTxId: freezed == refundTxId
           ? _value.refundTxId
           : refundTxId // ignore: cast_nullable_to_non_nullable
@@ -1400,6 +1434,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
       required this.autoAcceptedFees,
       this.liquidExpirationBlockheight,
       this.bitcoinExpirationBlockheight,
+      this.claimTxId,
       this.refundTxId,
       this.refundTxAmountSat})
       : super._();
@@ -1427,6 +1462,10 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   @override
   final int? bitcoinExpirationBlockheight;
 
+  /// The claim tx id in case it has already been broadcast
+  @override
+  final String? claimTxId;
+
   /// For a Send swap which was refunded, this is the refund tx id
   @override
   final String? refundTxId;
@@ -1437,7 +1476,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   String toString() {
-    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1453,6 +1492,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
                 other.liquidExpirationBlockheight == liquidExpirationBlockheight) &&
             (identical(other.bitcoinExpirationBlockheight, bitcoinExpirationBlockheight) ||
                 other.bitcoinExpirationBlockheight == bitcoinExpirationBlockheight) &&
+            (identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
                 other.refundTxAmountSat == refundTxAmountSat));
@@ -1460,7 +1500,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   int get hashCode => Object.hash(runtimeType, swapId, description, autoAcceptedFees,
-      liquidExpirationBlockheight, bitcoinExpirationBlockheight, refundTxId, refundTxAmountSat);
+      liquidExpirationBlockheight, bitcoinExpirationBlockheight, claimTxId, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1478,6 +1518,7 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
       required final bool autoAcceptedFees,
       final int? liquidExpirationBlockheight,
       final int? bitcoinExpirationBlockheight,
+      final String? claimTxId,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_BitcoinImpl;
   const PaymentDetails_Bitcoin._() : super._();
@@ -1500,6 +1541,9 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   /// The height of the Bitcoin block at which the swap will no longer be valid
   /// It should always be populated in case of an incoming chain swap
   int? get bitcoinExpirationBlockheight;
+
+  /// The claim tx id in case it has already been broadcast
+  String? get claimTxId;
 
   /// For a Send swap which was refunded, this is the refund tx id
   String? get refundTxId;

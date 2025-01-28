@@ -91,6 +91,13 @@ class SwapUpdatedJob(
                                 stopPolling()
                                 return@launch
                             }
+                            PaymentState.PENDING -> {
+                                if (paymentClaimIsBroadcasted(payment.details)) {
+                                    onEvent(SdkEvent.PaymentWaitingConfirmation(payment))
+                                    stopPolling()
+                                    return@launch
+                                }
+                            }
                             else -> { }
                         }
                     }
@@ -140,6 +147,14 @@ class SwapUpdatedJob(
             is PaymentDetails.Bitcoin -> details.swapId
             is PaymentDetails.Lightning -> details.swapId
             else -> null
+        }
+    }
+
+    private fun paymentClaimIsBroadcasted(details: PaymentDetails?): Boolean {
+        return when (details) {
+            is PaymentDetails.Bitcoin -> details.claimTxId != null
+            is PaymentDetails.Lightning -> details.claimTxId != null
+            else -> false
         }
     }
 

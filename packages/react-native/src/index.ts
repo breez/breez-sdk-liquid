@@ -685,6 +685,7 @@ export type PaymentDetails = {
     paymentHash?: string
     destinationPubkey?: string
     lnurlInfo?: LnUrlInfo
+    claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
 } | {
@@ -700,6 +701,7 @@ export type PaymentDetails = {
     autoAcceptedFees: boolean
     bitcoinExpirationBlockheight?: number
     liquidExpirationBlockheight?: number
+    claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
 }

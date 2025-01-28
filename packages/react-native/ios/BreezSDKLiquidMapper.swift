@@ -4170,11 +4170,13 @@ enum BreezSDKLiquidMapper {
                 _lnurlInfo = try asLnUrlInfo(lnUrlInfo: lnurlInfoTmp)
             }
 
+            let _claimTxId = paymentDetails["claimTxId"] as? String
+
             let _refundTxId = paymentDetails["refundTxId"] as? String
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.lightning(swapId: _swapId, description: _description, liquidExpirationBlockheight: _liquidExpirationBlockheight, preimage: _preimage, invoice: _invoice, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, destinationPubkey: _destinationPubkey, lnurlInfo: _lnurlInfo, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.lightning(swapId: _swapId, description: _description, liquidExpirationBlockheight: _liquidExpirationBlockheight, preimage: _preimage, invoice: _invoice, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, destinationPubkey: _destinationPubkey, lnurlInfo: _lnurlInfo, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
         if type == "liquid" {
             guard let _assetId = paymentDetails["assetId"] as? String else {
@@ -4207,11 +4209,13 @@ enum BreezSDKLiquidMapper {
 
             let _liquidExpirationBlockheight = paymentDetails["liquidExpirationBlockheight"] as? UInt32
 
+            let _claimTxId = paymentDetails["claimTxId"] as? String
+
             let _refundTxId = paymentDetails["refundTxId"] as? String
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -4220,7 +4224,7 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(paymentDetails: PaymentDetails) -> [String: Any?] {
         switch paymentDetails {
         case let .lightning(
-            swapId, description, liquidExpirationBlockheight, preimage, invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, refundTxId, refundTxAmountSat
+            swapId, description, liquidExpirationBlockheight, preimage, invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, claimTxId, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "lightning",
@@ -4233,6 +4237,7 @@ enum BreezSDKLiquidMapper {
                 "paymentHash": paymentHash == nil ? nil : paymentHash,
                 "destinationPubkey": destinationPubkey == nil ? nil : destinationPubkey,
                 "lnurlInfo": lnurlInfo == nil ? nil : dictionaryOf(lnUrlInfo: lnurlInfo!),
+                "claimTxId": claimTxId == nil ? nil : claimTxId,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
             ]
@@ -4249,7 +4254,7 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bitcoin(
-            swapId, description, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, refundTxId, refundTxAmountSat
+            swapId, description, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, claimTxId, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "bitcoin",
@@ -4258,6 +4263,7 @@ enum BreezSDKLiquidMapper {
                 "autoAcceptedFees": autoAcceptedFees,
                 "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight == nil ? nil : bitcoinExpirationBlockheight,
                 "liquidExpirationBlockheight": liquidExpirationBlockheight == nil ? nil : liquidExpirationBlockheight,
+                "claimTxId": claimTxId == nil ? nil : claimTxId,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
             ]

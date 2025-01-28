@@ -3901,6 +3901,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
                 let mut var_destinationPubkey = <Option<String>>::sse_decode(deserializer);
                 let mut var_lnurlInfo = <Option<crate::model::LnUrlInfo>>::sse_decode(deserializer);
+                let mut var_claimTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Lightning {
@@ -3913,6 +3914,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     payment_hash: var_paymentHash,
                     destination_pubkey: var_destinationPubkey,
                     lnurl_info: var_lnurlInfo,
+                    claim_tx_id: var_claimTxId,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
                 };
@@ -3935,6 +3937,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_autoAcceptedFees = <bool>::sse_decode(deserializer);
                 let mut var_liquidExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
                 let mut var_bitcoinExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
+                let mut var_claimTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Bitcoin {
@@ -3943,6 +3946,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     auto_accepted_fees: var_autoAcceptedFees,
                     liquid_expiration_blockheight: var_liquidExpirationBlockheight,
                     bitcoin_expiration_blockheight: var_bitcoinExpirationBlockheight,
+                    claim_tx_id: var_claimTxId,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
                 };
@@ -6205,6 +6209,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 payment_hash,
                 destination_pubkey,
                 lnurl_info,
+                claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => [
@@ -6218,6 +6223,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 payment_hash.into_into_dart().into_dart(),
                 destination_pubkey.into_into_dart().into_dart(),
                 lnurl_info.into_into_dart().into_dart(),
+                claim_tx_id.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
             ]
@@ -6241,6 +6247,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 auto_accepted_fees,
                 liquid_expiration_blockheight,
                 bitcoin_expiration_blockheight,
+                claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => [
@@ -6250,6 +6257,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 auto_accepted_fees.into_into_dart().into_dart(),
                 liquid_expiration_blockheight.into_into_dart().into_dart(),
                 bitcoin_expiration_blockheight.into_into_dart().into_dart(),
+                claim_tx_id.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
             ]
@@ -8468,6 +8476,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 payment_hash,
                 destination_pubkey,
                 lnurl_info,
+                claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => {
@@ -8481,6 +8490,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <Option<String>>::sse_encode(payment_hash, serializer);
                 <Option<String>>::sse_encode(destination_pubkey, serializer);
                 <Option<crate::model::LnUrlInfo>>::sse_encode(lnurl_info, serializer);
+                <Option<String>>::sse_encode(claim_tx_id, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
             }
@@ -8502,6 +8512,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 auto_accepted_fees,
                 liquid_expiration_blockheight,
                 bitcoin_expiration_blockheight,
+                claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
             } => {
@@ -8511,6 +8522,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <bool>::sse_encode(auto_accepted_fees, serializer);
                 <Option<u32>>::sse_encode(liquid_expiration_blockheight, serializer);
                 <Option<u32>>::sse_encode(bitcoin_expiration_blockheight, serializer);
+                <Option<String>>::sse_encode(claim_tx_id, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
             }
@@ -10693,6 +10705,7 @@ mod io {
                         payment_hash: ans.payment_hash.cst_decode(),
                         destination_pubkey: ans.destination_pubkey.cst_decode(),
                         lnurl_info: ans.lnurl_info.cst_decode(),
+                        claim_tx_id: ans.claim_tx_id.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
                     }
@@ -10718,6 +10731,7 @@ mod io {
                         bitcoin_expiration_blockheight: ans
                             .bitcoin_expiration_blockheight
                             .cst_decode(),
+                        claim_tx_id: ans.claim_tx_id.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
                     }
@@ -14484,6 +14498,7 @@ mod io {
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
         destination_pubkey: *mut wire_cst_list_prim_u_8_strict,
         lnurl_info: *mut wire_cst_ln_url_info,
+        claim_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
     }
@@ -14503,6 +14518,7 @@ mod io {
         auto_accepted_fees: bool,
         liquid_expiration_blockheight: *mut u32,
         bitcoin_expiration_blockheight: *mut u32,
+        claim_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
     }

@@ -55,6 +55,11 @@ class SwapUpdatedTask : TaskProtocol {
                     case .waitingFeeAcceptance:
                         onEvent(e: SdkEvent.paymentWaitingFeeAcceptance(details: payment))
                         self.stopPolling()
+                    case .pending:
+                        if paymentClaimIsBroadcasted(details: payment.details) {
+                            onEvent(e: SdkEvent.paymentWaitingConfirmation(details: payment))
+                            self.stopPolling()
+                        }
                     default:
                         break
                     }
@@ -103,15 +108,26 @@ class SwapUpdatedTask : TaskProtocol {
     func getSwapId(details: PaymentDetails?) -> String? {
         if let details = details {
             switch details {
-            case let .bitcoin(swapId, _, _, _, _, _, _):
+            case let .bitcoin(swapId, _, _, _, _, _, _, _):
                 return swapId
-            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _):
+            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _, _):
                 return swapId
             default:
                 break
             }
         }
         return nil
+    }
+
+    func paymentClaimIsBroadcasted(details: PaymentDetails) -> Bool {
+        switch details {
+        case let .bitcoin(_, _, _, _, _, claimTxId, _, _):
+            return claimTxId != nil
+        case let .lightning( _, _, _, _, _, _, _, _, _, claimTxId, _, _):
+            return claimTxId != nil
+        default:
+            return false
+        }
     }
 
     func onShutdown() {

@@ -932,6 +932,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The payment LNURL info
     LnUrlInfo? lnurlInfo,
 
+    /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+    String? claimTxId,
+
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
 
@@ -973,6 +976,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The height of the Bitcoin block at which the swap will no longer be valid
     /// It should always be populated in case of an incoming chain swap
     int? bitcoinExpirationBlockheight,
+
+    /// The claim tx id in case it has already been broadcast
+    String? claimTxId,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
