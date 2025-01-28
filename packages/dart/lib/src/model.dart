@@ -474,6 +474,11 @@ sealed class GetPaymentRequest with _$GetPaymentRequest {
   const factory GetPaymentRequest.lightning({
     required String paymentHash,
   }) = GetPaymentRequest_Lightning;
+
+  /// The SHA256-hash of the swap id in hex
+  const factory GetPaymentRequest.swapIdHash({
+    required String hash,
+  }) = GetPaymentRequest_SwapIdHash;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].

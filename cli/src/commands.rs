@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use breez_sdk_liquid::prelude::*;
 use clap::{arg, ArgAction, Parser};
 use qrcode_rs::render::unicode;
@@ -156,9 +156,14 @@ pub(crate) enum Command {
         sort_ascending: Option<bool>,
     },
     /// Retrieve a payment
+    #[command(group = clap::ArgGroup::new("payment_identifiers").args(&["payment_hash", "swap_id_hash"]).required(true))]
     GetPayment {
         /// Lightning payment hash
-        payment_hash: String,
+        #[arg(long, short = 'p')]
+        payment_hash: Option<String>,
+        /// Swap ID hash
+        #[arg(long, short = 's')]
+        swap_id_hash: Option<String>,
     },
     /// Get and potentially accept proposed fees for WaitingFeeAcceptance Payment
     ReviewPaymentProposedFees { swap_id: String },
@@ -568,10 +573,24 @@ pub(crate) async fn handle_command(
                 .await?;
             command_result!(payments)
         }
-        Command::GetPayment { payment_hash } => {
-            let maybe_payment = sdk
-                .get_payment(&GetPaymentRequest::Lightning { payment_hash })
-                .await?;
+        Command::GetPayment {
+            payment_hash,
+            swap_id_hash,
+        } => {
+            if payment_hash.is_none() && swap_id_hash.is_none() {
+                bail!("No payment identifiers provided.");
+            }
+
+            let maybe_payment = if let Some(payment_hash) = payment_hash {
+                sdk.get_payment(&GetPaymentRequest::Lightning { payment_hash })
+                    .await?
+            } else if let Some(swap_id_hash) = swap_id_hash {
+                sdk.get_payment(&GetPaymentRequest::SwapIdHash { hash: swap_id_hash })
+                    .await?
+            } else {
+                None
+            };
+
             match maybe_payment {
                 Some(payment) => command_result!(payment),
                 None => {

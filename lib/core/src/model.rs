@@ -724,6 +724,8 @@ pub enum ListPaymentDetails {
 pub enum GetPaymentRequest {
     /// The Lightning payment hash of the payment
     Lightning { payment_hash: String },
+    /// The SHA256-hash of the swap id in hex
+    SwapIdHash { hash: String },
 }
 
 /// Trait that can be used to react to new blocks from Bitcoin and Liquid chains

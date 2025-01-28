@@ -15,21 +15,12 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$GetPaymentRequest {
-  String get paymentHash => throw _privateConstructorUsedError;
-
-  /// Create a copy of GetPaymentRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $GetPaymentRequestCopyWith<GetPaymentRequest> get copyWith => throw _privateConstructorUsedError;
-}
+mixin _$GetPaymentRequest {}
 
 /// @nodoc
 abstract class $GetPaymentRequestCopyWith<$Res> {
   factory $GetPaymentRequestCopyWith(GetPaymentRequest value, $Res Function(GetPaymentRequest) then) =
       _$GetPaymentRequestCopyWithImpl<$Res, GetPaymentRequest>;
-  @useResult
-  $Res call({String paymentHash});
 }
 
 /// @nodoc
@@ -44,26 +35,13 @@ class _$GetPaymentRequestCopyWithImpl<$Res, $Val extends GetPaymentRequest>
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? paymentHash = null,
-  }) {
-    return _then(_value.copyWith(
-      paymentHash: null == paymentHash
-          ? _value.paymentHash
-          : paymentHash // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
 }
 
 /// @nodoc
-abstract class _$$GetPaymentRequest_LightningImplCopyWith<$Res> implements $GetPaymentRequestCopyWith<$Res> {
+abstract class _$$GetPaymentRequest_LightningImplCopyWith<$Res> {
   factory _$$GetPaymentRequest_LightningImplCopyWith(
           _$GetPaymentRequest_LightningImpl value, $Res Function(_$GetPaymentRequest_LightningImpl) then) =
       __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>;
-  @override
   @useResult
   $Res call({String paymentHash});
 }
@@ -130,14 +108,92 @@ abstract class GetPaymentRequest_Lightning extends GetPaymentRequest {
       _$GetPaymentRequest_LightningImpl;
   const GetPaymentRequest_Lightning._() : super._();
 
-  @override
   String get paymentHash;
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
-  @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$GetPaymentRequest_LightningImplCopyWith<_$GetPaymentRequest_LightningImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$GetPaymentRequest_SwapIdHashImplCopyWith<$Res> {
+  factory _$$GetPaymentRequest_SwapIdHashImplCopyWith(
+          _$GetPaymentRequest_SwapIdHashImpl value, $Res Function(_$GetPaymentRequest_SwapIdHashImpl) then) =
+      __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String hash});
+}
+
+/// @nodoc
+class __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<$Res>
+    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_SwapIdHashImpl>
+    implements _$$GetPaymentRequest_SwapIdHashImplCopyWith<$Res> {
+  __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl(
+      _$GetPaymentRequest_SwapIdHashImpl _value, $Res Function(_$GetPaymentRequest_SwapIdHashImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of GetPaymentRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? hash = null,
+  }) {
+    return _then(_$GetPaymentRequest_SwapIdHashImpl(
+      hash: null == hash
+          ? _value.hash
+          : hash // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$GetPaymentRequest_SwapIdHashImpl extends GetPaymentRequest_SwapIdHash {
+  const _$GetPaymentRequest_SwapIdHashImpl({required this.hash}) : super._();
+
+  @override
+  final String hash;
+
+  @override
+  String toString() {
+    return 'GetPaymentRequest.swapIdHash(hash: $hash)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$GetPaymentRequest_SwapIdHashImpl &&
+            (identical(other.hash, hash) || other.hash == hash));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, hash);
+
+  /// Create a copy of GetPaymentRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$GetPaymentRequest_SwapIdHashImplCopyWith<_$GetPaymentRequest_SwapIdHashImpl> get copyWith =>
+      __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<_$GetPaymentRequest_SwapIdHashImpl>(this, _$identity);
+}
+
+abstract class GetPaymentRequest_SwapIdHash extends GetPaymentRequest {
+  const factory GetPaymentRequest_SwapIdHash({required final String hash}) =
+      _$GetPaymentRequest_SwapIdHashImpl;
+  const GetPaymentRequest_SwapIdHash._() : super._();
+
+  String get hash;
+
+  /// Create a copy of GetPaymentRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$GetPaymentRequest_SwapIdHashImplCopyWith<_$GetPaymentRequest_SwapIdHashImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

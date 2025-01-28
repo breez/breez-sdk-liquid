@@ -823,6 +823,10 @@ impl Persister {
                 "(rs.payment_hash = ?1 OR ss.payment_hash = ?1)",
                 payment_hash,
             ),
+            GetPaymentRequest::SwapIdHash { hash } => (
+                "(rs.id_hash = ?1 OR ss.id_hash = ?1 OR cs.id_hash = ?1)",
+                hash,
+            ),
         };
         Ok(self
             .get_connection()?

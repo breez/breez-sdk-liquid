@@ -3004,6 +3004,10 @@ fun asGetPaymentRequest(getPaymentRequest: ReadableMap): GetPaymentRequest? {
         val paymentHash = getPaymentRequest.getString("paymentHash")!!
         return GetPaymentRequest.Lightning(paymentHash)
     }
+    if (type == "swapIdHash") {
+        val hash = getPaymentRequest.getString("hash")!!
+        return GetPaymentRequest.SwapIdHash(hash)
+    }
     return null
 }
 
@@ -3013,6 +3017,10 @@ fun readableMapOf(getPaymentRequest: GetPaymentRequest): ReadableMap? {
         is GetPaymentRequest.Lightning -> {
             pushToMap(map, "type", "lightning")
             pushToMap(map, "paymentHash", getPaymentRequest.paymentHash)
+        }
+        is GetPaymentRequest.SwapIdHash -> {
+            pushToMap(map, "type", "swapIdHash")
+            pushToMap(map, "hash", getPaymentRequest.hash)
         }
     }
     return map

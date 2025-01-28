@@ -1959,6 +1959,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return GetPaymentRequest_Lightning(
           paymentHash: dco_decode_String(raw[1]),
         );
+      case 1:
+        return GetPaymentRequest_SwapIdHash(
+          hash: dco_decode_String(raw[1]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -4114,6 +4118,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 0:
         var var_paymentHash = sse_decode_String(deserializer);
         return GetPaymentRequest_Lightning(paymentHash: var_paymentHash);
+      case 1:
+        var var_hash = sse_decode_String(deserializer);
+        return GetPaymentRequest_SwapIdHash(hash: var_hash);
       default:
         throw UnimplementedError('');
     }
@@ -6448,6 +6455,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case GetPaymentRequest_Lightning(paymentHash: final paymentHash):
         sse_encode_i_32(0, serializer);
         sse_encode_String(paymentHash, serializer);
+      case GetPaymentRequest_SwapIdHash(hash: final hash):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(hash, serializer);
     }
   }
 

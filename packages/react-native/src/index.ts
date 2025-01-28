@@ -522,12 +522,16 @@ export enum BuyBitcoinProvider {
 }
 
 export enum GetPaymentRequestVariant {
-    LIGHTNING = "lightning"
+    LIGHTNING = "lightning",
+    SWAP_ID_HASH = "swapIdHash"
 }
 
-export interface GetPaymentRequest {
+export type GetPaymentRequest = {
     type: GetPaymentRequestVariant.LIGHTNING,
     paymentHash: string
+} | {
+    type: GetPaymentRequestVariant.SWAP_ID_HASH,
+    hash: string
 }
 
 export enum InputTypeVariant {

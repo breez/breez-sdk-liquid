@@ -4182,8 +4182,14 @@ final class wire_cst_GetPaymentRequest_Lightning extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 }
 
+final class wire_cst_GetPaymentRequest_SwapIdHash extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> hash;
+}
+
 final class GetPaymentRequestKind extends ffi.Union {
   external wire_cst_GetPaymentRequest_Lightning Lightning;
+
+  external wire_cst_GetPaymentRequest_SwapIdHash SwapIdHash;
 }
 
 final class wire_cst_get_payment_request extends ffi.Struct {

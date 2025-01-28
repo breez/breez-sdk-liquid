@@ -82,8 +82,13 @@ typedef struct wire_cst_GetPaymentRequest_Lightning {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
 } wire_cst_GetPaymentRequest_Lightning;
 
+typedef struct wire_cst_GetPaymentRequest_SwapIdHash {
+  struct wire_cst_list_prim_u_8_strict *hash;
+} wire_cst_GetPaymentRequest_SwapIdHash;
+
 typedef union GetPaymentRequestKind {
   struct wire_cst_GetPaymentRequest_Lightning Lightning;
+  struct wire_cst_GetPaymentRequest_SwapIdHash SwapIdHash;
 } GetPaymentRequestKind;
 
 typedef struct wire_cst_get_payment_request {

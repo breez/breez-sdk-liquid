@@ -3499,6 +3499,12 @@ enum BreezSDKLiquidMapper {
             }
             return GetPaymentRequest.lightning(paymentHash: _paymentHash)
         }
+        if type == "swapIdHash" {
+            guard let _hash = getPaymentRequest["hash"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "hash", typeName: "GetPaymentRequest"))
+            }
+            return GetPaymentRequest.swapIdHash(hash: _hash)
+        }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum GetPaymentRequest")
     }
@@ -3511,6 +3517,14 @@ enum BreezSDKLiquidMapper {
             return [
                 "type": "lightning",
                 "paymentHash": paymentHash,
+            ]
+
+        case let .swapIdHash(
+            hash
+        ):
+            return [
+                "type": "swapIdHash",
+                "hash": hash,
             ]
         }
     }

@@ -2691,6 +2691,10 @@ impl SseDecode for crate::model::GetPaymentRequest {
                     payment_hash: var_paymentHash,
                 };
             }
+            1 => {
+                let mut var_hash = <String>::sse_decode(deserializer);
+                return crate::model::GetPaymentRequest::SwapIdHash { hash: var_hash };
+            }
             _ => {
                 unimplemented!("");
             }
@@ -5282,6 +5286,9 @@ impl flutter_rust_bridge::IntoDart for crate::model::GetPaymentRequest {
             crate::model::GetPaymentRequest::Lightning { payment_hash } => {
                 [0.into_dart(), payment_hash.into_into_dart().into_dart()].into_dart()
             }
+            crate::model::GetPaymentRequest::SwapIdHash { hash } => {
+                [1.into_dart(), hash.into_into_dart().into_dart()].into_dart()
+            }
             _ => {
                 unimplemented!("");
             }
@@ -7490,6 +7497,10 @@ impl SseEncode for crate::model::GetPaymentRequest {
             crate::model::GetPaymentRequest::Lightning { payment_hash } => {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(payment_hash, serializer);
+            }
+            crate::model::GetPaymentRequest::SwapIdHash { hash } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(hash, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9886,6 +9897,12 @@ mod io {
                     let ans = unsafe { self.kind.Lightning };
                     crate::model::GetPaymentRequest::Lightning {
                         payment_hash: ans.payment_hash.cst_decode(),
+                    }
+                }
+                1 => {
+                    let ans = unsafe { self.kind.SwapIdHash };
+                    crate::model::GetPaymentRequest::SwapIdHash {
+                        hash: ans.hash.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -13791,12 +13808,18 @@ mod io {
     #[derive(Clone, Copy)]
     pub union GetPaymentRequestKind {
         Lightning: wire_cst_GetPaymentRequest_Lightning,
+        SwapIdHash: wire_cst_GetPaymentRequest_SwapIdHash,
         nil__: (),
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_GetPaymentRequest_Lightning {
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_GetPaymentRequest_SwapIdHash {
+        hash: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
