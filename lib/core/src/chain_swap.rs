@@ -14,7 +14,7 @@ use lwk_wollet::{
     hashes::hex::DisplayHex,
     History,
 };
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::broadcast;
 
 use crate::model::{BlockListener, ChainSwapUpdate, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
 use crate::{
@@ -42,7 +42,7 @@ pub(crate) struct ChainSwapHandler {
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
-    bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+    bitcoin_chain_service: Arc<dyn BitcoinChainService>,
     subscription_notifier: broadcast::Sender<String>,
 }
 
@@ -71,7 +71,7 @@ impl ChainSwapHandler {
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
-        bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+        bitcoin_chain_service: Arc<dyn BitcoinChainService>,
     ) -> Result<Self> {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Ok(Self {
@@ -454,9 +454,7 @@ impl ChainSwapHandler {
 
         let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
         let script_balance = self
-            .bitcoin_chain_service
-            .lock()
-            .await
+            .bitcoin_chain_service           
             .script_get_balance_with_retry(script_pubkey.as_script(), 10)
             .await?;
         debug!("Found lockup balance {script_balance:?}");
@@ -854,9 +852,8 @@ impl ChainSwapHandler {
                                 self.swapper.broadcast_tx(self.config.network.into(), &claim_tx_hex)
                             })
                     }
-                    SdkTransaction::Bitcoin(tx) => {
-                        let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
-                        bitcoin_chain_service
+                    SdkTransaction::Bitcoin(tx) => {                        
+                        self.bitcoin_chain_service
                             .broadcast(&tx)
                             .map(|tx_id| tx_id.to_hex())
                             .map_err(|err| PaymentError::Generic {
@@ -977,13 +974,12 @@ impl ChainSwapHandler {
                 err: "Unexpected swap script type found".to_string(),
             });
         };
-
-        let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
+        
         let script_pk = swap_script
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .script_pubkey();
-        let utxos = bitcoin_chain_service.get_script_utxos(&script_pk).await?;
+        let utxos = self.bitcoin_chain_service.get_script_utxos(&script_pk).await?;
 
         let SdkTransaction::Bitcoin(refund_tx) = self.swapper.create_refund_tx(
             Swap::Chain(swap.clone()),
@@ -997,7 +993,7 @@ impl ChainSwapHandler {
                 err: format!("Unexpected refund tx type returned for incoming Chain swap {id}",),
             });
         };
-        let refund_tx_id = bitcoin_chain_service.broadcast(&refund_tx)?.to_string();
+        let refund_tx_id = self.bitcoin_chain_service.broadcast(&refund_tx)?.to_string();
 
         info!("Successfully broadcast refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}");
 
@@ -1203,9 +1199,7 @@ impl ChainSwapHandler {
 
         // Get full transaction
         let txs = self
-            .bitcoin_chain_service
-            .lock()
-            .await
+            .bitcoin_chain_service            
             .get_transactions(&[first_tx_id])?;
         let user_lockup_tx = txs.first().ok_or(anyhow!(
             "No transactions found for user lockup script for swap {}",
@@ -1324,9 +1318,7 @@ impl ChainSwapHandler {
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let tx = self
-            .bitcoin_chain_service
-            .lock()
-            .await
+            .bitcoin_chain_service           
             .verify_tx(
                 &address,
                 &swap_update_tx.id,
@@ -1424,9 +1416,7 @@ impl ChainSwapHandler {
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
         let script_pubkey = address.script_pubkey();
         let script = script_pubkey.as_script();
-        self.bitcoin_chain_service
-            .lock()
-            .await
+        self.bitcoin_chain_service           
             .get_script_history_with_retry(script, 5)
             .await
     }

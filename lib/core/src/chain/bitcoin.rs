@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Mutex, time::Duration};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -24,7 +24,7 @@ use crate::{
 #[async_trait]
 pub trait BitcoinChainService: Send + Sync {
     /// Get the blockchain latest block
-    fn tip(&mut self) -> Result<HeaderNotification>;
+    fn tip(&self) -> Result<HeaderNotification>;
 
     /// Broadcast a transaction
     fn broadcast(&self, tx: &Transaction) -> Result<Txid>;
@@ -76,7 +76,7 @@ pub trait BitcoinChainService: Send + Sync {
 
 pub(crate) struct HybridBitcoinChainService {
     client: Client,
-    tip: HeaderNotification,
+    tip: Mutex<HeaderNotification>,
     config: Config,
 }
 impl HybridBitcoinChainService {
@@ -93,7 +93,7 @@ impl HybridBitcoinChainService {
 
         Ok(Self {
             client,
-            tip,
+            tip: Mutex::new(tip),
             config,
         })
     }
@@ -101,7 +101,7 @@ impl HybridBitcoinChainService {
 
 #[async_trait]
 impl BitcoinChainService for HybridBitcoinChainService {
-    fn tip(&mut self) -> Result<HeaderNotification> {
+    fn tip(&self) -> Result<HeaderNotification> {
         let mut maybe_popped_header = None;
         while let Some(header) = self.client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
@@ -110,7 +110,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         match maybe_popped_header {
             Some(popped_header) => {
                 let tip: HeaderNotification = popped_header.try_into()?;
-                self.tip = tip;
+                *self.tip.lock().unwrap() = tip;
             }
             None => {
                 // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
@@ -119,12 +119,12 @@ impl BitcoinChainService for HybridBitcoinChainService {
                 // successful retry will prevent us knowing about the reconnect.
                 if let Ok(header) = self.client.block_headers_subscribe_raw() {
                     let tip: HeaderNotification = header.try_into()?;
-                    self.tip = tip;
+                    *self.tip.lock().unwrap() = tip;
                 }
             }
         }
 
-        Ok(self.tip.clone())
+        Ok(self.tip.lock().unwrap().clone())
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {

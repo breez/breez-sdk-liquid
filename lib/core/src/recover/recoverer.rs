@@ -10,7 +10,6 @@ use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
-use tokio::sync::Mutex;
 
 use super::model::*;
 
@@ -28,7 +27,7 @@ pub(crate) struct Recoverer {
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
-    bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+    bitcoin_chain_service: Arc<dyn BitcoinChainService>,
 }
 
 impl Recoverer {
@@ -37,7 +36,7 @@ impl Recoverer {
         swapper: Arc<dyn Swapper>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
-        bitcoin_chain_service: Arc<Mutex<dyn BitcoinChainService>>,
+        bitcoin_chain_service: Arc<dyn BitcoinChainService>,
     ) -> Result<Self> {
         Ok(Self {
             master_blinding_key: MasterBlindingKey::from_hex(
@@ -214,7 +213,7 @@ impl Recoverer {
             &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
         )?;
 
-        let bitcoin_tip = self.bitcoin_chain_service.lock().await.tip()?;
+        let bitcoin_tip = self.bitcoin_chain_service.tip()?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
 
         for swap in swaps.iter_mut() {
@@ -381,13 +380,14 @@ impl Recoverer {
             .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
             .collect();
 
-        let bitcoin_chain_service = self.bitcoin_chain_service.lock().await;
         let swap_btc_script_bufs = swaps_list.get_swap_btc_scripts();
         let swap_btc_scripts = swap_btc_script_bufs
             .iter()
             .map(|x| x.as_script())
             .collect::<Vec<&lwk_wollet::bitcoin::Script>>();
-        let btc_script_histories = bitcoin_chain_service.get_scripts_history(&swap_btc_scripts)?;
+        let btc_script_histories = self
+            .bitcoin_chain_service
+            .get_scripts_history(&swap_btc_scripts)?;
         let btx_script_tx_ids: Vec<lwk_wollet::bitcoin::Txid> = btc_script_histories
             .iter()
             .flatten()
@@ -408,8 +408,12 @@ impl Recoverer {
             .map(|(k, v)| (k, v.iter().map(HistoryTxId::from).collect()))
             .collect();
 
-        let btc_script_txs = bitcoin_chain_service.get_transactions(&btx_script_tx_ids)?;
-        let btc_script_balances = bitcoin_chain_service.scripts_get_balance(&swap_btc_scripts)?;
+        let btc_script_txs = self
+            .bitcoin_chain_service
+            .get_transactions(&btx_script_tx_ids)?;
+        let btc_script_balances = self
+            .bitcoin_chain_service
+            .scripts_get_balance(&swap_btc_scripts)?;
         let btc_script_to_txs_map: HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>> =
             swap_btc_script_bufs
                 .clone()

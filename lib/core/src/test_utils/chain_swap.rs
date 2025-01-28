@@ -6,8 +6,6 @@ use lazy_static::lazy_static;
 use sdk_common::bitcoin::{consensus::deserialize, Transaction};
 use std::sync::Arc;
 
-use tokio::sync::Mutex;
-
 use crate::{
     chain_swap::ChainSwapHandler,
     model::{ChainSwap, Config, Direction, PaymentState, Signer},
@@ -35,7 +33,7 @@ pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainS
     let onchain_wallet = Arc::new(MockWallet::new(signer)?);
     let swapper = Arc::new(BoltzSwapper::new(config.clone(), None));
     let liquid_chain_service = Arc::new(MockLiquidChainService::new());
-    let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
+    let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
     ChainSwapHandler::new(
         config,
