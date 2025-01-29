@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 use std::{path::Path, str::FromStr, sync::Arc};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
@@ -17,7 +17,7 @@ use lwk_wollet::{
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
     WolletDescriptor,
 };
-use lwk_wollet::{BlockchainBackend, EsploraClient, Update};
+use lwk_wollet::{BlockchainBackend, EsploraClient};
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
@@ -104,20 +104,24 @@ pub trait OnchainWallet: Send + Sync {
 
 enum BlockchainClient {
     Electrum(Box<ElectrumClient>),
-    Esplora(Box<EsploraClient>),
+    Esplora(EsploraClient),
 }
 
 impl BlockchainClient {
-    pub(crate) fn full_scan_to_index(
+    pub(crate) fn update_wallet(
         &mut self,
-        wollet: &Wollet,
+        wollet: &mut Wollet,
         index: u32,
-    ) -> Result<Option<Update>, lwk_wollet::Error> {
+    ) -> Result<(), lwk_wollet::Error> {
         let state = wollet.state();
-        match self {
-            Self::Electrum(client) => client.full_scan_to_index(&state, index),
-            Self::Esplora(client) => client.full_scan_to_index(&state, index),
+        let update = match self {
+            Self::Electrum(client) => client.full_scan_to_index(&state, index)?,
+            Self::Esplora(client) => client.full_scan_to_index(&state, index)?,
+        };
+        if let Some(update) = update {
+            wollet.apply_update(update)?;
         }
+        Ok(())
     }
 }
 
@@ -128,17 +132,16 @@ impl TryFrom<&BlockchainExplorer> for BlockchainClient {
         match exp {
             BlockchainExplorer::Electrum { url } => {
                 let url = ElectrumUrl::new(url, true, true)?;
-                Ok(BlockchainClient::Electrum(Box::new(ElectrumClient::new(
-                    &url,
-                )?)))
+                let client = ElectrumClient::new(&url)?;
+                Ok(BlockchainClient::Electrum(Box::new(client)))
             }
             BlockchainExplorer::Esplora {
                 url,
                 use_waterfalls,
-            } => Ok(BlockchainClient::Esplora(Box::new(match use_waterfalls {
+            } => Ok(BlockchainClient::Esplora(match use_waterfalls {
                 true => EsploraClient::new_waterfalls(url),
                 false => EsploraClient::new(url),
-            }))),
+            })),
         }
     }
 }
@@ -147,7 +150,7 @@ pub(crate) struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
-    blockchain_client: Mutex<Option<BlockchainClient>>,
+    clients: Mutex<HashMap<String, Arc<Mutex<BlockchainClient>>>>,
     working_dir: String,
     pub(crate) signer: SdkLwkSigner,
 }
@@ -171,7 +174,7 @@ impl LiquidOnchainWallet {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
-            blockchain_client: Mutex::new(None),
+            clients: Default::default(),
             working_dir: working_dir.clone(),
             signer,
         })
@@ -222,6 +225,20 @@ impl LiquidOnchainWallet {
         )
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
         Ok(descriptor_str.parse()?)
+    }
+
+    async fn execute_scan(&self, client: &mut BlockchainClient, index: u32) -> Result<()> {
+        let mut wallet = self.wallet.lock().await;
+        if let Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) =
+            client.update_wallet(&mut wallet, index)
+        {
+            warn!("Full scan failed with update height too old, wiping storage and retrying");
+            let mut new_wallet =
+                Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
+            client.update_wallet(&mut new_wallet, index)?;
+            *wallet = new_wallet;
+        };
+        Ok(())
     }
 }
 
@@ -402,43 +419,27 @@ impl OnchainWallet for LiquidOnchainWallet {
     async fn full_scan(&self) -> Result<()> {
         let full_scan_started = Instant::now();
 
-        let mut blockchain_client = self.blockchain_client.lock().await;
-        // create client if it doesn't already exist
-        if blockchain_client.is_none() {
-            *blockchain_client = match self.config.liquid_explorers.first() {
-                Some(explorer) => Some(explorer.try_into()?),
-                None => {
-                    bail!("Could not execute scan: no Liquid client was specified")
-                }
-            };
-        };
-
-        let client = blockchain_client
-            .as_mut()
-            .ok_or_else(|| anyhow!("Electrum client not initialized"))?;
-
         // Use the cached derivation index with a buffer of 5 to perform the scan
         let index = self
             .persister
             .get_last_derivation_index()?
             .map(|i| i + 5)
             .unwrap_or_default();
-        let mut wallet = self.wallet.lock().await;
+        let mut clients = self.clients.lock().await;
 
-        match client.full_scan_to_index(&wallet, index) {
-            Ok(Some(update)) => {
-                wallet.apply_update(update)?;
-            }
-            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
-                warn!("Full scan failed with update height too old, wiping storage and retrying");
-                let mut new_wallet =
-                    Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
-                if let Some(update) = client.full_scan_to_index(&new_wallet, index)? {
-                    new_wallet.apply_update(update)?;
-                    *wallet = new_wallet;
-                };
-            }
-            _ => {}
+        for explorer in &self.config.liquid_explorers {
+            let explorer_url = explorer.url();
+            match clients.get(explorer_url) {
+                Some(client) => {
+                    let mut client = client.lock().await;
+                    self.execute_scan(&mut client, index).await?;
+                }
+                None => {
+                    let mut client = explorer.try_into()?;
+                    self.execute_scan(&mut client, index).await?;
+                    clients.insert(explorer_url.clone(), Arc::new(Mutex::new(client)));
+                }
+            };
         }
 
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();

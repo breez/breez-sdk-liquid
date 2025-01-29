@@ -43,6 +43,15 @@ pub enum BlockchainExplorer {
     },
 }
 
+impl BlockchainExplorer {
+    pub(crate) fn url(&self) -> &String {
+        match self {
+            Self::Electrum { url } => url,
+            Self::Esplora { url, .. } => url,
+        }
+    }
+}
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
