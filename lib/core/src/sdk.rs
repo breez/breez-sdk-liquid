@@ -193,7 +193,7 @@ impl LiquidSdk {
             persister.set_swapper_proxy_url(swapper_proxy_url)?;
         }
         let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
-        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
+        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url)?);
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 
         let recoverer = Arc::new(Recoverer::new(

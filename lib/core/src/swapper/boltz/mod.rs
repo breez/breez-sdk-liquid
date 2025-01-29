@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use anyhow::{bail, Result};
 use boltz_client::{
     boltz::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
@@ -38,7 +39,7 @@ pub struct BoltzSwapper {
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config, swapper_proxy_url: Option<String>) -> Self {
+    pub fn new(config: Config, swapper_proxy_url: Option<String>) -> Result<Self> {
         let (boltz_api_base_url, referral_id) = match &config.network {
             LiquidNetwork::Testnet => (None, None),
             LiquidNetwork::Mainnet => match &swapper_proxy_url {
@@ -66,26 +67,33 @@ impl BoltzSwapper {
             .to_string(),
         );
 
-        Self {
+        let (Some(liquid_electrum_url), Some(bitcoin_electrum_url)) = (
+            config.liquid_electrum_explorers().first().cloned(),
+            config.bitcoin_electrum_explorers().first().cloned(),
+        ) else {
+            bail!("Cannot create Boltz swapper without specifying both Bitcoin and Liquid electrum urls");
+        };
+
+        Ok(Self {
             client: BoltzApiClientV2::new(&boltz_url),
             boltz_url,
             referral_id,
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
-                &config.liquid_electrum_url,
+                liquid_electrum_url,
                 true,
                 true,
                 100,
             ),
             bitcoin_electrum_config: ElectrumConfig::new(
                 config.network.as_bitcoin_chain(),
-                &config.bitcoin_electrum_url,
+                bitcoin_electrum_url,
                 true,
                 true,
                 100,
             ),
-        }
+        })
     }
 
     fn get_claim_partial_sig(

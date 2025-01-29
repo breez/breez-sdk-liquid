@@ -492,15 +492,16 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asConfig(config: [String: Any?]) throws -> Config {
-        guard let liquidElectrumUrl = config["liquidElectrumUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidElectrumUrl", typeName: "Config"))
+        guard let liquidExplorersTmp = config["liquidExplorers"] as? [[String: Any?]] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidExplorers", typeName: "Config"))
         }
-        guard let bitcoinElectrumUrl = config["bitcoinElectrumUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinElectrumUrl", typeName: "Config"))
+        let liquidExplorers = try asBlockchainExplorerList(arr: liquidExplorersTmp)
+
+        guard let bitcoinExplorersTmp = config["bitcoinExplorers"] as? [[String: Any?]] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinExplorers", typeName: "Config"))
         }
-        guard let mempoolspaceUrl = config["mempoolspaceUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "mempoolspaceUrl", typeName: "Config"))
-        }
+        let bitcoinExplorers = try asBlockchainExplorerList(arr: bitcoinExplorersTmp)
+
         guard let workingDir = config["workingDir"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "workingDir", typeName: "Config"))
         }
@@ -563,14 +564,13 @@ enum BreezSDKLiquidMapper {
             assetMetadata = try asAssetMetadataList(arr: assetMetadataTmp)
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
+        return Config(liquidExplorers: liquidExplorers, bitcoinExplorers: bitcoinExplorers, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
         return [
-            "liquidElectrumUrl": config.liquidElectrumUrl,
-            "bitcoinElectrumUrl": config.bitcoinElectrumUrl,
-            "mempoolspaceUrl": config.mempoolspaceUrl,
+            "liquidExplorers": arrayOf(blockchainExplorerList: config.liquidExplorers),
+            "bitcoinExplorers": arrayOf(blockchainExplorerList: config.bitcoinExplorers),
             "workingDir": config.workingDir,
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
@@ -3453,6 +3453,65 @@ enum BreezSDKLiquidMapper {
                 list.append(amount)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "Amount"))
+            }
+        }
+        return list
+    }
+
+    static func asBlockchainExplorer(blockchainExplorer: [String: Any?]) throws -> BlockchainExplorer {
+        let type = blockchainExplorer["type"] as! String
+        if type == "electrum" {
+            guard let _url = blockchainExplorer["url"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "BlockchainExplorer"))
+            }
+            return BlockchainExplorer.electrum(url: _url)
+        }
+        if type == "esplora" {
+            guard let _url = blockchainExplorer["url"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "BlockchainExplorer"))
+            }
+            guard let _useWaterfalls = blockchainExplorer["useWaterfalls"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "useWaterfalls", typeName: "BlockchainExplorer"))
+            }
+            return BlockchainExplorer.esplora(url: _url, useWaterfalls: _useWaterfalls)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum BlockchainExplorer")
+    }
+
+    static func dictionaryOf(blockchainExplorer: BlockchainExplorer) -> [String: Any?] {
+        switch blockchainExplorer {
+        case let .electrum(
+            url
+        ):
+            return [
+                "type": "electrum",
+                "url": url,
+            ]
+
+        case let .esplora(
+            url, useWaterfalls
+        ):
+            return [
+                "type": "esplora",
+                "url": url,
+                "useWaterfalls": useWaterfalls,
+            ]
+        }
+    }
+
+    static func arrayOf(blockchainExplorerList: [BlockchainExplorer]) -> [Any] {
+        return blockchainExplorerList.map { v -> [String: Any?] in return dictionaryOf(blockchainExplorer: v) }
+    }
+
+    static func asBlockchainExplorerList(arr: [Any]) throws -> [BlockchainExplorer] {
+        var list = [BlockchainExplorer]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var blockchainExplorer = try asBlockchainExplorer(blockchainExplorer: val)
+                list.append(blockchainExplorer)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "BlockchainExplorer"))
             }
         }
         return list

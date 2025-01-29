@@ -1,6 +1,6 @@
 use std::{sync::Mutex, time::Duration};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use electrum_client::{
     bitcoin::{
@@ -11,7 +11,7 @@ use electrum_client::{
     Client, ElectrumApi, GetBalanceRes, HeaderNotification,
 };
 use log::info;
-use lwk_wollet::{ElectrumOptions, ElectrumUrl, Error, History};
+use lwk_wollet::{ElectrumOptions, ElectrumUrl, History};
 use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
 
 use crate::{
@@ -80,13 +80,18 @@ pub(crate) struct HybridBitcoinChainService {
     config: Config,
 }
 impl HybridBitcoinChainService {
-    pub fn new(config: Config) -> Result<Self, Error> {
+    pub fn new(config: Config) -> Result<Self> {
         Self::with_options(config, ElectrumOptions::default())
     }
 
     /// Creates an Electrum client specifying non default options like timeout
-    pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self, Error> {
-        let electrum_url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true)?;
+    pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self> {
+        let Some(electrum_url) = config.bitcoin_electrum_explorers().first().cloned() else {
+            bail!(
+                "Could not create Bitcoin electrum client: no url specified in the configuration"
+            );
+        };
+        let electrum_url = ElectrumUrl::new(electrum_url, true, true)?;
         let client = electrum_url.build_client(&options)?;
         let header = client.block_headers_subscribe_raw()?;
         let tip: HeaderNotification = header.try_into()?;
@@ -314,11 +319,12 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {
-        get_parse_and_log_response(
-            &format!("{}/v1/fees/recommended", self.config.mempoolspace_url),
-            true,
-        )
-        .await
-        .map_err(Into::into)
+        let Some(esplora_url) = self.config.bitcoin_esplora_explorers().first().cloned() else {
+            bail!("Cannot fetch recommended fees without specifying a Bitcoin Esplora backend.");
+        };
+
+        get_parse_and_log_response(&format!("{esplora_url}/v1/fees/recommended"), true)
+            .await
+            .map_err(Into::into)
     }
 }

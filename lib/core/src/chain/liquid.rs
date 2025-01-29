@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
 use log::info;
@@ -64,7 +64,10 @@ pub(crate) struct HybridLiquidChainService {
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
-        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
+        let Some(electrum_url) = config.liquid_electrum_explorers().first().cloned() else {
+            bail!("Could not create Liquid electrum client: no url specified in the configuration");
+        };
+        let electrum_url = ElectrumUrl::new(electrum_url, true, true)?;
         let electrum_client = ElectrumClient::new(&electrum_url)?;
         let tip_client = ElectrumClient::new(&electrum_url)?;
         Ok(Self {
