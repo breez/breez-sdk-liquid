@@ -319,12 +319,24 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {
-        let Some(esplora_url) = self.config.bitcoin_esplora_explorers().first().cloned() else {
+        if self.config.bitcoin_esplora_explorers().is_empty() {
             bail!("Cannot fetch recommended fees without specifying a Bitcoin Esplora backend.");
-        };
+        }
 
-        get_parse_and_log_response(&format!("{esplora_url}/v1/fees/recommended"), true)
-            .await
-            .map_err(Into::into)
+        for esplora_url in self.config.bitcoin_esplora_explorers() {
+            let res =
+                get_parse_and_log_response(&format!("{esplora_url}/v1/fees/recommended"), true)
+                    .await
+                    .map_err(Into::<anyhow::Error>::into);
+
+            match res {
+                Ok(fees) => return Ok(fees),
+                Err(err) => {
+                    log::warn!("Could not fetch recommended fees from {esplora_url}: {err:?}")
+                }
+            }
+        }
+
+        bail!("Could not fetch recommended fees: request failed on all specified clients")
     }
 }
