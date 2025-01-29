@@ -117,10 +117,19 @@ impl SyncService {
                         self.run_event_loop().await;
                         event_loop_interval.reset();
                     },
-                    Some(Ok(_)) = remote_sync_trigger.next() => {
-                        self.run_event_loop().await;
-                        event_loop_interval.reset();
-                    }
+                    Some(msg) = remote_sync_trigger.next() => match msg {
+                        Ok(_) => {
+                            self.run_event_loop().await;
+                            event_loop_interval.reset();
+                        },
+                        Err(err) => {
+                            log::warn!("Received status {} from remote, attempting to reconnect.", err.message());
+                            match self.new_listener().await {
+                                Ok(listener) => remote_sync_trigger = listener,
+                                Err(e) => log::error!("Could not create new remote notification listener: {e:?}"),
+                            }
+                        }
+                    },
                     _ = shutdown.changed() => {
                         log::info!("Received shutdown signal, exiting realtime sync service loop");
                         if let Err(err) = self.client.disconnect().await {
