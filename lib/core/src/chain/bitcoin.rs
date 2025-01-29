@@ -107,24 +107,27 @@ impl BitcoinChainService for HybridBitcoinChainService {
             maybe_popped_header = Some(header)
         }
 
-        match maybe_popped_header {
-            Some(popped_header) => {
-                let tip: HeaderNotification = popped_header.try_into()?;
-                *self.tip.lock().unwrap() = tip;
-            }
+        let new_tip = match maybe_popped_header {
+            Some(popped_header) => Some(popped_header.try_into()?),
             None => {
                 // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
                 // It might be that the client has reconnected and subscriptions don't persist
                 // across connections. Calling `client.ping()` won't help here because the
                 // successful retry will prevent us knowing about the reconnect.
                 if let Ok(header) = self.client.block_headers_subscribe_raw() {
-                    let tip: HeaderNotification = header.try_into()?;
-                    *self.tip.lock().unwrap() = tip;
+                    Some(header.try_into()?)
+                } else {
+                    None
                 }
             }
+        };
+
+        let mut tip = self.tip.lock().unwrap();
+        if let Some(new_tip) = new_tip {
+            *tip = new_tip;
         }
 
-        Ok(self.tip.lock().unwrap().clone())
+        Ok(tip.clone())
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
