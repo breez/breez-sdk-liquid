@@ -1426,7 +1426,7 @@ impl ChainSwapHandler {
         let script_pubkey = address.script_pubkey();
         let script = script_pubkey.as_script();
         self.bitcoin_chain_service
-            .get_script_history_with_retry(script, 5)
+            .get_script_history_with_retry(script, 10)
             .await
     }
 
@@ -1442,7 +1442,7 @@ impl ChainSwapHandler {
         let script = Script::from_hex(hex::encode(address.script_pubkey().as_bytes()).as_str())
             .map_err(|e| anyhow!("Failed to get script from address {e:?}"))?;
         self.liquid_chain_service
-            .get_script_history_with_retry(&script, 5)
+            .get_script_history_with_retry(&script, 10)
             .await
     }
 }
