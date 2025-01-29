@@ -627,6 +627,35 @@ typedef struct wire_cst_sdk_event {
   union SdkEventKind kind;
 } wire_cst_sdk_event;
 
+typedef struct wire_cst_BlockchainExplorer_Electrum {
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_BlockchainExplorer_Electrum;
+
+typedef struct wire_cst_BlockchainExplorer_Esplora {
+  struct wire_cst_list_prim_u_8_strict *url;
+  bool use_waterfalls;
+} wire_cst_BlockchainExplorer_Esplora;
+
+typedef struct wire_cst_BlockchainExplorer_MempoolSpace {
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_BlockchainExplorer_MempoolSpace;
+
+typedef union BlockchainExplorerKind {
+  struct wire_cst_BlockchainExplorer_Electrum Electrum;
+  struct wire_cst_BlockchainExplorer_Esplora Esplora;
+  struct wire_cst_BlockchainExplorer_MempoolSpace MempoolSpace;
+} BlockchainExplorerKind;
+
+typedef struct wire_cst_blockchain_explorer {
+  int32_t tag;
+  union BlockchainExplorerKind kind;
+} wire_cst_blockchain_explorer;
+
+typedef struct wire_cst_list_blockchain_explorer {
+  struct wire_cst_blockchain_explorer *ptr;
+  int32_t len;
+} wire_cst_list_blockchain_explorer;
+
 typedef struct wire_cst_external_input_parser {
   struct wire_cst_list_prim_u_8_strict *provider_id;
   struct wire_cst_list_prim_u_8_strict *input_regex;
@@ -651,9 +680,8 @@ typedef struct wire_cst_list_asset_metadata {
 } wire_cst_list_asset_metadata;
 
 typedef struct wire_cst_config {
-  struct wire_cst_list_prim_u_8_strict *liquid_electrum_url;
-  struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
-  struct wire_cst_list_prim_u_8_strict *mempoolspace_url;
+  struct wire_cst_list_blockchain_explorer *liquid_explorers;
+  struct wire_cst_list_blockchain_explorer *bitcoin_explorers;
   struct wire_cst_list_prim_u_8_strict *working_dir;
   struct wire_cst_list_prim_u_8_strict *cache_dir;
   int32_t network;
@@ -1453,6 +1481,8 @@ struct wire_cst_list_asset_balance *frbgen_breez_liquid_cst_new_list_asset_balan
 
 struct wire_cst_list_asset_metadata *frbgen_breez_liquid_cst_new_list_asset_metadata(int32_t len);
 
+struct wire_cst_list_blockchain_explorer *frbgen_breez_liquid_cst_new_list_blockchain_explorer(int32_t len);
+
 struct wire_cst_list_external_input_parser *frbgen_breez_liquid_cst_new_list_external_input_parser(int32_t len);
 
 struct wire_cst_list_fiat_currency *frbgen_breez_liquid_cst_new_list_fiat_currency(int32_t len);
@@ -1538,6 +1568,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_String);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_asset_balance);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_asset_metadata);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_blockchain_explorer);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_external_input_parser);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_fiat_currency);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_list_ln_offer_blinded_path);

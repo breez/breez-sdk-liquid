@@ -5,7 +5,7 @@ use crate::{
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
     prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use async_trait::async_trait;
 use boltz_client::{
     boltz::{
@@ -43,31 +43,42 @@ pub struct BoltzSwapper<P: ProxyUrlFetcher> {
 }
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
-    pub fn new(config: Config, proxy_url: Arc<P>) -> Self {
+    pub fn new(config: Config, proxy_url: Arc<P>) -> Result<Self> {
         let (tls, validate_domain) = match config.network {
             LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
             LiquidNetwork::Regtest => (false, false),
         };
 
-        Self {
+        let liquid_electrum_url = config
+            .liquid_electrum_explorers()
+            .first()
+            .cloned()
+            .context("Cannot start swapper without providing a Liquid electrum url")?;
+        let bitcoin_electrum_url = config
+            .bitcoin_electrum_explorers()
+            .first()
+            .cloned()
+            .context("Cannot start swapper without providing a Bitcoin electrum url")?;
+
+        Ok(Self {
             proxy_url,
             client: OnceLock::new(),
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
-                &config.liquid_electrum_url,
+                liquid_electrum_url,
                 tls,
                 validate_domain,
                 100,
             ),
             bitcoin_electrum_config: ElectrumConfig::new(
                 config.network.as_bitcoin_chain(),
-                &config.bitcoin_electrum_url,
+                bitcoin_electrum_url,
                 tls,
                 validate_domain,
                 100,
             ),
-        }
+        })
     }
 
     async fn get_client(&self) -> Result<&BoltzClient> {

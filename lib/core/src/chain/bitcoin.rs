@@ -1,10 +1,10 @@
 use std::{
     collections::HashMap,
-    sync::{Mutex, OnceLock},
+    sync::{Mutex, RwLock, RwLockReadGuard},
     time::Duration,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use electrum_client::{
     bitcoin::{
@@ -81,41 +81,67 @@ pub trait BitcoinChainService: Send + Sync {
     async fn recommended_fees(&self) -> Result<RecommendedFees>;
 }
 
+macro_rules! get_client {
+    ($chain_service:ident,$client:ident) => {
+        let lock = $chain_service.get_client()?;
+        let Some($client) = lock.as_ref() else {
+            bail!("Could not read Bitcoin electrum client");
+        };
+    };
+}
+
 pub(crate) struct HybridBitcoinChainService {
-    client: OnceLock<Client>,
     config: Config,
+    client: RwLock<Option<Client>>,
     last_known_tip: Mutex<Option<HeaderNotification>>,
 }
 impl HybridBitcoinChainService {
     pub fn new(config: Config) -> Result<Self, Error> {
         Ok(Self {
             config,
-            client: OnceLock::new(),
+            client: RwLock::new(None),
             last_known_tip: Mutex::new(None),
         })
     }
 
-    fn get_client(&self) -> Result<&Client> {
-        if let Some(c) = self.client.get() {
-            return Ok(c);
-        }
+    fn build_client(&self, url: &str, options: &ElectrumOptions) -> Result<Client> {
         let (tls, validate_domain) = match self.config.network {
             LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
             LiquidNetwork::Regtest => (false, false),
         };
-        let electrum_url =
-            ElectrumUrl::new(&self.config.bitcoin_electrum_url, tls, validate_domain)?;
-        let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
+        let electrum_url = ElectrumUrl::new(url, tls, validate_domain)?;
+        Ok(electrum_url.build_client(options)?)
+    }
 
-        let client = self.client.get_or_init(|| client);
-        Ok(client)
+    fn get_client(&self) -> Result<RwLockReadGuard<Option<Client>>> {
+        let lock = self.client.read().unwrap();
+        if let Some(client) = lock.as_ref() {
+            if client.ping().is_ok() {
+                return Ok(lock);
+            }
+        }
+
+        let mut lock = self.client.write().unwrap();
+        for electrum_url in &self.config.bitcoin_electrum_explorers() {
+            if let Ok(electrum_client) =
+                self.build_client(electrum_url, &ElectrumOptions { timeout: Some(3) })
+            {
+                if electrum_client.ping().is_ok() {
+                    *lock = Some(electrum_client);
+                    drop(lock);
+                    return Ok(self.client.read().unwrap());
+                }
+            }
+        }
+
+        bail!("Could not create Bitcoin electrum client: no url specified in the configuration");
     }
 }
 
 #[async_trait]
 impl BitcoinChainService for HybridBitcoinChainService {
     fn tip(&self) -> Result<HeaderNotification> {
-        let client = self.get_client()?;
+        get_client!(self, client);
         let mut maybe_popped_header = None;
         while let Some(header) = client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
@@ -147,15 +173,15 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        let txid = self
-            .get_client()?
-            .transaction_broadcast_raw(&serialize(&tx))?;
+        get_client!(self, client);
+        let txid = client.transaction_broadcast_raw(&serialize(&tx))?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
     fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+        get_client!(self, client);
         let mut result = vec![];
-        for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
+        for tx in client.batch_transaction_get_raw(txids)? {
             let tx: Transaction = deserialize(&tx)?;
             result.push(tx);
         }
@@ -163,8 +189,8 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
-        Ok(self
-            .get_client()?
+        get_client!(self, client);
+        Ok(client
             .script_get_history(script)?
             .into_iter()
             .map(Into::into)
@@ -172,8 +198,8 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        Ok(self
-            .get_client()?
+        get_client!(self, client);
+        Ok(client
             .batch_script_get_history(scripts)?
             .into_iter()
             .map(|v| v.into_iter().map(Into::into).collect())
@@ -284,11 +310,13 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
-        Ok(self.get_client()?.script_get_balance(script)?)
+        get_client!(self, client);
+        Ok(client.script_get_balance(script)?)
     }
 
     fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
-        Ok(self.get_client()?.batch_script_get_balance(scripts)?)
+        get_client!(self, client);
+        Ok(client.batch_script_get_balance(scripts)?)
     }
 
     async fn script_get_balance_with_retry(
@@ -364,11 +392,26 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {
-        get_parse_and_log_response(
-            &format!("{}/v1/fees/recommended", self.config.mempoolspace_url),
-            true,
-        )
-        .await
-        .map_err(Into::into)
+        if self.config.bitcoin_esplora_explorers().is_empty() {
+            bail!("Cannot fetch recommended fees without specifying a Bitcoin Esplora backend.");
+        }
+
+        for mempool_space_url in self.config.bitcoin_mempool_space_explorers() {
+            let res = get_parse_and_log_response(
+                &format!("{mempool_space_url}/v1/fees/recommended"),
+                true,
+            )
+            .await
+            .map_err(Into::<anyhow::Error>::into);
+
+            match res {
+                Ok(fees) => return Ok(fees),
+                Err(err) => {
+                    log::warn!("Could not fetch recommended fees from {mempool_space_url}: {err:?}")
+                }
+            }
+        }
+
+        bail!("Could not fetch recommended fees: request failed on all specified clients")
     }
 }

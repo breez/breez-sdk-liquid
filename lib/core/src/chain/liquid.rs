@@ -1,7 +1,7 @@
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Mutex, RwLock, RwLockReadGuard};
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
 use electrum_client::{Client, ElectrumApi};
@@ -61,8 +61,17 @@ pub trait LiquidChainService: Send + Sync {
     ) -> Result<Transaction>;
 }
 
+macro_rules! get_client {
+    ($chain_service:ident,$client:ident) => {
+        let lock = $chain_service.get_client()?;
+        let Some($client) = lock.as_ref() else {
+            bail!("Could not read Liquid electrum client");
+        };
+    };
+}
+
 pub(crate) struct HybridLiquidChainService {
-    client: OnceLock<Client>,
+    client: RwLock<Option<Client>>,
     config: Config,
     last_known_tip: Mutex<Option<u32>>,
 }
@@ -71,32 +80,49 @@ impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
         Ok(Self {
             config,
-            client: OnceLock::new(),
+            client: RwLock::new(None),
             last_known_tip: Mutex::new(None),
         })
     }
 
-    fn get_client(&self) -> Result<&Client> {
-        if let Some(c) = self.client.get() {
-            return Ok(c);
-        }
+    fn build_client(&self, url: &str, options: &ElectrumOptions) -> Result<Client> {
         let (tls, validate_domain) = match self.config.network {
             LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
             LiquidNetwork::Regtest => (false, false),
         };
-        let electrum_url =
-            ElectrumUrl::new(&self.config.liquid_electrum_url, tls, validate_domain)?;
-        let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
+        let electrum_url = ElectrumUrl::new(url, tls, validate_domain)?;
+        Ok(electrum_url.build_client(options)?)
+    }
 
-        let client = self.client.get_or_init(|| client);
-        Ok(client)
+    fn get_client(&self) -> Result<RwLockReadGuard<Option<Client>>> {
+        let lock = self.client.read().unwrap();
+        if let Some(client) = lock.as_ref() {
+            if client.ping().is_ok() {
+                return Ok(lock);
+            }
+        }
+
+        let mut lock = self.client.write().unwrap();
+        for electrum_url in &self.config.liquid_electrum_explorers() {
+            if let Ok(electrum_client) =
+                self.build_client(electrum_url, &ElectrumOptions { timeout: Some(3) })
+            {
+                if electrum_client.ping().is_ok() {
+                    *lock = Some(electrum_client);
+                    drop(lock);
+                    return Ok(self.client.read().unwrap());
+                }
+            }
+        }
+
+        bail!("Could not create Liquid electrum client: no url specified in the configuration");
     }
 }
 
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
-        let client = self.get_client()?;
+        get_client!(self, client);
         let mut maybe_popped_header = None;
         while let Some(header) = client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
@@ -129,9 +155,8 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        let txid = self
-            .get_client()?
-            .transaction_broadcast_raw(&elements_serialize(tx))?;
+        get_client!(self, client);
+        let txid = client.transaction_broadcast_raw(&elements_serialize(tx))?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
@@ -140,13 +165,14 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+        get_client!(self, client);
         let txids: Vec<bitcoin::Txid> = txids
             .iter()
             .map(|t| bitcoin::Txid::from_raw_hash(t.to_raw_hash()))
             .collect();
 
         let mut result = vec![];
-        for tx in self.get_client()?.batch_transaction_get_raw(&txids)? {
+        for tx in client.batch_transaction_get_raw(&txids)? {
             let tx: Transaction = elements::encode::deserialize(&tx)?;
             result.push(tx);
         }
@@ -154,14 +180,14 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
+        get_client!(self, client);
         let scripts = &[script];
         let scripts: Vec<&bitcoin::Script> = scripts
             .iter()
             .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
             .collect();
 
-        let mut history_vec: Vec<Vec<History>> = self
-            .get_client()?
+        let mut history_vec: Vec<Vec<History>> = client
             .batch_script_get_history(&scripts)?
             .into_iter()
             .map(|e| e.into_iter().map(Into::into).collect())
@@ -171,13 +197,13 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+        get_client!(self, client);
         let scripts: Vec<&bitcoin::Script> = scripts
             .iter()
             .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
             .collect();
 
-        Ok(self
-            .get_client()?
+        Ok(client
             .batch_script_get_history(&scripts)?
             .into_iter()
             .map(|e| e.into_iter().map(Into::into).collect())
