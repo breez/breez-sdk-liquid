@@ -454,43 +454,20 @@ impl Persister {
         &self,
         swap_update: &ChainSwapUpdate,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_address, claim_tx_id, refund_tx_id
+        // Do not overwrite server_lockup_tx_id, user_lockup_tx_id, claim_address, claim_tx_id
+        // Overwrite refund_tx_id if provided (refund tx fee bump)
         let mut con = self.get_connection()?;
         let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         tx.execute(
             "UPDATE chain_swaps
             SET
-                server_lockup_tx_id =
-                    CASE
-                        WHEN server_lockup_tx_id IS NULL THEN :server_lockup_tx_id
-                        ELSE server_lockup_tx_id
-                    END,
+                server_lockup_tx_id = COALESCE(server_lockup_tx_id, :server_lockup_tx_id),
+                user_lockup_tx_id = COALESCE(user_lockup_tx_id, :user_lockup_tx_id),
+                claim_address = COALESCE(claim_address, :claim_address),
+                claim_tx_id = COALESCE(claim_tx_id, :claim_tx_id),
 
-                user_lockup_tx_id =
-                    CASE
-                        WHEN user_lockup_tx_id IS NULL THEN :user_lockup_tx_id
-                        ELSE user_lockup_tx_id
-                    END,
-
-                claim_address =
-                    CASE
-                        WHEN claim_address IS NULL THEN :claim_address
-                        ELSE claim_address
-                    END,
-
-                claim_tx_id =
-                    CASE
-                        WHEN claim_tx_id IS NULL THEN :claim_tx_id
-                        ELSE claim_tx_id
-                    END,
-
-                refund_tx_id =
-                    CASE
-                        WHEN refund_tx_id IS NULL THEN :refund_tx_id
-                        ELSE refund_tx_id
-                    END,
-
+                refund_tx_id = COALESCE(:refund_tx_id, refund_tx_id),
                 state = :state
             WHERE
                 id = :id",
