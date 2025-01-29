@@ -822,7 +822,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.4.0-rc3"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -872,7 +872,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-bindings"
-version = "0.4.0-rc3"
+version = "0.6.2"
 dependencies = [
  "anyhow",
  "breez-sdk-liquid",
