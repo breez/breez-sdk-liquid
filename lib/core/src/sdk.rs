@@ -351,7 +351,7 @@ impl LiquidSdk {
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
-                      info!("Track blocks loop ticked");
+                        info!("Track blocks loop ticked");
                         // Get the Liquid tip and process a new block
                         let t0 = Instant::now();
                         let liquid_tip_res = cloned.liquid_chain_service.tip().await;
