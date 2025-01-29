@@ -1,6 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_trait::async_trait;
 use boltz_client::{
     boltz::{self},
@@ -354,23 +354,24 @@ impl ChainSwapHandler {
                 match swap.refund_tx_id.clone() {
                     None => {
                         warn!("Chain Swap {id} is in an unrecoverable state: {swap_state:?}");
-                        match self.verify_user_lockup_tx_exists(swap).await {
-                            Ok(_) => {
-                                info!("Chain Swap {id} user lockup tx was broadcast. Setting the swap to refundable.");
-                                self.update_swap_info(&ChainSwapUpdate {
-                                    swap_id: id,
-                                    to_state: Refundable,
-                                    ..Default::default()
-                                })?;
-                            }
-                            Err(_) => {
-                                info!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
-                                self.update_swap_info(&ChainSwapUpdate {
-                                    swap_id: id,
-                                    to_state: Failed,
-                                    ..Default::default()
-                                })?;
-                            }
+                        if self
+                            .user_lockup_tx_exists(swap)
+                            .await
+                            .context("Failed to check if user lockup tx exists")?
+                        {
+                            info!("Chain Swap {id} user lockup tx was broadcast. Setting the swap to refundable.");
+                            self.update_swap_info(&ChainSwapUpdate {
+                                swap_id: id,
+                                to_state: Refundable,
+                                ..Default::default()
+                            })?;
+                        } else {
+                            info!("Chain Swap {id} user lockup tx was never broadcast. Resolving payment as failed.");
+                            self.update_swap_info(&ChainSwapUpdate {
+                                swap_id: id,
+                                to_state: Failed,
+                                ..Default::default()
+                            })?;
                         }
                     }
                     Some(refund_tx_id) => warn!(
@@ -1356,7 +1357,7 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    async fn verify_user_lockup_tx_exists(&self, chain_swap: &ChainSwap) -> Result<()> {
+    async fn user_lockup_tx_exists(&self, chain_swap: &ChainSwap) -> Result<bool> {
         let swap_script = chain_swap.get_lockup_swap_script()?;
         let script_history = match chain_swap.direction {
             Direction::Incoming => self.fetch_bitcoin_script_history(&swap_script).await,
@@ -1365,17 +1366,20 @@ impl ChainSwapHandler {
 
         match chain_swap.user_lockup_tx_id.clone() {
             Some(user_lockup_tx_id) => {
-                script_history
+                if !script_history
                     .iter()
-                    .find(|h| h.txid.to_hex() == user_lockup_tx_id)
-                    .ok_or(anyhow!("Transaction was not found in script history"))?;
+                    .any(|h| h.txid.to_hex() == user_lockup_tx_id)
+                {
+                    return Ok(false);
+                }
             }
             None => {
-                let txid = script_history
-                    .first()
-                    .ok_or(anyhow!("Script history has no transactions"))?
-                    .txid
-                    .to_hex();
+                let txid = match script_history.first() {
+                    None => {
+                        return Ok(false);
+                    }
+                    Some(h) => h.txid.to_hex(),
+                };
                 self.update_swap_info(&ChainSwapUpdate {
                     swap_id: chain_swap.id.clone(),
                     to_state: Pending,
@@ -1385,11 +1389,13 @@ impl ChainSwapHandler {
             }
         }
 
-        Ok(())
+        Ok(true)
     }
 
     async fn verify_user_lockup_tx(&self, chain_swap: &ChainSwap) -> Result<()> {
-        self.verify_user_lockup_tx_exists(chain_swap).await?;
+        if !self.user_lockup_tx_exists(chain_swap).await? {
+            bail!("User lockup tx not found in script history");
+        }
 
         // Verify amount for incoming chain swaps
         if chain_swap.direction == Direction::Incoming {
