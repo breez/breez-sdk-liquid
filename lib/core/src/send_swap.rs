@@ -10,7 +10,7 @@ use log::{debug, error, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
 use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::broadcast;
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::{
@@ -34,7 +34,7 @@ pub(crate) struct SendSwapHandler {
     onchain_wallet: Arc<dyn OnchainWallet>,
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
-    chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    chain_service: Arc<dyn LiquidChainService>,
     subscription_notifier: broadcast::Sender<String>,
 }
 
@@ -55,7 +55,7 @@ impl SendSwapHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        chain_service: Arc<Mutex<dyn LiquidChainService>>,
+        chain_service: Arc<dyn LiquidChainService>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -208,7 +208,7 @@ impl SendSwapHandler {
 
         info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
 
-        let broadcast_result = self.chain_service.lock().await.broadcast(&lockup_tx).await;
+        let broadcast_result = self.chain_service.broadcast(&lockup_tx).await;
 
         if let Err(err) = broadcast_result {
             debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
@@ -384,8 +384,6 @@ impl SendSwapHandler {
         // Get tx history of the swap script (lockup address)
         let history: Vec<_> = self
             .chain_service
-            .lock()
-            .await
             .get_script_history(&swap_script_pk)
             .await?;
 
@@ -405,8 +403,6 @@ impl SendSwapHandler {
                 let claim_tx_id = claim_tx_entry.txid;
                 let claim_tx = self
                     .chain_service
-                    .lock()
-                    .await
                     .get_transactions(&[claim_tx_id])
                     .await
                     .map_err(|e| anyhow!("Failed to fetch claim txs {claim_tx_id:?}: {e}"))?
@@ -445,13 +441,12 @@ impl SendSwapHandler {
         let swap_script = swap.get_swap_script()?;
         let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
 
-        let liquid_chain_service = self.chain_service.lock().await;
         let script_pk = swap_script
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .to_unconfidential()
             .script_pubkey();
-        let utxos = liquid_chain_service.get_script_utxos(&script_pk).await?;
+        let utxos = self.chain_service.get_script_utxos(&script_pk).await?;
         let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
             Swap::Send(swap.clone()),
             &refund_address,
@@ -467,10 +462,7 @@ impl SendSwapHandler {
                 ),
             });
         };
-        let refund_tx_id = liquid_chain_service
-            .broadcast(&refund_tx)
-            .await?
-            .to_string();
+        let refund_tx_id = self.chain_service.broadcast(&refund_tx).await?.to_string();
 
         info!(
             "Successfully broadcast refund for Send Swap {}, is_cooperative: {is_cooperative}",

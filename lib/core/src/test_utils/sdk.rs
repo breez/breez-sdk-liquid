@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use sdk_common::prelude::{BreezServer, STAGING_BREEZSERVER_URL};
 use std::sync::Arc;
 
-use tokio::sync::{watch, Mutex, RwLock};
+use tokio::sync::{watch, RwLock};
 
 use crate::{
     buy::BuyBitcoinService,
@@ -31,8 +31,8 @@ pub(crate) fn new_liquid_sdk(
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
 ) -> Result<LiquidSdk> {
-    let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
-    let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
+    let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+    let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
     new_liquid_sdk_with_chain_services(
         persister,
@@ -48,8 +48,8 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     persister: Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
-    liquid_chain_service: Arc<Mutex<MockLiquidChainService>>,
-    bitcoin_chain_service: Arc<Mutex<MockBitcoinChainService>>,
+    liquid_chain_service: Arc<MockLiquidChainService>,
+    bitcoin_chain_service: Arc<MockBitcoinChainService>,
     onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
 ) -> Result<LiquidSdk> {
     let mut config = Config::testnet(None);
