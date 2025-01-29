@@ -427,19 +427,36 @@ impl OnchainWallet for LiquidOnchainWallet {
             .unwrap_or_default();
         let mut clients = self.clients.lock().await;
 
+        let mut failed = vec![];
         for explorer in &self.config.liquid_explorers {
             let explorer_url = explorer.url();
             match clients.get(explorer_url) {
                 Some(client) => {
                     let mut client = client.lock().await;
-                    self.execute_scan(&mut client, index).await?;
+                    match self.execute_scan(&mut client, index).await {
+                        Ok(_) => break,
+                        Err(err) => {
+                            warn!("Could not execute full scan using {explorer_url}: {err:?}");
+                            failed.push(explorer_url);
+                        }
+                    }
                 }
                 None => {
                     let mut client = explorer.try_into()?;
-                    self.execute_scan(&mut client, index).await?;
-                    clients.insert(explorer_url.clone(), Arc::new(Mutex::new(client)));
+                    match self.execute_scan(&mut client, index).await {
+                        Ok(_) => {
+                            clients.insert(explorer_url.clone(), Arc::new(Mutex::new(client)));
+                            break;
+                        }
+                        Err(err) => {
+                            warn!("Could not execute full scan using {explorer_url}: {err:?}")
+                        }
+                    }
                 }
             };
+        }
+        for client in failed {
+            clients.remove(client);
         }
 
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
