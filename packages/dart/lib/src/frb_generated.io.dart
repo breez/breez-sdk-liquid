@@ -3304,7 +3304,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_prepare_ln_url_pay_request(
       PrepareLnUrlPayRequest apiObj, wire_cst_prepare_ln_url_pay_request wireObj) {
     cst_api_fill_to_wire_ln_url_pay_request_data(apiObj.data, wireObj.data);
-    wireObj.amount_msat = cst_encode_u_64(apiObj.amountMsat);
+    cst_api_fill_to_wire_pay_amount(apiObj.amount, wireObj.amount);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.validate_success_action_url = cst_encode_opt_box_autoadd_bool(apiObj.validateSuccessActionUrl);
   }
@@ -6476,17 +6476,6 @@ final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
   external int amount_sat;
 }
 
-final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
-  external wire_cst_ln_url_pay_request_data data;
-
-  @ffi.Uint64()
-  external int amount_msat;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
-
-  external ffi.Pointer<ffi.Bool> validate_success_action_url;
-}
-
 final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
   @ffi.Uint64()
   external int receiver_amount_sat;
@@ -6510,6 +6499,16 @@ final class wire_cst_pay_amount extends ffi.Struct {
   external int tag;
 
   external PayAmountKind kind;
+}
+
+final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
+  external wire_cst_ln_url_pay_request_data data;
+
+  external wire_cst_pay_amount amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
+
+  external ffi.Pointer<ffi.Bool> validate_success_action_url;
 }
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {

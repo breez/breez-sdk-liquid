@@ -50,7 +50,7 @@ pub(crate) enum Command {
         amount: Option<f64>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
-        #[arg(short, long)]
+        #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
 
         /// Delay for the send, in seconds
@@ -70,7 +70,7 @@ pub(crate) enum Command {
         receiver_amount_sat: Option<u64>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
-        #[arg(short, long)]
+        #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
 
         /// The optional fee rate to use, in sat/vbyte
@@ -224,6 +224,10 @@ pub(crate) enum Command {
     LnurlPay {
         /// LN Address or LNURL-pay endpoint
         lnurl: String,
+
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
+        #[clap(short, long, action = ArgAction::SetTrue)]
+        drain: Option<bool>,
 
         /// Validates the success action URL
         #[clap(name = "validate_success_url", short = 'v', long = "validate")]
@@ -664,21 +668,32 @@ pub(crate) async fn handle_command(
         }
         Command::LnurlPay {
             lnurl,
+            drain,
             validate_success_url,
         } => {
             let input = sdk.parse(&lnurl).await?;
             let res = match input {
                 InputType::LnUrlPay { data: pd } => {
-                    let prompt = format!(
-                        "Amount to pay in millisatoshi (min {} msat, max {} msat): ",
-                        pd.min_sendable, pd.max_sendable
-                    );
+                    let amount = match drain.unwrap_or(false) {
+                        true => PayAmount::Drain,
+                        false => {
+                            let min_sendable = (pd.min_sendable as f64 / 1000.0).ceil() as u64;
+                            let max_sendable = pd.max_sendable / 1000;
+                            let prompt = format!(
+                                "Amount to pay (min {} sat, max {} sat): ",
+                                min_sendable, max_sendable
+                            );
+                            let amount_sat = rl.readline(&prompt)?;
+                            PayAmount::Bitcoin {
+                                receiver_amount_sat: amount_sat.parse::<u64>()?,
+                            }
+                        }
+                    };
 
-                    let amount_msat = rl.readline(&prompt)?;
                     let prepare_response = sdk
                         .prepare_lnurl_pay(PrepareLnUrlPayRequest {
                             data: pd,
-                            amount_msat: amount_msat.parse::<u64>()?,
+                            amount,
                             comment: None,
                             validate_success_action_url: validate_success_url,
                         })

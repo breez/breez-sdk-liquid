@@ -348,13 +348,6 @@ typedef struct wire_cst_prepare_buy_bitcoin_request {
   uint64_t amount_sat;
 } wire_cst_prepare_buy_bitcoin_request;
 
-typedef struct wire_cst_prepare_ln_url_pay_request {
-  struct wire_cst_ln_url_pay_request_data data;
-  uint64_t amount_msat;
-  struct wire_cst_list_prim_u_8_strict *comment;
-  bool *validate_success_action_url;
-} wire_cst_prepare_ln_url_pay_request;
-
 typedef struct wire_cst_PayAmount_Bitcoin {
   uint64_t receiver_amount_sat;
 } wire_cst_PayAmount_Bitcoin;
@@ -373,6 +366,13 @@ typedef struct wire_cst_pay_amount {
   int32_t tag;
   union PayAmountKind kind;
 } wire_cst_pay_amount;
+
+typedef struct wire_cst_prepare_ln_url_pay_request {
+  struct wire_cst_ln_url_pay_request_data data;
+  struct wire_cst_pay_amount amount;
+  struct wire_cst_list_prim_u_8_strict *comment;
+  bool *validate_success_action_url;
+} wire_cst_prepare_ln_url_pay_request;
 
 typedef struct wire_cst_prepare_pay_onchain_request {
   struct wire_cst_pay_amount amount;

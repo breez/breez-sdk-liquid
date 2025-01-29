@@ -1124,8 +1124,8 @@ class PrepareLnUrlPayRequest {
   /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
   final LnUrlPayRequestData data;
 
-  /// The amount in millisatoshis for this payment
-  final BigInt amountMsat;
+  /// The amount to send
+  final PayAmount amount;
 
   /// An optional comment for this payment
   final String? comment;
@@ -1136,14 +1136,13 @@ class PrepareLnUrlPayRequest {
 
   const PrepareLnUrlPayRequest({
     required this.data,
-    required this.amountMsat,
+    required this.amount,
     this.comment,
     this.validateSuccessActionUrl,
   });
 
   @override
-  int get hashCode =>
-      data.hashCode ^ amountMsat.hashCode ^ comment.hashCode ^ validateSuccessActionUrl.hashCode;
+  int get hashCode => data.hashCode ^ amount.hashCode ^ comment.hashCode ^ validateSuccessActionUrl.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1151,7 +1150,7 @@ class PrepareLnUrlPayRequest {
       other is PrepareLnUrlPayRequest &&
           runtimeType == other.runtimeType &&
           data == other.data &&
-          amountMsat == other.amountMsat &&
+          amount == other.amount &&
           comment == other.comment &&
           validateSuccessActionUrl == other.validateSuccessActionUrl;
 }
@@ -1200,6 +1199,7 @@ class PrepareLnUrlPayResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 class PreparePayOnchainRequest {
+  /// The amount to send
   final PayAmount amount;
 
   /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.

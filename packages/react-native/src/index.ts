@@ -334,7 +334,7 @@ export interface PrepareBuyBitcoinResponse {
 
 export interface PrepareLnUrlPayRequest {
     data: LnUrlPayRequestData
-    amountMsat: number
+    amount: PayAmount
     comment?: string
     validateSuccessActionUrl?: boolean
 }
