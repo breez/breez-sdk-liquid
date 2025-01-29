@@ -6,7 +6,7 @@ use boltz_client::swaps::boltz::{self, SwapUpdateTxDetails};
 use boltz_client::{Serialize, ToHex};
 use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::broadcast;
 
 use crate::chain::liquid::LiquidChainService;
 use crate::model::PaymentState::*;
@@ -30,7 +30,7 @@ pub(crate) struct ReceiveSwapHandler {
     persister: Arc<Persister>,
     swapper: Arc<dyn Swapper>,
     subscription_notifier: broadcast::Sender<String>,
-    liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+    liquid_chain_service: Arc<dyn LiquidChainService>,
 }
 
 impl ReceiveSwapHandler {
@@ -39,7 +39,7 @@ impl ReceiveSwapHandler {
         onchain_wallet: Arc<dyn OnchainWallet>,
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
-        liquid_chain_service: Arc<Mutex<dyn LiquidChainService>>,
+        liquid_chain_service: Arc<dyn LiquidChainService>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -312,8 +312,7 @@ impl ReceiveSwapHandler {
         match self.persister.set_receive_swap_claim_tx_id(swap_id, &tx_id) {
             Ok(_) => {
                 // We attempt broadcasting via chain service, then fallback to Boltz
-                let liquid_chain_service = self.liquid_chain_service.lock().await;
-                let broadcast_res = liquid_chain_service
+                let broadcast_res = self.liquid_chain_service
                     .broadcast(&claim_tx, Some(&swap.id))
                     .await
                     .map(|tx_id| tx_id.to_hex())
@@ -427,8 +426,6 @@ impl ReceiveSwapHandler {
                     err: format!("Failed to get swap script address {e:?}"),
                 })?;
         self.liquid_chain_service
-            .lock()
-            .await
             .verify_tx(
                 &address,
                 &swap_update_tx.id,
