@@ -282,7 +282,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         verify_confirmation: bool,
     ) -> Result<Transaction> {
         let script = address.script_pubkey();
-        let script_history = self.get_script_history_with_retry(&script, 5).await?;
+        let script_history = self.get_script_history_with_retry(&script, 10).await?;
         let lockup_tx_history = script_history.iter().find(|h| h.txid.to_hex().eq(tx_id));
 
         match lockup_tx_history {

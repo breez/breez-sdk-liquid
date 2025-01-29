@@ -132,7 +132,7 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        let history = self.get_script_history_with_retry(script, 3).await?;
+        let history = self.get_script_history_with_retry(script, 10).await?;
 
         let mut utxos: Vec<Utxo> = vec![];
         for history_item in history {
