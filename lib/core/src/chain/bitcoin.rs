@@ -82,7 +82,7 @@ pub(crate) struct HybridBitcoinChainService {
 }
 impl HybridBitcoinChainService {
     pub fn new(config: Config) -> Result<Self, Error> {
-        Self::with_options(config, ElectrumOptions::default())
+        Self::with_options(config, ElectrumOptions { timeout: Some(3) })
     }
 
     /// Creates an Electrum client specifying non default options like timeout

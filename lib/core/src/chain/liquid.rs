@@ -4,14 +4,16 @@ use std::{str::FromStr, time::Duration};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
-use log::{info, warn};
+use log::info;
+use lwk_wollet::clients::blocking::BlockchainBackend;
 use lwk_wollet::elements::hex::FromHex;
+use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
     elements::{
         pset::serialize::Serialize, Address, BlockHash, OutPoint, Script, Transaction, Txid,
     },
     hashes::{sha256, Hash},
-    BlockchainBackend, ElectrumClient, ElectrumUrl, History,
+    ElectrumClient, ElectrumUrl, History,
 };
 use reqwest::{Response, StatusCode};
 use serde::Deserialize;
@@ -89,9 +91,11 @@ pub(crate) struct HybridLiquidChainService {
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
-        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true);
-        let electrum_client = ElectrumClient::new(&electrum_url)?;
-        let tip_client = ElectrumClient::new(&electrum_url)?;
+        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
+        let electrum_client =
+            ElectrumClient::with_options(&electrum_url, ElectrumOptions { timeout: Some(3) })?;
+        let tip_client =
+            ElectrumClient::with_options(&electrum_url, ElectrumOptions { timeout: Some(3) })?;
         Ok(Self {
             electrum_client,
             tip_client: Mutex::new(tip_client),

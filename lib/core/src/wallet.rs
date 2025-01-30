@@ -11,7 +11,8 @@ use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
-use lwk_wollet::elements::Txid;
+use lwk_wollet::elements::{AssetId, Txid};
+use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
@@ -346,8 +347,11 @@ impl OnchainWallet for LiquidOnchainWallet {
         // create electrum client if doesn't already exist
         let mut electrum_client = self.electrum_client.lock().await;
         if electrum_client.is_none() {
-            let electrum_url = ElectrumUrl::new(&self.config.liquid_electrum_url, true, true);
-            *electrum_client = Some(ElectrumClient::new(&electrum_url)?);
+            let electrum_url = ElectrumUrl::new(&self.config.liquid_electrum_url, true, true)?;
+            *electrum_client = Some(ElectrumClient::with_options(
+                &electrum_url,
+                ElectrumOptions { timeout: Some(3) },
+            )?);
         }
         let client = electrum_client
             .as_mut()

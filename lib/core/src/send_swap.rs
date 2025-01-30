@@ -9,7 +9,6 @@ use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
 use lwk_wollet::hashes::sha256;
-use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
 use tokio::sync::broadcast;
 

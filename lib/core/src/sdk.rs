@@ -16,7 +16,6 @@ use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
-use lwk_wollet::secp256k1::ThirtyTwoByteHash;
 use lwk_wollet::ElementsNetwork;
 use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
