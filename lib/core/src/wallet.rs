@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 use std::{path::Path, str::FromStr, sync::Arc};
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_trait::async_trait;
 use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
@@ -133,15 +133,20 @@ impl TryFrom<&BlockchainExplorer> for BlockchainClient {
             BlockchainExplorer::Electrum { url } => {
                 let url = ElectrumUrl::new(url, true, true)?;
                 let client = ElectrumClient::new(&url)?;
+                // Ensure we ping so we know the client is working
+                client.ping()?;
                 Ok(BlockchainClient::Electrum(Box::new(client)))
             }
             BlockchainExplorer::Esplora {
                 url,
                 use_waterfalls,
-            } => Ok(BlockchainClient::Esplora(match use_waterfalls {
-                true => EsploraClient::new_waterfalls(url),
-                false => EsploraClient::new(url),
-            })),
+            } => {
+                let client = match use_waterfalls {
+                    true => EsploraClient::new_waterfalls(url),
+                    false => EsploraClient::new(url),
+                };
+                Ok(BlockchainClient::Esplora(client))
+            }
         }
     }
 }
@@ -150,12 +155,35 @@ pub(crate) struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
-    clients: Mutex<HashMap<String, Arc<Mutex<BlockchainClient>>>>,
+    client: Mutex<(BlockchainClient, usize)>,
     working_dir: String,
     pub(crate) signer: SdkLwkSigner,
 }
 
 impl LiquidOnchainWallet {
+    fn get_client(config: &Config, index: usize) -> Result<(BlockchainClient, usize)> {
+        let index = index % config.liquid_explorers.len();
+
+        let explorer = config
+            .liquid_explorers
+            .get(index)
+            .context("Expected existing liquid explorer")?;
+
+        Ok((explorer.try_into()?, index))
+    }
+
+    fn get_next_available_client(
+        config: &Config,
+        start_index: usize,
+    ) -> Result<(BlockchainClient, usize)> {
+        for index in start_index..start_index + config.liquid_explorers.len() {
+            if let Ok(res) = Self::get_client(config, index) {
+                return Ok(res);
+            }
+        }
+        bail!("Could not find a working client")
+    }
+
     pub(crate) fn new(
         config: Config,
         working_dir: &String,
@@ -169,12 +197,13 @@ impl LiquidOnchainWallet {
         if !working_dir_buf.exists() {
             create_dir_all(&working_dir_buf)?;
         }
+        let client = Mutex::new(Self::get_next_available_client(&config, 0)?);
 
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
-            clients: Default::default(),
+            client,
             working_dir: working_dir.clone(),
             signer,
         })
@@ -420,43 +449,28 @@ impl OnchainWallet for LiquidOnchainWallet {
         let full_scan_started = Instant::now();
 
         // Use the cached derivation index with a buffer of 5 to perform the scan
-        let index = self
+        let derivation_index = self
             .persister
             .get_last_derivation_index()?
             .map(|i| i + 5)
             .unwrap_or_default();
-        let mut clients = self.clients.lock().await;
 
-        let mut failed = vec![];
-        for explorer in &self.config.liquid_explorers {
-            let explorer_url = explorer.url();
-            match clients.get(explorer_url) {
-                Some(client) => {
-                    let mut client = client.lock().await;
-                    match self.execute_scan(&mut client, index).await {
-                        Ok(_) => break,
-                        Err(err) => {
-                            warn!("Could not execute full scan using {explorer_url}: {err:?}");
-                            failed.push(explorer_url);
-                        }
-                    }
-                }
-                None => {
-                    let mut client = explorer.try_into()?;
-                    match self.execute_scan(&mut client, index).await {
-                        Ok(_) => {
-                            clients.insert(explorer_url.clone(), Arc::new(Mutex::new(client)));
-                            break;
-                        }
-                        Err(err) => {
-                            warn!("Could not execute full scan using {explorer_url}: {err:?}")
-                        }
-                    }
-                }
-            };
+        let mut attempts = 0;
+        let mut lock = self.client.lock().await;
+        while attempts < self.config.liquid_explorers.len() {
+            if self
+                .execute_scan(&mut lock.0, derivation_index)
+                .await
+                .is_ok()
+            {
+                break;
+            }
+            *lock = Self::get_next_available_client(&self.config, lock.1 + 1)?;
+            attempts += 1;
         }
-        for client in failed {
-            clients.remove(client);
+
+        if attempts >= self.config.liquid_explorers.len() {
+            bail!("Could not run full scan: request failed on all specified clients");
         }
 
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
