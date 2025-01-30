@@ -84,15 +84,32 @@ impl HybridBitcoinChainService {
         Self::with_options(config, ElectrumOptions::default())
     }
 
-    /// Creates an Electrum client specifying non default options like timeout
-    pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self> {
-        let Some(electrum_url) = config.bitcoin_electrum_explorers().first().cloned() else {
+    fn build_client(url: &str, options: &ElectrumOptions) -> Result<Client> {
+        let electrum_url = ElectrumUrl::new(url, true, true)?;
+        Ok(electrum_url.build_client(options)?)
+    }
+
+    fn get_working_client(config: &Config, options: ElectrumOptions) -> Result<Client> {
+        let mut client = None;
+        for electrum_url in &config.bitcoin_electrum_explorers() {
+            if let Ok(electrum_client) = Self::build_client(electrum_url, &options) {
+                if electrum_client.ping().is_ok() {
+                    client = Some(electrum_client);
+                    break;
+                }
+            }
+        }
+        let Some(client) = client else {
             bail!(
                 "Could not create Bitcoin electrum client: no url specified in the configuration"
             );
         };
-        let electrum_url = ElectrumUrl::new(electrum_url, true, true)?;
-        let client = electrum_url.build_client(&options)?;
+        Ok(client)
+    }
+
+    /// Creates an Electrum client specifying non default options like timeout
+    pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self> {
+        let client = Self::get_working_client(&config, options)?;
         let header = client.block_headers_subscribe_raw()?;
         let tip: HeaderNotification = header.try_into()?;
 

@@ -63,13 +63,32 @@ pub(crate) struct HybridLiquidChainService {
 }
 
 impl HybridLiquidChainService {
-    pub(crate) fn new(config: Config) -> Result<Self> {
-        let Some(electrum_url) = config.liquid_electrum_explorers().first().cloned() else {
-            bail!("Could not create Liquid electrum client: no url specified in the configuration");
+    fn build_client(url: &str) -> Result<ElectrumClient> {
+        let electrum_url = ElectrumUrl::new(url, true, true)?;
+        Ok(ElectrumClient::new(&electrum_url)?)
+    }
+
+    fn get_working_client(config: &Config) -> Result<(String, ElectrumClient)> {
+        let mut client = None;
+        let mut working_url = String::new();
+        for electrum_url in &config.liquid_electrum_explorers() {
+            if let Ok(electrum_client) = Self::build_client(electrum_url) {
+                if electrum_client.ping().is_ok() {
+                    working_url = electrum_url.to_string();
+                    client = Some(electrum_client);
+                    break;
+                }
+            }
+        }
+        let Some(client) = client else {
+            bail!("Could not create Liquid electrum client: no url specified in the configuration")
         };
-        let electrum_url = ElectrumUrl::new(electrum_url, true, true)?;
-        let electrum_client = ElectrumClient::new(&electrum_url)?;
-        let tip_client = ElectrumClient::new(&electrum_url)?;
+        Ok((working_url, client))
+    }
+
+    pub(crate) fn new(config: Config) -> Result<Self> {
+        let (electrum_url, electrum_client) = Self::get_working_client(&config)?;
+        let tip_client = Self::build_client(&electrum_url)?;
         Ok(Self {
             electrum_client,
             tip_client: Mutex::new(tip_client),
