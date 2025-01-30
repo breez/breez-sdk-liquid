@@ -147,6 +147,9 @@ impl TryFrom<&BlockchainExplorer> for BlockchainClient {
                 };
                 Ok(BlockchainClient::Esplora(client))
             }
+            BlockchainExplorer::MempoolSpace { .. } => {
+                bail!("Cannot create client from MempoolSpace url")
+            }
         }
     }
 }

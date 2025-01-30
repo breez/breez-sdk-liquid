@@ -41,6 +41,9 @@ pub enum BlockchainExplorer {
         /// Whether or not to use the "waterfalls" extension
         use_waterfalls: bool,
     },
+    MempoolSpace {
+        url: String,
+    },
 }
 
 /// Configuration for the Liquid SDK
@@ -99,9 +102,8 @@ impl Config {
                 BlockchainExplorer::Electrum {
                     url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
                 },
-                BlockchainExplorer::Esplora {
+                BlockchainExplorer::MempoolSpace {
                     url: "https://mempool.space/api".to_string(),
-                    use_waterfalls: false,
                 },
             ],
             working_dir: ".".to_string(),
@@ -128,9 +130,8 @@ impl Config {
                 BlockchainExplorer::Electrum {
                     url: "bitcoin-testnet.blockstream.info:50002".to_string(),
                 },
-                BlockchainExplorer::Esplora {
+                BlockchainExplorer::MempoolSpace {
                     url: "https://mempool.space/testnet/api".to_string(),
-                    use_waterfalls: false,
                 },
             ],
             working_dir: ".".to_string(),
@@ -225,6 +226,13 @@ impl Config {
     pub(crate) fn bitcoin_esplora_explorers(&self) -> Vec<&String> {
         Self::get_explorers(&self.bitcoin_explorers, |be| match be {
             BlockchainExplorer::Esplora { url, .. } => Some(url),
+            _ => None,
+        })
+    }
+
+    pub(crate) fn bitcoin_mempool_space_explorers(&self) -> Vec<&String> {
+        Self::get_explorers(&self.bitcoin_explorers, |be| match be {
+            BlockchainExplorer::MempoolSpace { url, .. } => Some(url),
             _ => None,
         })
     }

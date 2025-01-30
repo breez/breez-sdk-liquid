@@ -340,16 +340,18 @@ impl BitcoinChainService for HybridBitcoinChainService {
             bail!("Cannot fetch recommended fees without specifying a Bitcoin Esplora backend.");
         }
 
-        for esplora_url in self.config.bitcoin_esplora_explorers() {
-            let res =
-                get_parse_and_log_response(&format!("{esplora_url}/v1/fees/recommended"), true)
-                    .await
-                    .map_err(Into::<anyhow::Error>::into);
+        for mempool_space_url in self.config.bitcoin_mempool_space_explorers() {
+            let res = get_parse_and_log_response(
+                &format!("{mempool_space_url}/v1/fees/recommended"),
+                true,
+            )
+            .await
+            .map_err(Into::<anyhow::Error>::into);
 
             match res {
                 Ok(fees) => return Ok(fees),
                 Err(err) => {
-                    log::warn!("Could not fetch recommended fees from {esplora_url}: {err:?}")
+                    log::warn!("Could not fetch recommended fees from {mempool_space_url}: {err:?}")
                 }
             }
         }
