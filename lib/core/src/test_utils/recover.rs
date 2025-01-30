@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use tokio::sync::Mutex;
 
 use crate::{
     model::Signer, recover::recoverer::Recoverer, swapper::Swapper, wallet::OnchainWallet,
@@ -14,8 +13,8 @@ pub(crate) fn new_recoverer(
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
 ) -> Result<Recoverer> {
-    let liquid_chain_service = Arc::new(Mutex::new(MockLiquidChainService::new()));
-    let bitcoin_chain_service = Arc::new(Mutex::new(MockBitcoinChainService::new()));
+    let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+    let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
     Recoverer::new(
         signer.slip77_master_blinding_key()?,

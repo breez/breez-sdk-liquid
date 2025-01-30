@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
@@ -17,7 +18,7 @@ use crate::{model::Config, utils};
 #[async_trait]
 pub trait LiquidChainService: Send + Sync {
     /// Get the blockchain latest block
-    async fn tip(&mut self) -> Result<u32>;
+    async fn tip(&self) -> Result<u32>;
 
     /// Broadcast a transaction
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid>;
@@ -58,20 +59,25 @@ pub trait LiquidChainService: Send + Sync {
 
 pub(crate) struct HybridLiquidChainService {
     electrum_client: ElectrumClient,
+    tip_client: Mutex<ElectrumClient>,
 }
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
         let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
         let electrum_client = ElectrumClient::new(&electrum_url)?;
-        Ok(Self { electrum_client })
+        let tip_client = ElectrumClient::new(&electrum_url)?;
+        Ok(Self {
+            electrum_client,
+            tip_client: Mutex::new(tip_client),
+        })
     }
 }
 
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
-    async fn tip(&mut self) -> Result<u32> {
-        Ok(self.electrum_client.tip()?.height)
+    async fn tip(&self) -> Result<u32> {
+        Ok(self.tip_client.lock().unwrap().tip()?.height)
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
