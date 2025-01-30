@@ -1,8 +1,17 @@
-use paste::paste;
-use uniffi_bindgen::backend::{CodeType, Literal};
-use uniffi_bindgen::interface::{Radix, Type};
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-fn render_literal(literal: &Literal) -> String {
+use super::CodeType;
+use paste::paste;
+use uniffi_bindgen::{
+    backend::{Literal, Type},
+    interface::Radix,
+    ComponentInterface,
+};
+
+#[allow(dead_code)]
+fn render_literal(literal: &Literal, _ci: &ComponentInterface) -> String {
     fn typed_number(type_: &Type, num_str: String) -> String {
         match type_ {
             // Bytes, Shorts and Ints can all be inferred from the type.
@@ -50,28 +59,32 @@ macro_rules! impl_code_type_for_primitive {
             pub struct $T;
 
             impl CodeType for $T  {
-                fn type_label(&self) -> String {
+                fn type_label(&self, _ci: &ComponentInterface) -> String {
                     $class_name.into()
                 }
 
-                fn literal(&self, literal: &Literal) -> String {
-                    render_literal(literal)
+                fn canonical_name(&self) -> String {
+                    $class_name.into()
+                }
+
+                fn literal(&self, literal: &Literal, ci: &ComponentInterface) -> String {
+                    render_literal(&literal, ci)
                 }
             }
         }
     };
 }
 
-impl_code_type_for_primitive!(BooleanCodeType, "boolean");
-impl_code_type_for_primitive!(StringCodeType, "string");
-impl_code_type_for_primitive!(BytesCodeType, "[]");
-impl_code_type_for_primitive!(Int8CodeType, "number");
-impl_code_type_for_primitive!(Int16CodeType, "number");
-impl_code_type_for_primitive!(Int32CodeType, "number");
-impl_code_type_for_primitive!(Int64CodeType, "number");
-impl_code_type_for_primitive!(UInt8CodeType, "number");
-impl_code_type_for_primitive!(UInt16CodeType, "number");
-impl_code_type_for_primitive!(UInt32CodeType, "number");
-impl_code_type_for_primitive!(UInt64CodeType, "number");
-impl_code_type_for_primitive!(Float32CodeType, "number");
-impl_code_type_for_primitive!(Float64CodeType, "number");
+impl_code_type_for_primitive!(BooleanCodeType, "Boolean");
+impl_code_type_for_primitive!(StringCodeType, "String");
+impl_code_type_for_primitive!(BytesCodeType, "ByteArray");
+impl_code_type_for_primitive!(Int8CodeType, "Byte");
+impl_code_type_for_primitive!(Int16CodeType, "Short");
+impl_code_type_for_primitive!(Int32CodeType, "Int");
+impl_code_type_for_primitive!(Int64CodeType, "Long");
+impl_code_type_for_primitive!(UInt8CodeType, "UByte");
+impl_code_type_for_primitive!(UInt16CodeType, "UShort");
+impl_code_type_for_primitive!(UInt32CodeType, "UInt");
+impl_code_type_for_primitive!(UInt64CodeType, "ULong");
+impl_code_type_for_primitive!(Float32CodeType, "Float");
+impl_code_type_for_primitive!(Float64CodeType, "Double");

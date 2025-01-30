@@ -7,15 +7,17 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process::Command;
-use uniffi_bindgen::{BindingGenerator, BindingGeneratorConfig, ComponentInterface};
+use uniffi_bindgen::BindingGenerator;
+use uniffi_bindgen::BindingsConfig;
+use uniffi_bindgen::ComponentInterface;
 
 use crate::gen_kotlin;
 use crate::gen_swift;
 use crate::gen_typescript;
 
-pub struct RNBindingGenerator {}
+pub struct ReactNativeBindingGenerator {}
 
-impl RNBindingGenerator {
+impl ReactNativeBindingGenerator {
     fn write_bindings(
         &self,
         bindings_output: &String,
@@ -32,7 +34,7 @@ impl RNBindingGenerator {
     fn write_kotlin_mapper_bindings(
         &self,
         ci: &ComponentInterface,
-        config: RNConfig,
+        config: Config,
         base_output_path: &Utf8Path,
     ) -> Result<()> {
         // Create the path
@@ -57,7 +59,7 @@ impl RNBindingGenerator {
     fn write_kotlin_module_bindings(
         &self,
         ci: &ComponentInterface,
-        config: RNConfig,
+        config: Config,
         base_output_path: &Utf8Path,
     ) -> Result<()> {
         // Create the path
@@ -92,7 +94,7 @@ impl RNBindingGenerator {
     fn write_swift_mapper_bindings(
         &self,
         ci: &ComponentInterface,
-        config: RNConfig,
+        config: Config,
         base_output_path: &Utf8Path,
     ) -> Result<()> {
         // Create the path
@@ -116,7 +118,7 @@ impl RNBindingGenerator {
     fn write_swift_extern_bindings(
         &self,
         ci: &ComponentInterface,
-        config: RNConfig,
+        config: Config,
         base_output_path: &Utf8Path,
     ) -> Result<()> {
         // Create the path
@@ -140,7 +142,7 @@ impl RNBindingGenerator {
     fn write_swift_module_bindings(
         &self,
         ci: &ComponentInterface,
-        config: RNConfig,
+        config: Config,
         base_output_path: &Utf8Path,
     ) -> Result<()> {
         // Create the path
@@ -177,7 +179,7 @@ impl RNBindingGenerator {
     fn write_typescript_bindings(
         &self,
         ci: &ComponentInterface,
-        config: RNConfig,
+        config: Config,
         base_output_path: &Utf8Path,
     ) -> Result<()> {
         // Create the path
@@ -210,57 +212,64 @@ impl RNBindingGenerator {
 }
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct RNConfig {
+pub struct Config {
+    cdylib_name: Option<String>,
     package_name: Option<String>,
 }
 
-impl RNConfig {}
+impl Config {}
 
-impl BindingGeneratorConfig for RNConfig {
-    fn get_entry_from_bindings_table(_bindings: &toml::value::Value) -> Option<toml::value::Value> {
-        if let Some(table) = _bindings.as_table() {
-            table.get("rn").cloned()
-        } else {
-            None
-        }
+impl BindingsConfig for Config {
+    fn update_from_ci(&mut self, ci: &ComponentInterface) {
+        self.package_name
+            .get_or_insert_with(|| ci.namespace().into());
+        self.cdylib_name
+            .get_or_insert_with(|| format!("uniffi_{}", ci.namespace()));
     }
 
-    fn get_config_defaults(ci: &ComponentInterface) -> Vec<(String, toml::value::Value)> {
-        vec![
-            (
-                "package_name".to_string(),
-                toml::value::Value::String(ci.namespace().to_string()),
-            ),
-            (
-                "cdylib_name".to_string(),
-                toml::value::Value::String(ci.namespace().to_string()),
-            ),
-        ]
+    fn update_from_cdylib_name(&mut self, cdylib_name: &str) {
+        self.cdylib_name
+            .get_or_insert_with(|| cdylib_name.to_string());
+    }
+
+    fn update_from_dependency_configs(
+        &mut self,
+        _config_map: std::collections::HashMap<&str, &Self>,
+    ) {
+        // unused
     }
 }
 
-impl BindingGenerator for RNBindingGenerator {
-    type Config = RNConfig;
+impl BindingGenerator for ReactNativeBindingGenerator {
+    type Config = Config;
 
     fn write_bindings(
         &self,
-        ci: ComponentInterface,
-        config: Self::Config,
+        ci: &ComponentInterface,
+        config: &Self::Config,
         out_dir: &Utf8Path,
     ) -> Result<()> {
         fs::create_dir_all(out_dir)?;
 
         // generate kotlin
-        self.write_kotlin_mapper_bindings(&ci, config.clone(), out_dir)?;
-        self.write_kotlin_module_bindings(&ci, config.clone(), out_dir)?;
+        self.write_kotlin_mapper_bindings(ci, config.clone(), out_dir)?;
+        self.write_kotlin_module_bindings(ci, config.clone(), out_dir)?;
 
         // generate ios
-        self.write_swift_mapper_bindings(&ci, config.clone(), out_dir)?;
-        self.write_swift_extern_bindings(&ci, config.clone(), out_dir)?;
-        self.write_swift_module_bindings(&ci, config.clone(), out_dir)?;
+        self.write_swift_mapper_bindings(ci, config.clone(), out_dir)?;
+        self.write_swift_extern_bindings(ci, config.clone(), out_dir)?;
+        self.write_swift_module_bindings(ci, config.clone(), out_dir)?;
 
         // generate typescript
-        self.write_typescript_bindings(&ci, config.clone(), out_dir)?;
+        self.write_typescript_bindings(ci, config.clone(), out_dir)?;
+        Ok(())
+    }
+
+    fn check_library_path(
+        &self,
+        _library_path: &Utf8Path,
+        _cdylib_name: Option<&str>,
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 }

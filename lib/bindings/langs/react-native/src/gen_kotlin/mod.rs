@@ -1,13 +1,65 @@
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashSet};
+use std::fmt::Debug;
 
 use askama::Template;
+use heck::{ToLowerCamelCase, ToShoutySnakeCase, ToUpperCamelCase};
 use once_cell::sync::Lazy;
 use uniffi_bindgen::interface::*;
 
-pub use uniffi_bindgen::bindings::kotlin::gen_kotlin::*;
+use crate::generator::Config;
 
-use crate::generator::RNConfig;
+mod callback_interface;
+mod compounds;
+mod custom;
+mod enum_;
+mod executor;
+mod external;
+mod miscellany;
+mod object;
+mod primitives;
+mod record;
+
+#[allow(dead_code)]
+trait CodeType: Debug {
+    /// The language specific label used to reference this type. This will be used in
+    /// method signatures and property declarations.
+    fn type_label(&self, ci: &ComponentInterface) -> String;
+
+    /// A representation of this type label that can be used as part of another
+    /// identifier. e.g. `read_foo()`, or `FooInternals`.
+    ///
+    /// This is especially useful when creating specialized objects or methods to deal
+    /// with this type only.
+    fn canonical_name(&self) -> String;
+
+    fn literal(&self, _literal: &Literal, ci: &ComponentInterface) -> String {
+        unimplemented!("Unimplemented for {}", self.type_label(ci))
+    }
+
+    /// Name of the FfiConverter
+    ///
+    /// This is the object that contains the lower, write, lift, and read methods for this type.
+    /// Depending on the binding this will either be a singleton or a class with static methods.
+    ///
+    /// This is the newer way of handling these methods and replaces the lower, write, lift, and
+    /// read CodeType methods.  Currently only used by Kotlin, but the plan is to move other
+    /// backends to using this.
+    fn ffi_converter_name(&self) -> String {
+        format!("FfiConverter{}", self.canonical_name())
+    }
+
+    /// A list of imports that are needed if this type is in use.
+    /// Classes are imported exactly once.
+    fn imports(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    /// Function to run at startup
+    fn initialization_fn(&self) -> Option<String> {
+        None
+    }
+}
 
 static IGNORED_FUNCTIONS: Lazy<HashSet<String>> = Lazy::new(|| {
     let list: Vec<&str> = vec![
@@ -23,14 +75,14 @@ static IGNORED_FUNCTIONS: Lazy<HashSet<String>> = Lazy::new(|| {
 #[template(syntax = "rn", escape = "none", path = "mapper.kt")]
 #[allow(dead_code)]
 pub struct MapperGenerator<'a> {
-    config: RNConfig,
+    config: Config,
     ci: &'a ComponentInterface,
     // Track types used in sequences with the `add_sequence_type()` macro
     sequence_types: RefCell<BTreeSet<String>>,
 }
 
 impl<'a> MapperGenerator<'a> {
-    pub fn new(config: RNConfig, ci: &'a ComponentInterface) -> Self {
+    pub fn new(config: Config, ci: &'a ComponentInterface) -> Self {
         Self {
             config,
             ci,
@@ -62,29 +114,117 @@ impl<'a> MapperGenerator<'a> {
 #[template(syntax = "rn", escape = "none", path = "module.kt")]
 #[allow(dead_code)]
 pub struct ModuleGenerator<'a> {
-    config: RNConfig,
+    config: Config,
     ci: &'a ComponentInterface,
 }
 
 impl<'a> ModuleGenerator<'a> {
-    pub fn new(config: RNConfig, ci: &'a ComponentInterface) -> Self {
+    pub fn new(config: Config, ci: &'a ComponentInterface) -> Self {
         Self { config, ci }
     }
 }
 
-pub mod filters {
-    use heck::*;
-    use uniffi_bindgen::backend::CodeOracle;
-    use uniffi_bindgen::backend::{CodeType, TypeIdentifier};
+#[derive(Clone)]
+pub struct KotlinCodeOracle;
 
+#[allow(dead_code)]
+impl KotlinCodeOracle {
+    // Map `Type` instances to a `Box<dyn CodeType>` for that type.
+    //
+    // There is a companion match in `templates/Types.kt` which performs a similar function for the
+    // template code.
+    //
+    //   - When adding additional types here, make sure to also add a match arm to the `Types.kt` template.
+    //   - To keep things manageable, let's try to limit ourselves to these 2 mega-matches
+    fn create_code_type(&self, type_: Type) -> Box<dyn CodeType> {
+        match type_ {
+            Type::UInt8 => Box::new(primitives::UInt8CodeType),
+            Type::Int8 => Box::new(primitives::Int8CodeType),
+            Type::UInt16 => Box::new(primitives::UInt16CodeType),
+            Type::Int16 => Box::new(primitives::Int16CodeType),
+            Type::UInt32 => Box::new(primitives::UInt32CodeType),
+            Type::Int32 => Box::new(primitives::Int32CodeType),
+            Type::UInt64 => Box::new(primitives::UInt64CodeType),
+            Type::Int64 => Box::new(primitives::Int64CodeType),
+            Type::Float32 => Box::new(primitives::Float32CodeType),
+            Type::Float64 => Box::new(primitives::Float64CodeType),
+            Type::Boolean => Box::new(primitives::BooleanCodeType),
+            Type::String => Box::new(primitives::StringCodeType),
+            Type::Bytes => Box::new(primitives::BytesCodeType),
+
+            Type::Timestamp => Box::new(miscellany::TimestampCodeType),
+            Type::Duration => Box::new(miscellany::DurationCodeType),
+
+            Type::Enum { name, .. } => Box::new(enum_::EnumCodeType::new(name)),
+            Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
+            Type::Record { name, .. } => Box::new(record::RecordCodeType::new(name)),
+            Type::CallbackInterface { name, .. } => {
+                Box::new(callback_interface::CallbackInterfaceCodeType::new(name))
+            }
+            Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
+            Type::Optional { inner_type } => {
+                Box::new(compounds::OptionalCodeType::new(*inner_type))
+            }
+            Type::Sequence { inner_type } => {
+                Box::new(compounds::SequenceCodeType::new(*inner_type))
+            }
+            Type::Map {
+                key_type,
+                value_type,
+            } => Box::new(compounds::MapCodeType::new(*key_type, *value_type)),
+            Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
+            Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
+        }
+    }
+
+    fn find(&self, type_: &impl AsType) -> Box<dyn CodeType> {
+        self.create_code_type(type_.as_type())
+    }
+
+    /// Get the idiomatic Kotlin rendering of a class name (for enums, records, errors, etc).
+    fn class_name(&self, ci: &ComponentInterface, nm: &str) -> String {
+        let name = nm.to_string().to_upper_camel_case();
+        // fixup errors.
+        ci.is_name_used_as_error(nm)
+            .then(|| self.convert_error_suffix(&name))
+            .unwrap_or(name)
+    }
+
+    fn convert_error_suffix(&self, nm: &str) -> String {
+        match nm.strip_suffix("Error") {
+            None => nm.to_string(),
+            Some(stripped) => format!("{stripped}Exception"),
+        }
+    }
+
+    /// Get the idiomatic Kotlin rendering of a function name.
+    fn fn_name(&self, nm: &str) -> String {
+        format!("`{}`", nm.to_string().to_lower_camel_case())
+    }
+
+    /// Get the idiomatic Kotlin rendering of a variable name.
+    fn var_name(&self, nm: &str) -> String {
+        format!("`{}`", nm.to_string().to_lower_camel_case())
+    }
+
+    /// Get the idiomatic Kotlin rendering of an individual enum variant.
+    fn enum_variant_name(&self, nm: &str) -> String {
+        nm.to_string().to_shouty_snake_case()
+    }
+}
+
+pub mod filters {
     use super::*;
 
     fn oracle() -> &'static KotlinCodeOracle {
         &KotlinCodeOracle
     }
 
-    pub fn type_name(codetype: &impl CodeType) -> Result<String, askama::Error> {
-        Ok(codetype.type_label(oracle()))
+    pub fn type_name(
+        type_: &impl AsType,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
+        Ok(oracle().find(type_).type_label(ci))
     }
 
     pub fn fn_name(nm: &str) -> Result<String, askama::Error> {
@@ -108,8 +248,8 @@ pub mod filters {
             "ULong" => Ok("array.pushDouble(value.toDouble())".to_string()),
             _ => match ci.get_type(type_name) {
                 Some(t) => match t {
-                    Type::Enum(inner) => {
-                        let enum_def = ci.get_enum_definition(&inner).unwrap();
+                    Type::Enum { name, .. } => {
+                        let enum_def = ci.get_enum_definition(&name).unwrap();
                         match enum_def.is_flat() {
                             true => Ok("array.pushString(value.name.lowercase())".to_string()),
                             false => Ok("array.pushMap(readableMapOf(value))".to_string()),
@@ -124,13 +264,13 @@ pub mod filters {
     }
 
     pub fn render_to_map(
-        t: &TypeIdentifier,
+        type_: &impl AsType,
         ci: &ComponentInterface,
         obj_name: &str,
         field_name: &str,
         optional: bool,
     ) -> Result<String, askama::Error> {
-        let res: Result<String, askama::Error> = match t {
+        let res: Result<String, askama::Error> = match type_.as_type() {
             Type::UInt8 => Ok(format!("{obj_name}.{field_name}")),
             Type::Int8 => Ok(format!("{obj_name}.{field_name}")),
             Type::UInt16 => Ok(format!("{obj_name}.{field_name}")),
@@ -143,17 +283,18 @@ pub mod filters {
             Type::Float64 => Ok(format!("{obj_name}.{field_name}")),
             Type::Boolean => Ok(format!("{obj_name}.{field_name}")),
             Type::String => Ok(format!("{obj_name}.{field_name}")),
+            Type::Bytes => Ok(format!("{obj_name}.{field_name}")),
             Type::Timestamp => unimplemented!("render_to_map: Timestamp is not implemented"),
             Type::Duration => unimplemented!("render_to_map: Duration is not implemented"),
-            Type::Object(_) => unimplemented!("render_to_map: Object is not implemented"),
-            Type::Record(_) => match optional {
+            Type::Object { .. } => unimplemented!("render_to_map: Object is not implemented"),
+            Type::Record { .. } => match optional {
                 true => Ok(format!(
                     "{obj_name}.{field_name}?.let {{ readableMapOf(it) }}"
                 )),
                 false => Ok(format!("readableMapOf({obj_name}.{field_name})")),
             },
-            Type::Enum(inner) => {
-                let enum_def = ci.get_enum_definition(inner).unwrap();
+            Type::Enum { name, .. } => {
+                let enum_def = ci.get_enum_definition(&name).unwrap();
                 match enum_def.is_flat() {
                     true => match optional {
                         true => Ok(format!(
@@ -169,36 +310,35 @@ pub mod filters {
                     },
                 }
             }
-            Type::Error(_) => unimplemented!("render_to_map: Error is not implemented"),
-            Type::CallbackInterface(_) => {
+            Type::CallbackInterface { .. } => {
                 unimplemented!("render_to_map: CallbackInterface is not implemented")
             }
-            Type::Optional(inner) => {
-                let unboxed = inner.as_ref();
+            Type::ForeignExecutor { .. } => {
+                unimplemented!("render_to_map: ForeignExecutor is not implemented")
+            }
+            Type::Optional { inner_type } => {
+                let unboxed = inner_type.as_ref();
                 render_to_map(unboxed, ci, obj_name, field_name, true)
             }
-            Type::Sequence(_) => match optional {
+            Type::Sequence { .. } => match optional {
                 true => Ok(format!(
                     "{obj_name}.{field_name}?.let {{ readableArrayOf(it) }}"
                 )),
                 false => Ok(format!("readableArrayOf({obj_name}.{field_name})")),
             },
-            Type::Map(_, _) => unimplemented!("render_to_map: Map is not implemented"),
+            Type::Map { .. } => unimplemented!("render_to_map: Map is not implemented"),
             Type::External { .. } => {
                 unimplemented!("render_to_map: External is not implemented")
             }
             Type::Custom { .. } => {
                 unimplemented!("render_to_map: Custom is not implemented")
             }
-            Type::Unresolved { .. } => {
-                unimplemented!("render_to_map: Unresolved is not implemented")
-            }
         };
         res
     }
 
     pub fn render_from_map(
-        t: &TypeIdentifier,
+        type_: &impl AsType,
         ci: &ComponentInterface,
         name: &str,
         field_name: &str,
@@ -208,7 +348,7 @@ pub mod filters {
         if !optional {
             mandatory_suffix = "!!"
         }
-        let res: String = match t {
+        let res: String = match type_.as_type() {
             Type::UInt8 => format!("{name}.getInt(\"{field_name}\").toUByte()"),
             Type::Int8 => format!("{name}.getInt(\"{field_name}\").toByte()"),
             Type::UInt16 => format!("{name}.getInt(\"{field_name}\").toUShort()"),
@@ -221,49 +361,51 @@ pub mod filters {
             Type::Float64 => format!("{name}.getDouble(\"{field_name}\")"),
             Type::Boolean => format!("{name}.getBoolean(\"{field_name}\")"),
             Type::String => format!("{name}.getString(\"{field_name}\"){mandatory_suffix}"),
+            Type::Bytes => format!("{name}.getString(\"{field_name}\").toByteArray()"),
             Type::Timestamp => "".into(),
             Type::Duration => "".into(),
-            Type::Object(_) => "".into(),
-            Type::Record(_) => {
-                let record_type_name = type_name(t)?;
+            Type::Object { .. } => "".into(),
+            Type::Record { .. } => {
+                let record_type_name = type_name(type_, ci)?;
                 format!(
                     "{name}.getMap(\"{field_name}\")?.let {{ as{record_type_name}(it)}}{mandatory_suffix}"
                 )
             }
-            Type::Enum(inner) => {
-                let enum_def = ci.get_enum_definition(inner).unwrap();
+            Type::Enum {
+                name: inner_name, ..
+            } => {
+                let enum_def = ci.get_enum_definition(&inner_name).unwrap();
                 match enum_def.is_flat() {
                     false => {
-                        format!("{name}.getMap(\"{field_name}\")?.let {{ as{inner}(it)}}{mandatory_suffix}")
+                        format!("{name}.getMap(\"{field_name}\")?.let {{ as{inner_name}(it)}}{mandatory_suffix}")
                     }
                     true => format!(
-                        "{name}.getString(\"{field_name}\")?.let {{ as{inner}(it)}}{mandatory_suffix}"
+                        "{name}.getString(\"{field_name}\")?.let {{ as{inner_name}(it)}}{mandatory_suffix}"
                     ),
                 }
             }
-            Type::Error(_) => "".into(),
-            Type::CallbackInterface(_) => "".into(),
-            Type::Optional(inner) => {
-                let unboxed = inner.as_ref();
+            Type::CallbackInterface { .. } => "".into(),
+            Type::ForeignExecutor { .. } => "".into(),
+            Type::Optional { inner_type } => {
+                let unboxed = inner_type.as_ref();
                 let inner_res = render_from_map(unboxed, ci, name, field_name, true)?;
                 format!("if (hasNonNullKey({name}, \"{field_name}\")) {inner_res} else null")
             }
-            Type::Sequence(inner) => {
-                let unboxed = inner.as_ref();
-                let element_type_name = type_name(unboxed)?;
+            Type::Sequence { inner_type } => {
+                let unboxed = inner_type.as_ref();
+                let element_type_name = type_name(unboxed, ci)?;
                 format!("{name}.getArray(\"{field_name}\")?.let {{ as{element_type_name}List(it) }}{mandatory_suffix}")
             }
-            Type::Map(_, _) => "".into(),
+            Type::Map { .. } => "".into(),
             Type::External { .. } => "".into(),
             Type::Custom { .. } => "".into(),
-            Type::Unresolved { .. } => "".into(),
         };
         Ok(res.to_string())
     }
 
     /// Get the idiomatic Kotlin rendering of a variable name.
     pub fn var_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(format!("`{}`", nm.to_string().to_lower_camel_case()))
+        Ok(oracle().var_name(nm))
     }
 
     pub fn unquote(nm: &str) -> Result<String, askama::Error> {
@@ -275,16 +417,16 @@ pub mod filters {
     }
 
     pub fn rn_convert_type(
-        t: &TypeIdentifier,
+        type_: &impl AsType,
         _ci: &ComponentInterface,
     ) -> Result<String, askama::Error> {
-        match t {
+        match type_.as_type() {
             Type::UInt8 | Type::UInt16 | Type::UInt32 => Ok(".toUInt()".to_string()),
             Type::Int64 => Ok(".toLong()".to_string()),
             Type::UInt64 => Ok(".toULong()".to_string()),
             Type::Float32 | Type::Float64 => Ok(".toFloat()".to_string()),
-            Type::Optional(inner) => {
-                let unboxed = inner.as_ref();
+            Type::Optional { inner_type } => {
+                let unboxed = inner_type.as_ref();
                 let conversion = rn_convert_type(unboxed, _ci).unwrap();
                 let optional = match *unboxed {
                     Type::Int8
@@ -296,7 +438,7 @@ pub mod filters {
                     Type::Int64 => ".takeUnless { it == 0L }".to_string(),
                     Type::UInt64 => ".takeUnless { it == 0UL }".to_string(),
                     Type::Float32 | Type::Float64 => ".takeUnless { it == 0.0 }".to_string(),
-                    Type::String => ".takeUnless { it.isEmpty() }".to_string(),
+                    Type::String | Type::Bytes => ".takeUnless { it.isEmpty() }".to_string(),
                     _ => "".to_string(),
                 };
                 Ok(format!("{}{}", conversion, optional))
@@ -306,29 +448,29 @@ pub mod filters {
     }
 
     pub fn rn_type_name(
-        t: &TypeIdentifier,
+        type_: &impl AsType,
         ci: &ComponentInterface,
     ) -> Result<String, askama::Error> {
-        match t {
+        match type_.as_type() {
             Type::Boolean => Ok("Boolean".to_string()),
             Type::Int8 | Type::UInt8 | Type::Int16 | Type::UInt16 | Type::Int32 | Type::UInt32 => {
                 Ok("Int".to_string())
             }
             Type::Int64 | Type::UInt64 | Type::Float32 | Type::Float64 => Ok("Double".to_string()),
             Type::String => Ok("String".to_string()),
-            Type::Enum(inner) => {
-                let enum_def = ci.get_enum_definition(inner).unwrap();
+            Type::Enum { name, .. } => {
+                let enum_def = ci.get_enum_definition(&name).unwrap();
                 match enum_def.is_flat() {
                     false => Ok("ReadableMap".to_string()),
                     true => Ok("String".to_string()),
                 }
             }
-            Type::Record(_) => Ok("ReadableMap".to_string()),
-            Type::Optional(inner) => {
-                let unboxed = inner.as_ref();
+            Type::Record { .. } => Ok("ReadableMap".to_string()),
+            Type::Optional { inner_type } => {
+                let unboxed = inner_type.as_ref();
                 rn_type_name(unboxed, ci)
             }
-            Type::Sequence(_) => Ok("ReadableArray".to_string()),
+            Type::Sequence { .. } => Ok("ReadableArray".to_string()),
             _ => Ok("".to_string()),
         }
     }

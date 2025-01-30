@@ -3,18 +3,18 @@
     func {{ func.name()|fn_name|unquote }}(_ {% call swift::arg_list_decl(func) -%}resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
         do {
 {%- for arg in func.arguments() -%}
-    {%- match arg.type_() %}
-    {%- when Type::Enum(inner) %}
-        {%- let e = ci.get_enum_definition(inner).unwrap() %}
+    {%- match arg.as_type() %}
+    {%- when Type::Enum { name, module_path } %}
+        {%- let e = ci.get_enum_definition(name).unwrap() %}
         {%- if e.is_flat() %}
-            let {{arg.name()|var_name|unquote|temporary}} = try BreezSDKLiquidMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
+            let {{arg.name()|var_name|unquote|temporary}} = try BreezSDKLiquidMapper.as{{arg|type_name}}({{ arg|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
         {%- else %}
-            let {{arg.name()|var_name|unquote|temporary}} = try BreezSDKLiquidMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
+            let {{arg.name()|var_name|unquote|temporary}} = try BreezSDKLiquidMapper.as{{arg|type_name}}({{ arg|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
         {%- endif %}
-    {%- when Type::Optional(_) %}
-            let {{arg.name()|var_name|unquote|temporary}} = {{ arg.type_()|rn_convert_type(arg.name()|var_name|unquote) -}}
-    {%- when Type::Record(_) %}
-            let {{arg.type_()|type_name|var_name|unquote}} = try BreezSDKLiquidMapper.as{{arg.type_()|type_name}}({{ arg.type_()|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
+    {%- when Type::Optional { inner_type } %}
+            let {{arg.name()|var_name|unquote|temporary}} = {{ arg|rn_convert_type(arg.name()|var_name|unquote) -}}
+    {%- when Type::Record { name, module_path } %}
+            let {{arg|type_name|var_name|unquote}} = try BreezSDKLiquidMapper.as{{arg|type_name}}({{ arg|type_name|var_name|unquote }}: {{ arg.name()|var_name|unquote }})
     {%- else %}
     {%- endmatch %}
 {%- endfor %}
@@ -25,8 +25,8 @@
             res.workingDir = RNBreezSDKLiquid.breezSdkLiquidDirectory.path
 {%- endif -%}
     {%- match return_type %}
-    {%- when Type::Optional(inner) %}
-        {%- let unboxed = inner.as_ref() %}
+    {%- when Type::Optional { inner_type } %}
+        {%- let unboxed = inner_type.as_ref() %}
             if res != nil {
                 resolve({{ unboxed|rn_return_type(unboxed|type_name|var_name|unquote, true) }})
             } else {
