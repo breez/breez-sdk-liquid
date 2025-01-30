@@ -95,9 +95,15 @@ pub struct Config {
 impl Config {
     pub fn mainnet(breez_api_key: Option<String>) -> Self {
         Config {
-            liquid_explorers: vec![BlockchainExplorer::Electrum {
-                url: "elements-mainnet.breez.technology:50002".to_string(),
-            }],
+            liquid_explorers: vec![
+                BlockchainExplorer::Esplora {
+                    url: "https://waterfalls.liquidwebwallet.org/liquid/api".to_string(),
+                    use_waterfalls: true,
+                },
+                BlockchainExplorer::Electrum {
+                    url: "elements-mainnet.breez.technology:50002".to_string(),
+                },
+            ],
             bitcoin_explorers: vec![
                 BlockchainExplorer::Electrum {
                     url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
@@ -123,9 +129,15 @@ impl Config {
 
     pub fn testnet(breez_api_key: Option<String>) -> Self {
         Config {
-            liquid_explorers: vec![BlockchainExplorer::Electrum {
-                url: "elements-testnet.blockstream.info:50002".to_string(),
-            }],
+            liquid_explorers: vec![
+                BlockchainExplorer::Esplora {
+                    url: "https://waterfalls.liquidwebwallet.org/liquidtestnet/api".to_string(),
+                    use_waterfalls: true,
+                },
+                BlockchainExplorer::Electrum {
+                    url: "elements-testnet.blockstream.info:50002".to_string(),
+                },
+            ],
             bitcoin_explorers: vec![
                 BlockchainExplorer::Electrum {
                     url: "bitcoin-testnet.blockstream.info:50002".to_string(),
