@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use uniffi_bindgen::backend::CodeType;
+use super::CodeType;
 
 #[derive(Debug)]
 pub struct ExternalCodeType {
@@ -11,7 +11,7 @@ pub struct ExternalCodeType {
 
 impl ExternalCodeType {
     pub fn new(name: String) -> Self {
-        Self { name }
+        ExternalCodeType { name }
     }
 }
 
@@ -22,5 +22,15 @@ impl CodeType for ExternalCodeType {
 
     fn canonical_name(&self) -> String {
         format!("Type{}", self.name)
+    }
+
+    // lower and lift need to call public function which were generated for
+    // the original types.
+    fn lower(&self) -> String {
+        format!("{}_lower", self.ffi_converter_name())
+    }
+
+    fn lift(&self) -> String {
+        format!("{}_lift", self.ffi_converter_name())
     }
 }

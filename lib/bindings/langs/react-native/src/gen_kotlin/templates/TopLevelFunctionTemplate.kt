@@ -4,18 +4,18 @@
         executor.execute {
             try {
 {%- for arg in func.arguments() -%}
-    {%- match arg.type_() %}
-    {%- when Type::Enum(inner) %}
-        {%- let e = ci.get_enum_definition(inner).unwrap() %}
+    {%- match arg.as_type() %}
+    {%- when Type::Enum { name, module_path } %}
+        {%- let e = ci.get_enum_definition(name).unwrap() %}
         {%- if e.is_flat() %}
-                val {{arg.name()|var_name|unquote|temporary}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }})
+                val {{arg.name()|var_name|unquote|temporary}} = as{{arg|type_name(ci)}}({{ arg.name()|var_name|unquote }})
         {%- else %}
-                val {{arg.name()|var_name|unquote|temporary}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }}) ?: run { throw SdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg.type_()|type_name }}")) }
+                val {{arg.name()|var_name|unquote|temporary}} = as{{arg|type_name(ci)}}({{ arg.name()|var_name|unquote }}) ?: run { throw SdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg|type_name(ci) }}")) }
         {%- endif %}
-    {%- when Type::Optional(_) %}
-                val {{arg.name()|var_name|unquote|temporary}} = {{arg.name()|var_name|unquote}}{{ arg.type_()|rn_convert_type(ci) -}}
-    {%- when Type::Record(_) %}
-                val {{arg.type_()|type_name|var_name|unquote}} = as{{arg.type_()|type_name}}({{ arg.name()|var_name|unquote }}) ?: run { throw SdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg.type_()|type_name }}")) }
+    {%- when Type::Optional { inner_type } %}
+                val {{arg.name()|var_name|unquote|temporary}} = {{arg.name()|var_name|unquote}}{{ arg|rn_convert_type(ci) -}}
+    {%- when Type::Record { name, module_path } %}
+                val {{arg|type_name(ci)|var_name|unquote}} = as{{arg|type_name(ci)}}({{ arg.name()|var_name|unquote }}) ?: run { throw SdkException.Generic(errMissingMandatoryField("{{arg.name()|var_name|unquote}}", "{{ arg|type_name(ci) }}")) }
     {%- else %}
     {%- endmatch %}
 {%- endfor %}
@@ -28,8 +28,8 @@
                 res.workingDir = workingDir.absolutePath
 {%- endif -%}               
     {%- match return_type %}
-    {%- when Type::Optional(inner) %}
-        {%- let unboxed = inner.as_ref() %}
+    {%- when Type::Optional { inner_type } %}
+        {%- let unboxed = inner_type.as_ref() %}
                 promise.resolve(res?.let { {% call kt::return_value(unboxed) %} })
     {%- else %}
                 promise.resolve({% call kt::return_value(return_type) %})

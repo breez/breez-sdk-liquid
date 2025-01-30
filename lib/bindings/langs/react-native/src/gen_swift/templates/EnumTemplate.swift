@@ -1,3 +1,4 @@
+{%- if !ci.is_name_used_as_error(name) -%}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {%- if e.is_flat() %}
 
@@ -39,26 +40,26 @@ static func as{{ type_name }}({{ type_name|var_name|unquote }}: [String: Any?]) 
         if (type == "{{ variant.name()|var_name|unquote }}") {
             {%- if variant.has_fields() %}
                 {%- for field in variant.fields() %}
-                {%- match field.type_() %}         
-                {%- when Type::Optional(_) %}
-                    {% if field.type_()|inline_optional_field(ci) -%}
-                    let _{{field.name()|var_name|unquote}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field.type_()|rn_type_name(ci, true)}}
+                {%- match field.as_type() %}         
+                {%- when Type::Optional { inner_type } %}
+                    {% if field|inline_optional_field(ci) -%}
+                    let _{{field.name()|var_name|unquote}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field|rn_type_name(ci, true)}}
                     {% else -%}
-                    var _{{field.name()|var_name|unquote}}: {{field.type_()|type_name}}
-                    if let {{field.name()|var_name|unquote|temporary}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field.type_()|rn_type_name(ci, true)}} {
-                        _{{field.name()|var_name|unquote}} = {{field.type_()|render_from_map(ci, field.name()|var_name|unquote|temporary)}}
+                    var _{{field.name()|var_name|unquote}}: {{field|type_name}}
+                    if let {{field.name()|var_name|unquote|temporary}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field|rn_type_name(ci, true)}} {
+                        _{{field.name()|var_name|unquote}} = {{field|render_from_map(ci, field.name()|var_name|unquote|temporary)}}
                     }
                     {% endif -%}
                 {%- else %}
-                {% if field.type_()|inline_optional_field(ci) -%}
-                guard let _{{field.name()|var_name|unquote}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field.type_()|rn_type_name(ci, true)}} else {
+                {% if field|inline_optional_field(ci) -%}
+                guard let _{{field.name()|var_name|unquote}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field|rn_type_name(ci, true)}} else {
                     throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "{{field.name()|var_name|unquote}}", typeName: "{{ type_name }}"))
                 }
                 {%- else -%}
-                guard let {{field.name()|var_name|unquote|temporary}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field.type_()|rn_type_name(ci, true)}} else {
+                guard let {{field.name()|var_name|unquote|temporary}} = {{ type_name|var_name|unquote }}["{{field.name()|var_name|unquote}}"] as? {{field|rn_type_name(ci, true)}} else {
                     throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "{{field.name()|var_name|unquote}}", typeName: "{{ type_name }}"))
                 }
-            let _{{field.name()|var_name|unquote}} = {{field.type_()|render_from_map(ci, field.name()|var_name|unquote|temporary)}}
+            let _{{field.name()|var_name|unquote}} = {{field|render_from_map(ci, field.name()|var_name|unquote|temporary)}}
             {% endif -%}        
             {% endmatch %}    
             {%- endfor %}            
@@ -85,7 +86,7 @@ static func dictionaryOf({{ type_name|var_name|unquote }}: {{ type_name }}) -> [
         return [
             "type": "{{ variant.name()|var_name|unquote }}",
             {%- for f in variant.fields() %}
-            "{{ f.name()|var_name|unquote }}": {{ f.type_()|render_to_map(ci,"",f.name()|var_name|unquote, false) }},             
+            "{{ f.name()|var_name|unquote }}": {{ f|render_to_map(ci,"",f.name()|var_name|unquote, false) }},             
             {%- endfor %}
         ] 
     {%- endfor %}   
@@ -114,3 +115,4 @@ static func as{{ type_name }}List(arr: [Any]) throws -> [{{ type_name }}] {
     }
     return list
 }
+{%- endif %}

@@ -12,20 +12,22 @@ workspace = true
 anyhow = { version = "1.0.57", features = ["backtrace"] }
 thiserror = "1.0"
 tokio = { version = "1", features = ["full"] }
-uniffi = { version = "0.23.0", features = ["bindgen-tests", "cli"] }
-uniffi_bindgen = "0.23.0"
-uniffi_macros = "0.23.0"
+uniffi = { workspace = true, features = ["bindgen-tests", "cli"] }
+uniffi_bindgen = { workspace = true }
+uniffi_macros = { workspace = true }
 camino = "1.1.1"
 log = { workspace = true }
 serde = "*"
-askama = { version = "0.11.1", default-features = false, features = ["config"] }
+askama = { version = "0.12", default-features = false, features = ["config"] }
 toml = "0.5"
 clap = { version = "3.2.22", features = ["derive"] }
 heck = "0.4"
 paste = "1.0"
 once_cell = { workspace = true }
+textwrap = "0.16"
+regex = "1.11.0"
 
 [build-dependencies]
-uniffi_build = { version = "0.23.0" }
-uniffi_bindgen = "0.23.0"
+uniffi_build = { workspace = true }
+uniffi_bindgen = { workspace = true }
 anyhow = { version = "1.0.57", features = ["backtrace"] }

@@ -1,7 +1,4 @@
-//////////////////////////////////
-// BEGIN sdk-common mirror imports
-// These are structs defined in sdk-common, which we want to make available in this project's UDL bindings
-
+/// Wrapper for a BOLT11 LN invoice
 dictionary LNInvoice {
     string bolt11;
     Network network;
@@ -17,62 +14,111 @@ dictionary LNInvoice {
     u64 min_final_cltv_expiry_delta;
 };
 
+/// The different supported bitcoin networks
 enum Network {
+    /// Mainnet
     "Bitcoin",
     "Testnet",
     "Signet",
     "Regtest",
 };
 
+/// A route hint for a LN payment
 dictionary RouteHint {
     sequence<RouteHintHop> hops;
 };
 
+/// Details of a specific hop in a larger route hint
 dictionary RouteHintHop {
-     string src_node_id;
-     string short_channel_id;
-     u32 fees_base_msat;
-     u32 fees_proportional_millionths;
-     u64 cltv_expiry_delta;
-     u64? htlc_minimum_msat;
-     u64? htlc_maximum_msat;
+    /// The node id of the non-target end of the route
+    string src_node_id;
+    /// The short channel id of this channel
+    string short_channel_id;
+    /// The fees which must be paid to use this channel
+    u32 fees_base_msat;
+    u32 fees_proportional_millionths;
+    /// The difference in CLTV values between this node and the next node
+    u64 cltv_expiry_delta;
+    /// The minimum value, in msat, which must be relayed to the next hop
+    u64? htlc_minimum_msat;
+    /// The maximum value in msat available for routing with a single HTLC
+    u64? htlc_maximum_msat;
 };
 
+/// Different kinds of inputs supported by [parse], including any relevant details extracted from the input.
 [Enum]
 interface Amount {
     Bitcoin(u64 amount_msat);
+    /// An amount of currency specified using ISO 4712
     Currency(string iso4217_code, u64 fractional_amount);
 };
 
 dictionary LnOfferBlindedPath {
+    /// For each blinded hop, we store the node ID (pubkey as hex).
     sequence<string> blinded_hops;
 };
 
+/// Wrapped in a [InputType::Bolt12Offer], this is the result of [parse] when given a BOLT12 Offer.
 dictionary LNOffer {
+    /// String representation of the Bolt12 offer
     string offer;
     sequence<string> chains;
     sequence<LnOfferBlindedPath> paths;
     string? description;
+    /// The public key used by the recipient to sign invoices
     string? signing_pubkey;
+    /// If set, it represents the minimum amount that an invoice must have to be valid for this offer
     Amount? min_amount;
+    /// Epoch time from which an invoice should no longer be requested. If None, the offer does not expire
     u64? absolute_expiry;
     string? issuer;
 };
 
 [Enum]
 interface InputType {
+    /// # Supported standards
+    ///
+    /// - plain on-chain BTC address
+    /// - BIP21
     BitcoinAddress(BitcoinAddressData address);
+    /// # Supported standards
+    ///
+    /// - plain on-chain liquid address
+    /// - BIP21 on liquid/liquidtestnet
     LiquidAddress(LiquidAddressData address);
     Bolt11(LNInvoice invoice);
     Bolt12Offer(LNOffer offer);
     NodeId(string node_id);
     Url(string url);
+    /// # Supported standards
+    ///
+    /// - LUD-01 LNURL bech32 encoding
+    /// - LUD-06 `payRequest` spec
+    /// - LUD-16 LN Address
+    /// - LUD-17 Support for lnurlp prefix with non-bech32-encoded LNURL URLs
     LnUrlPay(LnUrlPayRequestData data);
+    /// # Supported standards
+    ///
+    /// - LUD-01 LNURL bech32 encoding
+    /// - LUD-03 `withdrawRequest` spec
+    /// - LUD-17 Support for lnurlw prefix with non-bech32-encoded LNURL URLs
+    ///
+    /// # Not supported (yet)
+    ///
+    /// - LUD-14 `balanceCheck`: reusable `withdrawRequest`s
+    /// - LUD-19 Pay link discoverable from withdraw link
     LnUrlWithdraw(LnUrlWithdrawRequestData data);
+    /// # Supported standards
+    ///
+    /// - LUD-01 LNURL bech32 encoding
+    /// - LUD-04 `auth` base spec
+    /// - LUD-17 Support for keyauth prefix with non-bech32-encoded LNURL URLs
     LnUrlAuth(LnUrlAuthRequestData data);
+    /// Error returned by the LNURL endpoint
     LnUrlError(LnUrlErrorData data);
 };
 
+/// Wrapped in a [InputType::BitcoinAddress], this is the result of [parse] when given a plain or BIP-21 BTC address.
 dictionary BitcoinAddressData {
     string address;
     Network network;
@@ -81,6 +127,7 @@ dictionary BitcoinAddressData {
     string? message;
 };
 
+/// Wrapped in a [InputType::LiquidAddress], this is the result of [parse] when given a plain or BIP-21 Liquid address.
 dictionary LiquidAddressData {
     string address;
     Network network;
@@ -91,75 +138,150 @@ dictionary LiquidAddressData {
     string? message;
 };
 
+/// Wrapped in a [InputType::LnUrlPay], this is the result of [parse] when given a LNURL-pay endpoint.
+///
+/// It represents the endpoint's parameters for the LNURL workflow.
+///
+/// See <https://github.com/lnurl/luds/blob/luds/06.md>
 dictionary LnUrlPayRequestData {
     string callback;
+    /// The minimum amount, in millisats, that this LNURL-pay endpoint accepts
     u64 min_sendable;
+    /// The maximum amount, in millisats, that this LNURL-pay endpoint accepts
     u64 max_sendable;
+    /// As per LUD-06, `metadata` is a raw string (e.g. a json representation of the inner map)
     string metadata_str;
+    /// The comment length accepted by this endpoint
+    ///
+    /// See <https://github.com/lnurl/luds/blob/luds/12.md>
     u16 comment_allowed;
+    /// Indicates the domain of the LNURL-pay service, to be shown to the user when asking for
+    /// payment input, as per LUD-06 spec.
+    ///
+    /// Note: this is not the domain of the callback, but the domain of the LNURL-pay endpoint.
     string domain;
+    /// Value indicating whether the recipient supports Nostr Zaps through NIP-57.
+    ///
+    /// See <https://github.com/nostr-protocol/nips/blob/master/57.md>
     boolean allows_nostr;
+    /// Optional recipient's lnurl provider's Nostr pubkey for NIP-57. If it exists it should be a
+    /// valid BIP 340 public key in hex.
+    ///
+    /// See <https://github.com/nostr-protocol/nips/blob/master/57.md>
+    /// See <https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki>
     string? nostr_pubkey;
+    /// If sending to a LN Address, this will be filled.
     string? ln_address;
 };
 
+/// Wrapped in a [InputType::LnUrlWithdraw], this is the result of [parse] when given a LNURL-withdraw endpoint.
+///
+/// It represents the endpoint's parameters for the LNURL workflow.
+///
+/// See <https://github.com/lnurl/luds/blob/luds/03.md>
 dictionary LnUrlWithdrawRequestData {
     string callback;
     string k1;
     string default_description;
+    /// The minimum amount, in millisats, that this LNURL-withdraw endpoint accepts
     u64 min_withdrawable;
+    /// The maximum amount, in millisats, that this LNURL-withdraw endpoint accepts
     u64 max_withdrawable;
 };
 
+/// Wrapped in a [InputType::LnUrlAuth], this is the result of [parse] when given a LNURL-auth endpoint.
+///
+/// It represents the endpoint's parameters for the LNURL workflow.
+///
+/// See <https://github.com/lnurl/luds/blob/luds/04.md>
 dictionary LnUrlAuthRequestData {
+    /// Hex encoded 32 bytes of challenge
     string k1;
+    /// Indicates the domain of the LNURL-auth service, to be shown to the user when asking for
+    /// auth confirmation, as per LUD-04 spec.
     string domain;
+    /// Indicates the URL of the LNURL-auth service, including the query arguments. This will be
+    /// extended with the signed challenge and the linking key, then called in the second step of the workflow.
     string url;
+    /// When available, one of: register, login, link, auth
     string? action = null;
 };
 
+/// Wrapped in a [InputType::LnUrlError], this represents a LNURL-endpoint error.
 dictionary LnUrlErrorData {
     string reason;
 };
 
+/// Supported success action types
+///
+/// Receiving any other (unsupported) success action type will result in a failed parsing,
+/// which will abort the LNURL-pay workflow, as per LUD-09.
 [Enum]
 interface SuccessAction {
+    /// AES type, described in LUD-10
     Aes(AesSuccessActionData data);
+    /// Message type, described in LUD-09
     Message(MessageSuccessActionData data);
-    Url(UrlSuccessActionData data);
+        /// URL type, described in LUD-09
+   Url(UrlSuccessActionData data);
 };
 
+/// [SuccessAction] where contents are ready to be consumed by the caller
+///
+/// Contents are identical to [SuccessAction], except for AES where the ciphertext is decrypted.
 [Enum]
 interface SuccessActionProcessed {
+    /// See [SuccessAction::Aes] for received payload
+    ///
+    /// See [AesSuccessActionDataDecrypted] for decrypted payload
     Aes(AesSuccessActionDataResult result);
+    /// See [SuccessAction::Message]
     Message(MessageSuccessActionData data);
+    /// See [SuccessAction::Url]
     Url(UrlSuccessActionData data);
 };
 
+/// Result of decryption of [SuccessActionProcessed::Aes] payload
 [Enum]
 interface AesSuccessActionDataResult {
     Decrypted(AesSuccessActionDataDecrypted data);
     ErrorStatus(string reason);
 };
 
+/// Payload of the AES success action, as received from the LNURL endpoint
+///
+/// See [AesSuccessActionDataDecrypted] for a similar wrapper containing the decrypted payload
 dictionary AesSuccessActionData {
+    /// Contents description, up to 144 characters
     string description;
+    /// Base64, AES-encrypted data where encryption key is payment preimage, up to 4kb of characters
     string ciphertext;
+    /// Base64, initialization vector, exactly 24 characters
     string iv;
 };
 
+/// Wrapper for the decrypted [AesSuccessActionDataResult::Decrypted] payload
 dictionary AesSuccessActionDataDecrypted {
+    /// Contents description, up to 144 characters
     string description;
+    /// Decrypted content
     string plaintext;
 };
 
+/// Wrapper for the [SuccessActionProcessed::Message] payload
 dictionary MessageSuccessActionData {
     string message;
 };
 
+/// Wrapper for the [SuccessActionProcessed::Url] payload
 dictionary UrlSuccessActionData {
+    /// Contents description, up to 144 characters
     string description;
+    /// URL of the success action
     string url;
+    /// Indicates the success URL domain matches the LNURL callback domain.
+    ///
+    /// See <https://github.com/lnurl/luds/blob/luds/09.md>
     boolean matches_callback_domain;
 };
 
@@ -168,32 +290,59 @@ dictionary LnUrlPayErrorData {
     string reason;
 };
 
+/// Error returned by [BindingLiquidSdk::lnurl_pay]
 [Error]
 interface LnUrlPayError {
+    /// This error is raised when attempting to pay an invoice that has already being paid.
     AlreadyPaid();
+    /// This error is raised when a general error occurs not specific to other error variants
+    /// in this enum.
     Generic(string err);
+    /// This error is raised when the amount from the parsed invoice is not set.
     InvalidAmount(string err);
+    /// This error is raised when the lightning invoice cannot be parsed.
     InvalidInvoice(string err);
+    /// This error is raised when the lightning invoice is for a different Bitcoin network.
     InvalidNetwork(string err);
+    /// This error is raised when the decoded LNURL URI is not compliant to the specification.
     InvalidUri(string err);
+    /// This error is raised when the lightning invoice has passed it's expiry time.
     InvoiceExpired(string err);
+    /// This error is raised when attempting to make a payment by the node fails.
     PaymentFailed(string err);
+    /// This error is raised when attempting to make a payment takes too long.
     PaymentTimeout(string err);
+    /// This error is raised when no route can be found when attempting to make a
+    /// payment by the node.
     RouteNotFound(string err);
+    /// This error is raised when the route is considered too expensive when
+    /// attempting to make a payment by the node.
     RouteTooExpensive(string err);
+    /// This error is raised when a connection to an external service fails.
     ServiceConnectivity(string err);
 };
 
+/// Error returned by [BindingLiquidSdk::lnurl_withdraw]
 [Error]
 interface LnUrlWithdrawError {
+    /// This error is raised when a general error occurs not specific to other error variants
+    /// in this enum.
     Generic(string err);
+    /// This error is raised when the amount is zero or the amount does not cover
+    /// the cost to open a new channel.
     InvalidAmount(string err);
+    /// This error is raised when the lightning invoice cannot be parsed.
     InvalidInvoice(string err);
+    /// This error is raised when the decoded LNURL URI is not compliant to the specification.
     InvalidUri(string err);
-    ServiceConnectivity(string err);
+    /// This error is raised when no routing hints were able to be added to the invoice
+    /// while trying to receive a payment.
     InvoiceNoRoutingHints(string err);
+    /// This error is raised when a connection to an external service fails.
+    ServiceConnectivity(string err);
 };
 
+/// [LnUrlCallbackStatus] specific to LNURL-withdraw, where the success case contains the invoice.
 [Enum]
 interface LnUrlWithdrawResult {
     Ok(LnUrlWithdrawSuccessData data);
@@ -205,33 +354,47 @@ dictionary LnUrlWithdrawSuccessData {
     LNInvoice invoice;
 };
 
-dictionary LnUrlWithdrawRequestData {
-    string callback;
-    string k1;
-    string default_description;
-    u64 min_withdrawable;
-    u64 max_withdrawable;
-};
-
 dictionary LnUrlWithdrawRequest {
+    /// Request data containing information on how to call the lnurl withdraw
+    /// endpoint. Typically retrieved by calling [parse] on a lnurl withdraw
+    /// input.
     LnUrlWithdrawRequestData data;
+    /// The amount to withdraw from the lnurl withdraw endpoint. Must be between
+    /// `min_withdrawable` and `max_withdrawable`.
     u64 amount_msat;
+    /// Optional description that will be put in the payment request for the
+    /// lnurl withdraw endpoint.
     string? description = null;
 };
 
+/// Contains the result of the entire LNURL interaction, as reported by the LNURL endpoint.
+///
+/// * [LnUrlCallbackStatus::Ok] indicates the interaction with the endpoint was valid, and the endpoint
+///  - started to pay the invoice asynchronously in the case of LNURL-withdraw,
+///  - verified the client signature in the case of LNURL-auth
+/// * [LnUrlCallbackStatus::ErrorStatus] indicates a generic issue the LNURL endpoint encountered, including a freetext
+///    description of the reason.
+///
+/// Both cases are described in LUD-03 <https://github.com/lnurl/luds/blob/luds/03.md> & LUD-04: <https://github.com/lnurl/luds/blob/luds/04.md>
 [Enum]
 interface LnUrlCallbackStatus {
     Ok();
     ErrorStatus(LnUrlErrorData data);
 };
 
+/// Error returned by [BindingLiquidSdk::lnurl_auth]
 [Error]
 interface LnUrlAuthError {
+    /// This error is raised when a general error occurs not specific to other error variants
+    /// in this enum.
     Generic(string err);
+    /// This error is raised when the decoded LNURL URI is not compliant to the specification.
     InvalidUri(string err);
+    /// This error is raised when a connection to an external service fails.
     ServiceConnectivity(string err);
 };
 
+/// Denominator in an exchange rate
 dictionary Rate {
     string coin;
     f64 value;
@@ -242,6 +405,7 @@ dictionary FiatCurrency {
     CurrencyInfo info;
 };
 
+/// Settings for the symbol representation of a currency
 dictionary Symbol {
     string? grapheme;
     string? template;
@@ -249,17 +413,20 @@ dictionary Symbol {
     u32? position;
 };
 
+/// Locale-specific settings for the representation of a currency
 dictionary LocaleOverrides {
     string locale;
     u32? spacing;
     Symbol symbol;
 };
 
+/// Localized name of a currency
 dictionary LocalizedName {
     string locale;
     string name;
 };
 
+/// Details about a supported currency in the fiat rate feed
 dictionary CurrencyInfo {
     string name;
     u32 fraction_size;
@@ -270,13 +437,22 @@ dictionary CurrencyInfo {
     sequence<LocaleOverrides> locale_overrides;
 };
 
+// ----------------------------------------------------------------------------------------------------------------
 // END sdk-common mirror imports
-////////////////////////////////
+// These are structs defined in sdk-common, which we want to make available in this project's UDL bindings
+// ----------------------------------------------------------------------------------------------------------------
 
-//////////////////////////////////
-// BEGIN sdk-common wrappers
-// These are connecting structures that glue relevant sdk-common structs to the SDK
-
+/// Contains the result of the entire LNURL-pay interaction, as reported by the LNURL endpoint.
+///
+/// * [LnUrlPayResult::EndpointSuccess] indicates the payment is complete. The endpoint may return a [SuccessActionProcessed],
+///   in which case, the wallet has to present it to the user as described in
+///   <https://github.com/lnurl/luds/blob/luds/09.md>
+///
+/// * [LnUrlPayResult::EndpointError] indicates a generic issue the LNURL endpoint encountered, including a freetext
+///   field with the reason.
+///
+/// * [LnUrlPayResult::PayError] indicates that an error occurred while trying to pay the invoice from the LNURL endpoint.
+///   This includes the payment hash of the failed invoice and the failure reason.
 [Enum]
 interface LnUrlPayResult {
     EndpointSuccess(LnUrlPaySuccessData data);
@@ -289,8 +465,10 @@ dictionary LnUrlPaySuccessData {
     Payment payment;
 };
 
+// ----------------------------------------------------------------------------------------------------------------
 // END sdk-common wrappers
-////////////////////////////////
+// These are connecting structures that glue relevant sdk-common structs to the SDK
+// ----------------------------------------------------------------------------------------------------------------
 
 [Error]
 enum SdkError {
@@ -326,29 +504,62 @@ enum PaymentError {
     "SignerError",
 };
 
+/// Configuration for the Liquid SDK
 dictionary Config {
     string liquid_electrum_url;
     string bitcoin_electrum_url;
+    /// The mempool.space API URL, has to be in the format: https://mempool.space/api
     string mempoolspace_url;
+    /// Directory in which all SDK files (DB, log, cache) are stored.
+    ///
+    /// Prefix can be a relative or absolute path to this directory.
     string working_dir;
     LiquidNetwork network;
+    /// Send payment timeout. See [BindingLiquidSdk::send_payment]
     u64 payment_timeout_sec;
+    /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
     u32 zero_conf_min_fee_rate_msat;
+    /// The url of the real-time sync service.
+    /// Setting this field to `None` will disable the service
     string? sync_service_url;
+    /// The Breez API key used for making requests to their mempool service
     string? breez_api_key;
+    /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
     string? cache_dir;
+    /// Maximum amount in satoshi to accept zero-conf payments with
+    /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     u64? zero_conf_max_amount_sat;
+    /// The SDK includes some default external input parsers
+    /// Set this to false in order to prevent their use.
     boolean use_default_external_input_parsers = true;
+    /// A set of external input parsers that are used by [crate::sdk::LiquidSdk::parse] when the input
+    /// is not recognized. See [ExternalInputParser] for more details on how to configure
+    /// external parsing.
     sequence<ExternalInputParser>? external_input_parsers = null;
+    /// For payments where the onchain fees can only be estimated on creation, this can be used
+    /// in order to automatically allow slightly more expensive fees. If the actual fee rate ends up
+    /// being above the sum of the initial estimate and this leeway, the payment will require
+    /// user fee acceptance. See [PaymentState::WaitingFeeAcceptance].
+    ///
+    /// Defaults to zero.
     u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
+    /// A set of asset metadata used by [crate::sdk::LiquidSdk::parse] when the input is a
+    /// [LiquidAddressData] and the [LiquidAddressData::asset_id] differs from the Liquid Bitcoin asset.
+    /// See [AssetMetadata] for more details on how define asset metadata.
+    /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
     sequence<AssetMetadata>? asset_metadata = null;
 };
 
+/// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
+/// Bitcoin network used.
 enum LiquidNetwork {
+    /// Mainnet Bitcoin and Liquid chains
     "Mainnet",
+    /// Testnet Bitcoin and Liquid chains
     "Testnet",
 };
 
+/// An argument when calling [BindingLiquidSdk::connect].
 dictionary ConnectRequest {
     Config config;    
     string mnemonic;
@@ -358,6 +569,7 @@ dictionary ConnectWithSignerRequest {
   Config config;  
 };
 
+/// An asset balance to denote the balance for each asset.
 dictionary AssetBalance {
     string asset_id;
     u64 balance_sat;
@@ -367,66 +579,104 @@ dictionary AssetBalance {
 };
 
 dictionary BlockchainInfo {
+    /// The block height of the Liquid chain tip
     u32 liquid_tip;
+    /// The block height of the Bitcoin chain tip
     u32 bitcoin_tip;
 };
 
 dictionary WalletInfo {
+    /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     u64 balance_sat;
+    /// Amount that is being used for ongoing Send swaps
     u64 pending_send_sat;
+    /// Incoming amount that is pending from ongoing Receive swaps
     u64 pending_receive_sat;
     string fingerprint;
     string pubkey;
     sequence<AssetBalance> asset_balances;
 };
 
+/// Returned when calling [BindingLiquidSdk::get_info].
 dictionary GetInfoResponse {
+    /// The wallet information, such as the balance, fingerprint and public key
     WalletInfo wallet_info;
+    /// The latest synced blockchain information, such as the Liquid/Bitcoin tips
     BlockchainInfo blockchain_info;
 };
 
+/// An argument when calling [BindingLiquidSdk::sign_message].
 dictionary SignMessageRequest {
     string message;
 };
 
+/// Returned when calling [BindingLiquidSdk::sign_message].
 dictionary SignMessageResponse {
     string signature;
 };
 
+/// An argument when calling [BindingLiquidSdk::check_message].
 dictionary CheckMessageRequest {
+    /// The message that was signed.
     string message;
+    /// The public key of the node that signed the message.
     string pubkey;
+    /// The zbase encoded signature to verify.
     string signature;
 };
 
+/// Returned when calling [BindingLiquidSdk::check_message].
 dictionary CheckMessageResponse {
+    /// Boolean value indicating whether the signature covers the message and
+    /// was signed by the given pubkey.
     boolean is_valid;
 };
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 dictionary PrepareLnUrlPayRequest {
+    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
     LnUrlPayRequestData data;
+    /// The amount to send
     PayAmount amount;
+    /// An optional comment for this payment
     string? comment = null;
+    /// Validates that, if there is a URL success action, the URL domain matches
+    /// the LNURL callback domain. Defaults to true
     boolean? validate_success_action_url = null;
 };
 
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 dictionary PrepareLnUrlPayResponse {
+    /// The destination of the payment
     SendDestination destination;
+    /// The fees in satoshis to send the payment
     u64 fees_sat;
+    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
     LnUrlPayRequestData data;
+    /// An optional comment for this payment
     string? comment = null;
+    /// The unprocessed LUD-09 success action. This will be processed and decrypted if
+    /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
     SuccessAction? success_action = null;
 };
 
+/// An argument when calling [crate::sdk::LiquidSdk::lnurl_pay].
 dictionary LnUrlPayRequest {
+    /// The response from calling [crate::sdk::LiquidSdk::prepare_lnurl_pay]
     PrepareLnUrlPayResponse prepare_response;
 };
 
+/// An argument when calling [BindingLiquidSdk::prepare_send_payment].
 dictionary PrepareSendRequest {
+    /// The destination we intend to pay to.
+    /// Supports BIP21 URIs, BOLT11 invoices and Liquid addresses
     string destination;
+    /// Should only be set when paying directly onchain or to a BIP21 URI
+    /// where no amount is specified, or when the caller wishes to drain
     PayAmount? amount = null;
 };
 
+/// Specifies the supported destinations which can be payed by the SDK
 [Enum]
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data);
@@ -434,19 +684,23 @@ interface SendDestination {
     Bolt12(LNOffer offer, u64 receiver_amount_sat);
 };
 
+/// Returned when calling [BindingLiquidSdk::prepare_send_payment].
 dictionary PrepareSendResponse {
     SendDestination destination;
     u64 fees_sat;
 };
 
+/// An argument when calling [BindingLiquidSdk::send_payment].
 dictionary SendPaymentRequest {
     PrepareSendResponse prepare_response;
 };
 
+/// Returned when calling [BindingLiquidSdk::send_payment].
 dictionary SendPaymentResponse {
     Payment payment;
 };
 
+/// The send/receive methods supported by the SDK
 enum PaymentMethod {
     "Lightning",
     "BitcoinAddress",
@@ -455,105 +709,164 @@ enum PaymentMethod {
 
 [Enum]
 interface ReceiveAmount {
+    /// The amount in satoshi that should be paid
     Bitcoin(u64 payer_amount_sat);
+    /// The amount of an asset that should be paid
     Asset(string asset_id, f64? payer_amount);
 };
 
+/// An argument when calling [BindingLiquidSdk::prepare_receive_payment].
 dictionary PrepareReceiveRequest {
     PaymentMethod payment_method;
     ReceiveAmount? amount = null;
 };
 
+/// Returned when calling [BindingLiquidSdk::prepare_receive_payment].
 dictionary PrepareReceiveResponse {
     PaymentMethod payment_method;
+    /// Generally represents the total fees that would be paid to send or receive this payment.
+    ///
+    /// In case of Zero-Amount Receive Chain swaps, the swapper service fee (`swapper_feerate` times
+    /// the amount) is paid in addition to `fees_sat`. The swapper service feerate is already known
+    /// in the beginning, but the exact swapper service fee will only be known when the
+    /// `payer_amount_sat` is known.
+    ///
+    /// In all other types of swaps, the swapper service fee is included in `fees_sat`.
     u64 fees_sat;
     ReceiveAmount? amount;
+    /// The minimum amount the payer can send for this swap to succeed.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
     u64? min_payer_amount_sat;
+    /// The maximum amount the payer can send for this swap to succeed.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
     u64? max_payer_amount_sat;
+    /// The percentage of the sent amount that will count towards the service fee.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
     f64? swapper_feerate;
 };
 
+/// An argument when calling [BindingLiquidSdk::receive_payment].
 dictionary ReceivePaymentRequest {
     PrepareReceiveResponse prepare_response;
+    /// The description for this payment request.
     string? description = null;
+    /// If set to true, then the hash of the description will be used.
     boolean? use_description_hash = null;
 };
 
+/// Returned when calling [BindingLiquidSdk::receive_payment].
 dictionary ReceivePaymentResponse {
+    /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
+    /// or an invoice, depending on the [PrepareReceiveResponse] parameters
     string destination;
 };
 
+/// The minimum and maximum in satoshis of a Lightning or onchain payment.
 dictionary Limits {
     u64 min_sat;
     u64 max_sat;
     u64 max_zero_conf_sat;
 };
 
+/// Returned when calling [BindingLiquidSdk::fetch_lightning_limits].
 dictionary LightningPaymentLimitsResponse {
+    /// Amount limits for a Send Payment to be valid
     Limits send;
+    /// Amount limits for a Receive Payment to be valid
     Limits receive;
 };
 
+/// Returned when calling [BindingLiquidSdk::fetch_onchain_limits].
 dictionary OnchainPaymentLimitsResponse {
+    /// Amount limits for a Send Onchain Payment to be valid
     Limits send;
+    /// Amount limits for a Receive Onchain Payment to be valid
     Limits receive;
 };
 
+/// Used to specify the amount to sent or to send all funds.
 [Enum]
 interface PayAmount {
+    /// The amount in satoshi that will be received
     Bitcoin(u64 receiver_amount_sat);
+    /// The amount of an asset that will be received
     Asset(string asset_id, f64 receiver_amount);
+    /// Indicates that all available Bitcoin funds should be sent
     Drain();
 };
 
+/// An argument when calling [BindingLiquidSdk::prepare_pay_onchain].
 dictionary PreparePayOnchainRequest {
+    /// The amount to send
     PayAmount amount;
+    /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.
     u32? fee_rate_sat_per_vbyte = null;
 };
 
+/// Returned when calling [BindingLiquidSdk::prepare_pay_onchain].
 dictionary PreparePayOnchainResponse {
     u64 receiver_amount_sat;
     u64 claim_fees_sat;
     u64 total_fees_sat;
 };
 
+/// An argument when calling [BindingLiquidSdk::pay_onchain].
 dictionary PayOnchainRequest {
     string address;
     PreparePayOnchainResponse prepare_response;
 };
 
+/// An argument of [PrepareBuyBitcoinRequest] when calling [BindingLiquidSdk::prepare_buy_bitcoin].
 enum BuyBitcoinProvider {
     "Moonpay",
 };
 
+/// An argument when calling [BindingLiquidSdk::prepare_buy_bitcoin].
 dictionary PrepareBuyBitcoinRequest {
     BuyBitcoinProvider provider;
     u64 amount_sat;
 };
 
+/// Returned when calling [BindingLiquidSdk::prepare_buy_bitcoin].
 dictionary PrepareBuyBitcoinResponse {
     BuyBitcoinProvider provider;
     u64 amount_sat;
     u64 fees_sat;
 };
 
+/// An argument when calling [BindingLiquidSdk::buy_bitcoin].
 dictionary BuyBitcoinRequest {
     PrepareBuyBitcoinResponse prepare_response;
+    /// The optional URL to redirect to after completing the buy.
+    ///
+    /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
     string? redirect_url = null;
 };
 
+/// An argument when calling [BindingLiquidSdk::backup].
 dictionary BackupRequest {
+    /// Path to the backup.
+    ///
+    /// If not set, it defaults to 'backup.sql' for mainnet and 'backup-testnet.sql' for testnet.
+    /// The file will be saved in [ConnectRequest]'s `data_dir`.
     string? backup_path = null;
 };
 
+/// An argument when calling [BindingLiquidSdk::restore].
 dictionary RestoreRequest {
     string? backup_path = null;
 };
 
+/// An argument when calling [BindingLiquidSdk::list_payments].
 dictionary ListPaymentsRequest {
     sequence<PaymentType>? filters = null;
     sequence<PaymentState>? states = null;
+    /// Epoch time, in seconds
     i64? from_timestamp = null;
+    /// Epoch time, in seconds
     i64? to_timestamp = null;
     u32? offset = null;
     u32? limit = null;
@@ -563,30 +876,39 @@ dictionary ListPaymentsRequest {
 
 [Enum]
 interface ListPaymentDetails {
+    /// A Liquid payment
     Liquid(string? asset_id, string? destination);
+    /// A Bitcoin payment
     Bitcoin(string? address);
 };
 
 [Enum]
 interface GetPaymentRequest {
+    /// The Lightning payment hash of the payment
     Lightning(string payment_hash);
 };
 
+/// An argument when calling [BindingLiquidSdk::fetch_payment_proposed_fees].
 dictionary FetchPaymentProposedFeesRequest {
     string swap_id;
 };
 
+/// Returned when calling [BindingLiquidSdk::fetch_payment_proposed_fees].
 dictionary FetchPaymentProposedFeesResponse {
     string swap_id;
     u64 fees_sat;
+    /// Amount sent by the swap payer
     u64 payer_amount_sat;
+    /// Amount that will be received if these fees are accepted
     u64 receiver_amount_sat;
 };
 
+/// An argument when calling [BindingLiquidSdk::accept_payment_proposed_fees].
 dictionary AcceptPaymentProposedFeesRequest {
     FetchPaymentProposedFeesResponse response;
 };
 
+/// Represents the payment LNURL info
 dictionary LnUrlInfo {
     string? ln_address;
     string? lnurl_pay_comment;
@@ -597,29 +919,77 @@ dictionary LnUrlInfo {
     string? lnurl_withdraw_endpoint;
 };
 
+/// Represents the Liquid payment asset info. The asset info is derived from
+/// the available [AssetMetadata] that is set in the [Config].
 dictionary AssetInfo {
+    /// The name of the asset
     string name;
+    /// The ticker of the asset
     string ticker;
+    /// The amount calculated from the satoshi amount of the transaction, having its
+    /// decimal shifted to the left by the [AssetMetadata]'s `precision`
     f64 amount;
 };
 
+/// The specific details of a payment, depending on its type
 [Enum]
 interface PaymentDetails {
+    /// Swapping to or from Lightning
     Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? refund_tx_id, u64? refund_tx_amount_sat);
+    /// Direct onchain payment to a Liquid address
     Liquid(string asset_id, string destination, string description, AssetInfo? asset_info);
+    /// Swapping to or from the Bitcoin chain
     Bitcoin(string swap_id, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
+/// Represents an SDK payment.
+///
+/// By default, this is an onchain tx. It may represent a swap, if swap metadata is available.
 dictionary Payment {
+    /// Composite timestamp that can be used for sorting or displaying the payment.
+    ///
+    /// If this payment has an associated swap, it is the swap creation time. Otherwise, the point
+    /// in time when the underlying tx was included in a block. If there is no associated swap
+    /// available and the underlying tx is not yet confirmed, the value is 'now()'.
     u32 timestamp;
+    /// The payment amount, which corresponds to the onchain tx amount.
+    ///
+    /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
     u64 amount_sat;
+    /// Represents the fees paid by this wallet for this payment.
+    ///
+    /// ### Swaps
+    /// If there is an associated Send Swap, these fees represent the total fees paid by this wallet
+    /// (the sender). It is the difference between the amount that was sent and the amount received.
+    ///
+    /// If there is an associated Receive Swap, these fees represent the total fees paid by this wallet
+    /// (the receiver). It is also the difference between the amount that was sent and the amount received.
+    ///
+    /// ### Pure onchain txs
+    /// If no swap is associated with this payment:
+    /// - for Send payments, this is the onchain tx fee
+    /// - for Receive payments, this is zero
     u64 fees_sat;
+    /// If it is a [PaymentType::Send] or [PaymentType::Receive] payment
     PaymentType payment_type;
+    /// Composite status representing the overall status of the payment.
+    ///
+    /// If the tx has no associated swap, this reflects the onchain tx status (confirmed or not).
+    ///
+    /// If the tx has an associated swap, this is determined by the swap status (pending or complete).
     PaymentState status;
+    /// The details of a payment, depending on its [Payment]'s `destination` and
+    /// [Payment]'s `type`.
     PaymentDetails details;
+    /// Service fees paid to the swapper service. This is only set for swaps (i.e. doesn't apply to
+    /// direct Liquid payments).
     u64? swapper_fees_sat = null;
+    /// The destination associated with the payment, if it was created via our SDK.
+    /// Can be either a Liquid/Bitcoin address, a Liquid BIP21 URI or an invoice
     string? destination = null;
     string? tx_id = null;
+    /// Data to use in the "blinded" param when unblinding the transaction in an explorer.
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
     string? unblinding_data = null;
 };
 
@@ -628,24 +998,88 @@ enum PaymentType {
     "Send",
 };
 
+/// The payment state of an individual payment.
 enum PaymentState {
     "Created",
+    /// ## Receive Swaps
+    ///
+    /// Covers the cases when
+    /// - the lockup tx is seen in the mempool or
+    /// - our claim tx is broadcast
+    ///
+    /// When the claim tx is broadcast, `claim_tx_id` is set in the swap.
+    ///
+    /// ## Send Swaps
+    ///
+    /// This is the status when our lockup tx was broadcast
+    ///
+    /// ## Chain Swaps
+    ///
+    /// This is the status when the user lockup tx was broadcast
+    ///
+    /// ## No swap data available
+    ///
+    /// If no associated swap is found, this indicates the underlying tx is not confirmed yet.
     "Pending",
+    /// ## Receive Swaps
+    ///
+    /// Covers the case when the claim tx is confirmed.
+    ///
+    /// ## Send and Chain Swaps
+    ///
+    /// This is the status when the claim tx is broadcast and we see it in the mempool.
+    ///
+    /// ## No swap data available
+    ///
+    /// If no associated swap is found, this indicates the underlying tx is confirmed.
     "Complete",
+    /// ## Receive Swaps
+    ///
+    /// This is the status when the swap failed for any reason and the Receive could not complete.
+    ///
+    /// ## Send and Chain Swaps
+    ///
+    /// This is the status when a swap refund was initiated and the refund tx is confirmed.
     "Failed",
+    /// ## Send and Outgoing Chain Swaps
+    ///
+    /// This covers the case when the swap state is still Created and the swap fails to reach the
+    /// Pending state in time. The TimedOut state indicates the lockup tx should never be broadcast.
     "TimedOut",
+    /// ## Incoming Chain Swaps
+    ///
+    /// This covers the case when the swap failed for any reason and there is a user lockup tx.
+    /// The swap in this case has to be manually refunded with a provided Bitcoin address
     "Refundable",
+    /// ## Send and Chain Swaps
+    ///
+    /// This is the status when a refund was initiated and/or our refund tx was broadcast
+    ///
+    /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     "RefundPending",
+    /// ## Chain Swaps
+    ///
+    /// This is the state when the user needs to accept new fees before the payment can proceed.
+    ///
+    /// Use [BindingLiquidSdk::fetch_payment_proposed_fees] to find out the current fees and
+    /// [BindingLiquidSdk::accept_payment_proposed_fees] to accept them, allowing the payment to proceed.
+    ///
+    /// Otherwise, this payment can be immediately refunded using
+    /// [BindingLiquidSdk::prepare_refund]/[BindingLiquidSdk::refund].
     "WaitingFeeAcceptance",
 };
 
+/// Returned when calling [BindingLiquidSdk::list_refundables].
 dictionary RefundableSwap {
     string swap_address;
     u32 timestamp;
+    /// Amount that is refundable, from all UTXOs
     u64 amount_sat;
+    /// The txid of the last broadcasted refund tx, if any
     string? last_refund_tx_id;
 };
 
+/// Returned when calling [BindingLiquidSdk::recommended_fees].
 dictionary RecommendedFees {
     u64 fastest_fee;
     u64 half_hour_fee;
@@ -654,28 +1088,40 @@ dictionary RecommendedFees {
     u64 minimum_fee;
 };
 
+/// An argument when calling [BindingLiquidSdk::prepare_refund].
 dictionary PrepareRefundRequest {
+    /// The address where the swap funds are locked up
     string swap_address;
+    /// The address to refund the swap funds to
     string refund_address;
+    /// The fee rate in sat/vB for the refund transaction
     u32 fee_rate_sat_per_vbyte;
 };
 
+/// Returned when calling [BindingLiquidSdk::prepare_refund].
 dictionary PrepareRefundResponse {
     u32 tx_vsize;
     u64 tx_fee_sat;
     string? last_refund_tx_id = null;
 };
 
+/// An argument when calling [BindingLiquidSdk::refund].
 dictionary RefundRequest {
+    /// The address where the swap funds are locked up
     string swap_address;
+    /// The address to refund the swap funds to
     string refund_address;
+    /// The fee rate in sat/vB for the refund transaction
     u32 fee_rate_sat_per_vbyte;
 };
 
+/// Returned when calling [BindingLiquidSdk::refund].
 dictionary RefundResponse {
     string refund_tx_id;
 };
 
+/// Event emitted by the SDK. Add an [EventListener] by calling [BindingLiquidSdk::add_event_listener]
+/// to listen for emitted events.
 [Enum]
 interface SdkEvent {
     PaymentFailed(Payment details);
@@ -689,10 +1135,12 @@ interface SdkEvent {
     Synced();
 };
 
+/// Interface that can be used to receive [SdkEvent]s emitted by the SDK.
 callback interface EventListener {    
     void on_event(SdkEvent e);
 };
 
+/// Interface that can be used to receive [LogEntry]s emitted by the SDK.
 callback interface Logger {
     void log(LogEntry l);
 };
@@ -702,32 +1150,56 @@ dictionary LogEntry {
     string level;
 };
 
+/// Configuration for an external input parser
 dictionary ExternalInputParser {
+    /// An arbitrary parser provider id
     string provider_id;
+    /// The external parser will be used when an input conforms to this regex
     string input_regex;
+    /// The URL of the parser containing a placeholder `<input>` that will be replaced with the
+    /// input to be parsed. The input is sanitized using percent encoding.
     string parser_url;
 };
 
+/// Configuration for asset metadata. Each asset metadata item represents an entry in the
+/// Liquid Asset Registry <https://docs.liquid.net/docs/blockstream-liquid-asset-registry>.
+/// An example Liquid Asset in the registry would be Tether USD <https://assets.blockstream.info/ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2.json>.
 dictionary AssetMetadata {
+    /// The asset id of the registered asset
     string asset_id;
+    /// The name of the asset
     string name;
+    /// The ticker of the asset
     string ticker;
+    /// The precision used to display the asset amount.
+    /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
     u8 precision;
 };
 
 namespace breez_sdk_liquid {
+    /// Initializes the SDK services and starts the background tasks.
+    /// This must be called to create the [BindingLiquidSdk] instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [ConnectRequest] containing:
+    ///     * `mnemonic` - the Liquid wallet mnemonic
+    ///     * `config` - the SDK [Config]
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);
 
+    /// If used, this must be called before [connect].
     [Throws=SdkError]
     BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer);
 
     [Throws=SdkError]
     void set_logger(Logger logger);
     
+    /// Get the full default [Config] for specific [LiquidNetwork].
     [Throws=SdkError]
     Config default_config(LiquidNetwork network, string? breez_api_key);
 
+    /// Parses a string into an [LNInvoice].
     [Throws=PaymentError]
     LNInvoice parse_invoice(string input);
 };
@@ -737,141 +1209,348 @@ interface SignerError {
     Generic(string err);
 };
 
+/// A trait that can be used to sign messages and verify signatures.
+/// The sdk user can implement this trait to use their own signer.
 callback interface Signer {
+    /// The master xpub encoded as 78 bytes length as defined in bip32 specification.
+    /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-Serialization_format>
     [Throws=SignerError]
     sequence<u8> xpub();
 
+    /// The derived xpub encoded as 78 bytes length as defined in bip32 specification.
+    /// The derivation path is a string represents the shorter notation of the key tree to derive. For example:
+    /// m/49'/1'/0'/0/0
+    /// m/48'/1'/0'/0/0
+    /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-The_key_tree>
     [Throws=SignerError]
     sequence<u8> derive_xpub(string derivation_path);
 
+    /// Sign an ECDSA message using the private key derived from the given derivation path
     [Throws=SignerError]
     sequence<u8> sign_ecdsa(sequence<u8> msg, string derivation_path);
 
+    /// Sign an ECDSA message using the private key derived from the master key
     [Throws=SignerError]
     sequence<u8> sign_ecdsa_recoverable(sequence<u8> msg);
 
+    /// Return the master blinding key for SLIP77: <https://github.com/satoshilabs/slips/blob/master/slip-0077.md>
     [Throws=SignerError]
     sequence<u8> slip77_master_blinding_key();
 
+    /// HMAC-SHA256 using the private key derived from the given derivation path
+    /// This is used to calculate the linking key of lnurl-auth specification: <https://github.com/lnurl/luds/blob/luds/05.md>
     [Throws=SignerError]
     sequence<u8> hmac_sha256(sequence<u8> msg, string derivation_path);
 
+    /// Encrypts a message using ECIES
     [Throws=SignerError]
     sequence<u8> ecies_encrypt(sequence<u8> msg);
 
+    /// Decrypts a message using ECIES
     [Throws=SignerError]
     sequence<u8> ecies_decrypt(sequence<u8> msg);
 };
 
 interface BindingLiquidSdk {
+    /// Adds an event listener to the [LiquidSdk] instance, where all [SdkEvent]'s will be emitted to.
+    /// The event listener can be removed be calling [BindingLiquidSdk::remove_event_listener].
+    ///
+    /// # Arguments
+    ///
+    /// * `listener` - The listener which is an implementation of the [EventListener] trait
     [Throws=SdkError]
     string add_event_listener(EventListener listener);
 
+    /// Removes an event listener from the [BindingLiquidSdk] instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - the event listener id returned by [BindingLiquidSdk::add_event_listener]
     [Throws=SdkError]
     void remove_event_listener(string id);
 
+    /// Get the wallet info, calculating the current pending and confirmed balances.
     [Throws=SdkError]
     GetInfoResponse get_info();
 
+    /// Sign given message with the private key. Returns a zbase encoded signature.
     [Throws=SdkError]
     SignMessageResponse sign_message(SignMessageRequest req);
 
+    /// Check whether given message was signed by the given
+    /// pubkey and the signature (zbase encoded) is valid.
     [Throws=SdkError]
     CheckMessageResponse check_message(CheckMessageRequest req);
 
+    /// Parses a string into an [InputType].
     [Throws=PaymentError]
     InputType parse(string input);
 
+    /// Prepares to pay a Lightning invoice via a submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareSendRequest] containing:
+    ///     * `destination` - Either a Liquid BIP21 URI/address or a BOLT11 invoice
+    ///     * `amount_sat` - Should only be specified when paying directly onchain or via amount-less BIP21
+    ///
+    /// # Returns
+    /// Returns a [PrepareSendResponse] containing:
+    ///     * `destination` - the parsed destination, of type [SendDestination]
+    ///     * `fees_sat` - the additional fees which will be paid by the sender
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
 
+    /// Either pays a Lightning invoice via a submarine swap or sends funds directly to an address.
+    ///
+    /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
+    /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
+    ///   complete in this time
+    /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - A [SendPaymentRequest], containing:
+    ///     * `prepare_response` - the [PrepareSendResponse] returned by [BindingLiquidSdk::prepare_send_payment]
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     [Throws=PaymentError]
     SendPaymentResponse send_payment(SendPaymentRequest req);
 
+    /// Prepares to receive a Lightning payment via a reverse submarine swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareReceiveRequest] containing:
+    ///     * `payer_amount_sat` - the amount in satoshis to be paid by the payer
+    ///     * `payment_method` - the supported payment methods; either an invoice, a Liquid address or a Bitcoin address
     [Throws=PaymentError]
     PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
 
+    /// Receive a Lightning payment via a reverse submarine swap, a chain swap or via direct Liquid
+    /// payment.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [ReceivePaymentRequest] containing:
+    ///     * `prepare_response` - the [PrepareReceiveResponse] from calling [BindingLiquidSdk::prepare_receive_payment]
+    ///     * `description` - the optional payment description
+    ///     * `use_description_hash` - optional if true uses the hash of the description
+    ///
+    /// # Returns
+    ///
+    /// * A [ReceivePaymentResponse] containing:
+    ///     * `destination` - the final destination to be paid by the payer, either a BIP21 URI (Liquid or Bitcoin), a Liquid address or an invoice
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
 
+    /// Fetch the current payment limits for [BindingLiquidSdk::send_payment] and [BindingLiquidSdk::receive_payment].
     [Throws=PaymentError]
     LightningPaymentLimitsResponse fetch_lightning_limits();
 
+    /// Fetch the current payment limits for [BindingLiquidSdk::pay_onchain] and [BindingLiquidSdk::receive_onchain].
     [Throws=PaymentError]
     OnchainPaymentLimitsResponse fetch_onchain_limits();
 
+    /// Prepares to pay to a Bitcoin address via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PreparePayOnchainRequest] containing:
+    ///     * `amount` - which can be of two types: [PayAmount::Drain], which uses all funds,
+    ///        and [PayAmount::Bitcoin], which sets the amount the receiver should receive
+    ///     * `fee_rate_sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     [Throws=PaymentError]
     PreparePayOnchainResponse prepare_pay_onchain(PreparePayOnchainRequest req);
 
+    /// Pays to a Bitcoin address via a chain swap.
+    ///
+    /// Depending on [Config]'s `payment_timeout_sec`, this function will return:
+    /// * [PaymentState::Pending] payment - if the payment could be initiated but didn't yet
+    ///   complete in this time
+    /// * [PaymentState::Complete] payment - if the payment was successfully completed in this time
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PayOnchainRequest] containing:
+    ///     * `address` - the Bitcoin address to pay to
+    ///     * `prepare_response` - the [PreparePayOnchainResponse] from calling [BindingLiquidSdk::prepare_pay_onchain]
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::PaymentTimeout] - if the payment could not be initiated in this time
     [Throws=PaymentError]
     SendPaymentResponse pay_onchain(PayOnchainRequest req);
 
+    /// Prepares to buy Bitcoin via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareBuyBitcoinRequest] containing:
+    ///     * `provider` - the [BuyBitcoinProvider] to use
+    ///     * `amount_sat` - the amount in satoshis to buy from the provider
     [Throws=PaymentError]
     PrepareBuyBitcoinResponse prepare_buy_bitcoin(PrepareBuyBitcoinRequest req);
 
+    /// Generate a URL to a third party provider used to buy Bitcoin via a chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [BuyBitcoinRequest] containing:
+    ///     * `prepare_response` - the [PrepareBuyBitcoinResponse] from calling [BindingLiquidSdk::prepare_buy_bitcoin]
+    ///     * `redirect_url` - the optional redirect URL the provider should redirect to after purchase
     [Throws=PaymentError]
     string buy_bitcoin(BuyBitcoinRequest req);
 
+    /// Lists the SDK payments in reverse chronological order, from newest to oldest.
+    /// The payments are determined based on onchain transactions and swaps.
     [Throws=PaymentError]
     sequence<Payment> list_payments(ListPaymentsRequest req);
 
+    /// Retrieves a payment.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [GetPaymentRequest] containing:
+    ///     * [GetPaymentRequest::Lightning] - the `payment_hash` of the lightning invoice
+    ///
+    /// # Returns
+    ///
+    /// Returns an `Option<Payment>` if found, or `None` if no payment matches the given request.
     [Throws=PaymentError]
     Payment? get_payment(GetPaymentRequest req);
 
+    /// Fetches an up-to-date fees proposal for a [Payment] that is [WaitingFeeAcceptance].
+    ///
+    /// Use [BindingLiquidSdk::accept_payment_proposed_fees] to accept the proposed fees and proceed
+    /// with the payment.
     [Throws=SdkError]
     FetchPaymentProposedFeesResponse fetch_payment_proposed_fees(FetchPaymentProposedFeesRequest req);
 
+    /// Accepts proposed fees for a [Payment] that is [WaitingFeeAcceptance].
+    ///
+    /// Use [BindingLiquidSdk::fetch_payment_proposed_fees] to get an up-to-date fees proposal.
     [Throws=PaymentError]
     void accept_payment_proposed_fees(AcceptPaymentProposedFeesRequest req);
 
+    /// List all failed chain swaps that need to be refunded.
+    /// They can be refunded by calling [BindingLiquidSdk::prepare_refund] then [BindingLiquidSdk::refund].
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();
 
+    /// Prepares to refund a failed chain swap by calculating the refund transaction size and absolute fee.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareRefundRequest] containing:
+    ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
+    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     [Throws=SdkError]
     PrepareRefundResponse prepare_refund(PrepareRefundRequest req);
 
+    /// Refund a failed chain swap.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [RefundRequest] containing:
+    ///     * `swap_address` - the swap address to refund from [RefundableSwap::swap_address]
+    ///     * `refund_address` - the Bitcoin address to refund to
+    ///     * `fee_rate_sat_per_vbyte` - the fee rate at which to broadcast the refund transaction
     [Throws=PaymentError]
     RefundResponse refund(RefundRequest req);
 
+    /// Rescans all expired chain swaps created from calling [BindingLiquidSdk::receive_onchain] within
+    /// the monitoring period to check if there are any confirmed funds available to refund.
     [Throws=SdkError]
     void rescan_onchain_swaps();
 
+    /// Synchronizes the local state with the mempool and onchain data.
     [Throws=SdkError]
     void sync();
 
+    /// Get the recommended Bitcoin fees based on the configured mempool.space instance.
     [Throws=SdkError]
     RecommendedFees recommended_fees();
 
+    /// Backup the local state to the provided backup path.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [BackupRequest] containing:
+    ///     * `backup_path` - the optional backup path. Defaults to [Config::working_dir]
     [Throws=SdkError]
     void backup(BackupRequest req);
 
+    /// Restores the local state from the provided backup path.
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [RestoreRequest] containing:
+    ///     * `backup_path` - the optional backup path. Defaults to [Config::working_dir]
     [Throws=SdkError]
     void restore(RestoreRequest req);
 
+    /// Disconnects the [BindingLiquidSdk] instance and stops the background tasks.
     [Throws=SdkError]
     void disconnect();
 
+    /// Second step of LNURL-pay. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlPayRequest] payload needed here.
+    ///
+    /// This call will validate the `amount_msat` and `comment` parameters of `req` against the parameters
+    /// of the [LnUrlPayRequestData::req_data]. If they match the endpoint requirements, the LNURL payment
+    /// is made.
     [Throws=LnUrlPayError]
     PrepareLnUrlPayResponse prepare_lnurl_pay(PrepareLnUrlPayRequest req);
 
     [Throws=LnUrlPayError]
     LnUrlPayResult lnurl_pay(LnUrlPayRequest req);
 
+    /// Second step of LNURL-withdraw. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlWithdrawRequest] payload needed here.
+    ///
+    /// This call will validate the given `amount_msat` against the parameters
+    /// of the [LnUrlWithdrawRequestData::data]. If they match the endpoint requirements, the LNURL withdraw
+    /// request is made. A successful result here means the endpoint started the payment.
     [Throws=LnUrlWithdrawError]
     LnUrlWithdrawResult lnurl_withdraw(LnUrlWithdrawRequest req);
 
+    /// Third and last step of LNURL-auth. The first step is [parse], which also validates the LNURL destination
+    /// and generates the [LnUrlAuthRequestData] payload needed here. The second step is user approval of auth action.
+    ///
+    /// This call will sign the [LnUrlAuthRequestData::k1] of the `req_data` using the derived linking private key and DER-encodes the signature.
+    /// If they match the endpoint requirements, the LNURL auth request is made. A successful result here means the client signature is verified.
     [Throws=LnUrlAuthError]
     LnUrlCallbackStatus lnurl_auth(LnUrlAuthRequestData req_data);
 
+    /// Register for webhook callbacks at the given `webhook_url`. Each created swap after registering the
+    /// webhook will include the `webhook_url`.
+    ///
+    /// This method should be called every time the application is started and when the `webhook_url` changes.
+    /// For example, if the `webhook_url` contains a push notification token and the token changes after
+    /// the application was started, then this method should be called to register for callbacks at
+    /// the new correct `webhook_url`. To unregister a webhook call [BindingLiquidSdk::unregister_webhook].
     [Throws=SdkError]
     void register_webhook(string webhook_url);
 
+    /// Unregister webhook callbacks. Each swap already created will continue to use the registered
+    /// `webhook_url` until complete.
+    ///
+    /// This can be called when callbacks are no longer needed or the `webhook_url`
+    /// has changed such that it needs unregistering. For example, the token is valid but the locale changes.
+    /// To register a webhook call [BindingLiquidSdk::register_webhook].
     [Throws=SdkError]
     void unregister_webhook();
 
+    /// Fetch live rates of fiat currencies, sorted by name.
     [Throws=SdkError]
     sequence<Rate> fetch_fiat_rates();
 
+    /// List all supported fiat currencies for which there is a known exchange rate.
+    /// List is sorted by the canonical name of the currency.
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
 };
