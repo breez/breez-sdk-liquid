@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
@@ -106,22 +105,14 @@ impl SyncService {
                     return;
                 }
             };
-            let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
 
             log::debug!("Starting real-time sync event loop");
 
             loop {
                 tokio::select! {
-                    _ = event_loop_interval.tick() => self.run_event_loop().await,
-                    Some(_) = local_sync_trigger.recv() => {
-                        self.run_event_loop().await;
-                        event_loop_interval.reset();
-                    },
+                    Some(_) = local_sync_trigger.recv() => self.run_event_loop().await,
                     Some(msg) = remote_sync_trigger.next() => match msg {
-                        Ok(_) => {
-                            self.run_event_loop().await;
-                            event_loop_interval.reset();
-                        },
+                        Ok(_) => self.run_event_loop().await,
                         Err(err) => {
                             log::warn!("Received status {} from remote, attempting to reconnect.", err.message());
                             match self.new_listener().await {
