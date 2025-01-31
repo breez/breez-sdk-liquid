@@ -103,6 +103,7 @@ async fn main() -> Result<()> {
     let cli_prompt = match network {
         LiquidNetwork::Mainnet => "breez-liquid-cli [mainnet]> ",
         LiquidNetwork::Testnet => "breez-liquid-cli [testnet]> ",
+        LiquidNetwork::Regtest => "breez-liquid-cli [regtest]> ",
     };
 
     loop {

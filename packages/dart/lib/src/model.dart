@@ -134,7 +134,9 @@ class AssetMetadata {
 class BackupRequest {
   /// Path to the backup.
   ///
-  /// If not set, it defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet.
+  /// If not set, it defaults to `backup.sql` for mainnet, `backup-testnet.sql` for testnet,
+  /// and `backup-regtest.sql` for regtest.
+  ///
   /// The file will be saved in [ConnectRequest]'s `data_dir`.
   final String? backupPath;
 
@@ -534,6 +536,9 @@ enum LiquidNetwork {
 
   /// Testnet Bitcoin and Liquid chains
   testnet,
+
+  /// Regtest Bitcoin and Liquid chains
+  regtest,
   ;
 }
 

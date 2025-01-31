@@ -347,6 +347,7 @@ dictionary Config {
 enum LiquidNetwork {
     "Mainnet",
     "Testnet",
+    "Regtest",
 };
 
 dictionary ConnectRequest {

@@ -14,6 +14,7 @@ use lwk_wollet::{
     ElectrumClient, ElectrumUrl, History,
 };
 
+use crate::model::LiquidNetwork;
 use crate::prelude::Utxo;
 use crate::{model::Config, utils};
 
@@ -66,7 +67,11 @@ pub(crate) struct HybridLiquidChainService {
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
-        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
+        let (tls, validate_domain) = match config.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        };
+        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, tls, validate_domain)?;
         let electrum_client =
             ElectrumClient::with_options(&electrum_url, ElectrumOptions { timeout: Some(3) })?;
         let tip_client =
