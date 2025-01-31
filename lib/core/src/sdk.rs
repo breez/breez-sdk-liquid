@@ -683,6 +683,7 @@ impl LiquidSdk {
         match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", LiquidNetwork::Mainnet) => {}
             ("testnet", LiquidNetwork::Testnet) => {}
+            ("regtest", LiquidNetwork::Regtest) => {}
             _ => {
                 return Err(PaymentError::InvalidNetwork {
                     err: "Invoice cannot be paid on the current network".to_string(),
@@ -826,7 +827,8 @@ impl LiquidSdk {
         //  https://github.com/Blockstream/lwk/issues/31
         match self.config.network {
             LiquidNetwork::Mainnet => "lq1pqvzxvqhrf54dd4sny4cag7497pe38252qefk46t92frs7us8r80ja9ha8r5me09nn22m4tmdqp5p4wafq3s59cql3v9n45t5trwtxrmxfsyxjnstkctj",
-            LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5"
+            LiquidNetwork::Testnet => "tlq1pq0wqu32e2xacxeyps22x8gjre4qk3u6r70pj4r62hzczxeyz8x3yxucrpn79zy28plc4x37aaf33kwt6dz2nn6gtkya6h02mwpzy4eh69zzexq7cf5y5",
+            LiquidNetwork::Regtest => "el1pqtjufhhy2se6lj2t7wufvpqqhnw66v57x2s0uu5dxs4fqlzlvh3hqe87vn83z3qreh8kxn49xe0h0fpe4kjkhl4gv99tdppupk0tdd485q8zegdag97r",
         }
     }
 
@@ -2108,6 +2110,7 @@ impl LiquidSdk {
                 };
 
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                println!("address: {address}");
                 let receive_destination =
                     if asset_id.ne(&lbtc_asset_id) || amount.is_some() || amount_sat.is_some() {
                         LiquidAddressData {
@@ -3410,6 +3413,7 @@ impl LiquidSdk {
         let config = match network {
             LiquidNetwork::Mainnet => Config::mainnet(breez_api_key),
             LiquidNetwork::Testnet => Config::testnet(breez_api_key),
+            LiquidNetwork::Regtest => Config::regtest(breez_api_key),
         };
         Ok(config)
     }

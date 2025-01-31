@@ -85,7 +85,7 @@ impl Persister {
 
     fn migrate_main_db(&self) -> Result<()> {
         let migrations = Migrations::new(
-            current_migrations(self.network.eq(&LiquidNetwork::Mainnet))
+            current_migrations(self.network)
                 .into_iter()
                 .map(M::up)
                 .collect(),

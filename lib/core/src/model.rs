@@ -1,11 +1,8 @@
-use std::cmp::PartialEq;
-use std::path::PathBuf;
-
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
-    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST_URL_V2, BOLTZ_TESTNET_URL_V2},
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -14,11 +11,15 @@ use boltz_client::{
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
+use lwk_wollet::elements::AssetId;
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::cmp::PartialEq;
+use std::path::PathBuf;
+use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkError, SdkResult};
@@ -120,6 +121,26 @@ impl Config {
         }
     }
 
+    pub fn regtest(breez_api_key: Option<String>) -> Self {
+        Config {
+            liquid_electrum_url: "localhost:19002".to_string(),
+            bitcoin_electrum_url: "localhost:19001".to_string(),
+            mempoolspace_url: "http://localhost/api".to_string(),
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Regtest,
+            payment_timeout_sec: 15,
+            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
     pub(crate) fn get_wallet_dir(
         &self,
         base_dir: &str,
@@ -129,6 +150,7 @@ impl Config {
             .join(match self.network {
                 LiquidNetwork::Mainnet => "mainnet",
                 LiquidNetwork::Testnet => "testnet",
+                LiquidNetwork::Regtest => "regtest",
             })
             .join(fingerprint_hex)
             .to_str()
@@ -169,6 +191,7 @@ impl Config {
         match self.network {
             LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
+            LiquidNetwork::Regtest => BOLTZ_REGTEST_URL_V2,
         }
     }
 }
@@ -181,12 +204,15 @@ pub enum LiquidNetwork {
     Mainnet,
     /// Testnet Bitcoin and Liquid chains
     Testnet,
+    /// Regtest Bitcoin and Liquid chains
+    Regtest,
 }
 impl LiquidNetwork {
     pub fn as_bitcoin_chain(&self) -> Chain {
         match self {
             LiquidNetwork::Mainnet => Chain::Bitcoin,
             LiquidNetwork::Testnet => Chain::BitcoinTestnet,
+            LiquidNetwork::Regtest => Chain::BitcoinRegtest,
         }
     }
 }
@@ -196,6 +222,12 @@ impl From<LiquidNetwork> for ElementsNetwork {
         match value {
             LiquidNetwork::Mainnet => ElementsNetwork::Liquid,
             LiquidNetwork::Testnet => ElementsNetwork::LiquidTestnet,
+            LiquidNetwork::Regtest => ElementsNetwork::ElementsRegtest {
+                policy_asset: AssetId::from_str(
+                    "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+                )
+                .unwrap(),
+            },
         }
     }
 }
@@ -205,6 +237,7 @@ impl From<LiquidNetwork> for Chain {
         match value {
             LiquidNetwork::Mainnet => Chain::Liquid,
             LiquidNetwork::Testnet => Chain::LiquidTestnet,
+            LiquidNetwork::Regtest => Chain::LiquidRegtest,
         }
     }
 }
@@ -216,16 +249,18 @@ impl TryFrom<&str> for LiquidNetwork {
         match value.to_lowercase().as_str() {
             "mainnet" => Ok(LiquidNetwork::Mainnet),
             "testnet" => Ok(LiquidNetwork::Testnet),
+            "regtest" => Ok(LiquidNetwork::Regtest),
             _ => Err(anyhow!("Invalid network")),
         }
     }
 }
 
-impl From<LiquidNetwork> for sdk_common::prelude::Network {
+impl From<LiquidNetwork> for Network {
     fn from(value: LiquidNetwork) -> Self {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
             LiquidNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Regtest => Self::Regtest,
         }
     }
 }
@@ -235,6 +270,7 @@ impl From<LiquidNetwork> for sdk_common::bitcoin::Network {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
             LiquidNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Regtest => Self::Regtest,
         }
     }
 }
@@ -244,6 +280,7 @@ impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
             LiquidNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Regtest => Self::Regtest,
         }
     }
 }
@@ -688,7 +725,9 @@ pub struct CheckMessageResponse {
 pub struct BackupRequest {
     /// Path to the backup.
     ///
-    /// If not set, it defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet.
+    /// If not set, it defaults to `backup.sql` for mainnet, `backup-testnet.sql` for testnet,
+    /// and `backup-regtest.sql` for regtest.
+    ///
     /// The file will be saved in [ConnectRequest]'s `data_dir`.
     pub backup_path: Option<String>,
 }
