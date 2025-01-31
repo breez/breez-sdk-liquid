@@ -525,7 +525,6 @@ services:
     image: ${MEMPOOL_WEB_IMAGE}
     user: "0:0"
     restart: on-failure
-    stop_grace_period: 1m
     command: "./wait-for mempool-db:3306 --timeout=720 -- nginx -g 'daemon off;'"
     ports:
       - 80:8080
@@ -550,7 +549,6 @@ services:
     image: ${MEMPOOL_API_IMAGE}
     user: "0:0"
     restart: on-failure
-    stop_grace_period: 1m
     command: "./wait-for-it.sh mempool-db:3306 --timeout=720 --strict -- ./start.sh"
     depends_on:
       bitcoind-init:
@@ -567,7 +565,6 @@ services:
     image: ${MEMPOOL_DB_IMAGE}
     user: "0:0"
     restart: on-failure
-    stop_grace_period: 1m
     volumes:
       - mempool-db-data:/var/lib/mysql
 
