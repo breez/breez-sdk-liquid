@@ -6,14 +6,18 @@ import android.os.Parcel
 import android.os.Parcelable
 import breez_sdk_liquid_notification.Constants.EXTRA_REMOTE_MESSAGE
 
-data class Message(val type: String?, val payload: String?) : Parcelable {
+data class Message(
+    val type: String?,
+    val payload: String?,
+) : Parcelable {
     constructor(parcel: Parcel) : this(parcel.readString(), parcel.readString())
 
-    override fun describeContents(): Int {
-        return 0
-    }
+    override fun describeContents(): Int = 0
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
+    override fun writeToParcel(
+        parcel: Parcel,
+        flags: Int,
+    ) {
         parcel.writeString(type)
         parcel.writeString(payload)
     }
@@ -22,19 +26,19 @@ data class Message(val type: String?, val payload: String?) : Parcelable {
         @Suppress("DEPRECATION")
         fun createFromIntent(intent: Intent?): Message? {
             return intent?.let {
-                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) it.getParcelableExtra(
-                    EXTRA_REMOTE_MESSAGE,
-                    Message::class.java
-                ) else it.getParcelableExtra(EXTRA_REMOTE_MESSAGE)
+                return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    it.getParcelableExtra(
+                        EXTRA_REMOTE_MESSAGE,
+                        Message::class.java,
+                    )
+                } else {
+                    it.getParcelableExtra(EXTRA_REMOTE_MESSAGE)
+                }
             }
         }
 
-        override fun createFromParcel(parcel: Parcel): Message {
-            return Message(parcel)
-        }
+        override fun createFromParcel(parcel: Parcel): Message = Message(parcel)
 
-        override fun newArray(size: Int): Array<Message?> {
-            return arrayOfNulls(size)
-        }
+        override fun newArray(size: Int): Array<Message?> = arrayOfNulls(size)
     }
 }

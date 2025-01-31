@@ -14,17 +14,21 @@ class BreezSdkLiquidConnector {
         internal fun connectSDK(
             connectRequest: ConnectRequest,
             sdkListener: EventListener,
-            logger: ServiceLogger
+            logger: ServiceLogger,
         ): BindingLiquidSdk {
             synchronized(this) {
                 if (liquidSDK == null) {
                     logger.log(
-                        TAG, "Connecting to Breez Liquid SDK", "DEBUG"
+                        TAG,
+                        "Connecting to Breez Liquid SDK",
+                        "DEBUG",
                     )
                     liquidSDK = connect(connectRequest)
                     logger.log(TAG, "Connected to Breez Liquid SDK", "DEBUG")
                     liquidSDK!!.addEventListener(sdkListener)
-                } else logger.log(TAG, "Already connected to Breez Liquid SDK", "DEBUG")
+                } else {
+                    logger.log(TAG, "Already connected to Breez Liquid SDK", "DEBUG")
+                }
 
                 return liquidSDK!!
             }

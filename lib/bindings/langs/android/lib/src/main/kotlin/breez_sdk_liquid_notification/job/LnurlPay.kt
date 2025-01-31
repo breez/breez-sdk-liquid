@@ -55,4 +55,6 @@ interface LnurlPayJob : Job {
     }
 }
 
-class InvalidLnurlPayException(message: String) : Exception(message)
+class InvalidLnurlPayException(
+    message: String,
+) : Exception(message)

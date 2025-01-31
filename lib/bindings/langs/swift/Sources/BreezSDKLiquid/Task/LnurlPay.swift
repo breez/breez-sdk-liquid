@@ -33,12 +33,12 @@ class LnurlPayTask : TaskProtocol {
     public func onEvent(e: SdkEvent) {}
     
     func onShutdown() {
-        displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_LNURL_PAY)
+        displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
     
     func replyServer(encodable: Encodable, replyURL: String) {
         guard let serverReplyURL = URL(string: replyURL) else {
-            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_LNURL_PAY)
+            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             return
         }
         var request = URLRequest(url: serverReplyURL)
@@ -48,9 +48,9 @@ class LnurlPayTask : TaskProtocol {
             let statusCode = (response as! HTTPURLResponse).statusCode
             
             if statusCode == 200 {
-                self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_LNURL_PAY)
+                self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             } else {
-                self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_LNURL_PAY)
+                self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
                 return
             }
         }
@@ -68,7 +68,7 @@ class LnurlPayTask : TaskProtocol {
             task.resume()
         }
         let title = failNotificationTitle != nil ? failNotificationTitle! : self.failNotificationTitle
-        self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_LNURL_PAY)
+        self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
 }
 
