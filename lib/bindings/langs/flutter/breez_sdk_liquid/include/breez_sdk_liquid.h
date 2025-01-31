@@ -78,17 +78,17 @@ typedef struct wire_cst_fetch_payment_proposed_fees_request {
   struct wire_cst_list_prim_u_8_strict *swap_id;
 } wire_cst_fetch_payment_proposed_fees_request;
 
-typedef struct wire_cst_GetPaymentRequest_Lightning {
+typedef struct wire_cst_GetPaymentRequest_PaymentHash {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
-} wire_cst_GetPaymentRequest_Lightning;
+} wire_cst_GetPaymentRequest_PaymentHash;
 
-typedef struct wire_cst_GetPaymentRequest_SwapIdHash {
-  struct wire_cst_list_prim_u_8_strict *hash;
-} wire_cst_GetPaymentRequest_SwapIdHash;
+typedef struct wire_cst_GetPaymentRequest_SwapId {
+  struct wire_cst_list_prim_u_8_strict *swap_id;
+} wire_cst_GetPaymentRequest_SwapId;
 
 typedef union GetPaymentRequestKind {
-  struct wire_cst_GetPaymentRequest_Lightning Lightning;
-  struct wire_cst_GetPaymentRequest_SwapIdHash SwapIdHash;
+  struct wire_cst_GetPaymentRequest_PaymentHash PaymentHash;
+  struct wire_cst_GetPaymentRequest_SwapId SwapId;
 } GetPaymentRequestKind;
 
 typedef struct wire_cst_get_payment_request {

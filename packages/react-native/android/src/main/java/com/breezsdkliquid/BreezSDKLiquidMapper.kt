@@ -3000,13 +3000,13 @@ fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
 fun asGetPaymentRequest(getPaymentRequest: ReadableMap): GetPaymentRequest? {
     val type = getPaymentRequest.getString("type")
 
-    if (type == "lightning") {
+    if (type == "paymentHash") {
         val paymentHash = getPaymentRequest.getString("paymentHash")!!
-        return GetPaymentRequest.Lightning(paymentHash)
+        return GetPaymentRequest.PaymentHash(paymentHash)
     }
-    if (type == "swapIdHash") {
-        val hash = getPaymentRequest.getString("hash")!!
-        return GetPaymentRequest.SwapIdHash(hash)
+    if (type == "swapId") {
+        val swapId = getPaymentRequest.getString("swapId")!!
+        return GetPaymentRequest.SwapId(swapId)
     }
     return null
 }
@@ -3014,13 +3014,13 @@ fun asGetPaymentRequest(getPaymentRequest: ReadableMap): GetPaymentRequest? {
 fun readableMapOf(getPaymentRequest: GetPaymentRequest): ReadableMap? {
     val map = Arguments.createMap()
     when (getPaymentRequest) {
-        is GetPaymentRequest.Lightning -> {
-            pushToMap(map, "type", "lightning")
+        is GetPaymentRequest.PaymentHash -> {
+            pushToMap(map, "type", "paymentHash")
             pushToMap(map, "paymentHash", getPaymentRequest.paymentHash)
         }
-        is GetPaymentRequest.SwapIdHash -> {
-            pushToMap(map, "type", "swapIdHash")
-            pushToMap(map, "hash", getPaymentRequest.hash)
+        is GetPaymentRequest.SwapId -> {
+            pushToMap(map, "type", "swapId")
+            pushToMap(map, "swapId", getPaymentRequest.swapId)
         }
     }
     return map

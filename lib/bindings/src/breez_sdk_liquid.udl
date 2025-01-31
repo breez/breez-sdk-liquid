@@ -569,8 +569,8 @@ interface ListPaymentDetails {
 
 [Enum]
 interface GetPaymentRequest {
-    Lightning(string payment_hash);
-    SwapIdHash(string hash);
+    PaymentHash(string payment_hash);
+    SwapId(string swap_id);
 };
 
 dictionary FetchPaymentProposedFeesRequest {

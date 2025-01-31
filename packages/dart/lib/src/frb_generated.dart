@@ -1956,12 +1956,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-        return GetPaymentRequest_Lightning(
+        return GetPaymentRequest_PaymentHash(
           paymentHash: dco_decode_String(raw[1]),
         );
       case 1:
-        return GetPaymentRequest_SwapIdHash(
-          hash: dco_decode_String(raw[1]),
+        return GetPaymentRequest_SwapId(
+          swapId: dco_decode_String(raw[1]),
         );
       default:
         throw Exception("unreachable");
@@ -4119,10 +4119,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     switch (tag_) {
       case 0:
         var var_paymentHash = sse_decode_String(deserializer);
-        return GetPaymentRequest_Lightning(paymentHash: var_paymentHash);
+        return GetPaymentRequest_PaymentHash(paymentHash: var_paymentHash);
       case 1:
-        var var_hash = sse_decode_String(deserializer);
-        return GetPaymentRequest_SwapIdHash(hash: var_hash);
+        var var_swapId = sse_decode_String(deserializer);
+        return GetPaymentRequest_SwapId(swapId: var_swapId);
       default:
         throw UnimplementedError('');
     }
@@ -6458,12 +6458,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_get_payment_request(GetPaymentRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
-      case GetPaymentRequest_Lightning(paymentHash: final paymentHash):
+      case GetPaymentRequest_PaymentHash(paymentHash: final paymentHash):
         sse_encode_i_32(0, serializer);
         sse_encode_String(paymentHash, serializer);
-      case GetPaymentRequest_SwapIdHash(hash: final hash):
+      case GetPaymentRequest_SwapId(swapId: final swapId):
         sse_encode_i_32(1, serializer);
-        sse_encode_String(hash, serializer);
+        sse_encode_String(swapId, serializer);
     }
   }
 

@@ -47,7 +47,7 @@ class SwapUpdatedTask : TaskProtocol {
                     return
                 }
 
-                if let payment = try liquidSDK.getPayment(req: .swapIdHash(hash: request.id)) {
+                if let payment = try liquidSDK.getPayment(req: .swapId(swapId: request.id)) {
                     switch payment.status {
                     case .complete:
                         onEvent(e: SdkEvent.paymentSucceeded(details: payment))

@@ -4178,18 +4178,18 @@ final class wire_cst_fetch_payment_proposed_fees_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
 
-final class wire_cst_GetPaymentRequest_Lightning extends ffi.Struct {
+final class wire_cst_GetPaymentRequest_PaymentHash extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 }
 
-final class wire_cst_GetPaymentRequest_SwapIdHash extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> hash;
+final class wire_cst_GetPaymentRequest_SwapId extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
 
 final class GetPaymentRequestKind extends ffi.Union {
-  external wire_cst_GetPaymentRequest_Lightning Lightning;
+  external wire_cst_GetPaymentRequest_PaymentHash PaymentHash;
 
-  external wire_cst_GetPaymentRequest_SwapIdHash SwapIdHash;
+  external wire_cst_GetPaymentRequest_SwapId SwapId;
 }
 
 final class wire_cst_get_payment_request extends ffi.Struct {

@@ -3493,17 +3493,17 @@ enum BreezSDKLiquidMapper {
 
     static func asGetPaymentRequest(getPaymentRequest: [String: Any?]) throws -> GetPaymentRequest {
         let type = getPaymentRequest["type"] as! String
-        if type == "lightning" {
+        if type == "paymentHash" {
             guard let _paymentHash = getPaymentRequest["paymentHash"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentHash", typeName: "GetPaymentRequest"))
             }
-            return GetPaymentRequest.lightning(paymentHash: _paymentHash)
+            return GetPaymentRequest.paymentHash(paymentHash: _paymentHash)
         }
-        if type == "swapIdHash" {
-            guard let _hash = getPaymentRequest["hash"] as? String else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "hash", typeName: "GetPaymentRequest"))
+        if type == "swapId" {
+            guard let _swapId = getPaymentRequest["swapId"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "swapId", typeName: "GetPaymentRequest"))
             }
-            return GetPaymentRequest.swapIdHash(hash: _hash)
+            return GetPaymentRequest.swapId(swapId: _swapId)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum GetPaymentRequest")
@@ -3511,20 +3511,20 @@ enum BreezSDKLiquidMapper {
 
     static func dictionaryOf(getPaymentRequest: GetPaymentRequest) -> [String: Any?] {
         switch getPaymentRequest {
-        case let .lightning(
+        case let .paymentHash(
             paymentHash
         ):
             return [
-                "type": "lightning",
+                "type": "paymentHash",
                 "paymentHash": paymentHash,
             ]
 
-        case let .swapIdHash(
-            hash
+        case let .swapId(
+            swapId
         ):
             return [
-                "type": "swapIdHash",
-                "hash": hash,
+                "type": "swapId",
+                "swapId": swapId,
             ]
         }
     }

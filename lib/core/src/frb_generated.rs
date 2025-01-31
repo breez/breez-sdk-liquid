@@ -2687,13 +2687,15 @@ impl SseDecode for crate::model::GetPaymentRequest {
         match tag_ {
             0 => {
                 let mut var_paymentHash = <String>::sse_decode(deserializer);
-                return crate::model::GetPaymentRequest::Lightning {
+                return crate::model::GetPaymentRequest::PaymentHash {
                     payment_hash: var_paymentHash,
                 };
             }
             1 => {
-                let mut var_hash = <String>::sse_decode(deserializer);
-                return crate::model::GetPaymentRequest::SwapIdHash { hash: var_hash };
+                let mut var_swapId = <String>::sse_decode(deserializer);
+                return crate::model::GetPaymentRequest::SwapId {
+                    swap_id: var_swapId,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -5287,11 +5289,11 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::GetInfoResponse>
 impl flutter_rust_bridge::IntoDart for crate::model::GetPaymentRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::model::GetPaymentRequest::Lightning { payment_hash } => {
+            crate::model::GetPaymentRequest::PaymentHash { payment_hash } => {
                 [0.into_dart(), payment_hash.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::GetPaymentRequest::SwapIdHash { hash } => {
-                [1.into_dart(), hash.into_into_dart().into_dart()].into_dart()
+            crate::model::GetPaymentRequest::SwapId { swap_id } => {
+                [1.into_dart(), swap_id.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -7502,13 +7504,13 @@ impl SseEncode for crate::model::GetPaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::model::GetPaymentRequest::Lightning { payment_hash } => {
+            crate::model::GetPaymentRequest::PaymentHash { payment_hash } => {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(payment_hash, serializer);
             }
-            crate::model::GetPaymentRequest::SwapIdHash { hash } => {
+            crate::model::GetPaymentRequest::SwapId { swap_id } => {
                 <i32>::sse_encode(1, serializer);
-                <String>::sse_encode(hash, serializer);
+                <String>::sse_encode(swap_id, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9906,15 +9908,15 @@ mod io {
         fn cst_decode(self) -> crate::model::GetPaymentRequest {
             match self.tag {
                 0 => {
-                    let ans = unsafe { self.kind.Lightning };
-                    crate::model::GetPaymentRequest::Lightning {
+                    let ans = unsafe { self.kind.PaymentHash };
+                    crate::model::GetPaymentRequest::PaymentHash {
                         payment_hash: ans.payment_hash.cst_decode(),
                     }
                 }
                 1 => {
-                    let ans = unsafe { self.kind.SwapIdHash };
-                    crate::model::GetPaymentRequest::SwapIdHash {
-                        hash: ans.hash.cst_decode(),
+                    let ans = unsafe { self.kind.SwapId };
+                    crate::model::GetPaymentRequest::SwapId {
+                        swap_id: ans.swap_id.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -13821,19 +13823,19 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub union GetPaymentRequestKind {
-        Lightning: wire_cst_GetPaymentRequest_Lightning,
-        SwapIdHash: wire_cst_GetPaymentRequest_SwapIdHash,
+        PaymentHash: wire_cst_GetPaymentRequest_PaymentHash,
+        SwapId: wire_cst_GetPaymentRequest_SwapId,
         nil__: (),
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_GetPaymentRequest_Lightning {
+    pub struct wire_cst_GetPaymentRequest_PaymentHash {
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
-    pub struct wire_cst_GetPaymentRequest_SwapIdHash {
-        hash: *mut wire_cst_list_prim_u_8_strict,
+    pub struct wire_cst_GetPaymentRequest_SwapId {
+        swap_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

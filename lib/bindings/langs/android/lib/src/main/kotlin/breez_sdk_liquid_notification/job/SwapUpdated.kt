@@ -79,7 +79,7 @@ class SwapUpdatedJob(
                         return@launch
                     }
 
-                    liquidSDK.getPayment(GetPaymentRequest.SwapIdHash(swapIdHash!!))?.let { payment ->
+                    liquidSDK.getPayment(GetPaymentRequest.SwapId(swapIdHash!!))?.let { payment ->
                         when (payment.status) {
                             PaymentState.COMPLETE -> {
                                 onEvent(SdkEvent.PaymentSucceeded(payment))

@@ -156,14 +156,14 @@ pub(crate) enum Command {
         sort_ascending: Option<bool>,
     },
     /// Retrieve a payment
-    #[command(group = clap::ArgGroup::new("payment_identifiers").args(&["payment_hash", "swap_id_hash"]).required(true))]
+    #[command(group = clap::ArgGroup::new("payment_identifiers").args(&["payment_hash", "swap_id"]).required(true))]
     GetPayment {
         /// Lightning payment hash
         #[arg(long, short = 'p')]
         payment_hash: Option<String>,
-        /// Swap ID hash
+        /// Swap ID or its hash
         #[arg(long, short = 's')]
-        swap_id_hash: Option<String>,
+        swap_id: Option<String>,
     },
     /// Get and potentially accept proposed fees for WaitingFeeAcceptance Payment
     ReviewPaymentProposedFees { swap_id: String },
@@ -575,17 +575,17 @@ pub(crate) async fn handle_command(
         }
         Command::GetPayment {
             payment_hash,
-            swap_id_hash,
+            swap_id,
         } => {
-            if payment_hash.is_none() && swap_id_hash.is_none() {
+            if payment_hash.is_none() && swap_id.is_none() {
                 bail!("No payment identifiers provided.");
             }
 
             let maybe_payment = if let Some(payment_hash) = payment_hash {
-                sdk.get_payment(&GetPaymentRequest::Lightning { payment_hash })
+                sdk.get_payment(&GetPaymentRequest::PaymentHash { payment_hash })
                     .await?
-            } else if let Some(swap_id_hash) = swap_id_hash {
-                sdk.get_payment(&GetPaymentRequest::SwapIdHash { hash: swap_id_hash })
+            } else if let Some(swap_id) = swap_id {
+                sdk.get_payment(&GetPaymentRequest::SwapId { swap_id })
                     .await?
             } else {
                 None

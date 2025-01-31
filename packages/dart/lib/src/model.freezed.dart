@@ -38,20 +38,20 @@ class _$GetPaymentRequestCopyWithImpl<$Res, $Val extends GetPaymentRequest>
 }
 
 /// @nodoc
-abstract class _$$GetPaymentRequest_LightningImplCopyWith<$Res> {
-  factory _$$GetPaymentRequest_LightningImplCopyWith(
-          _$GetPaymentRequest_LightningImpl value, $Res Function(_$GetPaymentRequest_LightningImpl) then) =
-      __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>;
+abstract class _$$GetPaymentRequest_PaymentHashImplCopyWith<$Res> {
+  factory _$$GetPaymentRequest_PaymentHashImplCopyWith(_$GetPaymentRequest_PaymentHashImpl value,
+          $Res Function(_$GetPaymentRequest_PaymentHashImpl) then) =
+      __$$GetPaymentRequest_PaymentHashImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String paymentHash});
 }
 
 /// @nodoc
-class __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>
-    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_LightningImpl>
-    implements _$$GetPaymentRequest_LightningImplCopyWith<$Res> {
-  __$$GetPaymentRequest_LightningImplCopyWithImpl(
-      _$GetPaymentRequest_LightningImpl _value, $Res Function(_$GetPaymentRequest_LightningImpl) _then)
+class __$$GetPaymentRequest_PaymentHashImplCopyWithImpl<$Res>
+    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_PaymentHashImpl>
+    implements _$$GetPaymentRequest_PaymentHashImplCopyWith<$Res> {
+  __$$GetPaymentRequest_PaymentHashImplCopyWithImpl(
+      _$GetPaymentRequest_PaymentHashImpl _value, $Res Function(_$GetPaymentRequest_PaymentHashImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of GetPaymentRequest
@@ -61,7 +61,7 @@ class __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>
   $Res call({
     Object? paymentHash = null,
   }) {
-    return _then(_$GetPaymentRequest_LightningImpl(
+    return _then(_$GetPaymentRequest_PaymentHashImpl(
       paymentHash: null == paymentHash
           ? _value.paymentHash
           : paymentHash // ignore: cast_nullable_to_non_nullable
@@ -72,22 +72,22 @@ class __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$GetPaymentRequest_LightningImpl extends GetPaymentRequest_Lightning {
-  const _$GetPaymentRequest_LightningImpl({required this.paymentHash}) : super._();
+class _$GetPaymentRequest_PaymentHashImpl extends GetPaymentRequest_PaymentHash {
+  const _$GetPaymentRequest_PaymentHashImpl({required this.paymentHash}) : super._();
 
   @override
   final String paymentHash;
 
   @override
   String toString() {
-    return 'GetPaymentRequest.lightning(paymentHash: $paymentHash)';
+    return 'GetPaymentRequest.paymentHash(paymentHash: $paymentHash)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$GetPaymentRequest_LightningImpl &&
+            other is _$GetPaymentRequest_PaymentHashImpl &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash));
   }
 
@@ -99,39 +99,40 @@ class _$GetPaymentRequest_LightningImpl extends GetPaymentRequest_Lightning {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$GetPaymentRequest_LightningImplCopyWith<_$GetPaymentRequest_LightningImpl> get copyWith =>
-      __$$GetPaymentRequest_LightningImplCopyWithImpl<_$GetPaymentRequest_LightningImpl>(this, _$identity);
+  _$$GetPaymentRequest_PaymentHashImplCopyWith<_$GetPaymentRequest_PaymentHashImpl> get copyWith =>
+      __$$GetPaymentRequest_PaymentHashImplCopyWithImpl<_$GetPaymentRequest_PaymentHashImpl>(
+          this, _$identity);
 }
 
-abstract class GetPaymentRequest_Lightning extends GetPaymentRequest {
-  const factory GetPaymentRequest_Lightning({required final String paymentHash}) =
-      _$GetPaymentRequest_LightningImpl;
-  const GetPaymentRequest_Lightning._() : super._();
+abstract class GetPaymentRequest_PaymentHash extends GetPaymentRequest {
+  const factory GetPaymentRequest_PaymentHash({required final String paymentHash}) =
+      _$GetPaymentRequest_PaymentHashImpl;
+  const GetPaymentRequest_PaymentHash._() : super._();
 
   String get paymentHash;
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$GetPaymentRequest_LightningImplCopyWith<_$GetPaymentRequest_LightningImpl> get copyWith =>
+  _$$GetPaymentRequest_PaymentHashImplCopyWith<_$GetPaymentRequest_PaymentHashImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$GetPaymentRequest_SwapIdHashImplCopyWith<$Res> {
-  factory _$$GetPaymentRequest_SwapIdHashImplCopyWith(
-          _$GetPaymentRequest_SwapIdHashImpl value, $Res Function(_$GetPaymentRequest_SwapIdHashImpl) then) =
-      __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<$Res>;
+abstract class _$$GetPaymentRequest_SwapIdImplCopyWith<$Res> {
+  factory _$$GetPaymentRequest_SwapIdImplCopyWith(
+          _$GetPaymentRequest_SwapIdImpl value, $Res Function(_$GetPaymentRequest_SwapIdImpl) then) =
+      __$$GetPaymentRequest_SwapIdImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String hash});
+  $Res call({String swapId});
 }
 
 /// @nodoc
-class __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<$Res>
-    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_SwapIdHashImpl>
-    implements _$$GetPaymentRequest_SwapIdHashImplCopyWith<$Res> {
-  __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl(
-      _$GetPaymentRequest_SwapIdHashImpl _value, $Res Function(_$GetPaymentRequest_SwapIdHashImpl) _then)
+class __$$GetPaymentRequest_SwapIdImplCopyWithImpl<$Res>
+    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_SwapIdImpl>
+    implements _$$GetPaymentRequest_SwapIdImplCopyWith<$Res> {
+  __$$GetPaymentRequest_SwapIdImplCopyWithImpl(
+      _$GetPaymentRequest_SwapIdImpl _value, $Res Function(_$GetPaymentRequest_SwapIdImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of GetPaymentRequest
@@ -139,12 +140,12 @@ class __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? hash = null,
+    Object? swapId = null,
   }) {
-    return _then(_$GetPaymentRequest_SwapIdHashImpl(
-      hash: null == hash
-          ? _value.hash
-          : hash // ignore: cast_nullable_to_non_nullable
+    return _then(_$GetPaymentRequest_SwapIdImpl(
+      swapId: null == swapId
+          ? _value.swapId
+          : swapId // ignore: cast_nullable_to_non_nullable
               as String,
     ));
   }
@@ -152,48 +153,47 @@ class __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$GetPaymentRequest_SwapIdHashImpl extends GetPaymentRequest_SwapIdHash {
-  const _$GetPaymentRequest_SwapIdHashImpl({required this.hash}) : super._();
+class _$GetPaymentRequest_SwapIdImpl extends GetPaymentRequest_SwapId {
+  const _$GetPaymentRequest_SwapIdImpl({required this.swapId}) : super._();
 
   @override
-  final String hash;
+  final String swapId;
 
   @override
   String toString() {
-    return 'GetPaymentRequest.swapIdHash(hash: $hash)';
+    return 'GetPaymentRequest.swapId(swapId: $swapId)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$GetPaymentRequest_SwapIdHashImpl &&
-            (identical(other.hash, hash) || other.hash == hash));
+            other is _$GetPaymentRequest_SwapIdImpl &&
+            (identical(other.swapId, swapId) || other.swapId == swapId));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, hash);
+  int get hashCode => Object.hash(runtimeType, swapId);
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$GetPaymentRequest_SwapIdHashImplCopyWith<_$GetPaymentRequest_SwapIdHashImpl> get copyWith =>
-      __$$GetPaymentRequest_SwapIdHashImplCopyWithImpl<_$GetPaymentRequest_SwapIdHashImpl>(this, _$identity);
+  _$$GetPaymentRequest_SwapIdImplCopyWith<_$GetPaymentRequest_SwapIdImpl> get copyWith =>
+      __$$GetPaymentRequest_SwapIdImplCopyWithImpl<_$GetPaymentRequest_SwapIdImpl>(this, _$identity);
 }
 
-abstract class GetPaymentRequest_SwapIdHash extends GetPaymentRequest {
-  const factory GetPaymentRequest_SwapIdHash({required final String hash}) =
-      _$GetPaymentRequest_SwapIdHashImpl;
-  const GetPaymentRequest_SwapIdHash._() : super._();
+abstract class GetPaymentRequest_SwapId extends GetPaymentRequest {
+  const factory GetPaymentRequest_SwapId({required final String swapId}) = _$GetPaymentRequest_SwapIdImpl;
+  const GetPaymentRequest_SwapId._() : super._();
 
-  String get hash;
+  String get swapId;
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$GetPaymentRequest_SwapIdHashImplCopyWith<_$GetPaymentRequest_SwapIdHashImpl> get copyWith =>
+  _$$GetPaymentRequest_SwapIdImplCopyWith<_$GetPaymentRequest_SwapIdImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

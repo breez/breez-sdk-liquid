@@ -722,10 +722,10 @@ pub enum ListPaymentDetails {
 /// An argument when calling [crate::sdk::LiquidSdk::get_payment].
 #[derive(Debug, Serialize)]
 pub enum GetPaymentRequest {
-    /// The Lightning payment hash of the payment
-    Lightning { payment_hash: String },
-    /// The SHA256-hash of the swap id in hex
-    SwapIdHash { hash: String },
+    /// The payment hash of a Lightning payment
+    PaymentHash { payment_hash: String },
+    /// A swap id or its SHA256 hash
+    SwapId { swap_id: String },
 }
 
 /// Trait that can be used to react to new blocks from Bitcoin and Liquid chains

@@ -2587,16 +2587,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_get_payment_request(
       GetPaymentRequest apiObj, wire_cst_get_payment_request wireObj) {
-    if (apiObj is GetPaymentRequest_Lightning) {
+    if (apiObj is GetPaymentRequest_PaymentHash) {
       var pre_payment_hash = cst_encode_String(apiObj.paymentHash);
       wireObj.tag = 0;
-      wireObj.kind.Lightning.payment_hash = pre_payment_hash;
+      wireObj.kind.PaymentHash.payment_hash = pre_payment_hash;
       return;
     }
-    if (apiObj is GetPaymentRequest_SwapIdHash) {
-      var pre_hash = cst_encode_String(apiObj.hash);
+    if (apiObj is GetPaymentRequest_SwapId) {
+      var pre_swap_id = cst_encode_String(apiObj.swapId);
       wireObj.tag = 1;
-      wireObj.kind.SwapIdHash.hash = pre_hash;
+      wireObj.kind.SwapId.swap_id = pre_swap_id;
       return;
     }
   }
@@ -6094,18 +6094,18 @@ final class wire_cst_fetch_payment_proposed_fees_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
 
-final class wire_cst_GetPaymentRequest_Lightning extends ffi.Struct {
+final class wire_cst_GetPaymentRequest_PaymentHash extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 }
 
-final class wire_cst_GetPaymentRequest_SwapIdHash extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> hash;
+final class wire_cst_GetPaymentRequest_SwapId extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
 
 final class GetPaymentRequestKind extends ffi.Union {
-  external wire_cst_GetPaymentRequest_Lightning Lightning;
+  external wire_cst_GetPaymentRequest_PaymentHash PaymentHash;
 
-  external wire_cst_GetPaymentRequest_SwapIdHash SwapIdHash;
+  external wire_cst_GetPaymentRequest_SwapId SwapId;
 }
 
 final class wire_cst_get_payment_request extends ffi.Struct {

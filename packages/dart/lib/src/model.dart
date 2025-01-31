@@ -470,15 +470,15 @@ class GetInfoResponse {
 sealed class GetPaymentRequest with _$GetPaymentRequest {
   const GetPaymentRequest._();
 
-  /// The Lightning payment hash of the payment
-  const factory GetPaymentRequest.lightning({
+  /// The payment hash of a Lightning payment
+  const factory GetPaymentRequest.paymentHash({
     required String paymentHash,
-  }) = GetPaymentRequest_Lightning;
+  }) = GetPaymentRequest_PaymentHash;
 
-  /// The SHA256-hash of the swap id in hex
-  const factory GetPaymentRequest.swapIdHash({
-    required String hash,
-  }) = GetPaymentRequest_SwapIdHash;
+  /// A swap id or its SHA256 hash
+  const factory GetPaymentRequest.swapId({
+    required String swapId,
+  }) = GetPaymentRequest_SwapId;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
