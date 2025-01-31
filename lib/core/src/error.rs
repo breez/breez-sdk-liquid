@@ -226,6 +226,22 @@ impl From<crate::bitcoin::util::bip32::Error> for PaymentError {
     }
 }
 
+impl From<secp256k1::Error> for PaymentError {
+    fn from(err: secp256k1::Error) -> Self {
+        Self::Generic {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<lwk_wollet::UrlError> for PaymentError {
+    fn from(err: lwk_wollet::UrlError) -> Self {
+        PaymentError::Generic {
+            err: format!("{err:?}"),
+        }
+    }
+}
+
 impl From<PaymentError> for LnUrlAuthError {
     fn from(value: PaymentError) -> Self {
         Self::Generic {

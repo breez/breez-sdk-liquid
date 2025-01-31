@@ -4,7 +4,7 @@ use std::{str::FromStr, time::Duration};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
-use log::info;
+use log::{info, warn};
 use lwk_wollet::clients::blocking::BlockchainBackend;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::ElectrumOptions;

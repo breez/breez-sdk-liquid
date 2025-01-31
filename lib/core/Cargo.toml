@@ -17,7 +17,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "5869f2444280890716b756adaeaef2942b8041a3" }
+boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "5c2a7aebd1669d599d76e782952b876a901bfb05" }
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
@@ -31,9 +31,7 @@ lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-
 #lwk_wollet = "0.8.0"
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", branch = "breez-sdk-liquid-0.6.3", features = [
-    "liquid",
-] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", branch = "breez-sdk-liquid-0.6.4", features = ["liquid"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -51,8 +49,10 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 async-trait = "0.1.80"
 hex = "0.4"
 reqwest = { version = "=0.11.20", features = ["json"] }
-elements = { version = "0.25.1" }
-electrum-client = { version = "0.19.0" }
+electrum-client = { version = "0.21.0", default-features = false, features = [
+    "use-rustls-ring",
+    "proxy",
+] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"

@@ -16,6 +16,7 @@ use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
+use lwk_wollet::secp256k1::Message;
 use lwk_wollet::ElementsNetwork;
 use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
@@ -1937,7 +1938,8 @@ impl LiquidSdk {
         // Signature of the claim public key of the SHA256 hash of the address for the direct payment
         let mrh_addr_str = mrh_addr.to_string();
         let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
-        let mrh_addr_hash_sig = keypair.sign_schnorr(mrh_addr_hash.into());
+        let mrh_addr_hash_sig =
+            keypair.sign_schnorr(Message::from_digest_slice(mrh_addr_hash.as_byte_array())?);
 
         let receiver_amount_sat = payer_amount_sat - fees_sat;
         let webhook_claim_status =
@@ -2887,7 +2889,7 @@ impl LiquidSdk {
                                             err: "Invalid preimage".to_string(),
                                         }
                                     })?;
-                                let preimage_arr: [u8; 32] = preimage.into_32();
+                                let preimage_arr: [u8; 32] = preimage.to_byte_array();
                                 let result = match (data, &preimage_arr).try_into() {
                                     Ok(data) => AesSuccessActionDataResult::Decrypted { data },
                                     Err(e) => AesSuccessActionDataResult::ErrorStatus {

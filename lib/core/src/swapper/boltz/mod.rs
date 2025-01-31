@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use boltz_client::{
     boltz::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
@@ -340,7 +342,7 @@ impl Swapper for BoltzSwapper {
         };
 
         let refund_tx_size = match self.new_lbtc_refund_wrapper(&swap, refund_address) {
-            Ok(refund_tx_wrapper) => refund_tx_wrapper.size(&refund_keypair, &preimage)?,
+            Ok(refund_tx_wrapper) => refund_tx_wrapper.size(&refund_keypair, &preimage, false)?,
             Err(_) => {
                 let refund_tx_wrapper = self.new_btc_refund_wrapper(&swap, refund_address)?;
                 refund_tx_wrapper.size(&refund_keypair, &preimage)?

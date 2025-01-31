@@ -11,7 +11,7 @@ use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
-use lwk_wollet::elements::{AssetId, Txid};
+use lwk_wollet::elements::Txid;
 use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},

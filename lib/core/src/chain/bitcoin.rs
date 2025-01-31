@@ -87,7 +87,7 @@ impl HybridBitcoinChainService {
 
     /// Creates an Electrum client specifying non default options like timeout
     pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self, Error> {
-        let url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true);
+        let url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true)?;
         let client = url.build_client(&options)?;
         let header = client.block_headers_subscribe_raw()?;
         let tip: HeaderNotification = header.try_into()?;
@@ -271,11 +271,11 @@ impl BitcoinChainService for HybridBitcoinChainService {
             Some(history) => {
                 info!("Bitcoin transaction found, verifying transaction content...");
                 let tx: Transaction = deserialize(&hex::decode(tx_hex)?)?;
-                if !tx.txid().to_hex().eq(&history.txid.to_hex()) {
+                if !tx.compute_txid().to_hex().eq(&history.txid.to_hex()) {
                     return Err(anyhow!(
                         "Bitcoin transaction id and hex do not match: {} vs {}",
                         tx_id,
-                        tx.txid().to_hex()
+                        tx.compute_txid().to_hex()
                     ));
                 }
 

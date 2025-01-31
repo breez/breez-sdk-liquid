@@ -4,7 +4,7 @@ use boltz_client::{
     boltz::SwapTxKind,
     elements::Transaction,
     util::{liquid_genesis_hash, secrets::Preimage},
-    Amount, ElementsAddress as Address, LBtcSwapTx,
+    ElementsAddress as Address, LBtcSwapTx,
 };
 use log::info;
 
@@ -50,8 +50,9 @@ impl BoltzSwapper {
         let signed_tx = claim_tx_wrapper.sign_claim(
             &swap.get_claim_keypair()?,
             &Preimage::from_str(&swap.preimage)?,
-            Amount::from_sat(swap.claim_fees_sat),
+            boltz_client::fees::Fee::Absolute(swap.claim_fees_sat),
             self.get_cooperative_details(swap.id.clone(), None, None),
+            false,
         )?;
 
         Ok(signed_tx)
@@ -77,8 +78,9 @@ impl BoltzSwapper {
         let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
-            Amount::from_sat(swap.claim_fees_sat),
+            boltz_client::fees::Fee::Absolute(swap.claim_fees_sat),
             self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            false,
         )?;
 
         Ok(signed_tx)
@@ -189,7 +191,7 @@ impl BoltzSwapper {
             genesis_hash,
         };
 
-        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage)?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage, false)?;
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
@@ -199,8 +201,9 @@ impl BoltzSwapper {
 
         let signed_tx = refund_tx.sign_refund(
             &refund_keypair,
-            Amount::from_sat(broadcast_fees_sat),
+            boltz_client::fees::Fee::Absolute(broadcast_fees_sat),
             cooperative,
+            false,
         )?;
         Ok(signed_tx)
     }

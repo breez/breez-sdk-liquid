@@ -8,7 +8,7 @@ use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
-use lwk_wollet::hashes::sha256;
+use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
 use tokio::sync::broadcast;
 
@@ -295,7 +295,7 @@ impl SendSwapHandler {
                         swap.id
                     );
                     let preimage = sha256::Hash::from_str(preimage_str)?;
-                    let preimage_arr: [u8; 32] = preimage.into_32();
+                    let preimage_arr: [u8; 32] = preimage.to_byte_array();
                     let result = match (data, &preimage_arr).try_into() {
                         Ok(data) => AesSuccessActionDataResult::Decrypted { data },
                         Err(e) => AesSuccessActionDataResult::ErrorStatus {
