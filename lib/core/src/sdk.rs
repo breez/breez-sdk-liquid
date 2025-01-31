@@ -2110,7 +2110,6 @@ impl LiquidSdk {
                 };
 
                 let address = self.onchain_wallet.next_unused_address().await?.to_string();
-                println!("address: {address}");
                 let receive_destination =
                     if asset_id.ne(&lbtc_asset_id) || amount.is_some() || amount_sat.is_some() {
                         LiquidAddressData {
