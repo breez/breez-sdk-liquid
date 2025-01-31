@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
+use futures_util::future::OptionFuture;
 use futures_util::TryFutureExt;
 use log::trace;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
+use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
 use tonic::Streaming;
 
@@ -36,6 +39,8 @@ pub(crate) struct SyncService {
     client: Box<dyn SyncerClient>,
     sync_trigger: Mutex<Receiver<()>>,
 }
+
+type RemoteStream = Option<Streaming<Notification>>;
 
 impl SyncService {
     fn set_sync_trigger(persister: Arc<Persister>) -> Receiver<()> {
@@ -81,9 +86,28 @@ impl SyncService {
         }
     }
 
-    async fn new_listener(&self) -> Result<Streaming<Notification>> {
+    async fn new_listener(&self) -> Result<RemoteStream> {
         let req = ListenChangesRequest::new(self.signer.clone())?;
-        self.client.listen(req).await
+        Ok(match self.client.listen(req).await {
+            Ok(trigger) => Some(trigger),
+            Err(err) => {
+                log::warn!("Could not create new remote sync trigger: {err:?}");
+                None
+            }
+        })
+    }
+
+    async fn handle_reconnect(self: Arc<Self>, remote_trigger: Arc<Mutex<RemoteStream>>) {
+        tokio::spawn(async move {
+            let mut remote_trigger = remote_trigger.lock().await;
+            loop {
+                if let Ok(Some(new_trigger)) = self.new_listener().await {
+                    *remote_trigger = Some(new_trigger);
+                    break;
+                }
+                sleep(Duration::from_secs(5)).await;
+            }
+        });
     }
 
     pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
@@ -98,27 +122,26 @@ impl SyncService {
             }
 
             let mut local_sync_trigger = self.sync_trigger.lock().await;
-            let mut remote_sync_trigger = match self.new_listener().await {
-                Ok(trigger) => trigger,
-                Err(err) => {
-                    log::warn!("Could not start remote sync trigger: {err:?}");
-                    return;
-                }
-            };
+            let remote_sync_trigger =
+                Arc::new(Mutex::new(self.new_listener().await.unwrap_or(None)));
 
             log::debug!("Starting real-time sync event loop");
 
             loop {
+                let remote_lock_and_read = async {
+                    let mut lock = remote_sync_trigger.lock().await;
+                    OptionFuture::from(lock.as_mut().map(|t| t.next()))
+                        .await
+                        .flatten()
+                };
+
                 tokio::select! {
                     Some(_) = local_sync_trigger.recv() => self.run_event_loop().await,
-                    Some(msg) = remote_sync_trigger.next() => match msg {
+                    Some(msg) = remote_lock_and_read => match msg {
                         Ok(_) => self.run_event_loop().await,
                         Err(err) => {
                             log::warn!("Received status {} from remote, attempting to reconnect.", err.message());
-                            match self.new_listener().await {
-                                Ok(listener) => remote_sync_trigger = listener,
-                                Err(e) => log::error!("Could not create new remote notification listener: {e:?}"),
-                            }
+                            self.clone().handle_reconnect(remote_sync_trigger.clone()).await;
                         }
                     },
                     _ = shutdown.changed() => {
