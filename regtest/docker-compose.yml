@@ -89,7 +89,7 @@ x-services:
 services:
   cleanup:
     <<: *base-scripts
-    restart: no
+    restart: "no"
     container_name: boltz-cleanup
     platform: linux/amd64
     entrypoint: ["/bin/bash", "-c", "/cleanup.sh"]
@@ -422,7 +422,7 @@ services:
       - regtest
       - --jsonrpc-import
     healthcheck:
-      test: ["CMD-SHELL", "curl -s $(hostname):3002/blocks/tip/height"]
+      test: ["CMD-SHELL", "curl -s $$(hostname):3002/blocks/tip/height"]
       timeout: 1s
       retries: 20
       interval: 2s
@@ -461,7 +461,7 @@ services:
       - regtest
       - --jsonrpc-import
     healthcheck:
-      test: ["CMD-SHELL", "curl -s $(hostname):3003/blocks/tip/height"]
+      test: ["CMD-SHELL", "curl -s $$(hostname):3003/blocks/tip/height"]
       timeout: 15s
       retries: 20
       interval: 2s
