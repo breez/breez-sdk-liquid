@@ -145,7 +145,10 @@ impl LiquidOnchainWallet {
 
         match Wollet::new(elements_network, lwk_persister, descriptor.clone()) {
             Ok(wollet) => Ok(wollet),
-            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
+            Err(
+                lwk_wollet::Error::UpdateHeightTooOld { .. }
+                | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
+            ) => {
                 warn!("Update height too old, wipping storage and retrying");
                 let mut path = working_dir.as_ref().to_path_buf();
                 path.push(elements_network.as_str());
