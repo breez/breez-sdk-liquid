@@ -14,6 +14,7 @@ use log::info;
 use lwk_wollet::{ElectrumOptions, ElectrumUrl, Error, History};
 use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
 
+use crate::model::LiquidNetwork;
 use crate::{
     model::{Config, RecommendedFees},
     prelude::Utxo,
@@ -86,7 +87,11 @@ impl HybridBitcoinChainService {
 
     /// Creates an Electrum client specifying non default options like timeout
     pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self, Error> {
-        let electrum_url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true)?;
+        let (tls, validate_domain) = match config.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        };
+        let electrum_url = ElectrumUrl::new(&config.bitcoin_electrum_url, tls, validate_domain)?;
         let client = electrum_url.build_client(&options)?;
         let header = client.block_headers_subscribe_raw()?;
         let tip: HeaderNotification = header.try_into()?;

@@ -5,7 +5,7 @@ use boltz_client::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
         CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
-        BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
+        BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::{electrum::ElectrumConfig, Chain},
@@ -40,7 +40,7 @@ pub struct BoltzSwapper {
 impl BoltzSwapper {
     pub fn new(config: Config, swapper_proxy_url: Option<String>) -> Self {
         let (boltz_api_base_url, referral_id) = match &config.network {
-            LiquidNetwork::Testnet => (None, None),
+            LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
             LiquidNetwork::Mainnet => match &swapper_proxy_url {
                 Some(swapper_proxy_url) => Url::parse(swapper_proxy_url)
                     .map(|url| match url.query() {
@@ -62,9 +62,15 @@ impl BoltzSwapper {
             match config.network {
                 LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
                 LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
+                LiquidNetwork::Regtest => BOLTZ_REGTEST,
             }
             .to_string(),
         );
+
+        let (tls, validate_domain) = match config.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        };
 
         Self {
             client: BoltzApiClientV2::new(&boltz_url),
@@ -74,15 +80,15 @@ impl BoltzSwapper {
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
                 &config.liquid_electrum_url,
-                true,
-                true,
+                tls,
+                validate_domain,
                 100,
             ),
             bitcoin_electrum_config: ElectrumConfig::new(
                 config.network.as_bitcoin_chain(),
                 &config.bitcoin_electrum_url,
-                true,
-                true,
+                tls,
+                validate_domain,
                 100,
             ),
         }
