@@ -15,21 +15,12 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$GetPaymentRequest {
-  String get paymentHash => throw _privateConstructorUsedError;
-
-  /// Create a copy of GetPaymentRequest
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $GetPaymentRequestCopyWith<GetPaymentRequest> get copyWith => throw _privateConstructorUsedError;
-}
+mixin _$GetPaymentRequest {}
 
 /// @nodoc
 abstract class $GetPaymentRequestCopyWith<$Res> {
   factory $GetPaymentRequestCopyWith(GetPaymentRequest value, $Res Function(GetPaymentRequest) then) =
       _$GetPaymentRequestCopyWithImpl<$Res, GetPaymentRequest>;
-  @useResult
-  $Res call({String paymentHash});
 }
 
 /// @nodoc
@@ -44,36 +35,23 @@ class _$GetPaymentRequestCopyWithImpl<$Res, $Val extends GetPaymentRequest>
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? paymentHash = null,
-  }) {
-    return _then(_value.copyWith(
-      paymentHash: null == paymentHash
-          ? _value.paymentHash
-          : paymentHash // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
 }
 
 /// @nodoc
-abstract class _$$GetPaymentRequest_LightningImplCopyWith<$Res> implements $GetPaymentRequestCopyWith<$Res> {
-  factory _$$GetPaymentRequest_LightningImplCopyWith(
-          _$GetPaymentRequest_LightningImpl value, $Res Function(_$GetPaymentRequest_LightningImpl) then) =
-      __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>;
-  @override
+abstract class _$$GetPaymentRequest_PaymentHashImplCopyWith<$Res> {
+  factory _$$GetPaymentRequest_PaymentHashImplCopyWith(_$GetPaymentRequest_PaymentHashImpl value,
+          $Res Function(_$GetPaymentRequest_PaymentHashImpl) then) =
+      __$$GetPaymentRequest_PaymentHashImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String paymentHash});
 }
 
 /// @nodoc
-class __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>
-    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_LightningImpl>
-    implements _$$GetPaymentRequest_LightningImplCopyWith<$Res> {
-  __$$GetPaymentRequest_LightningImplCopyWithImpl(
-      _$GetPaymentRequest_LightningImpl _value, $Res Function(_$GetPaymentRequest_LightningImpl) _then)
+class __$$GetPaymentRequest_PaymentHashImplCopyWithImpl<$Res>
+    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_PaymentHashImpl>
+    implements _$$GetPaymentRequest_PaymentHashImplCopyWith<$Res> {
+  __$$GetPaymentRequest_PaymentHashImplCopyWithImpl(
+      _$GetPaymentRequest_PaymentHashImpl _value, $Res Function(_$GetPaymentRequest_PaymentHashImpl) _then)
       : super(_value, _then);
 
   /// Create a copy of GetPaymentRequest
@@ -83,7 +61,7 @@ class __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>
   $Res call({
     Object? paymentHash = null,
   }) {
-    return _then(_$GetPaymentRequest_LightningImpl(
+    return _then(_$GetPaymentRequest_PaymentHashImpl(
       paymentHash: null == paymentHash
           ? _value.paymentHash
           : paymentHash // ignore: cast_nullable_to_non_nullable
@@ -94,22 +72,22 @@ class __$$GetPaymentRequest_LightningImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$GetPaymentRequest_LightningImpl extends GetPaymentRequest_Lightning {
-  const _$GetPaymentRequest_LightningImpl({required this.paymentHash}) : super._();
+class _$GetPaymentRequest_PaymentHashImpl extends GetPaymentRequest_PaymentHash {
+  const _$GetPaymentRequest_PaymentHashImpl({required this.paymentHash}) : super._();
 
   @override
   final String paymentHash;
 
   @override
   String toString() {
-    return 'GetPaymentRequest.lightning(paymentHash: $paymentHash)';
+    return 'GetPaymentRequest.paymentHash(paymentHash: $paymentHash)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$GetPaymentRequest_LightningImpl &&
+            other is _$GetPaymentRequest_PaymentHashImpl &&
             (identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash));
   }
 
@@ -121,23 +99,101 @@ class _$GetPaymentRequest_LightningImpl extends GetPaymentRequest_Lightning {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$GetPaymentRequest_LightningImplCopyWith<_$GetPaymentRequest_LightningImpl> get copyWith =>
-      __$$GetPaymentRequest_LightningImplCopyWithImpl<_$GetPaymentRequest_LightningImpl>(this, _$identity);
+  _$$GetPaymentRequest_PaymentHashImplCopyWith<_$GetPaymentRequest_PaymentHashImpl> get copyWith =>
+      __$$GetPaymentRequest_PaymentHashImplCopyWithImpl<_$GetPaymentRequest_PaymentHashImpl>(
+          this, _$identity);
 }
 
-abstract class GetPaymentRequest_Lightning extends GetPaymentRequest {
-  const factory GetPaymentRequest_Lightning({required final String paymentHash}) =
-      _$GetPaymentRequest_LightningImpl;
-  const GetPaymentRequest_Lightning._() : super._();
+abstract class GetPaymentRequest_PaymentHash extends GetPaymentRequest {
+  const factory GetPaymentRequest_PaymentHash({required final String paymentHash}) =
+      _$GetPaymentRequest_PaymentHashImpl;
+  const GetPaymentRequest_PaymentHash._() : super._();
 
-  @override
   String get paymentHash;
 
   /// Create a copy of GetPaymentRequest
   /// with the given fields replaced by the non-null parameter values.
-  @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$GetPaymentRequest_LightningImplCopyWith<_$GetPaymentRequest_LightningImpl> get copyWith =>
+  _$$GetPaymentRequest_PaymentHashImplCopyWith<_$GetPaymentRequest_PaymentHashImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$GetPaymentRequest_SwapIdImplCopyWith<$Res> {
+  factory _$$GetPaymentRequest_SwapIdImplCopyWith(
+          _$GetPaymentRequest_SwapIdImpl value, $Res Function(_$GetPaymentRequest_SwapIdImpl) then) =
+      __$$GetPaymentRequest_SwapIdImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String swapId});
+}
+
+/// @nodoc
+class __$$GetPaymentRequest_SwapIdImplCopyWithImpl<$Res>
+    extends _$GetPaymentRequestCopyWithImpl<$Res, _$GetPaymentRequest_SwapIdImpl>
+    implements _$$GetPaymentRequest_SwapIdImplCopyWith<$Res> {
+  __$$GetPaymentRequest_SwapIdImplCopyWithImpl(
+      _$GetPaymentRequest_SwapIdImpl _value, $Res Function(_$GetPaymentRequest_SwapIdImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of GetPaymentRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? swapId = null,
+  }) {
+    return _then(_$GetPaymentRequest_SwapIdImpl(
+      swapId: null == swapId
+          ? _value.swapId
+          : swapId // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$GetPaymentRequest_SwapIdImpl extends GetPaymentRequest_SwapId {
+  const _$GetPaymentRequest_SwapIdImpl({required this.swapId}) : super._();
+
+  @override
+  final String swapId;
+
+  @override
+  String toString() {
+    return 'GetPaymentRequest.swapId(swapId: $swapId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$GetPaymentRequest_SwapIdImpl &&
+            (identical(other.swapId, swapId) || other.swapId == swapId));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, swapId);
+
+  /// Create a copy of GetPaymentRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$GetPaymentRequest_SwapIdImplCopyWith<_$GetPaymentRequest_SwapIdImpl> get copyWith =>
+      __$$GetPaymentRequest_SwapIdImplCopyWithImpl<_$GetPaymentRequest_SwapIdImpl>(this, _$identity);
+}
+
+abstract class GetPaymentRequest_SwapId extends GetPaymentRequest {
+  const factory GetPaymentRequest_SwapId({required final String swapId}) = _$GetPaymentRequest_SwapIdImpl;
+  const GetPaymentRequest_SwapId._() : super._();
+
+  String get swapId;
+
+  /// Create a copy of GetPaymentRequest
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$GetPaymentRequest_SwapIdImplCopyWith<_$GetPaymentRequest_SwapIdImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -902,6 +958,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String? paymentHash,
       String? destinationPubkey,
       LnUrlInfo? lnurlInfo,
+      String? claimTxId,
       String? refundTxId,
       BigInt? refundTxAmountSat});
 }
@@ -928,6 +985,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? paymentHash = freezed,
     Object? destinationPubkey = freezed,
     Object? lnurlInfo = freezed,
+    Object? claimTxId = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
   }) {
@@ -968,6 +1026,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
           ? _value.lnurlInfo
           : lnurlInfo // ignore: cast_nullable_to_non_nullable
               as LnUrlInfo?,
+      claimTxId: freezed == claimTxId
+          ? _value.claimTxId
+          : claimTxId // ignore: cast_nullable_to_non_nullable
+              as String?,
       refundTxId: freezed == refundTxId
           ? _value.refundTxId
           : refundTxId // ignore: cast_nullable_to_non_nullable
@@ -993,6 +1055,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       this.paymentHash,
       this.destinationPubkey,
       this.lnurlInfo,
+      this.claimTxId,
       this.refundTxId,
       this.refundTxAmountSat})
       : super._();
@@ -1032,6 +1095,10 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final LnUrlInfo? lnurlInfo;
 
+  /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+  @override
+  final String? claimTxId;
+
   /// For a Send swap which was refunded, this is the refund tx id
   @override
   final String? refundTxId;
@@ -1042,7 +1109,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1061,14 +1128,27 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.destinationPubkey, destinationPubkey) ||
                 other.destinationPubkey == destinationPubkey) &&
             (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
+            (identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
                 other.refundTxAmountSat == refundTxAmountSat));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, swapId, description, liquidExpirationBlockheight, preimage,
-      invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, refundTxId, refundTxAmountSat);
+  int get hashCode => Object.hash(
+      runtimeType,
+      swapId,
+      description,
+      liquidExpirationBlockheight,
+      preimage,
+      invoice,
+      bolt12Offer,
+      paymentHash,
+      destinationPubkey,
+      lnurlInfo,
+      claimTxId,
+      refundTxId,
+      refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1090,6 +1170,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       final String? paymentHash,
       final String? destinationPubkey,
       final LnUrlInfo? lnurlInfo,
+      final String? claimTxId,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
   const PaymentDetails_Lightning._() : super._();
@@ -1120,6 +1201,9 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
 
   /// The payment LNURL info
   LnUrlInfo? get lnurlInfo;
+
+  /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+  String? get claimTxId;
 
   /// For a Send swap which was refunded, this is the refund tx id
   String? get refundTxId;
@@ -1277,6 +1361,7 @@ abstract class _$$PaymentDetails_BitcoinImplCopyWith<$Res> implements $PaymentDe
       bool autoAcceptedFees,
       int? liquidExpirationBlockheight,
       int? bitcoinExpirationBlockheight,
+      String? claimTxId,
       String? refundTxId,
       BigInt? refundTxAmountSat});
 }
@@ -1299,6 +1384,7 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
     Object? autoAcceptedFees = null,
     Object? liquidExpirationBlockheight = freezed,
     Object? bitcoinExpirationBlockheight = freezed,
+    Object? claimTxId = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
   }) {
@@ -1323,6 +1409,10 @@ class __$$PaymentDetails_BitcoinImplCopyWithImpl<$Res>
           ? _value.bitcoinExpirationBlockheight
           : bitcoinExpirationBlockheight // ignore: cast_nullable_to_non_nullable
               as int?,
+      claimTxId: freezed == claimTxId
+          ? _value.claimTxId
+          : claimTxId // ignore: cast_nullable_to_non_nullable
+              as String?,
       refundTxId: freezed == refundTxId
           ? _value.refundTxId
           : refundTxId // ignore: cast_nullable_to_non_nullable
@@ -1344,6 +1434,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
       required this.autoAcceptedFees,
       this.liquidExpirationBlockheight,
       this.bitcoinExpirationBlockheight,
+      this.claimTxId,
       this.refundTxId,
       this.refundTxAmountSat})
       : super._();
@@ -1371,6 +1462,10 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
   @override
   final int? bitcoinExpirationBlockheight;
 
+  /// The claim tx id in case it has already been broadcast
+  @override
+  final String? claimTxId;
+
   /// For a Send swap which was refunded, this is the refund tx id
   @override
   final String? refundTxId;
@@ -1381,7 +1476,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   String toString() {
-    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1397,6 +1492,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
                 other.liquidExpirationBlockheight == liquidExpirationBlockheight) &&
             (identical(other.bitcoinExpirationBlockheight, bitcoinExpirationBlockheight) ||
                 other.bitcoinExpirationBlockheight == bitcoinExpirationBlockheight) &&
+            (identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
                 other.refundTxAmountSat == refundTxAmountSat));
@@ -1404,7 +1500,7 @@ class _$PaymentDetails_BitcoinImpl extends PaymentDetails_Bitcoin {
 
   @override
   int get hashCode => Object.hash(runtimeType, swapId, description, autoAcceptedFees,
-      liquidExpirationBlockheight, bitcoinExpirationBlockheight, refundTxId, refundTxAmountSat);
+      liquidExpirationBlockheight, bitcoinExpirationBlockheight, claimTxId, refundTxId, refundTxAmountSat);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1422,6 +1518,7 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
       required final bool autoAcceptedFees,
       final int? liquidExpirationBlockheight,
       final int? bitcoinExpirationBlockheight,
+      final String? claimTxId,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_BitcoinImpl;
   const PaymentDetails_Bitcoin._() : super._();
@@ -1444,6 +1541,9 @@ abstract class PaymentDetails_Bitcoin extends PaymentDetails {
   /// The height of the Bitcoin block at which the swap will no longer be valid
   /// It should always be populated in case of an incoming chain swap
   int? get bitcoinExpirationBlockheight;
+
+  /// The claim tx id in case it has already been broadcast
+  String? get claimTxId;
 
   /// For a Send swap which was refunded, this is the refund tx id
   String? get refundTxId;

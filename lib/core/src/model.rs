@@ -724,8 +724,10 @@ pub enum ListPaymentDetails {
 /// An argument when calling [crate::sdk::LiquidSdk::get_payment].
 #[derive(Debug, Serialize)]
 pub enum GetPaymentRequest {
-    /// The Lightning payment hash of the payment
-    Lightning { payment_hash: String },
+    /// The payment hash of a Lightning payment
+    PaymentHash { payment_hash: String },
+    /// A swap id or its SHA256 hash
+    SwapId { swap_id: String },
 }
 
 /// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
@@ -1544,6 +1546,9 @@ pub enum PaymentDetails {
         /// The payment LNURL info
         lnurl_info: Option<LnUrlInfo>,
 
+        /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+        claim_tx_id: Option<String>,
+
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
 
@@ -1583,6 +1588,9 @@ pub enum PaymentDetails {
         /// The height of the Bitcoin block at which the swap will no longer be valid
         /// It should always be populated in case of an incoming chain swap
         bitcoin_expiration_blockheight: Option<u32>,
+
+        /// The claim tx id in case it has already been broadcast
+        claim_tx_id: Option<String>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,

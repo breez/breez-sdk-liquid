@@ -9,12 +9,15 @@ struct SwapUpdatedRequest: Codable {
 class SwapUpdatedTask : TaskProtocol {
     fileprivate let TAG = "SwapUpdatedTask"
     
+    private let pollingInterval: TimeInterval = 5.0
+    
     internal var payload: String
     internal var contentHandler: ((UNNotificationContent) -> Void)?
     internal var bestAttemptContent: UNMutableNotificationContent?
     internal var logger: ServiceLogger
     internal var request: SwapUpdatedRequest? = nil
     internal var notified: Bool = false
+    private var pollingTimer: Timer?
     
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
         self.payload = payload
@@ -30,6 +33,52 @@ class SwapUpdatedTask : TaskProtocol {
             self.logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
             self.onShutdown()
             throw e
+        }
+
+        startPolling(liquidSDK: liquidSDK)
+    }
+
+    func startPolling(liquidSDK: BindingLiquidSdk) {
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            do {
+                guard let request = self.request else {
+                    self.stopPolling(withError: NSError(domain: "SwapUpdatedTask", code: -1, userInfo: [NSLocalizedDescriptionKey: "Missing swap updated request"]))
+                    return
+                }
+
+                if let payment = try liquidSDK.getPayment(req: .swapId(swapId: request.id)) {
+                    switch payment.status {
+                    case .complete:
+                        onEvent(e: SdkEvent.paymentSucceeded(details: payment))
+                        self.stopPolling()
+                    case .waitingFeeAcceptance:
+                        onEvent(e: SdkEvent.paymentWaitingFeeAcceptance(details: payment))
+                        self.stopPolling()
+                    case .pending:
+                        if paymentClaimIsBroadcasted(details: payment.details) {
+                            onEvent(e: SdkEvent.paymentWaitingConfirmation(details: payment))
+                            self.stopPolling()
+                        }
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                self.stopPolling(withError: error)
+            }
+        }
+
+        pollingTimer?.fire()
+    }
+    
+    private func stopPolling(withError error: Error? = nil) {
+        pollingTimer?.invalidate()
+        pollingTimer = nil
+        
+        if let error = error {
+            logger.log(tag: TAG, line: "Polling stopped with error: \(error)", level: "ERROR")
+            onShutdown()
         }
     }
 
@@ -59,15 +108,26 @@ class SwapUpdatedTask : TaskProtocol {
     func getSwapId(details: PaymentDetails?) -> String? {
         if let details = details {
             switch details {
-            case let .bitcoin(swapId, _, _, _, _, _, _):
+            case let .bitcoin(swapId, _, _, _, _, _, _, _):
                 return swapId
-            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _):
+            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _, _):
                 return swapId
             default:
                 break
             }
         }
         return nil
+    }
+
+    func paymentClaimIsBroadcasted(details: PaymentDetails) -> Bool {
+        switch details {
+        case let .bitcoin(_, _, _, _, _, claimTxId, _, _):
+            return claimTxId != nil
+        case let .lightning( _, _, _, _, _, _, _, _, _, claimTxId, _, _):
+            return claimTxId != nil
+        default:
+            return false
+        }
     }
 
     func onShutdown() {

@@ -522,12 +522,16 @@ export enum BuyBitcoinProvider {
 }
 
 export enum GetPaymentRequestVariant {
-    LIGHTNING = "lightning"
+    PAYMENT_HASH = "paymentHash",
+    SWAP_ID = "swapId"
 }
 
-export interface GetPaymentRequest {
-    type: GetPaymentRequestVariant.LIGHTNING,
+export type GetPaymentRequest = {
+    type: GetPaymentRequestVariant.PAYMENT_HASH,
     paymentHash: string
+} | {
+    type: GetPaymentRequestVariant.SWAP_ID,
+    swapId: string
 }
 
 export enum InputTypeVariant {
@@ -681,6 +685,7 @@ export type PaymentDetails = {
     paymentHash?: string
     destinationPubkey?: string
     lnurlInfo?: LnUrlInfo
+    claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
 } | {
@@ -696,6 +701,7 @@ export type PaymentDetails = {
     autoAcceptedFees: boolean
     bitcoinExpirationBlockheight?: number
     liquidExpirationBlockheight?: number
+    claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
 }
