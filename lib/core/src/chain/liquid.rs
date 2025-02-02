@@ -1,3 +1,4 @@
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
@@ -60,23 +61,37 @@ pub trait LiquidChainService: Send + Sync {
 }
 
 pub(crate) struct HybridLiquidChainService {
-    client: Client,
+    client: OnceLock<Client>,
+    config: Config,
 }
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
-        let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
+        Ok(Self {
+            config,
+            client: OnceLock::new(),
+        })
+    }
+
+    fn get_client(&self) -> Result<&Client> {
+        if let Some(c) = self.client.get() {
+            return Ok(c);
+        }
+        let electrum_url = ElectrumUrl::new(&self.config.liquid_electrum_url, true, true)?;
         let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
-        Ok(Self { client })
+
+        let client = self.client.get_or_init(|| client);
+        Ok(client)
     }
 }
 
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
+        let client = self.get_client()?;
         let mut maybe_popped_header = None;
         println!("Fetching block headers");
-        while let Some(header) = self.client.block_headers_pop_raw()? {
+        while let Some(header) = client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
         }
 
@@ -88,7 +103,7 @@ impl LiquidChainService for HybridLiquidChainService {
                 // It might be that the client has reconnected and subscriptions don't persist
                 // across connections. Calling `client.ping()` won't help here because the
                 // successful retry will prevent us knowing about the reconnect.
-                if let Ok(header) = self.client.block_headers_subscribe_raw() {
+                if let Ok(header) = client.block_headers_subscribe_raw() {
                     println!("Fetching block headers block_headers_subscribe_raw returned result");
                     println!("header: {:?}", header.height);
                     Some(header.height.try_into()?)
@@ -105,7 +120,7 @@ impl LiquidChainService for HybridLiquidChainService {
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
         let txid = self
-            .client
+            .get_client()?
             .transaction_broadcast_raw(&elements_serialize(tx))?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
@@ -121,7 +136,7 @@ impl LiquidChainService for HybridLiquidChainService {
             .collect();
 
         let mut result = vec![];
-        for tx in self.client.batch_transaction_get_raw(&txids)? {
+        for tx in self.get_client()?.batch_transaction_get_raw(&txids)? {
             let tx: Transaction = elements::encode::deserialize(&tx)?;
             result.push(tx);
         }
@@ -136,7 +151,7 @@ impl LiquidChainService for HybridLiquidChainService {
             .collect();
 
         let mut history_vec: Vec<Vec<History>> = self
-            .client
+            .get_client()?
             .batch_script_get_history(&scripts)?
             .into_iter()
             .map(|e| e.into_iter().map(Into::into).collect())
@@ -152,7 +167,7 @@ impl LiquidChainService for HybridLiquidChainService {
             .collect();
 
         Ok(self
-            .client
+            .get_client()?
             .batch_script_get_history(&scripts)?
             .into_iter()
             .map(|e| e.into_iter().map(Into::into).collect())
