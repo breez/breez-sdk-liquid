@@ -568,6 +568,14 @@ services:
     volumes:
       - mempool-db-data:/var/lib/mysql
 
+  rt-sync:
+    environment:
+      SQLITE_DIR_PATH: /app/db
+    image: ${RT_SYNC_IMAGE}
+    user: "0:0"
+    restart: on-failure
+    volumes:
+      - rt-sync-data:/app/db
 
 
 volumes:
@@ -648,3 +656,10 @@ volumes:
       type: none
       o: bind
       device: ./data/mempool-db
+  rt-sync-data:
+    name: rt-sync-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/rt-sync
