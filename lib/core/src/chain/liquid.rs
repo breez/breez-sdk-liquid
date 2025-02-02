@@ -1,17 +1,17 @@
-use std::sync::Mutex;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
+use electrum_client::{Client, ElectrumApi, HeaderNotification};
+use elements::encode::serialize as elements_serialize;
 use log::info;
-use lwk_wollet::clients::blocking::BlockchainBackend;
 use lwk_wollet::elements::hex::FromHex;
-use lwk_wollet::ElectrumOptions;
+use lwk_wollet::{bitcoin, elements, ElectrumOptions};
 use lwk_wollet::{
     elements::{Address, OutPoint, Script, Transaction, Txid},
     hashes::{sha256, Hash},
-    ElectrumClient, ElectrumUrl, History,
+    ElectrumUrl, History,
 };
 
 use crate::prelude::Utxo;
@@ -60,32 +60,52 @@ pub trait LiquidChainService: Send + Sync {
 }
 
 pub(crate) struct HybridLiquidChainService {
-    electrum_client: ElectrumClient,
-    tip_client: Mutex<ElectrumClient>,
+    client: Client,
 }
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
         let electrum_url = ElectrumUrl::new(&config.liquid_electrum_url, true, true)?;
-        let electrum_client =
-            ElectrumClient::with_options(&electrum_url, ElectrumOptions { timeout: Some(3) })?;
-        let tip_client =
-            ElectrumClient::with_options(&electrum_url, ElectrumOptions { timeout: Some(3) })?;
-        Ok(Self {
-            electrum_client,
-            tip_client: Mutex::new(tip_client),
-        })
+        let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
+        Ok(Self { client })
     }
 }
 
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
-        Ok(self.tip_client.lock().unwrap().tip()?.height)
+        let mut maybe_popped_header = None;
+        while let Some(header) = self.client.block_headers_pop_raw()? {
+            maybe_popped_header = Some(header)
+        }
+
+        let new_tip: Option<HeaderNotification> = match maybe_popped_header {
+            Some(popped_header) => Some(popped_header.try_into()?),
+            None => {
+                // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
+                // It might be that the client has reconnected and subscriptions don't persist
+                // across connections. Calling `client.ping()` won't help here because the
+                // successful retry will prevent us knowing about the reconnect.
+                if let Ok(header) = self.client.block_headers_subscribe_raw() {
+                    Some(header.try_into()?)
+                } else {
+                    None
+                }
+            }
+        };
+
+        let tip: u32 = new_tip
+            .ok_or_else(|| anyhow!("Failed to get tip"))?
+            .height
+            .try_into()?;
+        Ok(tip)
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        Ok(self.electrum_client.broadcast(tx)?)
+        let txid = self
+            .client
+            .transaction_broadcast_raw(&elements_serialize(tx))?;
+        Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
@@ -93,19 +113,48 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        Ok(self.electrum_client.get_transactions(txids)?)
+        let txids: Vec<bitcoin::Txid> = txids
+            .iter()
+            .map(|t| bitcoin::Txid::from_raw_hash(t.to_raw_hash()))
+            .collect();
+
+        let mut result = vec![];
+        for tx in self.client.batch_transaction_get_raw(&txids)? {
+            let tx: Transaction = elements::encode::deserialize(&tx)?;
+            result.push(tx);
+        }
+        Ok(result)
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
-        let mut history_vec = self.electrum_client.get_scripts_history(&[script])?;
+        let scripts = &[script];
+        let scripts: Vec<&bitcoin::Script> = scripts
+            .iter()
+            .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
+            .collect();
+
+        let mut history_vec: Vec<Vec<History>> = self
+            .client
+            .batch_script_get_history(&scripts)?
+            .into_iter()
+            .map(|e| e.into_iter().map(Into::into).collect())
+            .collect();
         let h = history_vec.pop();
         Ok(h.unwrap_or(vec![]))
     }
 
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        self.electrum_client
-            .get_scripts_history(scripts)
-            .map_err(Into::into)
+        let scripts: Vec<&bitcoin::Script> = scripts
+            .iter()
+            .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
+            .collect();
+
+        Ok(self
+            .client
+            .batch_script_get_history(&scripts)?
+            .into_iter()
+            .map(|e| e.into_iter().map(Into::into).collect())
+            .collect())
     }
 
     async fn get_script_history_with_retry(

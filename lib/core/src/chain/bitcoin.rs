@@ -1,4 +1,4 @@
-use std::{sync::Mutex, time::Duration};
+use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -76,7 +76,6 @@ pub trait BitcoinChainService: Send + Sync {
 
 pub(crate) struct HybridBitcoinChainService {
     client: Client,
-    tip: Mutex<HeaderNotification>,
     config: Config,
 }
 impl HybridBitcoinChainService {
@@ -88,14 +87,7 @@ impl HybridBitcoinChainService {
     pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self, Error> {
         let electrum_url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true)?;
         let client = electrum_url.build_client(&options)?;
-        let header = client.block_headers_subscribe_raw()?;
-        let tip: HeaderNotification = header.try_into()?;
-
-        Ok(Self {
-            client,
-            tip: Mutex::new(tip),
-            config,
-        })
+        Ok(Self { client, config })
     }
 }
 
@@ -122,12 +114,8 @@ impl BitcoinChainService for HybridBitcoinChainService {
             }
         };
 
-        let mut tip = self.tip.lock().unwrap();
-        if let Some(new_tip) = new_tip {
-            *tip = new_tip;
-        }
-
-        Ok(tip.clone())
+        let tip = new_tip.ok_or_else(|| anyhow!("Failed to get tip"))?;
+        Ok(tip)
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
