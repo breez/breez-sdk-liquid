@@ -3412,7 +3412,7 @@ impl LiquidSdk {
         let config = match network {
             LiquidNetwork::Mainnet => Config::mainnet(breez_api_key),
             LiquidNetwork::Testnet => Config::testnet(breez_api_key),
-            LiquidNetwork::Regtest => Config::regtest(breez_api_key),
+            LiquidNetwork::Regtest => Config::regtest(),
         };
         Ok(config)
     }

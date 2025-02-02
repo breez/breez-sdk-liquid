@@ -121,7 +121,7 @@ impl Config {
         }
     }
 
-    pub fn regtest(breez_api_key: Option<String>) -> Self {
+    pub fn regtest() -> Self {
         Config {
             liquid_electrum_url: "localhost:19002".to_string(),
             bitcoin_electrum_url: "localhost:19001".to_string(),
@@ -131,9 +131,9 @@ impl Config {
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
             zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
-            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
+            sync_service_url: Some("http://localhost:8088".to_string()),
             zero_conf_max_amount_sat: None,
-            breez_api_key,
+            breez_api_key: None,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,

@@ -572,8 +572,11 @@ services:
     environment:
       SQLITE_DIR_PATH: /app/db
     image: ${RT_SYNC_IMAGE}
+    platform: linux/amd64
     user: "0:0"
     restart: on-failure
+    ports:
+      - 8088:8080
     volumes:
       - rt-sync-data:/app/db
 
