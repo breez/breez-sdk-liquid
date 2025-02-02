@@ -140,7 +140,7 @@ impl LiquidChainService for HybridLiquidChainService {
             .map(|e| e.into_iter().map(Into::into).collect())
             .collect();
         let h = history_vec.pop();
-        Ok(h.unwrap_or(vec![]))
+        Ok(h.unwrap_or_default())
     }
 
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
