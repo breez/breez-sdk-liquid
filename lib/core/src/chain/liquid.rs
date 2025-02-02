@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
-use electrum_client::{Client, ElectrumApi, HeaderNotification};
+use electrum_client::{Client, ElectrumApi};
 use elements::encode::serialize as elements_serialize;
 use log::info;
 use lwk_wollet::elements::hex::FromHex;
@@ -75,29 +75,31 @@ impl HybridLiquidChainService {
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
         let mut maybe_popped_header = None;
+        println!("Fetching block headers");
         while let Some(header) = self.client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
         }
 
-        let new_tip: Option<HeaderNotification> = match maybe_popped_header {
-            Some(popped_header) => Some(popped_header.try_into()?),
+        let new_tip: Option<u32> = match maybe_popped_header {
+            Some(popped_header) => Some(popped_header.height.try_into()?),
             None => {
-                // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
+                println!("Fetching block headers none");
+                // https://github.com/bitcoindevkit/rusprintln!("Fetching block headers");t-electrum-client/issues/124
                 // It might be that the client has reconnected and subscriptions don't persist
                 // across connections. Calling `client.ping()` won't help here because the
                 // successful retry will prevent us knowing about the reconnect.
                 if let Ok(header) = self.client.block_headers_subscribe_raw() {
-                    Some(header.try_into()?)
+                    println!("Fetching block headers block_headers_subscribe_raw returned result");
+                    println!("header: {:?}", header.height);
+                    Some(header.height.try_into()?)
                 } else {
+                    println!("Fetching block headers block_headers_subscribe_raw returned None");
                     None
                 }
             }
         };
 
-        let tip: u32 = new_tip
-            .ok_or_else(|| anyhow!("Failed to get tip"))?
-            .height
-            .try_into()?;
+        let tip: u32 = new_tip.ok_or_else(|| anyhow!("Failed to get tip"))?;
         Ok(tip)
     }
 
