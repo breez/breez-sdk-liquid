@@ -1,4 +1,4 @@
-use std::{sync::Mutex, time::Duration};
+use std::{sync::OnceLock, time::Duration};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -75,35 +75,35 @@ pub trait BitcoinChainService: Send + Sync {
 }
 
 pub(crate) struct HybridBitcoinChainService {
-    client: Client,
-    tip: Mutex<HeaderNotification>,
+    client: OnceLock<Client>,
     config: Config,
 }
 impl HybridBitcoinChainService {
     pub fn new(config: Config) -> Result<Self, Error> {
-        Self::with_options(config, ElectrumOptions { timeout: Some(3) })
+        Ok(Self {
+            config,
+            client: OnceLock::new(),
+        })
     }
 
-    /// Creates an Electrum client specifying non default options like timeout
-    pub fn with_options(config: Config, options: ElectrumOptions) -> Result<Self, Error> {
-        let electrum_url = ElectrumUrl::new(&config.bitcoin_electrum_url, true, true)?;
-        let client = electrum_url.build_client(&options)?;
-        let header = client.block_headers_subscribe_raw()?;
-        let tip: HeaderNotification = header.try_into()?;
+    fn get_client(&self) -> Result<&Client> {
+        if let Some(c) = self.client.get() {
+            return Ok(c);
+        }
+        let electrum_url = ElectrumUrl::new(&self.config.bitcoin_electrum_url, true, true)?;
+        let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
 
-        Ok(Self {
-            client,
-            tip: Mutex::new(tip),
-            config,
-        })
+        let client = self.client.get_or_init(|| client);
+        Ok(client)
     }
 }
 
 #[async_trait]
 impl BitcoinChainService for HybridBitcoinChainService {
     fn tip(&self) -> Result<HeaderNotification> {
+        let client = self.get_client()?;
         let mut maybe_popped_header = None;
-        while let Some(header) = self.client.block_headers_pop_raw()? {
+        while let Some(header) = client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
         }
 
@@ -114,7 +114,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                 // It might be that the client has reconnected and subscriptions don't persist
                 // across connections. Calling `client.ping()` won't help here because the
                 // successful retry will prevent us knowing about the reconnect.
-                if let Ok(header) = self.client.block_headers_subscribe_raw() {
+                if let Ok(header) = client.block_headers_subscribe_raw() {
                     Some(header.try_into()?)
                 } else {
                     None
@@ -122,22 +122,19 @@ impl BitcoinChainService for HybridBitcoinChainService {
             }
         };
 
-        let mut tip = self.tip.lock().unwrap();
-        if let Some(new_tip) = new_tip {
-            *tip = new_tip;
-        }
-
-        Ok(tip.clone())
+        new_tip.ok_or_else(|| anyhow!("Failed to get tip"))
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        let txid = self.client.transaction_broadcast_raw(&serialize(&tx))?;
+        let txid = self
+            .get_client()?
+            .transaction_broadcast_raw(&serialize(&tx))?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
     fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         let mut result = vec![];
-        for tx in self.client.batch_transaction_get_raw(txids)? {
+        for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
             let tx: Transaction = deserialize(&tx)?;
             result.push(tx);
         }
@@ -146,7 +143,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
 
     fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
         Ok(self
-            .client
+            .get_client()?
             .script_get_history(script)?
             .into_iter()
             .map(Into::into)
@@ -155,7 +152,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
 
     fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
         Ok(self
-            .client
+            .get_client()?
             .batch_script_get_history(scripts)?
             .into_iter()
             .map(|v| v.into_iter().map(Into::into).collect())
@@ -234,11 +231,11 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
-        Ok(self.client.script_get_balance(script)?)
+        Ok(self.get_client()?.script_get_balance(script)?)
     }
 
     fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
-        Ok(self.client.batch_script_get_balance(scripts)?)
+        Ok(self.get_client()?.batch_script_get_balance(scripts)?)
     }
 
     async fn script_get_balance_with_retry(
