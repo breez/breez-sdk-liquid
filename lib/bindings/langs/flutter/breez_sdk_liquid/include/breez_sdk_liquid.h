@@ -78,12 +78,17 @@ typedef struct wire_cst_fetch_payment_proposed_fees_request {
   struct wire_cst_list_prim_u_8_strict *swap_id;
 } wire_cst_fetch_payment_proposed_fees_request;
 
-typedef struct wire_cst_GetPaymentRequest_Lightning {
+typedef struct wire_cst_GetPaymentRequest_PaymentHash {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
-} wire_cst_GetPaymentRequest_Lightning;
+} wire_cst_GetPaymentRequest_PaymentHash;
+
+typedef struct wire_cst_GetPaymentRequest_SwapId {
+  struct wire_cst_list_prim_u_8_strict *swap_id;
+} wire_cst_GetPaymentRequest_SwapId;
 
 typedef union GetPaymentRequestKind {
-  struct wire_cst_GetPaymentRequest_Lightning Lightning;
+  struct wire_cst_GetPaymentRequest_PaymentHash PaymentHash;
+  struct wire_cst_GetPaymentRequest_SwapId SwapId;
 } GetPaymentRequestKind;
 
 typedef struct wire_cst_get_payment_request {
@@ -522,6 +527,7 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
   struct wire_cst_list_prim_u_8_strict *destination_pubkey;
   struct wire_cst_ln_url_info *lnurl_info;
+  struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
 } wire_cst_PaymentDetails_Lightning;
@@ -545,6 +551,7 @@ typedef struct wire_cst_PaymentDetails_Bitcoin {
   bool auto_accepted_fees;
   uint32_t *liquid_expiration_blockheight;
   uint32_t *bitcoin_expiration_blockheight;
+  struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
 } wire_cst_PaymentDetails_Bitcoin;

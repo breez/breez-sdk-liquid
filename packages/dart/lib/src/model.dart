@@ -470,10 +470,15 @@ class GetInfoResponse {
 sealed class GetPaymentRequest with _$GetPaymentRequest {
   const GetPaymentRequest._();
 
-  /// The Lightning payment hash of the payment
-  const factory GetPaymentRequest.lightning({
+  /// The payment hash of a Lightning payment
+  const factory GetPaymentRequest.paymentHash({
     required String paymentHash,
-  }) = GetPaymentRequest_Lightning;
+  }) = GetPaymentRequest_PaymentHash;
+
+  /// A swap id or its SHA256 hash
+  const factory GetPaymentRequest.swapId({
+    required String swapId,
+  }) = GetPaymentRequest_SwapId;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_lightning_limits].
@@ -927,6 +932,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The payment LNURL info
     LnUrlInfo? lnurlInfo,
 
+    /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+    String? claimTxId,
+
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
 
@@ -968,6 +976,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The height of the Bitcoin block at which the swap will no longer be valid
     /// It should always be populated in case of an incoming chain swap
     int? bitcoinExpirationBlockheight,
+
+    /// The claim tx id in case it has already been broadcast
+    String? claimTxId,
 
     /// For a Send swap which was refunded, this is the refund tx id
     String? refundTxId,
