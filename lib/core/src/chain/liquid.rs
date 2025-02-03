@@ -90,7 +90,6 @@ impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
         let client = self.get_client()?;
         let mut maybe_popped_header = None;
-        println!("Fetching block headers");
         while let Some(header) = client.block_headers_pop_raw()? {
             maybe_popped_header = Some(header)
         }
@@ -98,17 +97,13 @@ impl LiquidChainService for HybridLiquidChainService {
         let new_tip: Option<u32> = match maybe_popped_header {
             Some(popped_header) => Some(popped_header.height.try_into()?),
             None => {
-                println!("Fetching block headers none");
                 // https://github.com/bitcoindevkit/rusprintln!("Fetching block headers");t-electrum-client/issues/124
                 // It might be that the client has reconnected and subscriptions don't persist
                 // across connections. Calling `client.ping()` won't help here because the
                 // successful retry will prevent us knowing about the reconnect.
                 if let Ok(header) = client.block_headers_subscribe_raw() {
-                    println!("Fetching block headers block_headers_subscribe_raw returned result");
-                    println!("header: {:?}", header.height);
                     Some(header.height.try_into()?)
                 } else {
-                    println!("Fetching block headers block_headers_subscribe_raw returned None");
                     None
                 }
             }
