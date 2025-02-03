@@ -30,7 +30,7 @@ impl BoltzSwapper {
                         swap_script.as_bitcoin_script()?,
                         refund_address,
                         &self.bitcoin_electrum_config,
-                        self.boltz_url.clone(),
+                        self.get_client()?.url.clone(),
                         swap.id.clone(),
                     )
                 }
@@ -91,7 +91,7 @@ impl BoltzSwapper {
         let broadcast_fees_sat = (refund_tx_size as f64 * broadcast_fee_rate_sat_per_vb) as u64;
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap.id.clone(), None, None),
+            true => self.get_cooperative_details(swap.id.clone(), None, None)?,
             false => None,
         };
 
@@ -114,7 +114,7 @@ impl BoltzSwapper {
             claim_swap_script,
             claim_address,
             &self.bitcoin_electrum_config,
-            self.boltz_url.clone(),
+            self.get_client()?.url.clone(),
             swap.id.clone(),
         )?;
 
@@ -124,7 +124,7 @@ impl BoltzSwapper {
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
             Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))?,
         )?;
 
         Ok(signed_tx)

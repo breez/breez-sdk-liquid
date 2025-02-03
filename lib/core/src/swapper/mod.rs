@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{
     boltz::{
@@ -114,7 +115,7 @@ pub trait Swapper: Send + Sync {
     /// Broadcasts a transaction and returns its id
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError>;
 
-    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
+    fn create_status_stream(&self) -> Result<Box<dyn SwapperStatusStream>>;
 
     /// Look for a valid Magic Routing Hint. If found, validate it and extract the BIP21 info (amount, address).
     fn check_for_mrh(
