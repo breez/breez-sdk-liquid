@@ -113,16 +113,7 @@ impl LiquidSdk {
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
     ) -> Result<Arc<LiquidSdk>> {
-        let maybe_swapper_proxy_url =
-            match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
-                Ok(breez_server) => breez_server
-                    .fetch_boltz_swapper_urls()
-                    .await
-                    .ok()
-                    .and_then(|swapper_urls| swapper_urls.first().cloned()),
-                Err(_) => None,
-            };
-        let sdk = LiquidSdk::new(req.config, maybe_swapper_proxy_url, Arc::new(signer))?;
+        let sdk = LiquidSdk::new(req.config, Arc::new(signer))?;
         sdk.start()
             .inspect_err(|e| error!("Failed to start an SDK instance: {:?}", e))
             .await?;
@@ -154,11 +145,7 @@ impl LiquidSdk {
         Ok(())
     }
 
-    fn new(
-        config: Config,
-        swapper_proxy_url: Option<String>,
-        signer: Arc<Box<dyn Signer>>,
-    ) -> Result<Arc<Self>> {
+    fn new(config: Config, signer: Arc<Box<dyn Signer>>) -> Result<Arc<Self>> {
         if let Some(breez_api_key) = &config.breez_api_key {
             Self::validate_breez_api_key(breez_api_key)?
         }
@@ -189,11 +176,7 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        if let Some(swapper_proxy_url) = swapper_proxy_url {
-            persister.set_swapper_proxy_url(swapper_proxy_url)?;
-        }
-        let cached_swapper_proxy_url = persister.get_swapper_proxy_url()?;
-        let swapper = Arc::new(BoltzSwapper::new(config.clone(), cached_swapper_proxy_url));
+        let swapper = Arc::new(BoltzSwapper::new(config.clone(), persister.clone()));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream()?);
 
         let recoverer = Arc::new(Recoverer::new(
