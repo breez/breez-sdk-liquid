@@ -109,8 +109,7 @@ impl LiquidChainService for HybridLiquidChainService {
             }
         };
 
-        let tip: u32 = new_tip.ok_or_else(|| anyhow!("Failed to get tip"))?;
-        Ok(tip)
+        new_tip.ok_or_else(|| anyhow!("Failed to get tip"))
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {

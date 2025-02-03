@@ -122,8 +122,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
             }
         };
 
-        let tip = new_tip.ok_or_else(|| anyhow!("Failed to get tip"))?;
-        Ok(tip)
+        new_tip.ok_or_else(|| anyhow!("Failed to get tip"))
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
