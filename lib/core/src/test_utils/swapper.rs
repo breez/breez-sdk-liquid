@@ -94,6 +94,10 @@ impl MockSwapper {
 }
 
 impl Swapper for MockSwapper {
+    fn connect(&self, _maybe_swapper_proxy_url: Option<String>) -> Result<()> {
+        Ok(())
+    }
+
     fn create_chain_swap(
         &self,
         _req: boltz_client::swaps::boltz::CreateChainRequest,

@@ -31,10 +31,11 @@ impl MockStatusStream {
 
 #[async_trait]
 impl SwapperStatusStream for MockStatusStream {
-    async fn start(
+    async fn connect(
         self: Arc<Self>,
         _callback: Box<dyn ReconnectHandler>,
         _shutdown: watch::Receiver<()>,
+        _maybe_swapper_proxy_url: Option<String>,
     ) {
     }
 

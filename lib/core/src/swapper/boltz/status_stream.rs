@@ -13,28 +13,30 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
+use crate::prelude::Config;
 use crate::swapper::{ReconnectHandler, SwapperStatusStream};
 
 pub(crate) struct BoltzStatusStream {
-    url: String,
+    config: Config,
     subscription_notifier: broadcast::Sender<String>,
     update_notifier: broadcast::Sender<boltz::Update>,
 }
 
 impl BoltzStatusStream {
-    pub(crate) fn new(url: &str) -> Self {
+    pub(crate) fn new(config: Config) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
 
         Self {
-            url: url.replace("http", "ws") + "/ws",
+            config,
             subscription_notifier,
             update_notifier,
         }
     }
 
-    async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let (socket, _) = connect_async(Url::parse(&self.url)?)
+    async fn connect_ws(&self, url: &str) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
+        let url = url.replace("https", "ws") + "/ws";
+        let (socket, _) = connect_async(Url::parse(&url)?)
             .await
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
         Ok(socket)
@@ -69,18 +71,20 @@ impl SwapperStatusStream for BoltzStatusStream {
         self.update_notifier.subscribe()
     }
 
-    async fn start(
+    async fn connect(
         self: Arc<Self>,
         callback: Box<dyn ReconnectHandler>,
         mut shutdown: watch::Receiver<()>,
+        maybe_swapper_proxy_url: Option<String>,
     ) {
         let keep_alive_ping_interval = Duration::from_secs(15);
         let reconnect_delay = Duration::from_secs(2);
 
+        let url = maybe_swapper_proxy_url.unwrap_or(self.config.default_boltz_url());
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
-                match self.connect().await {
+                match self.connect_ws(&url).await {
                     Ok(mut ws_stream) => {
                         let mut subscription_stream = self.subscription_notifier.subscribe();
 

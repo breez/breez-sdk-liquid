@@ -176,7 +176,7 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let swapper = Arc::new(BoltzSwapper::new(config.clone(), persister.clone()));
+        let swapper = Arc::new(BoltzSwapper::new(config.clone()));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream()?);
 
         let recoverer = Arc::new(Recoverer::new(
@@ -288,19 +288,12 @@ impl LiquidSdk {
     ///
     /// Internal method. Should only be used as part of [LiquidSdk::start].
     async fn start_background_tasks(self: &Arc<LiquidSdk>) -> SdkResult<()> {
-        let reconnect_handler = Box::new(SwapperReconnectHandler::new(
-            self.persister.clone(),
-            self.status_stream.clone(),
-        ));
-        self.status_stream
-            .clone()
-            .start(reconnect_handler, self.shutdown_receiver.clone())
-            .await;
-        if let Some(sync_service) = self.sync_service.clone() {
-            sync_service.start(self.shutdown_receiver.clone()).await?;
-        }
+        self.start_swapper_tasks().await;
         self.track_new_blocks().await;
         self.track_swap_updates().await;
+        if let Some(sync_service) = self.sync_service.clone() {
+            sync_service.start(self.shutdown_receiver.clone()).await;
+        }
 
         Ok(())
     }
@@ -321,6 +314,50 @@ impl LiquidSdk {
             .map_err(|e| SdkError::generic(format!("Shutdown failed: {e}")))?;
         *is_started = false;
         Ok(())
+    }
+
+    async fn start_swapper_tasks(self: &Arc<LiquidSdk>) {
+        let cloned = self.clone();
+        tokio::spawn(async move {
+            let maybe_swapper_proxy_url =
+                match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
+                    Ok(breez_server) => {
+                        let maybe_swapper_proxy_url = breez_server
+                            .fetch_boltz_swapper_urls()
+                            .await
+                            .ok()
+                            .and_then(|swapper_urls| swapper_urls.first().cloned());
+                        if let Some(swapper_proxy_url) = maybe_swapper_proxy_url.clone() {
+                            cloned
+                                .persister
+                                .set_swapper_proxy_url(swapper_proxy_url)
+                                .unwrap_or_else(|err| {
+                                    error!("Could not set cached swapper proxy url: {err:?}")
+                                });
+                        }
+                        maybe_swapper_proxy_url
+                    }
+                    Err(_) => cloned.persister.get_swapper_proxy_url().unwrap_or(None),
+                };
+
+            if let Err(err) = cloned.swapper.connect(maybe_swapper_proxy_url.clone()) {
+                error!("Could not initialize swapper: {err:?}");
+            };
+
+            let reconnect_handler = Box::new(SwapperReconnectHandler::new(
+                cloned.persister.clone(),
+                cloned.status_stream.clone(),
+            ));
+            cloned
+                .status_stream
+                .clone()
+                .connect(
+                    reconnect_handler,
+                    cloned.shutdown_receiver.clone(),
+                    maybe_swapper_proxy_url,
+                )
+                .await;
+        });
     }
 
     async fn track_new_blocks(self: &Arc<LiquidSdk>) {

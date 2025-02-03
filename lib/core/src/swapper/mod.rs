@@ -24,6 +24,9 @@ pub(crate) mod boltz;
 pub(crate) mod reconnect_handler;
 
 pub trait Swapper: Send + Sync {
+    /// Instantiates a new Boltz client
+    fn connect(&self, maybe_swapper_proxy_url: Option<String>) -> Result<()>;
+
     /// Create a new chain swap
     fn create_chain_swap(
         &self,
@@ -128,10 +131,11 @@ pub trait Swapper: Send + Sync {
 
 #[async_trait]
 pub trait SwapperStatusStream: Send + Sync {
-    async fn start(
+    async fn connect(
         self: Arc<Self>,
         callback: Box<dyn ReconnectHandler>,
         shutdown: watch::Receiver<()>,
+        maybe_swapper_proxy_url: Option<String>,
     );
     fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
