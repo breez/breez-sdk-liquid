@@ -97,7 +97,7 @@ impl LiquidChainService for HybridLiquidChainService {
         let new_tip: Option<u32> = match maybe_popped_header {
             Some(popped_header) => Some(popped_header.height.try_into()?),
             None => {
-                // https://github.com/bitcoindevkit/rusprintln!("Fetching block headers");t-electrum-client/issues/124
+                // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
                 // It might be that the client has reconnected and subscriptions don't persist
                 // across connections. Calling `client.ping()` won't help here because the
                 // successful retry will prevent us knowing about the reconnect.
