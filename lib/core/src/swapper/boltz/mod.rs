@@ -1,4 +1,7 @@
-use std::{str::FromStr, sync::OnceLock};
+use std::{
+    str::FromStr,
+    sync::{Arc, OnceLock},
+};
 
 use anyhow::Result;
 use boltz_client::{
@@ -14,11 +17,13 @@ use boltz_client::{
     Amount,
 };
 use log::info;
+use sdk_common::prelude::BreezServer;
 use url::Url;
 
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
+    persist::Persister,
     prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
 
@@ -37,17 +42,17 @@ pub(crate) struct BoltzClient {
 
 pub struct BoltzSwapper {
     client: OnceLock<BoltzClient>,
-    swapper_proxy_url: Option<String>,
+    persister: Arc<Persister>,
     config: Config,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config, swapper_proxy_url: Option<String>) -> Self {
+    pub fn new(config: Config, persister: Arc<Persister>) -> Self {
         Self {
             client: OnceLock::new(),
-            swapper_proxy_url,
+            persister,
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
@@ -66,6 +71,35 @@ impl BoltzSwapper {
         }
     }
 
+    fn get_swapper_proxy_url(&self) -> Result<Option<String>> {
+        let cached_swapper_proxy_url = self.persister.get_swapper_proxy_url()?;
+        if cached_swapper_proxy_url.is_some() {
+            return Ok(cached_swapper_proxy_url);
+        }
+
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<Option<String>>(1);
+        tokio::spawn(async move {
+            let maybe_swapper_proxy_url =
+                match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
+                    Ok(breez_server) => breez_server
+                        .fetch_boltz_swapper_urls()
+                        .await
+                        .ok()
+                        .and_then(|swapper_urls| swapper_urls.first().cloned()),
+                    Err(_) => None,
+                };
+
+            tx.send(maybe_swapper_proxy_url).await.unwrap();
+        });
+
+        let maybe_swapper_proxy_url = rx.blocking_recv().flatten();
+        if let Some(swapper_proxy_url) = maybe_swapper_proxy_url.clone() {
+            self.persister.set_swapper_proxy_url(swapper_proxy_url)?;
+        }
+
+        Ok(maybe_swapper_proxy_url)
+    }
+
     fn get_client(&self) -> Result<&BoltzClient> {
         if let Some(client) = self.client.get() {
             return Ok(client);
@@ -73,8 +107,8 @@ impl BoltzSwapper {
 
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet => (None, None),
-            LiquidNetwork::Mainnet => match &self.swapper_proxy_url {
-                Some(swapper_proxy_url) => Url::parse(swapper_proxy_url)
+            LiquidNetwork::Mainnet => match self.get_swapper_proxy_url() {
+                Ok(Some(swapper_proxy_url)) => Url::parse(&swapper_proxy_url)
                     .map(|url| match url.query() {
                         None => (None, None),
                         Some(query) => {
@@ -86,7 +120,7 @@ impl BoltzSwapper {
                         }
                     })
                     .unwrap_or_default(),
-                None => (None, None),
+                _ => (None, None),
             },
         };
 
