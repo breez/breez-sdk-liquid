@@ -5,7 +5,7 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
-    boltz::ChainPair,
+    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -163,6 +163,14 @@ impl Config {
         external_input_parsers.extend(self.external_input_parsers.clone().unwrap_or_default());
 
         external_input_parsers
+    }
+
+    pub(crate) fn default_boltz_url(&self) -> String {
+        match self.network {
+            LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
+            LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
+        }
+        .to_string()
     }
 }
 

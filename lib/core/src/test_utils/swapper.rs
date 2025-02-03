@@ -1,5 +1,6 @@
 #![cfg(test)]
 
+use anyhow::Result;
 use boltz_client::{
     boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
@@ -93,6 +94,10 @@ impl MockSwapper {
 }
 
 impl Swapper for MockSwapper {
+    fn connect(&self, _maybe_swapper_proxy_url: Option<String>) -> Result<()> {
+        Ok(())
+    }
+
     fn create_chain_swap(
         &self,
         _req: boltz_client::swaps::boltz::CreateChainRequest,
@@ -332,8 +337,8 @@ impl Swapper for MockSwapper {
         Ok(tx.txid().to_string())
     }
 
-    fn create_status_stream(&self) -> Box<dyn crate::swapper::SwapperStatusStream> {
-        Box::new(MockStatusStream::new())
+    fn create_status_stream(&self) -> Result<Box<dyn crate::swapper::SwapperStatusStream>> {
+        Ok(Box::new(MockStatusStream::new()))
     }
 
     fn check_for_mrh(

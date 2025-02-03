@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{
     boltz::{
@@ -23,6 +24,9 @@ pub(crate) mod boltz;
 pub(crate) mod reconnect_handler;
 
 pub trait Swapper: Send + Sync {
+    /// Instantiates a new Boltz client
+    fn connect(&self, maybe_swapper_proxy_url: Option<String>) -> Result<()>;
+
     /// Create a new chain swap
     fn create_chain_swap(
         &self,
@@ -114,7 +118,7 @@ pub trait Swapper: Send + Sync {
     /// Broadcasts a transaction and returns its id
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError>;
 
-    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
+    fn create_status_stream(&self) -> Result<Box<dyn SwapperStatusStream>>;
 
     /// Look for a valid Magic Routing Hint. If found, validate it and extract the BIP21 info (amount, address).
     fn check_for_mrh(
@@ -127,10 +131,11 @@ pub trait Swapper: Send + Sync {
 
 #[async_trait]
 pub trait SwapperStatusStream: Send + Sync {
-    async fn start(
+    async fn connect(
         self: Arc<Self>,
         callback: Box<dyn ReconnectHandler>,
         shutdown: watch::Receiver<()>,
+        maybe_swapper_proxy_url: Option<String>,
     );
     fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;

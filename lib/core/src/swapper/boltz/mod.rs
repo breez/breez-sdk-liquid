@@ -1,11 +1,11 @@
-use std::str::FromStr;
+use std::{str::FromStr, sync::OnceLock};
 
+use anyhow::{anyhow, Result};
 use boltz_client::{
     boltz::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
         CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
-        BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::{electrum::ElectrumConfig, Chain},
@@ -28,48 +28,23 @@ pub(crate) mod bitcoin;
 pub(crate) mod liquid;
 pub mod status_stream;
 
-pub struct BoltzSwapper {
-    client: BoltzApiClientV2,
-    boltz_url: String,
+pub(crate) struct BoltzClient {
+    url: String,
     referral_id: Option<String>,
+    inner: BoltzApiClientV2,
+}
+
+pub struct BoltzSwapper {
+    client: OnceLock<BoltzClient>,
     config: Config,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config, swapper_proxy_url: Option<String>) -> Self {
-        let (boltz_api_base_url, referral_id) = match &config.network {
-            LiquidNetwork::Testnet => (None, None),
-            LiquidNetwork::Mainnet => match &swapper_proxy_url {
-                Some(swapper_proxy_url) => Url::parse(swapper_proxy_url)
-                    .map(|url| match url.query() {
-                        None => (None, None),
-                        Some(query) => {
-                            let api_base_url =
-                                url.domain().map(|domain| format!("https://{domain}/v2"));
-                            let parts: Vec<String> = query.split('=').map(Into::into).collect();
-                            let referral_id = parts.get(1).cloned();
-                            (api_base_url, referral_id)
-                        }
-                    })
-                    .unwrap_or_default(),
-                None => (None, None),
-            },
-        };
-
-        let boltz_url = boltz_api_base_url.unwrap_or(
-            match config.network {
-                LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
-                LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-            }
-            .to_string(),
-        );
-
+    pub fn new(config: Config) -> Self {
         Self {
-            client: BoltzApiClientV2::new(&boltz_url),
-            boltz_url,
-            referral_id,
+            client: OnceLock::new(),
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
@@ -88,6 +63,12 @@ impl BoltzSwapper {
         }
     }
 
+    fn get_client(&self) -> Result<&BoltzClient> {
+        self.client
+            .get()
+            .ok_or(anyhow!("Could not get client: swapper is not connected"))
+    }
+
     fn get_claim_partial_sig(
         &self,
         swap: &ChainSwap,
@@ -98,7 +79,10 @@ impl BoltzSwapper {
         // We need it to calculate the musig partial sig for the claim tx from the other chain
         let lockup_address = &swap.lockup_address;
 
-        let claim_tx_details = self.client.get_chain_claim_tx_details(&swap.id)?;
+        let claim_tx_details = self
+            .get_client()?
+            .inner
+            .get_chain_claim_tx_details(&swap.id)?;
         match swap.direction {
             Direction::Incoming => {
                 let refund_tx_wrapper =
@@ -129,27 +113,60 @@ impl BoltzSwapper {
         swap_id: String,
         pub_nonce: Option<MusigPubNonce>,
         partial_sig: Option<MusigPartialSignature>,
-    ) -> Option<Cooperative> {
-        Some(Cooperative {
-            boltz_api: &self.client,
+    ) -> Result<Option<Cooperative>> {
+        Ok(Some(Cooperative {
+            boltz_api: &self.get_client()?.inner,
             swap_id,
             pub_nonce,
             partial_sig,
-        })
+        }))
     }
 }
 
 impl Swapper for BoltzSwapper {
+    fn connect(&self, maybe_swapper_proxy_url: Option<String>) -> Result<()> {
+        let (boltz_api_base_url, referral_id) = match &self.config.network {
+            LiquidNetwork::Testnet => (None, None),
+            LiquidNetwork::Mainnet => match maybe_swapper_proxy_url {
+                Some(swapper_proxy_url) => Url::parse(&swapper_proxy_url)
+                    .map(|url| match url.query() {
+                        None => (None, None),
+                        Some(query) => {
+                            let api_base_url =
+                                url.domain().map(|domain| format!("https://{domain}/v2"));
+                            let parts: Vec<String> = query.split('=').map(Into::into).collect();
+                            let referral_id = parts.get(1).cloned();
+                            (api_base_url, referral_id)
+                        }
+                    })
+                    .unwrap_or_default(),
+                None => (None, None),
+            },
+        };
+
+        let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url());
+        self.client
+            .set(BoltzClient {
+                inner: BoltzApiClientV2::new(&boltz_url),
+                url: boltz_url,
+                referral_id,
+            })
+            .map_err(|_| anyhow!("Could not initialize client: client already set"))?;
+
+        Ok(())
+    }
+
     /// Create a new chain swap
     fn create_chain_swap(
         &self,
         req: CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError> {
+        let client = self.get_client()?;
         let modified_req = CreateChainRequest {
-            referral_id: self.referral_id.clone(),
+            referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(self.client.post_chain_req(modified_req)?)
+        Ok(client.inner.post_chain_req(modified_req)?)
     }
 
     /// Create a new send swap
@@ -157,15 +174,16 @@ impl Swapper for BoltzSwapper {
         &self,
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
+        let client = self.get_client()?;
         let modified_req = CreateSubmarineRequest {
-            referral_id: self.referral_id.clone(),
+            referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(self.client.post_swap_req(&modified_req)?)
+        Ok(client.inner.post_swap_req(&modified_req)?)
     }
 
     fn get_chain_pair(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError> {
-        let pairs = self.client.get_chain_pairs()?;
+        let pairs = self.get_client()?.inner.get_chain_pairs()?;
         let pair = match direction {
             Direction::Incoming => pairs.get_btc_to_lbtc_pair(),
             Direction::Outgoing => pairs.get_lbtc_to_btc_pair(),
@@ -174,14 +192,15 @@ impl Swapper for BoltzSwapper {
     }
 
     fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
-        let pairs = self.client.get_chain_pairs()?;
+        let pairs = self.get_client()?.inner.get_chain_pairs()?;
         let pair_outgoing = pairs.get_lbtc_to_btc_pair();
         let pair_incoming = pairs.get_btc_to_lbtc_pair();
         Ok((pair_outgoing, pair_incoming))
     }
 
     fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError> {
-        self.client
+        self.get_client()?
+            .inner
             .get_quote(swap_id)
             .map(|r| Amount::from_sat(r.amount))
             .map_err(Into::into)
@@ -192,19 +211,28 @@ impl Swapper for BoltzSwapper {
         swap_id: &str,
         server_lockup_sat: u64,
     ) -> Result<(), PaymentError> {
-        self.client
+        self.get_client()?
+            .inner
             .accept_quote(swap_id, server_lockup_sat)
             .map_err(Into::into)
     }
 
     /// Get a submarine pair information
     fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
-        Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
+        Ok(self
+            .get_client()?
+            .inner
+            .get_submarine_pairs()?
+            .get_lbtc_to_btc_pair())
     }
 
     /// Get a submarine swap's preimage
     fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError> {
-        Ok(self.client.get_submarine_preimage(swap_id)?.preimage)
+        Ok(self
+            .get_client()?
+            .inner
+            .get_submarine_preimage(swap_id)?
+            .preimage)
     }
 
     /// Get claim tx details which includes the preimage as a proof of payment.
@@ -214,7 +242,10 @@ impl Swapper for BoltzSwapper {
         &self,
         swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError> {
-        let claim_tx_response = self.client.get_submarine_claim_tx_details(&swap.id)?;
+        let claim_tx_response = self
+            .get_client()?
+            .inner
+            .get_submarine_claim_tx_details(&swap.id)?;
         info!("Received claim tx details: {:?}", &claim_tx_response);
 
         self.validate_send_swap_preimage(&swap.id, &swap.invoice, &claim_tx_response.preimage)?;
@@ -242,7 +273,7 @@ impl Swapper for BoltzSwapper {
             &claim_tx_response.transaction_hash,
         )?;
 
-        self.client.post_submarine_claim_tx_details(
+        self.get_client()?.inner.post_submarine_claim_tx_details(
             &swap_id.to_string(),
             pub_nonce,
             partial_sig,
@@ -256,16 +287,21 @@ impl Swapper for BoltzSwapper {
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
+        let client = self.get_client()?;
         let modified_req = CreateReverseRequest {
-            referral_id: self.referral_id.clone(),
+            referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(self.client.post_reverse_req(modified_req)?)
+        Ok(client.inner.post_reverse_req(modified_req)?)
     }
 
     // Get a reverse pair information
     fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
-        Ok(self.client.get_reverse_pairs()?.get_btc_to_lbtc_pair())
+        Ok(self
+            .get_client()?
+            .inner
+            .get_reverse_pairs()?
+            .get_btc_to_lbtc_pair())
     }
 
     /// Create a claim transaction for a receive or chain swap
@@ -408,7 +444,10 @@ impl Swapper for BoltzSwapper {
     }
 
     fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError> {
-        let response = self.client.broadcast_tx(chain, &tx_hex.into())?;
+        let response = self
+            .get_client()?
+            .inner
+            .broadcast_tx(chain, &tx_hex.into())?;
         let err = format!("Unexpected response from Boltz server: {response}");
         let tx_id = response
             .as_object()
@@ -421,8 +460,8 @@ impl Swapper for BoltzSwapper {
         Ok(tx_id)
     }
 
-    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
-        Box::new(BoltzStatusStream::new(&self.boltz_url))
+    fn create_status_stream(&self) -> Result<Box<dyn SwapperStatusStream>> {
+        Ok(Box::new(BoltzStatusStream::new(self.config.clone())))
     }
 
     fn check_for_mrh(
@@ -430,7 +469,7 @@ impl Swapper for BoltzSwapper {
         invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
         boltz_client::swaps::magic_routing::check_for_mrh(
-            &self.client,
+            &self.get_client()?.inner,
             invoice,
             self.config.network.into(),
         )
@@ -438,7 +477,10 @@ impl Swapper for BoltzSwapper {
     }
 
     fn get_bolt12_invoice(&self, offer: &str, amount_sat: u64) -> Result<String, PaymentError> {
-        let invoice_res = self.client.get_bolt12_invoice(offer, amount_sat)?;
+        let invoice_res = self
+            .get_client()?
+            .inner
+            .get_bolt12_invoice(offer, amount_sat)?;
         info!("Received BOLT12 invoice response: {invoice_res:?}");
         Ok(invoice_res.invoice)
     }

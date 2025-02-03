@@ -41,7 +41,7 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.boltz_url.clone(),
+            self.get_client()?.url.clone(),
             swap.id.clone(),
         )?;
 
@@ -49,7 +49,7 @@ impl BoltzSwapper {
             &swap.get_claim_keypair()?,
             &Preimage::from_str(&swap.preimage)?,
             Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), None, None),
+            self.get_cooperative_details(swap.id.clone(), None, None)?,
             true,
         )?;
 
@@ -67,7 +67,7 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.boltz_url.clone(),
+            self.get_client()?.url.clone(),
             swap.id.clone(),
         )?;
 
@@ -77,7 +77,7 @@ impl BoltzSwapper {
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
             Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))?,
             true,
         )?;
 
@@ -107,7 +107,7 @@ impl BoltzSwapper {
                         swap_script.as_liquid_script()?,
                         refund_address,
                         &self.liquid_electrum_config,
-                        self.boltz_url.clone(),
+                        self.get_client()?.url.clone(),
                         swap.id.clone(),
                     )
                 }
@@ -118,7 +118,7 @@ impl BoltzSwapper {
                     swap_script,
                     refund_address,
                     &self.liquid_electrum_config,
-                    self.boltz_url.clone(),
+                    self.get_client()?.url.clone(),
                     swap.id.clone(),
                 )
             }
@@ -189,7 +189,7 @@ impl BoltzSwapper {
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap_id.clone(), None, None),
+            true => self.get_cooperative_details(swap_id.clone(), None, None)?,
             false => None,
         };
 
