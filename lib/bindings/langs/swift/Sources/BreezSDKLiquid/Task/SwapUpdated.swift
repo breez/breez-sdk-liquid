@@ -73,7 +73,7 @@ class SwapUpdatedTask : TaskProtocol {
     func onShutdown() {
         let notificationTitle = ResourceHelper.shared.getString(key: Constants.SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE, fallback: Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE)
         let notificationBody = ResourceHelper.shared.getString(key: Constants.SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT, fallback: Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT)
-        self.displayPushNotification(title: notificationTitle, body: notificationBody, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
+        self.displayPushNotification(title: notificationTitle, body: notificationBody, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
     }
 
     func notifySuccess(payment: Payment) {
@@ -85,7 +85,7 @@ class SwapUpdatedTask : TaskProtocol {
                 validateContains: "%d", 
                 fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
             self.notified = true
-            self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
+            self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
         }
     }
     
@@ -99,7 +99,7 @@ class SwapUpdatedTask : TaskProtocol {
                 key: Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT,
                 fallback: Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT)
             self.notified = true
-            self.displayPushNotification(title: notificationTitle, body: notificationBody, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_SWAP_UPDATED)
+            self.displayPushNotification(title: notificationTitle, body: notificationBody, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
         }
     }
 }

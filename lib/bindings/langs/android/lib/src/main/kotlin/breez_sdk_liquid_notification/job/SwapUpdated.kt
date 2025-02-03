@@ -14,7 +14,7 @@ import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEP
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
-import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_SWAP_UPDATED
+import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_DISMISSIBLE
 import breez_sdk_liquid_notification.Constants.PAYMENT_RECEIVED_NOTIFICATION_TEXT
 import breez_sdk_liquid_notification.Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.PAYMENT_SENT_NOTIFICATION_TEXT
@@ -66,7 +66,7 @@ class SwapUpdatedJob(
             is SdkEvent.PaymentWaitingFeeAcceptance -> handlePaymentWaitingFeeAcceptance(e.details)
 
             else -> {
-                logger.log(TAG, "Received event: ${e}", "TRACE")
+                logger.log(TAG, "Received event: $e", "TRACE")
             }
         }
     }
@@ -76,18 +76,18 @@ class SwapUpdatedJob(
     }
 
     private fun hashId(id: String): String =
-        MessageDigest.getInstance("SHA-256")
+        MessageDigest
+            .getInstance("SHA-256")
             .digest(id.toByteArray())
             .fold(StringBuilder()) { sb, it -> sb.append("%02x".format(it)) }
             .toString()
 
-    private fun getSwapId(details: PaymentDetails?): String? {
-        return when (details) {
+    private fun getSwapId(details: PaymentDetails?): String? =
+        when (details) {
             is PaymentDetails.Bitcoin -> details.swapId
             is PaymentDetails.Lightning -> details.swapId
             else -> null
         }
-    }
 
     private fun handlePaymentSuccess(payment: Payment) {
         val swapId = getSwapId(payment.details)
@@ -97,7 +97,7 @@ class SwapUpdatedJob(
                 logger.log(
                     TAG,
                     "Received payment event: ${this.swapIdHash} ${payment.status}",
-                    "TRACE"
+                    "TRACE",
                 )
                 notifySuccess(payment)
             }
@@ -112,7 +112,7 @@ class SwapUpdatedJob(
                 logger.log(
                     TAG,
                     "Payment waiting fee acceptance: ${this.swapIdHash}",
-                    "TRACE"
+                    "TRACE",
                 )
                 notifyPaymentWaitingFeeAcceptance(payment)
             }
@@ -125,20 +125,21 @@ class SwapUpdatedJob(
             val received = payment.paymentType == PaymentType.RECEIVE
             notifyChannel(
                 context,
-                NOTIFICATION_CHANNEL_SWAP_UPDATED,
+                NOTIFICATION_CHANNEL_DISMISSIBLE,
                 getString(
                     context,
                     if (received) PAYMENT_RECEIVED_NOTIFICATION_TITLE else PAYMENT_SENT_NOTIFICATION_TITLE,
-                    if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE else DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE
+                    if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE else DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE,
                 ),
                 String.format(
                     getString(
                         context,
                         if (received) PAYMENT_RECEIVED_NOTIFICATION_TEXT else PAYMENT_SENT_NOTIFICATION_TEXT,
                         "%d",
-                        if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT else DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
-                    ), payment.amountSat.toLong()
-                )
+                        if (received) DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT else DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT,
+                    ),
+                    payment.amountSat.toLong(),
+                ),
             )
             this.notified = true
             fgService.onFinished(this)
@@ -150,17 +151,17 @@ class SwapUpdatedJob(
             logger.log(TAG, "Payment with swap ID ${getSwapId(payment.details)} requires fee acceptance", "INFO")
             notifyChannel(
                 context,
-                NOTIFICATION_CHANNEL_SWAP_UPDATED,
+                NOTIFICATION_CHANNEL_DISMISSIBLE,
                 getString(
                     context,
                     PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE,
-                    DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE
+                    DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE,
                 ),
                 getString(
                     context,
                     PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT,
-                    DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT
-                )
+                    DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT,
+                ),
             )
             this.notified = true
             fgService.onFinished(this)
@@ -172,16 +173,16 @@ class SwapUpdatedJob(
             logger.log(TAG, "Swap $swapIdHash processing failed", "INFO")
             notifyChannel(
                 context,
-                NOTIFICATION_CHANNEL_SWAP_UPDATED,
+                NOTIFICATION_CHANNEL_DISMISSIBLE,
                 getString(
                     context,
                     SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE,
-                    DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE
+                    DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE,
                 ),
                 getString(
                     context,
                     SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT,
-                    DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT
+                    DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT,
                 ),
             )
         }

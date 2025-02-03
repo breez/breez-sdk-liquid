@@ -2,8 +2,8 @@ import Foundation
 
 struct Constants {
     // Notification Threads
-    static let NOTIFICATION_THREAD_LNURL_PAY = "LNURL_PAY"
-    static let NOTIFICATION_THREAD_SWAP_UPDATED = "SWAP_UPDATED"
+    static let NOTIFICATION_THREAD_DISMISSIBLE = "DISMISSIBLE"
+    static let NOTIFICATION_THREAD_REPLACEABLE = "REPLACEABLE"
 
     // Message Data
     static let MESSAGE_DATA_TYPE = "notification_type"

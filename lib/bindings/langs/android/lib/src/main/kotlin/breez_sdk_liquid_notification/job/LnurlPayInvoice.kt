@@ -12,7 +12,7 @@ import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_NOTIFICATION_FA
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_NOTIFICATION_FAILURE_TITLE
-import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_LNURL_PAY
+import breez_sdk_liquid_notification.Constants.NOTIFICATION_CHANNEL_REPLACEABLE
 import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
 import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
@@ -57,21 +57,24 @@ class LnurlPayInvoiceJob(
             if (amountSat < limits.receive.minSat || amountSat > limits.receive.maxSat) {
                 throw InvalidLnurlPayException("Invalid amount requested ${request.amount}")
             }
-            val plainTextMetadata = getString(
-                context,
-                LNURL_PAY_METADATA_PLAIN_TEXT,
-                DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
-            )
-            val prepareReceivePaymentRes = liquidSDK.prepareReceivePayment(
-                PrepareReceiveRequest(PaymentMethod.LIGHTNING, ReceiveAmount.Bitcoin(amountSat))
-            )
-            val receivePaymentResponse = liquidSDK.receivePayment(
-                ReceivePaymentRequest(
-                    prepareReceivePaymentRes,
-                    description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
-                    useDescriptionHash = true
+            val plainTextMetadata =
+                getString(
+                    context,
+                    LNURL_PAY_METADATA_PLAIN_TEXT,
+                    DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT,
                 )
-            )
+            val prepareReceivePaymentRes =
+                liquidSDK.prepareReceivePayment(
+                    PrepareReceiveRequest(PaymentMethod.LIGHTNING, ReceiveAmount.Bitcoin(amountSat)),
+                )
+            val receivePaymentResponse =
+                liquidSDK.receivePayment(
+                    ReceivePaymentRequest(
+                        prepareReceivePaymentRes,
+                        description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
+                        useDescriptionHash = true,
+                    ),
+                )
             val response =
                 LnurlPayInvoiceResponse(
                     receivePaymentResponse.destination,
@@ -80,11 +83,11 @@ class LnurlPayInvoiceJob(
             val success = replyServer(Json.encodeToString(response), request.replyURL)
             notifyChannel(
                 context,
-                NOTIFICATION_CHANNEL_LNURL_PAY,
+                NOTIFICATION_CHANNEL_REPLACEABLE,
                 getString(
                     context,
                     if (success) LNURL_PAY_INVOICE_NOTIFICATION_TITLE else LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
-                    if (success) DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE else DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
+                    if (success) DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE else DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
                 ),
             )
         } catch (e: Exception) {
@@ -94,11 +97,11 @@ class LnurlPayInvoiceJob(
             }
             notifyChannel(
                 context,
-                NOTIFICATION_CHANNEL_LNURL_PAY,
+                NOTIFICATION_CHANNEL_REPLACEABLE,
                 getString(
                     context,
                     LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
-                    DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
+                    DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
                 ),
             )
         }
