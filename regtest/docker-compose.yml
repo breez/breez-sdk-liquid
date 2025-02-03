@@ -357,7 +357,7 @@ services:
   bitcoind-init:
     <<: *base-scripts
     platform: linux/amd64
-    restart: no
+    restart: "no"
     container_name: boltz-bitcoind-init
     entrypoint:
       ["/bin/bash", "-c", "source /etc/profile.d/utils.sh && bitcoind-init"]
@@ -368,7 +368,7 @@ services:
   regtest-start:
     <<: *base-scripts
     platform: linux/amd64
-    restart: no
+    restart: "no"
     container_name: boltz-regtest-start
     entrypoint:
       ["/bin/bash", "-c", "source /etc/profile.d/utils.sh && regtest-start"]
@@ -393,7 +393,7 @@ services:
 
   scripts:
     <<: *base-scripts
-    restart: no
+    restart: "no"
     platform: linux/amd64
     container_name: boltz-scripts
     depends_on:
