@@ -1,6 +1,7 @@
 x-services:
   base-scripts: &base-scripts
     image: ${SCRIPTS_IMAGE}
+    platform: linux/amd64
     volumes:
       - bitcoin-data:/root/.bitcoin
       - elements-data:/root/.elements
@@ -91,7 +92,6 @@ services:
     <<: *base-scripts
     restart: "no"
     container_name: boltz-cleanup
-    platform: linux/amd64
     entrypoint: ["/bin/bash", "-c", "/cleanup.sh"]
     profiles: ["default", "ci"]
 
@@ -308,7 +308,6 @@ services:
 
   cln-1:
     container_name: boltz-cln-1
-    platform: linux/amd64
     hostname: cln-1
     <<: *base-cln
     ports:
@@ -320,7 +319,6 @@ services:
 
   cln-2:
     container_name: boltz-cln-2
-    platform: linux/amd64
     hostname: cln-2
     <<: *base-cln
     ports:
@@ -334,7 +332,6 @@ services:
   lnd-1:
     <<: *base-lnd
     container_name: boltz-lnd-1
-    platform: linux/amd64
     hostname: lnd-1
     ports:
       - 8081:8081
@@ -346,7 +343,6 @@ services:
   lnd-2:
     <<: *base-lnd
     container_name: boltz-lnd-2
-    platform: linux/amd64
     hostname: lnd-2
     ports:
       - 11009:10009
@@ -356,7 +352,6 @@ services:
 
   bitcoind-init:
     <<: *base-scripts
-    platform: linux/amd64
     restart: "no"
     container_name: boltz-bitcoind-init
     entrypoint:
@@ -367,7 +362,6 @@ services:
 
   regtest-start:
     <<: *base-scripts
-    platform: linux/amd64
     restart: "no"
     container_name: boltz-regtest-start
     entrypoint:
@@ -394,7 +388,6 @@ services:
   scripts:
     <<: *base-scripts
     restart: "no"
-    platform: linux/amd64
     container_name: boltz-scripts
     depends_on:
       boltz-backend:
