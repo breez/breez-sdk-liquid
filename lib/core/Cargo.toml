@@ -57,7 +57,7 @@ zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
 prost = "0.13.3"
-ecies = "0.2.7"
+ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
