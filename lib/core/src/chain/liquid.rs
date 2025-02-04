@@ -1,4 +1,4 @@
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
@@ -63,6 +63,7 @@ pub trait LiquidChainService: Send + Sync {
 pub(crate) struct HybridLiquidChainService {
     client: OnceLock<Client>,
     config: Config,
+    last_known_tip: Mutex<Option<u32>>,
 }
 
 impl HybridLiquidChainService {
@@ -70,6 +71,7 @@ impl HybridLiquidChainService {
         Ok(Self {
             config,
             client: OnceLock::new(),
+            last_known_tip: Mutex::new(None),
         })
     }
 
@@ -109,7 +111,15 @@ impl LiquidChainService for HybridLiquidChainService {
             }
         };
 
-        new_tip.ok_or_else(|| anyhow!("Failed to get tip"))
+        let mut last_tip: std::sync::MutexGuard<'_, Option<u32>> =
+            self.last_known_tip.lock().unwrap();
+        match new_tip {
+            Some(header) => {
+                *last_tip = Some(header);
+                Ok(header)
+            }
+            None => last_tip.ok_or_else(|| anyhow!("Failed to get tip")),
+        }
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {

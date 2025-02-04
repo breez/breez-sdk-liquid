@@ -1,4 +1,7 @@
-use std::{sync::OnceLock, time::Duration};
+use std::{
+    sync::{Mutex, OnceLock},
+    time::Duration,
+};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
@@ -77,12 +80,14 @@ pub trait BitcoinChainService: Send + Sync {
 pub(crate) struct HybridBitcoinChainService {
     client: OnceLock<Client>,
     config: Config,
+    last_known_tip: Mutex<Option<HeaderNotification>>,
 }
 impl HybridBitcoinChainService {
     pub fn new(config: Config) -> Result<Self, Error> {
         Ok(Self {
             config,
             client: OnceLock::new(),
+            last_known_tip: Mutex::new(None),
         })
     }
 
@@ -107,7 +112,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
             maybe_popped_header = Some(header)
         }
 
-        let new_tip = match maybe_popped_header {
+        let new_tip: Option<HeaderNotification> = match maybe_popped_header {
             Some(popped_header) => Some(popped_header.try_into()?),
             None => {
                 // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
@@ -122,7 +127,14 @@ impl BitcoinChainService for HybridBitcoinChainService {
             }
         };
 
-        new_tip.ok_or_else(|| anyhow!("Failed to get tip"))
+        let mut last_tip = self.last_known_tip.lock().unwrap();
+        match new_tip {
+            Some(header) => {
+                *last_tip = Some(header.clone());
+                Ok(header)
+            }
+            None => last_tip.clone().ok_or_else(|| anyhow!("Failed to get tip")),
+        }
     }
 
     fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
