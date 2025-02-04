@@ -1,18 +1,20 @@
-use anyhow::Result;
-use lwk_wollet::hashes::hex::DisplayHex as _;
-use openssl::sha::sha256;
-use std::sync::Arc;
-
 use crate::{
     prelude::{Signer, SignerError},
     utils,
 };
+use anyhow::Result;
+use log::trace;
+use lwk_wollet::hashes::hex::DisplayHex as _;
+use openssl::sha::sha256;
+use std::sync::Arc;
 
 use super::{ListChangesRequest, Record, SetRecordRequest, CURRENT_SCHEMA_VERSION, MESSAGE_PREFIX};
 
 fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, SignerError> {
     let msg = [MESSAGE_PREFIX, msg].concat();
+    trace!("About to compute sha256 hash of msg: {msg:?}");
     let digest = sha256(&sha256(&msg));
+    trace!("About to sign digest: {digest:?}");
     signer
         .sign_ecdsa_recoverable(digest.into())
         .map(|bytes| zbase32::encode_full_bytes(&bytes))
@@ -44,7 +46,9 @@ impl SetRecordRequest {
             *CURRENT_SCHEMA_VERSION,
             request_time,
         );
+        trace!("About to sign message: {}", msg);
         let signature = sign_message(msg.as_bytes(), signer)?;
+        trace!("Got signature: {}", signature);
         Ok(Self {
             record: Some(record),
             request_time,

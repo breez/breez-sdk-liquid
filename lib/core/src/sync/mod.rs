@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
+use log::trace;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
 
@@ -386,21 +387,28 @@ impl SyncService {
 
         // Step 1: Get the sync state, if it exists, to compute the revision
         let maybe_sync_state = self.persister.get_sync_state_by_record_id(record_id)?;
+        trace!("Got sync state: {}", maybe_sync_state.is_some());
         let record_revision = maybe_sync_state
             .as_ref()
             .map(|s| s.record_revision)
             .unwrap_or(0);
+        trace!("Got revision: {}", record_revision);
         let is_local = maybe_sync_state.map(|s| s.is_local).unwrap_or(true);
+        trace!("Got is local: {}", is_local);
 
         // Step 2: Fetch the sync data
         let sync_data = self.load_sync_data(data_id, record_type)?;
+        trace!("Got sync data: {sync_data:?}");
 
         // Step 3: Create the record to push outwards
         let record = Record::new(sync_data, record_revision, self.signer.clone())?;
+        trace!("Got record: {record:?}");
 
         // Step 4: Push the record
         let req = SetRecordRequest::new(record, utils::now(), self.signer.clone())?;
+        trace!("Got set record request: {req:?}");
         let reply = self.client.push(req).await?;
+        trace!("Got reply: {reply:?}");
 
         // Step 5: Check for conflict. If present, skip and retry on the next call
         if reply.status() == SetRecordStatus::Conflict {
