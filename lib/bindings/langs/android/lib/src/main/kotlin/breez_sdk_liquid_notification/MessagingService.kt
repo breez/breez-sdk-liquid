@@ -21,14 +21,21 @@ interface MessagingService {
 
     /** Check if the foreground service is needed depending on the
      *  message type and foreground state of the application. */
-    fun startServiceIfNeeded(context: Context, message: Message) {
+    fun startServiceIfNeeded(
+        context: Context,
+        message: Message,
+    ) {
         val notificationManager = getNotificationManager(context)
-        val isServiceNeeded = when (message.type) {
-            MESSAGE_TYPE_SWAP_UPDATED -> !isAppForeground(context)
-            else -> true
+        val isServiceNeeded =
+            when (message.type) {
+                MESSAGE_TYPE_SWAP_UPDATED -> !isAppForeground(context)
+                else -> true
+            }
+        if (notificationManager != null && isServiceNeeded) {
+            startForegroundService(message)
+        } else {
+            Log.w(TAG, "Ignoring message ${message.type}: ${message.payload}")
         }
-        if (notificationManager != null && isServiceNeeded) startForegroundService(message)
-        else Log.w(TAG, "Ignoring message ${message.type}: ${message.payload}")
     }
 
     /** Basic implementation to check if the application is in the foreground */
