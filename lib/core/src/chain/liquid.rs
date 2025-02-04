@@ -114,9 +114,9 @@ impl LiquidChainService for HybridLiquidChainService {
         let mut last_tip: std::sync::MutexGuard<'_, Option<u32>> =
             self.last_known_tip.lock().unwrap();
         match new_tip {
-            Some(header) => {
-                *last_tip = Some(header);
-                Ok(header)
+            Some(height) => {
+                *last_tip = Some(height);
+                Ok(height)
             }
             None => last_tip.ok_or_else(|| anyhow!("Failed to get tip")),
         }
