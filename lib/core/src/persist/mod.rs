@@ -1019,12 +1019,11 @@ mod tests {
             false,
         )?;
 
-        assert!(storage
+        assert!(!storage
             .get_payments(&ListPaymentsRequest {
                 ..Default::default()
             })?
-            .first()
-            .is_some());
+            .is_empty());
         assert!(storage.get_payment(&payment_tx_data.tx_id)?.is_some());
 
         Ok(())

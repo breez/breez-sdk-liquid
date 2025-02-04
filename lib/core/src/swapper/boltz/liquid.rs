@@ -41,7 +41,7 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.get_client()?.url.clone(),
+            self.get_url()?,
             swap.id.clone(),
         )?;
 
@@ -67,7 +67,7 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.get_client()?.url.clone(),
+            self.get_url()?,
             swap.id.clone(),
         )?;
 
@@ -107,7 +107,7 @@ impl BoltzSwapper {
                         swap_script.as_liquid_script()?,
                         refund_address,
                         &self.liquid_electrum_config,
-                        self.get_client()?.url.clone(),
+                        self.get_url()?,
                         swap.id.clone(),
                     )
                 }
@@ -118,7 +118,7 @@ impl BoltzSwapper {
                     swap_script,
                     refund_address,
                     &self.liquid_electrum_config,
-                    self.get_client()?.url.clone(),
+                    self.get_url()?,
                     swap.id.clone(),
                 )
             }

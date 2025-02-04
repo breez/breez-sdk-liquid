@@ -9,7 +9,6 @@ use boltz_client::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
         CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
-        BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::{electrum::ElectrumConfig, Chain},
@@ -17,13 +16,11 @@ use boltz_client::{
     Amount,
 };
 use log::info;
-use sdk_common::prelude::BreezServer;
 use url::Url;
 
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
-    persist::Persister,
     prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
 
@@ -40,19 +37,21 @@ pub(crate) struct BoltzClient {
     inner: BoltzApiClientV2,
 }
 
+pub(crate) type FetchProxyUrlFn = dyn Fn() -> Result<Option<String>> + Send + Sync;
+
 pub struct BoltzSwapper {
-    client: OnceLock<BoltzClient>,
-    persister: Arc<Persister>,
     config: Config,
+    client: OnceLock<BoltzClient>,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
+    fetch_proxy_url: Arc<FetchProxyUrlFn>,
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config, persister: Arc<Persister>) -> Self {
+    pub fn new(config: Config, fetch_proxy_url: Arc<FetchProxyUrlFn>) -> Self {
         Self {
+            fetch_proxy_url,
             client: OnceLock::new(),
-            persister,
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
@@ -71,35 +70,6 @@ impl BoltzSwapper {
         }
     }
 
-    fn get_swapper_proxy_url(&self) -> Result<Option<String>> {
-        let cached_swapper_proxy_url = self.persister.get_swapper_proxy_url()?;
-        if cached_swapper_proxy_url.is_some() {
-            return Ok(cached_swapper_proxy_url);
-        }
-
-        let (tx, mut rx) = tokio::sync::mpsc::channel::<Option<String>>(1);
-        tokio::spawn(async move {
-            let maybe_swapper_proxy_url =
-                match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
-                    Ok(breez_server) => breez_server
-                        .fetch_boltz_swapper_urls()
-                        .await
-                        .ok()
-                        .and_then(|swapper_urls| swapper_urls.first().cloned()),
-                    Err(_) => None,
-                };
-
-            tx.send(maybe_swapper_proxy_url).await.unwrap();
-        });
-
-        let maybe_swapper_proxy_url = rx.blocking_recv().flatten();
-        if let Some(swapper_proxy_url) = maybe_swapper_proxy_url.clone() {
-            self.persister.set_swapper_proxy_url(swapper_proxy_url)?;
-        }
-
-        Ok(maybe_swapper_proxy_url)
-    }
-
     fn get_client(&self) -> Result<&BoltzClient> {
         if let Some(client) = self.client.get() {
             return Ok(client);
@@ -107,7 +77,7 @@ impl BoltzSwapper {
 
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet => (None, None),
-            LiquidNetwork::Mainnet => match self.get_swapper_proxy_url() {
+            LiquidNetwork::Mainnet => match (self.fetch_proxy_url)() {
                 Ok(Some(swapper_proxy_url)) => Url::parse(&swapper_proxy_url)
                     .map(|url| match url.query() {
                         None => (None, None),
@@ -124,13 +94,7 @@ impl BoltzSwapper {
             },
         };
 
-        let boltz_url = boltz_api_base_url.unwrap_or(
-            match self.config.network {
-                LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
-                LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-            }
-            .to_string(),
-        );
+        let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
 
         let client = self.client.get_or_init(|| BoltzClient {
             inner: BoltzApiClientV2::new(&boltz_url),
@@ -138,6 +102,10 @@ impl BoltzSwapper {
             referral_id,
         });
         Ok(client)
+    }
+
+    fn get_url(&self) -> Result<String> {
+        Ok(self.get_client()?.url.clone())
     }
 
     fn get_claim_partial_sig(
@@ -500,7 +468,10 @@ impl Swapper for BoltzSwapper {
     }
 
     fn create_status_stream(&self) -> Result<Box<dyn SwapperStatusStream>> {
-        Ok(Box::new(BoltzStatusStream::new(&self.get_client()?.url)))
+        Ok(Box::new(BoltzStatusStream::new(
+            self.config.clone(),
+            self.fetch_proxy_url.clone(),
+        )))
     }
 
     fn check_for_mrh(

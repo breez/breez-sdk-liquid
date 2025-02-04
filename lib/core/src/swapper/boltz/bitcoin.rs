@@ -30,7 +30,7 @@ impl BoltzSwapper {
                         swap_script.as_bitcoin_script()?,
                         refund_address,
                         &self.bitcoin_electrum_config,
-                        self.get_client()?.url.clone(),
+                        self.get_url()?,
                         swap.id.clone(),
                     )
                 }
@@ -114,7 +114,7 @@ impl BoltzSwapper {
             claim_swap_script,
             claim_address,
             &self.bitcoin_electrum_config,
-            self.get_client()?.url.clone(),
+            self.get_url()?,
             swap.id.clone(),
         )?;
 

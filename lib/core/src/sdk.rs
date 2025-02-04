@@ -26,6 +26,7 @@ use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use signer::SdkSigner;
+use swapper::boltz::FetchProxyUrlFn;
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
@@ -155,6 +156,29 @@ impl LiquidSdk {
         Ok(())
     }
 
+    fn fetch_swapper_proxy_url(persister: Arc<Persister>) -> Result<Option<String>> {
+        let maybe_swapper_proxy_url =
+            match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
+                Ok(breez_server) => {
+                    let maybe_swapper_proxy_url = tokio::runtime::Runtime::new()?
+                        .block_on(breez_server.fetch_boltz_swapper_urls())
+                        .ok()
+                        .and_then(|swapper_urls| swapper_urls.first().cloned());
+                    if let Some(swapper_proxy_url) = maybe_swapper_proxy_url.clone() {
+                        persister.set_swapper_proxy_url(swapper_proxy_url)?;
+                    }
+                    maybe_swapper_proxy_url
+                }
+                Err(_) => persister.get_swapper_proxy_url().unwrap_or(None),
+            };
+
+        Ok(maybe_swapper_proxy_url)
+    }
+
+    fn fetch_swapper_proxy_url_getter(persister: Arc<Persister>) -> Arc<FetchProxyUrlFn> {
+        Arc::new(move || Self::fetch_swapper_proxy_url(persister.clone()))
+    }
+
     fn new(config: Config, signer: Arc<Box<dyn Signer>>) -> Result<Arc<Self>> {
         if let Some(breez_api_key) = &config.breez_api_key {
             Self::validate_breez_api_key(breez_api_key)?
@@ -186,7 +210,10 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let swapper = Arc::new(BoltzSwapper::new(config.clone(), persister.clone()));
+        let swapper = Arc::new(BoltzSwapper::new(
+            config.clone(),
+            Self::fetch_swapper_proxy_url_getter(persister.clone()),
+        ));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream()?);
 
         let recoverer = Arc::new(Recoverer::new(
@@ -1513,7 +1540,7 @@ impl LiquidSdk {
 
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
-                    id: swap_id.clone(),
+                    id: swap_id.to_string(),
                     invoice: invoice.to_string(),
                     bolt12_offer,
                     payment_hash: Some(payment_hash.to_string()),

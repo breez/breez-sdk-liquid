@@ -13,28 +13,38 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
+use crate::model::Config;
 use crate::swapper::{ReconnectHandler, SwapperStatusStream};
 
+use super::FetchProxyUrlFn;
+
 pub(crate) struct BoltzStatusStream {
-    url: String,
+    config: Config,
+    fetch_proxy_url: Arc<FetchProxyUrlFn>,
     subscription_notifier: broadcast::Sender<String>,
     update_notifier: broadcast::Sender<boltz::Update>,
 }
 
 impl BoltzStatusStream {
-    pub(crate) fn new(url: &str) -> Self {
+    pub(crate) fn new(config: Config, fetch_proxy_url: Arc<FetchProxyUrlFn>) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
 
         Self {
-            url: url.replace("http", "ws") + "/ws",
+            config,
+            fetch_proxy_url,
             subscription_notifier,
             update_notifier,
         }
     }
 
     async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let (socket, _) = connect_async(Url::parse(&self.url)?)
+        let url = (self.fetch_proxy_url)()
+            .ok()
+            .flatten()
+            .unwrap_or(self.config.default_boltz_url().to_string());
+        let url = url.replace("http", "ws") + "/ws";
+        let (socket, _) = connect_async(Url::parse(&url)?)
             .await
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
         Ok(socket)
