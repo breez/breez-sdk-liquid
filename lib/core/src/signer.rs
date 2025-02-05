@@ -155,7 +155,11 @@ impl LwkSigner for SdkLwkSigner {
     }
 
     fn derive_xpub(&self, path: &DerivationPath) -> Result<Xpub, Self::Error> {
-        let pubkey_bytes = self.sdk_signer.derive_xpub(path.to_string())?;
+        let pubkey_bytes = if path.is_empty() {
+            self.sdk_signer.xpub()?
+        } else {
+            self.sdk_signer.derive_xpub(path.to_string())?
+        };
         let xpub = Xpub::decode(pubkey_bytes.as_slice())?;
         Ok(xpub)
     }
