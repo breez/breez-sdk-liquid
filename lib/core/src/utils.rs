@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::ensure_sdk;
 use crate::error::{PaymentError, SdkResult};
@@ -145,6 +145,26 @@ pub(crate) fn increment_invoice_amount_up_to_drain_amount(
     } else {
         invoice_amount_sat
     }
+}
+
+pub(crate) fn log_print_header(init_time_ms: Duration) {
+    log::info!(
+        "
+            ↘↘↘
+         ↘↘↘↘↘↘↘↘       
+           ↘↘↘↘↘↘↘↘    
+     ↘↘↘↘↘       ↘↘↘↘   
+                 ↘↘↘      Breez SDK Nodeless - version {}
+ ↘↘↘↘↘↘↘↘↘  ↘↘↘↘↘↘↘↘↘     Initialization time: {init_time_ms:?}
+                  ↘↘↘↘    Github: https://github.com/breez/breez-sdk-liquid
+   ↘↘↘↘↘↘↘↘↘↘↘↘    ↘↘↘↘   Docs: https://sdk-doc-liquid.breez.technology/
+                  ↘↘↘↘↘ 
+      ↘↘↘↘↘↘↘↘↘↘↘↘↘↘↘   
+        ↘↘↘↘↘↘↘↘↘↘
+            ↘↘↘
+    ",
+        env!("CARGO_PKG_VERSION"),
+    );
 }
 
 #[cfg(test)]
