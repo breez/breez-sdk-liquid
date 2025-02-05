@@ -49,7 +49,7 @@ impl Recoverer {
         })
     }
 
-    fn recover_cooperative_preimages(
+    async fn recover_cooperative_preimages(
         &self,
         recovered_send_data: &mut HashMap<String, &mut RecoveredOnchainDataSend>,
     ) -> HashMap<String, Txid> {
@@ -59,7 +59,7 @@ impl Recoverer {
                 continue;
             };
 
-            match self.swapper.get_submarine_preimage(swap_id) {
+            match self.swapper.get_submarine_preimage(swap_id).await {
                 Ok(preimage) => recovered_data.preimage = Some(preimage),
                 Err(err) => {
                     warn!("Could not recover Send swap {swap_id} preimage cooperatively: {err:?}");
@@ -118,7 +118,9 @@ impl Recoverer {
         mut recovered_send_data: HashMap<String, &mut RecoveredOnchainDataSend>,
     ) -> Result<()> {
         // Recover the preimages by querying the swapper, only if there is a claim_tx_id
-        let failed_cooperative = self.recover_cooperative_preimages(&mut recovered_send_data);
+        let failed_cooperative = self
+            .recover_cooperative_preimages(&mut recovered_send_data)
+            .await;
 
         // For those which failed, recover the preimages by querying onchain (non-cooperative case)
         self.recover_non_cooperative_preimages(&mut recovered_send_data, failed_cooperative)

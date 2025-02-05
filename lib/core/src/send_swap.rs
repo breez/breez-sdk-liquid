@@ -355,7 +355,7 @@ impl SendSwapHandler {
             &send_swap.id
         );
         let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let claim_tx_details = self.swapper.get_send_claim_tx_details(send_swap)?;
+        let claim_tx_details = self.swapper.get_send_claim_tx_details(send_swap).await?;
         self.update_swap_info(
             &send_swap.id,
             Complete,
@@ -364,7 +364,8 @@ impl SendSwapHandler {
             None,
         )?;
         self.swapper
-            .claim_send_swap_cooperative(send_swap, claim_tx_details, &output_address)?;
+            .claim_send_swap_cooperative(send_swap, claim_tx_details, &output_address)
+            .await?;
         Ok(())
     }
 
@@ -447,13 +448,16 @@ impl SendSwapHandler {
             .to_unconfidential()
             .script_pubkey();
         let utxos = self.chain_service.get_script_utxos(&script_pk).await?;
-        let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
-            Swap::Send(swap.clone()),
-            &refund_address,
-            utxos,
-            None,
-            is_cooperative,
-        )?
+        let SdkTransaction::Liquid(refund_tx) = self
+            .swapper
+            .create_refund_tx(
+                Swap::Send(swap.clone()),
+                &refund_address,
+                utxos,
+                None,
+                is_cooperative,
+            )
+            .await?
         else {
             return Err(PaymentError::Generic {
                 err: format!(

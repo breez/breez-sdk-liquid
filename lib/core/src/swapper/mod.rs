@@ -23,55 +23,58 @@ pub(crate) use reconnect_handler::*;
 pub(crate) mod boltz;
 pub(crate) mod reconnect_handler;
 
+#[async_trait]
 pub trait Swapper: Send + Sync {
     /// Create a new chain swap
-    fn create_chain_swap(
+    async fn create_chain_swap(
         &self,
         req: CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError>;
 
     /// Create a new send swap
-    fn create_send_swap(
+    async fn create_send_swap(
         &self,
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError>;
 
     /// Get the current rate, limits and fees for a given swap direction
-    fn get_chain_pair(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError>;
+    async fn get_chain_pair(&self, direction: Direction)
+        -> Result<Option<ChainPair>, PaymentError>;
 
     /// Get the current rate, limits and fees for both swap directions
-    fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError>;
+    async fn get_chain_pairs(&self)
+        -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError>;
 
     /// Get the quote for a Zero-Amount Receive Chain Swap.
     ///
     /// If the user locked-up funds in the valid range this will return that amount. In all other
     /// cases, this will return an error.
-    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError>;
+    async fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError>;
 
     /// Accept a specific quote for a Zero-Amount Receive Chain Swap
-    fn accept_zero_amount_chain_swap_quote(
+    async fn accept_zero_amount_chain_swap_quote(
         &self,
         swap_id: &str,
         server_lockup_sat: u64,
     ) -> Result<(), PaymentError>;
 
     /// Get a submarine pair information
-    fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
+    async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
 
     /// Get a submarine swap's preimage
-    fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError>;
+    async fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError>;
 
     /// Get send swap claim tx details which includes the preimage as a proof of payment.
     /// It is used to validate the preimage before claiming which is the reason why we need to separate
     /// the claim into two steps.
-    fn get_send_claim_tx_details(
+    async fn get_send_claim_tx_details(
         &self,
         swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError>;
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
-    fn claim_send_swap_cooperative(
+    async fn claim_send_swap_cooperative(
         &self,
         swap: &SendSwap,
         claim_tx_response: SubmarineClaimTxResponse,
@@ -79,23 +82,23 @@ pub trait Swapper: Send + Sync {
     ) -> Result<(), PaymentError>;
 
     /// Create a new receive swap
-    fn create_receive_swap(
+    async fn create_receive_swap(
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError>;
 
     /// Get a reverse pair information
-    fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError>;
+    async fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError>;
 
     /// Create a claim transaction for a receive or chain swap
-    fn create_claim_tx(
+    async fn create_claim_tx(
         &self,
         swap: Swap,
         claim_address: Option<String>,
     ) -> Result<crate::prelude::Transaction, PaymentError>;
 
     /// Estimate the refund broadcast transaction size and fees in sats for a send or chain swap
-    fn estimate_refund_broadcast(
+    async fn estimate_refund_broadcast(
         &self,
         swap: Swap,
         refund_address: &str,
@@ -103,7 +106,7 @@ pub trait Swapper: Send + Sync {
     ) -> Result<(u32, u64), SdkError>;
 
     /// Create a refund transaction for a send or chain swap
-    fn create_refund_tx(
+    async fn create_refund_tx(
         &self,
         swap: Swap,
         refund_address: &str,
@@ -113,26 +116,25 @@ pub trait Swapper: Send + Sync {
     ) -> Result<crate::prelude::Transaction, PaymentError>;
 
     /// Broadcasts a transaction and returns its id
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError>;
+    async fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError>;
 
-    fn create_status_stream(&self) -> Result<Box<dyn SwapperStatusStream>>;
+    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
 
     /// Look for a valid Magic Routing Hint. If found, validate it and extract the BIP21 info (amount, address).
-    fn check_for_mrh(
+    async fn check_for_mrh(
         &self,
         invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError>;
 
-    fn get_bolt12_invoice(&self, offer: &str, amount_sat: u64) -> Result<String, PaymentError>;
+    async fn get_bolt12_invoice(
+        &self,
+        offer: &str,
+        amount_sat: u64,
+    ) -> Result<String, PaymentError>;
 }
 
-#[async_trait]
 pub trait SwapperStatusStream: Send + Sync {
-    async fn start(
-        self: Arc<Self>,
-        callback: Box<dyn ReconnectHandler>,
-        shutdown: watch::Receiver<()>,
-    );
+    fn start(self: Arc<Self>, callback: Box<dyn ReconnectHandler>, shutdown: watch::Receiver<()>);
     fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
 }

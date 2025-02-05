@@ -341,7 +341,8 @@ impl ReceiveSwapHandler {
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
         let crate::prelude::Transaction::Liquid(claim_tx) = self
             .swapper
-            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address))?
+            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address))
+            .await?
         else {
             return Err(PaymentError::Generic {
                 err: format!("Constructed invalid transaction for Receive swap {swap_id}"),
@@ -354,18 +355,18 @@ impl ReceiveSwapHandler {
         match self.persister.set_receive_swap_claim_tx_id(swap_id, &tx_id) {
             Ok(_) => {
                 // We attempt broadcasting via chain service, then fallback to Boltz
-                let broadcast_res = self.liquid_chain_service
-                    .broadcast(&claim_tx)
-                    .await
-                    .map(|tx_id| tx_id.to_hex())
-                    .or_else(|err| {
+                let broadcast_res = match self.liquid_chain_service.broadcast(&claim_tx).await {
+                    Ok(tx_id) => Ok(tx_id.to_hex()),
+                    Err(err) => {
                         debug!(
                             "Could not broadcast claim tx via chain service for Receive swap {swap_id}: {err:?}"
                         );
                         let claim_tx_hex = claim_tx.serialize().to_lower_hex_string();
-                        self.swapper.broadcast_tx(self.config.network.into(), &claim_tx_hex)
-                    });
-
+                        self.swapper
+                            .broadcast_tx(self.config.network.into(), &claim_tx_hex)
+                            .await
+                    }
+                };
                 match broadcast_res {
                     Ok(claim_tx_id) => {
                         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while

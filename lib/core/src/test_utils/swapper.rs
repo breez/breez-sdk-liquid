@@ -1,6 +1,7 @@
 #![cfg(test)]
 
 use anyhow::Result;
+use async_trait::async_trait;
 use boltz_client::{
     boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
@@ -76,25 +77,45 @@ impl MockSwapper {
         *self.zero_amount_swap_mock_config.lock().unwrap() = config;
     }
 
-    fn get_zero_amount_swap_server_lockup_sat(&self) -> u64 {
+    fn new_chain_pair() -> ChainPair {
+        ChainPair {
+            hash: generate_random_string(10),
+            rate: 0.0,
+            limits: PairLimits {
+                maximal: u64::MAX,
+                minimal: 0,
+                maximal_zero_conf: 100_000,
+            },
+            fees: ChainFees {
+                percentage: 0.1,
+                miner_fees: ChainMinerFees {
+                    server: 100,
+                    user: PairMinerFees {
+                        lockup: 100,
+                        claim: 100,
+                    },
+                },
+            },
+        }
+    }
+
+    async fn get_zero_amount_swap_server_lockup_sat(&self) -> u64 {
         let zero_amount_swap_mock_config = self.zero_amount_swap_mock_config.lock().unwrap();
 
-        let pair = self
-            .get_chain_pair(Direction::Incoming)
-            .expect("mock get_chain_pair failed")
-            .expect("no chainpair in mock");
-
+        let pair = Self::new_chain_pair();
         let fees = pair
             .fees
             .boltz(zero_amount_swap_mock_config.user_lockup_sat)
             + pair.fees.server()
             + zero_amount_swap_mock_config.onchain_fee_increase_sat;
+
         zero_amount_swap_mock_config.user_lockup_sat - fees
     }
 }
 
+#[async_trait]
 impl Swapper for MockSwapper {
-    fn create_chain_swap(
+    async fn create_chain_swap(
         &self,
         _req: boltz_client::swaps::boltz::CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError> {
@@ -105,7 +126,7 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn create_send_swap(
+    async fn create_send_swap(
         &self,
         req: boltz_client::swaps::boltz::CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
@@ -131,32 +152,16 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn get_chain_pair(
+    async fn get_chain_pair(
         &self,
         _direction: Direction,
     ) -> anyhow::Result<Option<ChainPair>, PaymentError> {
-        Ok(Some(ChainPair {
-            hash: generate_random_string(10),
-            rate: 0.0,
-            limits: PairLimits {
-                maximal: u64::MAX,
-                minimal: 0,
-                maximal_zero_conf: 100_000,
-            },
-            fees: ChainFees {
-                percentage: 0.1,
-                miner_fees: ChainMinerFees {
-                    server: 100,
-                    user: PairMinerFees {
-                        lockup: 100,
-                        claim: 100,
-                    },
-                },
-            },
-        }))
+        Ok(Some(Self::new_chain_pair()))
     }
 
-    fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
+    async fn get_chain_pairs(
+        &self,
+    ) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
         let test_pair = Some(ChainPair {
             hash: generate_random_string(10),
             rate: 0.0,
@@ -179,11 +184,11 @@ impl Swapper for MockSwapper {
         Ok((test_pair.clone(), test_pair))
     }
 
-    fn get_submarine_preimage(&self, _swap_id: &str) -> Result<String, PaymentError> {
+    async fn get_submarine_preimage(&self, _swap_id: &str) -> Result<String, PaymentError> {
         Ok(Preimage::new().to_string().unwrap())
     }
 
-    fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
+    async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
         Ok(Some(SubmarinePair {
             hash: generate_random_string(10),
             rate: 0.0,
@@ -199,7 +204,7 @@ impl Swapper for MockSwapper {
         }))
     }
 
-    fn get_send_claim_tx_details(
+    async fn get_send_claim_tx_details(
         &self,
         _swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError> {
@@ -213,7 +218,7 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn create_claim_tx(
+    async fn create_claim_tx(
         &self,
         swap: Swap,
         _claim_address: Option<String>,
@@ -241,7 +246,7 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn estimate_refund_broadcast(
+    async fn estimate_refund_broadcast(
         &self,
         _swap: Swap,
         _refund_address: &str,
@@ -250,7 +255,7 @@ impl Swapper for MockSwapper {
         Ok((0, 0))
     }
 
-    fn create_refund_tx(
+    async fn create_refund_tx(
         &self,
         swap: Swap,
         _refund_address: &str,
@@ -281,7 +286,7 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn claim_send_swap_cooperative(
+    async fn claim_send_swap_cooperative(
         &self,
         _swap: &SendSwap,
         _claim_tx_response: boltz_client::swaps::boltz::SubmarineClaimTxResponse,
@@ -290,7 +295,7 @@ impl Swapper for MockSwapper {
         Ok(())
     }
 
-    fn create_receive_swap(
+    async fn create_receive_swap(
         &self,
         _req: boltz_client::swaps::boltz::CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
@@ -306,7 +311,7 @@ impl Swapper for MockSwapper {
         })
     }
 
-    fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
+    async fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
         Ok(Some(ReversePair {
             hash: "".to_string(),
             rate: 0.0,
@@ -324,7 +329,7 @@ impl Swapper for MockSwapper {
         }))
     }
 
-    fn broadcast_tx(
+    async fn broadcast_tx(
         &self,
         _chain: boltz_client::network::Chain,
         tx_hex: &str,
@@ -333,11 +338,11 @@ impl Swapper for MockSwapper {
         Ok(tx.txid().to_string())
     }
 
-    fn create_status_stream(&self) -> Result<Box<dyn crate::swapper::SwapperStatusStream>> {
-        Ok(Box::new(MockStatusStream::new()))
+    fn create_status_stream(&self) -> Box<dyn crate::swapper::SwapperStatusStream> {
+        Box::new(MockStatusStream::new())
     }
 
-    fn check_for_mrh(
+    async fn check_for_mrh(
         &self,
         _invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
@@ -345,22 +350,26 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
-    fn get_bolt12_invoice(&self, _offer: &str, _amount_sat: u64) -> Result<String, PaymentError> {
+    async fn get_bolt12_invoice(
+        &self,
+        _offer: &str,
+        _amount_sat: u64,
+    ) -> Result<String, PaymentError> {
         unimplemented!()
     }
 
-    fn get_zero_amount_chain_swap_quote(&self, _swap_id: &str) -> Result<Amount, SdkError> {
-        let server_lockup_amount_sat = self.get_zero_amount_swap_server_lockup_sat();
+    async fn get_zero_amount_chain_swap_quote(&self, _swap_id: &str) -> Result<Amount, SdkError> {
+        let server_lockup_amount_sat = self.get_zero_amount_swap_server_lockup_sat().await;
         Ok(Amount::from_sat(server_lockup_amount_sat))
     }
 
-    fn accept_zero_amount_chain_swap_quote(
+    async fn accept_zero_amount_chain_swap_quote(
         &self,
         _swap_id: &str,
         server_lockup_sat: u64,
     ) -> Result<(), PaymentError> {
         ensure_sdk!(
-            server_lockup_sat == self.get_zero_amount_swap_server_lockup_sat(),
+            server_lockup_sat == self.get_zero_amount_swap_server_lockup_sat().await,
             PaymentError::InvalidOrExpiredFees
         );
         Ok(())

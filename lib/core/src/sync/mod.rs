@@ -80,7 +80,7 @@ impl SyncService {
         }
     }
 
-    pub(crate) async fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) -> Result<()> {
+    pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
         tokio::spawn(async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
                 log::warn!("Could not connect to sync service: {err:?}");
@@ -111,8 +111,6 @@ impl SyncService {
                 }
             }
         });
-
-        Ok(())
     }
 
     fn commit_record(&self, decryption_info: &DecryptionInfo, swap: Option<Swap>) -> Result<()> {

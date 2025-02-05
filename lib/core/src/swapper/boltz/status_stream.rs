@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use boltz_client::swaps::boltz::{self, Subscription, SwapUpdate};
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, warn};
@@ -40,6 +39,7 @@ impl BoltzStatusStream {
 
     async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
         let url = (self.fetch_proxy_url)()
+            .await
             .ok()
             .flatten()
             .unwrap_or(self.config.default_boltz_url().to_string());
@@ -68,7 +68,6 @@ impl BoltzStatusStream {
     }
 }
 
-#[async_trait]
 impl SwapperStatusStream for BoltzStatusStream {
     fn track_swap_id(&self, swap_id: &str) -> Result<()> {
         let _ = self.subscription_notifier.send(swap_id.to_string());
@@ -79,7 +78,7 @@ impl SwapperStatusStream for BoltzStatusStream {
         self.update_notifier.subscribe()
     }
 
-    async fn start(
+    fn start(
         self: Arc<Self>,
         callback: Box<dyn ReconnectHandler>,
         mut shutdown: watch::Receiver<()>,
