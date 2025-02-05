@@ -6,6 +6,7 @@ use self::data::SyncData;
 use crate::prelude::Signer;
 use anyhow::Result;
 use lazy_static::lazy_static;
+use log::trace;
 use lwk_wollet::hashes::hex::DisplayHex;
 use openssl::sha::sha256;
 use rusqlite::{
@@ -135,9 +136,11 @@ impl Record {
     ) -> Result<Self, anyhow::Error> {
         let id = Self::get_id_from_sync_data(&data);
         let data = data.to_bytes()?;
+        trace!("About to encrypt sync data: {data:?}");
         let data = signer
             .ecies_encrypt(data)
             .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
+        trace!("Got encrypted sync data: {data:?}");
         let schema_version = CURRENT_SCHEMA_VERSION.to_string();
         Ok(Self {
             id,
