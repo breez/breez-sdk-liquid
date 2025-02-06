@@ -1,22 +1,28 @@
-pub(crate) fn current_migrations(is_mainnet: bool) -> Vec<&'static str> {
-    let alter_payment_tx_data_add_asset_id = if is_mainnet {
-        "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d';"
-    } else {
-        "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49';"
+use crate::model::LiquidNetwork;
+
+pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
+    let alter_payment_tx_data_add_asset_id = match network {
+        LiquidNetwork::Mainnet => "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d';",
+        LiquidNetwork::Testnet => "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49';",
+        LiquidNetwork::Regtest => "ALTER TABLE payment_tx_data ADD COLUMN asset_id TEXT NOT NULL DEFAULT '5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225';",
     };
-    let insert_default_asset_metadata = if is_mainnet {
-        "
-        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default) 
-            VALUES 
+    let insert_default_asset_metadata = match network {
+        LiquidNetwork::Mainnet => "
+        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default)
+            VALUES
             ('6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d', 'Bitcoin', 'BTC', 8, 1),
             ('ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2', 'Tether USD', 'USDt', 8, 1);
-        "
-    } else {
-        "
-        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default) 
-            VALUES 
+        ",
+        LiquidNetwork::Testnet => "
+        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default)
+            VALUES
             ('144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49', 'Testnet Bitcoin', 'BTC', 8, 1),
             ('b612eb46313a2cd6ebabd8b7a8eed5696e29898b87a43bff41c94f51acef9d73', 'Testnet Tether USD', 'USDt', 8, 1);
+        ",
+        LiquidNetwork::Regtest => "
+        INSERT INTO asset_metadata (asset_id, name, ticker, precision, is_default)
+            VALUES
+            ('5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225', 'Regtest Bitcoin', 'BTC', 8, 1);
         "
     };
     vec![

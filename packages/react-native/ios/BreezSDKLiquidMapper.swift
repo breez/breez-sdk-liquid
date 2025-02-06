@@ -3747,6 +3747,9 @@ enum BreezSDKLiquidMapper {
         case "testnet":
             return LiquidNetwork.testnet
 
+        case "regtest":
+            return LiquidNetwork.regtest
+
         default: throw SdkError.Generic(message: "Invalid variant \(liquidNetwork) for enum LiquidNetwork")
         }
     }
@@ -3758,6 +3761,9 @@ enum BreezSDKLiquidMapper {
 
         case .testnet:
             return "testnet"
+
+        case .regtest:
+            return "regtest"
         }
     }
 

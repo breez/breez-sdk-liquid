@@ -2155,6 +2155,7 @@ impl CstDecode<crate::model::LiquidNetwork> for i32 {
         match self {
             0 => crate::model::LiquidNetwork::Mainnet,
             1 => crate::model::LiquidNetwork::Testnet,
+            2 => crate::model::LiquidNetwork::Regtest,
             _ => unreachable!("Invalid variant for LiquidNetwork: {}", self),
         }
     }
@@ -2839,6 +2840,7 @@ impl SseDecode for crate::model::LiquidNetwork {
         return match inner {
             0 => crate::model::LiquidNetwork::Mainnet,
             1 => crate::model::LiquidNetwork::Testnet,
+            2 => crate::model::LiquidNetwork::Regtest,
             _ => unreachable!("Invalid variant for LiquidNetwork: {}", inner),
         };
     }
@@ -5436,6 +5438,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::LiquidNetwork {
         match self {
             Self::Mainnet => 0.into_dart(),
             Self::Testnet => 1.into_dart(),
+            Self::Regtest => 2.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -7625,6 +7628,7 @@ impl SseEncode for crate::model::LiquidNetwork {
             match self {
                 crate::model::LiquidNetwork::Mainnet => 0,
                 crate::model::LiquidNetwork::Testnet => 1,
+                crate::model::LiquidNetwork::Regtest => 2,
                 _ => {
                     unimplemented!("");
                 }

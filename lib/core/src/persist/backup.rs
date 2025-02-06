@@ -11,6 +11,7 @@ impl Persister {
         self.main_db_dir.join(match self.network {
             LiquidNetwork::Mainnet => "backup.sql",
             LiquidNetwork::Testnet => "backup-testnet.sql",
+            LiquidNetwork::Regtest => "backup-regtest.sql",
         })
     }
 

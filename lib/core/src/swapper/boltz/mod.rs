@@ -48,6 +48,11 @@ pub struct BoltzSwapper<P: ProxyUrlFetcher> {
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub fn new(config: Config, proxy_url: Arc<P>) -> Self {
+        let (tls, validate_domain) = match config.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        };
+
         Self {
             proxy_url,
             client: OnceLock::new(),
@@ -55,15 +60,15 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
                 &config.liquid_electrum_url,
-                true,
-                true,
+                tls,
+                validate_domain,
                 100,
             ),
             bitcoin_electrum_config: ElectrumConfig::new(
                 config.network.as_bitcoin_chain(),
                 &config.bitcoin_electrum_url,
-                true,
-                true,
+                tls,
+                validate_domain,
                 100,
             ),
         }
@@ -75,7 +80,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         }
 
         let (boltz_api_base_url, referral_id) = match &self.config.network {
-            LiquidNetwork::Testnet => (None, None),
+            LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
             LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
                 Ok(Some(swapper_proxy_url)) => split_proxy_url(swapper_proxy_url),
                 _ => (None, None),
