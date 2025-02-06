@@ -17,6 +17,7 @@ use crate::{
 use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},
     generate_random_string,
+    swapper::MockProxyUrlFetcher,
     wallet::{MockSigner, MockWallet},
 };
 
@@ -33,7 +34,7 @@ pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainS
     let onchain_wallet = Arc::new(MockWallet::new(signer)?);
     let swapper = Arc::new(BoltzSwapper::new(
         config.clone(),
-        Arc::new(move || Box::pin(async move { Ok(None) })),
+        Box::new(MockProxyUrlFetcher::new()),
     ));
     let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());

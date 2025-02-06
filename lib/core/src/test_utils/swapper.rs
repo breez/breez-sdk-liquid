@@ -19,7 +19,7 @@ use crate::{
     ensure_sdk,
     error::{PaymentError, SdkError},
     model::{Direction, SendSwap, Swap, Transaction as SdkTransaction, Utxo},
-    swapper::Swapper,
+    swapper::{ProxyUrlFetcher, Swapper},
     test_utils::generate_random_string,
     utils,
 };
@@ -373,5 +373,20 @@ impl Swapper for MockSwapper {
             PaymentError::InvalidOrExpiredFees
         );
         Ok(())
+    }
+}
+
+pub(crate) struct MockProxyUrlFetcher {}
+
+impl MockProxyUrlFetcher {
+    pub(crate) fn new() -> Self {
+        Self {}
+    }
+}
+
+#[async_trait]
+impl ProxyUrlFetcher for MockProxyUrlFetcher {
+    async fn fetch(&self) -> Result<&Option<String>> {
+        Ok(&None)
     }
 }

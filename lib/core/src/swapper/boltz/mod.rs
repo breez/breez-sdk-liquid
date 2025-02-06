@@ -1,9 +1,4 @@
-use std::{
-    future::Future,
-    pin::Pin,
-    str::FromStr,
-    sync::{Arc, OnceLock},
-};
+use std::{str::FromStr, sync::OnceLock};
 
 use anyhow::Result;
 use async_trait::async_trait;
@@ -28,10 +23,11 @@ use crate::{
 };
 
 use self::status_stream::BoltzStatusStream;
-use super::{Swapper, SwapperStatusStream};
+use super::{ProxyUrlFetcher, Swapper, SwapperStatusStream};
 
 pub(crate) mod bitcoin;
 pub(crate) mod liquid;
+pub(crate) mod proxy;
 pub mod status_stream;
 
 pub(crate) struct BoltzClient {
@@ -40,21 +36,18 @@ pub(crate) struct BoltzClient {
     inner: BoltzApiClientV2,
 }
 
-pub(crate) type FetchProxyUrlFn =
-    dyn Fn() -> Pin<Box<dyn Future<Output = Result<Option<String>>> + Send>> + Send + Sync;
-
 pub struct BoltzSwapper {
     config: Config,
     client: OnceLock<BoltzClient>,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
-    fetch_proxy_url: Arc<FetchProxyUrlFn>,
+    proxy_url: Box<dyn ProxyUrlFetcher>,
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config, fetch_proxy_url: Arc<FetchProxyUrlFn>) -> Self {
+    pub fn new(config: Config, proxy_url: Box<dyn ProxyUrlFetcher>) -> Self {
         Self {
-            fetch_proxy_url,
+            proxy_url,
             client: OnceLock::new(),
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
@@ -81,8 +74,8 @@ impl BoltzSwapper {
 
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet => (None, None),
-            LiquidNetwork::Mainnet => match (self.fetch_proxy_url)().await {
-                Ok(Some(swapper_proxy_url)) => Url::parse(&swapper_proxy_url)
+            LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
+                Ok(Some(swapper_proxy_url)) => Url::parse(swapper_proxy_url)
                     .map(|url| match url.query() {
                         None => (None, None),
                         Some(query) => {
@@ -489,10 +482,7 @@ impl Swapper for BoltzSwapper {
     }
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
-        Box::new(BoltzStatusStream::new(
-            self.config.clone(),
-            self.fetch_proxy_url.clone(),
-        ))
+        Box::new(BoltzStatusStream::new(self.config.clone()))
     }
 
     async fn check_for_mrh(

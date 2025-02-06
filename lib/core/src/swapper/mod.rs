@@ -138,3 +138,8 @@ pub trait SwapperStatusStream: Send + Sync {
     fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
 }
+
+#[async_trait]
+pub(crate) trait ProxyUrlFetcher: Send + Sync {
+    async fn fetch(&self) -> Result<&Option<String>>;
+}
