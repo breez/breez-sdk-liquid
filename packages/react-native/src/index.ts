@@ -108,6 +108,7 @@ export interface Config {
 export interface ConnectRequest {
     config: Config
     mnemonic: string
+    passphrase?: string
 }
 
 export interface ConnectWithSignerRequest {

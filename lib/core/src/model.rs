@@ -319,8 +319,12 @@ pub trait Signer: Send + Sync {
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
 pub struct ConnectRequest {
+    /// The SDK [Config]
     pub config: Config,
+    /// The Liquid wallet mnemonic
     pub mnemonic: String,
+    /// The optional passphrase for the seed
+    pub passphrase: Option<String>,
 }
 
 pub struct ConnectWithSignerRequest {

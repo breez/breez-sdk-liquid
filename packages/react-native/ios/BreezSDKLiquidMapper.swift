@@ -612,14 +612,22 @@ enum BreezSDKLiquidMapper {
         guard let mnemonic = connectRequest["mnemonic"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
         }
+        var passphrase: String?
+        if hasNonNilKey(data: connectRequest, key: "passphrase") {
+            guard let passphraseTmp = connectRequest["passphrase"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "passphrase"))
+            }
+            passphrase = passphraseTmp
+        }
 
-        return ConnectRequest(config: config, mnemonic: mnemonic)
+        return ConnectRequest(config: config, mnemonic: mnemonic, passphrase: passphrase)
     }
 
     static func dictionaryOf(connectRequest: ConnectRequest) -> [String: Any?] {
         return [
             "config": dictionaryOf(config: connectRequest.config),
             "mnemonic": connectRequest.mnemonic,
+            "passphrase": connectRequest.passphrase == nil ? nil : connectRequest.passphrase,
         ]
     }
 

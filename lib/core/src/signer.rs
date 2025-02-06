@@ -173,10 +173,10 @@ pub struct SdkSigner {
 }
 
 impl SdkSigner {
-    pub fn new(mnemonic: &str, is_mainnet: bool) -> Result<Self, NewError> {
+    pub fn new(mnemonic: &str, passphrase: &str, is_mainnet: bool) -> Result<Self, NewError> {
         let secp = Secp256k1::new();
         let mnemonic: Mnemonic = mnemonic.parse()?;
-        let seed = mnemonic.to_seed("");
+        let seed = mnemonic.to_seed(passphrase);
 
         let network = if is_mainnet {
             bitcoin::Network::Bitcoin
