@@ -20,7 +20,7 @@ pub(crate) mod data;
 
 const MESSAGE_PREFIX: &[u8; 13] = b"realtimesync:";
 lazy_static! {
-    static ref CURRENT_SCHEMA_VERSION: Version = Version::parse("0.3.0").unwrap();
+    static ref CURRENT_SCHEMA_VERSION: Version = Version::parse("0.4.0").unwrap();
 }
 
 #[derive(Copy, Clone)]
