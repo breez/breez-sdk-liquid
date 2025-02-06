@@ -380,16 +380,38 @@ pub struct _LNOffer {
 
 #[frb(mirror(InputType))]
 pub enum _InputType {
-    BitcoinAddress { address: BitcoinAddressData },
-    LiquidAddress { address: LiquidAddressData },
-    Bolt11 { invoice: LNInvoice },
-    Bolt12Offer { offer: LNOffer },
-    NodeId { node_id: String },
-    Url { url: String },
-    LnUrlPay { data: LnUrlPayRequestData },
-    LnUrlWithdraw { data: LnUrlWithdrawRequestData },
-    LnUrlAuth { data: LnUrlAuthRequestData },
-    LnUrlError { data: LnUrlErrorData },
+    BitcoinAddress {
+        address: BitcoinAddressData,
+    },
+    LiquidAddress {
+        address: LiquidAddressData,
+    },
+    Bolt11 {
+        invoice: LNInvoice,
+    },
+    Bolt12Offer {
+        offer: LNOffer,
+        bip353_address: Option<String>,
+    },
+    NodeId {
+        node_id: String,
+    },
+    Url {
+        url: String,
+    },
+    LnUrlPay {
+        data: LnUrlPayRequestData,
+        bip353_address: Option<String>,
+    },
+    LnUrlWithdraw {
+        data: LnUrlWithdrawRequestData,
+    },
+    LnUrlAuth {
+        data: LnUrlAuthRequestData,
+    },
+    LnUrlError {
+        data: LnUrlErrorData,
+    },
 }
 
 #[frb(mirror(BitcoinAddressData))]
