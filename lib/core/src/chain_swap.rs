@@ -941,6 +941,7 @@ impl ChainSwapHandler {
             Swap::Chain(swap),
             refund_address,
             Some(fee_rate_sat_per_vb as f64),
+            true,
         )?;
 
         Ok((refund_tx_size, refund_tx_fees_sat, refund_tx_id))
