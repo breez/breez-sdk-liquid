@@ -118,12 +118,16 @@ impl LiquidOnchainWallet {
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
         let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
+        info!("Creating new LiquidOnchainWallet with signer");
         let wollet = Self::create_wallet(&config, working_dir, &signer)?;
+        info!("Wallet created successfully");
 
         let working_dir_buf = PathBuf::from_str(working_dir)?;
         if !working_dir_buf.exists() {
+            info!("Creating working directory: {:?}", working_dir_buf.to_str());
             create_dir_all(&working_dir_buf)?;
         }
+        info!("Working directory: {:?}", working_dir_buf.to_str());
 
         Ok(Self {
             config,
@@ -141,10 +145,20 @@ impl LiquidOnchainWallet {
         signer: &SdkLwkSigner,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
+        info!(
+            "Creating wallet with network: {:?} working dir {}",
+            elements_network,
+            working_dir.as_ref().to_str().unwrap()
+        );
         let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
+        info!("Wallet descriptor: {:?}", descriptor);
         let mut lwk_persister =
             FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
+        info!("Wallet persister created");
+
         let wollet_res = Wollet::new(elements_network, lwk_persister, descriptor.clone());
+        info!("Wallet created");
+
         match wollet_res {
             Ok(wollet) => Ok(wollet),
             Err(

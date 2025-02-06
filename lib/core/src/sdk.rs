@@ -172,10 +172,13 @@ impl LiquidSdk {
 
         let persister = Arc::new(Persister::new(&working_dir, config.network, None)?);
         persister.init()?;
+        info!("Initialized persister at {working_dir}");
         persister.replace_asset_metadata(config.asset_metadata.clone())?;
-
+        info!("Replaced asset metadata");
         let liquid_chain_service = Arc::new(HybridLiquidChainService::new(config.clone())?);
+        info!("Initialized Liquid chain service");
         let bitcoin_chain_service = Arc::new(HybridBitcoinChainService::new(config.clone())?);
+        info!("Initialized Bitcoin chain service");
 
         let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
             config.clone(),
@@ -183,13 +186,18 @@ impl LiquidSdk {
             persister.clone(),
             signer.clone(),
         )?);
+        info!("Initialized onchain wallet");
 
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
         let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
+        info!("Initialized Boltz proxy fetcher");
+
         let swapper = Arc::new(BoltzSwapper::new(config.clone(), proxy_url_fetcher));
+        info!("Initialized Boltz swapper");
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
+        info!("Initialized status stream");
 
         let recoverer = Arc::new(Recoverer::new(
             signer.slip77_master_blinding_key()?,
@@ -198,6 +206,7 @@ impl LiquidSdk {
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
         )?);
+        info!("Initialized recoverer");
 
         let mut sync_service = None;
         if let Some(sync_service_url) = config.sync_service_url.clone() {
@@ -216,6 +225,7 @@ impl LiquidSdk {
                 syncer_client,
             )));
         }
+        info!("sync server created");
 
         let send_swap_handler = SendSwapHandler::new(
             config.clone(),
@@ -224,6 +234,7 @@ impl LiquidSdk {
             swapper.clone(),
             liquid_chain_service.clone(),
         );
+        info!("Initialized send swap handler");
 
         let receive_swap_handler = ReceiveSwapHandler::new(
             config.clone(),
@@ -232,6 +243,7 @@ impl LiquidSdk {
             swapper.clone(),
             liquid_chain_service.clone(),
         );
+        info!("Initialized receive swap handler");
 
         let chain_swap_handler = Arc::new(ChainSwapHandler::new(
             config.clone(),
@@ -241,13 +253,17 @@ impl LiquidSdk {
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
         )?);
+        info!("Initialized chain swap handler");
 
         let breez_server = Arc::new(BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?);
+        info!("Initialized Breez server");
 
         let buy_bitcoin_service =
             Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
+        info!("Initialized BuyBitcoin service");
 
         let external_input_parsers = config.get_all_external_input_parsers();
+        info!("Initialized external input parsers");
 
         let sdk = Arc::new(LiquidSdk {
             config: config.clone(),
@@ -271,6 +287,7 @@ impl LiquidSdk {
             buy_bitcoin_service,
             external_input_parsers,
         });
+        info!("Initialized Liquid SDK");
         Ok(sdk)
     }
 
