@@ -1939,8 +1939,12 @@ const _: fn() = || {
         crate::bindings::InputType::Bolt11 { invoice } => {
             let _: crate::bindings::LNInvoice = invoice;
         }
-        crate::bindings::InputType::Bolt12Offer { offer } => {
+        crate::bindings::InputType::Bolt12Offer {
+            offer,
+            bip353_address,
+        } => {
             let _: crate::bindings::LNOffer = offer;
+            let _: Option<String> = bip353_address;
         }
         crate::bindings::InputType::NodeId { node_id } => {
             let _: String = node_id;
@@ -1948,8 +1952,12 @@ const _: fn() = || {
         crate::bindings::InputType::Url { url } => {
             let _: String = url;
         }
-        crate::bindings::InputType::LnUrlPay { data } => {
+        crate::bindings::InputType::LnUrlPay {
+            data,
+            bip353_address,
+        } => {
             let _: crate::bindings::LnUrlPayRequestData = data;
+            let _: Option<String> = bip353_address;
         }
         crate::bindings::InputType::LnUrlWithdraw { data } => {
             let _: crate::bindings::LnUrlWithdrawRequestData = data;
@@ -2747,7 +2755,11 @@ impl SseDecode for crate::bindings::InputType {
             }
             3 => {
                 let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
-                return crate::bindings::InputType::Bolt12Offer { offer: var_offer };
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
+                return crate::bindings::InputType::Bolt12Offer {
+                    offer: var_offer,
+                    bip353_address: var_bip353Address,
+                };
             }
             4 => {
                 let mut var_nodeId = <String>::sse_decode(deserializer);
@@ -2761,7 +2773,11 @@ impl SseDecode for crate::bindings::InputType {
             }
             6 => {
                 let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
-                return crate::bindings::InputType::LnUrlPay { data: var_data };
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
+                return crate::bindings::InputType::LnUrlPay {
+                    data: var_data,
+                    bip353_address: var_bip353Address,
+                };
             }
             7 => {
                 let mut var_data =
@@ -3905,6 +3921,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_paymentHash = <Option<String>>::sse_decode(deserializer);
                 let mut var_destinationPubkey = <Option<String>>::sse_decode(deserializer);
                 let mut var_lnurlInfo = <Option<crate::model::LnUrlInfo>>::sse_decode(deserializer);
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
                 let mut var_claimTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
@@ -3918,6 +3935,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     payment_hash: var_paymentHash,
                     destination_pubkey: var_destinationPubkey,
                     lnurl_info: var_lnurlInfo,
+                    bip353_address: var_bip353Address,
                     claim_tx_id: var_claimTxId,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
@@ -4129,11 +4147,13 @@ impl SseDecode for crate::model::PrepareLnUrlPayRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
         let mut var_amount = <crate::model::PayAmount>::sse_decode(deserializer);
+        let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_validateSuccessActionUrl = <Option<bool>>::sse_decode(deserializer);
         return crate::model::PrepareLnUrlPayRequest {
             data: var_data,
             amount: var_amount,
+            bip353_address: var_bip353Address,
             comment: var_comment,
             validate_success_action_url: var_validateSuccessActionUrl,
         };
@@ -4146,6 +4166,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
+        let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_successAction =
             <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
@@ -4153,6 +4174,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
             data: var_data,
+            bip353_address: var_bip353Address,
             comment: var_comment,
             success_action: var_successAction,
         };
@@ -4540,9 +4562,11 @@ impl SseDecode for crate::model::SendDestination {
             2 => {
                 let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
                 let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt12 {
                     offer: var_offer,
                     receiver_amount_sat: var_receiverAmountSat,
+                    bip353_address: var_bip353Address,
                 };
             }
             _ => {
@@ -5328,18 +5352,30 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::InputType> {
             crate::bindings::InputType::Bolt11 { invoice } => {
                 [2.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::Bolt12Offer { offer } => {
-                [3.into_dart(), offer.into_into_dart().into_dart()].into_dart()
-            }
+            crate::bindings::InputType::Bolt12Offer {
+                offer,
+                bip353_address,
+            } => [
+                3.into_dart(),
+                offer.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::bindings::InputType::NodeId { node_id } => {
                 [4.into_dart(), node_id.into_into_dart().into_dart()].into_dart()
             }
             crate::bindings::InputType::Url { url } => {
                 [5.into_dart(), url.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::InputType::LnUrlPay { data } => {
-                [6.into_dart(), data.into_into_dart().into_dart()].into_dart()
-            }
+            crate::bindings::InputType::LnUrlPay {
+                data,
+                bip353_address,
+            } => [
+                6.into_dart(),
+                data.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::bindings::InputType::LnUrlWithdraw { data } => {
                 [7.into_dart(), data.into_into_dart().into_dart()].into_dart()
             }
@@ -6214,6 +6250,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 payment_hash,
                 destination_pubkey,
                 lnurl_info,
+                bip353_address,
                 claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -6228,6 +6265,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 payment_hash.into_into_dart().into_dart(),
                 destination_pubkey.into_into_dart().into_dart(),
                 lnurl_info.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
                 claim_tx_id.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
@@ -6450,6 +6488,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayRequest {
         [
             self.data.into_into_dart().into_dart(),
             self.amount.into_into_dart().into_dart(),
+            self.bip353_address.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
             self.validate_success_action_url
                 .into_into_dart()
@@ -6476,6 +6515,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayResponse {
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.data.into_into_dart().into_dart(),
+            self.bip353_address.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
             self.success_action.into_into_dart().into_dart(),
         ]
@@ -6970,10 +7010,12 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
             crate::model::SendDestination::Bolt12 {
                 offer,
                 receiver_amount_sat,
+                bip353_address,
             } => [
                 2.into_dart(),
                 offer.into_into_dart().into_dart(),
                 receiver_amount_sat.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
             ]
             .into_dart(),
             _ => {
@@ -7553,9 +7595,13 @@ impl SseEncode for crate::bindings::InputType {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
             }
-            crate::bindings::InputType::Bolt12Offer { offer } => {
+            crate::bindings::InputType::Bolt12Offer {
+                offer,
+                bip353_address,
+            } => {
                 <i32>::sse_encode(3, serializer);
                 <crate::bindings::LNOffer>::sse_encode(offer, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
             }
             crate::bindings::InputType::NodeId { node_id } => {
                 <i32>::sse_encode(4, serializer);
@@ -7565,9 +7611,13 @@ impl SseEncode for crate::bindings::InputType {
                 <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(url, serializer);
             }
-            crate::bindings::InputType::LnUrlPay { data } => {
+            crate::bindings::InputType::LnUrlPay {
+                data,
+                bip353_address,
+            } => {
                 <i32>::sse_encode(6, serializer);
                 <crate::bindings::LnUrlPayRequestData>::sse_encode(data, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
             }
             crate::bindings::InputType::LnUrlWithdraw { data } => {
                 <i32>::sse_encode(7, serializer);
@@ -8482,6 +8532,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 payment_hash,
                 destination_pubkey,
                 lnurl_info,
+                bip353_address,
                 claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -8496,6 +8547,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <Option<String>>::sse_encode(payment_hash, serializer);
                 <Option<String>>::sse_encode(destination_pubkey, serializer);
                 <Option<crate::model::LnUrlInfo>>::sse_encode(lnurl_info, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
                 <Option<String>>::sse_encode(claim_tx_id, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
@@ -8705,6 +8757,7 @@ impl SseEncode for crate::model::PrepareLnUrlPayRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
         <crate::model::PayAmount>::sse_encode(self.amount, serializer);
+        <Option<String>>::sse_encode(self.bip353_address, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<bool>>::sse_encode(self.validate_success_action_url, serializer);
     }
@@ -8716,6 +8769,7 @@ impl SseEncode for crate::model::PrepareLnUrlPayResponse {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
+        <Option<String>>::sse_encode(self.bip353_address, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<crate::bindings::SuccessAction>>::sse_encode(self.success_action, serializer);
     }
@@ -8989,10 +9043,12 @@ impl SseEncode for crate::model::SendDestination {
             crate::model::SendDestination::Bolt12 {
                 offer,
                 receiver_amount_sat,
+                bip353_address,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNOffer>::sse_encode(offer, serializer);
                 <u64>::sse_encode(receiver_amount_sat, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9954,6 +10010,7 @@ mod io {
                     let ans = unsafe { self.kind.Bolt12Offer };
                     crate::bindings::InputType::Bolt12Offer {
                         offer: ans.offer.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                     }
                 }
                 4 => {
@@ -9972,6 +10029,7 @@ mod io {
                     let ans = unsafe { self.kind.LnUrlPay };
                     crate::bindings::InputType::LnUrlPay {
                         data: ans.data.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                     }
                 }
                 7 => {
@@ -10712,6 +10770,7 @@ mod io {
                         payment_hash: ans.payment_hash.cst_decode(),
                         destination_pubkey: ans.destination_pubkey.cst_decode(),
                         lnurl_info: ans.lnurl_info.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                         claim_tx_id: ans.claim_tx_id.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
@@ -10858,6 +10917,7 @@ mod io {
             crate::model::PrepareLnUrlPayRequest {
                 data: self.data.cst_decode(),
                 amount: self.amount.cst_decode(),
+                bip353_address: self.bip353_address.cst_decode(),
                 comment: self.comment.cst_decode(),
                 validate_success_action_url: self.validate_success_action_url.cst_decode(),
             }
@@ -10870,6 +10930,7 @@ mod io {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 data: self.data.cst_decode(),
+                bip353_address: self.bip353_address.cst_decode(),
                 comment: self.comment.cst_decode(),
                 success_action: self.success_action.cst_decode(),
             }
@@ -11173,6 +11234,7 @@ mod io {
                     crate::model::SendDestination::Bolt12 {
                         offer: ans.offer.cst_decode(),
                         receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -12174,6 +12236,7 @@ mod io {
             Self {
                 data: Default::default(),
                 amount: Default::default(),
+                bip353_address: core::ptr::null_mut(),
                 comment: core::ptr::null_mut(),
                 validate_success_action_url: core::ptr::null_mut(),
             }
@@ -12190,6 +12253,7 @@ mod io {
                 destination: Default::default(),
                 fees_sat: Default::default(),
                 data: Default::default(),
+                bip353_address: core::ptr::null_mut(),
                 comment: core::ptr::null_mut(),
                 success_action: core::ptr::null_mut(),
             }
@@ -13884,6 +13948,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_InputType_Bolt12Offer {
         offer: *mut wire_cst_ln_offer,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13899,6 +13964,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_InputType_LnUrlPay {
         data: *mut wire_cst_ln_url_pay_request_data,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14507,6 +14573,7 @@ mod io {
         payment_hash: *mut wire_cst_list_prim_u_8_strict,
         destination_pubkey: *mut wire_cst_list_prim_u_8_strict,
         lnurl_info: *mut wire_cst_ln_url_info,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
         claim_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
@@ -14627,6 +14694,7 @@ mod io {
     pub struct wire_cst_prepare_ln_url_pay_request {
         data: wire_cst_ln_url_pay_request_data,
         amount: wire_cst_pay_amount,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
         comment: *mut wire_cst_list_prim_u_8_strict,
         validate_success_action_url: *mut bool,
     }
@@ -14636,6 +14704,7 @@ mod io {
         destination: wire_cst_send_destination,
         fees_sat: u64,
         data: wire_cst_ln_url_pay_request_data,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
         comment: *mut wire_cst_list_prim_u_8_strict,
         success_action: *mut wire_cst_success_action,
     }
@@ -14897,6 +14966,7 @@ mod io {
     pub struct wire_cst_SendDestination_Bolt12 {
         offer: *mut wire_cst_ln_offer,
         receiver_amount_sat: u64,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

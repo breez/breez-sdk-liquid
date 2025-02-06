@@ -692,7 +692,10 @@ pub(crate) async fn handle_command(
         } => {
             let input = sdk.parse(&lnurl).await?;
             let res = match input {
-                InputType::LnUrlPay { data: pd } => {
+                InputType::LnUrlPay {
+                    data: pd,
+                    bip353_address,
+                } => {
                     let amount = match drain.unwrap_or(false) {
                         true => PayAmount::Drain,
                         false => {
@@ -713,6 +716,7 @@ pub(crate) async fn handle_command(
                         .prepare_lnurl_pay(PrepareLnUrlPayRequest {
                             data: pd,
                             amount,
+                            bip353_address,
                             comment: None,
                             validate_success_action_url: validate_success_url,
                         })

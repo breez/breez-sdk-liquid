@@ -285,5 +285,6 @@ pub(crate) fn current_migrations(is_mainnet: bool) -> Vec<&'static str> {
         ) STRICT;
         ",
         insert_default_asset_metadata,
+        "ALTER TABLE payment_details ADD COLUMN bip353_address TEXT;",
     ]
 }
