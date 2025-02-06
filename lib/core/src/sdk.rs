@@ -99,14 +99,22 @@ impl LiquidSdk {
     ///     * `mnemonic` - the Liquid wallet mnemonic
     ///     * `config` - the SDK [Config]
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
+        let start_ts = Instant::now();
+
         let signer = Box::new(SdkSigner::new(
             req.mnemonic.as_ref(),
             req.config.network == LiquidNetwork::Mainnet,
         )?);
 
-        Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)
-            .inspect_err(|e| error!("Failed to connect: {:?}", e))
-            .await
+        let sdk =
+            Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)
+                .inspect_err(|e| error!("Failed to connect: {:?}", e))
+                .await;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
+        sdk
     }
 
     pub async fn connect_with_signer(
@@ -285,8 +293,6 @@ impl LiquidSdk {
     /// Should only be called as part of [LiquidSdk::connect].
     async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
         let mut is_started = self.is_started.write().await;
-        let start_ts = Instant::now();
-
         self.persister
             .update_send_swaps_by_state(Created, TimedOut)
             .inspect_err(|e| error!("Failed to update send swaps by state: {:?}", e))?;
@@ -295,9 +301,6 @@ impl LiquidSdk {
             .inspect_err(|e| error!("Failed to start background tasks: {:?}", e))
             .await?;
         *is_started = true;
-
-        let start_duration = start_ts.elapsed();
-        info!("Liquid SDK initialized in: {start_duration:?}");
         Ok(())
     }
 
