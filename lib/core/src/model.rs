@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
-    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST_URL_V2, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -191,7 +191,7 @@ impl Config {
         match self.network {
             LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-            LiquidNetwork::Regtest => BOLTZ_REGTEST_URL_V2,
+            LiquidNetwork::Regtest => BOLTZ_REGTEST,
         }
     }
 }
