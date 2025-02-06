@@ -187,7 +187,7 @@ impl LiquidSdk {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let proxy_url_fetcher = Box::new(BoltzProxyFetcher::new(persister.clone()));
+        let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
         let swapper = Arc::new(BoltzSwapper::new(config.clone(), proxy_url_fetcher));
         let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
 

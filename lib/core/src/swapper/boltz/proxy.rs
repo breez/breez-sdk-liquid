@@ -3,12 +3,29 @@ use std::sync::{Arc, OnceLock};
 use anyhow::Result;
 use async_trait::async_trait;
 use sdk_common::prelude::BreezServer;
+use url::Url;
 
 use crate::{persist::Persister, swapper::ProxyUrlFetcher};
 
 pub(crate) struct BoltzProxyFetcher {
     url: OnceLock<Option<String>>,
     persister: Arc<Persister>,
+}
+
+pub(crate) fn split_proxy_url(url: &str) -> (Option<String>, Option<String>) {
+    Url::parse(url)
+        .map(|url| {
+            let api_base_url = url.domain().map(|domain| format!("https://{domain}/v2"));
+            let referral_id = url.query().and_then(|q| {
+                q.split('=')
+                    .map(Into::into)
+                    .collect::<Vec<String>>()
+                    .get(1)
+                    .cloned()
+            });
+            (api_base_url, referral_id)
+        })
+        .unwrap_or_default()
 }
 
 impl BoltzProxyFetcher {

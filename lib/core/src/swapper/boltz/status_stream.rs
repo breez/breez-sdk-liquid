@@ -15,26 +15,34 @@ use url::Url;
 use crate::model::Config;
 use crate::swapper::{ReconnectHandler, SwapperStatusStream};
 
+use super::{split_proxy_url, ProxyUrlFetcher};
+
 pub(crate) struct BoltzStatusStream {
     config: Config,
+    proxy_url: Arc<dyn ProxyUrlFetcher>,
     subscription_notifier: broadcast::Sender<String>,
     update_notifier: broadcast::Sender<boltz::Update>,
 }
 
 impl BoltzStatusStream {
-    pub(crate) fn new(config: Config) -> Self {
+    pub(crate) fn new(config: Config, proxy_url: Arc<dyn ProxyUrlFetcher>) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
 
         Self {
             config,
+            proxy_url,
             subscription_notifier,
             update_notifier,
         }
     }
 
     async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let url = self.config.default_boltz_url().to_string();
+        let default_url = self.config.default_boltz_url().to_string();
+        let url = match self.proxy_url.fetch().await {
+            Ok(Some(url)) => split_proxy_url(url).0.unwrap_or(default_url),
+            _ => default_url,
+        };
         let url = url.replace("http", "ws") + "/ws";
         let (socket, _) = connect_async(Url::parse(&url)?)
             .await

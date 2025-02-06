@@ -1,5 +1,13 @@
-use std::{str::FromStr, sync::OnceLock};
+use std::{
+    str::FromStr,
+    sync::{Arc, OnceLock},
+};
 
+use crate::{
+    error::{PaymentError, SdkError},
+    model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
+    prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use boltz_client::{
@@ -14,13 +22,7 @@ use boltz_client::{
     Amount,
 };
 use log::info;
-use url::Url;
-
-use crate::{
-    error::{PaymentError, SdkError},
-    model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
-    prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
-};
+use proxy::split_proxy_url;
 
 use self::status_stream::BoltzStatusStream;
 use super::{ProxyUrlFetcher, Swapper, SwapperStatusStream};
@@ -41,11 +43,11 @@ pub struct BoltzSwapper {
     client: OnceLock<BoltzClient>,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
-    proxy_url: Box<dyn ProxyUrlFetcher>,
+    proxy_url: Arc<dyn ProxyUrlFetcher>,
 }
 
 impl BoltzSwapper {
-    pub fn new(config: Config, proxy_url: Box<dyn ProxyUrlFetcher>) -> Self {
+    pub fn new(config: Config, proxy_url: Arc<dyn ProxyUrlFetcher>) -> Self {
         Self {
             proxy_url,
             client: OnceLock::new(),
@@ -75,18 +77,7 @@ impl BoltzSwapper {
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet => (None, None),
             LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
-                Ok(Some(swapper_proxy_url)) => Url::parse(swapper_proxy_url)
-                    .map(|url| match url.query() {
-                        None => (None, None),
-                        Some(query) => {
-                            let api_base_url =
-                                url.domain().map(|domain| format!("https://{domain}/v2"));
-                            let parts: Vec<String> = query.split('=').map(Into::into).collect();
-                            let referral_id = parts.get(1).cloned();
-                            (api_base_url, referral_id)
-                        }
-                    })
-                    .unwrap_or_default(),
+                Ok(Some(swapper_proxy_url)) => split_proxy_url(swapper_proxy_url),
                 _ => (None, None),
             },
         };
@@ -482,7 +473,10 @@ impl Swapper for BoltzSwapper {
     }
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
-        Box::new(BoltzStatusStream::new(self.config.clone()))
+        Box::new(BoltzStatusStream::new(
+            self.config.clone(),
+            self.proxy_url.clone(),
+        ))
     }
 
     async fn check_for_mrh(
