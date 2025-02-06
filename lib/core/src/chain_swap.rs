@@ -402,6 +402,7 @@ impl ChainSwapHandler {
         let quote = self
             .swapper
             .get_zero_amount_chain_swap_quote(&id)
+            .await
             .map(|quote| quote.to_sat())?;
         info!("Got quote of {quote} sat for swap {}", &id);
 
@@ -420,7 +421,8 @@ impl ChainSwapHandler {
                     .inspect_err(|e| {
                         error!("Failed to accept zero-amount swap {id} quote: {e} - trying to erase the accepted receiver amount...");
                         let _ = self.persister.update_accepted_receiver_amount(&id, None);
-                    })?;
+                    })
+                    .await?;
                 self.persister.set_chain_swap_auto_accepted_fees(&id)
             }
             ValidateAmountlessSwapResult::RequiresUserAction {
@@ -828,7 +830,8 @@ impl ChainSwapHandler {
         };
         let claim_tx = self
             .swapper
-            .create_claim_tx(Swap::Chain(swap.clone()), claim_address.clone())?;
+            .create_claim_tx(Swap::Chain(swap.clone()), claim_address.clone())
+            .await?;
 
         // Set the swap claim_tx_id before broadcasting.
         // If another claim_tx_id has been set in the meantime, don't broadcast the claim tx
@@ -841,26 +844,26 @@ impl ChainSwapHandler {
                 let broadcast_res = match claim_tx {
                     // We attempt broadcasting via chain service, then fallback to Boltz
                     SdkTransaction::Liquid(tx) => {
-                        self.liquid_chain_service
-                            .broadcast(&tx)
-                            .await
-                            .map(|tx_id| tx_id.to_hex())
-                            .or_else(|err| {
+                        match self.liquid_chain_service.broadcast(&tx).await {
+                            Ok(tx_id) => Ok(tx_id.to_hex()),
+                            Err(err) => {
                                 debug!(
-                                    "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
-                                );
+                                        "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
+                                    );
                                 let claim_tx_hex = tx.serialize().to_lower_hex_string();
-                                self.swapper.broadcast_tx(self.config.network.into(), &claim_tx_hex)
-                            })
+                                self.swapper
+                                    .broadcast_tx(self.config.network.into(), &claim_tx_hex)
+                                    .await
+                            }
+                        }
                     }
-                    SdkTransaction::Bitcoin(tx) => {
-                        self.bitcoin_chain_service
-                            .broadcast(&tx)
-                            .map(|tx_id| tx_id.to_hex())
-                            .map_err(|err| PaymentError::Generic {
-                                err: err.to_string(),
-                            })
-                    }
+                    SdkTransaction::Bitcoin(tx) => self
+                        .bitcoin_chain_service
+                        .broadcast(&tx)
+                        .map(|tx_id| tx_id.to_hex())
+                        .map_err(|err| PaymentError::Generic {
+                            err: err.to_string(),
+                        }),
                 };
 
                 match broadcast_res {
@@ -937,11 +940,14 @@ impl ChainSwapHandler {
             );
         }
 
-        let (refund_tx_size, refund_tx_fees_sat) = self.swapper.estimate_refund_broadcast(
-            Swap::Chain(swap),
-            refund_address,
-            Some(fee_rate_sat_per_vb as f64),
-        )?;
+        let (refund_tx_size, refund_tx_fees_sat) = self
+            .swapper
+            .estimate_refund_broadcast(
+                Swap::Chain(swap),
+                refund_address,
+                Some(fee_rate_sat_per_vb as f64),
+            )
+            .await?;
 
         Ok((refund_tx_size, refund_tx_fees_sat, refund_tx_id))
     }
@@ -985,13 +991,16 @@ impl ChainSwapHandler {
             .get_script_utxos(&script_pk)
             .await?;
 
-        let SdkTransaction::Bitcoin(refund_tx) = self.swapper.create_refund_tx(
-            Swap::Chain(swap.clone()),
-            refund_address,
-            utxos,
-            Some(broadcast_fee_rate_sat_per_vb as f64),
-            is_cooperative,
-        )?
+        let SdkTransaction::Bitcoin(refund_tx) = self
+            .swapper
+            .create_refund_tx(
+                Swap::Chain(swap.clone()),
+                refund_address,
+                utxos,
+                Some(broadcast_fee_rate_sat_per_vb as f64),
+                is_cooperative,
+            )
+            .await?
         else {
             return Err(PaymentError::Generic {
                 err: format!("Unexpected refund tx type returned for incoming Chain swap {id}",),
@@ -1054,13 +1063,16 @@ impl ChainSwapHandler {
             .await?;
 
         let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
-        let SdkTransaction::Liquid(refund_tx) = self.swapper.create_refund_tx(
-            Swap::Chain(swap.clone()),
-            &refund_address,
-            utxos,
-            None,
-            is_cooperative,
-        )?
+        let SdkTransaction::Liquid(refund_tx) = self
+            .swapper
+            .create_refund_tx(
+                Swap::Chain(swap.clone()),
+                &refund_address,
+                utxos,
+                None,
+                is_cooperative,
+            )
+            .await?
         else {
             return Err(PaymentError::Generic {
                 err: format!(

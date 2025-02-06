@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use boltz_client::swaps::boltz::{self, Subscription, SwapUpdate};
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, warn};
@@ -13,28 +12,39 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
+use crate::model::Config;
 use crate::swapper::{ReconnectHandler, SwapperStatusStream};
 
+use super::{split_proxy_url, ProxyUrlFetcher};
+
 pub(crate) struct BoltzStatusStream {
-    url: String,
+    config: Config,
+    proxy_url: Arc<dyn ProxyUrlFetcher>,
     subscription_notifier: broadcast::Sender<String>,
     update_notifier: broadcast::Sender<boltz::Update>,
 }
 
 impl BoltzStatusStream {
-    pub(crate) fn new(url: &str) -> Self {
+    pub(crate) fn new(config: Config, proxy_url: Arc<dyn ProxyUrlFetcher>) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
 
         Self {
-            url: url.replace("http", "ws") + "/ws",
+            config,
+            proxy_url,
             subscription_notifier,
             update_notifier,
         }
     }
 
     async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let (socket, _) = connect_async(Url::parse(&self.url)?)
+        let default_url = self.config.default_boltz_url().to_string();
+        let url = match self.proxy_url.fetch().await {
+            Ok(Some(url)) => split_proxy_url(url).0.unwrap_or(default_url),
+            _ => default_url,
+        };
+        let url = url.replace("http", "ws") + "/ws";
+        let (socket, _) = connect_async(Url::parse(&url)?)
             .await
             .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
         Ok(socket)
@@ -58,7 +68,6 @@ impl BoltzStatusStream {
     }
 }
 
-#[async_trait]
 impl SwapperStatusStream for BoltzStatusStream {
     fn track_swap_id(&self, swap_id: &str) -> Result<()> {
         let _ = self.subscription_notifier.send(swap_id.to_string());
@@ -69,7 +78,7 @@ impl SwapperStatusStream for BoltzStatusStream {
         self.update_notifier.subscribe()
     }
 
-    async fn start(
+    fn start(
         self: Arc<Self>,
         callback: Box<dyn ReconnectHandler>,
         mut shutdown: watch::Receiver<()>,

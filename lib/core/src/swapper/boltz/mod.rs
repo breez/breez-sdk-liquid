@@ -1,11 +1,20 @@
-use std::str::FromStr;
+use std::{
+    str::FromStr,
+    sync::{Arc, OnceLock},
+};
 
+use crate::{
+    error::{PaymentError, SdkError},
+    model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
+    prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
+};
+use anyhow::Result;
+use async_trait::async_trait;
 use boltz_client::{
     boltz::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
         CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
-        BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::{electrum::ElectrumConfig, Chain},
@@ -13,63 +22,35 @@ use boltz_client::{
     Amount,
 };
 use log::info;
-use url::Url;
-
-use crate::{
-    error::{PaymentError, SdkError},
-    model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
-    prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
-};
+use proxy::split_proxy_url;
 
 use self::status_stream::BoltzStatusStream;
-use super::{Swapper, SwapperStatusStream};
+use super::{ProxyUrlFetcher, Swapper, SwapperStatusStream};
 
 pub(crate) mod bitcoin;
 pub(crate) mod liquid;
+pub(crate) mod proxy;
 pub mod status_stream;
 
-pub struct BoltzSwapper {
-    client: BoltzApiClientV2,
-    boltz_url: String,
+pub(crate) struct BoltzClient {
+    url: String,
     referral_id: Option<String>,
-    config: Config,
-    liquid_electrum_config: ElectrumConfig,
-    bitcoin_electrum_config: ElectrumConfig,
+    inner: BoltzApiClientV2,
 }
 
-impl BoltzSwapper {
-    pub fn new(config: Config, swapper_proxy_url: Option<String>) -> Self {
-        let (boltz_api_base_url, referral_id) = match &config.network {
-            LiquidNetwork::Testnet => (None, None),
-            LiquidNetwork::Mainnet => match &swapper_proxy_url {
-                Some(swapper_proxy_url) => Url::parse(swapper_proxy_url)
-                    .map(|url| match url.query() {
-                        None => (None, None),
-                        Some(query) => {
-                            let api_base_url =
-                                url.domain().map(|domain| format!("https://{domain}/v2"));
-                            let parts: Vec<String> = query.split('=').map(Into::into).collect();
-                            let referral_id = parts.get(1).cloned();
-                            (api_base_url, referral_id)
-                        }
-                    })
-                    .unwrap_or_default(),
-                None => (None, None),
-            },
-        };
+pub struct BoltzSwapper<P: ProxyUrlFetcher> {
+    config: Config,
+    client: OnceLock<BoltzClient>,
+    liquid_electrum_config: ElectrumConfig,
+    bitcoin_electrum_config: ElectrumConfig,
+    proxy_url: Arc<P>,
+}
 
-        let boltz_url = boltz_api_base_url.unwrap_or(
-            match config.network {
-                LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
-                LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-            }
-            .to_string(),
-        );
-
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
+    pub fn new(config: Config, proxy_url: Arc<P>) -> Self {
         Self {
-            client: BoltzApiClientV2::new(&boltz_url),
-            boltz_url,
-            referral_id,
+            proxy_url,
+            client: OnceLock::new(),
             config: config.clone(),
             liquid_electrum_config: ElectrumConfig::new(
                 config.network.into(),
@@ -88,7 +69,34 @@ impl BoltzSwapper {
         }
     }
 
-    fn get_claim_partial_sig(
+    async fn get_client(&self) -> Result<&BoltzClient> {
+        if let Some(client) = self.client.get() {
+            return Ok(client);
+        }
+
+        let (boltz_api_base_url, referral_id) = match &self.config.network {
+            LiquidNetwork::Testnet => (None, None),
+            LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
+                Ok(Some(swapper_proxy_url)) => split_proxy_url(swapper_proxy_url),
+                _ => (None, None),
+            },
+        };
+
+        let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
+
+        let client = self.client.get_or_init(|| BoltzClient {
+            inner: BoltzApiClientV2::new(&boltz_url),
+            url: boltz_url,
+            referral_id,
+        });
+        Ok(client)
+    }
+
+    async fn get_url(&self) -> Result<String> {
+        Ok(self.get_client().await?.url.clone())
+    }
+
+    async fn get_claim_partial_sig(
         &self,
         swap: &ChainSwap,
     ) -> Result<(MusigPartialSignature, MusigPubNonce), PaymentError> {
@@ -98,11 +106,16 @@ impl BoltzSwapper {
         // We need it to calculate the musig partial sig for the claim tx from the other chain
         let lockup_address = &swap.lockup_address;
 
-        let claim_tx_details = self.client.get_chain_claim_tx_details(&swap.id)?;
+        let claim_tx_details = self
+            .get_client()
+            .await?
+            .inner
+            .get_chain_claim_tx_details(&swap.id)?;
         match swap.direction {
             Direction::Incoming => {
-                let refund_tx_wrapper =
-                    self.new_btc_refund_wrapper(&Swap::Chain(swap.clone()), lockup_address)?;
+                let refund_tx_wrapper = self
+                    .new_btc_refund_wrapper(&Swap::Chain(swap.clone()), lockup_address)
+                    .await?;
 
                 refund_tx_wrapper.partial_sign(
                     &refund_keypair,
@@ -111,8 +124,9 @@ impl BoltzSwapper {
                 )
             }
             Direction::Outgoing => {
-                let refund_tx_wrapper =
-                    self.new_lbtc_refund_wrapper(&Swap::Chain(swap.clone()), lockup_address)?;
+                let refund_tx_wrapper = self
+                    .new_lbtc_refund_wrapper(&Swap::Chain(swap.clone()), lockup_address)
+                    .await?;
 
                 refund_tx_wrapper.partial_sign(
                     &refund_keypair,
@@ -124,48 +138,54 @@ impl BoltzSwapper {
         .map_err(Into::into)
     }
 
-    fn get_cooperative_details(
+    async fn get_cooperative_details(
         &self,
         swap_id: String,
         pub_nonce: Option<MusigPubNonce>,
         partial_sig: Option<MusigPartialSignature>,
-    ) -> Option<Cooperative> {
-        Some(Cooperative {
-            boltz_api: &self.client,
+    ) -> Result<Option<Cooperative>> {
+        Ok(Some(Cooperative {
+            boltz_api: &self.get_client().await?.inner,
             swap_id,
             pub_nonce,
             partial_sig,
-        })
+        }))
     }
 }
 
-impl Swapper for BoltzSwapper {
+#[async_trait]
+impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
     /// Create a new chain swap
-    fn create_chain_swap(
+    async fn create_chain_swap(
         &self,
         req: CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError> {
+        let client = self.get_client().await?;
         let modified_req = CreateChainRequest {
-            referral_id: self.referral_id.clone(),
+            referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(self.client.post_chain_req(modified_req)?)
+        Ok(client.inner.post_chain_req(modified_req)?)
     }
 
     /// Create a new send swap
-    fn create_send_swap(
+    async fn create_send_swap(
         &self,
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
+        let client = self.get_client().await?;
         let modified_req = CreateSubmarineRequest {
-            referral_id: self.referral_id.clone(),
+            referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(self.client.post_swap_req(&modified_req)?)
+        Ok(client.inner.post_swap_req(&modified_req)?)
     }
 
-    fn get_chain_pair(&self, direction: Direction) -> Result<Option<ChainPair>, PaymentError> {
-        let pairs = self.client.get_chain_pairs()?;
+    async fn get_chain_pair(
+        &self,
+        direction: Direction,
+    ) -> Result<Option<ChainPair>, PaymentError> {
+        let pairs = self.get_client().await?.inner.get_chain_pairs()?;
         let pair = match direction {
             Direction::Incoming => pairs.get_btc_to_lbtc_pair(),
             Direction::Outgoing => pairs.get_lbtc_to_btc_pair(),
@@ -173,48 +193,68 @@ impl Swapper for BoltzSwapper {
         Ok(pair)
     }
 
-    fn get_chain_pairs(&self) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
-        let pairs = self.client.get_chain_pairs()?;
+    async fn get_chain_pairs(
+        &self,
+    ) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
+        let pairs = self.get_client().await?.inner.get_chain_pairs()?;
         let pair_outgoing = pairs.get_lbtc_to_btc_pair();
         let pair_incoming = pairs.get_btc_to_lbtc_pair();
         Ok((pair_outgoing, pair_incoming))
     }
 
-    fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError> {
-        self.client
+    async fn get_zero_amount_chain_swap_quote(&self, swap_id: &str) -> Result<Amount, SdkError> {
+        self.get_client()
+            .await?
+            .inner
             .get_quote(swap_id)
             .map(|r| Amount::from_sat(r.amount))
             .map_err(Into::into)
     }
 
-    fn accept_zero_amount_chain_swap_quote(
+    async fn accept_zero_amount_chain_swap_quote(
         &self,
         swap_id: &str,
         server_lockup_sat: u64,
     ) -> Result<(), PaymentError> {
-        self.client
+        self.get_client()
+            .await?
+            .inner
             .accept_quote(swap_id, server_lockup_sat)
             .map_err(Into::into)
     }
 
     /// Get a submarine pair information
-    fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
-        Ok(self.client.get_submarine_pairs()?.get_lbtc_to_btc_pair())
+    async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
+        Ok(self
+            .get_client()
+            .await?
+            .inner
+            .get_submarine_pairs()?
+            .get_lbtc_to_btc_pair())
     }
 
     /// Get a submarine swap's preimage
-    fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError> {
-        Ok(self.client.get_submarine_preimage(swap_id)?.preimage)
+    async fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError> {
+        Ok(self
+            .get_client()
+            .await?
+            .inner
+            .get_submarine_preimage(swap_id)?
+            .preimage)
     }
 
     /// Get claim tx details which includes the preimage as a proof of payment.
     /// It is used to validate the preimage before claiming which is the reason why we need to separate
     /// the claim into two steps.
-    fn get_send_claim_tx_details(
+    async fn get_send_claim_tx_details(
         &self,
         swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError> {
-        let claim_tx_response = self.client.get_submarine_claim_tx_details(&swap.id)?;
+        let claim_tx_response = self
+            .get_client()
+            .await?
+            .inner
+            .get_submarine_claim_tx_details(&swap.id)?;
         info!("Received claim tx details: {:?}", &claim_tx_response);
 
         self.validate_send_swap_preimage(&swap.id, &swap.invoice, &claim_tx_response.preimage)?;
@@ -223,7 +263,7 @@ impl Swapper for BoltzSwapper {
 
     /// Claim send swap cooperatively. Here the remote swapper is the one that claims.
     /// We are helping to use key spend path for cheaper fees.
-    fn claim_send_swap_cooperative(
+    async fn claim_send_swap_cooperative(
         &self,
         swap: &SendSwap,
         claim_tx_response: SubmarineClaimTxResponse,
@@ -231,8 +271,9 @@ impl Swapper for BoltzSwapper {
     ) -> Result<(), PaymentError> {
         let swap_id = &swap.id;
         let keypair = swap.get_refund_keypair()?;
-        let refund_tx_wrapper =
-            self.new_lbtc_refund_wrapper(&Swap::Send(swap.clone()), refund_address)?;
+        let refund_tx_wrapper = self
+            .new_lbtc_refund_wrapper(&Swap::Send(swap.clone()), refund_address)
+            .await?;
 
         self.validate_send_swap_preimage(swap_id, &swap.invoice, &claim_tx_response.preimage)?;
 
@@ -242,34 +283,39 @@ impl Swapper for BoltzSwapper {
             &claim_tx_response.transaction_hash,
         )?;
 
-        self.client.post_submarine_claim_tx_details(
-            &swap_id.to_string(),
-            pub_nonce,
-            partial_sig,
-        )?;
+        self.get_client()
+            .await?
+            .inner
+            .post_submarine_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)?;
         info!("Successfully sent claim details for swap-in {swap_id}");
         Ok(())
     }
 
     // Create a new receive swap
-    fn create_receive_swap(
+    async fn create_receive_swap(
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
+        let client = self.get_client().await?;
         let modified_req = CreateReverseRequest {
-            referral_id: self.referral_id.clone(),
+            referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(self.client.post_reverse_req(modified_req)?)
+        Ok(client.inner.post_reverse_req(modified_req)?)
     }
 
     // Get a reverse pair information
-    fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
-        Ok(self.client.get_reverse_pairs()?.get_btc_to_lbtc_pair())
+    async fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
+        Ok(self
+            .get_client()
+            .await?
+            .inner
+            .get_reverse_pairs()?
+            .get_btc_to_lbtc_pair())
     }
 
     /// Create a claim transaction for a receive or chain swap
-    fn create_claim_tx(
+    async fn create_claim_tx(
         &self,
         swap: Swap,
         claim_address: Option<String>,
@@ -285,12 +331,14 @@ impl Swapper for BoltzSwapper {
                     });
                 };
                 match swap.direction {
-                    Direction::Incoming => {
-                        Transaction::Liquid(self.new_incoming_chain_claim_tx(swap, claim_address)?)
-                    }
-                    Direction::Outgoing => {
-                        Transaction::Bitcoin(self.new_outgoing_chain_claim_tx(swap, claim_address)?)
-                    }
+                    Direction::Incoming => Transaction::Liquid(
+                        self.new_incoming_chain_claim_tx(swap, claim_address)
+                            .await?,
+                    ),
+                    Direction::Outgoing => Transaction::Bitcoin(
+                        self.new_outgoing_chain_claim_tx(swap, claim_address)
+                            .await?,
+                    ),
                 }
             }
             Swap::Receive(swap) => {
@@ -302,7 +350,7 @@ impl Swapper for BoltzSwapper {
                         ),
                     });
                 };
-                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address)?)
+                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address).await?)
             }
             Swap::Send(swap) => {
                 return Err(PaymentError::Generic {
@@ -318,7 +366,7 @@ impl Swapper for BoltzSwapper {
     }
 
     /// Estimate the refund broadcast transaction size and fees in sats for a send or chain swap
-    fn estimate_refund_broadcast(
+    async fn estimate_refund_broadcast(
         &self,
         swap: Swap,
         refund_address: &str,
@@ -339,10 +387,10 @@ impl Swapper for BoltzSwapper {
             }
         };
 
-        let refund_tx_size = match self.new_lbtc_refund_wrapper(&swap, refund_address) {
+        let refund_tx_size = match self.new_lbtc_refund_wrapper(&swap, refund_address).await {
             Ok(refund_tx_wrapper) => refund_tx_wrapper.size(&refund_keypair, &preimage, true)?,
             Err(_) => {
-                let refund_tx_wrapper = self.new_btc_refund_wrapper(&swap, refund_address)?;
+                let refund_tx_wrapper = self.new_btc_refund_wrapper(&swap, refund_address).await?;
                 refund_tx_wrapper.size(&refund_keypair, &preimage)?
             }
         } as u32;
@@ -354,7 +402,7 @@ impl Swapper for BoltzSwapper {
     }
 
     /// Create a refund transaction for a send or chain swap
-    fn create_refund_tx(
+    async fn create_refund_tx(
         &self,
         swap: Swap,
         refund_address: &str,
@@ -374,27 +422,26 @@ impl Swapper for BoltzSwapper {
                             });
                     };
 
-                    Transaction::Bitcoin(self.new_btc_refund_tx(
-                        chain_swap,
-                        refund_address,
-                        utxos,
-                        broadcast_fee_rate_sat_per_vb,
-                        is_cooperative,
-                    )?)
+                    Transaction::Bitcoin(
+                        self.new_btc_refund_tx(
+                            chain_swap,
+                            refund_address,
+                            utxos,
+                            broadcast_fee_rate_sat_per_vb,
+                            is_cooperative,
+                        )
+                        .await?,
+                    )
                 }
-                Direction::Outgoing => Transaction::Liquid(self.new_lbtc_refund_tx(
-                    &swap,
-                    refund_address,
-                    utxos,
-                    is_cooperative,
-                )?),
+                Direction::Outgoing => Transaction::Liquid(
+                    self.new_lbtc_refund_tx(&swap, refund_address, utxos, is_cooperative)
+                        .await?,
+                ),
             },
-            Swap::Send(_) => Transaction::Liquid(self.new_lbtc_refund_tx(
-                &swap,
-                refund_address,
-                utxos,
-                is_cooperative,
-            )?),
+            Swap::Send(_) => Transaction::Liquid(
+                self.new_lbtc_refund_tx(&swap, refund_address, utxos, is_cooperative)
+                    .await?,
+            ),
             Swap::Receive(_) => {
                 return Err(PaymentError::Generic {
                     err: format!(
@@ -407,8 +454,12 @@ impl Swapper for BoltzSwapper {
         Ok(tx)
     }
 
-    fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError> {
-        let response = self.client.broadcast_tx(chain, &tx_hex.into())?;
+    async fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError> {
+        let response = self
+            .get_client()
+            .await?
+            .inner
+            .broadcast_tx(chain, &tx_hex.into())?;
         let err = format!("Unexpected response from Boltz server: {response}");
         let tx_id = response
             .as_object()
@@ -422,23 +473,34 @@ impl Swapper for BoltzSwapper {
     }
 
     fn create_status_stream(&self) -> Box<dyn SwapperStatusStream> {
-        Box::new(BoltzStatusStream::new(&self.boltz_url))
+        Box::new(BoltzStatusStream::new(
+            self.config.clone(),
+            self.proxy_url.clone(),
+        ))
     }
 
-    fn check_for_mrh(
+    async fn check_for_mrh(
         &self,
         invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
         boltz_client::swaps::magic_routing::check_for_mrh(
-            &self.client,
+            &self.get_client().await?.inner,
             invoice,
             self.config.network.into(),
         )
         .map_err(Into::into)
     }
 
-    fn get_bolt12_invoice(&self, offer: &str, amount_sat: u64) -> Result<String, PaymentError> {
-        let invoice_res = self.client.get_bolt12_invoice(offer, amount_sat)?;
+    async fn get_bolt12_invoice(
+        &self,
+        offer: &str,
+        amount_sat: u64,
+    ) -> Result<String, PaymentError> {
+        let invoice_res = self
+            .get_client()
+            .await?
+            .inner
+            .get_bolt12_invoice(offer, amount_sat)?;
         info!("Received BOLT12 invoice response: {invoice_res:?}");
         Ok(invoice_res.invoice)
     }

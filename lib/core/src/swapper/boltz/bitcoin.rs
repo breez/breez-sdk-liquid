@@ -14,10 +14,10 @@ use crate::{
     prelude::{ChainSwap, Direction, Swap, Utxo},
 };
 
-use super::BoltzSwapper;
+use super::{BoltzSwapper, ProxyUrlFetcher};
 
-impl BoltzSwapper {
-    pub(crate) fn new_btc_refund_wrapper(
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
+    pub(crate) async fn new_btc_refund_wrapper(
         &self,
         swap: &Swap,
         refund_address: &str,
@@ -30,7 +30,7 @@ impl BoltzSwapper {
                         swap_script.as_bitcoin_script()?,
                         refund_address,
                         &self.bitcoin_electrum_config,
-                        self.boltz_url.clone(),
+                        self.get_url().await?,
                         swap.id.clone(),
                     )
                 }
@@ -51,7 +51,7 @@ impl BoltzSwapper {
         Ok(refund_wrapper)
     }
 
-    pub(crate) fn new_btc_refund_tx(
+    pub(crate) async fn new_btc_refund_tx(
         &self,
         swap: &ChainSwap,
         refund_address: &str,
@@ -91,7 +91,10 @@ impl BoltzSwapper {
         let broadcast_fees_sat = (refund_tx_size as f64 * broadcast_fee_rate_sat_per_vb) as u64;
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap.id.clone(), None, None),
+            true => {
+                self.get_cooperative_details(swap.id.clone(), None, None)
+                    .await?
+            }
             false => None,
         };
 
@@ -103,7 +106,7 @@ impl BoltzSwapper {
         Ok(signed_tx)
     }
 
-    pub(crate) fn new_outgoing_chain_claim_tx(
+    pub(crate) async fn new_outgoing_chain_claim_tx(
         &self,
         swap: &ChainSwap,
         claim_address: String,
@@ -114,17 +117,18 @@ impl BoltzSwapper {
             claim_swap_script,
             claim_address,
             &self.bitcoin_electrum_config,
-            self.boltz_url.clone(),
+            self.get_url().await?,
             swap.id.clone(),
         )?;
 
-        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap)?;
+        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap).await?;
 
         let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
             Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
+                .await?,
         )?;
 
         Ok(signed_tx)

@@ -16,9 +16,9 @@ use crate::{
     utils,
 };
 
-use super::BoltzSwapper;
+use super::{BoltzSwapper, ProxyUrlFetcher};
 
-impl BoltzSwapper {
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub(crate) fn validate_send_swap_preimage(
         &self,
         swap_id: &str,
@@ -30,7 +30,7 @@ impl BoltzSwapper {
         Ok(())
     }
 
-    pub(crate) fn new_receive_claim_tx(
+    pub(crate) async fn new_receive_claim_tx(
         &self,
         swap: &ReceiveSwap,
         claim_address: String,
@@ -41,7 +41,7 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.boltz_url.clone(),
+            self.get_url().await?,
             swap.id.clone(),
         )?;
 
@@ -49,14 +49,15 @@ impl BoltzSwapper {
             &swap.get_claim_keypair()?,
             &Preimage::from_str(&swap.preimage)?,
             Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), None, None),
+            self.get_cooperative_details(swap.id.clone(), None, None)
+                .await?,
             true,
         )?;
 
         Ok(signed_tx)
     }
 
-    pub(crate) fn new_incoming_chain_claim_tx(
+    pub(crate) async fn new_incoming_chain_claim_tx(
         &self,
         swap: &ChainSwap,
         claim_address: String,
@@ -67,17 +68,18 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.boltz_url.clone(),
+            self.get_url().await?,
             swap.id.clone(),
         )?;
 
-        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap)?;
+        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap).await?;
 
         let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
             Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
+                .await?,
             true,
         )?;
 
@@ -88,7 +90,7 @@ impl BoltzSwapper {
         (refund_tx_size as f64 * LIQUID_FEE_RATE_SAT_PER_VBYTE).ceil() as u64
     }
 
-    pub(crate) fn new_lbtc_refund_wrapper(
+    pub(crate) async fn new_lbtc_refund_wrapper(
         &self,
         swap: &Swap,
         refund_address: &str,
@@ -107,7 +109,7 @@ impl BoltzSwapper {
                         swap_script.as_liquid_script()?,
                         refund_address,
                         &self.liquid_electrum_config,
-                        self.boltz_url.clone(),
+                        self.get_url().await?,
                         swap.id.clone(),
                     )
                 }
@@ -118,7 +120,7 @@ impl BoltzSwapper {
                     swap_script,
                     refund_address,
                     &self.liquid_electrum_config,
-                    self.boltz_url.clone(),
+                    self.get_url().await?,
                     swap.id.clone(),
                 )
             }
@@ -132,7 +134,7 @@ impl BoltzSwapper {
         Ok(refund_wrapper)
     }
 
-    pub(crate) fn new_lbtc_refund_tx(
+    pub(crate) async fn new_lbtc_refund_tx(
         &self,
         swap: &Swap,
         refund_address: &str,
@@ -189,7 +191,10 @@ impl BoltzSwapper {
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap_id.clone(), None, None),
+            true => {
+                self.get_cooperative_details(swap_id.clone(), None, None)
+                    .await?
+            }
             false => None,
         };
 

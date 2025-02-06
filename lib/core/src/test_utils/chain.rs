@@ -247,7 +247,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         _retries: u64,
     ) -> Result<electrum_client::GetBalanceRes> {
         Ok(GetBalanceRes {
-            confirmed: self.script_balance_sat.lock().unwrap().clone(),
+            confirmed: *self.script_balance_sat.lock().unwrap(),
             unconfirmed: 0,
         })
     }
