@@ -162,8 +162,14 @@ impl Recoverer {
     ///
     /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
-    pub(crate) async fn recover_from_onchain(&self, swaps: &mut [Swap]) -> Result<()> {
-        let tx_map = TxMap::from_raw_tx_map(self.onchain_wallet.transactions_by_tx_id().await?);
+    ///
+    /// Returns the raw onchain tx map used for recovery.
+    pub(crate) async fn recover_from_onchain(
+        &self,
+        swaps: &mut [Swap],
+    ) -> Result<HashMap<Txid, WalletTx>> {
+        let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
+        let tx_map = TxMap::from_raw_tx_map(raw_tx_map.clone());
 
         let swaps_list = swaps.to_vec().try_into()?;
         let histories = self.fetch_swaps_histories(&swaps_list).await?;
@@ -344,7 +350,7 @@ impl Recoverer {
             }
         }
 
-        Ok(())
+        Ok(raw_tx_map)
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services

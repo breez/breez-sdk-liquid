@@ -2658,10 +2658,10 @@ impl LiquidSdk {
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
         let mut recoverable_swaps = self.get_monitored_swaps_list(partial_sync).await?;
-        self.recoverer
+        let mut tx_map = self
+            .recoverer
             .recover_from_onchain(&mut recoverable_swaps)
             .await?;
-        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
         for swap in recoverable_swaps {
             let swap_id = &swap.id();
