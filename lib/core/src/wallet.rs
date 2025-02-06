@@ -177,7 +177,14 @@ impl LiquidOnchainWallet {
                     descriptor.clone(),
                 )?)
             }
-            Err(e) => Err(e.into()),
+            Err(lwk_wollet::Error::Generic(str)) => {
+                warn!("Error initialising wollet with generic error: {str}");
+                Err(anyhow!("Error initialising wollet: {str}"))
+            }
+            Err(e) => {
+                warn!("Error initialising wollet with unrecognized error: {e:?}");
+                Err(e.into())
+            }
         }
     }
 
