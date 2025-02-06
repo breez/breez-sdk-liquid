@@ -179,11 +179,29 @@ impl LiquidOnchainWallet {
             }
             Err(lwk_wollet::Error::Generic(str)) => {
                 warn!("Error initialising wollet with generic error: {str}");
-                Err(anyhow!("Error initialising wollet: {str}"))
+                let mut path = working_dir.as_ref().to_path_buf();
+                path.push(elements_network.as_str());
+                fs::remove_dir_all(&path)?;
+                warn!("Wiping wallet in path: {:?}", path);
+                lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
+                Ok(Wollet::new(
+                    elements_network,
+                    lwk_persister,
+                    descriptor.clone(),
+                )?)
             }
             Err(e) => {
                 warn!("Error initialising wollet with unrecognized error: {e:?}");
-                Err(e.into())
+                let mut path = working_dir.as_ref().to_path_buf();
+                path.push(elements_network.as_str());
+                fs::remove_dir_all(&path)?;
+                warn!("Wiping wallet in path: {:?}", path);
+                lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
+                Ok(Wollet::new(
+                    elements_network,
+                    lwk_persister,
+                    descriptor.clone(),
+                )?)
             }
         }
     }
