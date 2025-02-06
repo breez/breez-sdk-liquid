@@ -173,10 +173,10 @@ pub struct SdkSigner {
 }
 
 impl SdkSigner {
-    pub fn new(mnemonic: &str, is_mainnet: bool) -> Result<Self, NewError> {
+    pub fn new(mnemonic: &str, passphrase: &str, is_mainnet: bool) -> Result<Self, NewError> {
         let secp = Secp256k1::new();
         let mnemonic: Mnemonic = mnemonic.parse()?;
-        let seed = mnemonic.to_seed("");
+        let seed = mnemonic.to_seed(passphrase);
 
         let network = if is_mainnet {
             bitcoin::Network::Bitcoin
@@ -307,7 +307,7 @@ mod tests {
 
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {
         let sw_signer = SwSigner::new(mnemonic, false).unwrap();
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
+        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
         (sw_signer, sdk_signer)
     }
@@ -458,7 +458,7 @@ mod tests {
         .unwrap();
 
         // 2. Create a wallet using SdkLwkSigner
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
+        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
         let sdk_wallet = Wollet::new(
             network,

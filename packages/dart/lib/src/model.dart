@@ -371,16 +371,23 @@ class Config {
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
 class ConnectRequest {
+  /// The SDK [Config]
   final Config config;
+
+  /// The Liquid wallet mnemonic
   final String mnemonic;
+
+  /// The optional passphrase for the seed
+  final String? passphrase;
 
   const ConnectRequest({
     required this.config,
     required this.mnemonic,
+    this.passphrase,
   });
 
   @override
-  int get hashCode => config.hashCode ^ mnemonic.hashCode;
+  int get hashCode => config.hashCode ^ mnemonic.hashCode ^ passphrase.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -388,7 +395,8 @@ class ConnectRequest {
       other is ConnectRequest &&
           runtimeType == other.runtimeType &&
           config == other.config &&
-          mnemonic == other.mnemonic;
+          mnemonic == other.mnemonic &&
+          passphrase == other.passphrase;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].

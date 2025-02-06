@@ -542,13 +542,15 @@ fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
     }
     val config = connectRequest.getMap("config")?.let { asConfig(it) }!!
     val mnemonic = connectRequest.getString("mnemonic")!!
-    return ConnectRequest(config, mnemonic)
+    val passphrase = if (hasNonNullKey(connectRequest, "passphrase")) connectRequest.getString("passphrase") else null
+    return ConnectRequest(config, mnemonic, passphrase)
 }
 
 fun readableMapOf(connectRequest: ConnectRequest): ReadableMap =
     readableMapOf(
         "config" to readableMapOf(connectRequest.config),
         "mnemonic" to connectRequest.mnemonic,
+        "passphrase" to connectRequest.passphrase,
     )
 
 fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {

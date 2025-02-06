@@ -2536,6 +2536,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_connect_request(ConnectRequest apiObj, wire_cst_connect_request wireObj) {
     cst_api_fill_to_wire_config(apiObj.config, wireObj.config);
     wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
+    wireObj.passphrase = cst_encode_opt_String(apiObj.passphrase);
   }
 
   @protected
@@ -6942,6 +6943,8 @@ final class wire_cst_connect_request extends ffi.Struct {
   external wire_cst_config config;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> passphrase;
 }
 
 final class wire_cst_bitcoin_address_data extends ffi.Struct {

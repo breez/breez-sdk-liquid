@@ -27,6 +27,9 @@ pub(crate) struct Args {
 
     #[clap(short, long, value_parser = parse_network_arg)]
     pub(crate) network: Option<LiquidNetwork>,
+
+    #[clap(short, long)]
+    pub(crate) passphrase: Option<String>,
 }
 
 fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
@@ -80,6 +83,7 @@ async fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
+    let passphrase = args.passphrase;
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
@@ -92,8 +96,9 @@ async fn main() -> Result<()> {
         config.sync_service_url = data_sync_url;
     }
     let sdk = LiquidSdk::connect(ConnectRequest {
-        mnemonic: mnemonic.to_string(),
         config,
+        mnemonic: mnemonic.to_string(),
+        passphrase,
     })
     .await?;
     let listener_id = sdk

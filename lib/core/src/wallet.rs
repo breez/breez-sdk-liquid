@@ -438,7 +438,7 @@ mod tests {
     #[tokio::test]
     async fn test_sign_and_check_message() -> Result<()> {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
+        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
 
         let config = Config::testnet(None);

@@ -96,13 +96,15 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [ConnectRequest] containing:
-    ///     * `mnemonic` - the Liquid wallet mnemonic
     ///     * `config` - the SDK [Config]
+    ///     * `mnemonic` - the Liquid wallet mnemonic
+    ///     * `passphrase` - the optional passphrase for the seed
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
 
         let signer = Box::new(SdkSigner::new(
             req.mnemonic.as_ref(),
+            req.passphrase.unwrap_or("".to_string()).as_ref(),
             req.config.network == LiquidNetwork::Mainnet,
         )?);
 

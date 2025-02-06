@@ -2579,9 +2579,11 @@ impl SseDecode for crate::model::ConnectRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_config = <crate::model::Config>::sse_decode(deserializer);
         let mut var_mnemonic = <String>::sse_decode(deserializer);
+        let mut var_passphrase = <Option<String>>::sse_decode(deserializer);
         return crate::model::ConnectRequest {
             config: var_config,
             mnemonic: var_mnemonic,
+            passphrase: var_passphrase,
         };
     }
 }
@@ -5146,6 +5148,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
         [
             self.config.into_into_dart().into_dart(),
             self.mnemonic.into_into_dart().into_dart(),
+            self.passphrase.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7435,6 +7438,7 @@ impl SseEncode for crate::model::ConnectRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::Config>::sse_encode(self.config, serializer);
         <String>::sse_encode(self.mnemonic, serializer);
+        <Option<String>>::sse_encode(self.passphrase, serializer);
     }
 }
 
@@ -9835,6 +9839,7 @@ mod io {
             crate::model::ConnectRequest {
                 config: self.config.cst_decode(),
                 mnemonic: self.mnemonic.cst_decode(),
+                passphrase: self.passphrase.cst_decode(),
             }
         }
     }
@@ -11525,6 +11530,7 @@ mod io {
             Self {
                 config: Default::default(),
                 mnemonic: core::ptr::null_mut(),
+                passphrase: core::ptr::null_mut(),
             }
         }
     }
@@ -13770,6 +13776,7 @@ mod io {
     pub struct wire_cst_connect_request {
         config: wire_cst_config,
         mnemonic: *mut wire_cst_list_prim_u_8_strict,
+        passphrase: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
