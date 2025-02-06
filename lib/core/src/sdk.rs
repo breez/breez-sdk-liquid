@@ -1122,7 +1122,10 @@ impl LiquidSdk {
                         }
                     };
             }
-            Ok(InputType::Bolt12Offer { offer }) => {
+            Ok(InputType::Bolt12Offer {
+                offer,
+                bip353_address,
+            }) => {
                 receiver_amount_sat = match req.amount {
                     Some(PayAmount::Bitcoin {
                         receiver_amount_sat: amount_sat,
@@ -1152,6 +1155,7 @@ impl LiquidSdk {
                 payment_destination = SendDestination::Bolt12 {
                     offer,
                     receiver_amount_sat,
+                    bip353_address,
                 };
             }
             _ => {
@@ -1249,13 +1253,28 @@ impl LiquidSdk {
             SendDestination::Bolt12 {
                 offer,
                 receiver_amount_sat,
+                bip353_address,
             } => {
                 let bolt12_invoice = self
                     .swapper
                     .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
                     .await?;
-                self.pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
-                    .await
+                let response = self
+                    .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
+                    .await?;
+                if let (Some(tx_id), Some(destination)) =
+                    (&response.payment.tx_id, &response.payment.destination)
+                {
+                    self.persister
+                        .insert_or_update_payment_details(PaymentTxDetails {
+                            tx_id: tx_id.clone(),
+                            destination: destination.clone(),
+                            description: offer.description.clone(),
+                            lnurl_info: None,
+                            bip353_address: bip353_address.clone(),
+                        })?;
+                }
+                Ok(response)
             }
         }
     }
@@ -3078,13 +3097,20 @@ impl LiquidSdk {
     ///     * `amount` - The optional amount of type [PayAmount].
     ///        - [PayAmount::Drain] which uses all funds
     ///        - [PayAmount::Receiver] which sets the amount the receiver should receive
+    ///     * `bip353_address` - A BIP353 address, in case one was used in order to fetch the LNURL
+    ///       Pay request data. Returned by [parse].
     ///     * `comment` - an optional comment for this payment
     ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
     ///       the LNURL callback domain. Defaults to 'true'
     ///
     /// # Returns
     /// Returns a [PrepareLnUrlPayResponse] containing:
-    ///     * `prepare_send_response` - the prepared [PrepareSendResponse] for the retreived invoice
+    ///     * `prepare_send_response` - the prepared [PrepareSendResponse] for the retrieved invoice
+    ///     * `fees_sat` - The fees in satoshis to send the payment
+    ///     * `data` - The [LnUrlPayRequestData] returned by [parse]
+    ///     * `bip353_address` - A BIP353 address, in case one was used in order to fetch the LNURL
+    ///       Pay request data.
+    ///     * `comment` - An optional comment for this payment
     ///     * `success_action` - the optional unprocessed LUD-09 success action
     pub async fn prepare_lnurl_pay(
         &self,
@@ -3168,6 +3194,7 @@ impl LiquidSdk {
                     destination: prepare_response.destination,
                     fees_sat: prepare_response.fees_sat,
                     data: req.data,
+                    bip353_address: req.bip353_address,
                     comment: req.comment,
                     success_action: data.success_action,
                 })
@@ -3277,6 +3304,7 @@ impl LiquidSdk {
                         lnurl_pay_unprocessed_success_action: prepare_response.success_action,
                         lnurl_withdraw_endpoint: None,
                     }),
+                    bip353_address: prepare_response.bip353_address,
                 })?;
         }
 
@@ -3340,6 +3368,7 @@ impl LiquidSdk {
                             lnurl_withdraw_endpoint: Some(req.data.callback),
                             ..Default::default()
                         }),
+                        bip353_address: None,
                     })?;
             }
         }

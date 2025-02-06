@@ -480,6 +480,7 @@ pub enum SendDestination {
     Bolt12 {
         offer: LNOffer,
         receiver_amount_sat: u64,
+        bip353_address: Option<String>,
     },
 }
 
@@ -1557,6 +1558,9 @@ pub enum PaymentDetails {
         /// The payment LNURL info
         lnurl_info: Option<LnUrlInfo>,
 
+        /// The BIP353 address used to resolve this payment
+        bip353_address: Option<String>,
+
         /// For a Receive payment, this is the claim tx id in case it has already been broadcast
         claim_tx_id: Option<String>,
 
@@ -1908,10 +1912,13 @@ impl From<SwapTree> for InternalSwapTree {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 #[derive(Debug, Serialize)]
 pub struct PrepareLnUrlPayRequest {
-    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+    /// The [LnUrlPayRequestData] returned by [parse]
     pub data: LnUrlPayRequestData,
     /// The amount to send
     pub amount: PayAmount,
+    /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
+    /// Returned by [parse].
+    pub bip353_address: Option<String>,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// Validates that, if there is a URL success action, the URL domain matches
@@ -1926,8 +1933,10 @@ pub struct PrepareLnUrlPayResponse {
     pub destination: SendDestination,
     /// The fees in satoshis to send the payment
     pub fees_sat: u64,
-    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+    /// The [LnUrlPayRequestData] returned by [parse]
     pub data: LnUrlPayRequestData,
+    /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
+    pub bip353_address: Option<String>,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if

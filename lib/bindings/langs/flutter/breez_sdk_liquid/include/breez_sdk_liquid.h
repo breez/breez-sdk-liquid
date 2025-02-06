@@ -247,6 +247,7 @@ typedef struct wire_cst_ln_offer {
 typedef struct wire_cst_SendDestination_Bolt12 {
   struct wire_cst_ln_offer *offer;
   uint64_t receiver_amount_sat;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_SendDestination_Bolt12;
 
 typedef union SendDestinationKind {
@@ -315,6 +316,7 @@ typedef struct wire_cst_prepare_ln_url_pay_response {
   struct wire_cst_send_destination destination;
   uint64_t fees_sat;
   struct wire_cst_ln_url_pay_request_data data;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
   struct wire_cst_list_prim_u_8_strict *comment;
   struct wire_cst_success_action *success_action;
 } wire_cst_prepare_ln_url_pay_response;
@@ -375,6 +377,7 @@ typedef struct wire_cst_pay_amount {
 typedef struct wire_cst_prepare_ln_url_pay_request {
   struct wire_cst_ln_url_pay_request_data data;
   struct wire_cst_pay_amount amount;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
   struct wire_cst_list_prim_u_8_strict *comment;
   bool *validate_success_action_url;
 } wire_cst_prepare_ln_url_pay_request;
@@ -527,6 +530,7 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *payment_hash;
   struct wire_cst_list_prim_u_8_strict *destination_pubkey;
   struct wire_cst_ln_url_info *lnurl_info;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
   struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
@@ -826,6 +830,7 @@ typedef struct wire_cst_InputType_Bolt11 {
 
 typedef struct wire_cst_InputType_Bolt12Offer {
   struct wire_cst_ln_offer *offer;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_InputType_Bolt12Offer;
 
 typedef struct wire_cst_InputType_NodeId {
@@ -838,6 +843,7 @@ typedef struct wire_cst_InputType_Url {
 
 typedef struct wire_cst_InputType_LnUrlPay {
   struct wire_cst_ln_url_pay_request_data *data;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_InputType_LnUrlPay;
 
 typedef struct wire_cst_InputType_LnUrlWithdraw {

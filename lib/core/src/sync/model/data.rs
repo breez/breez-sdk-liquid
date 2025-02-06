@@ -304,6 +304,7 @@ pub(crate) struct PaymentDetailsSyncData {
     pub(crate) destination: String,
     pub(crate) description: Option<String>,
     pub(crate) lnurl_info: Option<LnUrlInfo>,
+    pub(crate) bip353_address: Option<String>,
 }
 
 impl PaymentDetailsSyncData {
@@ -313,6 +314,7 @@ impl PaymentDetailsSyncData {
                 "destination" => self.destination.clone_from(&other.destination),
                 "description" => clone_if_set(&mut self.description, &other.description),
                 "lnurl_info" => clone_if_set(&mut self.lnurl_info, &other.lnurl_info),
+                "bip353_address" => clone_if_set(&mut self.bip353_address, &other.bip353_address),
                 _ => continue,
             }
         }
@@ -326,6 +328,7 @@ impl From<PaymentTxDetails> for PaymentDetailsSyncData {
             destination: value.destination,
             description: value.description,
             lnurl_info: value.lnurl_info,
+            bip353_address: value.bip353_address,
         }
     }
 }
@@ -337,6 +340,7 @@ impl From<PaymentDetailsSyncData> for PaymentTxDetails {
             destination: val.destination,
             description: val.description,
             lnurl_info: val.lnurl_info,
+            bip353_address: val.bip353_address,
         }
     }
 }
