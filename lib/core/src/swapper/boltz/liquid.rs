@@ -141,7 +141,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         utxos: Vec<Utxo>,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let (swap_script, refund_keypair, preimage) = match swap {
+        let (swap_script, refund_keypair) = match swap {
             Swap::Chain(swap) => {
                 ensure_sdk!(
                     swap.direction == Direction::Outgoing,
@@ -151,14 +151,9 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                 (
                     swap.get_lockup_swap_script()?.as_liquid_script()?,
                     swap.get_refund_keypair()?,
-                    Preimage::from_str(&swap.preimage)?,
                 )
             }
-            Swap::Send(swap) => (
-                swap.get_swap_script()?,
-                swap.get_refund_keypair()?,
-                Preimage::new(),
-            ),
+            Swap::Send(swap) => (swap.get_swap_script()?, swap.get_refund_keypair()?),
             Swap::Receive(_) => {
                 return Err(SdkError::generic(
                     "Cannot create LBTC refund tx for Receive swaps.",
@@ -187,7 +182,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             genesis_hash,
         };
 
-        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage, true)?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, is_cooperative, true)?;
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {

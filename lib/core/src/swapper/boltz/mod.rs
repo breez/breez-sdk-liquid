@@ -1,7 +1,4 @@
-use std::{
-    str::FromStr,
-    sync::{Arc, OnceLock},
-};
+use std::sync::{Arc, OnceLock};
 
 use crate::{
     error::{PaymentError, SdkError},
@@ -18,7 +15,6 @@ use boltz_client::{
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::{electrum::ElectrumConfig, Chain},
-    util::secrets::Preimage,
     Amount,
 };
 use log::info;
@@ -376,27 +372,27 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         swap: Swap,
         refund_address: &str,
         fee_rate_sat_per_vb: Option<f64>,
+        is_cooperative: bool,
     ) -> Result<(u32, u64), SdkError> {
         let refund_address = &refund_address.to_string();
-        let (refund_keypair, preimage) = match &swap {
-            Swap::Chain(swap) => (
-                swap.get_refund_keypair()?,
-                Preimage::from_str(&swap.preimage)?,
-            ),
-            Swap::Send(swap) => (swap.get_refund_keypair()?, Preimage::new()),
+        let refund_keypair = match &swap {
+            Swap::Chain(swap) => swap.get_refund_keypair()?,
+            Swap::Send(swap) => swap.get_refund_keypair()?,
             Swap::Receive(swap) => {
                 return Err(SdkError::generic(format!(
-                    "Failed to retrieve refund keypair and preimage for Receive swap {}: invalid swap type",
+                    "Cannot create refund tx for Receive swap {}: invalid swap type",
                     swap.id
                 )));
             }
         };
 
         let refund_tx_size = match self.new_lbtc_refund_wrapper(&swap, refund_address).await {
-            Ok(refund_tx_wrapper) => refund_tx_wrapper.size(&refund_keypair, &preimage, true)?,
+            Ok(refund_tx_wrapper) => {
+                refund_tx_wrapper.size(&refund_keypair, is_cooperative, true)?
+            }
             Err(_) => {
                 let refund_tx_wrapper = self.new_btc_refund_wrapper(&swap, refund_address).await?;
-                refund_tx_wrapper.size(&refund_keypair, &preimage)?
+                refund_tx_wrapper.size(&refund_keypair, is_cooperative)?
             }
         } as u32;
 

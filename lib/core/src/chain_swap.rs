@@ -946,6 +946,7 @@ impl ChainSwapHandler {
                 Swap::Chain(swap),
                 refund_address,
                 Some(fee_rate_sat_per_vb as f64),
+                true,
             )
             .await?;
 

@@ -86,8 +86,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         };
 
         let refund_keypair = swap.get_refund_keypair()?;
-        let preimage = Preimage::from_str(&swap.preimage)?;
-        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage)?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, is_cooperative)?;
         let broadcast_fees_sat = (refund_tx_size as f64 * broadcast_fee_rate_sat_per_vb) as u64;
 
         let cooperative = match is_cooperative {

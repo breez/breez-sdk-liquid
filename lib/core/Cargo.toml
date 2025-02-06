@@ -17,7 +17,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "1989f43a9bfbf9875798a2a99afa300aeea9ec7e" }
+boltz-client = { git = "https://github.com/dangeross/boltz-rust", rev = "8710a0a9b675bc8181e0ce22ef0cc786491e144d" }
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
