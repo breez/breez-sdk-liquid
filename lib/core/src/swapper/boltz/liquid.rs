@@ -16,9 +16,9 @@ use crate::{
     utils,
 };
 
-use super::BoltzSwapper;
+use super::{BoltzSwapper, ProxyUrlFetcher};
 
-impl BoltzSwapper {
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub(crate) fn validate_send_swap_preimage(
         &self,
         swap_id: &str,

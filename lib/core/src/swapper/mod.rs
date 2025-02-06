@@ -140,6 +140,6 @@ pub trait SwapperStatusStream: Send + Sync {
 }
 
 #[async_trait]
-pub(crate) trait ProxyUrlFetcher: Send + Sync {
+pub(crate) trait ProxyUrlFetcher: Send + Sync + 'static {
     async fn fetch(&self) -> Result<&Option<String>>;
 }

@@ -38,16 +38,16 @@ pub(crate) struct BoltzClient {
     inner: BoltzApiClientV2,
 }
 
-pub struct BoltzSwapper {
+pub struct BoltzSwapper<P: ProxyUrlFetcher> {
     config: Config,
     client: OnceLock<BoltzClient>,
     liquid_electrum_config: ElectrumConfig,
     bitcoin_electrum_config: ElectrumConfig,
-    proxy_url: Arc<dyn ProxyUrlFetcher>,
+    proxy_url: Arc<P>,
 }
 
-impl BoltzSwapper {
-    pub fn new(config: Config, proxy_url: Arc<dyn ProxyUrlFetcher>) -> Self {
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
+    pub fn new(config: Config, proxy_url: Arc<P>) -> Self {
         Self {
             proxy_url,
             client: OnceLock::new(),
@@ -154,7 +154,7 @@ impl BoltzSwapper {
 }
 
 #[async_trait]
-impl Swapper for BoltzSwapper {
+impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
     /// Create a new chain swap
     async fn create_chain_swap(
         &self,

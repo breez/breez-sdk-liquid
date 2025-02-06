@@ -14,9 +14,9 @@ use crate::{
     prelude::{ChainSwap, Direction, Swap, Utxo},
 };
 
-use super::BoltzSwapper;
+use super::{BoltzSwapper, ProxyUrlFetcher};
 
-impl BoltzSwapper {
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub(crate) async fn new_btc_refund_wrapper(
         &self,
         swap: &Swap,
