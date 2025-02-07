@@ -2956,14 +2956,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareLnUrlPayResponse dco_decode_prepare_ln_url_pay_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return PrepareLnUrlPayResponse(
       destination: dco_decode_send_destination(arr[0]),
       feesSat: dco_decode_u_64(arr[1]),
       data: dco_decode_ln_url_pay_request_data(arr[2]),
-      bip353Address: dco_decode_opt_String(arr[3]),
-      comment: dco_decode_opt_String(arr[4]),
-      successAction: dco_decode_opt_box_autoadd_success_action(arr[5]),
+      comment: dco_decode_opt_String(arr[3]),
+      successAction: dco_decode_opt_box_autoadd_success_action(arr[4]),
     );
   }
 
@@ -3273,6 +3272,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 1:
         return SendDestination_Bolt11(
           invoice: dco_decode_box_autoadd_ln_invoice(raw[1]),
+          bip353Address: dco_decode_opt_String(raw[2]),
         );
       case 2:
         return SendDestination_Bolt12(
@@ -5303,14 +5303,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_destination = sse_decode_send_destination(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
     var var_data = sse_decode_ln_url_pay_request_data(deserializer);
-    var var_bip353Address = sse_decode_opt_String(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
     var var_successAction = sse_decode_opt_box_autoadd_success_action(deserializer);
     return PrepareLnUrlPayResponse(
         destination: var_destination,
         feesSat: var_feesSat,
         data: var_data,
-        bip353Address: var_bip353Address,
         comment: var_comment,
         successAction: var_successAction);
   }
@@ -5596,7 +5594,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SendDestination_LiquidAddress(addressData: var_addressData);
       case 1:
         var var_invoice = sse_decode_box_autoadd_ln_invoice(deserializer);
-        return SendDestination_Bolt11(invoice: var_invoice);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
+        return SendDestination_Bolt11(invoice: var_invoice, bip353Address: var_bip353Address);
       case 2:
         var var_offer = sse_decode_box_autoadd_ln_offer(deserializer);
         var var_receiverAmountSat = sse_decode_u_64(deserializer);
@@ -7447,7 +7446,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_send_destination(self.destination, serializer);
     sse_encode_u_64(self.feesSat, serializer);
     sse_encode_ln_url_pay_request_data(self.data, serializer);
-    sse_encode_opt_String(self.bip353Address, serializer);
     sse_encode_opt_String(self.comment, serializer);
     sse_encode_opt_box_autoadd_success_action(self.successAction, serializer);
   }
@@ -7664,9 +7662,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SendDestination_LiquidAddress(addressData: final addressData):
         sse_encode_i_32(0, serializer);
         sse_encode_box_autoadd_liquid_address_data(addressData, serializer);
-      case SendDestination_Bolt11(invoice: final invoice):
+      case SendDestination_Bolt11(invoice: final invoice, bip353Address: final bip353Address):
         sse_encode_i_32(1, serializer);
         sse_encode_box_autoadd_ln_invoice(invoice, serializer);
+        sse_encode_opt_String(bip353Address, serializer);
       case SendDestination_Bolt12(
           offer: final offer,
           receiverAmountSat: final receiverAmountSat,

@@ -476,10 +476,13 @@ pub enum SendDestination {
     },
     Bolt11 {
         invoice: LNInvoice,
+        /// A BIP353 address, in case one was used to resolve this BOLT11
+        bip353_address: Option<String>,
     },
     Bolt12 {
         offer: LNOffer,
         receiver_amount_sat: u64,
+        /// A BIP353 address, in case one was used to resolve this BOLT12
         bip353_address: Option<String>,
     },
 }
@@ -1935,8 +1938,6 @@ pub struct PrepareLnUrlPayResponse {
     pub fees_sat: u64,
     /// The [LnUrlPayRequestData] returned by [parse]
     pub data: LnUrlPayRequestData,
-    /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
-    pub bip353_address: Option<String>,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if

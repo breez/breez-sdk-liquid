@@ -4354,6 +4354,8 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
 final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_list_String extends ffi.Struct {
@@ -4520,8 +4522,6 @@ final class wire_cst_prepare_ln_url_pay_response extends ffi.Struct {
   external int fees_sat;
 
   external wire_cst_ln_url_pay_request_data data;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 

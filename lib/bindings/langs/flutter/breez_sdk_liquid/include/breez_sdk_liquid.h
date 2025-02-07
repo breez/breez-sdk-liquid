@@ -198,6 +198,7 @@ typedef struct wire_cst_ln_invoice {
 
 typedef struct wire_cst_SendDestination_Bolt11 {
   struct wire_cst_ln_invoice *invoice;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_SendDestination_Bolt11;
 
 typedef struct wire_cst_list_String {
@@ -316,7 +317,6 @@ typedef struct wire_cst_prepare_ln_url_pay_response {
   struct wire_cst_send_destination destination;
   uint64_t fees_sat;
   struct wire_cst_ln_url_pay_request_data data;
-  struct wire_cst_list_prim_u_8_strict *bip353_address;
   struct wire_cst_list_prim_u_8_strict *comment;
   struct wire_cst_success_action *success_action;
 } wire_cst_prepare_ln_url_pay_response;

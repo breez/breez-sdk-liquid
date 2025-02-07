@@ -2293,13 +2293,6 @@ enum BreezSDKLiquidMapper {
         }
         let data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
 
-        var bip353Address: String?
-        if hasNonNilKey(data: prepareLnUrlPayResponse, key: "bip353Address") {
-            guard let bip353AddressTmp = prepareLnUrlPayResponse["bip353Address"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "bip353Address"))
-            }
-            bip353Address = bip353AddressTmp
-        }
         var comment: String?
         if hasNonNilKey(data: prepareLnUrlPayResponse, key: "comment") {
             guard let commentTmp = prepareLnUrlPayResponse["comment"] as? String else {
@@ -2312,7 +2305,7 @@ enum BreezSDKLiquidMapper {
             successAction = try asSuccessAction(successAction: successActionTmp)
         }
 
-        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, data: data, bip353Address: bip353Address, comment: comment, successAction: successAction)
+        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, data: data, comment: comment, successAction: successAction)
     }
 
     static func dictionaryOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse) -> [String: Any?] {
@@ -2320,7 +2313,6 @@ enum BreezSDKLiquidMapper {
             "destination": dictionaryOf(sendDestination: prepareLnUrlPayResponse.destination),
             "feesSat": prepareLnUrlPayResponse.feesSat,
             "data": dictionaryOf(lnUrlPayRequestData: prepareLnUrlPayResponse.data),
-            "bip353Address": prepareLnUrlPayResponse.bip353Address == nil ? nil : prepareLnUrlPayResponse.bip353Address,
             "comment": prepareLnUrlPayResponse.comment == nil ? nil : prepareLnUrlPayResponse.comment,
             "successAction": prepareLnUrlPayResponse.successAction == nil ? nil : dictionaryOf(successAction: prepareLnUrlPayResponse.successAction!),
         ]
@@ -4718,7 +4710,9 @@ enum BreezSDKLiquidMapper {
             }
             let _invoice = try asLnInvoice(lnInvoice: invoiceTmp)
 
-            return SendDestination.bolt11(invoice: _invoice)
+            let _bip353Address = sendDestination["bip353Address"] as? String
+
+            return SendDestination.bolt11(invoice: _invoice, bip353Address: _bip353Address)
         }
         if type == "bolt12" {
             guard let offerTmp = sendDestination["offer"] as? [String: Any?] else {
@@ -4748,11 +4742,12 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bolt11(
-            invoice
+            invoice, bip353Address
         ):
             return [
                 "type": "bolt11",
                 "invoice": dictionaryOf(lnInvoice: invoice),
+                "bip353Address": bip353Address == nil ? nil : bip353Address,
             ]
 
         case let .bolt12(

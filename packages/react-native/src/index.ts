@@ -345,7 +345,6 @@ export interface PrepareLnUrlPayResponse {
     destination: SendDestination
     feesSat: number
     data: LnUrlPayRequestData
-    bip353Address?: string
     comment?: string
     successAction?: SuccessAction
 }
@@ -800,6 +799,7 @@ export type SendDestination = {
 } | {
     type: SendDestinationVariant.BOLT11,
     invoice: LnInvoice
+    bip353Address?: string
 } | {
     type: SendDestinationVariant.BOLT12,
     offer: LnOffer

@@ -1199,9 +1199,6 @@ class PrepareLnUrlPayResponse {
   /// The [LnUrlPayRequestData] returned by [parse]
   final LnUrlPayRequestData data;
 
-  /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
-  final String? bip353Address;
-
   /// An optional comment for this payment
   final String? comment;
 
@@ -1213,19 +1210,13 @@ class PrepareLnUrlPayResponse {
     required this.destination,
     required this.feesSat,
     required this.data,
-    this.bip353Address,
     this.comment,
     this.successAction,
   });
 
   @override
   int get hashCode =>
-      destination.hashCode ^
-      feesSat.hashCode ^
-      data.hashCode ^
-      bip353Address.hashCode ^
-      comment.hashCode ^
-      successAction.hashCode;
+      destination.hashCode ^ feesSat.hashCode ^ data.hashCode ^ comment.hashCode ^ successAction.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1235,7 +1226,6 @@ class PrepareLnUrlPayResponse {
           destination == other.destination &&
           feesSat == other.feesSat &&
           data == other.data &&
-          bip353Address == other.bip353Address &&
           comment == other.comment &&
           successAction == other.successAction;
 }
@@ -1718,10 +1708,15 @@ sealed class SendDestination with _$SendDestination {
   }) = SendDestination_LiquidAddress;
   const factory SendDestination.bolt11({
     required LNInvoice invoice,
+
+    /// A BIP353 address, in case one was used to resolve this BOLT11
+    String? bip353Address,
   }) = SendDestination_Bolt11;
   const factory SendDestination.bolt12({
     required LNOffer offer,
     required BigInt receiverAmountSat,
+
+    /// A BIP353 address, in case one was used to resolve this BOLT12
     String? bip353Address,
   }) = SendDestination_Bolt12;
 }

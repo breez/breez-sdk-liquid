@@ -1948,16 +1948,6 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
     val destination = prepareLnUrlPayResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = prepareLnUrlPayResponse.getDouble("feesSat").toULong()
     val data = prepareLnUrlPayResponse.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
-    val bip353Address =
-        if (hasNonNullKey(
-                prepareLnUrlPayResponse,
-                "bip353Address",
-            )
-        ) {
-            prepareLnUrlPayResponse.getString("bip353Address")
-        } else {
-            null
-        }
     val comment = if (hasNonNullKey(prepareLnUrlPayResponse, "comment")) prepareLnUrlPayResponse.getString("comment") else null
     val successAction =
         if (hasNonNullKey(prepareLnUrlPayResponse, "successAction")) {
@@ -1967,7 +1957,7 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
         } else {
             null
         }
-    return PrepareLnUrlPayResponse(destination, feesSat, data, bip353Address, comment, successAction)
+    return PrepareLnUrlPayResponse(destination, feesSat, data, comment, successAction)
 }
 
 fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap =
@@ -1975,7 +1965,6 @@ fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap
         "destination" to readableMapOf(prepareLnUrlPayResponse.destination),
         "feesSat" to prepareLnUrlPayResponse.feesSat,
         "data" to readableMapOf(prepareLnUrlPayResponse.data),
-        "bip353Address" to prepareLnUrlPayResponse.bip353Address,
         "comment" to prepareLnUrlPayResponse.comment,
         "successAction" to prepareLnUrlPayResponse.successAction?.let { readableMapOf(it) },
     )
@@ -3781,7 +3770,8 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
     }
     if (type == "bolt11") {
         val invoice = sendDestination.getMap("invoice")?.let { asLnInvoice(it) }!!
-        return SendDestination.Bolt11(invoice)
+        val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
+        return SendDestination.Bolt11(invoice, bip353Address)
     }
     if (type == "bolt12") {
         val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
@@ -3802,6 +3792,7 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
         is SendDestination.Bolt11 -> {
             pushToMap(map, "type", "bolt11")
             pushToMap(map, "invoice", readableMapOf(sendDestination.invoice))
+            pushToMap(map, "bip353Address", sendDestination.bip353Address)
         }
         is SendDestination.Bolt12 -> {
             pushToMap(map, "type", "bolt12")

@@ -1103,7 +1103,10 @@ impl LiquidSdk {
                             (
                                 invoice_amount_sat,
                                 fees_sat,
-                                SendDestination::Bolt11 { invoice },
+                                SendDestination::Bolt11 {
+                                    invoice,
+                                    bip353_address: None,
+                                },
                             )
                         }
                         (None, _) => {
@@ -1117,7 +1120,10 @@ impl LiquidSdk {
                             (
                                 invoice_amount_sat,
                                 fees_sat,
-                                SendDestination::Bolt11 { invoice },
+                                SendDestination::Bolt11 {
+                                    invoice,
+                                    bip353_address: None,
+                                },
                             )
                         }
                     };
@@ -1247,7 +1253,7 @@ impl LiquidSdk {
                 self.pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat, true)
                     .await
             }
-            SendDestination::Bolt11 { invoice } => {
+            SendDestination::Bolt11 { invoice, .. } => {
                 self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await
             }
             SendDestination::Bolt12 {
@@ -3105,11 +3111,9 @@ impl LiquidSdk {
     ///
     /// # Returns
     /// Returns a [PrepareLnUrlPayResponse] containing:
-    ///     * `prepare_send_response` - the prepared [PrepareSendResponse] for the retrieved invoice
+    ///     * `destination` - the destination of the payment
     ///     * `fees_sat` - The fees in satoshis to send the payment
     ///     * `data` - The [LnUrlPayRequestData] returned by [parse]
-    ///     * `bip353_address` - A BIP353 address, in case one was used in order to fetch the LNURL
-    ///       Pay request data.
     ///     * `comment` - An optional comment for this payment
     ///     * `success_action` - the optional unprocessed LUD-09 success action
     pub async fn prepare_lnurl_pay(
@@ -3190,11 +3194,22 @@ impl LiquidSdk {
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
 
+                let destination =
+                    if let SendDestination::Bolt11 { invoice, .. } = prepare_response.destination {
+                        SendDestination::Bolt11 {
+                            invoice,
+                            bip353_address: req.bip353_address,
+                        }
+                    } else {
+                        return Err(LnUrlPayError::Generic {
+                            err: "SendDestination for LNURL Pay  is not BOLT11 invoice".to_string(),
+                        });
+                    };
+
                 Ok(PrepareLnUrlPayResponse {
-                    destination: prepare_response.destination,
+                    destination,
                     fees_sat: prepare_response.fees_sat,
                     data: req.data,
-                    bip353_address: req.bip353_address,
                     comment: req.comment,
                     success_action: data.success_action,
                 })
@@ -3222,7 +3237,7 @@ impl LiquidSdk {
         let payment = self
             .send_payment(&SendPaymentRequest {
                 prepare_response: PrepareSendResponse {
-                    destination: prepare_response.destination,
+                    destination: prepare_response.destination.clone(),
                     fees_sat: prepare_response.fees_sat,
                 },
             })
@@ -3290,6 +3305,17 @@ impl LiquidSdk {
         if let (Some(tx_id), Some(destination)) =
             (payment.tx_id.clone(), payment.destination.clone())
         {
+            let bip353_address = if let SendDestination::Bolt11 { bip353_address, .. } =
+                prepare_response.destination
+            {
+                bip353_address
+            } else {
+                error!(
+                    "SendDestination for LNURL Pay is not BOLT11: {:?}",
+                    prepare_response.destination
+                );
+                None
+            };
             self.persister
                 .insert_or_update_payment_details(PaymentTxDetails {
                     tx_id,
@@ -3304,7 +3330,7 @@ impl LiquidSdk {
                         lnurl_pay_unprocessed_success_action: prepare_response.success_action,
                         lnurl_withdraw_endpoint: None,
                     }),
-                    bip353_address: prepare_response.bip353_address,
+                    bip353_address,
                 })?;
         }
 

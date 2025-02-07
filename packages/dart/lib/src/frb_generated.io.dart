@@ -3333,7 +3333,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     cst_api_fill_to_wire_send_destination(apiObj.destination, wireObj.destination);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     cst_api_fill_to_wire_ln_url_pay_request_data(apiObj.data, wireObj.data);
-    wireObj.bip353_address = cst_encode_opt_String(apiObj.bip353Address);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.success_action = cst_encode_opt_box_autoadd_success_action(apiObj.successAction);
   }
@@ -3579,8 +3578,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is SendDestination_Bolt11) {
       var pre_invoice = cst_encode_box_autoadd_ln_invoice(apiObj.invoice);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 1;
       wireObj.kind.Bolt11.invoice = pre_invoice;
+      wireObj.kind.Bolt11.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is SendDestination_Bolt12) {
@@ -6281,6 +6282,8 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
 final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_list_String extends ffi.Struct {
@@ -6447,8 +6450,6 @@ final class wire_cst_prepare_ln_url_pay_response extends ffi.Struct {
   external int fees_sat;
 
   external wire_cst_ln_url_pay_request_data data;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 

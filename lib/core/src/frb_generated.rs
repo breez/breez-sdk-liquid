@@ -4166,7 +4166,6 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
-        let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_successAction =
             <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
@@ -4174,7 +4173,6 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
             data: var_data,
-            bip353_address: var_bip353Address,
             comment: var_comment,
             success_action: var_successAction,
         };
@@ -4555,8 +4553,10 @@ impl SseDecode for crate::model::SendDestination {
             }
             1 => {
                 let mut var_invoice = <crate::bindings::LNInvoice>::sse_decode(deserializer);
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt11 {
                     invoice: var_invoice,
+                    bip353_address: var_bip353Address,
                 };
             }
             2 => {
@@ -6515,7 +6515,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayResponse {
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.data.into_into_dart().into_dart(),
-            self.bip353_address.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
             self.success_action.into_into_dart().into_dart(),
         ]
@@ -7004,9 +7003,15 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
             crate::model::SendDestination::LiquidAddress { address_data } => {
                 [0.into_dart(), address_data.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SendDestination::Bolt11 { invoice } => {
-                [1.into_dart(), invoice.into_into_dart().into_dart()].into_dart()
-            }
+            crate::model::SendDestination::Bolt11 {
+                invoice,
+                bip353_address,
+            } => [
+                1.into_dart(),
+                invoice.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::model::SendDestination::Bolt12 {
                 offer,
                 receiver_amount_sat,
@@ -8769,7 +8774,6 @@ impl SseEncode for crate::model::PrepareLnUrlPayResponse {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
-        <Option<String>>::sse_encode(self.bip353_address, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<crate::bindings::SuccessAction>>::sse_encode(self.success_action, serializer);
     }
@@ -9036,9 +9040,13 @@ impl SseEncode for crate::model::SendDestination {
                 <i32>::sse_encode(0, serializer);
                 <crate::bindings::LiquidAddressData>::sse_encode(address_data, serializer);
             }
-            crate::model::SendDestination::Bolt11 { invoice } => {
+            crate::model::SendDestination::Bolt11 {
+                invoice,
+                bip353_address,
+            } => {
                 <i32>::sse_encode(1, serializer);
                 <crate::bindings::LNInvoice>::sse_encode(invoice, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
             }
             crate::model::SendDestination::Bolt12 {
                 offer,
@@ -10930,7 +10938,6 @@ mod io {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 data: self.data.cst_decode(),
-                bip353_address: self.bip353_address.cst_decode(),
                 comment: self.comment.cst_decode(),
                 success_action: self.success_action.cst_decode(),
             }
@@ -11227,6 +11234,7 @@ mod io {
                     let ans = unsafe { self.kind.Bolt11 };
                     crate::model::SendDestination::Bolt11 {
                         invoice: ans.invoice.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                     }
                 }
                 2 => {
@@ -12253,7 +12261,6 @@ mod io {
                 destination: Default::default(),
                 fees_sat: Default::default(),
                 data: Default::default(),
-                bip353_address: core::ptr::null_mut(),
                 comment: core::ptr::null_mut(),
                 success_action: core::ptr::null_mut(),
             }
@@ -14704,7 +14711,6 @@ mod io {
         destination: wire_cst_send_destination,
         fees_sat: u64,
         data: wire_cst_ln_url_pay_request_data,
-        bip353_address: *mut wire_cst_list_prim_u_8_strict,
         comment: *mut wire_cst_list_prim_u_8_strict,
         success_action: *mut wire_cst_success_action,
     }
@@ -14960,6 +14966,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SendDestination_Bolt11 {
         invoice: *mut wire_cst_ln_invoice,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
