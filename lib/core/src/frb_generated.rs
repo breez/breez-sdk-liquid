@@ -4382,15 +4382,11 @@ impl SseDecode for crate::model::RefundableSwap {
         let mut var_swapAddress = <String>::sse_decode(deserializer);
         let mut var_timestamp = <u32>::sse_decode(deserializer);
         let mut var_amountSat = <u64>::sse_decode(deserializer);
-        let mut var_confirmedAmountSat = <u64>::sse_decode(deserializer);
-        let mut var_unconfirmedAmountSat = <i64>::sse_decode(deserializer);
         let mut var_lastRefundTxId = <Option<String>>::sse_decode(deserializer);
         return crate::model::RefundableSwap {
             swap_address: var_swapAddress,
             timestamp: var_timestamp,
             amount_sat: var_amountSat,
-            confirmed_amount_sat: var_confirmedAmountSat,
-            unconfirmed_amount_sat: var_unconfirmedAmountSat,
             last_refund_tx_id: var_lastRefundTxId,
         };
     }
@@ -6826,8 +6822,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::RefundableSwap {
             self.swap_address.into_into_dart().into_dart(),
             self.timestamp.into_into_dart().into_dart(),
             self.amount_sat.into_into_dart().into_dart(),
-            self.confirmed_amount_sat.into_into_dart().into_dart(),
-            self.unconfirmed_amount_sat.into_into_dart().into_dart(),
             self.last_refund_tx_id.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -8882,8 +8876,6 @@ impl SseEncode for crate::model::RefundableSwap {
         <String>::sse_encode(self.swap_address, serializer);
         <u32>::sse_encode(self.timestamp, serializer);
         <u64>::sse_encode(self.amount_sat, serializer);
-        <u64>::sse_encode(self.confirmed_amount_sat, serializer);
-        <i64>::sse_encode(self.unconfirmed_amount_sat, serializer);
         <Option<String>>::sse_encode(self.last_refund_tx_id, serializer);
     }
 }
@@ -11051,8 +11043,6 @@ mod io {
                 swap_address: self.swap_address.cst_decode(),
                 timestamp: self.timestamp.cst_decode(),
                 amount_sat: self.amount_sat.cst_decode(),
-                confirmed_amount_sat: self.confirmed_amount_sat.cst_decode(),
-                unconfirmed_amount_sat: self.unconfirmed_amount_sat.cst_decode(),
                 last_refund_tx_id: self.last_refund_tx_id.cst_decode(),
             }
         }
@@ -12425,8 +12415,6 @@ mod io {
                 swap_address: core::ptr::null_mut(),
                 timestamp: Default::default(),
                 amount_sat: Default::default(),
-                confirmed_amount_sat: Default::default(),
-                unconfirmed_amount_sat: Default::default(),
                 last_refund_tx_id: core::ptr::null_mut(),
             }
         }
@@ -14779,8 +14767,6 @@ mod io {
         swap_address: *mut wire_cst_list_prim_u_8_strict,
         timestamp: u32,
         amount_sat: u64,
-        confirmed_amount_sat: u64,
-        unconfirmed_amount_sat: i64,
         last_refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]

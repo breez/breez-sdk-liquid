@@ -1008,18 +1008,11 @@ impl ChainSwap {
         Ok(script_pubkey)
     }
 
-    pub(crate) fn to_refundable(
-        &self,
-        amount_sat: u64,
-        confirmed_amount_sat: u64,
-        unconfirmed_amount_sat: i64,
-    ) -> RefundableSwap {
+    pub(crate) fn to_refundable(&self, amount_sat: u64) -> RefundableSwap {
         RefundableSwap {
             swap_address: self.lockup_address.clone(),
             timestamp: self.created_at,
             amount_sat,
-            confirmed_amount_sat,
-            unconfirmed_amount_sat,
             last_refund_tx_id: self.refund_tx_id.clone(),
         }
     }
@@ -1266,10 +1259,6 @@ pub struct RefundableSwap {
     pub timestamp: u32,
     /// Amount that is refundable, from all UTXOs
     pub amount_sat: u64,
-    /// Confirmed amount, from all UTXOs
-    pub confirmed_amount_sat: u64,
-    /// Unconfirmed amount (negative is an outgoing amount), from all UTXOs
-    pub unconfirmed_amount_sat: i64,
     /// The txid of the last broadcasted refund tx, if any
     pub last_refund_tx_id: Option<String>,
 }

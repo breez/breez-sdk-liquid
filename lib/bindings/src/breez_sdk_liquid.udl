@@ -646,8 +646,6 @@ dictionary RefundableSwap {
     string swap_address;
     u32 timestamp;
     u64 amount_sat;
-    u64 confirmed_amount_sat;
-    i64 unconfirmed_amount_sat;
     string? last_refund_tx_id;
 };
 

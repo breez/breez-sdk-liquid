@@ -218,13 +218,20 @@ impl BitcoinChainService for MockBitcoinChainService {
         Ok(vec![])
     }
 
-    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        let out_point = OutPoint::default();
-        let tx_out = TxOut {
-            value: Amount::from_sat(1000),
-            script_pubkey: script.to_p2sh(),
-        };
-        Ok(vec![Utxo::Bitcoin((out_point, tx_out))])
+    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<(OutPoint, TxOut)>>> {
+        let scripts_utxos = scripts
+            .iter()
+            .map(|s| {
+                vec![(
+                    OutPoint::default(),
+                    TxOut {
+                        value: Amount::from_sat(1000),
+                        script_pubkey: s.to_p2sh(),
+                    },
+                )]
+            })
+            .collect();
+        Ok(scripts_utxos)
     }
 
     fn script_get_balance(

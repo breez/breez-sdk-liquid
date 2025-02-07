@@ -432,8 +432,6 @@ export interface RefundableSwap {
     swapAddress: string
     timestamp: number
     amountSat: number
-    confirmedAmountSat: number
-    unconfirmedAmountSat: number
     lastRefundTxId?: string
 }
 

@@ -2408,27 +2408,19 @@ impl LiquidSdk {
             .iter()
             .map(|s| s.as_script())
             .collect();
-        let scripts_balance = self
+        let scripts_utxos = self
             .bitcoin_chain_service
-            .scripts_get_balance(&lockup_scripts)?;
+            .get_scripts_utxos(&lockup_scripts)?;
 
         let mut refundables = vec![];
-        for (chain_swap, script_balance) in chain_swaps.into_iter().zip(scripts_balance) {
+        for (chain_swap, script_utxos) in chain_swaps.into_iter().zip(scripts_utxos) {
             let swap_id = &chain_swap.id;
-            let refundable_amount_sat = script_balance
-                .confirmed
-                .saturating_add_signed(script_balance.unconfirmed);
-            info!("Incoming Chain Swap {swap_id} is refundable with ({} confirmed {} unconfirmed) {} sats",
-                script_balance.confirmed,
-                script_balance.unconfirmed,
-                refundable_amount_sat,
-            );
+            let amount_sat = script_utxos
+                .iter()
+                .fold(0, |acc, (_, txo)| acc + txo.value.to_sat());
+            info!("Incoming Chain Swap {swap_id} is refundable with {amount_sat} sats");
 
-            let refundable: RefundableSwap = chain_swap.to_refundable(
-                refundable_amount_sat,
-                script_balance.confirmed,
-                script_balance.unconfirmed,
-            );
+            let refundable: RefundableSwap = chain_swap.to_refundable(amount_sat);
             refundables.push(refundable);
         }
 

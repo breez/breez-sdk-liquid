@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     sync::{Mutex, OnceLock},
     time::Duration,
 };
@@ -14,14 +15,13 @@ use electrum_client::{
     Client, ElectrumApi, GetBalanceRes, HeaderNotification,
 };
 use log::info;
-use lwk_wollet::{ElectrumOptions, ElectrumUrl, Error, History};
+use lwk_wollet::{
+    bitcoin::{ScriptBuf, TxOut},
+    ElectrumOptions, ElectrumUrl, Error, History,
+};
 use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
 
-use crate::model::LiquidNetwork;
-use crate::{
-    model::{Config, RecommendedFees},
-    prelude::Utxo,
-};
+use crate::model::{Config, LiquidNetwork, RecommendedFees};
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
@@ -49,8 +49,8 @@ pub trait BitcoinChainService: Send + Sync {
         retries: u64,
     ) -> Result<Vec<History>>;
 
-    /// Get the utxos associated with a script pubkey
-    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
+    /// Get the utxos associated with a list of scripts
+    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<(OutPoint, TxOut)>>>;
 
     /// Return the confirmed and unconfirmed balances of a script hash
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
@@ -204,48 +204,72 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(script_history)
     }
 
-    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        // Get confirmed transactions involving our script
-        let history: Vec<_> = self
-            .get_script_history(script)?
-            .into_iter()
-            .filter(|h| h.height > 0)
-            .collect();
-        let txs = self.get_transactions(
-            &history
-                .iter()
-                .map(|h| h.txid.to_raw_hash().into())
-                .collect::<Vec<_>>(),
-        )?;
-
-        // Find all unspent outputs paying to our script
-        let utxos = txs
+    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<(OutPoint, TxOut)>>> {
+        let scripts_history = self.get_scripts_history(scripts)?;
+        let tx_confirmed_map: HashMap<_, _> = scripts_history
             .iter()
-            .flat_map(|tx| {
-                tx.output
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, output)| output.script_pubkey == *script)
-                    .filter(|(vout, _)| {
-                        // Check if output is unspent
-                        !txs.iter().any(|spending_tx| {
-                            // Check if any input spends our output
-                            spending_tx.input.iter().any(|input| {
-                                input.previous_output.txid == tx.compute_txid()
-                                    && input.previous_output.vout == *vout as u32
-                            })
+            .flatten()
+            .map(|h| (Txid::from_raw_hash(h.txid.to_raw_hash()), h.height > 0))
+            .collect();
+        let txs = self.get_transactions(&tx_confirmed_map.keys().cloned().collect::<Vec<_>>())?;
+        let script_txs_map: HashMap<ScriptBuf, Vec<Transaction>> = scripts
+            .iter()
+            .map(|script| ScriptBuf::from_bytes(script.to_bytes().to_vec()))
+            .zip(scripts_history)
+            .map(|(script_buf, script_history)| {
+                (
+                    script_buf,
+                    script_history
+                        .iter()
+                        .filter_map(|h| {
+                            txs.iter()
+                                .find(|tx| tx.compute_txid().as_raw_hash() == h.txid.as_raw_hash())
+                                .cloned()
                         })
-                    })
-                    .map(|(vout, output)| {
-                        Utxo::Bitcoin((
-                            OutPoint::new(tx.compute_txid(), vout as u32),
-                            output.clone(),
-                        ))
-                    })
+                        .collect::<Vec<_>>(),
+                )
             })
             .collect();
+        let scripts_utxos = script_txs_map
+            .iter()
+            .map(|(script_buf, txs)| {
+                txs.iter()
+                    .flat_map(|tx| {
+                        tx.output
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, output)| output.script_pubkey == *script_buf)
+                            .filter(|(vout, _)| {
+                                // Check if output is unspent (only consider confirmed spending txs)
+                                !txs.iter().any(|spending_tx| {
+                                    let spends_our_output = spending_tx.input.iter().any(|input| {
+                                        input.previous_output.txid == tx.compute_txid()
+                                            && input.previous_output.vout == *vout as u32
+                                    });
 
-        Ok(utxos)
+                                    if spends_our_output {
+                                        // If it does spend our output, check if it's confirmed
+                                        let spending_tx_hash = spending_tx.compute_txid();
+                                        tx_confirmed_map
+                                            .get(&spending_tx_hash)
+                                            .copied()
+                                            .unwrap_or(false)
+                                    } else {
+                                        false
+                                    }
+                                })
+                            })
+                            .map(|(vout, output)| {
+                                (
+                                    OutPoint::new(tx.compute_txid(), vout as u32),
+                                    output.clone(),
+                                )
+                            })
+                    })
+                    .collect()
+            })
+            .collect();
+        Ok(scripts_utxos)
     }
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {

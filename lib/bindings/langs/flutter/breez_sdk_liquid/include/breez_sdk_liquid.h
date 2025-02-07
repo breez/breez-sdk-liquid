@@ -781,8 +781,6 @@ typedef struct wire_cst_refundable_swap {
   struct wire_cst_list_prim_u_8_strict *swap_address;
   uint32_t timestamp;
   uint64_t amount_sat;
-  uint64_t confirmed_amount_sat;
-  int64_t unconfirmed_amount_sat;
   struct wire_cst_list_prim_u_8_strict *last_refund_tx_id;
 } wire_cst_refundable_swap;
 
