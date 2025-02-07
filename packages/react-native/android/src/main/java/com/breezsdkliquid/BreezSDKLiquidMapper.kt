@@ -2526,6 +2526,8 @@ fun asRefundableSwap(refundableSwap: ReadableMap): RefundableSwap? {
                 "swapAddress",
                 "timestamp",
                 "amountSat",
+                "confirmedAmountSat",
+                "unconfirmedAmountSat",
             ),
         )
     ) {
@@ -2534,8 +2536,10 @@ fun asRefundableSwap(refundableSwap: ReadableMap): RefundableSwap? {
     val swapAddress = refundableSwap.getString("swapAddress")!!
     val timestamp = refundableSwap.getInt("timestamp").toUInt()
     val amountSat = refundableSwap.getDouble("amountSat").toULong()
+    val confirmedAmountSat = refundableSwap.getDouble("confirmedAmountSat").toULong()
+    val unconfirmedAmountSat = refundableSwap.getDouble("unconfirmedAmountSat").toLong()
     val lastRefundTxId = if (hasNonNullKey(refundableSwap, "lastRefundTxId")) refundableSwap.getString("lastRefundTxId") else null
-    return RefundableSwap(swapAddress, timestamp, amountSat, lastRefundTxId)
+    return RefundableSwap(swapAddress, timestamp, amountSat, confirmedAmountSat, unconfirmedAmountSat, lastRefundTxId)
 }
 
 fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
@@ -2543,6 +2547,8 @@ fun readableMapOf(refundableSwap: RefundableSwap): ReadableMap =
         "swapAddress" to refundableSwap.swapAddress,
         "timestamp" to refundableSwap.timestamp,
         "amountSat" to refundableSwap.amountSat,
+        "confirmedAmountSat" to refundableSwap.confirmedAmountSat,
+        "unconfirmedAmountSat" to refundableSwap.unconfirmedAmountSat,
         "lastRefundTxId" to refundableSwap.lastRefundTxId,
     )
 

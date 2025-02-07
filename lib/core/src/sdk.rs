@@ -2415,10 +2415,20 @@ impl LiquidSdk {
         let mut refundables = vec![];
         for (chain_swap, script_balance) in chain_swaps.into_iter().zip(scripts_balance) {
             let swap_id = &chain_swap.id;
-            let refundable_confirmed_sat = script_balance.confirmed;
-            info!("Incoming Chain Swap {swap_id} is refundable with {refundable_confirmed_sat} confirmed sats");
+            let refundable_amount_sat = script_balance
+                .confirmed
+                .saturating_add_signed(script_balance.unconfirmed);
+            info!("Incoming Chain Swap {swap_id} is refundable with ({} confirmed {} unconfirmed) {} sats",
+                script_balance.confirmed,
+                script_balance.unconfirmed,
+                refundable_amount_sat,
+            );
 
-            let refundable: RefundableSwap = chain_swap.to_refundable(refundable_confirmed_sat);
+            let refundable: RefundableSwap = chain_swap.to_refundable(
+                refundable_amount_sat,
+                script_balance.confirmed,
+                script_balance.unconfirmed,
+            );
             refundables.push(refundable);
         }
 

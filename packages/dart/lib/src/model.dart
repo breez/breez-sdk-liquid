@@ -1617,6 +1617,12 @@ class RefundableSwap {
   /// Amount that is refundable, from all UTXOs
   final BigInt amountSat;
 
+  /// Confirmed amount, from all UTXOs
+  final BigInt confirmedAmountSat;
+
+  /// Unconfirmed amount (negative is an outgoing amount), from all UTXOs
+  final PlatformInt64 unconfirmedAmountSat;
+
   /// The txid of the last broadcasted refund tx, if any
   final String? lastRefundTxId;
 
@@ -1624,12 +1630,19 @@ class RefundableSwap {
     required this.swapAddress,
     required this.timestamp,
     required this.amountSat,
+    required this.confirmedAmountSat,
+    required this.unconfirmedAmountSat,
     this.lastRefundTxId,
   });
 
   @override
   int get hashCode =>
-      swapAddress.hashCode ^ timestamp.hashCode ^ amountSat.hashCode ^ lastRefundTxId.hashCode;
+      swapAddress.hashCode ^
+      timestamp.hashCode ^
+      amountSat.hashCode ^
+      confirmedAmountSat.hashCode ^
+      unconfirmedAmountSat.hashCode ^
+      lastRefundTxId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1639,6 +1652,8 @@ class RefundableSwap {
           swapAddress == other.swapAddress &&
           timestamp == other.timestamp &&
           amountSat == other.amountSat &&
+          confirmedAmountSat == other.confirmedAmountSat &&
+          unconfirmedAmountSat == other.unconfirmedAmountSat &&
           lastRefundTxId == other.lastRefundTxId;
 }
 

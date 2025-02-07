@@ -453,7 +453,7 @@ impl SendSwapHandler {
             .create_refund_tx(
                 Swap::Send(swap.clone()),
                 &refund_address,
-                utxos,
+                Some(utxos),
                 None,
                 is_cooperative,
             )

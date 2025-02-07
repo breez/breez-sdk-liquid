@@ -214,19 +214,19 @@ impl RecoveredOnchainDataChainReceive {
             self.btc_user_lockup_amount_sat < limits.minimal
                 || self.btc_user_lockup_amount_sat > limits.maximal
         });
-        let is_refundable = self.btc_user_lockup_address_balance_sat > 0
-            && (is_expired || unexpected_amount || amount_out_of_bounds);
+        let is_expired_refundable = is_expired && self.btc_user_lockup_address_balance_sat > 0;
+        let is_refundable = is_expired_refundable || unexpected_amount || amount_out_of_bounds;
         match &self.btc_user_lockup_tx_id {
             Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
                 (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
-                    true => match is_refundable {
+                    true => match is_expired_refundable {
                         true => Some(PaymentState::Refundable),
                         false => Some(PaymentState::Complete),
                     },
                     false => Some(PaymentState::Pending),
                 },
                 (None, Some(btc_refund_tx_id)) => match btc_refund_tx_id.confirmed() {
-                    true => match is_refundable {
+                    true => match is_expired_refundable {
                         true => Some(PaymentState::Refundable),
                         false => Some(PaymentState::Failed),
                     },
@@ -235,7 +235,7 @@ impl RecoveredOnchainDataChainReceive {
                 (Some(lbtc_claim_tx_id), Some(btc_refund_tx_id)) => {
                     match lbtc_claim_tx_id.confirmed() {
                         true => match btc_refund_tx_id.confirmed() {
-                            true => match is_refundable {
+                            true => match is_expired_refundable {
                                 true => Some(PaymentState::Refundable),
                                 false => Some(PaymentState::Complete),
                             },
@@ -246,7 +246,7 @@ impl RecoveredOnchainDataChainReceive {
                 }
                 (None, None) => match is_refundable {
                     true => Some(PaymentState::Refundable),
-                    false => match is_waiting_fee_acceptance && !amount_out_of_bounds {
+                    false => match is_waiting_fee_acceptance {
                         true => Some(PaymentState::WaitingFeeAcceptance),
                         false => Some(PaymentState::Pending),
                     },

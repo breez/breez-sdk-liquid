@@ -3148,12 +3148,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RefundableSwap dco_decode_refundable_swap(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return RefundableSwap(
       swapAddress: dco_decode_String(arr[0]),
       timestamp: dco_decode_u_32(arr[1]),
       amountSat: dco_decode_u_64(arr[2]),
-      lastRefundTxId: dco_decode_opt_String(arr[3]),
+      confirmedAmountSat: dco_decode_u_64(arr[3]),
+      unconfirmedAmountSat: dco_decode_i_64(arr[4]),
+      lastRefundTxId: dco_decode_opt_String(arr[5]),
     );
   }
 
@@ -5471,11 +5473,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_swapAddress = sse_decode_String(deserializer);
     var var_timestamp = sse_decode_u_32(deserializer);
     var var_amountSat = sse_decode_u_64(deserializer);
+    var var_confirmedAmountSat = sse_decode_u_64(deserializer);
+    var var_unconfirmedAmountSat = sse_decode_i_64(deserializer);
     var var_lastRefundTxId = sse_decode_opt_String(deserializer);
     return RefundableSwap(
         swapAddress: var_swapAddress,
         timestamp: var_timestamp,
         amountSat: var_amountSat,
+        confirmedAmountSat: var_confirmedAmountSat,
+        unconfirmedAmountSat: var_unconfirmedAmountSat,
         lastRefundTxId: var_lastRefundTxId);
   }
 
@@ -7558,6 +7564,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.swapAddress, serializer);
     sse_encode_u_32(self.timestamp, serializer);
     sse_encode_u_64(self.amountSat, serializer);
+    sse_encode_u_64(self.confirmedAmountSat, serializer);
+    sse_encode_i_64(self.unconfirmedAmountSat, serializer);
     sse_encode_opt_String(self.lastRefundTxId, serializer);
   }
 

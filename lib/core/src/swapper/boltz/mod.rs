@@ -407,7 +407,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         &self,
         swap: Swap,
         refund_address: &str,
-        utxos: Vec<Utxo>,
+        utxos: Option<Vec<Utxo>>,
         broadcast_fee_rate_sat_per_vb: Option<f64>,
         is_cooperative: bool,
     ) -> Result<Transaction, PaymentError> {
@@ -418,31 +418,42 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             Swap::Chain(chain_swap) => match chain_swap.direction {
                 Direction::Incoming => {
                     let Some(broadcast_fee_rate_sat_per_vb) = broadcast_fee_rate_sat_per_vb else {
-                        return Err(PaymentError::Generic {
-                                err: format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")
-                            });
+                        return Err(PaymentError::generic(&format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")));
                     };
 
                     Transaction::Bitcoin(
                         self.new_btc_refund_tx(
                             chain_swap,
                             refund_address,
-                            utxos,
                             broadcast_fee_rate_sat_per_vb,
                             is_cooperative,
                         )
                         .await?,
                     )
                 }
-                Direction::Outgoing => Transaction::Liquid(
+                Direction::Outgoing => {
+                    let Some(utxos) = utxos else {
+                        return Err(PaymentError::generic(&format!(
+                            "No utxos provided for outgoing Chain Swap {swap_id} refund"
+                        )));
+                    };
+                    Transaction::Liquid(
+                        self.new_lbtc_refund_tx(&swap, refund_address, utxos, is_cooperative)
+                            .await?,
+                    )
+                }
+            },
+            Swap::Send(_) => {
+                let Some(utxos) = utxos else {
+                    return Err(PaymentError::generic(&format!(
+                        "No utxos provided for Send Swap {swap_id} refund"
+                    )));
+                };
+                Transaction::Liquid(
                     self.new_lbtc_refund_tx(&swap, refund_address, utxos, is_cooperative)
                         .await?,
-                ),
-            },
-            Swap::Send(_) => Transaction::Liquid(
-                self.new_lbtc_refund_tx(&swap, refund_address, utxos, is_cooperative)
-                    .await?,
-            ),
+                )
+            }
             Swap::Receive(_) => {
                 return Err(PaymentError::Generic {
                     err: format!(

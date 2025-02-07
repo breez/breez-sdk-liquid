@@ -5181,6 +5181,12 @@ final class wire_cst_refundable_swap extends ffi.Struct {
   @ffi.Uint64()
   external int amount_sat;
 
+  @ffi.Uint64()
+  external int confirmed_amount_sat;
+
+  @ffi.Int64()
+  external int unconfirmed_amount_sat;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> last_refund_tx_id;
 }
 

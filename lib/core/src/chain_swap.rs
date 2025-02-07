@@ -977,27 +977,12 @@ impl ChainSwapHandler {
 
         info!("Initiating refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}",);
 
-        let SwapScriptV2::Bitcoin(swap_script) = swap.get_lockup_swap_script()? else {
-            return Err(PaymentError::Generic {
-                err: "Unexpected swap script type found".to_string(),
-            });
-        };
-
-        let script_pk = swap_script
-            .to_address(self.config.network.as_bitcoin_chain())
-            .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
-            .script_pubkey();
-        let utxos = self
-            .bitcoin_chain_service
-            .get_script_utxos(&script_pk)
-            .await?;
-
         let SdkTransaction::Bitcoin(refund_tx) = self
             .swapper
             .create_refund_tx(
                 Swap::Chain(swap.clone()),
                 refund_address,
-                utxos,
+                None,
                 Some(broadcast_fee_rate_sat_per_vb as f64),
                 is_cooperative,
             )
@@ -1069,7 +1054,7 @@ impl ChainSwapHandler {
             .create_refund_tx(
                 Swap::Chain(swap.clone()),
                 &refund_address,
-                utxos,
+                Some(utxos),
                 None,
                 is_cooperative,
             )

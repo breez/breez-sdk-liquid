@@ -111,7 +111,7 @@ pub trait Swapper: Send + Sync {
         &self,
         swap: Swap,
         refund_address: &str,
-        utxos: Vec<Utxo>,
+        utxos: Option<Vec<Utxo>>,
         broadcast_fee_rate_sat_per_vb: Option<f64>,
         is_cooperative: bool,
     ) -> Result<crate::prelude::Transaction, PaymentError>;

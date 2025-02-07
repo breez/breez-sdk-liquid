@@ -3457,6 +3457,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.swap_address = cst_encode_String(apiObj.swapAddress);
     wireObj.timestamp = cst_encode_u_32(apiObj.timestamp);
     wireObj.amount_sat = cst_encode_u_64(apiObj.amountSat);
+    wireObj.confirmed_amount_sat = cst_encode_u_64(apiObj.confirmedAmountSat);
+    wireObj.unconfirmed_amount_sat = cst_encode_i_64(apiObj.unconfirmedAmountSat);
     wireObj.last_refund_tx_id = cst_encode_opt_String(apiObj.lastRefundTxId);
   }
 
@@ -7097,6 +7099,12 @@ final class wire_cst_refundable_swap extends ffi.Struct {
 
   @ffi.Uint64()
   external int amount_sat;
+
+  @ffi.Uint64()
+  external int confirmed_amount_sat;
+
+  @ffi.Int64()
+  external int unconfirmed_amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> last_refund_tx_id;
 }
