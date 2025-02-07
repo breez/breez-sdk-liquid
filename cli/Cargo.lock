@@ -701,7 +701,7 @@ dependencies = [
 [[package]]
 name = "boltz-client"
 version = "0.2.0"
-source = "git+https://github.com/hydra-yse/boltz-rust?rev=5c2a7aebd1669d599d76e782952b876a901bfb05#5c2a7aebd1669d599d76e782952b876a901bfb05"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=1989f43a9bfbf9875798a2a99afa300aeea9ec7e#1989f43a9bfbf9875798a2a99afa300aeea9ec7e"
 dependencies = [
  "bip39",
  "bitcoin 0.32.5",
@@ -3947,7 +3947,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=5a20b38b4c3b574282e8d6e5a61750bb7f4bebed#5a20b38b4c3b574282e8d6e5a61750bb7f4bebed"
+source = "git+https://github.com/breez/breez-sdk?rev=7a96ce7e5c12d837948e1e37687a1bd0cd0f884c#7a96ce7e5c12d837948e1e37687a1bd0cd0f884c"
 dependencies = [
  "aes",
  "anyhow",
