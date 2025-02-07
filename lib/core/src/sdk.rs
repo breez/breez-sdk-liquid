@@ -1258,17 +1258,19 @@ impl LiquidSdk {
                 bip353_address,
             } => {
                 let response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
-                if let (Some(tx_id), Some(destination)) =
-                    (&response.payment.tx_id, &response.payment.destination)
-                {
-                    self.persister
-                        .insert_or_update_payment_details(PaymentTxDetails {
-                            tx_id: tx_id.clone(),
-                            destination: destination.clone(),
-                            description: None,
-                            lnurl_info: None,
-                            bip353_address: bip353_address.clone(),
-                        })?;
+                if bip353_address.is_some() {
+                    if let (Some(tx_id), Some(destination)) =
+                        (&response.payment.tx_id, &response.payment.destination)
+                    {
+                        self.persister
+                            .insert_or_update_payment_details(PaymentTxDetails {
+                                tx_id: tx_id.clone(),
+                                destination: destination.clone(),
+                                description: None,
+                                lnurl_info: None,
+                                bip353_address: bip353_address.clone(),
+                            })?;
+                    }
                 }
                 Ok(response)
             }
@@ -1284,17 +1286,19 @@ impl LiquidSdk {
                 let response = self
                     .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
                     .await?;
-                if let (Some(tx_id), Some(destination)) =
-                    (&response.payment.tx_id, &response.payment.destination)
-                {
-                    self.persister
-                        .insert_or_update_payment_details(PaymentTxDetails {
-                            tx_id: tx_id.clone(),
-                            destination: destination.clone(),
-                            description: offer.description.clone(),
-                            lnurl_info: None,
-                            bip353_address: bip353_address.clone(),
-                        })?;
+                if bip353_address.is_some() {
+                    if let (Some(tx_id), Some(destination)) =
+                        (&response.payment.tx_id, &response.payment.destination)
+                    {
+                        self.persister
+                            .insert_or_update_payment_details(PaymentTxDetails {
+                                tx_id: tx_id.clone(),
+                                destination: destination.clone(),
+                                description: None,
+                                lnurl_info: None,
+                                bip353_address: bip353_address.clone(),
+                            })?;
+                    }
                 }
                 Ok(response)
             }
