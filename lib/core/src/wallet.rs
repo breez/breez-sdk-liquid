@@ -364,7 +364,13 @@ impl OnchainWallet for LiquidOnchainWallet {
         // create electrum client if doesn't already exist
         let mut electrum_client = self.electrum_client.lock().await;
         if electrum_client.is_none() {
-            let electrum_url = ElectrumUrl::new(&self.config.liquid_electrum_url, true, true)?;
+            let (tls, validate_domain) = match self.config.network {
+                LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+                LiquidNetwork::Regtest => (false, false),
+            };
+
+            let electrum_url =
+                ElectrumUrl::new(&self.config.liquid_electrum_url, tls, validate_domain)?;
             *electrum_client = Some(ElectrumClient::with_options(
                 &electrum_url,
                 ElectrumOptions { timeout: Some(3) },

@@ -25,6 +25,9 @@ lazy_static! {
     static ref LBTC_TESTNET_ASSET_ID: AssetId =
         AssetId::from_str("144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49")
             .unwrap();
+    static ref LBTC_REGTEST_ASSET_ID: AssetId =
+        AssetId::from_str("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225")
+            .unwrap();
 }
 
 pub(crate) fn now() -> u32 {
@@ -124,6 +127,7 @@ pub(crate) fn lbtc_asset_id(network: LiquidNetwork) -> AssetId {
     match network {
         LiquidNetwork::Mainnet => AssetId::LIQUID_BTC,
         LiquidNetwork::Testnet => *LBTC_TESTNET_ASSET_ID,
+        LiquidNetwork::Regtest => *LBTC_REGTEST_ASSET_ID,
     }
 }
 

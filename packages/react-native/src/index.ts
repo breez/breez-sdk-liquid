@@ -585,7 +585,8 @@ export type InputType = {
 
 export enum LiquidNetwork {
     MAINNET = "mainnet",
-    TESTNET = "testnet"
+    TESTNET = "testnet",
+    REGTEST = "regtest"
 }
 
 export enum ListPaymentDetailsVariant {
