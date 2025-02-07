@@ -148,7 +148,8 @@ impl LiquidOnchainWallet {
         match wollet_res {
             Ok(wollet) => Ok(wollet),
             Err(
-                lwk_wollet::Error::UpdateHeightTooOld { .. }
+                lwk_wollet::Error::PersistError(_)
+                | lwk_wollet::Error::UpdateHeightTooOld { .. }
                 | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
             ) => {
                 warn!("Update error initialising wollet, wipping storage and retrying: {wollet_res:?}");
