@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use futures_util::future::OptionFuture;
 use futures_util::TryFutureExt;
 use log::trace;
 use tokio::sync::mpsc::Receiver;
@@ -143,9 +142,12 @@ impl SyncService {
             loop {
                 let remote_lock_and_read = async {
                     let mut lock = remote_sync_trigger.lock().await;
-                    OptionFuture::from(lock.as_mut().map(|t| t.next()))
-                        .await
-                        .flatten()
+                    match lock.as_mut() {
+                        Some(trigger) => trigger.next().await,
+                        // Future hangs in case of a missing initial remote trigger,
+                        // tokio_select! branch is never picked
+                        None => std::future::pending().await,
+                    }
                 };
 
                 tokio::select! {
