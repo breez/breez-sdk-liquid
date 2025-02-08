@@ -97,16 +97,28 @@ impl SyncService {
         })
     }
 
-    fn handle_reconnect(self: Arc<Self>, remote_trigger: Arc<Mutex<RemoteStream>>) {
+    fn handle_reconnect(
+        self: Arc<Self>,
+        remote_trigger: Arc<Mutex<RemoteStream>>,
+        mut shutdown: watch::Receiver<()>,
+    ) {
         tokio::spawn(async move {
             let mut remote_trigger = remote_trigger.lock().await;
             loop {
-                if let Ok(Some(new_trigger)) = self.new_listener().await {
-                    *remote_trigger = Some(new_trigger);
-                    self.run_event_loop().await;
-                    break;
+                tokio::select! {
+                    _ = shutdown.changed() => {
+                        log::info!("Received shutdown signal, exiting realtime sync reconnect loop");
+                        return;
+                    }
+                    Ok(maybe_new_trigger) = self.new_listener() => match maybe_new_trigger {
+                        Some(new_trigger) => {
+                            *remote_trigger = Some(new_trigger);
+                            self.run_event_loop().await;
+                            return;
+                        },
+                        None => sleep(Duration::from_secs(5)).await,
+                    }
                 }
-                sleep(Duration::from_secs(5)).await;
             }
         });
     }
@@ -142,7 +154,7 @@ impl SyncService {
                         Ok(_) => self.run_event_loop().await,
                         Err(err) => {
                             log::warn!("Received status {} from remote, attempting to reconnect.", err.message());
-                            self.clone().handle_reconnect(remote_sync_trigger.clone());
+                            self.clone().handle_reconnect(remote_sync_trigger.clone(), shutdown.clone());
                         }
                     },
                     _ = shutdown.changed() => {
