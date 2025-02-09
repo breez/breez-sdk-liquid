@@ -6,7 +6,7 @@ package sync;
 service Syncer {
   rpc SetRecord(SetRecordRequest) returns (SetRecordReply) {}
   rpc ListChanges(ListChangesRequest) returns (ListChangesReply) {}
-  rpc TrackChanges(TrackChangesRequest) returns (stream Record);
+  rpc ListenChanges(ListenChangesRequest) returns (stream Notification);
 }
 
 message Record {
@@ -37,7 +37,9 @@ message ListChangesRequest {
 }
 message ListChangesReply { repeated Record changes = 1; }
 
-message TrackChangesRequest {
+message ListenChangesRequest {
   uint32 request_time = 1;
   string signature = 2;
 }
+
+message Notification {}
