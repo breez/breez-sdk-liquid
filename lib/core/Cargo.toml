@@ -37,7 +37,7 @@ strum = "0.26.3"
 strum_macros = "0.26.4"
 thiserror = { workspace = true }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
-openssl = { version = "0.10", features = ["vendored"] }
+openssl = { version = "=0.10.66", features = ["vendored"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 url = "2.5.0"
