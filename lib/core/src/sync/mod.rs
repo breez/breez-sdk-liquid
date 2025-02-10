@@ -7,10 +7,13 @@ use futures_util::TryFutureExt;
 use log::trace;
 use tokio::sync::mpsc::Receiver;
 use tokio::sync::{watch, Mutex};
+use tokio::time::sleep;
+use tokio_stream::StreamExt as _;
+use tonic::Streaming;
 
 use self::client::SyncerClient;
 use self::model::{data::SyncData, ListChangesRequest, RecordType, SyncState};
-use self::model::{DecryptionError, SyncOutgoingChanges};
+use self::model::{DecryptionError, ListenChangesRequest, Notification, SyncOutgoingChanges};
 use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
 use crate::sync::model::data::{
@@ -35,6 +38,8 @@ pub(crate) struct SyncService {
     client: Box<dyn SyncerClient>,
     sync_trigger: Mutex<Receiver<()>>,
 }
+
+type RemoteStream = Option<Streaming<Notification>>;
 
 impl SyncService {
     fn set_sync_trigger(persister: Arc<Persister>) -> Receiver<()> {
@@ -80,6 +85,43 @@ impl SyncService {
         }
     }
 
+    async fn new_listener(&self) -> Result<RemoteStream> {
+        let req = ListenChangesRequest::new(self.signer.clone())?;
+        Ok(match self.client.listen(req).await {
+            Ok(trigger) => Some(trigger),
+            Err(err) => {
+                log::warn!("Could not create new remote sync trigger: {err:?}");
+                None
+            }
+        })
+    }
+
+    fn handle_reconnect(
+        self: Arc<Self>,
+        remote_trigger: Arc<Mutex<RemoteStream>>,
+        mut shutdown: watch::Receiver<()>,
+    ) {
+        tokio::spawn(async move {
+            let mut remote_trigger = remote_trigger.lock().await;
+            loop {
+                tokio::select! {
+                    _ = shutdown.changed() => {
+                        log::info!("Received shutdown signal, exiting realtime sync reconnect loop");
+                        return;
+                    }
+                    Ok(maybe_new_trigger) = self.new_listener() => match maybe_new_trigger {
+                        Some(new_trigger) => {
+                            *remote_trigger = Some(new_trigger);
+                            self.run_event_loop().await;
+                            return;
+                        },
+                        None => sleep(Duration::from_secs(5)).await,
+                    }
+                }
+            }
+        });
+    }
+
     pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
         tokio::spawn(async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
@@ -91,16 +133,32 @@ impl SyncService {
                 return;
             }
 
-            let mut sync_trigger = self.sync_trigger.lock().await;
-            let mut event_loop_interval = tokio::time::interval(Duration::from_secs(30));
+            let mut local_sync_trigger = self.sync_trigger.lock().await;
+            let remote_sync_trigger =
+                Arc::new(Mutex::new(self.new_listener().await.unwrap_or(None)));
+
+            log::debug!("Starting real-time sync event loop");
 
             loop {
-                tokio::select! {
-                    _ = event_loop_interval.tick() => self.run_event_loop().await,
-                    Some(_) = sync_trigger.recv() => {
-                        self.run_event_loop().await;
-                        event_loop_interval.reset();
+                let remote_lock_and_read = async {
+                    let mut lock = remote_sync_trigger.lock().await;
+                    match lock.as_mut() {
+                        Some(trigger) => trigger.next().await,
+                        // Future hangs in case of a missing initial remote trigger,
+                        // tokio_select! branch is never picked
+                        None => std::future::pending().await,
                     }
+                };
+
+                tokio::select! {
+                    Some(_) = local_sync_trigger.recv() => self.run_event_loop().await,
+                    Some(msg) = remote_lock_and_read => match msg {
+                        Ok(_) => self.run_event_loop().await,
+                        Err(err) => {
+                            log::warn!("Received status {} from remote, attempting to reconnect.", err.message());
+                            self.clone().handle_reconnect(remote_sync_trigger.clone(), shutdown.clone());
+                        }
+                    },
                     _ = shutdown.changed() => {
                         log::info!("Received shutdown signal, exiting realtime sync service loop");
                         if let Err(err) = self.client.disconnect().await {
