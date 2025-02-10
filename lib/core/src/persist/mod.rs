@@ -50,6 +50,15 @@ fn get_where_clause_state_in(allowed_states: &[PaymentState]) -> String {
     )
 }
 
+fn where_clauses_to_string(where_clauses: Vec<String>) -> String {
+    let mut where_clause_str = String::new();
+    if !where_clauses.is_empty() {
+        where_clause_str = String::from("WHERE ");
+        where_clause_str.push_str(where_clauses.join(" AND ").as_str());
+    }
+    where_clause_str
+}
+
 impl Persister {
     pub fn new(
         working_dir: &str,

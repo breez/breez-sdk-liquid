@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
-use crate::persist::{get_where_clause_state_in, Persister};
+use crate::persist::{get_where_clause_state_in, where_clauses_to_string, Persister};
 use crate::sync::model::data::ReceiveSyncData;
 use crate::sync::model::RecordType;
 
@@ -128,11 +128,7 @@ impl Persister {
     }
 
     fn list_receive_swaps_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "
@@ -231,18 +227,19 @@ impl Persister {
         is_local: Option<bool>,
     ) -> Result<Vec<ReceiveSwap>> {
         let con = self.get_connection()?;
-        let mut where_clause = vec![get_where_clause_state_in(&[
+        let mut where_clauses = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
         if let Some(is_local) = is_local {
-            where_clause.push(format!(
-                "(sync_state.is_local = {} OR sync_state.is_local IS NULL)",
-                is_local as i8
-            ));
+            let mut where_is_local = format!("sync_state.is_local = {}", is_local as u8);
+            if is_local {
+                where_is_local = format!("({} OR sync_state.is_local IS NULL)", where_is_local);
+            }
+            where_clauses.push(where_is_local);
         }
 
-        self.list_receive_swaps_where(&con, where_clause)
+        self.list_receive_swaps_where(&con, where_clauses)
     }
 
     pub(crate) fn list_recoverable_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {

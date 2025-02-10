@@ -494,21 +494,25 @@ impl Recoverer {
                 .iter()
                 .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
                 .cloned();
-            if lockup_tx_id.is_none() {
+            let claim_tx_id = if lockup_tx_id.is_some() {
+                // A history tx that is neither a known incoming or outgoing tx is a claim tx.
+                //
+                // Only find the claim_tx from the history if we find a lockup_tx. Not doing so will select
+                // the first tx as the claim, whereas we should check that the claim is not the lockup.
+                history
+                    .iter()
+                    .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                    .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
+                    .cloned()
+            } else {
                 error!("No lockup tx found when recovering data for Send Swap {swap_id}");
-            }
+                None
+            };
 
             // If a history tx is one of our incoming txs, it's a refund tx
             let refund_tx_id = history
                 .iter()
                 .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
-                .cloned();
-
-            // A history tx that is neither a known incoming or outgoing tx is a claim tx
-            let claim_tx_id = history
-                .iter()
-                .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
-                .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
                 .cloned();
 
             res.insert(
