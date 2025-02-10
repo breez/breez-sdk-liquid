@@ -67,6 +67,8 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
     "https://cryptoqr.net/.well-known/lnurlp/<input>",
 )];
 
+const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(60 * 3);
+
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
@@ -384,10 +386,6 @@ impl LiquidSdk {
                             })
                             .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
                         };
-
-                        if let Err(err) = cloned.onchain_wallet.full_scan().await {
-                          error!("Failed to scan wallet: {err:?}");
-                        }
 
                         // Only partial sync when there are no new Liquid or Bitcoin blocks
                         let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
@@ -2737,10 +2735,11 @@ impl LiquidSdk {
 
         // We query only these that may need update, should be a fast query.
         let unconfirmed_payment_txs_data = self.persister.list_unconfirmed_payment_txs_data()?;
-        let unconfirmed_txs_by_id: HashMap<String, PaymentTxData> = unconfirmed_payment_txs_data
-            .into_iter()
-            .map(|tx| (tx.tx_id.clone(), tx))
-            .collect::<HashMap<String, PaymentTxData>>();
+        let mut unconfirmed_txs_by_id: HashMap<String, PaymentTxData> =
+            unconfirmed_payment_txs_data
+                .into_iter()
+                .map(|tx| (tx.tx_id.clone(), tx))
+                .collect::<HashMap<String, PaymentTxData>>();
 
         for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
@@ -2770,6 +2769,22 @@ impl LiquidSdk {
             if !updated && unconfirmed_txs_by_id.contains_key(&tx_id) && tx.height.is_some() {
                 // An unconfirmed tx that was not found in the payments table
                 self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
+            }
+            unconfirmed_txs_by_id.remove(&tx_id);
+        }
+
+        for unknown_unconfirmed_tx_data in unconfirmed_txs_by_id.values() {
+            if unknown_unconfirmed_tx_data.timestamp.is_some_and(|t| {
+                (utils::now().saturating_sub(t)) > NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32
+            }) {
+                self.persister
+                    .delete_payment_tx_data(&unknown_unconfirmed_tx_data.tx_id)?;
+                info!(
+                    "Found an unknown unconfirmed tx and deleted it. Txid: {}",
+                    unknown_unconfirmed_tx_data.tx_id
+                );
+            } else {
+                debug!("Found an unknown unconfirmed tx. Keeping it to allow propagation through the network. Txid: {}", unknown_unconfirmed_tx_data.tx_id)
             }
         }
 
@@ -3001,6 +3016,11 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
+
+        if let Err(err) = self.onchain_wallet.full_scan().await {
+            error!("Failed to scan wallet: {err:?}");
+        }
+
         let is_first_sync = !self
             .persister
             .get_is_first_sync_complete()?

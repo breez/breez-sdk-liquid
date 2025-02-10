@@ -279,6 +279,14 @@ impl Persister {
         Ok(())
     }
 
+    pub(crate) fn delete_payment_tx_data(&self, tx_id: &str) -> Result<()> {
+        let con = self.get_connection()?;
+
+        con.execute("DELETE FROM payment_tx_data WHERE tx_id = ?", [tx_id])?;
+
+        Ok(())
+    }
+
     fn insert_or_update_payment_details_inner(
         con: &Connection,
         payment_tx_details: &PaymentTxDetails,
