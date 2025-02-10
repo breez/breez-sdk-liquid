@@ -281,7 +281,7 @@ impl LiquidSdk {
     async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
         let mut is_started = self.is_started.write().await;
         self.persister
-            .update_send_swaps_by_state(Created, TimedOut)
+            .update_send_swaps_by_state(Created, TimedOut, Some(true))
             .inspect_err(|e| error!("Failed to update send swaps by state: {:?}", e))?;
 
         self.start_background_tasks()

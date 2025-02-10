@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
-use crate::persist::{get_where_clause_state_in, Persister};
+use crate::persist::{get_where_clause_state_in, where_clauses_to_string, Persister};
 use crate::sync::model::data::ReceiveSyncData;
 use crate::sync::model::RecordType;
 
@@ -128,11 +128,7 @@ impl Persister {
     }
 
     fn list_receive_swaps_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "

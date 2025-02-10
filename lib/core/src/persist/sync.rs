@@ -7,6 +7,7 @@ use rusqlite::{
 
 use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentTxDetails, Persister, Swap};
 use crate::{
+    persist::where_clauses_to_string,
     sync::model::{
         data::LAST_DERIVATION_INDEX_DATA_ID, Record, RecordType, SyncOutgoingChanges, SyncSettings,
         SyncState,
@@ -16,11 +17,7 @@ use crate::{
 
 impl Persister {
     fn select_sync_state_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "
@@ -289,11 +286,7 @@ impl Persister {
     }
 
     fn select_sync_outgoing_changes_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "

@@ -11,6 +11,8 @@ use crate::sync::model::data::SendSyncData;
 use crate::sync::model::RecordType;
 use crate::{ensure_sdk, get_updated_fields};
 
+use super::where_clauses_to_string;
+
 impl Persister {
     pub(crate) fn insert_or_update_send_swap_inner(
         con: &Connection,
@@ -116,15 +118,34 @@ impl Persister {
         &self,
         from_state: PaymentState,
         to_state: PaymentState,
+        is_local: Option<bool>,
     ) -> Result<()> {
         let con = self.get_connection()?;
+        let mut where_clauses = vec!["state = :from_state".to_string()];
+        if let Some(is_local) = is_local {
+            where_clauses.push(format!(
+                "(sync_state.is_local = {} OR sync_state.is_local IS NULL)",
+                is_local as i8
+            ));
+        }
+
+        let where_clause_str = where_clauses_to_string(where_clauses);
+        let query = format!(
+            "
+            UPDATE send_swaps
+            SET state = :to_state
+            WHERE id IN (
+                SELECT id
+                FROM send_swaps AS ss
+                LEFT JOIN sync_state ON ss.id = sync_state.data_id
+                {where_clause_str}
+                ORDER BY created_at
+            )
+            "
+        );
+
         con.execute(
-            "UPDATE send_swaps
-            SET
-                state = :to_state
-            WHERE
-                state = :from_state
-            ",
+            &query,
             named_params! {
                 ":from_state": from_state,
                 ":to_state": to_state,
@@ -162,7 +183,7 @@ impl Persister {
                 state,
                 pair_fees_json,
                 version
-            FROM send_swaps
+            FROM send_swaps AS ss
             {where_clause_str}
             ORDER BY created_at
         "
@@ -458,7 +479,7 @@ mod tests {
 
         // Update state (global)
         let new_state = PaymentState::Complete;
-        storage.update_send_swaps_by_state(send_swap.state, PaymentState::Complete)?;
+        storage.update_send_swaps_by_state(send_swap.state, PaymentState::Complete, None)?;
         let updated_send_swap = storage
             .fetch_send_swap_by_id(&send_swap.id)?
             .ok_or(anyhow!("Could not find Send swap in database"))?;

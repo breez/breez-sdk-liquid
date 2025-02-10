@@ -2,7 +2,7 @@ use anyhow::Result;
 use log::debug;
 use rusqlite::{Connection, Row, TransactionBehavior};
 
-use crate::error::PaymentError;
+use crate::{error::PaymentError, persist::where_clauses_to_string};
 
 use super::{Persister, ReservedAddress};
 
@@ -29,11 +29,7 @@ impl Persister {
     }
 
     fn get_reserved_address_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "
