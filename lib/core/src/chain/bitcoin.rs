@@ -15,13 +15,13 @@ use electrum_client::{
     Client, ElectrumApi, GetBalanceRes, HeaderNotification,
 };
 use log::info;
-use lwk_wollet::{
-    bitcoin::{ScriptBuf, TxOut},
-    ElectrumOptions, ElectrumUrl, Error, History,
-};
+use lwk_wollet::{bitcoin::ScriptBuf, ElectrumOptions, ElectrumUrl, Error, History};
 use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
 
-use crate::model::{Config, LiquidNetwork, RecommendedFees};
+use crate::{
+    model::{Config, LiquidNetwork, RecommendedFees},
+    prelude::Utxo,
+};
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
@@ -49,8 +49,11 @@ pub trait BitcoinChainService: Send + Sync {
         retries: u64,
     ) -> Result<Vec<History>>;
 
+    /// Get the utxos associated with a script pubkey
+    fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
+
     /// Get the utxos associated with a list of scripts
-    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<(OutPoint, TxOut)>>>;
+    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>>;
 
     /// Return the confirmed and unconfirmed balances of a script hash
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
@@ -204,7 +207,15 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(script_history)
     }
 
-    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<(OutPoint, TxOut)>>> {
+    fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
+        Ok(self
+            .get_scripts_utxos(&[script])?
+            .first()
+            .cloned()
+            .unwrap_or_default())
+    }
+
+    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
         let scripts_history = self.get_scripts_history(scripts)?;
         let tx_confirmed_map: HashMap<_, _> = scripts_history
             .iter()
@@ -260,10 +271,10 @@ impl BitcoinChainService for HybridBitcoinChainService {
                                 })
                             })
                             .map(|(vout, output)| {
-                                (
+                                Utxo::Bitcoin((
                                     OutPoint::new(tx.compute_txid(), vout as u32),
                                     output.clone(),
-                                )
+                                ))
                             })
                     })
                     .collect()

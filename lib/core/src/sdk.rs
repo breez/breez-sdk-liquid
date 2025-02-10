@@ -2417,6 +2417,7 @@ impl LiquidSdk {
             let swap_id = &chain_swap.id;
             let amount_sat = script_utxos
                 .iter()
+                .filter_map(|utxo| utxo.as_bitcoin().cloned())
                 .fold(0, |acc, (_, txo)| acc + txo.value.to_sat());
             info!("Incoming Chain Swap {swap_id} is refundable with {amount_sat} sats");
 

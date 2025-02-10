@@ -1,10 +1,17 @@
 use std::str::FromStr;
 
-use boltz_client::{bitcoin::Transaction, fees::Fee, util::secrets::Preimage, BtcSwapTx};
+use boltz_client::{
+    bitcoin::{address::Address, Transaction},
+    boltz::SwapTxKind,
+    fees::Fee,
+    util::secrets::Preimage,
+    BtcSwapTx,
+};
 
 use crate::{
+    ensure_sdk,
     error::{PaymentError, SdkError},
-    prelude::{ChainSwap, Direction, Swap},
+    prelude::{ChainSwap, Direction, Swap, Utxo},
 };
 
 use super::{BoltzSwapper, ProxyUrlFetcher};
@@ -46,25 +53,53 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
 
     pub(crate) async fn new_btc_refund_tx(
         &self,
-        chain_swap: &ChainSwap,
+        swap: &ChainSwap,
         refund_address: &str,
+        utxos: Vec<Utxo>,
         broadcast_fee_rate_sat_per_vb: f64,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let swap = Swap::Chain(chain_swap.clone());
-        let refund_tx_wrapper = self.new_btc_refund_wrapper(&swap, refund_address).await?;
-        let refund_keypair = chain_swap.get_refund_keypair()?;
+        ensure_sdk!(
+            swap.direction == Direction::Incoming,
+            SdkError::generic("Cannot create BTC refund tx for outgoing Chain swaps.")
+        );
+
+        let address = Address::from_str(refund_address)
+            .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
+
+        ensure_sdk!(
+            address.is_valid_for_network(self.config.network.into()),
+            SdkError::generic("Address network validation failed")
+        );
+
+        let utxos = utxos
+            .iter()
+            .filter_map(|utxo| utxo.as_bitcoin().cloned())
+            .collect();
+
+        let swap_script = swap.get_lockup_swap_script()?.as_bitcoin_script()?;
+        let refund_tx = BtcSwapTx {
+            kind: SwapTxKind::Refund,
+            swap_script,
+            output_address: address.assume_checked(),
+            utxos,
+        };
+
+        let refund_keypair = swap.get_refund_keypair()?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, is_cooperative)?;
+        let broadcast_fees_sat = (refund_tx_size as f64 * broadcast_fee_rate_sat_per_vb) as u64;
+
         let cooperative = match is_cooperative {
             true => {
-                self.get_cooperative_details(chain_swap.id.clone(), None, None)
+                self.get_cooperative_details(swap.id.clone(), None, None)
                     .await?
             }
             false => None,
         };
 
-        let signed_tx = refund_tx_wrapper.sign_refund(
+        let signed_tx = refund_tx.sign_refund(
             &refund_keypair,
-            Fee::Relative(broadcast_fee_rate_sat_per_vb),
+            Fee::Absolute(broadcast_fees_sat),
             cooperative,
         )?;
         Ok(signed_tx)

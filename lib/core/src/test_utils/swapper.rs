@@ -260,7 +260,7 @@ impl Swapper for MockSwapper {
         &self,
         swap: Swap,
         _refund_address: &str,
-        _utxos: Option<Vec<Utxo>>,
+        _utxos: Vec<Utxo>,
         _broadcast_fee_rate_sat_per_vb: Option<f64>,
         _is_cooperative: bool,
     ) -> Result<SdkTransaction, PaymentError> {

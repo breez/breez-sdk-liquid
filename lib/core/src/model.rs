@@ -2038,6 +2038,18 @@ pub enum Utxo {
 }
 
 impl Utxo {
+    pub(crate) fn as_bitcoin(
+        &self,
+    ) -> Option<&(
+        boltz_client::bitcoin::OutPoint,
+        boltz_client::bitcoin::TxOut,
+    )> {
+        match self {
+            Utxo::Liquid(_) => None,
+            Utxo::Bitcoin(utxo) => Some(utxo),
+        }
+    }
+
     pub(crate) fn as_liquid(
         &self,
     ) -> Option<
