@@ -387,10 +387,6 @@ impl LiquidSdk {
                             .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
                         };
 
-                        if let Err(err) = cloned.onchain_wallet.full_scan().await {
-                          error!("Failed to scan wallet: {err:?}");
-                        }
-
                         // Only partial sync when there are no new Liquid or Bitcoin blocks
                         let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
                         _ = cloned.sync(partial_sync).await;
@@ -3020,6 +3016,11 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
+
+        if let Err(err) = self.onchain_wallet.full_scan().await {
+            error!("Failed to scan wallet: {err:?}");
+        }
+
         let is_first_sync = !self
             .persister
             .get_is_first_sync_complete()?
