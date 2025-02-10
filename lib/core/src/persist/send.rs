@@ -123,10 +123,11 @@ impl Persister {
         let con = self.get_connection()?;
         let mut where_clauses = vec!["state = :from_state".to_string()];
         if let Some(is_local) = is_local {
-            where_clauses.push(format!(
-                "(sync_state.is_local = {} OR sync_state.is_local IS NULL)",
-                is_local as i8
-            ));
+            let mut where_is_local = format!("sync_state.is_local = {}", is_local as u8);
+            if is_local {
+                where_is_local = format!("({} OR sync_state.is_local IS NULL)", where_is_local);
+            }
+            where_clauses.push(where_is_local);
         }
 
         let where_clause_str = where_clauses_to_string(where_clauses);
