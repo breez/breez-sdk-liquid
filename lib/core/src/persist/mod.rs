@@ -66,7 +66,7 @@ impl Persister {
         }
         let mut sync_trigger = None;
         if sync_enabled {
-            let (events_notifier, _) = broadcast::channel::<()>(100);
+            let (events_notifier, _) = broadcast::channel::<()>(1);
             sync_trigger = Some(events_notifier);
         }
         Ok(Persister {

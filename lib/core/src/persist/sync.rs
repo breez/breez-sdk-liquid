@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
+use log::info;
 use rusqlite::{
     named_params, Connection, OptionalExtension, Row, Statement, Transaction, TransactionBehavior,
 };
@@ -499,6 +500,7 @@ impl Persister {
     }
 
     pub(crate) fn trigger_sync(&self) {
+        info!("realtime-sync: Triggering sync");
         if let Some(sender) = self.sync_trigger.clone() {
             _ = sender.send(());
         }

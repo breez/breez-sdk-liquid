@@ -110,11 +110,12 @@ impl SyncService {
                         continue;
                     }
                 };
-
+                log::info!("realtime-sync: Starting sync service loop");
                 loop {
                     log::info!("realtime-sync: before tokio_select");
                     tokio::select! {
                         local_event = local_sync_trigger.recv() => {
+                          log::info!("realtime-sync: Received local message");
                           match local_event {
                             Ok(_) => self.run_event_loop().await,
                             Err(err) => {
@@ -122,12 +123,15 @@ impl SyncService {
                             }
                           }
                         }
-                        Some(msg) = remote_sync_trigger.next() => match msg {
+                        Some(msg) = remote_sync_trigger.next() => {
+                          log::info!("realtime-sync: Received remote message");
+                          match msg {
                             Ok(_) => self.run_event_loop().await,
                             Err(err) => {
                                 log::warn!("realtime-sync: Received status {} from remote, attempting to reconnect.", err.message());
                                 break; // break the inner loop which will start the main loop by reconnecting
                             }
+                          }
                         },
                         _ = shutdown.changed() => {
                             log::info!("realtime-sync: Received shutdown signal, exiting realtime sync service loop");
