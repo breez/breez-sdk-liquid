@@ -4,6 +4,7 @@ use anyhow::Result;
 use rusqlite::{
     named_params, Connection, OptionalExtension, Row, Statement, Transaction, TransactionBehavior,
 };
+use tokio::sync::broadcast;
 
 use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentTxDetails, Persister, Swap};
 use crate::{
@@ -246,6 +247,9 @@ impl Persister {
         record_type: RecordType,
         updated_fields: Option<Vec<String>>,
     ) -> Result<()> {
+        if self.sync_trigger.is_none() {
+            return Ok(());
+        }
         let record_id = Record::get_id_from_record_type(record_type, data_id);
         let updated_fields = updated_fields
             .map(|fields| {
@@ -487,12 +491,16 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn trigger_sync(&self) -> Result<()> {
-        if let Ok(lock) = self.sync_trigger.try_read() {
-            if let Some(trigger) = lock.clone() {
-                trigger.try_send(())?;
-            }
+    pub(crate) fn subscribe_sync_trigger(&self) -> Result<broadcast::Receiver<()>> {
+        match self.sync_trigger {
+            Some(ref sender) => Ok(sender.subscribe()),
+            None => Err(anyhow::anyhow!("Sync is not enabled")),
         }
-        Ok(())
+    }
+
+    pub(crate) fn trigger_sync(&self) {
+        if let Some(sender) = self.sync_trigger.clone() {
+            _ = sender.send(());
+        }
     }
 }

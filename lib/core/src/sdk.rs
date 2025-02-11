@@ -172,7 +172,12 @@ impl LiquidSdk {
             &fingerprint_hex,
         )?;
 
-        let persister = Arc::new(Persister::new(&working_dir, config.network, None)?);
+        let sync_enabled = config
+            .sync_service_url
+            .clone()
+            .map(|_| true)
+            .unwrap_or(false);
+        let persister = Arc::new(Persister::new(&working_dir, config.network, sync_enabled)?);
         persister.init()?;
         persister.replace_asset_metadata(config.asset_metadata.clone())?;
 

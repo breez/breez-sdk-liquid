@@ -5,7 +5,6 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
 use log::{info, trace, warn};
-use tokio::sync::mpsc::Receiver;
 use tokio::sync::watch;
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
@@ -39,13 +38,6 @@ pub(crate) struct SyncService {
 }
 
 impl SyncService {
-    fn set_sync_trigger(persister: Arc<Persister>) -> Receiver<()> {
-        let (sync_trigger_tx, sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(30);
-        let mut persister_trigger = persister.sync_trigger.write().unwrap();
-        *persister_trigger = Some(sync_trigger_tx);
-        sync_trigger_rx
-    }
-
     pub(crate) fn new(
         remote_url: String,
         persister: Arc<Persister>,
@@ -97,7 +89,10 @@ impl SyncService {
                 log::warn!("realtime-sync: Could not check for remote change: {err:?}");
                 return;
             }
-            let mut local_sync_trigger = Self::set_sync_trigger(self.persister.clone());
+            let Ok(mut local_sync_trigger) = self.persister.subscribe_sync_trigger() else {
+                log::warn!("realtime-sync: Could not subscribe to local sync trigger");
+                return;
+            };
 
             log::debug!("realtime-sync: Starting real-time sync event loop");
             loop {
@@ -115,10 +110,18 @@ impl SyncService {
                         continue;
                     }
                 };
+
                 loop {
                     log::info!("realtime-sync: before tokio_select");
                     tokio::select! {
-                        Some(_) = local_sync_trigger.recv() => self.run_event_loop().await,
+                        local_event = local_sync_trigger.recv() => {
+                          match local_event {
+                            Ok(_) => self.run_event_loop().await,
+                            Err(err) => {
+                                log::warn!("realtime-sync: local trigger received error, probably lagging behind {err:?}");
+                            }
+                          }
+                        }
                         Some(msg) = remote_sync_trigger.next() => match msg {
                             Ok(_) => self.run_event_loop().await,
                             Err(err) => {
