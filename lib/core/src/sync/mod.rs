@@ -108,7 +108,7 @@ impl SyncService {
                     Ok(trigger) => trigger,
                     Err(e) => {
                         warn!(
-                            "realtime-sync: new_listener returned error: {:?} waiting one second",
+                            "realtime-sync: new_listener returned error: {:?} waiting 3 seconds",
                             e
                         );
                         sleep(Duration::from_secs(3)).await;
