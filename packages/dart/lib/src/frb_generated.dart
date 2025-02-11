@@ -2000,6 +2000,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 3:
         return InputType_Bolt12Offer(
           offer: dco_decode_box_autoadd_ln_offer(raw[1]),
+          bip353Address: dco_decode_opt_String(raw[2]),
         );
       case 4:
         return InputType_NodeId(
@@ -2012,6 +2013,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 6:
         return InputType_LnUrlPay(
           data: dco_decode_box_autoadd_ln_url_pay_request_data(raw[1]),
+          bip353Address: dco_decode_opt_String(raw[2]),
         );
       case 7:
         return InputType_LnUrlWithdraw(
@@ -2791,9 +2793,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           paymentHash: dco_decode_opt_String(raw[7]),
           destinationPubkey: dco_decode_opt_String(raw[8]),
           lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[9]),
-          claimTxId: dco_decode_opt_String(raw[10]),
-          refundTxId: dco_decode_opt_String(raw[11]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[12]),
+          bip353Address: dco_decode_opt_String(raw[10]),
+          claimTxId: dco_decode_opt_String(raw[11]),
+          refundTxId: dco_decode_opt_String(raw[12]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[13]),
         );
       case 1:
         return PaymentDetails_Liquid(
@@ -2939,12 +2942,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareLnUrlPayRequest dco_decode_prepare_ln_url_pay_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return PrepareLnUrlPayRequest(
       data: dco_decode_ln_url_pay_request_data(arr[0]),
       amount: dco_decode_pay_amount(arr[1]),
-      comment: dco_decode_opt_String(arr[2]),
-      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[3]),
+      bip353Address: dco_decode_opt_String(arr[2]),
+      comment: dco_decode_opt_String(arr[3]),
+      validateSuccessActionUrl: dco_decode_opt_box_autoadd_bool(arr[4]),
     );
   }
 
@@ -3268,11 +3272,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 1:
         return SendDestination_Bolt11(
           invoice: dco_decode_box_autoadd_ln_invoice(raw[1]),
+          bip353Address: dco_decode_opt_String(raw[2]),
         );
       case 2:
         return SendDestination_Bolt12(
           offer: dco_decode_box_autoadd_ln_offer(raw[1]),
           receiverAmountSat: dco_decode_u_64(raw[2]),
+          bip353Address: dco_decode_opt_String(raw[3]),
         );
       default:
         throw Exception("unreachable");
@@ -4159,7 +4165,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return InputType_Bolt11(invoice: var_invoice);
       case 3:
         var var_offer = sse_decode_box_autoadd_ln_offer(deserializer);
-        return InputType_Bolt12Offer(offer: var_offer);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
+        return InputType_Bolt12Offer(offer: var_offer, bip353Address: var_bip353Address);
       case 4:
         var var_nodeId = sse_decode_String(deserializer);
         return InputType_NodeId(nodeId: var_nodeId);
@@ -4168,7 +4175,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return InputType_Url(url: var_url);
       case 6:
         var var_data = sse_decode_box_autoadd_ln_url_pay_request_data(deserializer);
-        return InputType_LnUrlPay(data: var_data);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
+        return InputType_LnUrlPay(data: var_data, bip353Address: var_bip353Address);
       case 7:
         var var_data = sse_decode_box_autoadd_ln_url_withdraw_request_data(deserializer);
         return InputType_LnUrlWithdraw(data: var_data);
@@ -5117,6 +5125,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_paymentHash = sse_decode_opt_String(deserializer);
         var var_destinationPubkey = sse_decode_opt_String(deserializer);
         var var_lnurlInfo = sse_decode_opt_box_autoadd_ln_url_info(deserializer);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
         var var_claimTxId = sse_decode_opt_String(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -5130,6 +5139,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             paymentHash: var_paymentHash,
             destinationPubkey: var_destinationPubkey,
             lnurlInfo: var_lnurlInfo,
+            bip353Address: var_bip353Address,
             claimTxId: var_claimTxId,
             refundTxId: var_refundTxId,
             refundTxAmountSat: var_refundTxAmountSat);
@@ -5276,11 +5286,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_data = sse_decode_ln_url_pay_request_data(deserializer);
     var var_amount = sse_decode_pay_amount(deserializer);
+    var var_bip353Address = sse_decode_opt_String(deserializer);
     var var_comment = sse_decode_opt_String(deserializer);
     var var_validateSuccessActionUrl = sse_decode_opt_box_autoadd_bool(deserializer);
     return PrepareLnUrlPayRequest(
         data: var_data,
         amount: var_amount,
+        bip353Address: var_bip353Address,
         comment: var_comment,
         validateSuccessActionUrl: var_validateSuccessActionUrl);
   }
@@ -5582,11 +5594,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SendDestination_LiquidAddress(addressData: var_addressData);
       case 1:
         var var_invoice = sse_decode_box_autoadd_ln_invoice(deserializer);
-        return SendDestination_Bolt11(invoice: var_invoice);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
+        return SendDestination_Bolt11(invoice: var_invoice, bip353Address: var_bip353Address);
       case 2:
         var var_offer = sse_decode_box_autoadd_ln_offer(deserializer);
         var var_receiverAmountSat = sse_decode_u_64(deserializer);
-        return SendDestination_Bolt12(offer: var_offer, receiverAmountSat: var_receiverAmountSat);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
+        return SendDestination_Bolt12(
+            offer: var_offer, receiverAmountSat: var_receiverAmountSat, bip353Address: var_bip353Address);
       default:
         throw UnimplementedError('');
     }
@@ -6495,18 +6510,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case InputType_Bolt11(invoice: final invoice):
         sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_invoice(invoice, serializer);
-      case InputType_Bolt12Offer(offer: final offer):
+      case InputType_Bolt12Offer(offer: final offer, bip353Address: final bip353Address):
         sse_encode_i_32(3, serializer);
         sse_encode_box_autoadd_ln_offer(offer, serializer);
+        sse_encode_opt_String(bip353Address, serializer);
       case InputType_NodeId(nodeId: final nodeId):
         sse_encode_i_32(4, serializer);
         sse_encode_String(nodeId, serializer);
       case InputType_Url(url: final url):
         sse_encode_i_32(5, serializer);
         sse_encode_String(url, serializer);
-      case InputType_LnUrlPay(data: final data):
+      case InputType_LnUrlPay(data: final data, bip353Address: final bip353Address):
         sse_encode_i_32(6, serializer);
         sse_encode_box_autoadd_ln_url_pay_request_data(data, serializer);
+        sse_encode_opt_String(bip353Address, serializer);
       case InputType_LnUrlWithdraw(data: final data):
         sse_encode_i_32(7, serializer);
         sse_encode_box_autoadd_ln_url_withdraw_request_data(data, serializer);
@@ -7265,6 +7282,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           paymentHash: final paymentHash,
           destinationPubkey: final destinationPubkey,
           lnurlInfo: final lnurlInfo,
+          bip353Address: final bip353Address,
           claimTxId: final claimTxId,
           refundTxId: final refundTxId,
           refundTxAmountSat: final refundTxAmountSat
@@ -7279,6 +7297,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(paymentHash, serializer);
         sse_encode_opt_String(destinationPubkey, serializer);
         sse_encode_opt_box_autoadd_ln_url_info(lnurlInfo, serializer);
+        sse_encode_opt_String(bip353Address, serializer);
         sse_encode_opt_String(claimTxId, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
@@ -7416,6 +7435,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_ln_url_pay_request_data(self.data, serializer);
     sse_encode_pay_amount(self.amount, serializer);
+    sse_encode_opt_String(self.bip353Address, serializer);
     sse_encode_opt_String(self.comment, serializer);
     sse_encode_opt_box_autoadd_bool(self.validateSuccessActionUrl, serializer);
   }
@@ -7642,13 +7662,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SendDestination_LiquidAddress(addressData: final addressData):
         sse_encode_i_32(0, serializer);
         sse_encode_box_autoadd_liquid_address_data(addressData, serializer);
-      case SendDestination_Bolt11(invoice: final invoice):
+      case SendDestination_Bolt11(invoice: final invoice, bip353Address: final bip353Address):
         sse_encode_i_32(1, serializer);
         sse_encode_box_autoadd_ln_invoice(invoice, serializer);
-      case SendDestination_Bolt12(offer: final offer, receiverAmountSat: final receiverAmountSat):
+        sse_encode_opt_String(bip353Address, serializer);
+      case SendDestination_Bolt12(
+          offer: final offer,
+          receiverAmountSat: final receiverAmountSat,
+          bip353Address: final bip353Address
+        ):
         sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_offer(offer, serializer);
         sse_encode_u_64(receiverAmountSat, serializer);
+        sse_encode_opt_String(bip353Address, serializer);
     }
   }
 

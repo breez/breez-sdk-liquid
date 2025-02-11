@@ -653,7 +653,7 @@ abstract class _$$InputType_Bolt12OfferImplCopyWith<$Res> {
           _$InputType_Bolt12OfferImpl value, $Res Function(_$InputType_Bolt12OfferImpl) then) =
       __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({LNOffer offer});
+  $Res call({LNOffer offer, String? bip353Address});
 }
 
 /// @nodoc
@@ -670,12 +670,17 @@ class __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? offer = null,
+    Object? bip353Address = freezed,
   }) {
     return _then(_$InputType_Bolt12OfferImpl(
       offer: null == offer
           ? _value.offer
           : offer // ignore: cast_nullable_to_non_nullable
               as LNOffer,
+      bip353Address: freezed == bip353Address
+          ? _value.bip353Address
+          : bip353Address // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -683,14 +688,16 @@ class __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$InputType_Bolt12OfferImpl extends InputType_Bolt12Offer {
-  const _$InputType_Bolt12OfferImpl({required this.offer}) : super._();
+  const _$InputType_Bolt12OfferImpl({required this.offer, this.bip353Address}) : super._();
 
   @override
   final LNOffer offer;
+  @override
+  final String? bip353Address;
 
   @override
   String toString() {
-    return 'InputType.bolt12Offer(offer: $offer)';
+    return 'InputType.bolt12Offer(offer: $offer, bip353Address: $bip353Address)';
   }
 
   @override
@@ -698,11 +705,12 @@ class _$InputType_Bolt12OfferImpl extends InputType_Bolt12Offer {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$InputType_Bolt12OfferImpl &&
-            (identical(other.offer, offer) || other.offer == offer));
+            (identical(other.offer, offer) || other.offer == offer) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, offer);
+  int get hashCode => Object.hash(runtimeType, offer, bip353Address);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
@@ -714,10 +722,12 @@ class _$InputType_Bolt12OfferImpl extends InputType_Bolt12Offer {
 }
 
 abstract class InputType_Bolt12Offer extends InputType {
-  const factory InputType_Bolt12Offer({required final LNOffer offer}) = _$InputType_Bolt12OfferImpl;
+  const factory InputType_Bolt12Offer({required final LNOffer offer, final String? bip353Address}) =
+      _$InputType_Bolt12OfferImpl;
   const InputType_Bolt12Offer._() : super._();
 
   LNOffer get offer;
+  String? get bip353Address;
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
@@ -884,7 +894,7 @@ abstract class _$$InputType_LnUrlPayImplCopyWith<$Res> {
           _$InputType_LnUrlPayImpl value, $Res Function(_$InputType_LnUrlPayImpl) then) =
       __$$InputType_LnUrlPayImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({LnUrlPayRequestData data});
+  $Res call({LnUrlPayRequestData data, String? bip353Address});
 }
 
 /// @nodoc
@@ -901,12 +911,17 @@ class __$$InputType_LnUrlPayImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? data = null,
+    Object? bip353Address = freezed,
   }) {
     return _then(_$InputType_LnUrlPayImpl(
       data: null == data
           ? _value.data
           : data // ignore: cast_nullable_to_non_nullable
               as LnUrlPayRequestData,
+      bip353Address: freezed == bip353Address
+          ? _value.bip353Address
+          : bip353Address // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -914,14 +929,16 @@ class __$$InputType_LnUrlPayImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$InputType_LnUrlPayImpl extends InputType_LnUrlPay {
-  const _$InputType_LnUrlPayImpl({required this.data}) : super._();
+  const _$InputType_LnUrlPayImpl({required this.data, this.bip353Address}) : super._();
 
   @override
   final LnUrlPayRequestData data;
+  @override
+  final String? bip353Address;
 
   @override
   String toString() {
-    return 'InputType.lnUrlPay(data: $data)';
+    return 'InputType.lnUrlPay(data: $data, bip353Address: $bip353Address)';
   }
 
   @override
@@ -929,11 +946,12 @@ class _$InputType_LnUrlPayImpl extends InputType_LnUrlPay {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$InputType_LnUrlPayImpl &&
-            (identical(other.data, data) || other.data == data));
+            (identical(other.data, data) || other.data == data) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, data);
+  int get hashCode => Object.hash(runtimeType, data, bip353Address);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
@@ -945,10 +963,12 @@ class _$InputType_LnUrlPayImpl extends InputType_LnUrlPay {
 }
 
 abstract class InputType_LnUrlPay extends InputType {
-  const factory InputType_LnUrlPay({required final LnUrlPayRequestData data}) = _$InputType_LnUrlPayImpl;
+  const factory InputType_LnUrlPay({required final LnUrlPayRequestData data, final String? bip353Address}) =
+      _$InputType_LnUrlPayImpl;
   const InputType_LnUrlPay._() : super._();
 
   LnUrlPayRequestData get data;
+  String? get bip353Address;
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.

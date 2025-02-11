@@ -336,6 +336,7 @@ export interface PrepareBuyBitcoinResponse {
 export interface PrepareLnUrlPayRequest {
     data: LnUrlPayRequestData
     amount: PayAmount
+    bip353Address?: string
     comment?: string
     validateSuccessActionUrl?: boolean
 }
@@ -560,6 +561,7 @@ export type InputType = {
 } | {
     type: InputTypeVariant.BOLT12_OFFER,
     offer: LnOffer
+    bip353Address?: string
 } | {
     type: InputTypeVariant.NODE_ID,
     nodeId: string
@@ -569,6 +571,7 @@ export type InputType = {
 } | {
     type: InputTypeVariant.LN_URL_PAY,
     data: LnUrlPayRequestData
+    bip353Address?: string
 } | {
     type: InputTypeVariant.LN_URL_WITHDRAW,
     data: LnUrlWithdrawRequestData
@@ -687,6 +690,7 @@ export type PaymentDetails = {
     paymentHash?: string
     destinationPubkey?: string
     lnurlInfo?: LnUrlInfo
+    bip353Address?: string
     claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
@@ -796,10 +800,12 @@ export type SendDestination = {
 } | {
     type: SendDestinationVariant.BOLT11,
     invoice: LnInvoice
+    bip353Address?: string
 } | {
     type: SendDestinationVariant.BOLT12,
     offer: LnOffer
     receiverAmountSat: number
+    bip353Address?: string
 }
 
 export enum SuccessActionVariant {

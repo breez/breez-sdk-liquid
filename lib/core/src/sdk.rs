@@ -1095,7 +1095,10 @@ impl LiquidSdk {
                             (
                                 invoice_amount_sat,
                                 fees_sat,
-                                SendDestination::Bolt11 { invoice },
+                                SendDestination::Bolt11 {
+                                    invoice,
+                                    bip353_address: None,
+                                },
                             )
                         }
                         (None, _) => {
@@ -1109,12 +1112,18 @@ impl LiquidSdk {
                             (
                                 invoice_amount_sat,
                                 fees_sat,
-                                SendDestination::Bolt11 { invoice },
+                                SendDestination::Bolt11 {
+                                    invoice,
+                                    bip353_address: None,
+                                },
                             )
                         }
                     };
             }
-            Ok(InputType::Bolt12Offer { offer }) => {
+            Ok(InputType::Bolt12Offer {
+                offer,
+                bip353_address,
+            }) => {
                 receiver_amount_sat = match req.amount {
                     Some(PayAmount::Bitcoin {
                         receiver_amount_sat: amount_sat,
@@ -1144,6 +1153,7 @@ impl LiquidSdk {
                 payment_destination = SendDestination::Bolt12 {
                     offer,
                     receiver_amount_sat,
+                    bip353_address,
                 };
             }
             _ => {
@@ -1235,19 +1245,54 @@ impl LiquidSdk {
                 self.pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat, true)
                     .await
             }
-            SendDestination::Bolt11 { invoice } => {
-                self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await
+            SendDestination::Bolt11 {
+                invoice,
+                bip353_address,
+            } => {
+                let response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
+                if bip353_address.is_some() {
+                    if let (Some(tx_id), Some(destination)) =
+                        (&response.payment.tx_id, &response.payment.destination)
+                    {
+                        self.persister
+                            .insert_or_update_payment_details(PaymentTxDetails {
+                                tx_id: tx_id.clone(),
+                                destination: destination.clone(),
+                                description: None,
+                                lnurl_info: None,
+                                bip353_address: bip353_address.clone(),
+                            })?;
+                    }
+                }
+                Ok(response)
             }
             SendDestination::Bolt12 {
                 offer,
                 receiver_amount_sat,
+                bip353_address,
             } => {
                 let bolt12_invoice = self
                     .swapper
                     .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
                     .await?;
-                self.pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
-                    .await
+                let response = self
+                    .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
+                    .await?;
+                if bip353_address.is_some() {
+                    if let (Some(tx_id), Some(destination)) =
+                        (&response.payment.tx_id, &response.payment.destination)
+                    {
+                        self.persister
+                            .insert_or_update_payment_details(PaymentTxDetails {
+                                tx_id: tx_id.clone(),
+                                destination: destination.clone(),
+                                description: None,
+                                lnurl_info: None,
+                                bip353_address: bip353_address.clone(),
+                            })?;
+                    }
+                }
+                Ok(response)
             }
         }
     }
@@ -3092,13 +3137,18 @@ impl LiquidSdk {
     ///     * `amount` - The optional amount of type [PayAmount].
     ///        - [PayAmount::Drain] which uses all funds
     ///        - [PayAmount::Receiver] which sets the amount the receiver should receive
+    ///     * `bip353_address` - A BIP353 address, in case one was used in order to fetch the LNURL
+    ///       Pay request data. Returned by [parse].
     ///     * `comment` - an optional comment for this payment
     ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
     ///       the LNURL callback domain. Defaults to 'true'
     ///
     /// # Returns
     /// Returns a [PrepareLnUrlPayResponse] containing:
-    ///     * `prepare_send_response` - the prepared [PrepareSendResponse] for the retreived invoice
+    ///     * `destination` - the destination of the payment
+    ///     * `fees_sat` - The fees in satoshis to send the payment
+    ///     * `data` - The [LnUrlPayRequestData] returned by [parse]
+    ///     * `comment` - An optional comment for this payment
     ///     * `success_action` - the optional unprocessed LUD-09 success action
     pub async fn prepare_lnurl_pay(
         &self,
@@ -3178,8 +3228,20 @@ impl LiquidSdk {
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
 
+                let destination =
+                    if let SendDestination::Bolt11 { invoice, .. } = prepare_response.destination {
+                        SendDestination::Bolt11 {
+                            invoice,
+                            bip353_address: req.bip353_address,
+                        }
+                    } else {
+                        return Err(LnUrlPayError::Generic {
+                            err: "SendDestination for LNURL Pay is not BOLT11 invoice".to_string(),
+                        });
+                    };
+
                 Ok(PrepareLnUrlPayResponse {
-                    destination: prepare_response.destination,
+                    destination,
                     fees_sat: prepare_response.fees_sat,
                     data: req.data,
                     comment: req.comment,
@@ -3209,7 +3271,7 @@ impl LiquidSdk {
         let payment = self
             .send_payment(&SendPaymentRequest {
                 prepare_response: PrepareSendResponse {
-                    destination: prepare_response.destination,
+                    destination: prepare_response.destination.clone(),
                     fees_sat: prepare_response.fees_sat,
                 },
             })
@@ -3291,6 +3353,7 @@ impl LiquidSdk {
                         lnurl_pay_unprocessed_success_action: prepare_response.success_action,
                         lnurl_withdraw_endpoint: None,
                     }),
+                    bip353_address: None,
                 })?;
         }
 
@@ -3354,6 +3417,7 @@ impl LiquidSdk {
                             lnurl_withdraw_endpoint: Some(req.data.callback),
                             ..Default::default()
                         }),
+                        bip353_address: None,
                     })?;
             }
         }

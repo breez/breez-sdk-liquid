@@ -325,6 +325,7 @@ sealed class InputType with _$InputType {
   }) = InputType_Bolt11;
   const factory InputType.bolt12Offer({
     required LNOffer offer,
+    String? bip353Address,
   }) = InputType_Bolt12Offer;
   const factory InputType.nodeId({
     required String nodeId,
@@ -334,6 +335,7 @@ sealed class InputType with _$InputType {
   }) = InputType_Url;
   const factory InputType.lnUrlPay({
     required LnUrlPayRequestData data,
+    String? bip353Address,
   }) = InputType_LnUrlPay;
   const factory InputType.lnUrlWithdraw({
     required LnUrlWithdrawRequestData data,

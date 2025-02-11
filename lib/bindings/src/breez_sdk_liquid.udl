@@ -64,10 +64,10 @@ interface InputType {
     BitcoinAddress(BitcoinAddressData address);
     LiquidAddress(LiquidAddressData address);
     Bolt11(LNInvoice invoice);
-    Bolt12Offer(LNOffer offer);
+    Bolt12Offer(LNOffer offer, string? bip353_address);
     NodeId(string node_id);
     Url(string url);
-    LnUrlPay(LnUrlPayRequestData data);
+    LnUrlPay(LnUrlPayRequestData data, string? bip353_address);
     LnUrlWithdraw(LnUrlWithdrawRequestData data);
     LnUrlAuth(LnUrlAuthRequestData data);
     LnUrlError(LnUrlErrorData data);
@@ -408,6 +408,7 @@ dictionary CheckMessageResponse {
 dictionary PrepareLnUrlPayRequest {
     LnUrlPayRequestData data;
     PayAmount amount;
+    string? bip353_address = null;
     string? comment = null;
     boolean? validate_success_action_url = null;
 };
@@ -432,8 +433,8 @@ dictionary PrepareSendRequest {
 [Enum]
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data);
-    Bolt11(LNInvoice invoice);
-    Bolt12(LNOffer offer, u64 receiver_amount_sat);
+    Bolt11(LNInvoice invoice, string? bip353_address);
+    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address);
 };
 
 dictionary PrepareSendResponse {
@@ -608,7 +609,7 @@ dictionary AssetInfo {
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? bip353_address, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string asset_id, string destination, string description, AssetInfo? asset_info);
     Bitcoin(string swap_id, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
 };

@@ -958,6 +958,7 @@ abstract class _$$PaymentDetails_LightningImplCopyWith<$Res> implements $Payment
       String? paymentHash,
       String? destinationPubkey,
       LnUrlInfo? lnurlInfo,
+      String? bip353Address,
       String? claimTxId,
       String? refundTxId,
       BigInt? refundTxAmountSat});
@@ -985,6 +986,7 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
     Object? paymentHash = freezed,
     Object? destinationPubkey = freezed,
     Object? lnurlInfo = freezed,
+    Object? bip353Address = freezed,
     Object? claimTxId = freezed,
     Object? refundTxId = freezed,
     Object? refundTxAmountSat = freezed,
@@ -1026,6 +1028,10 @@ class __$$PaymentDetails_LightningImplCopyWithImpl<$Res>
           ? _value.lnurlInfo
           : lnurlInfo // ignore: cast_nullable_to_non_nullable
               as LnUrlInfo?,
+      bip353Address: freezed == bip353Address
+          ? _value.bip353Address
+          : bip353Address // ignore: cast_nullable_to_non_nullable
+              as String?,
       claimTxId: freezed == claimTxId
           ? _value.claimTxId
           : claimTxId // ignore: cast_nullable_to_non_nullable
@@ -1055,6 +1061,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       this.paymentHash,
       this.destinationPubkey,
       this.lnurlInfo,
+      this.bip353Address,
       this.claimTxId,
       this.refundTxId,
       this.refundTxAmountSat})
@@ -1095,6 +1102,10 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
   @override
   final LnUrlInfo? lnurlInfo;
 
+  /// The BIP353 address used to resolve this payment
+  @override
+  final String? bip353Address;
+
   /// For a Receive payment, this is the claim tx id in case it has already been broadcast
   @override
   final String? claimTxId;
@@ -1109,7 +1120,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
 
   @override
   String toString() {
-    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+    return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
   }
 
   @override
@@ -1128,6 +1139,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
             (identical(other.destinationPubkey, destinationPubkey) ||
                 other.destinationPubkey == destinationPubkey) &&
             (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address) &&
             (identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId) &&
             (identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId) &&
             (identical(other.refundTxAmountSat, refundTxAmountSat) ||
@@ -1146,6 +1158,7 @@ class _$PaymentDetails_LightningImpl extends PaymentDetails_Lightning {
       paymentHash,
       destinationPubkey,
       lnurlInfo,
+      bip353Address,
       claimTxId,
       refundTxId,
       refundTxAmountSat);
@@ -1170,6 +1183,7 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
       final String? paymentHash,
       final String? destinationPubkey,
       final LnUrlInfo? lnurlInfo,
+      final String? bip353Address,
       final String? claimTxId,
       final String? refundTxId,
       final BigInt? refundTxAmountSat}) = _$PaymentDetails_LightningImpl;
@@ -1201,6 +1215,9 @@ abstract class PaymentDetails_Lightning extends PaymentDetails {
 
   /// The payment LNURL info
   LnUrlInfo? get lnurlInfo;
+
+  /// The BIP353 address used to resolve this payment
+  String? get bip353Address;
 
   /// For a Receive payment, this is the claim tx id in case it has already been broadcast
   String? get claimTxId;
@@ -2564,7 +2581,7 @@ abstract class _$$SendDestination_Bolt11ImplCopyWith<$Res> {
           _$SendDestination_Bolt11Impl value, $Res Function(_$SendDestination_Bolt11Impl) then) =
       __$$SendDestination_Bolt11ImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({LNInvoice invoice});
+  $Res call({LNInvoice invoice, String? bip353Address});
 }
 
 /// @nodoc
@@ -2581,12 +2598,17 @@ class __$$SendDestination_Bolt11ImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? invoice = null,
+    Object? bip353Address = freezed,
   }) {
     return _then(_$SendDestination_Bolt11Impl(
       invoice: null == invoice
           ? _value.invoice
           : invoice // ignore: cast_nullable_to_non_nullable
               as LNInvoice,
+      bip353Address: freezed == bip353Address
+          ? _value.bip353Address
+          : bip353Address // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -2594,14 +2616,18 @@ class __$$SendDestination_Bolt11ImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SendDestination_Bolt11Impl extends SendDestination_Bolt11 {
-  const _$SendDestination_Bolt11Impl({required this.invoice}) : super._();
+  const _$SendDestination_Bolt11Impl({required this.invoice, this.bip353Address}) : super._();
 
   @override
   final LNInvoice invoice;
 
+  /// A BIP353 address, in case one was used to resolve this BOLT11
+  @override
+  final String? bip353Address;
+
   @override
   String toString() {
-    return 'SendDestination.bolt11(invoice: $invoice)';
+    return 'SendDestination.bolt11(invoice: $invoice, bip353Address: $bip353Address)';
   }
 
   @override
@@ -2609,11 +2635,12 @@ class _$SendDestination_Bolt11Impl extends SendDestination_Bolt11 {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SendDestination_Bolt11Impl &&
-            (identical(other.invoice, invoice) || other.invoice == invoice));
+            (identical(other.invoice, invoice) || other.invoice == invoice) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, invoice);
+  int get hashCode => Object.hash(runtimeType, invoice, bip353Address);
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
@@ -2625,10 +2652,14 @@ class _$SendDestination_Bolt11Impl extends SendDestination_Bolt11 {
 }
 
 abstract class SendDestination_Bolt11 extends SendDestination {
-  const factory SendDestination_Bolt11({required final LNInvoice invoice}) = _$SendDestination_Bolt11Impl;
+  const factory SendDestination_Bolt11({required final LNInvoice invoice, final String? bip353Address}) =
+      _$SendDestination_Bolt11Impl;
   const SendDestination_Bolt11._() : super._();
 
   LNInvoice get invoice;
+
+  /// A BIP353 address, in case one was used to resolve this BOLT11
+  String? get bip353Address;
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
@@ -2643,7 +2674,7 @@ abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
           _$SendDestination_Bolt12Impl value, $Res Function(_$SendDestination_Bolt12Impl) then) =
       __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({LNOffer offer, BigInt receiverAmountSat});
+  $Res call({LNOffer offer, BigInt receiverAmountSat, String? bip353Address});
 }
 
 /// @nodoc
@@ -2661,6 +2692,7 @@ class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
   $Res call({
     Object? offer = null,
     Object? receiverAmountSat = null,
+    Object? bip353Address = freezed,
   }) {
     return _then(_$SendDestination_Bolt12Impl(
       offer: null == offer
@@ -2671,6 +2703,10 @@ class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
           ? _value.receiverAmountSat
           : receiverAmountSat // ignore: cast_nullable_to_non_nullable
               as BigInt,
+      bip353Address: freezed == bip353Address
+          ? _value.bip353Address
+          : bip353Address // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -2678,16 +2714,22 @@ class __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
-  const _$SendDestination_Bolt12Impl({required this.offer, required this.receiverAmountSat}) : super._();
+  const _$SendDestination_Bolt12Impl(
+      {required this.offer, required this.receiverAmountSat, this.bip353Address})
+      : super._();
 
   @override
   final LNOffer offer;
   @override
   final BigInt receiverAmountSat;
 
+  /// A BIP353 address, in case one was used to resolve this BOLT12
+  @override
+  final String? bip353Address;
+
   @override
   String toString() {
-    return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat)';
+    return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat, bip353Address: $bip353Address)';
   }
 
   @override
@@ -2697,11 +2739,12 @@ class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
             other is _$SendDestination_Bolt12Impl &&
             (identical(other.offer, offer) || other.offer == offer) &&
             (identical(other.receiverAmountSat, receiverAmountSat) ||
-                other.receiverAmountSat == receiverAmountSat));
+                other.receiverAmountSat == receiverAmountSat) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, offer, receiverAmountSat);
+  int get hashCode => Object.hash(runtimeType, offer, receiverAmountSat, bip353Address);
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
@@ -2714,11 +2757,16 @@ class _$SendDestination_Bolt12Impl extends SendDestination_Bolt12 {
 
 abstract class SendDestination_Bolt12 extends SendDestination {
   const factory SendDestination_Bolt12(
-      {required final LNOffer offer, required final BigInt receiverAmountSat}) = _$SendDestination_Bolt12Impl;
+      {required final LNOffer offer,
+      required final BigInt receiverAmountSat,
+      final String? bip353Address}) = _$SendDestination_Bolt12Impl;
   const SendDestination_Bolt12._() : super._();
 
   LNOffer get offer;
   BigInt get receiverAmountSat;
+
+  /// A BIP353 address, in case one was used to resolve this BOLT12
+  String? get bip353Address;
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.

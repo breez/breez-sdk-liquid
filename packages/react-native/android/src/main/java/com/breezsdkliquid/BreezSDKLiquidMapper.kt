@@ -1889,6 +1889,16 @@ fun asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: ReadableMap): PrepareLnUrlP
     }
     val data = prepareLnUrlPayRequest.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
     val amount = prepareLnUrlPayRequest.getMap("amount")?.let { asPayAmount(it) }!!
+    val bip353Address =
+        if (hasNonNullKey(
+                prepareLnUrlPayRequest,
+                "bip353Address",
+            )
+        ) {
+            prepareLnUrlPayRequest.getString("bip353Address")
+        } else {
+            null
+        }
     val comment = if (hasNonNullKey(prepareLnUrlPayRequest, "comment")) prepareLnUrlPayRequest.getString("comment") else null
     val validateSuccessActionUrl =
         if (hasNonNullKey(
@@ -1900,13 +1910,14 @@ fun asPrepareLnUrlPayRequest(prepareLnUrlPayRequest: ReadableMap): PrepareLnUrlP
         } else {
             null
         }
-    return PrepareLnUrlPayRequest(data, amount, comment, validateSuccessActionUrl)
+    return PrepareLnUrlPayRequest(data, amount, bip353Address, comment, validateSuccessActionUrl)
 }
 
 fun readableMapOf(prepareLnUrlPayRequest: PrepareLnUrlPayRequest): ReadableMap =
     readableMapOf(
         "data" to readableMapOf(prepareLnUrlPayRequest.data),
         "amount" to readableMapOf(prepareLnUrlPayRequest.amount),
+        "bip353Address" to prepareLnUrlPayRequest.bip353Address,
         "comment" to prepareLnUrlPayRequest.comment,
         "validateSuccessActionUrl" to prepareLnUrlPayRequest.validateSuccessActionUrl,
     )
@@ -3056,7 +3067,8 @@ fun asInputType(inputType: ReadableMap): InputType? {
     }
     if (type == "bolt12Offer") {
         val offer = inputType.getMap("offer")?.let { asLnOffer(it) }!!
-        return InputType.Bolt12Offer(offer)
+        val bip353Address = if (hasNonNullKey(inputType, "bip353Address")) inputType.getString("bip353Address") else null
+        return InputType.Bolt12Offer(offer, bip353Address)
     }
     if (type == "nodeId") {
         val nodeId = inputType.getString("nodeId")!!
@@ -3068,7 +3080,8 @@ fun asInputType(inputType: ReadableMap): InputType? {
     }
     if (type == "lnUrlPay") {
         val data = inputType.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
-        return InputType.LnUrlPay(data)
+        val bip353Address = if (hasNonNullKey(inputType, "bip353Address")) inputType.getString("bip353Address") else null
+        return InputType.LnUrlPay(data, bip353Address)
     }
     if (type == "lnUrlWithdraw") {
         val data = inputType.getMap("data")?.let { asLnUrlWithdrawRequestData(it) }!!
@@ -3103,6 +3116,7 @@ fun readableMapOf(inputType: InputType): ReadableMap? {
         is InputType.Bolt12Offer -> {
             pushToMap(map, "type", "bolt12Offer")
             pushToMap(map, "offer", readableMapOf(inputType.offer))
+            pushToMap(map, "bip353Address", inputType.bip353Address)
         }
         is InputType.NodeId -> {
             pushToMap(map, "type", "nodeId")
@@ -3115,6 +3129,7 @@ fun readableMapOf(inputType: InputType): ReadableMap? {
         is InputType.LnUrlPay -> {
             pushToMap(map, "type", "lnUrlPay")
             pushToMap(map, "data", readableMapOf(inputType.data))
+            pushToMap(map, "bip353Address", inputType.bip353Address)
         }
         is InputType.LnUrlWithdraw -> {
             pushToMap(map, "type", "lnUrlWithdraw")
@@ -3424,6 +3439,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
+        val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
         val claimTxId = if (hasNonNullKey(paymentDetails, "claimTxId")) paymentDetails.getString("claimTxId") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
@@ -3446,6 +3462,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             paymentHash,
             destinationPubkey,
             lnurlInfo,
+            bip353Address,
             claimTxId,
             refundTxId,
             refundTxAmountSat,
@@ -3531,6 +3548,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "paymentHash", paymentDetails.paymentHash)
             pushToMap(map, "destinationPubkey", paymentDetails.destinationPubkey)
             pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
+            pushToMap(map, "bip353Address", paymentDetails.bip353Address)
             pushToMap(map, "claimTxId", paymentDetails.claimTxId)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
@@ -3752,12 +3770,14 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
     }
     if (type == "bolt11") {
         val invoice = sendDestination.getMap("invoice")?.let { asLnInvoice(it) }!!
-        return SendDestination.Bolt11(invoice)
+        val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
+        return SendDestination.Bolt11(invoice, bip353Address)
     }
     if (type == "bolt12") {
         val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
         val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
-        return SendDestination.Bolt12(offer, receiverAmountSat)
+        val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
+        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address)
     }
     return null
 }
@@ -3772,11 +3792,13 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
         is SendDestination.Bolt11 -> {
             pushToMap(map, "type", "bolt11")
             pushToMap(map, "invoice", readableMapOf(sendDestination.invoice))
+            pushToMap(map, "bip353Address", sendDestination.bip353Address)
         }
         is SendDestination.Bolt12 -> {
             pushToMap(map, "type", "bolt12")
             pushToMap(map, "offer", readableMapOf(sendDestination.offer))
             pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
+            pushToMap(map, "bip353Address", sendDestination.bip353Address)
         }
     }
     return map

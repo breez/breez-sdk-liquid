@@ -945,6 +945,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The payment LNURL info
     LnUrlInfo? lnurlInfo,
 
+    /// The BIP353 address used to resolve this payment
+    String? bip353Address,
+
     /// For a Receive payment, this is the claim tx id in case it has already been broadcast
     String? claimTxId,
 
@@ -1145,11 +1148,15 @@ class PrepareBuyBitcoinResponse {
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 class PrepareLnUrlPayRequest {
-  /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+  /// The [LnUrlPayRequestData] returned by [parse]
   final LnUrlPayRequestData data;
 
   /// The amount to send
   final PayAmount amount;
+
+  /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
+  /// Returned by [parse].
+  final String? bip353Address;
 
   /// An optional comment for this payment
   final String? comment;
@@ -1161,12 +1168,18 @@ class PrepareLnUrlPayRequest {
   const PrepareLnUrlPayRequest({
     required this.data,
     required this.amount,
+    this.bip353Address,
     this.comment,
     this.validateSuccessActionUrl,
   });
 
   @override
-  int get hashCode => data.hashCode ^ amount.hashCode ^ comment.hashCode ^ validateSuccessActionUrl.hashCode;
+  int get hashCode =>
+      data.hashCode ^
+      amount.hashCode ^
+      bip353Address.hashCode ^
+      comment.hashCode ^
+      validateSuccessActionUrl.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1175,6 +1188,7 @@ class PrepareLnUrlPayRequest {
           runtimeType == other.runtimeType &&
           data == other.data &&
           amount == other.amount &&
+          bip353Address == other.bip353Address &&
           comment == other.comment &&
           validateSuccessActionUrl == other.validateSuccessActionUrl;
 }
@@ -1187,7 +1201,7 @@ class PrepareLnUrlPayResponse {
   /// The fees in satoshis to send the payment
   final BigInt feesSat;
 
-  /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+  /// The [LnUrlPayRequestData] returned by [parse]
   final LnUrlPayRequestData data;
 
   /// An optional comment for this payment
@@ -1699,10 +1713,16 @@ sealed class SendDestination with _$SendDestination {
   }) = SendDestination_LiquidAddress;
   const factory SendDestination.bolt11({
     required LNInvoice invoice,
+
+    /// A BIP353 address, in case one was used to resolve this BOLT11
+    String? bip353Address,
   }) = SendDestination_Bolt11;
   const factory SendDestination.bolt12({
     required LNOffer offer,
     required BigInt receiverAmountSat,
+
+    /// A BIP353 address, in case one was used to resolve this BOLT12
+    String? bip353Address,
   }) = SendDestination_Bolt12;
 }
 

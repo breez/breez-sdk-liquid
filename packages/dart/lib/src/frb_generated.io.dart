@@ -2624,8 +2624,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is InputType_Bolt12Offer) {
       var pre_offer = cst_encode_box_autoadd_ln_offer(apiObj.offer);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 3;
       wireObj.kind.Bolt12Offer.offer = pre_offer;
+      wireObj.kind.Bolt12Offer.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is InputType_NodeId) {
@@ -2642,8 +2644,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is InputType_LnUrlPay) {
       var pre_data = cst_encode_box_autoadd_ln_url_pay_request_data(apiObj.data);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 6;
       wireObj.kind.LnUrlPay.data = pre_data;
+      wireObj.kind.LnUrlPay.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is InputType_LnUrlWithdraw) {
@@ -3126,6 +3130,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_payment_hash = cst_encode_opt_String(apiObj.paymentHash);
       var pre_destination_pubkey = cst_encode_opt_String(apiObj.destinationPubkey);
       var pre_lnurl_info = cst_encode_opt_box_autoadd_ln_url_info(apiObj.lnurlInfo);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       var pre_claim_tx_id = cst_encode_opt_String(apiObj.claimTxId);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
@@ -3139,6 +3144,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Lightning.payment_hash = pre_payment_hash;
       wireObj.kind.Lightning.destination_pubkey = pre_destination_pubkey;
       wireObj.kind.Lightning.lnurl_info = pre_lnurl_info;
+      wireObj.kind.Lightning.bip353_address = pre_bip353_address;
       wireObj.kind.Lightning.claim_tx_id = pre_claim_tx_id;
       wireObj.kind.Lightning.refund_tx_id = pre_refund_tx_id;
       wireObj.kind.Lightning.refund_tx_amount_sat = pre_refund_tx_amount_sat;
@@ -3316,6 +3322,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       PrepareLnUrlPayRequest apiObj, wire_cst_prepare_ln_url_pay_request wireObj) {
     cst_api_fill_to_wire_ln_url_pay_request_data(apiObj.data, wireObj.data);
     cst_api_fill_to_wire_pay_amount(apiObj.amount, wireObj.amount);
+    wireObj.bip353_address = cst_encode_opt_String(apiObj.bip353Address);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.validate_success_action_url = cst_encode_opt_box_autoadd_bool(apiObj.validateSuccessActionUrl);
   }
@@ -3571,16 +3578,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is SendDestination_Bolt11) {
       var pre_invoice = cst_encode_box_autoadd_ln_invoice(apiObj.invoice);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 1;
       wireObj.kind.Bolt11.invoice = pre_invoice;
+      wireObj.kind.Bolt11.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is SendDestination_Bolt12) {
       var pre_offer = cst_encode_box_autoadd_ln_offer(apiObj.offer);
       var pre_receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 2;
       wireObj.kind.Bolt12.offer = pre_offer;
       wireObj.kind.Bolt12.receiver_amount_sat = pre_receiver_amount_sat;
+      wireObj.kind.Bolt12.bip353_address = pre_bip353_address;
       return;
     }
   }
@@ -6271,6 +6282,8 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
 final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_list_String extends ffi.Struct {
@@ -6339,6 +6352,8 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
 
   @ffi.Uint64()
   external int receiver_amount_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class SendDestinationKind extends ffi.Union {
@@ -6522,6 +6537,8 @@ final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
   external wire_cst_ln_url_pay_request_data data;
 
   external wire_cst_pay_amount amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
@@ -6725,6 +6742,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination_pubkey;
 
   external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
 
@@ -7158,6 +7177,8 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
 
 final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_offer> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_InputType_NodeId extends ffi.Struct {
@@ -7170,6 +7191,8 @@ final class wire_cst_InputType_Url extends ffi.Struct {
 
 final class wire_cst_InputType_LnUrlPay extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_pay_request_data> data;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_InputType_LnUrlWithdraw extends ffi.Struct {

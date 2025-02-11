@@ -4354,6 +4354,8 @@ final class wire_cst_ln_invoice extends ffi.Struct {
 
 final class wire_cst_SendDestination_Bolt11 extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_invoice> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_list_String extends ffi.Struct {
@@ -4422,6 +4424,8 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
 
   @ffi.Uint64()
   external int receiver_amount_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class SendDestinationKind extends ffi.Union {
@@ -4605,6 +4609,8 @@ final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
   external wire_cst_ln_url_pay_request_data data;
 
   external wire_cst_pay_amount amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
@@ -4808,6 +4814,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination_pubkey;
 
   external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
 
@@ -5241,6 +5249,8 @@ final class wire_cst_InputType_Bolt11 extends ffi.Struct {
 
 final class wire_cst_InputType_Bolt12Offer extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_offer> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_InputType_NodeId extends ffi.Struct {
@@ -5253,6 +5263,8 @@ final class wire_cst_InputType_Url extends ffi.Struct {
 
 final class wire_cst_InputType_LnUrlPay extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_pay_request_data> data;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_InputType_LnUrlWithdraw extends ffi.Struct {
