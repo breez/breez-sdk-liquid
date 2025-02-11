@@ -148,7 +148,7 @@ pub(crate) fn new_chain_swap(
             }"#
             .to_string(),
             auto_accepted_fees: false,
-            version: 0
+            metadata: Default::default(),
         };
     }
     match direction {
@@ -233,7 +233,7 @@ pub(crate) fn new_chain_swap(
               }
             }"#.to_string(),
             auto_accepted_fees: false,
-            version: 0,
+            metadata: Default::default(),
         },
         Direction::Outgoing => ChainSwap {
             id: generate_random_string(4),
@@ -316,7 +316,7 @@ pub(crate) fn new_chain_swap(
               }
             }"#.to_string(),
             auto_accepted_fees: false,
-            version: 0
+            metadata: Default::default(),
         }
     }
 }

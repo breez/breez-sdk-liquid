@@ -120,7 +120,7 @@ impl From<ChainSyncData> for ChainSwap {
             claim_tx_id: None,
             refund_tx_id: None,
             auto_accepted_fees: val.auto_accepted_fees,
-            version: 0,
+            metadata: Default::default(),
         }
     }
 }
@@ -209,7 +209,7 @@ impl From<SendSyncData> for SendSwap {
             state: PaymentState::Created,
             lockup_tx_id: None,
             refund_tx_id: None,
-            version: 0,
+            metadata: Default::default(),
         }
     }
 }
@@ -293,7 +293,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             claim_tx_id: None,
             lockup_tx_id: None,
             mrh_tx_id: None,
-            version: 0,
+            metadata: Default::default(),
         }
     }
 }

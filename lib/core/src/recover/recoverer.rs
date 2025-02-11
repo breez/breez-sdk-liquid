@@ -14,6 +14,7 @@ use lwk_wollet::WalletTx;
 use super::model::*;
 
 use crate::prelude::{Direction, Swap};
+use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{
@@ -170,6 +171,8 @@ impl Recoverer {
         &self,
         swaps: &mut [Swap],
     ) -> Result<HashMap<Txid, WalletTx>> {
+        let recovery_started_at = utils::now();
+
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
         let tx_map = TxMap::from_raw_tx_map(raw_tx_map.clone());
 
@@ -212,20 +215,33 @@ impl Recoverer {
 
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
+            let is_within_grace_period = swap.is_local()
+                && recovery_started_at.saturating_sub(swap.last_updated_at())
+                    < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
+
+            if is_within_grace_period {
+                debug!(
+                    "Local swap {swap_id} was updated recently - skipping updates that may be \
+                affected by network tx propagation latency"
+                );
+            }
+
             match swap {
                 Swap::Send(send_swap) => {
                     let Some(recovered_data) = recovered_send_data.get_mut(swap_id) else {
-                        log::warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
+                        warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    send_swap.lockup_tx_id = recovered_data
-                        .lockup_tx_id
-                        .clone()
-                        .map(|h| h.txid.to_string());
-                    send_swap.refund_tx_id = recovered_data
-                        .refund_tx_id
-                        .clone()
-                        .map(|h| h.txid.to_string());
+                    if !is_within_grace_period {
+                        send_swap.lockup_tx_id = recovered_data
+                            .lockup_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                        send_swap.refund_tx_id = recovered_data
+                            .refund_tx_id
+                            .clone()
+                            .map(|h| h.txid.to_string());
+                    }
                     match (&send_swap.preimage, &recovered_data.preimage) {
                         // Update the preimage only if we don't have one already (e.g. from
                         // real-time sync)
@@ -252,7 +268,7 @@ impl Recoverer {
                 }
                 Swap::Receive(receive_swap) => {
                     let Some(recovered_data) = recovered_receive_data.get(swap_id) else {
-                        log::warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
+                        warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
                         continue;
                     };
                     let timeout_block_height = receive_swap.timeout_block_height;
@@ -260,16 +276,18 @@ impl Recoverer {
                     if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                         receive_swap.state = new_state;
                     }
-                    receive_swap.claim_tx_id = recovered_data
-                        .claim_tx_id
-                        .clone()
-                        .map(|history_tx_id| history_tx_id.txid.to_string());
+                    if !is_within_grace_period {
+                        receive_swap.claim_tx_id = recovered_data
+                            .claim_tx_id
+                            .clone()
+                            .map(|history_tx_id| history_tx_id.txid.to_string());
+                        receive_swap.lockup_tx_id = recovered_data
+                            .lockup_tx_id
+                            .clone()
+                            .map(|history_tx_id| history_tx_id.txid.to_string());
+                    }
                     receive_swap.mrh_tx_id = recovered_data
                         .mrh_tx_id
-                        .clone()
-                        .map(|history_tx_id| history_tx_id.txid.to_string());
-                    receive_swap.lockup_tx_id = recovered_data
-                        .lockup_tx_id
                         .clone()
                         .map(|history_tx_id| history_tx_id.txid.to_string());
                     if let Some(mrh_amount_sat) = recovered_data.mrh_amount_sat {
@@ -280,7 +298,7 @@ impl Recoverer {
                 Swap::Chain(chain_swap) => match chain_swap.direction {
                     Direction::Incoming => {
                         let Some(recovered_data) = recovered_chain_receive_data.get(swap_id) else {
-                            log::warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
+                            warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
                         if recovered_data.btc_user_lockup_amount_sat > 0 {
@@ -302,51 +320,55 @@ impl Recoverer {
                         ) {
                             chain_swap.state = new_state;
                         }
-                        chain_swap.server_lockup_tx_id = recovered_data
-                            .lbtc_server_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap
-                            .claim_address
-                            .clone_from(&recovered_data.lbtc_claim_address);
-                        chain_swap.user_lockup_tx_id = recovered_data
-                            .btc_user_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.claim_tx_id = recovered_data
-                            .lbtc_claim_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.refund_tx_id = recovered_data
-                            .btc_refund_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
+                        if !is_within_grace_period {
+                            chain_swap.server_lockup_tx_id = recovered_data
+                                .lbtc_server_lockup_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                            chain_swap
+                                .claim_address
+                                .clone_from(&recovered_data.lbtc_claim_address);
+                            chain_swap.user_lockup_tx_id = recovered_data
+                                .btc_user_lockup_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                            chain_swap.claim_tx_id = recovered_data
+                                .lbtc_claim_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                            chain_swap.refund_tx_id = recovered_data
+                                .btc_refund_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                        }
                     }
                     Direction::Outgoing => {
                         let Some(recovered_data) = recovered_chain_send_data.get(swap_id) else {
-                            log::warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
+                            warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
                         let is_expired = liquid_tip >= chain_swap.timeout_block_height;
                         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
                             chain_swap.state = new_state;
                         }
-                        chain_swap.server_lockup_tx_id = recovered_data
-                            .btc_server_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.user_lockup_tx_id = recovered_data
-                            .lbtc_user_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.claim_tx_id = recovered_data
-                            .btc_claim_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.refund_tx_id = recovered_data
-                            .lbtc_refund_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
+                        if !is_within_grace_period {
+                            chain_swap.server_lockup_tx_id = recovered_data
+                                .btc_server_lockup_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                            chain_swap.user_lockup_tx_id = recovered_data
+                                .lbtc_user_lockup_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                            chain_swap.claim_tx_id = recovered_data
+                                .btc_claim_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                            chain_swap.refund_tx_id = recovered_data
+                                .lbtc_refund_tx_id
+                                .clone()
+                                .map(|h| h.txid.to_string());
+                        }
                     }
                 },
             }
