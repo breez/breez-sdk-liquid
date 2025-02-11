@@ -4,9 +4,8 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use futures_util::TryFutureExt;
-use log::trace;
-use tokio::sync::mpsc::Receiver;
-use tokio::sync::{watch, Mutex};
+use log::{info, trace, warn};
+use tokio::sync::watch;
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
 use tonic::Streaming;
@@ -36,19 +35,9 @@ pub(crate) struct SyncService {
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
-    sync_trigger: Mutex<Receiver<()>>,
 }
 
-type RemoteStream = Option<Streaming<Notification>>;
-
 impl SyncService {
-    fn set_sync_trigger(persister: Arc<Persister>) -> Receiver<()> {
-        let (sync_trigger_tx, sync_trigger_rx) = tokio::sync::mpsc::channel::<()>(30);
-        let mut persister_trigger = persister.sync_trigger.write().unwrap();
-        *persister_trigger = Some(sync_trigger_tx);
-        sync_trigger_rx
-    }
-
     pub(crate) fn new(
         remote_url: String,
         persister: Arc<Persister>,
@@ -56,14 +45,12 @@ impl SyncService {
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
     ) -> Self {
-        let sync_trigger_rx = Self::set_sync_trigger(persister.clone());
         Self {
             remote_url,
             persister,
             recoverer,
             signer,
             client,
-            sync_trigger: Mutex::new(sync_trigger_rx),
         }
     }
 
@@ -80,91 +67,79 @@ impl SyncService {
     }
 
     async fn run_event_loop(&self) {
+        info!("realtime-sync: Running sync event loop");
         if let Err(err) = self.pull().and_then(|_| self.push()).await {
             log::debug!("Could not run sync event loop: {err:?}");
         }
     }
 
-    async fn new_listener(&self) -> Result<RemoteStream> {
+    async fn new_listener(&self) -> Result<Streaming<Notification>> {
         let req = ListenChangesRequest::new(self.signer.clone())?;
-        Ok(match self.client.listen(req).await {
-            Ok(trigger) => Some(trigger),
-            Err(err) => {
-                log::warn!("Could not create new remote sync trigger: {err:?}");
-                None
-            }
-        })
-    }
-
-    fn handle_reconnect(
-        self: Arc<Self>,
-        remote_trigger: Arc<Mutex<RemoteStream>>,
-        mut shutdown: watch::Receiver<()>,
-    ) {
-        tokio::spawn(async move {
-            let mut remote_trigger = remote_trigger.lock().await;
-            loop {
-                tokio::select! {
-                    _ = shutdown.changed() => {
-                        log::info!("Received shutdown signal, exiting realtime sync reconnect loop");
-                        return;
-                    }
-                    Ok(maybe_new_trigger) = self.new_listener() => match maybe_new_trigger {
-                        Some(new_trigger) => {
-                            *remote_trigger = Some(new_trigger);
-                            self.run_event_loop().await;
-                            return;
-                        },
-                        None => sleep(Duration::from_secs(5)).await,
-                    }
-                }
-            }
-        });
+        self.client.listen(req).await
     }
 
     pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
+        log::info!("sync-reconnect start service");
         tokio::spawn(async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
-                log::warn!("Could not connect to sync service: {err:?}");
+                log::warn!("realtime-sync: Could not connect to sync service: {err:?}");
                 return;
             }
             if let Err(err) = self.check_remote_change() {
-                log::warn!("Could not check for remote change: {err:?}");
+                log::warn!("realtime-sync: Could not check for remote change: {err:?}");
                 return;
             }
+            let Ok(mut local_sync_trigger) = self.persister.subscribe_sync_trigger() else {
+                log::warn!("realtime-sync: Could not subscribe to local sync trigger");
+                return;
+            };
 
-            let mut local_sync_trigger = self.sync_trigger.lock().await;
-            let remote_sync_trigger =
-                Arc::new(Mutex::new(self.new_listener().await.unwrap_or(None)));
-
-            log::debug!("Starting real-time sync event loop");
-
+            log::debug!("realtime-sync: Starting real-time sync event loop");
             loop {
-                let remote_lock_and_read = async {
-                    let mut lock = remote_sync_trigger.lock().await;
-                    match lock.as_mut() {
-                        Some(trigger) => trigger.next().await,
-                        // Future hangs in case of a missing initial remote trigger,
-                        // tokio_select! branch is never picked
-                        None => std::future::pending().await,
+                if shutdown.has_changed().unwrap_or(true) {
+                    return;
+                }
+                let mut remote_sync_trigger = match self.new_listener().await {
+                    Ok(trigger) => trigger,
+                    Err(e) => {
+                        warn!(
+                            "realtime-sync: new_listener returned error: {:?} waiting 3 seconds",
+                            e
+                        );
+                        sleep(Duration::from_secs(3)).await;
+                        continue;
                     }
                 };
-
-                tokio::select! {
-                    Some(_) = local_sync_trigger.recv() => self.run_event_loop().await,
-                    Some(msg) = remote_lock_and_read => match msg {
-                        Ok(_) => self.run_event_loop().await,
-                        Err(err) => {
-                            log::warn!("Received status {} from remote, attempting to reconnect.", err.message());
-                            self.clone().handle_reconnect(remote_sync_trigger.clone(), shutdown.clone());
+                log::info!("realtime-sync: Starting sync service loop");
+                loop {
+                    log::info!("realtime-sync: before tokio_select");
+                    tokio::select! {
+                        local_event = local_sync_trigger.recv() => {
+                          log::info!("realtime-sync: Received local message");
+                          match local_event {
+                            Ok(_) => self.run_event_loop().await,
+                            Err(err) => {
+                                log::warn!("realtime-sync: local trigger received error, probably lagging behind {err:?}");
+                            }
+                          }
                         }
-                    },
-                    _ = shutdown.changed() => {
-                        log::info!("Received shutdown signal, exiting realtime sync service loop");
-                        if let Err(err) = self.client.disconnect().await {
-                            log::debug!("Could not disconnect sync service client: {err:?}");
-                        };
-                        return;
+                        Some(msg) = remote_sync_trigger.next() => {
+                          log::info!("realtime-sync: Received remote message");
+                          match msg {
+                            Ok(_) => self.run_event_loop().await,
+                            Err(err) => {
+                                log::warn!("realtime-sync: Received status {} from remote, attempting to reconnect.", err.message());
+                                break; // break the inner loop which will start the main loop by reconnecting
+                            }
+                          }
+                        },
+                        _ = shutdown.changed() => {
+                            log::info!("realtime-sync: Received shutdown signal, exiting realtime sync service loop");
+                            if let Err(err) = self.client.disconnect().await {
+                                log::debug!("realtime-sync: Could not disconnect sync service client: {err:?}");
+                            };
+                            return;
+                        }
                     }
                 }
             }

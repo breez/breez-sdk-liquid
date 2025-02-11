@@ -130,7 +130,7 @@ macro_rules! create_persister {
                 .to_str()
                 .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
             crate::model::LiquidNetwork::Testnet,
-            None,
+            true,
         )?);
         $name.init()?;
     };

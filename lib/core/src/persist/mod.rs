@@ -11,7 +11,6 @@ pub(crate) mod sync;
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Not;
-use std::sync::RwLock;
 use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
 
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
@@ -28,14 +27,14 @@ use rusqlite::{
 };
 use rusqlite_migration::{Migrations, M};
 use sdk_common::bitcoin::hashes::hex::ToHex;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::broadcast::{self, Sender};
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
 
 pub(crate) struct Persister {
     main_db_dir: PathBuf,
     network: LiquidNetwork,
-    pub(crate) sync_trigger: RwLock<Option<Sender<()>>>,
+    pub(crate) sync_trigger: Option<Sender<()>>,
 }
 
 /// Builds a WHERE clause that checks if `state` is any of the given arguments
@@ -60,19 +59,20 @@ fn where_clauses_to_string(where_clauses: Vec<String>) -> String {
 }
 
 impl Persister {
-    pub fn new(
-        working_dir: &str,
-        network: LiquidNetwork,
-        sync_trigger: Option<Sender<()>>,
-    ) -> Result<Self> {
+    pub fn new(working_dir: &str, network: LiquidNetwork, sync_enabled: bool) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
             create_dir_all(&main_db_dir)?;
         }
+        let mut sync_trigger = None;
+        if sync_enabled {
+            let (events_notifier, _) = broadcast::channel::<()>(1);
+            sync_trigger = Some(events_notifier);
+        }
         Ok(Persister {
             main_db_dir,
             network,
-            sync_trigger: RwLock::new(sync_trigger),
+            sync_trigger,
         })
     }
 
@@ -273,7 +273,7 @@ impl Persister {
 
         tx.commit()?;
         if trigger_sync {
-            self.trigger_sync()?;
+            self.trigger_sync();
         }
 
         Ok(())
@@ -343,7 +343,7 @@ impl Persister {
             None,
         )?;
         tx.commit()?;
-        self.trigger_sync()?;
+        self.trigger_sync();
 
         Ok(())
     }
