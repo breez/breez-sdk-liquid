@@ -76,7 +76,7 @@ impl Persister {
                 ":lockup_tx_id": &send_swap.lockup_tx_id,
                 ":refund_tx_id": &send_swap.refund_tx_id,
                 ":state": &send_swap.state,
-                ":version": &send_swap.version,
+                ":version": &send_swap.metadata.version,
             },
         )?;
         ensure_sdk!(
@@ -183,8 +183,12 @@ impl Persister {
                 created_at,
                 state,
                 pair_fees_json,
-                version
+                version,
+                last_updated_at,
+
+                sync_state.is_local
             FROM send_swaps AS ss
+            LEFT JOIN sync_state ON ss.id = sync_state.data_id
             {where_clause_str}
             ORDER BY created_at
         "
@@ -226,7 +230,11 @@ impl Persister {
             created_at: row.get(14)?,
             state: row.get(15)?,
             pair_fees_json: row.get(16)?,
-            version: row.get(17)?,
+            metadata: SwapMetadata {
+                version: row.get(17)?,
+                last_updated_at: row.get(18)?,
+                is_local: row.get::<usize, Option<bool>>(19)?.unwrap_or(true),
+            },
         })
     }
 
