@@ -244,32 +244,29 @@ impl Persister {
         Ok(ongoing_send)
     }
 
-    pub(crate) fn list_ongoing_send_swaps(&self) -> Result<Vec<SendSwap>> {
+    pub(crate) fn list_send_swaps_by_state(
+        &self,
+        states: Vec<PaymentState>,
+    ) -> Result<Vec<SendSwap>> {
         let con = self.get_connection()?;
-        let where_clause = vec![get_where_clause_state_in(&[
-            PaymentState::Created,
-            PaymentState::Pending,
-        ])];
-
+        let where_clause = vec![get_where_clause_state_in(&states)];
         self.list_send_swaps_where(&con, where_clause)
+    }
+
+    pub(crate) fn list_ongoing_send_swaps(&self) -> Result<Vec<SendSwap>> {
+        self.list_send_swaps_by_state(vec![PaymentState::Created, PaymentState::Pending])
     }
 
     pub(crate) fn list_pending_send_swaps(&self) -> Result<Vec<SendSwap>> {
-        let con = self.get_connection()?;
-        let where_clause = vec![get_where_clause_state_in(&[
-            PaymentState::Pending,
-            PaymentState::RefundPending,
-        ])];
-        self.list_send_swaps_where(&con, where_clause)
+        self.list_send_swaps_by_state(vec![PaymentState::Pending, PaymentState::RefundPending])
     }
 
     pub(crate) fn list_recoverable_send_swaps(&self) -> Result<Vec<SendSwap>> {
-        let con = self.get_connection()?;
-        let where_clause = vec![get_where_clause_state_in(&[
+        self.list_send_swaps_by_state(vec![
+            PaymentState::Created,
             PaymentState::Pending,
             PaymentState::RefundPending,
-        ])];
-        self.list_send_swaps_where(&con, where_clause)
+        ])
     }
 
     pub(crate) fn try_handle_send_swap_update(
