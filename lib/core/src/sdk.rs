@@ -68,6 +68,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
 )];
 
 const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(60 * 3);
+const NEW_TX_PERIOD: Duration = Duration::from_secs(30);
 
 pub struct LiquidSdk {
     pub(crate) config: Config,
@@ -2711,6 +2712,7 @@ impl LiquidSdk {
             .recoverer
             .recover_from_onchain(&mut recoverable_swaps)
             .await?;
+        let mut info_update_needed = !partial_sync;
 
         for swap in recoverable_swaps {
             let swap_id = &swap.id();
@@ -2731,9 +2733,10 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    if let Err(e) = self.receive_swap_handler.update_swap(receive_swap) {
-                        error!("Error persisting recovered receive swap {swap_id}: {e}");
-                    }
+                    match self.receive_swap_handler.update_swap(receive_swap) {
+                        Ok(updated) => info_update_needed = info_update_needed || updated,
+                        Err(e) => error!("Error persisting recovered receive swap {swap_id}: {e}"),
+                    };
                 }
                 Swap::Send(send_swap) => {
                     let history_updates = vec![&send_swap.lockup_tx_id, &send_swap.refund_tx_id];
@@ -2749,9 +2752,10 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    if let Err(e) = self.send_swap_handler.update_swap(send_swap) {
-                        error!("Error persisting recovered send swap {swap_id}: {e}");
-                    }
+                    match self.send_swap_handler.update_swap(send_swap) {
+                        Ok(updated) => info_update_needed = info_update_needed || updated,
+                        Err(e) => error!("Error persisting recovered send swap {swap_id}: {e}"),
+                    };
                 }
                 Swap::Chain(chain_swap) => {
                     let history_updates = match chain_swap.direction {
@@ -2772,9 +2776,10 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
-                        error!("Error persisting recovered Chain Swap {swap_id}: {e}");
-                    }
+                    match self.chain_swap_handler.update_swap(chain_swap) {
+                        Ok(updated) => info_update_needed = info_update_needed || updated,
+                        Err(e) => error!("Error persisting recovered Chain Swap {swap_id}: {e}"),
+                    };
                 }
             };
         }
@@ -2790,6 +2795,7 @@ impl LiquidSdk {
                 .into_iter()
                 .map(|tx| (tx.tx_id.clone(), tx))
                 .collect::<HashMap<String, PaymentTxData>>();
+        let new_tx_period = NEW_TX_PERIOD.as_secs() as u32;
 
         for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
@@ -2810,15 +2816,29 @@ impl LiquidSdk {
                         // that was in the mempool, but is now confirmed
                         self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
                         self.emit_payment_updated(Some(tx_id.clone())).await?;
-                        updated = true
+                        updated = true;
+                        info_update_needed = true;
                     }
                 }
 
-                _ => {}
+                _ => {
+                    // Check if the tx timestamp is within the NEW_TX_PERIOD
+                    let new_tx_detected = tx
+                        .timestamp
+                        .map_or(true, |t| (utils::now().saturating_sub(t)) < new_tx_period);
+                    if new_tx_detected {
+                        debug!(
+                            "New swap tx detected in the last {} secs. Txid: {}",
+                            new_tx_period, tx_id
+                        );
+                        info_update_needed = true;
+                    }
+                }
             }
             if !updated && unconfirmed_txs_by_id.contains_key(&tx_id) && tx.height.is_some() {
                 // An unconfirmed tx that was not found in the payments table
                 self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
+                info_update_needed = true;
             }
             unconfirmed_txs_by_id.remove(&tx_id);
         }
@@ -2838,7 +2858,9 @@ impl LiquidSdk {
             }
         }
 
-        self.update_wallet_info().await?;
+        if info_update_needed {
+            self.update_wallet_info().await?;
+        }
         Ok(())
     }
 
@@ -2850,6 +2872,10 @@ impl LiquidSdk {
             .map(|am| (am.asset_id.clone(), am))
             .collect();
         let transactions = self.onchain_wallet.transactions().await?;
+        let tx_ids = transactions
+            .iter()
+            .map(|tx| tx.txid.to_string())
+            .collect::<Vec<_>>();
         let asset_balances = transactions
             .into_iter()
             .fold(BTreeMap::<AssetId, i64>::new(), |mut acc, tx| {
@@ -2875,12 +2901,11 @@ impl LiquidSdk {
                 }
             })
             .collect::<Vec<AssetBalance>>();
-        let balance_sat = asset_balances
+        let mut balance_sat = asset_balances
             .clone()
             .into_iter()
             .find(|ab| ab.asset_id.eq(&self.config.lbtc_asset_id()))
             .map_or(0, |ab| ab.balance_sat);
-        debug!("Onchain wallet balance: {balance_sat} sats");
 
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
@@ -2894,7 +2919,8 @@ impl LiquidSdk {
         })?;
 
         for payment in payments {
-            let total_sat = if payment.details.is_lbtc_asset_id(self.config.network) {
+            let is_lbtc_asset_id = payment.details.is_lbtc_asset_id(self.config.network);
+            let total_sat = if is_lbtc_asset_id {
                 payment.amount_sat + payment.fees_sat
             } else {
                 payment.fees_sat
@@ -2902,12 +2928,21 @@ impl LiquidSdk {
             match payment.payment_type {
                 PaymentType::Send => match payment.details.get_refund_tx_amount_sat() {
                     Some(refund_tx_amount_sat) => pending_receive_sat += refund_tx_amount_sat,
-                    None => pending_send_sat += total_sat,
+                    None => {
+                        if let Some(tx_id) = payment.tx_id {
+                            if !tx_ids.contains(&tx_id) {
+                                debug!("Deducting {total_sat} sats from balance");
+                                balance_sat = balance_sat.saturating_sub(total_sat);
+                            }
+                        }
+                        pending_send_sat += total_sat
+                    }
                 },
                 PaymentType::Receive => pending_receive_sat += total_sat,
             }
         }
 
+        debug!("Onchain wallet balance: {balance_sat} sats");
         let info_response = WalletInfo {
             balance_sat,
             pending_send_sat,
