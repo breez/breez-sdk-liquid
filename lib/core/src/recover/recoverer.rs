@@ -259,11 +259,16 @@ impl Recoverer {
                             }
                         }
                     }
+
                     // Set the state only AFTER the preimage and claim_tx_id have been verified
-                    let timeout_block_height = send_swap.timeout_block_height as u32;
-                    let is_expired = liquid_tip >= timeout_block_height;
-                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                        send_swap.state = new_state;
+                    if recovered_data.is_applied_to(send_swap) {
+                        let timeout_block_height = send_swap.timeout_block_height as u32;
+                        let is_expired = liquid_tip >= timeout_block_height;
+                        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+                            send_swap.state = new_state;
+                        }
+                    } else {
+                        warn!("Recovered data and swap are inconsistent for send swap {swap_id}: skipping state derivation")
                     }
                 }
                 Swap::Receive(receive_swap) => {
@@ -271,11 +276,6 @@ impl Recoverer {
                         warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
                         continue;
                     };
-                    let timeout_block_height = receive_swap.timeout_block_height;
-                    let is_expired = liquid_tip >= timeout_block_height;
-                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                        receive_swap.state = new_state;
-                    }
                     if !is_within_grace_period {
                         receive_swap.claim_tx_id = recovered_data
                             .claim_tx_id
@@ -294,6 +294,16 @@ impl Recoverer {
                         receive_swap.payer_amount_sat = mrh_amount_sat;
                         receive_swap.receiver_amount_sat = mrh_amount_sat;
                     }
+
+                    if recovered_data.is_applied_to(receive_swap) {
+                        let timeout_block_height = receive_swap.timeout_block_height;
+                        let is_expired = liquid_tip >= timeout_block_height;
+                        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+                            receive_swap.state = new_state;
+                        }
+                    } else {
+                        warn!("Recovered data and swap are inconsistent for receive swap {swap_id}: skipping state derivation")
+                    }
                 }
                 Swap::Chain(chain_swap) => match chain_swap.direction {
                     Direction::Incoming => {
@@ -304,21 +314,6 @@ impl Recoverer {
                         if recovered_data.btc_user_lockup_amount_sat > 0 {
                             chain_swap.actual_payer_amount_sat =
                                 Some(recovered_data.btc_user_lockup_amount_sat);
-                        }
-                        let is_expired =
-                            bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
-                        let (expected_user_lockup_amount_sat, swap_limits) =
-                            match chain_swap.payer_amount_sat {
-                                0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
-                                expected => (Some(expected), None),
-                            };
-                        if let Some(new_state) = recovered_data.derive_partial_state(
-                            expected_user_lockup_amount_sat,
-                            swap_limits,
-                            is_expired,
-                            chain_swap.is_waiting_fee_acceptance(),
-                        ) {
-                            chain_swap.state = new_state;
                         }
                         if !is_within_grace_period {
                             chain_swap.server_lockup_tx_id = recovered_data
@@ -341,16 +336,32 @@ impl Recoverer {
                                 .clone()
                                 .map(|h| h.txid.to_string());
                         }
+
+                        if recovered_data.is_applied_to(chain_swap) {
+                            let is_expired =
+                                bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
+                            let (expected_user_lockup_amount_sat, swap_limits) =
+                                match chain_swap.payer_amount_sat {
+                                    0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
+                                    expected => (Some(expected), None),
+                                };
+                            if let Some(new_state) = recovered_data.derive_partial_state(
+                                expected_user_lockup_amount_sat,
+                                swap_limits,
+                                is_expired,
+                                chain_swap.is_waiting_fee_acceptance(),
+                            ) {
+                                chain_swap.state = new_state;
+                            }
+                        } else {
+                            warn!("Recovered data and swap are inconsistent for incoming chain swap {swap_id}: skipping state derivation")
+                        }
                     }
                     Direction::Outgoing => {
                         let Some(recovered_data) = recovered_chain_send_data.get(swap_id) else {
                             warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
                             continue;
                         };
-                        let is_expired = liquid_tip >= chain_swap.timeout_block_height;
-                        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                            chain_swap.state = new_state;
-                        }
                         if !is_within_grace_period {
                             chain_swap.server_lockup_tx_id = recovered_data
                                 .btc_server_lockup_tx_id
@@ -368,6 +379,15 @@ impl Recoverer {
                                 .lbtc_refund_tx_id
                                 .clone()
                                 .map(|h| h.txid.to_string());
+                        }
+                        if recovered_data.is_applied_to(chain_swap) {
+                            let is_expired = liquid_tip >= chain_swap.timeout_block_height;
+                            if let Some(new_state) = recovered_data.derive_partial_state(is_expired)
+                            {
+                                chain_swap.state = new_state;
+                            }
+                        } else {
+                            warn!("Recovered data and swap are inconsistent for outgoing chain swap {swap_id}: skipping state derivation")
                         }
                     }
                 },

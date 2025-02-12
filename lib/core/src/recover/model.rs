@@ -93,6 +93,15 @@ impl RecoveredOnchainDataSend {
             },
         }
     }
+
+    pub(crate) fn is_applied_to(&self, swap: &SendSwap) -> bool {
+        self.lockup_tx_id.as_ref().map(|tx| tx.txid.to_string()) == swap.lockup_tx_id
+            && self.refund_tx_id.as_ref().map(|tx| tx.txid.to_string()) == swap.refund_tx_id
+            && self
+                .preimage
+                .as_ref()
+                .map_or(true, |preimage| swap.preimage.as_ref() == Some(preimage))
+    }
 }
 
 pub(crate) struct RecoveredOnchainDataReceive {
@@ -128,6 +137,16 @@ impl RecoveredOnchainDataReceive {
                 },
             },
         }
+    }
+
+    pub(crate) fn is_applied_to(&self, swap: &ReceiveSwap) -> bool {
+        self.lockup_tx_id.as_ref().map(|tx| tx.txid.to_string()) == swap.lockup_tx_id.clone()
+            && self.claim_tx_id.as_ref().map(|tx| tx.txid.to_string()) == swap.claim_tx_id.clone()
+            && self.mrh_tx_id.as_ref().map(|tx| tx.txid.to_string()) == swap.mrh_tx_id.clone()
+            && self.mrh_amount_sat.map_or(true, |mrh_amount_sat| {
+                swap.payer_amount_sat == mrh_amount_sat
+                    && swap.receiver_amount_sat == mrh_amount_sat
+            })
     }
 }
 
@@ -178,6 +197,25 @@ impl RecoveredOnchainDataChainSend {
                 false => None,
             },
         }
+    }
+
+    pub(crate) fn is_applied_to(&self, swap: &ChainSwap) -> bool {
+        self.lbtc_user_lockup_tx_id
+            .as_ref()
+            .map(|tx| tx.txid.to_string())
+            == swap.user_lockup_tx_id.clone()
+            && self
+                .lbtc_refund_tx_id
+                .as_ref()
+                .map(|tx| tx.txid.to_string())
+                == swap.refund_tx_id.clone()
+            && self
+                .btc_server_lockup_tx_id
+                .as_ref()
+                .map(|tx| tx.txid.to_string())
+                == swap.server_lockup_tx_id.clone()
+            && self.btc_claim_tx_id.as_ref().map(|tx| tx.txid.to_string())
+                == swap.claim_tx_id.clone()
     }
 }
 
@@ -259,6 +297,28 @@ impl RecoveredOnchainDataChainReceive {
                 false => None,
             },
         }
+    }
+
+    pub(crate) fn is_applied_to(&self, swap: &ChainSwap) -> bool {
+        if self.btc_user_lockup_amount_sat > 0
+            && (swap.actual_payer_amount_sat != Some(self.btc_user_lockup_amount_sat))
+        {
+            return false;
+        }
+        self.lbtc_server_lockup_tx_id
+            .as_ref()
+            .map(|tx| tx.txid.to_string())
+            == swap.server_lockup_tx_id.clone()
+            && self.lbtc_claim_tx_id.as_ref().map(|tx| tx.txid.to_string())
+                == swap.claim_tx_id.clone()
+            && self.lbtc_claim_address == swap.claim_address
+            && self
+                .btc_user_lockup_tx_id
+                .as_ref()
+                .map(|tx| tx.txid.to_string())
+                == swap.user_lockup_tx_id.clone()
+            && self.btc_refund_tx_id.as_ref().map(|tx| tx.txid.to_string())
+                == swap.refund_tx_id.clone()
     }
 }
 
