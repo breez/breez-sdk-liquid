@@ -22,7 +22,7 @@ use crate::{
 };
 
 /// The minimum acceptable fee rate when claiming using zero-conf
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE: u32 = 100;
+pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE: u32 = 50;
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
 
@@ -42,6 +42,9 @@ impl BlockListener for ReceiveSwapHandler {
     async fn on_liquid_block(&self, height: u32) {
         if let Err(e) = self.claim_confirmed_lockups(height).await {
             error!("Error claiming confirmed lockups: {e:?}");
+        }
+        if let Err(e) = self.process_liquid_tx_confirmations().await {
+            error!("Error processing tx confirmations for receive swaps: {e:?}");
         }
     }
 }
@@ -456,6 +459,34 @@ impl ReceiveSwapHandler {
         self.claim(swap_id)
             .await
             .map_err(|e| anyhow!("Could not claim Receive Swap {swap_id}: {e:?}"))
+    }
+
+    async fn process_liquid_tx_confirmations(&self) -> Result<()> {
+        let swaps = self.persister.list_ongoing_receive_swaps(None)?;
+        let tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
+        for swap in swaps {
+            if let Some(claim_tx_id) = swap.claim_tx_id {
+                if let Some(tx) = tx_map.get(&Txid::from_str(&claim_tx_id)?) {
+                    if tx.height.is_some() {
+                        debug!("Claim tx for receive swap {} was confirmed - updating state accordingly", swap.id);
+                        self.update_swap_info(&swap.id, Complete, None, None, None, None)?
+                    }
+                }
+            }
+            if let Some(mrh_tx_id) = swap.mrh_tx_id {
+                if let Some(tx) = tx_map.get(&Txid::from_str(&mrh_tx_id)?) {
+                    if tx.height.is_some() {
+                        debug!(
+                            "MRH tx for receive swap {} was confirmed - updating state accordingly",
+                            swap.id
+                        );
+                        self.update_swap_info(&swap.id, Complete, None, None, None, None)?
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn validate_state_transition(

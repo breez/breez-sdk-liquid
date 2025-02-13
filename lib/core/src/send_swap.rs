@@ -3,6 +3,7 @@ use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
+use boltz_client::elements::Txid;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use futures_util::TryFutureExt;
@@ -45,6 +46,9 @@ impl BlockListener for SendSwapHandler {
     async fn on_liquid_block(&self, _height: u32) {
         if let Err(err) = self.check_refunds().await {
             warn!("Could not refund expired swaps, error: {err:?}");
+        }
+        if let Err(e) = self.process_liquid_tx_confirmations().await {
+            error!("Error processing tx confirmations for send swaps: {e:?}");
         }
     }
 }
@@ -545,6 +549,25 @@ impl SendSwapHandler {
     pub(crate) async fn check_refunds(&self) -> Result<(), PaymentError> {
         let pending_swaps = self.persister.list_pending_send_swaps()?;
         self.try_refund_all(&pending_swaps).await;
+        Ok(())
+    }
+
+    async fn process_liquid_tx_confirmations(&self) -> Result<()> {
+        let swaps = self.persister.list_ongoing_send_swaps()?;
+        let tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
+        for swap in swaps {
+            if let Some(refund_tx_id) = swap.refund_tx_id {
+                if let Some(tx) = tx_map.get(&Txid::from_str(&refund_tx_id)?) {
+                    if tx.height.is_some() {
+                        debug!(
+                            "Refund tx for send swap {} was confirmed - updating state accordingly",
+                            swap.id
+                        );
+                        self.update_swap_info(&swap.id, Failed, None, None, None)?;
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
