@@ -70,6 +70,10 @@ When receiving a payment, the SDK performs a reverse submarine swap, converting 
 
 Within each sub-project readme, there are instructions on how to build, test, and run.
 
+## **Contributing**
+
+Contributions are always welcome. Please read our [contribution guide](CONTRIBUTING.md) to get started.
+
 ## **SDK Development Roadmap**
 
 - [x]  Send/Receive Lightning payments
