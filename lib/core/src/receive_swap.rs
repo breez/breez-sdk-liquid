@@ -283,10 +283,9 @@ impl ReceiveSwapHandler {
     }
 
     // Updates the swap without state transition validation
-    pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<bool, PaymentError> {
+    pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<(), PaymentError> {
         let swap = self.fetch_receive_swap_by_id(&updated_swap.id)?;
-        let is_updated = updated_swap != swap;
-        if is_updated {
+        if updated_swap != swap {
             info!(
                 "Updating Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
                 updated_swap.id, updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
@@ -295,7 +294,7 @@ impl ReceiveSwapHandler {
                 .insert_or_update_receive_swap(&updated_swap)?;
             let _ = self.subscription_notifier.send(updated_swap.id);
         }
-        Ok(is_updated)
+        Ok(())
     }
 
     // Updates the swap state with validation

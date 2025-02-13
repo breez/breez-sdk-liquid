@@ -781,10 +781,9 @@ impl ChainSwapHandler {
     }
 
     // Updates the swap without state transition validation
-    pub(crate) fn update_swap(&self, updated_swap: ChainSwap) -> Result<bool, PaymentError> {
+    pub(crate) fn update_swap(&self, updated_swap: ChainSwap) -> Result<(), PaymentError> {
         let swap = self.fetch_chain_swap_by_id(&updated_swap.id)?;
-        let is_updated = updated_swap != swap;
-        if is_updated {
+        if updated_swap != swap {
             info!(
                 "Updating Chain swap {} to {:?} (user_lockup_tx_id = {:?}, server_lockup_tx_id = {:?}, claim_tx_id = {:?}, refund_tx_id = {:?})",
                 updated_swap.id,
@@ -797,7 +796,7 @@ impl ChainSwapHandler {
             self.persister.insert_or_update_chain_swap(&updated_swap)?;
             let _ = self.subscription_notifier.send(updated_swap.id);
         }
-        Ok(is_updated)
+        Ok(())
     }
 
     // Updates the swap state with validation

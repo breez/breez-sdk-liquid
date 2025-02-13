@@ -67,10 +67,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
     "https://cryptoqr.net/.well-known/lnurlp/<input>",
 )];
 
-/// Number of seconds grace period to keep:
-/// - unconfirmed txs in the payment_tx_data table to account for network propagation
-/// - triggering wallet info updates while a tx is first seen
-const NETWORK_PROPAGATION_GRACE_PERIOD_SEC: u32 = 30;
+const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(60 * 3);
 
 pub struct LiquidSdk {
     pub(crate) config: Config,
@@ -2714,7 +2711,6 @@ impl LiquidSdk {
             .recoverer
             .recover_from_onchain(&mut recoverable_swaps)
             .await?;
-        let mut info_update_needed = !partial_sync;
 
         for swap in recoverable_swaps {
             let swap_id = &swap.id();
@@ -2735,10 +2731,9 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    match self.receive_swap_handler.update_swap(receive_swap) {
-                        Ok(updated) => info_update_needed = info_update_needed || updated,
-                        Err(e) => error!("Error persisting recovered receive swap {swap_id}: {e}"),
-                    };
+                    if let Err(e) = self.receive_swap_handler.update_swap(receive_swap) {
+                        error!("Error persisting recovered receive swap {swap_id}: {e}");
+                    }
                 }
                 Swap::Send(send_swap) => {
                     let history_updates = vec![&send_swap.lockup_tx_id, &send_swap.refund_tx_id];
@@ -2754,10 +2749,9 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    match self.send_swap_handler.update_swap(send_swap) {
-                        Ok(updated) => info_update_needed = info_update_needed || updated,
-                        Err(e) => error!("Error persisting recovered send swap {swap_id}: {e}"),
-                    };
+                    if let Err(e) = self.send_swap_handler.update_swap(send_swap) {
+                        error!("Error persisting recovered send swap {swap_id}: {e}");
+                    }
                 }
                 Swap::Chain(chain_swap) => {
                     let history_updates = match chain_swap.direction {
@@ -2778,10 +2772,9 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    match self.chain_swap_handler.update_swap(chain_swap) {
-                        Ok(updated) => info_update_needed = info_update_needed || updated,
-                        Err(e) => error!("Error persisting recovered Chain Swap {swap_id}: {e}"),
-                    };
+                    if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
+                        error!("Error persisting recovered Chain Swap {swap_id}: {e}");
+                    }
                 }
             };
         }
@@ -2817,36 +2810,22 @@ impl LiquidSdk {
                         // that was in the mempool, but is now confirmed
                         self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
                         self.emit_payment_updated(Some(tx_id.clone())).await?;
-                        updated = true;
-                        info_update_needed = true;
+                        updated = true
                     }
                 }
 
-                _ => {
-                    // Check if this is a new tx by it's timestamp
-                    let new_tx_detected = tx.timestamp.map_or(true, |t| {
-                        (utils::now().saturating_sub(t)) < NETWORK_PROPAGATION_GRACE_PERIOD_SEC
-                    });
-                    if new_tx_detected {
-                        debug!(
-                            "New swap tx detected in the last {} secs. Txid: {}",
-                            NETWORK_PROPAGATION_GRACE_PERIOD_SEC, tx_id
-                        );
-                        info_update_needed = true;
-                    }
-                }
+                _ => {}
             }
             if !updated && unconfirmed_txs_by_id.contains_key(&tx_id) && tx.height.is_some() {
                 // An unconfirmed tx that was not found in the payments table
                 self.persister.insert_or_update_payment_with_wallet_tx(tx)?;
-                info_update_needed = true;
             }
             unconfirmed_txs_by_id.remove(&tx_id);
         }
 
         for unknown_unconfirmed_tx_data in unconfirmed_txs_by_id.values() {
             if unknown_unconfirmed_tx_data.timestamp.is_some_and(|t| {
-                (utils::now().saturating_sub(t)) > NETWORK_PROPAGATION_GRACE_PERIOD_SEC
+                (utils::now().saturating_sub(t)) > NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32
             }) {
                 self.persister
                     .delete_payment_tx_data(&unknown_unconfirmed_tx_data.tx_id)?;
@@ -2859,9 +2838,7 @@ impl LiquidSdk {
             }
         }
 
-        if info_update_needed {
-            self.update_wallet_info().await?;
-        }
+        self.update_wallet_info().await?;
         Ok(())
     }
 

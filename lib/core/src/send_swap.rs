@@ -252,11 +252,10 @@ impl SendSwapHandler {
     }
 
     // Updates the swap without state transition validation
-    pub(crate) fn update_swap(&self, updated_swap: SendSwap) -> Result<bool, PaymentError> {
+    pub(crate) fn update_swap(&self, updated_swap: SendSwap) -> Result<(), PaymentError> {
         let swap = self.fetch_send_swap_by_id(&updated_swap.id)?;
         let lnurl_info_updated = self.update_swap_lnurl_info(&swap, &updated_swap)?;
-        let is_updated = updated_swap != swap || lnurl_info_updated;
-        if is_updated {
+        if updated_swap != swap || lnurl_info_updated {
             info!(
                 "Updating Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
                 updated_swap.id,
@@ -267,7 +266,7 @@ impl SendSwapHandler {
             self.persister.insert_or_update_send_swap(&updated_swap)?;
             let _ = self.subscription_notifier.send(updated_swap.id);
         }
-        Ok(is_updated)
+        Ok(())
     }
 
     pub(crate) fn update_swap_lnurl_info(
