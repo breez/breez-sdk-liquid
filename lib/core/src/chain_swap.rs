@@ -1,5 +1,3 @@
-use std::{str::FromStr, sync::Arc};
-
 use anyhow::{anyhow, bail, Context, Result};
 use async_trait::async_trait;
 use boltz_client::{
@@ -14,9 +12,12 @@ use lwk_wollet::{
     hashes::hex::DisplayHex,
     History,
 };
+use std::collections::HashMap;
+use std::{str::FromStr, sync::Arc};
 use tokio::sync::broadcast;
 
 use crate::model::{BlockListener, ChainSwapUpdate, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
+use crate::recover::model::SwapsList;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     ensure_sdk,
@@ -52,6 +53,9 @@ impl BlockListener for ChainSwapHandler {
         if let Err(e) = self.claim_outgoing(height).await {
             error!("Error claiming outgoing: {e:?}");
         }
+        if let Err(e) = self.process_tx_confirmations().await {
+            error!("Error processing tx confirmations for chain swaps: {e:?}");
+        }
     }
 
     async fn on_liquid_block(&self, height: u32) {
@@ -60,6 +64,9 @@ impl BlockListener for ChainSwapHandler {
         }
         if let Err(e) = self.claim_incoming(height).await {
             error!("Error claiming incoming: {e:?}");
+        }
+        if let Err(e) = self.process_tx_confirmations().await {
+            error!("Error processing tx confirmations for chain swaps: {e:?}");
         }
     }
 }
@@ -1145,6 +1152,129 @@ impl ChainSwapHandler {
                 }
             }
         }
+        Ok(())
+    }
+
+    async fn process_tx_confirmations(&self) -> Result<()> {
+        let swaps = self.persister.list_ongoing_chain_swaps()?;
+
+        let liquid_tx_confirmation_map = self
+            .onchain_wallet
+            .transactions_by_tx_id()
+            .await?
+            .into_iter()
+            .map(|(txid, tx)| (txid.to_string(), tx.height.is_some()))
+            .collect::<HashMap<_, _>>();
+
+        let btc_scripts = SwapsList::try_from(
+            swaps
+                .clone()
+                .into_iter()
+                .map(Swap::Chain)
+                .collect::<Vec<_>>(),
+        )?
+        .get_swap_btc_scripts();
+        let btc_scripts = btc_scripts
+            .iter()
+            .map(|x| x.as_script())
+            .collect::<Vec<&lwk_wollet::bitcoin::Script>>();
+        let bitcoin_tx_confirmation_map = self
+            .bitcoin_chain_service
+            .get_scripts_history(&btc_scripts)?
+            .iter()
+            .flatten()
+            .map(|h| (h.txid.to_string(), h.height > 0))
+            .collect::<HashMap<_, _>>();
+
+        for swap in swaps {
+            match swap.direction {
+                Direction::Incoming => match (swap.claim_tx_id, swap.refund_tx_id) {
+                    (Some(lbtc_claim_tx_id), None) => {
+                        if let Some(true) = liquid_tx_confirmation_map.get(&lbtc_claim_tx_id) {
+                            debug!("Claim tx for incoming chain swap {} was confirmed - updating state accordingly", swap.id);
+                            self.update_swap_info(&ChainSwapUpdate {
+                                swap_id: swap.id,
+                                to_state: Complete,
+                                ..Default::default()
+                            })?;
+                        }
+                    }
+                    (None, Some(btc_refund_tx_id)) => {
+                        if let Some(true) = bitcoin_tx_confirmation_map.get(&btc_refund_tx_id) {
+                            debug!("Refund tx for incoming chain swap {} was confirmed - updating state accordingly", swap.id);
+                            self.update_swap_info(&ChainSwapUpdate {
+                                swap_id: swap.id,
+                                to_state: Failed,
+                                ..Default::default()
+                            })?;
+                        }
+                    }
+                    (Some(lbtc_claim_tx_id), Some(btc_refund_tx_id)) => {
+                        if let Some(true) = liquid_tx_confirmation_map.get(&lbtc_claim_tx_id) {
+                            if let Some(true) = bitcoin_tx_confirmation_map.get(&btc_refund_tx_id) {
+                                debug!("Claim tx for incoming chain swap {} was confirmed - updating state accordingly", swap.id);
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: swap.id,
+                                    to_state: Complete,
+                                    ..Default::default()
+                                })?;
+                            } else if swap.state == Pending {
+                                debug!("Claim tx for incoming chain swap {} was confirmed, but there is a pending refund - updating state accordingly", swap.id);
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: swap.id,
+                                    to_state: RefundPending,
+                                    ..Default::default()
+                                })?;
+                            }
+                        }
+                    }
+                    _ => {}
+                },
+                Direction::Outgoing => match (swap.claim_tx_id, swap.refund_tx_id) {
+                    (Some(btc_claim_tx_id), None) => {
+                        if let Some(true) = bitcoin_tx_confirmation_map.get(&btc_claim_tx_id) {
+                            debug!("Claim tx for outgoing chain swap {} was confirmed - updating state accordingly", swap.id);
+                            self.update_swap_info(&ChainSwapUpdate {
+                                swap_id: swap.id,
+                                to_state: Complete,
+                                ..Default::default()
+                            })?;
+                        }
+                    }
+                    (None, Some(lbtc_refund_tx_id)) => {
+                        if let Some(true) = liquid_tx_confirmation_map.get(&lbtc_refund_tx_id) {
+                            debug!("Refund tx for outgoing chain swap {} was confirmed - updating state accordingly", swap.id);
+                            self.update_swap_info(&ChainSwapUpdate {
+                                swap_id: swap.id,
+                                to_state: Failed,
+                                ..Default::default()
+                            })?;
+                        }
+                    }
+                    (Some(btc_claim_tx_id), Some(lbtc_refund_tx_id)) => {
+                        if let Some(true) = bitcoin_tx_confirmation_map.get(&btc_claim_tx_id) {
+                            if let Some(true) = liquid_tx_confirmation_map.get(&lbtc_refund_tx_id) {
+                                debug!("Claim tx for outgoing chain swap {} was confirmed - updating state accordingly", swap.id);
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: swap.id,
+                                    to_state: Complete,
+                                    ..Default::default()
+                                })?;
+                            } else if swap.state == Pending {
+                                debug!("Claim tx for outgoing chain swap {} was confirmed, but there is a pending refund - updating state accordingly", swap.id);
+                                self.update_swap_info(&ChainSwapUpdate {
+                                    swap_id: swap.id,
+                                    to_state: RefundPending,
+                                    ..Default::default()
+                                })?;
+                            }
+                        }
+                    }
+                    _ => {}
+                },
+            }
+        }
+
         Ok(())
     }
 

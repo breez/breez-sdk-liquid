@@ -2706,16 +2706,11 @@ impl LiquidSdk {
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
     async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
-        let mut recoverable_swaps = self.get_monitored_swaps_list(partial_sync).await?;
-        let mut tx_map = self
-            .recoverer
-            .recover_from_onchain(&mut recoverable_swaps)
-            .await?;
+        // To be confirmed, but on partial sync (no new blocks), we process only receive swaps because we might get a MRH tx in the mempool, and this need to update the swap
+        let recoverable_swaps = self.get_monitored_swaps_list(partial_sync).await?;
+        let mut tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
         for swap in recoverable_swaps {
-            let swap_id = &swap.id();
-
-            // Update the payment wallet txs before updating the swap so the tx data is pulled into the payment
             match swap {
                 Swap::Receive(receive_swap) => {
                     let history_updates = vec![&receive_swap.claim_tx_id, &receive_swap.mrh_tx_id];
@@ -2731,9 +2726,6 @@ impl LiquidSdk {
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
                     }
-                    if let Err(e) = self.receive_swap_handler.update_swap(receive_swap) {
-                        error!("Error persisting recovered receive swap {swap_id}: {e}");
-                    }
                 }
                 Swap::Send(send_swap) => {
                     let history_updates = vec![&send_swap.lockup_tx_id, &send_swap.refund_tx_id];
@@ -2748,9 +2740,6 @@ impl LiquidSdk {
                             self.persister
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
-                    }
-                    if let Err(e) = self.send_swap_handler.update_swap(send_swap) {
-                        error!("Error persisting recovered send swap {swap_id}: {e}");
                     }
                 }
                 Swap::Chain(chain_swap) => {
@@ -2771,9 +2760,6 @@ impl LiquidSdk {
                             self.persister
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
-                    }
-                    if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
-                        error!("Error persisting recovered Chain Swap {swap_id}: {e}");
                     }
                 }
             };
