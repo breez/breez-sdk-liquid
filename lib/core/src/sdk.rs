@@ -67,8 +67,10 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
     "https://cryptoqr.net/.well-known/lnurlp/<input>",
 )];
 
-const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(60 * 3);
-const NEW_TX_PERIOD: Duration = Duration::from_secs(30);
+/// Number of seconds grace period to keep:
+/// - unconfirmed txs in the payment_tx_data table to account for network propagation
+/// - triggering wallet info updates while a tx is first seen
+const NETWORK_PROPAGATION_GRACE_PERIOD_SEC: u32 = 30;
 
 pub struct LiquidSdk {
     pub(crate) config: Config,
@@ -2795,7 +2797,6 @@ impl LiquidSdk {
                 .into_iter()
                 .map(|tx| (tx.tx_id.clone(), tx))
                 .collect::<HashMap<String, PaymentTxData>>();
-        let new_tx_period = NEW_TX_PERIOD.as_secs() as u32;
 
         for tx in tx_map.values() {
             let tx_id = tx.txid.to_string();
@@ -2822,14 +2823,14 @@ impl LiquidSdk {
                 }
 
                 _ => {
-                    // Check if the tx timestamp is within the NEW_TX_PERIOD
-                    let new_tx_detected = tx
-                        .timestamp
-                        .map_or(true, |t| (utils::now().saturating_sub(t)) < new_tx_period);
+                    // Check if this is a new tx by it's timestamp
+                    let new_tx_detected = tx.timestamp.map_or(true, |t| {
+                        (utils::now().saturating_sub(t)) < NETWORK_PROPAGATION_GRACE_PERIOD_SEC
+                    });
                     if new_tx_detected {
                         debug!(
                             "New swap tx detected in the last {} secs. Txid: {}",
-                            new_tx_period, tx_id
+                            NETWORK_PROPAGATION_GRACE_PERIOD_SEC, tx_id
                         );
                         info_update_needed = true;
                     }
@@ -2845,7 +2846,7 @@ impl LiquidSdk {
 
         for unknown_unconfirmed_tx_data in unconfirmed_txs_by_id.values() {
             if unknown_unconfirmed_tx_data.timestamp.is_some_and(|t| {
-                (utils::now().saturating_sub(t)) > NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32
+                (utils::now().saturating_sub(t)) > NETWORK_PROPAGATION_GRACE_PERIOD_SEC
             }) {
                 self.persister
                     .delete_payment_tx_data(&unknown_unconfirmed_tx_data.tx_id)?;
@@ -2919,8 +2920,7 @@ impl LiquidSdk {
         })?;
 
         for payment in payments {
-            let is_lbtc_asset_id = payment.details.is_lbtc_asset_id(self.config.network);
-            let total_sat = if is_lbtc_asset_id {
+            let total_sat = if payment.details.is_lbtc_asset_id(self.config.network) {
                 payment.amount_sat + payment.fees_sat
             } else {
                 payment.fees_sat
