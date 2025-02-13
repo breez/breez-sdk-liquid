@@ -2850,6 +2850,10 @@ impl LiquidSdk {
             .map(|am| (am.asset_id.clone(), am))
             .collect();
         let transactions = self.onchain_wallet.transactions().await?;
+        let tx_ids = transactions
+            .iter()
+            .map(|tx| tx.txid.to_string())
+            .collect::<Vec<_>>();
         let asset_balances = transactions
             .into_iter()
             .fold(BTreeMap::<AssetId, i64>::new(), |mut acc, tx| {
@@ -2875,12 +2879,11 @@ impl LiquidSdk {
                 }
             })
             .collect::<Vec<AssetBalance>>();
-        let balance_sat = asset_balances
+        let mut balance_sat = asset_balances
             .clone()
             .into_iter()
             .find(|ab| ab.asset_id.eq(&self.config.lbtc_asset_id()))
             .map_or(0, |ab| ab.balance_sat);
-        debug!("Onchain wallet balance: {balance_sat} sats");
 
         let mut pending_send_sat = 0;
         let mut pending_receive_sat = 0;
@@ -2902,12 +2905,21 @@ impl LiquidSdk {
             match payment.payment_type {
                 PaymentType::Send => match payment.details.get_refund_tx_amount_sat() {
                     Some(refund_tx_amount_sat) => pending_receive_sat += refund_tx_amount_sat,
-                    None => pending_send_sat += total_sat,
+                    None => {
+                        if let Some(tx_id) = payment.tx_id {
+                            if !tx_ids.contains(&tx_id) {
+                                debug!("Deducting {total_sat} sats from balance");
+                                balance_sat = balance_sat.saturating_sub(total_sat);
+                            }
+                        }
+                        pending_send_sat += total_sat
+                    }
                 },
                 PaymentType::Receive => pending_receive_sat += total_sat,
             }
         }
 
+        debug!("Onchain wallet balance: {balance_sat} sats");
         let info_response = WalletInfo {
             balance_sat,
             pending_send_sat,
