@@ -52,15 +52,6 @@ impl Persister {
         Ok(sync_state)
     }
 
-    pub(crate) fn get_sync_state_by_data_id(&self, data_id: &str) -> Result<Option<SyncState>> {
-        let con = self.get_connection()?;
-        let query = Self::select_sync_state_query(vec!["data_id = ?1".to_string()]);
-        let sync_state = con
-            .query_row(&query, [data_id], Self::sql_row_to_sync_state)
-            .optional()?;
-        Ok(sync_state)
-    }
-
     fn set_sync_state_stmt(con: &Connection) -> rusqlite::Result<Statement> {
         con.prepare(
             "

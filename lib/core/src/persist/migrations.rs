@@ -292,5 +292,28 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         ",
         insert_default_asset_metadata,
         "ALTER TABLE payment_details ADD COLUMN bip353_address TEXT;",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN last_updated_at INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE send_swaps ADD COLUMN last_updated_at INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE chain_swaps ADD COLUMN last_updated_at INTEGER NOT NULL DEFAULT 0;
+        CREATE TRIGGER IF NOT EXISTS update_receive_swaps_last_updated_at
+        AFTER UPDATE ON receive_swaps
+        BEGIN
+            UPDATE receive_swaps SET last_updated_at = (strftime('%s', 'now'))
+            WHERE id = NEW.id;
+        END;
+        CREATE TRIGGER IF NOT EXISTS update_send_swaps_last_updated_at
+        AFTER UPDATE ON send_swaps
+        BEGIN
+            UPDATE send_swaps SET last_updated_at = (strftime('%s', 'now'))
+            WHERE id = NEW.id;
+        END;
+        CREATE TRIGGER IF NOT EXISTS update_chain_swaps_last_updated_at
+        AFTER UPDATE ON chain_swaps
+        BEGIN
+            UPDATE chain_swaps SET last_updated_at = (strftime('%s', 'now'))
+            WHERE id = NEW.id;
+        END;
+        ",
     ]
 }

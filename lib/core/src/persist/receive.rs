@@ -85,7 +85,7 @@ impl Persister {
                 ":payer_amount_sat": &receive_swap.payer_amount_sat,
                 ":receiver_amount_sat": &receive_swap.receiver_amount_sat,
                 ":state": &receive_swap.state,
-                ":version": &receive_swap.version,
+                ":version": &receive_swap.metadata.version,
             },
         )?;
         ensure_sdk!(
@@ -153,8 +153,8 @@ impl Persister {
                 rs.state,
                 rs.pair_fees_json,
                 rs.version,
+                rs.last_updated_at,
 
-                -- Used for filtering
                 sync_state.is_local
             FROM receive_swaps AS rs
             LEFT JOIN sync_state ON rs.id = sync_state.data_id
@@ -204,7 +204,11 @@ impl Persister {
             created_at: row.get(16)?,
             state: row.get(17)?,
             pair_fees_json: row.get(18)?,
-            version: row.get(19)?,
+            metadata: SwapMetadata {
+                version: row.get(19)?,
+                last_updated_at: row.get(20)?,
+                is_local: row.get::<usize, Option<bool>>(21)?.unwrap_or(true),
+            },
         })
     }
 
