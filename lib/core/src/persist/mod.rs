@@ -19,6 +19,7 @@ use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
+use log::warn;
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use model::PaymentTxDetails;
@@ -145,7 +146,7 @@ impl Persister {
                 (asset_id, payment_type, amount)
             }
             None => {
-                log::warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
+                warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
                 return Ok(());
             }
         };
