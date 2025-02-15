@@ -234,7 +234,8 @@ impl Recoverer {
                     if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
                         warn!(
                             "Local send swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us"
+                        as it would clear a tx that may have been broadcasted by us. Lockup clear: \
+                        {lockup_is_cleared} - Refund clear: {refund_is_cleared}"
                         );
                         continue;
                     }
@@ -282,7 +283,7 @@ impl Recoverer {
                     if is_local_within_grace_period && claim_is_cleared {
                         warn!(
                             "Local receive swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us"
+                        as it would clear a tx that may have been broadcasted by us (claim)"
                         );
                         continue;
                     }
@@ -318,10 +319,13 @@ impl Recoverer {
 
                         let claim_is_cleared = chain_swap.claim_tx_id.is_some()
                             && recovered_data.lbtc_claim_tx_id.is_none();
-                        if is_local_within_grace_period && claim_is_cleared {
+                        let refund_is_cleared = chain_swap.refund_tx_id.is_some()
+                            && recovered_data.btc_refund_tx_id.is_none();
+                        if is_local_within_grace_period && (claim_is_cleared || refund_is_cleared) {
                             warn!(
                             "Local incoming chain swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us"
+                        as it would clear a tx that may have been broadcasted by us. Claim clear: \
+                        {claim_is_cleared} - Refund clear: {refund_is_cleared}"
                         );
                             continue;
                         }
@@ -375,11 +379,15 @@ impl Recoverer {
                             && recovered_data.lbtc_user_lockup_tx_id.is_none();
                         let refund_is_cleared = chain_swap.refund_tx_id.is_some()
                             && recovered_data.lbtc_refund_tx_id.is_none();
-                        if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared)
+                        let claim_is_cleared = chain_swap.claim_tx_id.is_some()
+                            && recovered_data.btc_claim_tx_id.is_none();
+                        if is_local_within_grace_period
+                            && (lockup_is_cleared || refund_is_cleared || claim_is_cleared)
                         {
                             warn!(
                             "Local outgoing chain swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us"
+                        as it would clear a tx that may have been broadcasted by us. Lockup clear: \
+                        {lockup_is_cleared} - Refund clear: {refund_is_cleared} - Claim clear: {claim_is_cleared}"
                         );
                             continue;
                         }
