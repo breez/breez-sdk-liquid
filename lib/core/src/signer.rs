@@ -168,15 +168,20 @@ impl LwkSigner for SdkLwkSigner {
 pub struct SdkSigner {
     xprv: Xpriv,
     secp: Secp256k1<All>, // could be sign only, but it is likely the caller already has the All context.
-    mnemonic: Mnemonic,
+    seed: Vec<u8>,
     network: Network,
 }
 
 impl SdkSigner {
     pub fn new(mnemonic: &str, passphrase: &str, is_mainnet: bool) -> Result<Self, NewError> {
-        let secp = Secp256k1::new();
         let mnemonic: Mnemonic = mnemonic.parse()?;
-        let seed = mnemonic.to_seed(passphrase);
+        let seed = mnemonic.to_seed(passphrase).to_vec();
+
+        Self::new_with_seed(seed, is_mainnet)
+    }
+
+    pub fn new_with_seed(seed: Vec<u8>, is_mainnet: bool) -> Result<Self, NewError> {
+        let secp = Secp256k1::new();
 
         let network = if is_mainnet {
             bitcoin::Network::Bitcoin
@@ -189,13 +194,9 @@ impl SdkSigner {
         Ok(Self {
             xprv,
             secp,
-            mnemonic,
+            seed,
             network,
         })
-    }
-
-    fn seed(&self) -> [u8; 64] {
-        self.mnemonic.to_seed("")
     }
 }
 
@@ -224,15 +225,13 @@ impl Signer for SdkSigner {
     }
 
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError> {
-        let seed = self.seed();
-        let master_blinding_key = MasterBlindingKey::from_seed(&seed[..]);
+        let master_blinding_key = MasterBlindingKey::from_seed(&self.seed);
         Ok(master_blinding_key.as_bytes().to_vec())
     }
 
     fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
-        let seed = self.seed();
         let secp = Secp256k1::new();
-        let keypair = Xpriv::new_master(self.network, &seed)
+        let keypair = Xpriv::new_master(self.network, &self.seed)
             .map_err(|e| anyhow::anyhow!("Could not get signer keypair: {e}"))?
             .to_keypair(&secp);
         let s = msg.as_slice();

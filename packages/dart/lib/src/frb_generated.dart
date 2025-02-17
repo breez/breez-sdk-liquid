@@ -1865,11 +1865,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ConnectRequest dco_decode_connect_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return ConnectRequest(
       config: dco_decode_config(arr[0]),
-      mnemonic: dco_decode_String(arr[1]),
+      mnemonic: dco_decode_opt_String(arr[1]),
       passphrase: dco_decode_opt_String(arr[2]),
+      seed: dco_decode_opt_list_prim_u_8_strict(arr[3]),
     );
   }
 
@@ -2726,6 +2727,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_list_payment_type(raw);
+  }
+
+  @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
   }
 
   @protected
@@ -4039,9 +4046,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_config = sse_decode_config(deserializer);
-    var var_mnemonic = sse_decode_String(deserializer);
+    var var_mnemonic = sse_decode_opt_String(deserializer);
     var var_passphrase = sse_decode_opt_String(deserializer);
-    return ConnectRequest(config: var_config, mnemonic: var_mnemonic, passphrase: var_passphrase);
+    var var_seed = sse_decode_opt_list_prim_u_8_strict(deserializer);
+    return ConnectRequest(
+        config: var_config, mnemonic: var_mnemonic, passphrase: var_passphrase, seed: var_seed);
   }
 
   @protected
@@ -5050,6 +5059,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_list_payment_type(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_prim_u_8_strict(deserializer));
     } else {
       return null;
     }
@@ -6411,8 +6431,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_config(self.config, serializer);
-    sse_encode_String(self.mnemonic, serializer);
+    sse_encode_opt_String(self.mnemonic, serializer);
     sse_encode_opt_String(self.passphrase, serializer);
+    sse_encode_opt_list_prim_u_8_strict(self.seed, serializer);
   }
 
   @protected
@@ -7227,6 +7248,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_list_payment_type(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(Uint8List? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_prim_u_8_strict(self, serializer);
     }
   }
 

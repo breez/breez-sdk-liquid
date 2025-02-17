@@ -372,24 +372,29 @@ class Config {
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
+/// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
 class ConnectRequest {
   /// The SDK [Config]
   final Config config;
 
-  /// The Liquid wallet mnemonic
-  final String mnemonic;
+  /// The optional Liquid wallet mnemonic
+  final String? mnemonic;
 
-  /// The optional passphrase for the seed
+  /// The optional passphrase for the mnemonic
   final String? passphrase;
+
+  /// The optional Liquid wallet seed
+  final Uint8List? seed;
 
   const ConnectRequest({
     required this.config,
-    required this.mnemonic,
+    this.mnemonic,
     this.passphrase,
+    this.seed,
   });
 
   @override
-  int get hashCode => config.hashCode ^ mnemonic.hashCode ^ passphrase.hashCode;
+  int get hashCode => config.hashCode ^ mnemonic.hashCode ^ passphrase.hashCode ^ seed.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -398,7 +403,8 @@ class ConnectRequest {
           runtimeType == other.runtimeType &&
           config == other.config &&
           mnemonic == other.mnemonic &&
-          passphrase == other.passphrase;
+          passphrase == other.passphrase &&
+          seed == other.seed;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].

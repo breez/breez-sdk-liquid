@@ -2587,12 +2587,14 @@ impl SseDecode for crate::model::ConnectRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_config = <crate::model::Config>::sse_decode(deserializer);
-        let mut var_mnemonic = <String>::sse_decode(deserializer);
+        let mut var_mnemonic = <Option<String>>::sse_decode(deserializer);
         let mut var_passphrase = <Option<String>>::sse_decode(deserializer);
+        let mut var_seed = <Option<Vec<u8>>>::sse_decode(deserializer);
         return crate::model::ConnectRequest {
             config: var_config,
             mnemonic: var_mnemonic,
             passphrase: var_passphrase,
+            seed: var_seed,
         };
     }
 }
@@ -3832,6 +3834,17 @@ impl SseDecode for Option<Vec<crate::model::PaymentType>> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<Vec<crate::model::PaymentType>>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<u8>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<u8>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -5175,6 +5188,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::ConnectRequest {
             self.config.into_into_dart().into_dart(),
             self.mnemonic.into_into_dart().into_dart(),
             self.passphrase.into_into_dart().into_dart(),
+            self.seed.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7487,8 +7501,9 @@ impl SseEncode for crate::model::ConnectRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::Config>::sse_encode(self.config, serializer);
-        <String>::sse_encode(self.mnemonic, serializer);
+        <Option<String>>::sse_encode(self.mnemonic, serializer);
         <Option<String>>::sse_encode(self.passphrase, serializer);
+        <Option<Vec<u8>>>::sse_encode(self.seed, serializer);
     }
 }
 
@@ -8471,6 +8486,16 @@ impl SseEncode for Option<Vec<crate::model::PaymentType>> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <Vec<crate::model::PaymentType>>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<u8>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<u8>>::sse_encode(value, serializer);
         }
     }
 }
@@ -9908,6 +9933,7 @@ mod io {
                 config: self.config.cst_decode(),
                 mnemonic: self.mnemonic.cst_decode(),
                 passphrase: self.passphrase.cst_decode(),
+                seed: self.seed.cst_decode(),
             }
         }
     }
@@ -11605,6 +11631,7 @@ mod io {
                 config: Default::default(),
                 mnemonic: core::ptr::null_mut(),
                 passphrase: core::ptr::null_mut(),
+                seed: core::ptr::null_mut(),
             }
         }
     }
@@ -13852,6 +13879,7 @@ mod io {
         config: wire_cst_config,
         mnemonic: *mut wire_cst_list_prim_u_8_strict,
         passphrase: *mut wire_cst_list_prim_u_8_strict,
+        seed: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

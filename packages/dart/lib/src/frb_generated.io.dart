@@ -507,6 +507,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PaymentType>? dco_decode_opt_list_payment_type(dynamic raw);
 
   @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
+
+  @protected
   PayAmount dco_decode_pay_amount(dynamic raw);
 
   @protected
@@ -1141,6 +1144,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<PaymentType>? sse_decode_opt_list_payment_type(SseDeserializer deserializer);
+
+  @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
   PayAmount sse_decode_pay_amount(SseDeserializer deserializer);
@@ -2076,6 +2082,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_opt_list_prim_u_8_strict(Uint8List? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_list_prim_u_8_strict(raw);
+  }
+
+  @protected
   int cst_encode_u_64(BigInt raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.toSigned(64).toInt();
@@ -2535,8 +2547,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_connect_request(ConnectRequest apiObj, wire_cst_connect_request wireObj) {
     cst_api_fill_to_wire_config(apiObj.config, wireObj.config);
-    wireObj.mnemonic = cst_encode_String(apiObj.mnemonic);
+    wireObj.mnemonic = cst_encode_opt_String(apiObj.mnemonic);
     wireObj.passphrase = cst_encode_opt_String(apiObj.passphrase);
+    wireObj.seed = cst_encode_opt_list_prim_u_8_strict(apiObj.seed);
   }
 
   @protected
@@ -4238,6 +4251,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_list_payment_type(List<PaymentType>? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(Uint8List? self, SseSerializer serializer);
 
   @protected
   void sse_encode_pay_amount(PayAmount self, SseSerializer serializer);
@@ -6964,6 +6980,8 @@ final class wire_cst_connect_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> passphrase;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> seed;
 }
 
 final class wire_cst_bitcoin_address_data extends ffi.Struct {

@@ -609,8 +609,12 @@ enum BreezSDKLiquidMapper {
         }
         let config = try asConfig(config: configTmp)
 
-        guard let mnemonic = connectRequest["mnemonic"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "mnemonic", typeName: "ConnectRequest"))
+        var mnemonic: String?
+        if hasNonNilKey(data: connectRequest, key: "mnemonic") {
+            guard let mnemonicTmp = connectRequest["mnemonic"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "mnemonic"))
+            }
+            mnemonic = mnemonicTmp
         }
         var passphrase: String?
         if hasNonNilKey(data: connectRequest, key: "passphrase") {
@@ -619,15 +623,23 @@ enum BreezSDKLiquidMapper {
             }
             passphrase = passphraseTmp
         }
+        var seed: [UInt8]?
+        if hasNonNilKey(data: connectRequest, key: "seed") {
+            guard let seedTmp = connectRequest["seed"] as? [UInt8] else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "seed"))
+            }
+            seed = seedTmp
+        }
 
-        return ConnectRequest(config: config, mnemonic: mnemonic, passphrase: passphrase)
+        return ConnectRequest(config: config, mnemonic: mnemonic, passphrase: passphrase, seed: seed)
     }
 
     static func dictionaryOf(connectRequest: ConnectRequest) -> [String: Any?] {
         return [
             "config": dictionaryOf(config: connectRequest.config),
-            "mnemonic": connectRequest.mnemonic,
+            "mnemonic": connectRequest.mnemonic == nil ? nil : connectRequest.mnemonic,
             "passphrase": connectRequest.passphrase == nil ? nil : connectRequest.passphrase,
+            "seed": connectRequest.seed == nil ? nil : connectRequest.seed,
         ]
     }
 

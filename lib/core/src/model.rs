@@ -362,13 +362,16 @@ pub trait Signer: Send + Sync {
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
+/// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
 pub struct ConnectRequest {
     /// The SDK [Config]
     pub config: Config,
-    /// The Liquid wallet mnemonic
-    pub mnemonic: String,
-    /// The optional passphrase for the seed
+    /// The optional Liquid wallet mnemonic
+    pub mnemonic: Option<String>,
+    /// The optional passphrase for the mnemonic
     pub passphrase: Option<String>,
+    /// The optional Liquid wallet seed
+    pub seed: Option<Vec<u8>>,
 }
 
 pub struct ConnectWithSignerRequest {

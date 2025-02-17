@@ -534,16 +534,16 @@ fun asConnectRequest(connectRequest: ReadableMap): ConnectRequest? {
             connectRequest,
             arrayOf(
                 "config",
-                "mnemonic",
             ),
         )
     ) {
         return null
     }
     val config = connectRequest.getMap("config")?.let { asConfig(it) }!!
-    val mnemonic = connectRequest.getString("mnemonic")!!
+    val mnemonic = if (hasNonNullKey(connectRequest, "mnemonic")) connectRequest.getString("mnemonic") else null
     val passphrase = if (hasNonNullKey(connectRequest, "passphrase")) connectRequest.getString("passphrase") else null
-    return ConnectRequest(config, mnemonic, passphrase)
+    val seed = if (hasNonNullKey(connectRequest, "seed")) connectRequest.getArray("seed")?.let { asUByteList(it) } else null
+    return ConnectRequest(config, mnemonic, passphrase, seed)
 }
 
 fun readableMapOf(connectRequest: ConnectRequest): ReadableMap =
@@ -551,6 +551,7 @@ fun readableMapOf(connectRequest: ConnectRequest): ReadableMap =
         "config" to readableMapOf(connectRequest.config),
         "mnemonic" to connectRequest.mnemonic,
         "passphrase" to connectRequest.passphrase,
+        "seed" to connectRequest.seed?.let { readableArrayOf(it) },
     )
 
 fun asConnectRequestList(arr: ReadableArray): List<ConnectRequest> {
