@@ -31,6 +31,7 @@ pub(crate) mod model;
 
 pub(crate) struct SyncService {
     remote_url: String,
+    client_id: String,
     persister: Arc<Persister>,
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
@@ -45,7 +46,10 @@ impl SyncService {
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
     ) -> Self {
+        let client_id = uuid::Uuid::new_v4().to_string();
+
         Self {
+            client_id,
             remote_url,
             persister,
             recoverer,
@@ -126,7 +130,13 @@ impl SyncService {
                         Some(msg) = remote_sync_trigger.next() => {
                           log::info!("realtime-sync: Received remote message");
                           match msg {
-                            Ok(_) => self.run_event_loop().await,
+                            Ok(Notification { client_id }) => {
+                                if client_id.is_some_and(|id| id == self.client_id) {
+                                    log::info!("realtime-sync: Notification client_id matches our own, skipping update.");
+                                    continue;
+                                }
+                                self.run_event_loop().await;
+                            }
                             Err(err) => {
                                 log::warn!("realtime-sync: Received status {} from remote, attempting to reconnect.", err.message());
                                 break; // break the inner loop which will start the main loop by reconnecting
@@ -436,7 +446,12 @@ impl SyncService {
         trace!("Got record: {record:?}");
 
         // Step 4: Push the record
-        let req = SetRecordRequest::new(record, utils::now(), self.signer.clone())?;
+        let req = SetRecordRequest::new(
+            record,
+            utils::now(),
+            self.signer.clone(),
+            self.client_id.clone(),
+        )?;
         trace!("Got set record request: {req:?}");
         let reply = self.client.push(req).await?;
         trace!("Got reply: {reply:?}");

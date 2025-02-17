@@ -40,6 +40,7 @@ impl SetRecordRequest {
         record: Record,
         request_time: u32,
         signer: Arc<Box<dyn Signer>>,
+        client_id: String,
     ) -> Result<Self, SignerError> {
         let msg = format!(
             "{}-{}-{}-{}-{}",
@@ -56,6 +57,7 @@ impl SetRecordRequest {
             record: Some(record),
             request_time,
             signature,
+            client_id: Some(client_id),
         })
     }
 }
