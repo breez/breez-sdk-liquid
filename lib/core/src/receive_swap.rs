@@ -78,12 +78,6 @@ impl ReceiveSwapHandler {
         let receive_swap = self.fetch_receive_swap_by_id(id)?;
 
         info!("Handling Receive Swap transition to {swap_state:?} for swap {id}");
-        // Get if the swap is local from the sync state. This allows us to verify
-        // the update but avoid claiming if not local.
-        let is_local_swap = self
-            .persister
-            .get_sync_state_by_data_id(&receive_swap.id)?
-            .map_or(true, |sync_state| sync_state.is_local);
 
         match swap_state {
             RevSwapStates::SwapExpired
@@ -188,7 +182,7 @@ impl ReceiveSwapHandler {
 
                 debug!("[Receive Swap {id}] Lockup tx fees are within acceptable range ({tx_fees} > {lower_bound_estimated_fees} sat). Proceeding with claim.");
 
-                if is_local_swap {
+                if receive_swap.metadata.is_local {
                     // Only claim a local swap
                     if let Err(err) = self.claim(id).await {
                         match err {
@@ -250,7 +244,7 @@ impl ReceiveSwapHandler {
                     None => {
                         self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)?;
 
-                        if is_local_swap {
+                        if receive_swap.metadata.is_local {
                             // Only claim a local swap
                             if let Err(err) = self.claim(id).await {
                                 match err {

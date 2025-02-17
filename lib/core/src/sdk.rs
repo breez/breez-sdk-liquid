@@ -67,7 +67,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
     "https://cryptoqr.net/.well-known/lnurlp/<input>",
 )];
 
-const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(60 * 3);
+pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(30);
 
 pub struct LiquidSdk {
     pub(crate) config: Config,
@@ -1582,7 +1582,7 @@ impl LiquidSdk {
                     created_at: utils::now(),
                     state: PaymentState::Created,
                     refund_private_key: keypair.display_secret().to_string(),
-                    version: 0,
+                    metadata: Default::default(),
                 };
                 self.persister.insert_or_update_send_swap(&swap)?;
                 swap
@@ -1885,7 +1885,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
             auto_accepted_fees: false,
-            version: 0,
+            metadata: Default::default(),
         };
         self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap_id)?;
@@ -2304,7 +2304,7 @@ impl LiquidSdk {
                 mrh_tx_id: None,
                 created_at: utils::now(),
                 state: PaymentState::Created,
-                version: 0,
+                metadata: Default::default(),
             })
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
@@ -2410,7 +2410,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
             auto_accepted_fees: false,
-            version: 0,
+            metadata: Default::default(),
         };
         self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap.id)?;

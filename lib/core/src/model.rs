@@ -809,22 +809,39 @@ impl Swap {
 
     pub(crate) fn version(&self) -> u64 {
         match self {
-            Swap::Chain(ChainSwap { version, .. })
-            | Swap::Send(SendSwap { version, .. })
-            | Swap::Receive(ReceiveSwap { version, .. }) => *version,
+            Swap::Chain(ChainSwap { metadata, .. })
+            | Swap::Send(SendSwap { metadata, .. })
+            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.version,
         }
     }
+
     pub(crate) fn set_version(&mut self, version: u64) {
         match self {
             Swap::Chain(chain_swap) => {
-                chain_swap.version = version;
+                chain_swap.metadata.version = version;
             }
             Swap::Send(send_swap) => {
-                send_swap.version = version;
+                send_swap.metadata.version = version;
             }
             Swap::Receive(receive_swap) => {
-                receive_swap.version = version;
+                receive_swap.metadata.version = version;
             }
+        }
+    }
+
+    pub(crate) fn is_local(&self) -> bool {
+        match self {
+            Swap::Chain(ChainSwap { metadata, .. })
+            | Swap::Send(SendSwap { metadata, .. })
+            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.is_local,
+        }
+    }
+
+    pub(crate) fn last_updated_at(&self) -> u32 {
+        match self {
+            Swap::Chain(ChainSwap { metadata, .. })
+            | Swap::Send(SendSwap { metadata, .. })
+            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.last_updated_at,
         }
     }
 }
@@ -888,6 +905,14 @@ impl FromSql for Direction {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub(crate) struct SwapMetadata {
+    /// Version used for optimistic concurrency control within local db
+    pub(crate) version: u64,
+    pub(crate) last_updated_at: u32,
+    pub(crate) is_local: bool,
+}
+
 /// A chain swap
 ///
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
@@ -930,9 +955,9 @@ pub(crate) struct ChainSwap {
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
     pub(crate) auto_accepted_fees: bool,
-    /// Version used for optimistic concurrency control within local db
+    /// Swap metadata that is only valid when reading one from the local database
     #[derivative(PartialEq = "ignore")]
-    pub(crate) version: u64,
+    pub(crate) metadata: SwapMetadata,
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
@@ -1084,9 +1109,9 @@ pub(crate) struct SendSwap {
     pub(crate) timeout_block_height: u64,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
-    /// Version used for optimistic concurrency control within local db
+    /// Swap metadata that is only valid when reading one from the local database
     #[derivative(PartialEq = "ignore")]
-    pub(crate) version: u64,
+    pub(crate) metadata: SwapMetadata,
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
@@ -1182,9 +1207,9 @@ pub(crate) struct ReceiveSwap {
     pub(crate) created_at: u32,
     pub(crate) timeout_block_height: u32,
     pub(crate) state: PaymentState,
-    /// Version used for optimistic concurrency control within local db
+    /// Swap metadata that is only valid when reading one from the local database
     #[derivative(PartialEq = "ignore")]
-    pub(crate) version: u64,
+    pub(crate) metadata: SwapMetadata,
 }
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
