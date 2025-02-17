@@ -19,12 +19,24 @@ If you don't have merge permissions, a reviewer will do it for you.
 >
 > If you don't know where to start, look for issues labeled with [good first issue](https://github.com/breez/breez-sdk-liquid/labels/good%20first%20issue).
 
-## Formatting, generating code and testing
-
+#### Code formatting
 The Rust source code should be formatted according to `cargo fmt` and have no linting errors from `cargo clippy`. Any changes to public facing functions or structs should be adequately documented according to [rustdoc](https://doc.rust-lang.org/rustdoc/index.html#using-rustdoc-with-cargo). Comments on code should be written clearly and concisely, and written in English.
 
-If there are any changes to the SDK's interface, they also need to be updated in the `bindings` crate. The SDK uses [UniFFI](https://github.com/mozilla/uniffi-rs) to generate the bindings code for several different languages. Add the changes needed to the [lib.rs](lib/bindings/src/lib.rs) Rust interface and also update the [UDL interface](lib/bindings/src/breez_sdk_liquid.udl) file. Whenever changes are made to the `bindings`, the [Flutter](libs/sdk-flutter) and [React Native](libs/sdk-react-native) bindings code needs to be regenerated and included in your pull request. You can regenerate these from the project root using `make codegen`. Please see the prerequisites for [Flutter](lib/bindings/langs/flutter/README.md) and [React Native](packages/react-native/DEVELOPING.md) if this is your first time generating code.
+#### Generating code
+If there are any changes to the SDK's interface, they also need to be updated in the bindings interface. The SDK uses [UniFFI](https://github.com/mozilla/uniffi-rs) and [Flutter Rust Bridge](https://pub.dev/packages/flutter_rust_bridge) to generate the bindings code for several different languages. 
 
+Please update the following crates when you change an SDK interface:
+
+__*[lib/bindings](lib/bindings)*__
+* [lib.rs](lib/bindings/src/lib.rs) - Update the Rust interface for the UniFFI bindings.
+* [breez_sdk_liquid.udl](lib/bindings/src/breez_sdk_liquid.udl) - Update the UniFFI interface definition language file.
+
+__*[lib/core](lib/core)*__
+* [bindings.rs](lib/core/src/bindings.rs) - Update the Rust interface for the Flutter Rust Bridge bindings.
+
+After making these changes the [Dart](packages/dart), [Flutter](packages/flutter) and [React Native](packages/react-native) bindings code also need to be regenerated and included in your pull request. You can regenerate these from the project root using `make codegen`. Please see the prerequisites for [Flutter](lib/bindings/langs/flutter/README.md) and [React Native](packages/react-native/DEVELOPING.md) if this is your first time generating code.
+
+#### Testing
 Please adequately test your code using the existing tests and write additional tests for new features. You can run the tests from the project root using `make test`. You can also make use of the [CLI](cli) to test changes while developing your feature.
 
 ## Pull requests
