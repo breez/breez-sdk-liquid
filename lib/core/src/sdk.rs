@@ -108,13 +108,13 @@ impl LiquidSdk {
         let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
 
         let signer = match (req.mnemonic, req.seed) {
-            (_, Some(seed)) => Box::new(SdkSigner::new_with_seed(seed, is_mainnet)?),
-            (Some(mnemonic), _) => Box::new(SdkSigner::new(
+            (None, Some(seed)) => Box::new(SdkSigner::new_with_seed(seed, is_mainnet)?),
+            (Some(mnemonic), None) => Box::new(SdkSigner::new(
                 &mnemonic,
                 req.passphrase.unwrap_or("".to_string()).as_ref(),
                 is_mainnet,
             )?),
-            _ => return Err(anyhow!("Missing required `mnemonic` or `seed`")),
+            _ => return Err(anyhow!("Either `mnemonic` or `seed` must be set")),
         };
 
         let sdk =
