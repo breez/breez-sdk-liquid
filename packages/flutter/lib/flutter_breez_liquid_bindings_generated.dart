@@ -5036,6 +5036,8 @@ final class wire_cst_connect_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> mnemonic;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> passphrase;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> seed;
 }
 
 final class wire_cst_bitcoin_address_data extends ffi.Struct {

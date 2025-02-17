@@ -352,8 +352,9 @@ enum LiquidNetwork {
 
 dictionary ConnectRequest {
     Config config;    
-    string mnemonic;
+    string? mnemonic = null;
     string? passphrase = null;
+    sequence<u8>? seed = null;
 };
 
 dictionary ConnectWithSignerRequest {

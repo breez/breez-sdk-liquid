@@ -100,16 +100,22 @@ impl LiquidSdk {
     ///
     /// * `req` - the [ConnectRequest] containing:
     ///     * `config` - the SDK [Config]
-    ///     * `mnemonic` - the Liquid wallet mnemonic
-    ///     * `passphrase` - the optional passphrase for the seed
+    ///     * `mnemonic` - the optional Liquid wallet mnemonic
+    ///     * `passphrase` - the optional passphrase for the mnemonic
+    ///     * `seed` - the optional Liquid wallet seed
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
+        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
 
-        let signer = Box::new(SdkSigner::new(
-            req.mnemonic.as_ref(),
-            req.passphrase.unwrap_or("".to_string()).as_ref(),
-            req.config.network == LiquidNetwork::Mainnet,
-        )?);
+        let signer = match (req.mnemonic, req.seed) {
+            (None, Some(seed)) => Box::new(SdkSigner::new_with_seed(seed, is_mainnet)?),
+            (Some(mnemonic), None) => Box::new(SdkSigner::new(
+                &mnemonic,
+                req.passphrase.unwrap_or("".to_string()).as_ref(),
+                is_mainnet,
+            )?),
+            _ => return Err(anyhow!("Either `mnemonic` or `seed` must be set")),
+        };
 
         let sdk =
             Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)

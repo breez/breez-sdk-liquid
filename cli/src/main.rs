@@ -97,8 +97,9 @@ async fn main() -> Result<()> {
     }
     let sdk = LiquidSdk::connect(ConnectRequest {
         config,
-        mnemonic: mnemonic.to_string(),
+        mnemonic: Some(mnemonic.to_string()),
         passphrase,
+        seed: None,
     })
     .await?;
     let listener_id = sdk

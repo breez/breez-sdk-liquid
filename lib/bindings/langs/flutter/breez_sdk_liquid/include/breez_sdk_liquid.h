@@ -677,6 +677,7 @@ typedef struct wire_cst_connect_request {
   struct wire_cst_config config;
   struct wire_cst_list_prim_u_8_strict *mnemonic;
   struct wire_cst_list_prim_u_8_strict *passphrase;
+  struct wire_cst_list_prim_u_8_strict *seed;
 } wire_cst_connect_request;
 
 typedef struct wire_cst_bitcoin_address_data {
