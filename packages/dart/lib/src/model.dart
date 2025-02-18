@@ -275,9 +275,6 @@ class Config {
   /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
   final BigInt paymentTimeoutSec;
 
-  /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
-  final int zeroConfMinFeeRateMsat;
-
   /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
   /// Setting this field to `None` will disable the service
   final String? syncServiceUrl;
@@ -321,7 +318,6 @@ class Config {
     this.cacheDir,
     required this.network,
     required this.paymentTimeoutSec,
-    required this.zeroConfMinFeeRateMsat,
     this.syncServiceUrl,
     this.zeroConfMaxAmountSat,
     this.breezApiKey,
@@ -340,7 +336,6 @@ class Config {
       cacheDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
-      zeroConfMinFeeRateMsat.hashCode ^
       syncServiceUrl.hashCode ^
       zeroConfMaxAmountSat.hashCode ^
       breezApiKey.hashCode ^
@@ -361,7 +356,6 @@ class Config {
           cacheDir == other.cacheDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
-          zeroConfMinFeeRateMsat == other.zeroConfMinFeeRateMsat &&
           syncServiceUrl == other.syncServiceUrl &&
           zeroConfMaxAmountSat == other.zeroConfMaxAmountSat &&
           breezApiKey == other.breezApiKey &&

@@ -21,8 +21,6 @@ use crate::{
     wallet::OnchainWallet,
 };
 
-/// The minimum acceptable fee rate when claiming using zero-conf
-pub const DEFAULT_ZERO_CONF_MIN_FEE_RATE: u32 = 100;
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
 
@@ -166,21 +164,7 @@ impl ReceiveSwapHandler {
                     warn!("[Receive Swap {id}] Lockup transaction signals RBF. Waiting for confirmation...");
                     return Ok(());
                 }
-
                 debug!("[Receive Swap {id}] Lockup tx does not signal RBF. Proceeding...");
-
-                // If the fees are higher than our estimated value
-                let tx_fees: u64 = lockup_tx.all_fees().values().sum();
-                let min_fee_rate = self.config.zero_conf_min_fee_rate_msat as f32 / 1000.0;
-                let lower_bound_estimated_fees =
-                    lockup_tx.discount_vsize() as f32 * min_fee_rate * 0.8;
-
-                if lower_bound_estimated_fees > tx_fees as f32 {
-                    warn!("[Receive Swap {id}] Lockup tx fees are too low: Expected at least {lower_bound_estimated_fees} sat, got {tx_fees} sat. Waiting for confirmation...");
-                    return Ok(());
-                }
-
-                debug!("[Receive Swap {id}] Lockup tx fees are within acceptable range ({tx_fees} > {lower_bound_estimated_fees} sat). Proceeding with claim.");
 
                 if receive_swap.metadata.is_local {
                     // Only claim a local swap
