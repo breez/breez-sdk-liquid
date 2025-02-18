@@ -23,11 +23,6 @@ typedef struct _Dart_Handle* Dart_Handle;
 #define LIQUID_FEE_RATE_MSAT_PER_VBYTE (float)(LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0)
 
 /**
- * The minimum acceptable fee rate when claiming using zero-conf
- */
-#define DEFAULT_ZERO_CONF_MIN_FEE_RATE 100
-
-/**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
  */
 #define DEFAULT_ZERO_CONF_MAX_SAT 1000000
@@ -663,7 +658,6 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *cache_dir;
   int32_t network;
   uint64_t payment_timeout_sec;
-  uint32_t zero_conf_min_fee_rate_msat;
   struct wire_cst_list_prim_u_8_strict *sync_service_url;
   uint64_t *zero_conf_max_amount_sat;
   struct wire_cst_list_prim_u_8_strict *breez_api_key;
