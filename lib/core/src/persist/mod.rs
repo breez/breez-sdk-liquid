@@ -754,7 +754,8 @@ impl Persister {
                 claim_tx_id: maybe_claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
-                description: description.unwrap_or("Lightning transfer".to_string()),
+                description: maybe_payment_details_description
+                    .unwrap_or(description.unwrap_or("Lightning transfer".to_string())),
                 liquid_expiration_blockheight: expiration_blockheight,
             },
             Some(PaymentSwapData {
