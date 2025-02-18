@@ -3355,6 +3355,11 @@ impl LiquidSdk {
             None => None,
         };
 
+        let description = payment
+            .details
+            .get_description()
+            .or_else(|| extract_description_from_metadata(&prepare_response.data));
+
         let lnurl_pay_domain = match prepare_response.data.ln_address {
             Some(_) => None,
             None => Some(prepare_response.data.domain),
@@ -3366,7 +3371,7 @@ impl LiquidSdk {
                 .insert_or_update_payment_details(PaymentTxDetails {
                     tx_id,
                     destination,
-                    description: prepare_response.comment.clone(),
+                    description,
                     lnurl_info: Some(LnUrlInfo {
                         ln_address: prepare_response.data.ln_address,
                         lnurl_pay_comment: prepare_response.comment,
@@ -3575,6 +3580,18 @@ impl LiquidSdk {
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
     }
+}
+
+/// Extracts `description` from `metadata_str`
+fn extract_description_from_metadata(request_data: &LnUrlPayRequestData) -> Option<String> {
+    let metadata = request_data.metadata_vec().ok()?;
+    metadata
+        .iter()
+        .find(|item| item.key == "text/plain")
+        .map(|item| {
+            info!("Extracted payment description: '{}'", item.value);
+            item.value.clone()
+        })
 }
 
 #[cfg(test)]

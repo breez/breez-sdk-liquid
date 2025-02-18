@@ -19,6 +19,7 @@ use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
+use log::warn;
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use model::PaymentTxDetails;
@@ -145,7 +146,7 @@ impl Persister {
                 (asset_id, payment_type, amount)
             }
             None => {
-                log::warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
+                warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
                 return Ok(());
             }
         };
@@ -753,7 +754,8 @@ impl Persister {
                 claim_tx_id: maybe_claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
-                description: description.unwrap_or("Lightning transfer".to_string()),
+                description: maybe_payment_details_description
+                    .unwrap_or(description.unwrap_or("Lightning transfer".to_string())),
                 liquid_expiration_blockheight: expiration_blockheight,
             },
             Some(PaymentSwapData {

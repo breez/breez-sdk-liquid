@@ -1704,6 +1704,14 @@ impl PaymentDetails {
         }
     }
 
+    pub(crate) fn get_description(&self) -> Option<String> {
+        match self {
+            Self::Lightning { description, .. }
+            | Self::Bitcoin { description, .. }
+            | Self::Liquid { description, .. } => Some(description.clone()),
+        }
+    }
+
     pub(crate) fn is_lbtc_asset_id(&self, network: LiquidNetwork) -> bool {
         match self {
             Self::Liquid { asset_id, .. } => {
