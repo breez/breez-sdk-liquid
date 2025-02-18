@@ -24,7 +24,7 @@ use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkError, SdkResult};
 use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
-use crate::receive_swap::{DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE};
+use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
 
 // Uses f64 for the maximum precision when converting between units
@@ -48,8 +48,6 @@ pub struct Config {
     pub network: LiquidNetwork,
     /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
     pub payment_timeout_sec: u64,
-    /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
-    pub zero_conf_min_fee_rate_msat: u32,
     /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
     /// Setting this field to `None` will disable the service
     pub sync_service_url: Option<String>,
@@ -90,7 +88,6 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key,
@@ -110,7 +107,6 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key,
@@ -130,7 +126,6 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE,
             sync_service_url: Some("http://localhost:8088".to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key: None,

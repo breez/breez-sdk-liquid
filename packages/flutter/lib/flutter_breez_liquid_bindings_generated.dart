@@ -5011,9 +5011,6 @@ final class wire_cst_config extends ffi.Struct {
   @ffi.Uint64()
   external int payment_timeout_sec;
 
-  @ffi.Uint32()
-  external int zero_conf_min_fee_rate_msat;
-
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> sync_service_url;
 
   external ffi.Pointer<ffi.Uint64> zero_conf_max_amount_sat;
@@ -5742,8 +5739,6 @@ const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 const double LIQUID_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LIQUID_FEE_RATE_MSAT_PER_VBYTE = 100.0;
-
-const int DEFAULT_ZERO_CONF_MIN_FEE_RATE = 100;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 1000000;
 

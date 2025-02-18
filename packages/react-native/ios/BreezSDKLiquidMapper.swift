@@ -512,9 +512,6 @@ enum BreezSDKLiquidMapper {
         guard let paymentTimeoutSec = config["paymentTimeoutSec"] as? UInt64 else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "paymentTimeoutSec", typeName: "Config"))
         }
-        guard let zeroConfMinFeeRateMsat = config["zeroConfMinFeeRateMsat"] as? UInt32 else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "zeroConfMinFeeRateMsat", typeName: "Config"))
-        }
         var syncServiceUrl: String?
         if hasNonNilKey(data: config, key: "syncServiceUrl") {
             guard let syncServiceUrlTmp = config["syncServiceUrl"] as? String else {
@@ -563,7 +560,7 @@ enum BreezSDKLiquidMapper {
             assetMetadata = try asAssetMetadataList(arr: assetMetadataTmp)
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, zeroConfMinFeeRateMsat: zeroConfMinFeeRateMsat, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
+        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -574,7 +571,6 @@ enum BreezSDKLiquidMapper {
             "workingDir": config.workingDir,
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
-            "zeroConfMinFeeRateMsat": config.zeroConfMinFeeRateMsat,
             "syncServiceUrl": config.syncServiceUrl == nil ? nil : config.syncServiceUrl,
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "cacheDir": config.cacheDir == nil ? nil : config.cacheDir,

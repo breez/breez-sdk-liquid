@@ -94,7 +94,6 @@ export interface Config {
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
-    zeroConfMinFeeRateMsat: number
     syncServiceUrl?: string
     breezApiKey?: string
     cacheDir?: string

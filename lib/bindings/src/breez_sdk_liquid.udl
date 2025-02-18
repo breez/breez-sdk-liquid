@@ -333,7 +333,6 @@ dictionary Config {
     string working_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
-    u32 zero_conf_min_fee_rate_msat;
     string? sync_service_url;
     string? breez_api_key;
     string? cache_dir;
