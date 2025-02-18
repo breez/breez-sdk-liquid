@@ -3349,7 +3349,10 @@ impl LiquidSdk {
             None => None,
         };
 
-        let description = extract_description_from_metadata(&prepare_response.data);
+        let description = payment
+            .details
+            .get_description()
+            .or_else(|| extract_description_from_metadata(&prepare_response.data));
 
         let lnurl_pay_domain = match prepare_response.data.ln_address {
             Some(_) => None,
