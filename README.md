@@ -90,7 +90,9 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  Bolt12 send
 - [x]  BIP353 pay codes
 - [x]  Amountless BTC swaps
-- [ ]  Support USTD as an asset
+- [x]  Support USTD and other Liquid assets
+- [ ]  USDT <-> LBTC swaps
+- [ ]  Pay fees with USDT
 - [ ]  Bolt12 receive
 - [ ]  Lower minimum payment amount
 - [ ]  TLV support
