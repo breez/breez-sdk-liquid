@@ -21,7 +21,7 @@ boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "198
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.7.0", features = [
+flutter_rust_bridge = { version = "=2.8.0", features = [
     "chrono",
 ], optional = true }
 log = { workspace = true }

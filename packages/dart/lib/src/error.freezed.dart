@@ -12,7 +12,8 @@ part of 'error.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 /// @nodoc
 mixin _$PaymentError {}
@@ -39,8 +40,9 @@ class _$PaymentErrorCopyWithImpl<$Res, $Val extends PaymentError> implements $Pa
 /// @nodoc
 abstract class _$$PaymentError_AlreadyClaimedImplCopyWith<$Res> {
   factory _$$PaymentError_AlreadyClaimedImplCopyWith(
-          _$PaymentError_AlreadyClaimedImpl value, $Res Function(_$PaymentError_AlreadyClaimedImpl) then) =
-      __$$PaymentError_AlreadyClaimedImplCopyWithImpl<$Res>;
+    _$PaymentError_AlreadyClaimedImpl value,
+    $Res Function(_$PaymentError_AlreadyClaimedImpl) then,
+  ) = __$$PaymentError_AlreadyClaimedImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -48,8 +50,9 @@ class __$$PaymentError_AlreadyClaimedImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AlreadyClaimedImpl>
     implements _$$PaymentError_AlreadyClaimedImplCopyWith<$Res> {
   __$$PaymentError_AlreadyClaimedImplCopyWithImpl(
-      _$PaymentError_AlreadyClaimedImpl _value, $Res Function(_$PaymentError_AlreadyClaimedImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_AlreadyClaimedImpl _value,
+    $Res Function(_$PaymentError_AlreadyClaimedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -83,8 +86,9 @@ abstract class PaymentError_AlreadyClaimed extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_AlreadyPaidImplCopyWith<$Res> {
   factory _$$PaymentError_AlreadyPaidImplCopyWith(
-          _$PaymentError_AlreadyPaidImpl value, $Res Function(_$PaymentError_AlreadyPaidImpl) then) =
-      __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>;
+    _$PaymentError_AlreadyPaidImpl value,
+    $Res Function(_$PaymentError_AlreadyPaidImpl) then,
+  ) = __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -92,8 +96,9 @@ class __$$PaymentError_AlreadyPaidImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AlreadyPaidImpl>
     implements _$$PaymentError_AlreadyPaidImplCopyWith<$Res> {
   __$$PaymentError_AlreadyPaidImplCopyWithImpl(
-      _$PaymentError_AlreadyPaidImpl _value, $Res Function(_$PaymentError_AlreadyPaidImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_AlreadyPaidImpl _value,
+    $Res Function(_$PaymentError_AlreadyPaidImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -126,9 +131,10 @@ abstract class PaymentError_AlreadyPaid extends PaymentError {
 
 /// @nodoc
 abstract class _$$PaymentError_PaymentInProgressImplCopyWith<$Res> {
-  factory _$$PaymentError_PaymentInProgressImplCopyWith(_$PaymentError_PaymentInProgressImpl value,
-          $Res Function(_$PaymentError_PaymentInProgressImpl) then) =
-      __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>;
+  factory _$$PaymentError_PaymentInProgressImplCopyWith(
+    _$PaymentError_PaymentInProgressImpl value,
+    $Res Function(_$PaymentError_PaymentInProgressImpl) then,
+  ) = __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -136,8 +142,9 @@ class __$$PaymentError_PaymentInProgressImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PaymentInProgressImpl>
     implements _$$PaymentError_PaymentInProgressImplCopyWith<$Res> {
   __$$PaymentError_PaymentInProgressImplCopyWithImpl(
-      _$PaymentError_PaymentInProgressImpl _value, $Res Function(_$PaymentError_PaymentInProgressImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_PaymentInProgressImpl _value,
+    $Res Function(_$PaymentError_PaymentInProgressImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -170,9 +177,10 @@ abstract class PaymentError_PaymentInProgress extends PaymentError {
 
 /// @nodoc
 abstract class _$$PaymentError_AmountOutOfRangeImplCopyWith<$Res> {
-  factory _$$PaymentError_AmountOutOfRangeImplCopyWith(_$PaymentError_AmountOutOfRangeImpl value,
-          $Res Function(_$PaymentError_AmountOutOfRangeImpl) then) =
-      __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>;
+  factory _$$PaymentError_AmountOutOfRangeImplCopyWith(
+    _$PaymentError_AmountOutOfRangeImpl value,
+    $Res Function(_$PaymentError_AmountOutOfRangeImpl) then,
+  ) = __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -180,8 +188,9 @@ class __$$PaymentError_AmountOutOfRangeImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AmountOutOfRangeImpl>
     implements _$$PaymentError_AmountOutOfRangeImplCopyWith<$Res> {
   __$$PaymentError_AmountOutOfRangeImplCopyWithImpl(
-      _$PaymentError_AmountOutOfRangeImpl _value, $Res Function(_$PaymentError_AmountOutOfRangeImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_AmountOutOfRangeImpl _value,
+    $Res Function(_$PaymentError_AmountOutOfRangeImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -215,8 +224,9 @@ abstract class PaymentError_AmountOutOfRange extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_AmountMissingImplCopyWith<$Res> {
   factory _$$PaymentError_AmountMissingImplCopyWith(
-          _$PaymentError_AmountMissingImpl value, $Res Function(_$PaymentError_AmountMissingImpl) then) =
-      __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>;
+    _$PaymentError_AmountMissingImpl value,
+    $Res Function(_$PaymentError_AmountMissingImpl) then,
+  ) = __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -226,22 +236,24 @@ class __$$PaymentError_AmountMissingImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AmountMissingImpl>
     implements _$$PaymentError_AmountMissingImplCopyWith<$Res> {
   __$$PaymentError_AmountMissingImplCopyWithImpl(
-      _$PaymentError_AmountMissingImpl _value, $Res Function(_$PaymentError_AmountMissingImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_AmountMissingImpl _value,
+    $Res Function(_$PaymentError_AmountMissingImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_AmountMissingImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_AmountMissingImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -294,8 +306,9 @@ abstract class PaymentError_AmountMissing extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_AssetErrorImplCopyWith<$Res> {
   factory _$$PaymentError_AssetErrorImplCopyWith(
-          _$PaymentError_AssetErrorImpl value, $Res Function(_$PaymentError_AssetErrorImpl) then) =
-      __$$PaymentError_AssetErrorImplCopyWithImpl<$Res>;
+    _$PaymentError_AssetErrorImpl value,
+    $Res Function(_$PaymentError_AssetErrorImpl) then,
+  ) = __$$PaymentError_AssetErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -305,22 +318,24 @@ class __$$PaymentError_AssetErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_AssetErrorImpl>
     implements _$$PaymentError_AssetErrorImplCopyWith<$Res> {
   __$$PaymentError_AssetErrorImplCopyWithImpl(
-      _$PaymentError_AssetErrorImpl _value, $Res Function(_$PaymentError_AssetErrorImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_AssetErrorImpl _value,
+    $Res Function(_$PaymentError_AssetErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_AssetErrorImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_AssetErrorImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -373,8 +388,9 @@ abstract class PaymentError_AssetError extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_InvalidNetworkImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidNetworkImplCopyWith(
-          _$PaymentError_InvalidNetworkImpl value, $Res Function(_$PaymentError_InvalidNetworkImpl) then) =
-      __$$PaymentError_InvalidNetworkImplCopyWithImpl<$Res>;
+    _$PaymentError_InvalidNetworkImpl value,
+    $Res Function(_$PaymentError_InvalidNetworkImpl) then,
+  ) = __$$PaymentError_InvalidNetworkImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -384,22 +400,24 @@ class __$$PaymentError_InvalidNetworkImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidNetworkImpl>
     implements _$$PaymentError_InvalidNetworkImplCopyWith<$Res> {
   __$$PaymentError_InvalidNetworkImplCopyWithImpl(
-      _$PaymentError_InvalidNetworkImpl _value, $Res Function(_$PaymentError_InvalidNetworkImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_InvalidNetworkImpl _value,
+    $Res Function(_$PaymentError_InvalidNetworkImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_InvalidNetworkImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_InvalidNetworkImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -452,8 +470,9 @@ abstract class PaymentError_InvalidNetwork extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_GenericImplCopyWith<$Res> {
   factory _$$PaymentError_GenericImplCopyWith(
-          _$PaymentError_GenericImpl value, $Res Function(_$PaymentError_GenericImpl) then) =
-      __$$PaymentError_GenericImplCopyWithImpl<$Res>;
+    _$PaymentError_GenericImpl value,
+    $Res Function(_$PaymentError_GenericImpl) then,
+  ) = __$$PaymentError_GenericImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -463,22 +482,24 @@ class __$$PaymentError_GenericImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_GenericImpl>
     implements _$$PaymentError_GenericImplCopyWith<$Res> {
   __$$PaymentError_GenericImplCopyWithImpl(
-      _$PaymentError_GenericImpl _value, $Res Function(_$PaymentError_GenericImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_GenericImpl _value,
+    $Res Function(_$PaymentError_GenericImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_GenericImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_GenericImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -530,18 +551,20 @@ abstract class PaymentError_Generic extends PaymentError {
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidOrExpiredFeesImplCopyWith<$Res> {
-  factory _$$PaymentError_InvalidOrExpiredFeesImplCopyWith(_$PaymentError_InvalidOrExpiredFeesImpl value,
-          $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) then) =
-      __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>;
+  factory _$$PaymentError_InvalidOrExpiredFeesImplCopyWith(
+    _$PaymentError_InvalidOrExpiredFeesImpl value,
+    $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) then,
+  ) = __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
 class __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidOrExpiredFeesImpl>
     implements _$$PaymentError_InvalidOrExpiredFeesImplCopyWith<$Res> {
-  __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl(_$PaymentError_InvalidOrExpiredFeesImpl _value,
-      $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) _then)
-      : super(_value, _then);
+  __$$PaymentError_InvalidOrExpiredFeesImplCopyWithImpl(
+    _$PaymentError_InvalidOrExpiredFeesImpl _value,
+    $Res Function(_$PaymentError_InvalidOrExpiredFeesImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -574,9 +597,10 @@ abstract class PaymentError_InvalidOrExpiredFees extends PaymentError {
 
 /// @nodoc
 abstract class _$$PaymentError_InsufficientFundsImplCopyWith<$Res> {
-  factory _$$PaymentError_InsufficientFundsImplCopyWith(_$PaymentError_InsufficientFundsImpl value,
-          $Res Function(_$PaymentError_InsufficientFundsImpl) then) =
-      __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>;
+  factory _$$PaymentError_InsufficientFundsImplCopyWith(
+    _$PaymentError_InsufficientFundsImpl value,
+    $Res Function(_$PaymentError_InsufficientFundsImpl) then,
+  ) = __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -584,8 +608,9 @@ class __$$PaymentError_InsufficientFundsImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InsufficientFundsImpl>
     implements _$$PaymentError_InsufficientFundsImplCopyWith<$Res> {
   __$$PaymentError_InsufficientFundsImplCopyWithImpl(
-      _$PaymentError_InsufficientFundsImpl _value, $Res Function(_$PaymentError_InsufficientFundsImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_InsufficientFundsImpl _value,
+    $Res Function(_$PaymentError_InsufficientFundsImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -618,9 +643,10 @@ abstract class PaymentError_InsufficientFunds extends PaymentError {
 
 /// @nodoc
 abstract class _$$PaymentError_InvalidDescriptionImplCopyWith<$Res> {
-  factory _$$PaymentError_InvalidDescriptionImplCopyWith(_$PaymentError_InvalidDescriptionImpl value,
-          $Res Function(_$PaymentError_InvalidDescriptionImpl) then) =
-      __$$PaymentError_InvalidDescriptionImplCopyWithImpl<$Res>;
+  factory _$$PaymentError_InvalidDescriptionImplCopyWith(
+    _$PaymentError_InvalidDescriptionImpl value,
+    $Res Function(_$PaymentError_InvalidDescriptionImpl) then,
+  ) = __$$PaymentError_InvalidDescriptionImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -629,23 +655,25 @@ abstract class _$$PaymentError_InvalidDescriptionImplCopyWith<$Res> {
 class __$$PaymentError_InvalidDescriptionImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidDescriptionImpl>
     implements _$$PaymentError_InvalidDescriptionImplCopyWith<$Res> {
-  __$$PaymentError_InvalidDescriptionImplCopyWithImpl(_$PaymentError_InvalidDescriptionImpl _value,
-      $Res Function(_$PaymentError_InvalidDescriptionImpl) _then)
-      : super(_value, _then);
+  __$$PaymentError_InvalidDescriptionImplCopyWithImpl(
+    _$PaymentError_InvalidDescriptionImpl _value,
+    $Res Function(_$PaymentError_InvalidDescriptionImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_InvalidDescriptionImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_InvalidDescriptionImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -680,7 +708,9 @@ class _$PaymentError_InvalidDescriptionImpl extends PaymentError_InvalidDescript
   @pragma('vm:prefer-inline')
   _$$PaymentError_InvalidDescriptionImplCopyWith<_$PaymentError_InvalidDescriptionImpl> get copyWith =>
       __$$PaymentError_InvalidDescriptionImplCopyWithImpl<_$PaymentError_InvalidDescriptionImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class PaymentError_InvalidDescription extends PaymentError {
@@ -700,8 +730,9 @@ abstract class PaymentError_InvalidDescription extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_InvalidInvoiceImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidInvoiceImplCopyWith(
-          _$PaymentError_InvalidInvoiceImpl value, $Res Function(_$PaymentError_InvalidInvoiceImpl) then) =
-      __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>;
+    _$PaymentError_InvalidInvoiceImpl value,
+    $Res Function(_$PaymentError_InvalidInvoiceImpl) then,
+  ) = __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -711,22 +742,24 @@ class __$$PaymentError_InvalidInvoiceImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidInvoiceImpl>
     implements _$$PaymentError_InvalidInvoiceImplCopyWith<$Res> {
   __$$PaymentError_InvalidInvoiceImplCopyWithImpl(
-      _$PaymentError_InvalidInvoiceImpl _value, $Res Function(_$PaymentError_InvalidInvoiceImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_InvalidInvoiceImpl _value,
+    $Res Function(_$PaymentError_InvalidInvoiceImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_InvalidInvoiceImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_InvalidInvoiceImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -779,8 +812,9 @@ abstract class PaymentError_InvalidInvoice extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_InvalidPreimageImplCopyWith<$Res> {
   factory _$$PaymentError_InvalidPreimageImplCopyWith(
-          _$PaymentError_InvalidPreimageImpl value, $Res Function(_$PaymentError_InvalidPreimageImpl) then) =
-      __$$PaymentError_InvalidPreimageImplCopyWithImpl<$Res>;
+    _$PaymentError_InvalidPreimageImpl value,
+    $Res Function(_$PaymentError_InvalidPreimageImpl) then,
+  ) = __$$PaymentError_InvalidPreimageImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -788,8 +822,9 @@ class __$$PaymentError_InvalidPreimageImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_InvalidPreimageImpl>
     implements _$$PaymentError_InvalidPreimageImplCopyWith<$Res> {
   __$$PaymentError_InvalidPreimageImplCopyWithImpl(
-      _$PaymentError_InvalidPreimageImpl _value, $Res Function(_$PaymentError_InvalidPreimageImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_InvalidPreimageImpl _value,
+    $Res Function(_$PaymentError_InvalidPreimageImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -823,8 +858,9 @@ abstract class PaymentError_InvalidPreimage extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_LwkErrorImplCopyWith<$Res> {
   factory _$$PaymentError_LwkErrorImplCopyWith(
-          _$PaymentError_LwkErrorImpl value, $Res Function(_$PaymentError_LwkErrorImpl) then) =
-      __$$PaymentError_LwkErrorImplCopyWithImpl<$Res>;
+    _$PaymentError_LwkErrorImpl value,
+    $Res Function(_$PaymentError_LwkErrorImpl) then,
+  ) = __$$PaymentError_LwkErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -834,22 +870,24 @@ class __$$PaymentError_LwkErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_LwkErrorImpl>
     implements _$$PaymentError_LwkErrorImplCopyWith<$Res> {
   __$$PaymentError_LwkErrorImplCopyWithImpl(
-      _$PaymentError_LwkErrorImpl _value, $Res Function(_$PaymentError_LwkErrorImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_LwkErrorImpl _value,
+    $Res Function(_$PaymentError_LwkErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_LwkErrorImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_LwkErrorImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -902,8 +940,9 @@ abstract class PaymentError_LwkError extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_PairsNotFoundImplCopyWith<$Res> {
   factory _$$PaymentError_PairsNotFoundImplCopyWith(
-          _$PaymentError_PairsNotFoundImpl value, $Res Function(_$PaymentError_PairsNotFoundImpl) then) =
-      __$$PaymentError_PairsNotFoundImplCopyWithImpl<$Res>;
+    _$PaymentError_PairsNotFoundImpl value,
+    $Res Function(_$PaymentError_PairsNotFoundImpl) then,
+  ) = __$$PaymentError_PairsNotFoundImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -911,8 +950,9 @@ class __$$PaymentError_PairsNotFoundImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PairsNotFoundImpl>
     implements _$$PaymentError_PairsNotFoundImplCopyWith<$Res> {
   __$$PaymentError_PairsNotFoundImplCopyWithImpl(
-      _$PaymentError_PairsNotFoundImpl _value, $Res Function(_$PaymentError_PairsNotFoundImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_PairsNotFoundImpl _value,
+    $Res Function(_$PaymentError_PairsNotFoundImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -946,8 +986,9 @@ abstract class PaymentError_PairsNotFound extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_PaymentTimeoutImplCopyWith<$Res> {
   factory _$$PaymentError_PaymentTimeoutImplCopyWith(
-          _$PaymentError_PaymentTimeoutImpl value, $Res Function(_$PaymentError_PaymentTimeoutImpl) then) =
-      __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>;
+    _$PaymentError_PaymentTimeoutImpl value,
+    $Res Function(_$PaymentError_PaymentTimeoutImpl) then,
+  ) = __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -955,8 +996,9 @@ class __$$PaymentError_PaymentTimeoutImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PaymentTimeoutImpl>
     implements _$$PaymentError_PaymentTimeoutImplCopyWith<$Res> {
   __$$PaymentError_PaymentTimeoutImplCopyWithImpl(
-      _$PaymentError_PaymentTimeoutImpl _value, $Res Function(_$PaymentError_PaymentTimeoutImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_PaymentTimeoutImpl _value,
+    $Res Function(_$PaymentError_PaymentTimeoutImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -990,8 +1032,9 @@ abstract class PaymentError_PaymentTimeout extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_PersistErrorImplCopyWith<$Res> {
   factory _$$PaymentError_PersistErrorImplCopyWith(
-          _$PaymentError_PersistErrorImpl value, $Res Function(_$PaymentError_PersistErrorImpl) then) =
-      __$$PaymentError_PersistErrorImplCopyWithImpl<$Res>;
+    _$PaymentError_PersistErrorImpl value,
+    $Res Function(_$PaymentError_PersistErrorImpl) then,
+  ) = __$$PaymentError_PersistErrorImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -999,8 +1042,9 @@ class __$$PaymentError_PersistErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_PersistErrorImpl>
     implements _$$PaymentError_PersistErrorImplCopyWith<$Res> {
   __$$PaymentError_PersistErrorImplCopyWithImpl(
-      _$PaymentError_PersistErrorImpl _value, $Res Function(_$PaymentError_PersistErrorImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_PersistErrorImpl _value,
+    $Res Function(_$PaymentError_PersistErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -1034,8 +1078,9 @@ abstract class PaymentError_PersistError extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_ReceiveErrorImplCopyWith<$Res> {
   factory _$$PaymentError_ReceiveErrorImplCopyWith(
-          _$PaymentError_ReceiveErrorImpl value, $Res Function(_$PaymentError_ReceiveErrorImpl) then) =
-      __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>;
+    _$PaymentError_ReceiveErrorImpl value,
+    $Res Function(_$PaymentError_ReceiveErrorImpl) then,
+  ) = __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1045,22 +1090,24 @@ class __$$PaymentError_ReceiveErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_ReceiveErrorImpl>
     implements _$$PaymentError_ReceiveErrorImplCopyWith<$Res> {
   __$$PaymentError_ReceiveErrorImplCopyWithImpl(
-      _$PaymentError_ReceiveErrorImpl _value, $Res Function(_$PaymentError_ReceiveErrorImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_ReceiveErrorImpl _value,
+    $Res Function(_$PaymentError_ReceiveErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_ReceiveErrorImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_ReceiveErrorImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1113,8 +1160,9 @@ abstract class PaymentError_ReceiveError extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_RefundedImplCopyWith<$Res> {
   factory _$$PaymentError_RefundedImplCopyWith(
-          _$PaymentError_RefundedImpl value, $Res Function(_$PaymentError_RefundedImpl) then) =
-      __$$PaymentError_RefundedImplCopyWithImpl<$Res>;
+    _$PaymentError_RefundedImpl value,
+    $Res Function(_$PaymentError_RefundedImpl) then,
+  ) = __$$PaymentError_RefundedImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err, String refundTxId});
 }
@@ -1124,27 +1172,29 @@ class __$$PaymentError_RefundedImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_RefundedImpl>
     implements _$$PaymentError_RefundedImplCopyWith<$Res> {
   __$$PaymentError_RefundedImplCopyWithImpl(
-      _$PaymentError_RefundedImpl _value, $Res Function(_$PaymentError_RefundedImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_RefundedImpl _value,
+    $Res Function(_$PaymentError_RefundedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-    Object? refundTxId = null,
-  }) {
-    return _then(_$PaymentError_RefundedImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-      refundTxId: null == refundTxId
-          ? _value.refundTxId
-          : refundTxId // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null, Object? refundTxId = null}) {
+    return _then(
+      _$PaymentError_RefundedImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+        refundTxId:
+            null == refundTxId
+                ? _value.refundTxId
+                : refundTxId // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1202,9 +1252,9 @@ abstract class PaymentError_Refunded extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_SelfTransferNotSupportedImplCopyWith<$Res> {
   factory _$$PaymentError_SelfTransferNotSupportedImplCopyWith(
-          _$PaymentError_SelfTransferNotSupportedImpl value,
-          $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) then) =
-      __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>;
+    _$PaymentError_SelfTransferNotSupportedImpl value,
+    $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) then,
+  ) = __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -1212,9 +1262,9 @@ class __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SelfTransferNotSupportedImpl>
     implements _$$PaymentError_SelfTransferNotSupportedImplCopyWith<$Res> {
   __$$PaymentError_SelfTransferNotSupportedImplCopyWithImpl(
-      _$PaymentError_SelfTransferNotSupportedImpl _value,
-      $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_SelfTransferNotSupportedImpl _value,
+    $Res Function(_$PaymentError_SelfTransferNotSupportedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
@@ -1248,8 +1298,9 @@ abstract class PaymentError_SelfTransferNotSupported extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_SendErrorImplCopyWith<$Res> {
   factory _$$PaymentError_SendErrorImplCopyWith(
-          _$PaymentError_SendErrorImpl value, $Res Function(_$PaymentError_SendErrorImpl) then) =
-      __$$PaymentError_SendErrorImplCopyWithImpl<$Res>;
+    _$PaymentError_SendErrorImpl value,
+    $Res Function(_$PaymentError_SendErrorImpl) then,
+  ) = __$$PaymentError_SendErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1259,22 +1310,24 @@ class __$$PaymentError_SendErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SendErrorImpl>
     implements _$$PaymentError_SendErrorImplCopyWith<$Res> {
   __$$PaymentError_SendErrorImplCopyWithImpl(
-      _$PaymentError_SendErrorImpl _value, $Res Function(_$PaymentError_SendErrorImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_SendErrorImpl _value,
+    $Res Function(_$PaymentError_SendErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_SendErrorImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_SendErrorImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1327,8 +1380,9 @@ abstract class PaymentError_SendError extends PaymentError {
 /// @nodoc
 abstract class _$$PaymentError_SignerErrorImplCopyWith<$Res> {
   factory _$$PaymentError_SignerErrorImplCopyWith(
-          _$PaymentError_SignerErrorImpl value, $Res Function(_$PaymentError_SignerErrorImpl) then) =
-      __$$PaymentError_SignerErrorImplCopyWithImpl<$Res>;
+    _$PaymentError_SignerErrorImpl value,
+    $Res Function(_$PaymentError_SignerErrorImpl) then,
+  ) = __$$PaymentError_SignerErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1338,22 +1392,24 @@ class __$$PaymentError_SignerErrorImplCopyWithImpl<$Res>
     extends _$PaymentErrorCopyWithImpl<$Res, _$PaymentError_SignerErrorImpl>
     implements _$$PaymentError_SignerErrorImplCopyWith<$Res> {
   __$$PaymentError_SignerErrorImplCopyWithImpl(
-      _$PaymentError_SignerErrorImpl _value, $Res Function(_$PaymentError_SignerErrorImpl) _then)
-      : super(_value, _then);
+    _$PaymentError_SignerErrorImpl _value,
+    $Res Function(_$PaymentError_SignerErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of PaymentError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$PaymentError_SignerErrorImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$PaymentError_SignerErrorImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1428,8 +1484,9 @@ class _$SdkErrorCopyWithImpl<$Res, $Val extends SdkError> implements $SdkErrorCo
 /// @nodoc
 abstract class _$$SdkError_AlreadyStartedImplCopyWith<$Res> {
   factory _$$SdkError_AlreadyStartedImplCopyWith(
-          _$SdkError_AlreadyStartedImpl value, $Res Function(_$SdkError_AlreadyStartedImpl) then) =
-      __$$SdkError_AlreadyStartedImplCopyWithImpl<$Res>;
+    _$SdkError_AlreadyStartedImpl value,
+    $Res Function(_$SdkError_AlreadyStartedImpl) then,
+  ) = __$$SdkError_AlreadyStartedImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -1437,8 +1494,9 @@ class __$$SdkError_AlreadyStartedImplCopyWithImpl<$Res>
     extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_AlreadyStartedImpl>
     implements _$$SdkError_AlreadyStartedImplCopyWith<$Res> {
   __$$SdkError_AlreadyStartedImplCopyWithImpl(
-      _$SdkError_AlreadyStartedImpl _value, $Res Function(_$SdkError_AlreadyStartedImpl) _then)
-      : super(_value, _then);
+    _$SdkError_AlreadyStartedImpl _value,
+    $Res Function(_$SdkError_AlreadyStartedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SdkError
   /// with the given fields replaced by the non-null parameter values.
@@ -1472,8 +1530,9 @@ abstract class SdkError_AlreadyStarted extends SdkError {
 /// @nodoc
 abstract class _$$SdkError_GenericImplCopyWith<$Res> {
   factory _$$SdkError_GenericImplCopyWith(
-          _$SdkError_GenericImpl value, $Res Function(_$SdkError_GenericImpl) then) =
-      __$$SdkError_GenericImplCopyWithImpl<$Res>;
+    _$SdkError_GenericImpl value,
+    $Res Function(_$SdkError_GenericImpl) then,
+  ) = __$$SdkError_GenericImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1482,22 +1541,24 @@ abstract class _$$SdkError_GenericImplCopyWith<$Res> {
 class __$$SdkError_GenericImplCopyWithImpl<$Res> extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_GenericImpl>
     implements _$$SdkError_GenericImplCopyWith<$Res> {
   __$$SdkError_GenericImplCopyWithImpl(
-      _$SdkError_GenericImpl _value, $Res Function(_$SdkError_GenericImpl) _then)
-      : super(_value, _then);
+    _$SdkError_GenericImpl _value,
+    $Res Function(_$SdkError_GenericImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SdkError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$SdkError_GenericImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$SdkError_GenericImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1549,8 +1610,9 @@ abstract class SdkError_Generic extends SdkError {
 /// @nodoc
 abstract class _$$SdkError_NotStartedImplCopyWith<$Res> {
   factory _$$SdkError_NotStartedImplCopyWith(
-          _$SdkError_NotStartedImpl value, $Res Function(_$SdkError_NotStartedImpl) then) =
-      __$$SdkError_NotStartedImplCopyWithImpl<$Res>;
+    _$SdkError_NotStartedImpl value,
+    $Res Function(_$SdkError_NotStartedImpl) then,
+  ) = __$$SdkError_NotStartedImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -1558,8 +1620,9 @@ class __$$SdkError_NotStartedImplCopyWithImpl<$Res>
     extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_NotStartedImpl>
     implements _$$SdkError_NotStartedImplCopyWith<$Res> {
   __$$SdkError_NotStartedImplCopyWithImpl(
-      _$SdkError_NotStartedImpl _value, $Res Function(_$SdkError_NotStartedImpl) _then)
-      : super(_value, _then);
+    _$SdkError_NotStartedImpl _value,
+    $Res Function(_$SdkError_NotStartedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SdkError
   /// with the given fields replaced by the non-null parameter values.
@@ -1592,8 +1655,9 @@ abstract class SdkError_NotStarted extends SdkError {
 /// @nodoc
 abstract class _$$SdkError_ServiceConnectivityImplCopyWith<$Res> {
   factory _$$SdkError_ServiceConnectivityImplCopyWith(
-          _$SdkError_ServiceConnectivityImpl value, $Res Function(_$SdkError_ServiceConnectivityImpl) then) =
-      __$$SdkError_ServiceConnectivityImplCopyWithImpl<$Res>;
+    _$SdkError_ServiceConnectivityImpl value,
+    $Res Function(_$SdkError_ServiceConnectivityImpl) then,
+  ) = __$$SdkError_ServiceConnectivityImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1603,22 +1667,24 @@ class __$$SdkError_ServiceConnectivityImplCopyWithImpl<$Res>
     extends _$SdkErrorCopyWithImpl<$Res, _$SdkError_ServiceConnectivityImpl>
     implements _$$SdkError_ServiceConnectivityImplCopyWith<$Res> {
   __$$SdkError_ServiceConnectivityImplCopyWithImpl(
-      _$SdkError_ServiceConnectivityImpl _value, $Res Function(_$SdkError_ServiceConnectivityImpl) _then)
-      : super(_value, _then);
+    _$SdkError_ServiceConnectivityImpl _value,
+    $Res Function(_$SdkError_ServiceConnectivityImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SdkError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$SdkError_ServiceConnectivityImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$SdkError_ServiceConnectivityImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 

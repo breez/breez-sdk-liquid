@@ -12,7 +12,8 @@ part of 'duplicates.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 /// @nodoc
 mixin _$LnUrlAuthError {
@@ -46,23 +47,26 @@ class _$LnUrlAuthErrorCopyWithImpl<$Res, $Val extends LnUrlAuthError>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_value.copyWith(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
+  $Res call({Object? err = null}) {
+    return _then(
+      _value.copyWith(
+            err:
+                null == err
+                    ? _value.err
+                    : err // ignore: cast_nullable_to_non_nullable
+                        as String,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$LnUrlAuthError_GenericImplCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
   factory _$$LnUrlAuthError_GenericImplCopyWith(
-          _$LnUrlAuthError_GenericImpl value, $Res Function(_$LnUrlAuthError_GenericImpl) then) =
-      __$$LnUrlAuthError_GenericImplCopyWithImpl<$Res>;
+    _$LnUrlAuthError_GenericImpl value,
+    $Res Function(_$LnUrlAuthError_GenericImpl) then,
+  ) = __$$LnUrlAuthError_GenericImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -73,22 +77,24 @@ class __$$LnUrlAuthError_GenericImplCopyWithImpl<$Res>
     extends _$LnUrlAuthErrorCopyWithImpl<$Res, _$LnUrlAuthError_GenericImpl>
     implements _$$LnUrlAuthError_GenericImplCopyWith<$Res> {
   __$$LnUrlAuthError_GenericImplCopyWithImpl(
-      _$LnUrlAuthError_GenericImpl _value, $Res Function(_$LnUrlAuthError_GenericImpl) _then)
-      : super(_value, _then);
+    _$LnUrlAuthError_GenericImpl _value,
+    $Res Function(_$LnUrlAuthError_GenericImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlAuthError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlAuthError_GenericImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlAuthError_GenericImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -143,8 +149,9 @@ abstract class LnUrlAuthError_Generic extends LnUrlAuthError {
 /// @nodoc
 abstract class _$$LnUrlAuthError_InvalidUriImplCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
   factory _$$LnUrlAuthError_InvalidUriImplCopyWith(
-          _$LnUrlAuthError_InvalidUriImpl value, $Res Function(_$LnUrlAuthError_InvalidUriImpl) then) =
-      __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<$Res>;
+    _$LnUrlAuthError_InvalidUriImpl value,
+    $Res Function(_$LnUrlAuthError_InvalidUriImpl) then,
+  ) = __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -155,22 +162,24 @@ class __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<$Res>
     extends _$LnUrlAuthErrorCopyWithImpl<$Res, _$LnUrlAuthError_InvalidUriImpl>
     implements _$$LnUrlAuthError_InvalidUriImplCopyWith<$Res> {
   __$$LnUrlAuthError_InvalidUriImplCopyWithImpl(
-      _$LnUrlAuthError_InvalidUriImpl _value, $Res Function(_$LnUrlAuthError_InvalidUriImpl) _then)
-      : super(_value, _then);
+    _$LnUrlAuthError_InvalidUriImpl _value,
+    $Res Function(_$LnUrlAuthError_InvalidUriImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlAuthError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlAuthError_InvalidUriImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlAuthError_InvalidUriImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -225,9 +234,10 @@ abstract class LnUrlAuthError_InvalidUri extends LnUrlAuthError {
 /// @nodoc
 abstract class _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<$Res>
     implements $LnUrlAuthErrorCopyWith<$Res> {
-  factory _$$LnUrlAuthError_ServiceConnectivityImplCopyWith(_$LnUrlAuthError_ServiceConnectivityImpl value,
-          $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) then) =
-      __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<$Res>;
+  factory _$$LnUrlAuthError_ServiceConnectivityImplCopyWith(
+    _$LnUrlAuthError_ServiceConnectivityImpl value,
+    $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) then,
+  ) = __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -237,23 +247,25 @@ abstract class _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<$Res>
 class __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<$Res>
     extends _$LnUrlAuthErrorCopyWithImpl<$Res, _$LnUrlAuthError_ServiceConnectivityImpl>
     implements _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<$Res> {
-  __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl(_$LnUrlAuthError_ServiceConnectivityImpl _value,
-      $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl(
+    _$LnUrlAuthError_ServiceConnectivityImpl _value,
+    $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlAuthError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlAuthError_ServiceConnectivityImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlAuthError_ServiceConnectivityImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -288,7 +300,9 @@ class _$LnUrlAuthError_ServiceConnectivityImpl extends LnUrlAuthError_ServiceCon
   @pragma('vm:prefer-inline')
   _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<_$LnUrlAuthError_ServiceConnectivityImpl> get copyWith =>
       __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<_$LnUrlAuthError_ServiceConnectivityImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlAuthError_ServiceConnectivity extends LnUrlAuthError {
@@ -333,8 +347,9 @@ class _$LnUrlCallbackStatusCopyWithImpl<$Res, $Val extends LnUrlCallbackStatus>
 /// @nodoc
 abstract class _$$LnUrlCallbackStatus_OkImplCopyWith<$Res> {
   factory _$$LnUrlCallbackStatus_OkImplCopyWith(
-          _$LnUrlCallbackStatus_OkImpl value, $Res Function(_$LnUrlCallbackStatus_OkImpl) then) =
-      __$$LnUrlCallbackStatus_OkImplCopyWithImpl<$Res>;
+    _$LnUrlCallbackStatus_OkImpl value,
+    $Res Function(_$LnUrlCallbackStatus_OkImpl) then,
+  ) = __$$LnUrlCallbackStatus_OkImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -342,8 +357,9 @@ class __$$LnUrlCallbackStatus_OkImplCopyWithImpl<$Res>
     extends _$LnUrlCallbackStatusCopyWithImpl<$Res, _$LnUrlCallbackStatus_OkImpl>
     implements _$$LnUrlCallbackStatus_OkImplCopyWith<$Res> {
   __$$LnUrlCallbackStatus_OkImplCopyWithImpl(
-      _$LnUrlCallbackStatus_OkImpl _value, $Res Function(_$LnUrlCallbackStatus_OkImpl) _then)
-      : super(_value, _then);
+    _$LnUrlCallbackStatus_OkImpl _value,
+    $Res Function(_$LnUrlCallbackStatus_OkImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlCallbackStatus
   /// with the given fields replaced by the non-null parameter values.
@@ -376,9 +392,10 @@ abstract class LnUrlCallbackStatus_Ok extends LnUrlCallbackStatus {
 
 /// @nodoc
 abstract class _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<$Res> {
-  factory _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith(_$LnUrlCallbackStatus_ErrorStatusImpl value,
-          $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) then) =
-      __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<$Res>;
+  factory _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith(
+    _$LnUrlCallbackStatus_ErrorStatusImpl value,
+    $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) then,
+  ) = __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlErrorData data});
 }
@@ -387,23 +404,25 @@ abstract class _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<$Res> {
 class __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<$Res>
     extends _$LnUrlCallbackStatusCopyWithImpl<$Res, _$LnUrlCallbackStatus_ErrorStatusImpl>
     implements _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<$Res> {
-  __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl(_$LnUrlCallbackStatus_ErrorStatusImpl _value,
-      $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl(
+    _$LnUrlCallbackStatus_ErrorStatusImpl _value,
+    $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlCallbackStatus
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$LnUrlCallbackStatus_ErrorStatusImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlErrorData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$LnUrlCallbackStatus_ErrorStatusImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlErrorData,
+      ),
+    );
   }
 }
 
@@ -438,7 +457,9 @@ class _$LnUrlCallbackStatus_ErrorStatusImpl extends LnUrlCallbackStatus_ErrorSta
   @pragma('vm:prefer-inline')
   _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<_$LnUrlCallbackStatus_ErrorStatusImpl> get copyWith =>
       __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<_$LnUrlCallbackStatus_ErrorStatusImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlCallbackStatus_ErrorStatus extends LnUrlCallbackStatus {
@@ -480,8 +501,9 @@ class _$LnUrlPayErrorCopyWithImpl<$Res, $Val extends LnUrlPayError> implements $
 /// @nodoc
 abstract class _$$LnUrlPayError_AlreadyPaidImplCopyWith<$Res> {
   factory _$$LnUrlPayError_AlreadyPaidImplCopyWith(
-          _$LnUrlPayError_AlreadyPaidImpl value, $Res Function(_$LnUrlPayError_AlreadyPaidImpl) then) =
-      __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_AlreadyPaidImpl value,
+    $Res Function(_$LnUrlPayError_AlreadyPaidImpl) then,
+  ) = __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl<$Res>;
 }
 
 /// @nodoc
@@ -489,8 +511,9 @@ class __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_AlreadyPaidImpl>
     implements _$$LnUrlPayError_AlreadyPaidImplCopyWith<$Res> {
   __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl(
-      _$LnUrlPayError_AlreadyPaidImpl _value, $Res Function(_$LnUrlPayError_AlreadyPaidImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_AlreadyPaidImpl _value,
+    $Res Function(_$LnUrlPayError_AlreadyPaidImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
@@ -524,8 +547,9 @@ abstract class LnUrlPayError_AlreadyPaid extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_GenericImplCopyWith<$Res> {
   factory _$$LnUrlPayError_GenericImplCopyWith(
-          _$LnUrlPayError_GenericImpl value, $Res Function(_$LnUrlPayError_GenericImpl) then) =
-      __$$LnUrlPayError_GenericImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_GenericImpl value,
+    $Res Function(_$LnUrlPayError_GenericImpl) then,
+  ) = __$$LnUrlPayError_GenericImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -535,22 +559,24 @@ class __$$LnUrlPayError_GenericImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_GenericImpl>
     implements _$$LnUrlPayError_GenericImplCopyWith<$Res> {
   __$$LnUrlPayError_GenericImplCopyWithImpl(
-      _$LnUrlPayError_GenericImpl _value, $Res Function(_$LnUrlPayError_GenericImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_GenericImpl _value,
+    $Res Function(_$LnUrlPayError_GenericImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_GenericImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_GenericImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -603,8 +629,9 @@ abstract class LnUrlPayError_Generic extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_InvalidAmountImplCopyWith<$Res> {
   factory _$$LnUrlPayError_InvalidAmountImplCopyWith(
-          _$LnUrlPayError_InvalidAmountImpl value, $Res Function(_$LnUrlPayError_InvalidAmountImpl) then) =
-      __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_InvalidAmountImpl value,
+    $Res Function(_$LnUrlPayError_InvalidAmountImpl) then,
+  ) = __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -614,22 +641,24 @@ class __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidAmountImpl>
     implements _$$LnUrlPayError_InvalidAmountImplCopyWith<$Res> {
   __$$LnUrlPayError_InvalidAmountImplCopyWithImpl(
-      _$LnUrlPayError_InvalidAmountImpl _value, $Res Function(_$LnUrlPayError_InvalidAmountImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_InvalidAmountImpl _value,
+    $Res Function(_$LnUrlPayError_InvalidAmountImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_InvalidAmountImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_InvalidAmountImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -682,8 +711,9 @@ abstract class LnUrlPayError_InvalidAmount extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_InvalidInvoiceImplCopyWith<$Res> {
   factory _$$LnUrlPayError_InvalidInvoiceImplCopyWith(
-          _$LnUrlPayError_InvalidInvoiceImpl value, $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) then) =
-      __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_InvalidInvoiceImpl value,
+    $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) then,
+  ) = __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -693,22 +723,24 @@ class __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidInvoiceImpl>
     implements _$$LnUrlPayError_InvalidInvoiceImplCopyWith<$Res> {
   __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl(
-      _$LnUrlPayError_InvalidInvoiceImpl _value, $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_InvalidInvoiceImpl _value,
+    $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_InvalidInvoiceImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_InvalidInvoiceImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -762,8 +794,9 @@ abstract class LnUrlPayError_InvalidInvoice extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_InvalidNetworkImplCopyWith<$Res> {
   factory _$$LnUrlPayError_InvalidNetworkImplCopyWith(
-          _$LnUrlPayError_InvalidNetworkImpl value, $Res Function(_$LnUrlPayError_InvalidNetworkImpl) then) =
-      __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_InvalidNetworkImpl value,
+    $Res Function(_$LnUrlPayError_InvalidNetworkImpl) then,
+  ) = __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -773,22 +806,24 @@ class __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidNetworkImpl>
     implements _$$LnUrlPayError_InvalidNetworkImplCopyWith<$Res> {
   __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl(
-      _$LnUrlPayError_InvalidNetworkImpl _value, $Res Function(_$LnUrlPayError_InvalidNetworkImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_InvalidNetworkImpl _value,
+    $Res Function(_$LnUrlPayError_InvalidNetworkImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_InvalidNetworkImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_InvalidNetworkImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -842,8 +877,9 @@ abstract class LnUrlPayError_InvalidNetwork extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_InvalidUriImplCopyWith<$Res> {
   factory _$$LnUrlPayError_InvalidUriImplCopyWith(
-          _$LnUrlPayError_InvalidUriImpl value, $Res Function(_$LnUrlPayError_InvalidUriImpl) then) =
-      __$$LnUrlPayError_InvalidUriImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_InvalidUriImpl value,
+    $Res Function(_$LnUrlPayError_InvalidUriImpl) then,
+  ) = __$$LnUrlPayError_InvalidUriImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -853,22 +889,24 @@ class __$$LnUrlPayError_InvalidUriImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidUriImpl>
     implements _$$LnUrlPayError_InvalidUriImplCopyWith<$Res> {
   __$$LnUrlPayError_InvalidUriImplCopyWithImpl(
-      _$LnUrlPayError_InvalidUriImpl _value, $Res Function(_$LnUrlPayError_InvalidUriImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_InvalidUriImpl _value,
+    $Res Function(_$LnUrlPayError_InvalidUriImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_InvalidUriImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_InvalidUriImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -921,8 +959,9 @@ abstract class LnUrlPayError_InvalidUri extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_InvoiceExpiredImplCopyWith<$Res> {
   factory _$$LnUrlPayError_InvoiceExpiredImplCopyWith(
-          _$LnUrlPayError_InvoiceExpiredImpl value, $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) then) =
-      __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_InvoiceExpiredImpl value,
+    $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) then,
+  ) = __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -932,22 +971,24 @@ class __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvoiceExpiredImpl>
     implements _$$LnUrlPayError_InvoiceExpiredImplCopyWith<$Res> {
   __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl(
-      _$LnUrlPayError_InvoiceExpiredImpl _value, $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_InvoiceExpiredImpl _value,
+    $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_InvoiceExpiredImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_InvoiceExpiredImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1001,8 +1042,9 @@ abstract class LnUrlPayError_InvoiceExpired extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_PaymentFailedImplCopyWith<$Res> {
   factory _$$LnUrlPayError_PaymentFailedImplCopyWith(
-          _$LnUrlPayError_PaymentFailedImpl value, $Res Function(_$LnUrlPayError_PaymentFailedImpl) then) =
-      __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_PaymentFailedImpl value,
+    $Res Function(_$LnUrlPayError_PaymentFailedImpl) then,
+  ) = __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1012,22 +1054,24 @@ class __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_PaymentFailedImpl>
     implements _$$LnUrlPayError_PaymentFailedImplCopyWith<$Res> {
   __$$LnUrlPayError_PaymentFailedImplCopyWithImpl(
-      _$LnUrlPayError_PaymentFailedImpl _value, $Res Function(_$LnUrlPayError_PaymentFailedImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_PaymentFailedImpl _value,
+    $Res Function(_$LnUrlPayError_PaymentFailedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_PaymentFailedImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_PaymentFailedImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1080,8 +1124,9 @@ abstract class LnUrlPayError_PaymentFailed extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_PaymentTimeoutImplCopyWith<$Res> {
   factory _$$LnUrlPayError_PaymentTimeoutImplCopyWith(
-          _$LnUrlPayError_PaymentTimeoutImpl value, $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) then) =
-      __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_PaymentTimeoutImpl value,
+    $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) then,
+  ) = __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1091,22 +1136,24 @@ class __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_PaymentTimeoutImpl>
     implements _$$LnUrlPayError_PaymentTimeoutImplCopyWith<$Res> {
   __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl(
-      _$LnUrlPayError_PaymentTimeoutImpl _value, $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_PaymentTimeoutImpl _value,
+    $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_PaymentTimeoutImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_PaymentTimeoutImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1160,8 +1207,9 @@ abstract class LnUrlPayError_PaymentTimeout extends LnUrlPayError {
 /// @nodoc
 abstract class _$$LnUrlPayError_RouteNotFoundImplCopyWith<$Res> {
   factory _$$LnUrlPayError_RouteNotFoundImplCopyWith(
-          _$LnUrlPayError_RouteNotFoundImpl value, $Res Function(_$LnUrlPayError_RouteNotFoundImpl) then) =
-      __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<$Res>;
+    _$LnUrlPayError_RouteNotFoundImpl value,
+    $Res Function(_$LnUrlPayError_RouteNotFoundImpl) then,
+  ) = __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1171,22 +1219,24 @@ class __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_RouteNotFoundImpl>
     implements _$$LnUrlPayError_RouteNotFoundImplCopyWith<$Res> {
   __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl(
-      _$LnUrlPayError_RouteNotFoundImpl _value, $Res Function(_$LnUrlPayError_RouteNotFoundImpl) _then)
-      : super(_value, _then);
+    _$LnUrlPayError_RouteNotFoundImpl _value,
+    $Res Function(_$LnUrlPayError_RouteNotFoundImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_RouteNotFoundImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_RouteNotFoundImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1238,9 +1288,10 @@ abstract class LnUrlPayError_RouteNotFound extends LnUrlPayError {
 
 /// @nodoc
 abstract class _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_RouteTooExpensiveImplCopyWith(_$LnUrlPayError_RouteTooExpensiveImpl value,
-          $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) then) =
-      __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<$Res>;
+  factory _$$LnUrlPayError_RouteTooExpensiveImplCopyWith(
+    _$LnUrlPayError_RouteTooExpensiveImpl value,
+    $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) then,
+  ) = __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1249,23 +1300,25 @@ abstract class _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<$Res> {
 class __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_RouteTooExpensiveImpl>
     implements _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<$Res> {
-  __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl(_$LnUrlPayError_RouteTooExpensiveImpl _value,
-      $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl(
+    _$LnUrlPayError_RouteTooExpensiveImpl _value,
+    $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_RouteTooExpensiveImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_RouteTooExpensiveImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1300,7 +1353,9 @@ class _$LnUrlPayError_RouteTooExpensiveImpl extends LnUrlPayError_RouteTooExpens
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<_$LnUrlPayError_RouteTooExpensiveImpl> get copyWith =>
       __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<_$LnUrlPayError_RouteTooExpensiveImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlPayError_RouteTooExpensive extends LnUrlPayError {
@@ -1319,9 +1374,10 @@ abstract class LnUrlPayError_RouteTooExpensive extends LnUrlPayError {
 
 /// @nodoc
 abstract class _$$LnUrlPayError_ServiceConnectivityImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_ServiceConnectivityImplCopyWith(_$LnUrlPayError_ServiceConnectivityImpl value,
-          $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) then) =
-      __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<$Res>;
+  factory _$$LnUrlPayError_ServiceConnectivityImplCopyWith(
+    _$LnUrlPayError_ServiceConnectivityImpl value,
+    $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) then,
+  ) = __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String err});
 }
@@ -1330,23 +1386,25 @@ abstract class _$$LnUrlPayError_ServiceConnectivityImplCopyWith<$Res> {
 class __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<$Res>
     extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_ServiceConnectivityImpl>
     implements _$$LnUrlPayError_ServiceConnectivityImplCopyWith<$Res> {
-  __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl(_$LnUrlPayError_ServiceConnectivityImpl _value,
-      $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl(
+    _$LnUrlPayError_ServiceConnectivityImpl _value,
+    $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlPayError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlPayError_ServiceConnectivityImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlPayError_ServiceConnectivityImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1381,7 +1439,9 @@ class _$LnUrlPayError_ServiceConnectivityImpl extends LnUrlPayError_ServiceConne
   @pragma('vm:prefer-inline')
   _$$LnUrlPayError_ServiceConnectivityImplCopyWith<_$LnUrlPayError_ServiceConnectivityImpl> get copyWith =>
       __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<_$LnUrlPayError_ServiceConnectivityImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
@@ -1430,23 +1490,26 @@ class _$LnUrlWithdrawErrorCopyWithImpl<$Res, $Val extends LnUrlWithdrawError>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_value.copyWith(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
+  $Res call({Object? err = null}) {
+    return _then(
+      _value.copyWith(
+            err:
+                null == err
+                    ? _value.err
+                    : err // ignore: cast_nullable_to_non_nullable
+                        as String,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$LnUrlWithdrawError_GenericImplCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
   factory _$$LnUrlWithdrawError_GenericImplCopyWith(
-          _$LnUrlWithdrawError_GenericImpl value, $Res Function(_$LnUrlWithdrawError_GenericImpl) then) =
-      __$$LnUrlWithdrawError_GenericImplCopyWithImpl<$Res>;
+    _$LnUrlWithdrawError_GenericImpl value,
+    $Res Function(_$LnUrlWithdrawError_GenericImpl) then,
+  ) = __$$LnUrlWithdrawError_GenericImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -1457,22 +1520,24 @@ class __$$LnUrlWithdrawError_GenericImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_GenericImpl>
     implements _$$LnUrlWithdrawError_GenericImplCopyWith<$Res> {
   __$$LnUrlWithdrawError_GenericImplCopyWithImpl(
-      _$LnUrlWithdrawError_GenericImpl _value, $Res Function(_$LnUrlWithdrawError_GenericImpl) _then)
-      : super(_value, _then);
+    _$LnUrlWithdrawError_GenericImpl _value,
+    $Res Function(_$LnUrlWithdrawError_GenericImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlWithdrawError_GenericImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlWithdrawError_GenericImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1527,9 +1592,10 @@ abstract class LnUrlWithdrawError_Generic extends LnUrlWithdrawError {
 /// @nodoc
 abstract class _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<$Res>
     implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvalidAmountImplCopyWith(_$LnUrlWithdrawError_InvalidAmountImpl value,
-          $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) then) =
-      __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<$Res>;
+  factory _$$LnUrlWithdrawError_InvalidAmountImplCopyWith(
+    _$LnUrlWithdrawError_InvalidAmountImpl value,
+    $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) then,
+  ) = __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -1539,23 +1605,25 @@ abstract class _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<$Res>
 class __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvalidAmountImpl>
     implements _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl(_$LnUrlWithdrawError_InvalidAmountImpl _value,
-      $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl(
+    _$LnUrlWithdrawError_InvalidAmountImpl _value,
+    $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlWithdrawError_InvalidAmountImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlWithdrawError_InvalidAmountImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1590,7 +1658,9 @@ class _$LnUrlWithdrawError_InvalidAmountImpl extends LnUrlWithdrawError_InvalidA
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<_$LnUrlWithdrawError_InvalidAmountImpl> get copyWith =>
       __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<_$LnUrlWithdrawError_InvalidAmountImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlWithdrawError_InvalidAmount extends LnUrlWithdrawError {
@@ -1612,9 +1682,10 @@ abstract class LnUrlWithdrawError_InvalidAmount extends LnUrlWithdrawError {
 /// @nodoc
 abstract class _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<$Res>
     implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith(_$LnUrlWithdrawError_InvalidInvoiceImpl value,
-          $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) then) =
-      __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<$Res>;
+  factory _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith(
+    _$LnUrlWithdrawError_InvalidInvoiceImpl value,
+    $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) then,
+  ) = __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -1624,23 +1695,25 @@ abstract class _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<$Res>
 class __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvalidInvoiceImpl>
     implements _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl(_$LnUrlWithdrawError_InvalidInvoiceImpl _value,
-      $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl(
+    _$LnUrlWithdrawError_InvalidInvoiceImpl _value,
+    $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlWithdrawError_InvalidInvoiceImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlWithdrawError_InvalidInvoiceImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1675,7 +1748,9 @@ class _$LnUrlWithdrawError_InvalidInvoiceImpl extends LnUrlWithdrawError_Invalid
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<_$LnUrlWithdrawError_InvalidInvoiceImpl> get copyWith =>
       __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<_$LnUrlWithdrawError_InvalidInvoiceImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlWithdrawError_InvalidInvoice extends LnUrlWithdrawError {
@@ -1697,9 +1772,10 @@ abstract class LnUrlWithdrawError_InvalidInvoice extends LnUrlWithdrawError {
 /// @nodoc
 abstract class _$$LnUrlWithdrawError_InvalidUriImplCopyWith<$Res>
     implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvalidUriImplCopyWith(_$LnUrlWithdrawError_InvalidUriImpl value,
-          $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) then) =
-      __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<$Res>;
+  factory _$$LnUrlWithdrawError_InvalidUriImplCopyWith(
+    _$LnUrlWithdrawError_InvalidUriImpl value,
+    $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) then,
+  ) = __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -1710,22 +1786,24 @@ class __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvalidUriImpl>
     implements _$$LnUrlWithdrawError_InvalidUriImplCopyWith<$Res> {
   __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl(
-      _$LnUrlWithdrawError_InvalidUriImpl _value, $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) _then)
-      : super(_value, _then);
+    _$LnUrlWithdrawError_InvalidUriImpl _value,
+    $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlWithdrawError_InvalidUriImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlWithdrawError_InvalidUriImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1760,7 +1838,9 @@ class _$LnUrlWithdrawError_InvalidUriImpl extends LnUrlWithdrawError_InvalidUri 
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvalidUriImplCopyWith<_$LnUrlWithdrawError_InvalidUriImpl> get copyWith =>
       __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<_$LnUrlWithdrawError_InvalidUriImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlWithdrawError_InvalidUri extends LnUrlWithdrawError {
@@ -1783,9 +1863,9 @@ abstract class LnUrlWithdrawError_InvalidUri extends LnUrlWithdrawError {
 abstract class _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<$Res>
     implements $LnUrlWithdrawErrorCopyWith<$Res> {
   factory _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith(
-          _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl value,
-          $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) then) =
-      __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<$Res>;
+    _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl value,
+    $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) then,
+  ) = __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -1796,23 +1876,24 @@ class __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
     implements _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<$Res> {
   __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl(
-      _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl _value,
-      $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) _then)
-      : super(_value, _then);
+    _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl _value,
+    $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1846,8 +1927,9 @@ class _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl extends LnUrlWithdrawError_
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
-      get copyWith => __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<
-          _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>(this, _$identity);
+  get copyWith => __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<
+    _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl
+  >(this, _$identity);
 }
 
 abstract class LnUrlWithdrawError_InvoiceNoRoutingHints extends LnUrlWithdrawError {
@@ -1863,16 +1945,16 @@ abstract class LnUrlWithdrawError_InvoiceNoRoutingHints extends LnUrlWithdrawErr
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<$Res>
     implements $LnUrlWithdrawErrorCopyWith<$Res> {
   factory _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith(
-          _$LnUrlWithdrawError_ServiceConnectivityImpl value,
-          $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) then) =
-      __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<$Res>;
+    _$LnUrlWithdrawError_ServiceConnectivityImpl value,
+    $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) then,
+  ) = __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({String err});
@@ -1883,23 +1965,24 @@ class __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_ServiceConnectivityImpl>
     implements _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<$Res> {
   __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl(
-      _$LnUrlWithdrawError_ServiceConnectivityImpl _value,
-      $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) _then)
-      : super(_value, _then);
+    _$LnUrlWithdrawError_ServiceConnectivityImpl _value,
+    $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawError
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? err = null,
-  }) {
-    return _then(_$LnUrlWithdrawError_ServiceConnectivityImpl(
-      err: null == err
-          ? _value.err
-          : err // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? err = null}) {
+    return _then(
+      _$LnUrlWithdrawError_ServiceConnectivityImpl(
+        err:
+            null == err
+                ? _value.err
+                : err // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -1933,8 +2016,9 @@ class _$LnUrlWithdrawError_ServiceConnectivityImpl extends LnUrlWithdrawError_Se
   @override
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
-      get copyWith => __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<
-          _$LnUrlWithdrawError_ServiceConnectivityImpl>(this, _$identity);
+  get copyWith => __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<
+    _$LnUrlWithdrawError_ServiceConnectivityImpl
+  >(this, _$identity);
 }
 
 abstract class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError {
@@ -1950,7 +2034,7 @@ abstract class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -1981,8 +2065,9 @@ class _$LnUrlWithdrawResultCopyWithImpl<$Res, $Val extends LnUrlWithdrawResult>
 /// @nodoc
 abstract class _$$LnUrlWithdrawResult_OkImplCopyWith<$Res> {
   factory _$$LnUrlWithdrawResult_OkImplCopyWith(
-          _$LnUrlWithdrawResult_OkImpl value, $Res Function(_$LnUrlWithdrawResult_OkImpl) then) =
-      __$$LnUrlWithdrawResult_OkImplCopyWithImpl<$Res>;
+    _$LnUrlWithdrawResult_OkImpl value,
+    $Res Function(_$LnUrlWithdrawResult_OkImpl) then,
+  ) = __$$LnUrlWithdrawResult_OkImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlWithdrawSuccessData data});
 }
@@ -1992,22 +2077,24 @@ class __$$LnUrlWithdrawResult_OkImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_OkImpl>
     implements _$$LnUrlWithdrawResult_OkImplCopyWith<$Res> {
   __$$LnUrlWithdrawResult_OkImplCopyWithImpl(
-      _$LnUrlWithdrawResult_OkImpl _value, $Res Function(_$LnUrlWithdrawResult_OkImpl) _then)
-      : super(_value, _then);
+    _$LnUrlWithdrawResult_OkImpl _value,
+    $Res Function(_$LnUrlWithdrawResult_OkImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawResult
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$LnUrlWithdrawResult_OkImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlWithdrawSuccessData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$LnUrlWithdrawResult_OkImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlWithdrawSuccessData,
+      ),
+    );
   }
 }
 
@@ -2062,8 +2149,9 @@ abstract class LnUrlWithdrawResult_Ok extends LnUrlWithdrawResult {
 /// @nodoc
 abstract class _$$LnUrlWithdrawResult_TimeoutImplCopyWith<$Res> {
   factory _$$LnUrlWithdrawResult_TimeoutImplCopyWith(
-          _$LnUrlWithdrawResult_TimeoutImpl value, $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) then) =
-      __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>;
+    _$LnUrlWithdrawResult_TimeoutImpl value,
+    $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) then,
+  ) = __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlWithdrawSuccessData data});
 }
@@ -2073,22 +2161,24 @@ class __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_TimeoutImpl>
     implements _$$LnUrlWithdrawResult_TimeoutImplCopyWith<$Res> {
   __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl(
-      _$LnUrlWithdrawResult_TimeoutImpl _value, $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) _then)
-      : super(_value, _then);
+    _$LnUrlWithdrawResult_TimeoutImpl _value,
+    $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawResult
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$LnUrlWithdrawResult_TimeoutImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlWithdrawSuccessData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$LnUrlWithdrawResult_TimeoutImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlWithdrawSuccessData,
+      ),
+    );
   }
 }
 
@@ -2142,9 +2232,10 @@ abstract class LnUrlWithdrawResult_Timeout extends LnUrlWithdrawResult {
 
 /// @nodoc
 abstract class _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<$Res> {
-  factory _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith(_$LnUrlWithdrawResult_ErrorStatusImpl value,
-          $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) then) =
-      __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<$Res>;
+  factory _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith(
+    _$LnUrlWithdrawResult_ErrorStatusImpl value,
+    $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) then,
+  ) = __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlErrorData data});
 }
@@ -2153,23 +2244,25 @@ abstract class _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<$Res> {
 class __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<$Res>
     extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_ErrorStatusImpl>
     implements _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<$Res> {
-  __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl(_$LnUrlWithdrawResult_ErrorStatusImpl _value,
-      $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) _then)
-      : super(_value, _then);
+  __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl(
+    _$LnUrlWithdrawResult_ErrorStatusImpl _value,
+    $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of LnUrlWithdrawResult
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$LnUrlWithdrawResult_ErrorStatusImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlErrorData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$LnUrlWithdrawResult_ErrorStatusImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlErrorData,
+      ),
+    );
   }
 }
 
@@ -2204,7 +2297,9 @@ class _$LnUrlWithdrawResult_ErrorStatusImpl extends LnUrlWithdrawResult_ErrorSta
   @pragma('vm:prefer-inline')
   _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<_$LnUrlWithdrawResult_ErrorStatusImpl> get copyWith =>
       __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<_$LnUrlWithdrawResult_ErrorStatusImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class LnUrlWithdrawResult_ErrorStatus extends LnUrlWithdrawResult {
