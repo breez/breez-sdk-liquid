@@ -12,7 +12,8 @@ part of 'bindings.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 /// @nodoc
 mixin _$AesSuccessActionDataResult {}
@@ -20,8 +21,9 @@ mixin _$AesSuccessActionDataResult {}
 /// @nodoc
 abstract class $AesSuccessActionDataResultCopyWith<$Res> {
   factory $AesSuccessActionDataResultCopyWith(
-          AesSuccessActionDataResult value, $Res Function(AesSuccessActionDataResult) then) =
-      _$AesSuccessActionDataResultCopyWithImpl<$Res, AesSuccessActionDataResult>;
+    AesSuccessActionDataResult value,
+    $Res Function(AesSuccessActionDataResult) then,
+  ) = _$AesSuccessActionDataResultCopyWithImpl<$Res, AesSuccessActionDataResult>;
 }
 
 /// @nodoc
@@ -41,9 +43,9 @@ class _$AesSuccessActionDataResultCopyWithImpl<$Res, $Val extends AesSuccessActi
 /// @nodoc
 abstract class _$$AesSuccessActionDataResult_DecryptedImplCopyWith<$Res> {
   factory _$$AesSuccessActionDataResult_DecryptedImplCopyWith(
-          _$AesSuccessActionDataResult_DecryptedImpl value,
-          $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) then) =
-      __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<$Res>;
+    _$AesSuccessActionDataResult_DecryptedImpl value,
+    $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) then,
+  ) = __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<$Res>;
   @useResult
   $Res call({AesSuccessActionDataDecrypted data});
 }
@@ -52,23 +54,25 @@ abstract class _$$AesSuccessActionDataResult_DecryptedImplCopyWith<$Res> {
 class __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<$Res>
     extends _$AesSuccessActionDataResultCopyWithImpl<$Res, _$AesSuccessActionDataResult_DecryptedImpl>
     implements _$$AesSuccessActionDataResult_DecryptedImplCopyWith<$Res> {
-  __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl(_$AesSuccessActionDataResult_DecryptedImpl _value,
-      $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) _then)
-      : super(_value, _then);
+  __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl(
+    _$AesSuccessActionDataResult_DecryptedImpl _value,
+    $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of AesSuccessActionDataResult
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$AesSuccessActionDataResult_DecryptedImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as AesSuccessActionDataDecrypted,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$AesSuccessActionDataResult_DecryptedImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as AesSuccessActionDataDecrypted,
+      ),
+    );
   }
 }
 
@@ -102,8 +106,11 @@ class _$AesSuccessActionDataResult_DecryptedImpl extends AesSuccessActionDataRes
   @override
   @pragma('vm:prefer-inline')
   _$$AesSuccessActionDataResult_DecryptedImplCopyWith<_$AesSuccessActionDataResult_DecryptedImpl>
-      get copyWith => __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<
-          _$AesSuccessActionDataResult_DecryptedImpl>(this, _$identity);
+  get copyWith =>
+      __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<_$AesSuccessActionDataResult_DecryptedImpl>(
+        this,
+        _$identity,
+      );
 }
 
 abstract class AesSuccessActionDataResult_Decrypted extends AesSuccessActionDataResult {
@@ -117,15 +124,15 @@ abstract class AesSuccessActionDataResult_Decrypted extends AesSuccessActionData
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AesSuccessActionDataResult_DecryptedImplCopyWith<_$AesSuccessActionDataResult_DecryptedImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<$Res> {
   factory _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith(
-          _$AesSuccessActionDataResult_ErrorStatusImpl value,
-          $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) then) =
-      __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<$Res>;
+    _$AesSuccessActionDataResult_ErrorStatusImpl value,
+    $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) then,
+  ) = __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String reason});
 }
@@ -135,23 +142,24 @@ class __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<$Res>
     extends _$AesSuccessActionDataResultCopyWithImpl<$Res, _$AesSuccessActionDataResult_ErrorStatusImpl>
     implements _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<$Res> {
   __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl(
-      _$AesSuccessActionDataResult_ErrorStatusImpl _value,
-      $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) _then)
-      : super(_value, _then);
+    _$AesSuccessActionDataResult_ErrorStatusImpl _value,
+    $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of AesSuccessActionDataResult
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? reason = null,
-  }) {
-    return _then(_$AesSuccessActionDataResult_ErrorStatusImpl(
-      reason: null == reason
-          ? _value.reason
-          : reason // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? reason = null}) {
+    return _then(
+      _$AesSuccessActionDataResult_ErrorStatusImpl(
+        reason:
+            null == reason
+                ? _value.reason
+                : reason // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -185,8 +193,9 @@ class _$AesSuccessActionDataResult_ErrorStatusImpl extends AesSuccessActionDataR
   @override
   @pragma('vm:prefer-inline')
   _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<_$AesSuccessActionDataResult_ErrorStatusImpl>
-      get copyWith => __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<
-          _$AesSuccessActionDataResult_ErrorStatusImpl>(this, _$identity);
+  get copyWith => __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<
+    _$AesSuccessActionDataResult_ErrorStatusImpl
+  >(this, _$identity);
 }
 
 abstract class AesSuccessActionDataResult_ErrorStatus extends AesSuccessActionDataResult {
@@ -200,7 +209,7 @@ abstract class AesSuccessActionDataResult_ErrorStatus extends AesSuccessActionDa
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<_$AesSuccessActionDataResult_ErrorStatusImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -227,8 +236,9 @@ class _$AmountCopyWithImpl<$Res, $Val extends Amount> implements $AmountCopyWith
 /// @nodoc
 abstract class _$$Amount_BitcoinImplCopyWith<$Res> {
   factory _$$Amount_BitcoinImplCopyWith(
-          _$Amount_BitcoinImpl value, $Res Function(_$Amount_BitcoinImpl) then) =
-      __$$Amount_BitcoinImplCopyWithImpl<$Res>;
+    _$Amount_BitcoinImpl value,
+    $Res Function(_$Amount_BitcoinImpl) then,
+  ) = __$$Amount_BitcoinImplCopyWithImpl<$Res>;
   @useResult
   $Res call({BigInt amountMsat});
 }
@@ -237,21 +247,22 @@ abstract class _$$Amount_BitcoinImplCopyWith<$Res> {
 class __$$Amount_BitcoinImplCopyWithImpl<$Res> extends _$AmountCopyWithImpl<$Res, _$Amount_BitcoinImpl>
     implements _$$Amount_BitcoinImplCopyWith<$Res> {
   __$$Amount_BitcoinImplCopyWithImpl(_$Amount_BitcoinImpl _value, $Res Function(_$Amount_BitcoinImpl) _then)
-      : super(_value, _then);
+    : super(_value, _then);
 
   /// Create a copy of Amount
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? amountMsat = null,
-  }) {
-    return _then(_$Amount_BitcoinImpl(
-      amountMsat: null == amountMsat
-          ? _value.amountMsat
-          : amountMsat // ignore: cast_nullable_to_non_nullable
-              as BigInt,
-    ));
+  $Res call({Object? amountMsat = null}) {
+    return _then(
+      _$Amount_BitcoinImpl(
+        amountMsat:
+            null == amountMsat
+                ? _value.amountMsat
+                : amountMsat // ignore: cast_nullable_to_non_nullable
+                    as BigInt,
+      ),
+    );
   }
 }
 
@@ -303,8 +314,9 @@ abstract class Amount_Bitcoin extends Amount {
 /// @nodoc
 abstract class _$$Amount_CurrencyImplCopyWith<$Res> {
   factory _$$Amount_CurrencyImplCopyWith(
-          _$Amount_CurrencyImpl value, $Res Function(_$Amount_CurrencyImpl) then) =
-      __$$Amount_CurrencyImplCopyWithImpl<$Res>;
+    _$Amount_CurrencyImpl value,
+    $Res Function(_$Amount_CurrencyImpl) then,
+  ) = __$$Amount_CurrencyImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String iso4217Code, BigInt fractionalAmount});
 }
@@ -313,27 +325,29 @@ abstract class _$$Amount_CurrencyImplCopyWith<$Res> {
 class __$$Amount_CurrencyImplCopyWithImpl<$Res> extends _$AmountCopyWithImpl<$Res, _$Amount_CurrencyImpl>
     implements _$$Amount_CurrencyImplCopyWith<$Res> {
   __$$Amount_CurrencyImplCopyWithImpl(
-      _$Amount_CurrencyImpl _value, $Res Function(_$Amount_CurrencyImpl) _then)
-      : super(_value, _then);
+    _$Amount_CurrencyImpl _value,
+    $Res Function(_$Amount_CurrencyImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of Amount
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? iso4217Code = null,
-    Object? fractionalAmount = null,
-  }) {
-    return _then(_$Amount_CurrencyImpl(
-      iso4217Code: null == iso4217Code
-          ? _value.iso4217Code
-          : iso4217Code // ignore: cast_nullable_to_non_nullable
-              as String,
-      fractionalAmount: null == fractionalAmount
-          ? _value.fractionalAmount
-          : fractionalAmount // ignore: cast_nullable_to_non_nullable
-              as BigInt,
-    ));
+  $Res call({Object? iso4217Code = null, Object? fractionalAmount = null}) {
+    return _then(
+      _$Amount_CurrencyImpl(
+        iso4217Code:
+            null == iso4217Code
+                ? _value.iso4217Code
+                : iso4217Code // ignore: cast_nullable_to_non_nullable
+                    as String,
+        fractionalAmount:
+            null == fractionalAmount
+                ? _value.fractionalAmount
+                : fractionalAmount // ignore: cast_nullable_to_non_nullable
+                    as BigInt,
+      ),
+    );
   }
 }
 
@@ -413,8 +427,9 @@ class _$InputTypeCopyWithImpl<$Res, $Val extends InputType> implements $InputTyp
 /// @nodoc
 abstract class _$$InputType_BitcoinAddressImplCopyWith<$Res> {
   factory _$$InputType_BitcoinAddressImplCopyWith(
-          _$InputType_BitcoinAddressImpl value, $Res Function(_$InputType_BitcoinAddressImpl) then) =
-      __$$InputType_BitcoinAddressImplCopyWithImpl<$Res>;
+    _$InputType_BitcoinAddressImpl value,
+    $Res Function(_$InputType_BitcoinAddressImpl) then,
+  ) = __$$InputType_BitcoinAddressImplCopyWithImpl<$Res>;
   @useResult
   $Res call({BitcoinAddressData address});
 }
@@ -424,22 +439,24 @@ class __$$InputType_BitcoinAddressImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_BitcoinAddressImpl>
     implements _$$InputType_BitcoinAddressImplCopyWith<$Res> {
   __$$InputType_BitcoinAddressImplCopyWithImpl(
-      _$InputType_BitcoinAddressImpl _value, $Res Function(_$InputType_BitcoinAddressImpl) _then)
-      : super(_value, _then);
+    _$InputType_BitcoinAddressImpl _value,
+    $Res Function(_$InputType_BitcoinAddressImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? address = null,
-  }) {
-    return _then(_$InputType_BitcoinAddressImpl(
-      address: null == address
-          ? _value.address
-          : address // ignore: cast_nullable_to_non_nullable
-              as BitcoinAddressData,
-    ));
+  $Res call({Object? address = null}) {
+    return _then(
+      _$InputType_BitcoinAddressImpl(
+        address:
+            null == address
+                ? _value.address
+                : address // ignore: cast_nullable_to_non_nullable
+                    as BitcoinAddressData,
+      ),
+    );
   }
 }
 
@@ -493,8 +510,9 @@ abstract class InputType_BitcoinAddress extends InputType {
 /// @nodoc
 abstract class _$$InputType_LiquidAddressImplCopyWith<$Res> {
   factory _$$InputType_LiquidAddressImplCopyWith(
-          _$InputType_LiquidAddressImpl value, $Res Function(_$InputType_LiquidAddressImpl) then) =
-      __$$InputType_LiquidAddressImplCopyWithImpl<$Res>;
+    _$InputType_LiquidAddressImpl value,
+    $Res Function(_$InputType_LiquidAddressImpl) then,
+  ) = __$$InputType_LiquidAddressImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LiquidAddressData address});
 }
@@ -504,22 +522,24 @@ class __$$InputType_LiquidAddressImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_LiquidAddressImpl>
     implements _$$InputType_LiquidAddressImplCopyWith<$Res> {
   __$$InputType_LiquidAddressImplCopyWithImpl(
-      _$InputType_LiquidAddressImpl _value, $Res Function(_$InputType_LiquidAddressImpl) _then)
-      : super(_value, _then);
+    _$InputType_LiquidAddressImpl _value,
+    $Res Function(_$InputType_LiquidAddressImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? address = null,
-  }) {
-    return _then(_$InputType_LiquidAddressImpl(
-      address: null == address
-          ? _value.address
-          : address // ignore: cast_nullable_to_non_nullable
-              as LiquidAddressData,
-    ));
+  $Res call({Object? address = null}) {
+    return _then(
+      _$InputType_LiquidAddressImpl(
+        address:
+            null == address
+                ? _value.address
+                : address // ignore: cast_nullable_to_non_nullable
+                    as LiquidAddressData,
+      ),
+    );
   }
 }
 
@@ -573,8 +593,9 @@ abstract class InputType_LiquidAddress extends InputType {
 /// @nodoc
 abstract class _$$InputType_Bolt11ImplCopyWith<$Res> {
   factory _$$InputType_Bolt11ImplCopyWith(
-          _$InputType_Bolt11Impl value, $Res Function(_$InputType_Bolt11Impl) then) =
-      __$$InputType_Bolt11ImplCopyWithImpl<$Res>;
+    _$InputType_Bolt11Impl value,
+    $Res Function(_$InputType_Bolt11Impl) then,
+  ) = __$$InputType_Bolt11ImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LNInvoice invoice});
 }
@@ -583,22 +604,24 @@ abstract class _$$InputType_Bolt11ImplCopyWith<$Res> {
 class __$$InputType_Bolt11ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt11Impl>
     implements _$$InputType_Bolt11ImplCopyWith<$Res> {
   __$$InputType_Bolt11ImplCopyWithImpl(
-      _$InputType_Bolt11Impl _value, $Res Function(_$InputType_Bolt11Impl) _then)
-      : super(_value, _then);
+    _$InputType_Bolt11Impl _value,
+    $Res Function(_$InputType_Bolt11Impl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? invoice = null,
-  }) {
-    return _then(_$InputType_Bolt11Impl(
-      invoice: null == invoice
-          ? _value.invoice
-          : invoice // ignore: cast_nullable_to_non_nullable
-              as LNInvoice,
-    ));
+  $Res call({Object? invoice = null}) {
+    return _then(
+      _$InputType_Bolt11Impl(
+        invoice:
+            null == invoice
+                ? _value.invoice
+                : invoice // ignore: cast_nullable_to_non_nullable
+                    as LNInvoice,
+      ),
+    );
   }
 }
 
@@ -650,8 +673,9 @@ abstract class InputType_Bolt11 extends InputType {
 /// @nodoc
 abstract class _$$InputType_Bolt12OfferImplCopyWith<$Res> {
   factory _$$InputType_Bolt12OfferImplCopyWith(
-          _$InputType_Bolt12OfferImpl value, $Res Function(_$InputType_Bolt12OfferImpl) then) =
-      __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>;
+    _$InputType_Bolt12OfferImpl value,
+    $Res Function(_$InputType_Bolt12OfferImpl) then,
+  ) = __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LNOffer offer, String? bip353Address});
 }
@@ -661,27 +685,29 @@ class __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt12OfferImpl>
     implements _$$InputType_Bolt12OfferImplCopyWith<$Res> {
   __$$InputType_Bolt12OfferImplCopyWithImpl(
-      _$InputType_Bolt12OfferImpl _value, $Res Function(_$InputType_Bolt12OfferImpl) _then)
-      : super(_value, _then);
+    _$InputType_Bolt12OfferImpl _value,
+    $Res Function(_$InputType_Bolt12OfferImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? offer = null,
-    Object? bip353Address = freezed,
-  }) {
-    return _then(_$InputType_Bolt12OfferImpl(
-      offer: null == offer
-          ? _value.offer
-          : offer // ignore: cast_nullable_to_non_nullable
-              as LNOffer,
-      bip353Address: freezed == bip353Address
-          ? _value.bip353Address
-          : bip353Address // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
+  $Res call({Object? offer = null, Object? bip353Address = freezed}) {
+    return _then(
+      _$InputType_Bolt12OfferImpl(
+        offer:
+            null == offer
+                ? _value.offer
+                : offer // ignore: cast_nullable_to_non_nullable
+                    as LNOffer,
+        bip353Address:
+            freezed == bip353Address
+                ? _value.bip353Address
+                : bip353Address // ignore: cast_nullable_to_non_nullable
+                    as String?,
+      ),
+    );
   }
 }
 
@@ -739,8 +765,9 @@ abstract class InputType_Bolt12Offer extends InputType {
 /// @nodoc
 abstract class _$$InputType_NodeIdImplCopyWith<$Res> {
   factory _$$InputType_NodeIdImplCopyWith(
-          _$InputType_NodeIdImpl value, $Res Function(_$InputType_NodeIdImpl) then) =
-      __$$InputType_NodeIdImplCopyWithImpl<$Res>;
+    _$InputType_NodeIdImpl value,
+    $Res Function(_$InputType_NodeIdImpl) then,
+  ) = __$$InputType_NodeIdImplCopyWithImpl<$Res>;
   @useResult
   $Res call({String nodeId});
 }
@@ -749,22 +776,24 @@ abstract class _$$InputType_NodeIdImplCopyWith<$Res> {
 class __$$InputType_NodeIdImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_NodeIdImpl>
     implements _$$InputType_NodeIdImplCopyWith<$Res> {
   __$$InputType_NodeIdImplCopyWithImpl(
-      _$InputType_NodeIdImpl _value, $Res Function(_$InputType_NodeIdImpl) _then)
-      : super(_value, _then);
+    _$InputType_NodeIdImpl _value,
+    $Res Function(_$InputType_NodeIdImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? nodeId = null,
-  }) {
-    return _then(_$InputType_NodeIdImpl(
-      nodeId: null == nodeId
-          ? _value.nodeId
-          : nodeId // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? nodeId = null}) {
+    return _then(
+      _$InputType_NodeIdImpl(
+        nodeId:
+            null == nodeId
+                ? _value.nodeId
+                : nodeId // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -825,21 +854,22 @@ abstract class _$$InputType_UrlImplCopyWith<$Res> {
 class __$$InputType_UrlImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_UrlImpl>
     implements _$$InputType_UrlImplCopyWith<$Res> {
   __$$InputType_UrlImplCopyWithImpl(_$InputType_UrlImpl _value, $Res Function(_$InputType_UrlImpl) _then)
-      : super(_value, _then);
+    : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? url = null,
-  }) {
-    return _then(_$InputType_UrlImpl(
-      url: null == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+  $Res call({Object? url = null}) {
+    return _then(
+      _$InputType_UrlImpl(
+        url:
+            null == url
+                ? _value.url
+                : url // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
   }
 }
 
@@ -891,8 +921,9 @@ abstract class InputType_Url extends InputType {
 /// @nodoc
 abstract class _$$InputType_LnUrlPayImplCopyWith<$Res> {
   factory _$$InputType_LnUrlPayImplCopyWith(
-          _$InputType_LnUrlPayImpl value, $Res Function(_$InputType_LnUrlPayImpl) then) =
-      __$$InputType_LnUrlPayImplCopyWithImpl<$Res>;
+    _$InputType_LnUrlPayImpl value,
+    $Res Function(_$InputType_LnUrlPayImpl) then,
+  ) = __$$InputType_LnUrlPayImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlPayRequestData data, String? bip353Address});
 }
@@ -902,27 +933,29 @@ class __$$InputType_LnUrlPayImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlPayImpl>
     implements _$$InputType_LnUrlPayImplCopyWith<$Res> {
   __$$InputType_LnUrlPayImplCopyWithImpl(
-      _$InputType_LnUrlPayImpl _value, $Res Function(_$InputType_LnUrlPayImpl) _then)
-      : super(_value, _then);
+    _$InputType_LnUrlPayImpl _value,
+    $Res Function(_$InputType_LnUrlPayImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-    Object? bip353Address = freezed,
-  }) {
-    return _then(_$InputType_LnUrlPayImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlPayRequestData,
-      bip353Address: freezed == bip353Address
-          ? _value.bip353Address
-          : bip353Address // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
+  $Res call({Object? data = null, Object? bip353Address = freezed}) {
+    return _then(
+      _$InputType_LnUrlPayImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlPayRequestData,
+        bip353Address:
+            freezed == bip353Address
+                ? _value.bip353Address
+                : bip353Address // ignore: cast_nullable_to_non_nullable
+                    as String?,
+      ),
+    );
   }
 }
 
@@ -980,8 +1013,9 @@ abstract class InputType_LnUrlPay extends InputType {
 /// @nodoc
 abstract class _$$InputType_LnUrlWithdrawImplCopyWith<$Res> {
   factory _$$InputType_LnUrlWithdrawImplCopyWith(
-          _$InputType_LnUrlWithdrawImpl value, $Res Function(_$InputType_LnUrlWithdrawImpl) then) =
-      __$$InputType_LnUrlWithdrawImplCopyWithImpl<$Res>;
+    _$InputType_LnUrlWithdrawImpl value,
+    $Res Function(_$InputType_LnUrlWithdrawImpl) then,
+  ) = __$$InputType_LnUrlWithdrawImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlWithdrawRequestData data});
 }
@@ -991,22 +1025,24 @@ class __$$InputType_LnUrlWithdrawImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlWithdrawImpl>
     implements _$$InputType_LnUrlWithdrawImplCopyWith<$Res> {
   __$$InputType_LnUrlWithdrawImplCopyWithImpl(
-      _$InputType_LnUrlWithdrawImpl _value, $Res Function(_$InputType_LnUrlWithdrawImpl) _then)
-      : super(_value, _then);
+    _$InputType_LnUrlWithdrawImpl _value,
+    $Res Function(_$InputType_LnUrlWithdrawImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$InputType_LnUrlWithdrawImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlWithdrawRequestData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$InputType_LnUrlWithdrawImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlWithdrawRequestData,
+      ),
+    );
   }
 }
 
@@ -1060,8 +1096,9 @@ abstract class InputType_LnUrlWithdraw extends InputType {
 /// @nodoc
 abstract class _$$InputType_LnUrlAuthImplCopyWith<$Res> {
   factory _$$InputType_LnUrlAuthImplCopyWith(
-          _$InputType_LnUrlAuthImpl value, $Res Function(_$InputType_LnUrlAuthImpl) then) =
-      __$$InputType_LnUrlAuthImplCopyWithImpl<$Res>;
+    _$InputType_LnUrlAuthImpl value,
+    $Res Function(_$InputType_LnUrlAuthImpl) then,
+  ) = __$$InputType_LnUrlAuthImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlAuthRequestData data});
 }
@@ -1071,22 +1108,24 @@ class __$$InputType_LnUrlAuthImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlAuthImpl>
     implements _$$InputType_LnUrlAuthImplCopyWith<$Res> {
   __$$InputType_LnUrlAuthImplCopyWithImpl(
-      _$InputType_LnUrlAuthImpl _value, $Res Function(_$InputType_LnUrlAuthImpl) _then)
-      : super(_value, _then);
+    _$InputType_LnUrlAuthImpl _value,
+    $Res Function(_$InputType_LnUrlAuthImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$InputType_LnUrlAuthImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlAuthRequestData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$InputType_LnUrlAuthImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlAuthRequestData,
+      ),
+    );
   }
 }
 
@@ -1139,8 +1178,9 @@ abstract class InputType_LnUrlAuth extends InputType {
 /// @nodoc
 abstract class _$$InputType_LnUrlErrorImplCopyWith<$Res> {
   factory _$$InputType_LnUrlErrorImplCopyWith(
-          _$InputType_LnUrlErrorImpl value, $Res Function(_$InputType_LnUrlErrorImpl) then) =
-      __$$InputType_LnUrlErrorImplCopyWithImpl<$Res>;
+    _$InputType_LnUrlErrorImpl value,
+    $Res Function(_$InputType_LnUrlErrorImpl) then,
+  ) = __$$InputType_LnUrlErrorImplCopyWithImpl<$Res>;
   @useResult
   $Res call({LnUrlErrorData data});
 }
@@ -1150,22 +1190,24 @@ class __$$InputType_LnUrlErrorImplCopyWithImpl<$Res>
     extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlErrorImpl>
     implements _$$InputType_LnUrlErrorImplCopyWith<$Res> {
   __$$InputType_LnUrlErrorImplCopyWithImpl(
-      _$InputType_LnUrlErrorImpl _value, $Res Function(_$InputType_LnUrlErrorImpl) _then)
-      : super(_value, _then);
+    _$InputType_LnUrlErrorImpl _value,
+    $Res Function(_$InputType_LnUrlErrorImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of InputType
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$InputType_LnUrlErrorImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as LnUrlErrorData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$InputType_LnUrlErrorImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as LnUrlErrorData,
+      ),
+    );
   }
 }
 
@@ -1242,8 +1284,9 @@ class _$SuccessActionCopyWithImpl<$Res, $Val extends SuccessAction> implements $
 /// @nodoc
 abstract class _$$SuccessAction_AesImplCopyWith<$Res> {
   factory _$$SuccessAction_AesImplCopyWith(
-          _$SuccessAction_AesImpl value, $Res Function(_$SuccessAction_AesImpl) then) =
-      __$$SuccessAction_AesImplCopyWithImpl<$Res>;
+    _$SuccessAction_AesImpl value,
+    $Res Function(_$SuccessAction_AesImpl) then,
+  ) = __$$SuccessAction_AesImplCopyWithImpl<$Res>;
   @useResult
   $Res call({AesSuccessActionData data});
 }
@@ -1253,22 +1296,24 @@ class __$$SuccessAction_AesImplCopyWithImpl<$Res>
     extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_AesImpl>
     implements _$$SuccessAction_AesImplCopyWith<$Res> {
   __$$SuccessAction_AesImplCopyWithImpl(
-      _$SuccessAction_AesImpl _value, $Res Function(_$SuccessAction_AesImpl) _then)
-      : super(_value, _then);
+    _$SuccessAction_AesImpl _value,
+    $Res Function(_$SuccessAction_AesImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SuccessAction
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$SuccessAction_AesImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as AesSuccessActionData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$SuccessAction_AesImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as AesSuccessActionData,
+      ),
+    );
   }
 }
 
@@ -1322,8 +1367,9 @@ abstract class SuccessAction_Aes extends SuccessAction {
 /// @nodoc
 abstract class _$$SuccessAction_MessageImplCopyWith<$Res> {
   factory _$$SuccessAction_MessageImplCopyWith(
-          _$SuccessAction_MessageImpl value, $Res Function(_$SuccessAction_MessageImpl) then) =
-      __$$SuccessAction_MessageImplCopyWithImpl<$Res>;
+    _$SuccessAction_MessageImpl value,
+    $Res Function(_$SuccessAction_MessageImpl) then,
+  ) = __$$SuccessAction_MessageImplCopyWithImpl<$Res>;
   @useResult
   $Res call({MessageSuccessActionData data});
 }
@@ -1333,22 +1379,24 @@ class __$$SuccessAction_MessageImplCopyWithImpl<$Res>
     extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_MessageImpl>
     implements _$$SuccessAction_MessageImplCopyWith<$Res> {
   __$$SuccessAction_MessageImplCopyWithImpl(
-      _$SuccessAction_MessageImpl _value, $Res Function(_$SuccessAction_MessageImpl) _then)
-      : super(_value, _then);
+    _$SuccessAction_MessageImpl _value,
+    $Res Function(_$SuccessAction_MessageImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SuccessAction
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$SuccessAction_MessageImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as MessageSuccessActionData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$SuccessAction_MessageImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as MessageSuccessActionData,
+      ),
+    );
   }
 }
 
@@ -1403,8 +1451,9 @@ abstract class SuccessAction_Message extends SuccessAction {
 /// @nodoc
 abstract class _$$SuccessAction_UrlImplCopyWith<$Res> {
   factory _$$SuccessAction_UrlImplCopyWith(
-          _$SuccessAction_UrlImpl value, $Res Function(_$SuccessAction_UrlImpl) then) =
-      __$$SuccessAction_UrlImplCopyWithImpl<$Res>;
+    _$SuccessAction_UrlImpl value,
+    $Res Function(_$SuccessAction_UrlImpl) then,
+  ) = __$$SuccessAction_UrlImplCopyWithImpl<$Res>;
   @useResult
   $Res call({UrlSuccessActionData data});
 }
@@ -1414,22 +1463,24 @@ class __$$SuccessAction_UrlImplCopyWithImpl<$Res>
     extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_UrlImpl>
     implements _$$SuccessAction_UrlImplCopyWith<$Res> {
   __$$SuccessAction_UrlImplCopyWithImpl(
-      _$SuccessAction_UrlImpl _value, $Res Function(_$SuccessAction_UrlImpl) _then)
-      : super(_value, _then);
+    _$SuccessAction_UrlImpl _value,
+    $Res Function(_$SuccessAction_UrlImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SuccessAction
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$SuccessAction_UrlImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as UrlSuccessActionData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$SuccessAction_UrlImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as UrlSuccessActionData,
+      ),
+    );
   }
 }
 
@@ -1486,8 +1537,9 @@ mixin _$SuccessActionProcessed {}
 /// @nodoc
 abstract class $SuccessActionProcessedCopyWith<$Res> {
   factory $SuccessActionProcessedCopyWith(
-          SuccessActionProcessed value, $Res Function(SuccessActionProcessed) then) =
-      _$SuccessActionProcessedCopyWithImpl<$Res, SuccessActionProcessed>;
+    SuccessActionProcessed value,
+    $Res Function(SuccessActionProcessed) then,
+  ) = _$SuccessActionProcessedCopyWithImpl<$Res, SuccessActionProcessed>;
 }
 
 /// @nodoc
@@ -1507,8 +1559,9 @@ class _$SuccessActionProcessedCopyWithImpl<$Res, $Val extends SuccessActionProce
 /// @nodoc
 abstract class _$$SuccessActionProcessed_AesImplCopyWith<$Res> {
   factory _$$SuccessActionProcessed_AesImplCopyWith(
-          _$SuccessActionProcessed_AesImpl value, $Res Function(_$SuccessActionProcessed_AesImpl) then) =
-      __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>;
+    _$SuccessActionProcessed_AesImpl value,
+    $Res Function(_$SuccessActionProcessed_AesImpl) then,
+  ) = __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>;
   @useResult
   $Res call({AesSuccessActionDataResult result});
 
@@ -1520,22 +1573,24 @@ class __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>
     extends _$SuccessActionProcessedCopyWithImpl<$Res, _$SuccessActionProcessed_AesImpl>
     implements _$$SuccessActionProcessed_AesImplCopyWith<$Res> {
   __$$SuccessActionProcessed_AesImplCopyWithImpl(
-      _$SuccessActionProcessed_AesImpl _value, $Res Function(_$SuccessActionProcessed_AesImpl) _then)
-      : super(_value, _then);
+    _$SuccessActionProcessed_AesImpl _value,
+    $Res Function(_$SuccessActionProcessed_AesImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SuccessActionProcessed
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? result = null,
-  }) {
-    return _then(_$SuccessActionProcessed_AesImpl(
-      result: null == result
-          ? _value.result
-          : result // ignore: cast_nullable_to_non_nullable
-              as AesSuccessActionDataResult,
-    ));
+  $Res call({Object? result = null}) {
+    return _then(
+      _$SuccessActionProcessed_AesImpl(
+        result:
+            null == result
+                ? _value.result
+                : result // ignore: cast_nullable_to_non_nullable
+                    as AesSuccessActionDataResult,
+      ),
+    );
   }
 
   /// Create a copy of SuccessActionProcessed
@@ -1598,9 +1653,10 @@ abstract class SuccessActionProcessed_Aes extends SuccessActionProcessed {
 
 /// @nodoc
 abstract class _$$SuccessActionProcessed_MessageImplCopyWith<$Res> {
-  factory _$$SuccessActionProcessed_MessageImplCopyWith(_$SuccessActionProcessed_MessageImpl value,
-          $Res Function(_$SuccessActionProcessed_MessageImpl) then) =
-      __$$SuccessActionProcessed_MessageImplCopyWithImpl<$Res>;
+  factory _$$SuccessActionProcessed_MessageImplCopyWith(
+    _$SuccessActionProcessed_MessageImpl value,
+    $Res Function(_$SuccessActionProcessed_MessageImpl) then,
+  ) = __$$SuccessActionProcessed_MessageImplCopyWithImpl<$Res>;
   @useResult
   $Res call({MessageSuccessActionData data});
 }
@@ -1610,22 +1666,24 @@ class __$$SuccessActionProcessed_MessageImplCopyWithImpl<$Res>
     extends _$SuccessActionProcessedCopyWithImpl<$Res, _$SuccessActionProcessed_MessageImpl>
     implements _$$SuccessActionProcessed_MessageImplCopyWith<$Res> {
   __$$SuccessActionProcessed_MessageImplCopyWithImpl(
-      _$SuccessActionProcessed_MessageImpl _value, $Res Function(_$SuccessActionProcessed_MessageImpl) _then)
-      : super(_value, _then);
+    _$SuccessActionProcessed_MessageImpl _value,
+    $Res Function(_$SuccessActionProcessed_MessageImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SuccessActionProcessed
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$SuccessActionProcessed_MessageImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as MessageSuccessActionData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$SuccessActionProcessed_MessageImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as MessageSuccessActionData,
+      ),
+    );
   }
 }
 
@@ -1660,7 +1718,9 @@ class _$SuccessActionProcessed_MessageImpl extends SuccessActionProcessed_Messag
   @pragma('vm:prefer-inline')
   _$$SuccessActionProcessed_MessageImplCopyWith<_$SuccessActionProcessed_MessageImpl> get copyWith =>
       __$$SuccessActionProcessed_MessageImplCopyWithImpl<_$SuccessActionProcessed_MessageImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 }
 
 abstract class SuccessActionProcessed_Message extends SuccessActionProcessed {
@@ -1680,8 +1740,9 @@ abstract class SuccessActionProcessed_Message extends SuccessActionProcessed {
 /// @nodoc
 abstract class _$$SuccessActionProcessed_UrlImplCopyWith<$Res> {
   factory _$$SuccessActionProcessed_UrlImplCopyWith(
-          _$SuccessActionProcessed_UrlImpl value, $Res Function(_$SuccessActionProcessed_UrlImpl) then) =
-      __$$SuccessActionProcessed_UrlImplCopyWithImpl<$Res>;
+    _$SuccessActionProcessed_UrlImpl value,
+    $Res Function(_$SuccessActionProcessed_UrlImpl) then,
+  ) = __$$SuccessActionProcessed_UrlImplCopyWithImpl<$Res>;
   @useResult
   $Res call({UrlSuccessActionData data});
 }
@@ -1691,22 +1752,24 @@ class __$$SuccessActionProcessed_UrlImplCopyWithImpl<$Res>
     extends _$SuccessActionProcessedCopyWithImpl<$Res, _$SuccessActionProcessed_UrlImpl>
     implements _$$SuccessActionProcessed_UrlImplCopyWith<$Res> {
   __$$SuccessActionProcessed_UrlImplCopyWithImpl(
-      _$SuccessActionProcessed_UrlImpl _value, $Res Function(_$SuccessActionProcessed_UrlImpl) _then)
-      : super(_value, _then);
+    _$SuccessActionProcessed_UrlImpl _value,
+    $Res Function(_$SuccessActionProcessed_UrlImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SuccessActionProcessed
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? data = null,
-  }) {
-    return _then(_$SuccessActionProcessed_UrlImpl(
-      data: null == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as UrlSuccessActionData,
-    ));
+  $Res call({Object? data = null}) {
+    return _then(
+      _$SuccessActionProcessed_UrlImpl(
+        data:
+            null == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                    as UrlSuccessActionData,
+      ),
+    );
   }
 }
 
