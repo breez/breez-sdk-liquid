@@ -251,6 +251,7 @@ impl Swapper for MockSwapper {
         _swap: Swap,
         _refund_address: &str,
         _fee_rate_sat_per_vb: Option<f64>,
+        _is_cooperative: bool,
     ) -> Result<(u32, u64), SdkError> {
         Ok((0, 0))
     }
