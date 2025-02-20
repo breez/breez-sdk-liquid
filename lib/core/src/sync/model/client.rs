@@ -5,7 +5,7 @@ use crate::{
 use anyhow::Result;
 use log::trace;
 use lwk_wollet::hashes::hex::DisplayHex as _;
-use openssl::sha::sha256;
+use sdk_common::bitcoin::hashes::{sha256, Hash};
 use std::sync::Arc;
 
 use super::{
@@ -16,10 +16,10 @@ use super::{
 fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, SignerError> {
     let msg = [MESSAGE_PREFIX, msg].concat();
     trace!("About to compute sha256 hash of msg: {msg:?}");
-    let digest = sha256(&sha256(&msg));
+    let digest = sha256::Hash::hash(&sha256::Hash::hash(&msg));
     trace!("About to sign digest: {digest:?}");
     signer
-        .sign_ecdsa_recoverable(digest.into())
+        .sign_ecdsa_recoverable(digest.to_vec())
         .map(|bytes| zbase32::encode_full_bytes(&bytes))
 }
 

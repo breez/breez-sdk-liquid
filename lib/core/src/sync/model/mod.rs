@@ -8,11 +8,11 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 use log::trace;
 use lwk_wollet::hashes::hex::DisplayHex;
-use openssl::sha::sha256;
 use rusqlite::{
     types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef},
     ToSql,
 };
+use sdk_common::bitcoin::hashes::{sha256, Hash};
 use semver::Version;
 
 pub(crate) mod client;
@@ -151,7 +151,7 @@ impl Record {
     }
 
     fn id(prefix: String, data_id: &str) -> String {
-        sha256((prefix + ":" + data_id).as_bytes()).to_lower_hex_string()
+        sha256::Hash::hash((prefix + ":" + data_id).as_bytes()).to_lower_hex_string()
     }
 
     pub(crate) fn get_id_from_sync_data(data: &SyncData) -> String {
