@@ -2510,9 +2510,8 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c10584274047cb335c23d3e61bcef8e323adae7c5c8c760540f73610177fc3f"
+version = "0.31.0"
+source = "git+https://github.com/Spxg/rusqlite?rev=e36644127f31fa6e7ea0999b59432deb4a07f220#e36644127f31fa6e7ea0999b59432deb4a07f220"
 dependencies = [
  "cc",
  "pkg-config",
@@ -3555,9 +3554,8 @@ dependencies = [
 
 [[package]]
 name = "rusqlite"
-version = "0.31.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b838eba278d213a8beaf485bd313fd580ca4505a00d5871caeb1457c55322cae"
+version = "0.33.0"
+source = "git+https://github.com/Spxg/rusqlite?rev=e36644127f31fa6e7ea0999b59432deb4a07f220#e36644127f31fa6e7ea0999b59432deb4a07f220"
 dependencies = [
  "bitflags 2.6.0",
  "fallible-iterator",
@@ -3565,13 +3563,13 @@ dependencies = [
  "hashlink",
  "libsqlite3-sys",
  "smallvec",
+ "sqlite-wasm-rs",
 ]
 
 [[package]]
 name = "rusqlite_migration"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55709bc01054c69e2f1cefdc886642b5e6376a8db3c86f761be0c423eebf178b"
+version = "1.3.1"
+source = "git+https://github.com/hydra-yse/rusqlite_migration?branch=rusqlite-v0.33.0#b18181b61b4c26549dff9f309e04915b6d2c39a7"
 dependencies = [
  "log",
  "rusqlite",
@@ -4113,6 +4111,24 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+
+[[package]]
+name = "sqlite-wasm-rs"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84473e8335ed2f167c6f8040970d976990fb66aa62292ae58735de6d61ecfb73"
+dependencies = [
+ "fragile",
+ "js-sys",
+ "once_cell",
+ "parking_lot",
+ "thiserror 2.0.12",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "xshell",
+]
 
 [[package]]
 name = "stable_deref_trait"
@@ -5353,6 +5369,21 @@ dependencies = [
  "thiserror 1.0.69",
  "time",
 ]
+
+[[package]]
+name = "xshell"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e7290c623014758632efe00737145b6867b66292c42167f2ec381eb566a373d"
+dependencies = [
+ "xshell-macros",
+]
+
+[[package]]
+name = "xshell-macros"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32ac00cd3f8ec9c1d33fb3e7958a82df6989c42d747bd326c822b1d625283547"
 
 [[package]]
 name = "yoke"
