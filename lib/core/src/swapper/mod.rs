@@ -103,6 +103,7 @@ pub trait Swapper: Send + Sync {
         swap: Swap,
         refund_address: &str,
         fee_rate_sat_per_vb: Option<f64>,
+        is_cooperative: bool,
     ) -> Result<(u32, u64), SdkError>;
 
     /// Create a refund transaction for a send or chain swap

@@ -1035,11 +1035,11 @@ impl ChainSwap {
         Ok(script_pubkey)
     }
 
-    pub(crate) fn to_refundable(&self, refundable_amount_sat: u64) -> RefundableSwap {
+    pub(crate) fn to_refundable(&self, amount_sat: u64) -> RefundableSwap {
         RefundableSwap {
             swap_address: self.lockup_address.clone(),
             timestamp: self.created_at,
-            amount_sat: refundable_amount_sat,
+            amount_sat,
             last_refund_tx_id: self.refund_tx_id.clone(),
         }
     }
