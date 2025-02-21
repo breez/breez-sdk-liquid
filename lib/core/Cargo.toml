@@ -43,13 +43,7 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 ] }
 async-trait = "0.1.86"
 hex = "0.4"
-reqwest = { version = "0.12", default-features = false, features = [
-    "charset",
-    "http2",
-    "json",
-    "blocking",
-    "rustls-tls",
-] }
+reqwest = { version = "0.12", features = [ "json" ] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
