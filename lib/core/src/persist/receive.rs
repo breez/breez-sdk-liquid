@@ -1,21 +1,23 @@
-use std::collections::HashMap;
-
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::swaps::boltz::CreateReverseResponse;
-use rusqlite::{named_params, params, Connection, Row};
+use rusqlite::{named_params, params, Connection, Row, TransactionBehavior};
 use sdk_common::bitcoin::hashes::{hex::ToHex, sha256, Hash};
 use serde::{Deserialize, Serialize};
 
 use crate::ensure_sdk;
 use crate::error::PaymentError;
 use crate::model::*;
-use crate::persist::{get_where_clause_state_in, Persister};
+use crate::persist::{get_where_clause_state_in, where_clauses_to_string, Persister};
+use crate::sync::model::data::ReceiveSyncData;
+use crate::sync::model::RecordType;
 
 impl Persister {
-    pub(crate) fn insert_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
-        let con = self.get_connection()?;
-
-        let mut stmt = con.prepare(
+    pub(crate) fn insert_or_update_receive_swap_inner(
+        con: &Connection,
+        receive_swap: &ReceiveSwap,
+    ) -> Result<()> {
+        let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
+        con.execute(
             "
             INSERT INTO receive_swaps (
                 id,
@@ -24,60 +26,109 @@ impl Persister {
                 create_response_json,
                 claim_private_key,
                 invoice,
+                timeout_block_height,
                 payment_hash,
+                destination_pubkey,
                 payer_amount_sat,
                 receiver_amount_sat,
                 created_at,
                 claim_fees_sat,
                 mrh_address,
-                mrh_script_pubkey,
-                state
+                state,
+                pair_fees_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT DO NOTHING
+            ",
+            (
+                &receive_swap.id,
+                id_hash,
+                &receive_swap.preimage,
+                &receive_swap.create_response_json,
+                &receive_swap.claim_private_key,
+                &receive_swap.invoice,
+                &receive_swap.timeout_block_height,
+                &receive_swap.payment_hash,
+                &receive_swap.destination_pubkey,
+                &receive_swap.payer_amount_sat,
+                &receive_swap.receiver_amount_sat,
+                &receive_swap.created_at,
+                &receive_swap.claim_fees_sat,
+                &receive_swap.mrh_address,
+                &receive_swap.state,
+                &receive_swap.pair_fees_json,
+            ),
         )?;
-        let id_hash = sha256::Hash::hash(receive_swap.id.as_bytes()).to_hex();
-        _ = stmt.execute((
-            &receive_swap.id,
-            id_hash,
-            &receive_swap.preimage,
-            &receive_swap.create_response_json,
-            &receive_swap.claim_private_key,
-            &receive_swap.invoice,
-            &receive_swap.payment_hash,
-            &receive_swap.payer_amount_sat,
-            &receive_swap.receiver_amount_sat,
-            &receive_swap.created_at,
-            &receive_swap.claim_fees_sat,
-            &receive_swap.mrh_address,
-            &receive_swap.mrh_script_pubkey,
-            &receive_swap.state,
-        ))?;
 
-        con.execute(
+        let rows_affected = con.execute(
             "UPDATE receive_swaps
             SET
                 description = :description,
                 claim_tx_id = :claim_tx_id,
-                mrh_tx_id = :mrh_tx_id
+                lockup_tx_id = :lockup_tx_id,
+                mrh_tx_id = :mrh_tx_id,
+                payer_amount_sat = :payer_amount_sat,
+                receiver_amount_sat = :receiver_amount_sat,
+                state = :state
             WHERE
-                id = :id",
+                id = :id AND
+                version = :version",
             named_params! {
                 ":id": &receive_swap.id,
                 ":description": &receive_swap.description,
                 ":claim_tx_id": &receive_swap.claim_tx_id,
+                ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
+                // When the swap is paid via MRH, the recoverer sets the
+                // payer/receiver amount to the MRH tx amount.
+                // This is to show no fees in the payment.
+                ":payer_amount_sat": &receive_swap.payer_amount_sat,
+                ":receiver_amount_sat": &receive_swap.receiver_amount_sat,
+                ":state": &receive_swap.state,
+                ":version": &receive_swap.metadata.version,
             },
         )?;
+        ensure_sdk!(
+            rows_affected > 0,
+            anyhow!("Version mismatch for receive swap {}", receive_swap.id)
+        );
+
+        if receive_swap.mrh_tx_id.is_some() {
+            Self::delete_reserved_address_inner(con, &receive_swap.mrh_address)?;
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn insert_or_update_receive_swap(&self, receive_swap: &ReceiveSwap) -> Result<()> {
+        let maybe_swap = self.fetch_receive_swap_by_id(&receive_swap.id)?;
+        let updated_fields = ReceiveSyncData::updated_fields(maybe_swap, receive_swap);
+
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::insert_or_update_receive_swap_inner(&tx, receive_swap)?;
+
+        // Trigger a sync if:
+        // - updated_fields is None (swap is inserted, not updated)
+        // - updated_fields in a non empty list of updated fields
+        let trigger_sync = updated_fields.as_ref().map_or(true, |u| !u.is_empty());
+        match trigger_sync {
+            true => {
+                self.commit_outgoing(&tx, &receive_swap.id, RecordType::Receive, updated_fields)?;
+                tx.commit()?;
+                self.trigger_sync();
+            }
+            false => {
+                tx.commit()?;
+            }
+        };
 
         Ok(())
     }
 
     fn list_receive_swaps_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "
@@ -88,6 +139,8 @@ impl Persister {
                 rs.claim_private_key,
                 rs.invoice,
                 rs.payment_hash,
+                rs.destination_pubkey,
+                rs.timeout_block_height,
                 rs.description,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -95,11 +148,16 @@ impl Persister {
                 rs.claim_tx_id,
                 rs.lockup_tx_id,
                 rs.mrh_address,
-                rs.mrh_script_pubkey,
                 rs.mrh_tx_id,
                 rs.created_at,
-                rs.state
+                rs.state,
+                rs.pair_fees_json,
+                rs.version,
+                rs.last_updated_at,
+
+                sync_state.is_local
             FROM receive_swaps AS rs
+            LEFT JOIN sync_state ON rs.id = sync_state.data_id
             {where_clause_str}
             ORDER BY rs.created_at
         "
@@ -133,23 +191,25 @@ impl Persister {
             claim_private_key: row.get(3)?,
             invoice: row.get(4)?,
             payment_hash: row.get(5)?,
-            description: row.get(6)?,
-            payer_amount_sat: row.get(7)?,
-            receiver_amount_sat: row.get(8)?,
-            claim_fees_sat: row.get(9)?,
-            claim_tx_id: row.get(10)?,
-            lockup_tx_id: row.get(11)?,
-            mrh_address: row.get(12)?,
-            mrh_script_pubkey: row.get(13)?,
-            mrh_tx_id: row.get(14)?,
-            created_at: row.get(15)?,
-            state: row.get(16)?,
+            destination_pubkey: row.get(6)?,
+            timeout_block_height: row.get(7)?,
+            description: row.get(8)?,
+            payer_amount_sat: row.get(9)?,
+            receiver_amount_sat: row.get(10)?,
+            claim_fees_sat: row.get(11)?,
+            claim_tx_id: row.get(12)?,
+            lockup_tx_id: row.get(13)?,
+            mrh_address: row.get(14)?,
+            mrh_tx_id: row.get(15)?,
+            created_at: row.get(16)?,
+            state: row.get(17)?,
+            pair_fees_json: row.get(18)?,
+            metadata: SwapMetadata {
+                version: row.get(19)?,
+                last_updated_at: row.get(20)?,
+                is_local: row.get::<usize, Option<bool>>(21)?.unwrap_or(true),
+            },
         })
-    }
-
-    pub(crate) fn list_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
-        let con: Connection = self.get_connection()?;
-        self.list_receive_swaps_where(&con, vec![])
     }
 
     pub(crate) fn list_receive_swaps_where(
@@ -166,66 +226,34 @@ impl Persister {
         Ok(ongoing_receive)
     }
 
-    pub(crate) fn list_ongoing_receive_swaps(&self, con: &Connection) -> Result<Vec<ReceiveSwap>> {
+    pub(crate) fn list_ongoing_receive_swaps(
+        &self,
+        is_local: Option<bool>,
+    ) -> Result<Vec<ReceiveSwap>> {
+        let con = self.get_connection()?;
+        let mut where_clauses = vec![get_where_clause_state_in(&[
+            PaymentState::Created,
+            PaymentState::Pending,
+        ])];
+        if let Some(is_local) = is_local {
+            let mut where_is_local = format!("sync_state.is_local = {}", is_local as u8);
+            if is_local {
+                where_is_local = format!("({} OR sync_state.is_local IS NULL)", where_is_local);
+            }
+            where_clauses.push(where_is_local);
+        }
+
+        self.list_receive_swaps_where(&con, where_clauses)
+    }
+
+    pub(crate) fn list_recoverable_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
+        let con = self.get_connection()?;
         let where_clause = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
 
-        self.list_receive_swaps_where(con, where_clause)
-    }
-
-    pub(crate) fn list_pending_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
-        let con: Connection = self.get_connection()?;
-        let query = Self::list_receive_swaps_query(vec!["state = ?1".to_string()]);
-        let res = con
-            .prepare(&query)?
-            .query_map(
-                params![PaymentState::Pending],
-                Self::sql_row_to_receive_swap,
-            )?
-            .map(|i| i.unwrap())
-            .collect();
-        Ok(res)
-    }
-
-    /// Ongoing Receive Swaps with no claim or lockup transactions, indexed by mrh_script_pubkey
-    pub(crate) fn list_ongoing_receive_swaps_by_mrh_script_pubkey(
-        &self,
-    ) -> Result<HashMap<String, ReceiveSwap>> {
-        let con: Connection = self.get_connection()?;
-        let res = self
-            .list_ongoing_receive_swaps(&con)?
-            .iter()
-            .filter_map(|swap| {
-                match (
-                    swap.lockup_tx_id.clone(),
-                    swap.claim_tx_id.clone(),
-                    swap.mrh_script_pubkey.is_empty(),
-                ) {
-                    (None, None, false) => Some((swap.mrh_script_pubkey.clone(), swap.clone())),
-                    _ => None,
-                }
-            })
-            .collect();
-        Ok(res)
-    }
-
-    /// Pending Receive Swaps, indexed by claim_tx_id
-    pub(crate) fn list_pending_receive_swaps_by_claim_tx_id(
-        &self,
-    ) -> Result<HashMap<String, ReceiveSwap>> {
-        let res = self
-            .list_pending_receive_swaps()?
-            .iter()
-            .filter_map(|pending_receive_swap| {
-                pending_receive_swap
-                    .claim_tx_id
-                    .as_ref()
-                    .map(|claim_tx_id| (claim_tx_id.clone(), pending_receive_swap.clone()))
-            })
-            .collect();
-        Ok(res)
+        self.list_receive_swaps_where(&con, where_clause)
     }
 
     // Only set the Receive Swap claim_tx_id if not set, otherwise return an error
@@ -281,26 +309,17 @@ impl Persister {
         mrh_tx_id: Option<&str>,
         mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
-        // Do not overwrite claim_tx_id or lockup_tx_id
-        let con: Connection = self.get_connection()?;
-        con.execute(
+        // Do not overwrite claim_tx_id, lockup_tx_id, mrh_tx_id
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+
+        tx.execute(
             "UPDATE receive_swaps
             SET
-                claim_tx_id =
-                    CASE
-                        WHEN claim_tx_id IS NULL THEN :claim_tx_id
-                        ELSE claim_tx_id
-                    END,
-                lockup_tx_id = 
-                    CASE
-                        WHEN lockup_tx_id IS NULL THEN :lockup_tx_id
-                        ELSE lockup_tx_id
-                    END,
-                mrh_tx_id = 
-                    CASE
-                        WHEN mrh_tx_id IS NULL THEN :mrh_tx_id
-                        ELSE mrh_tx_id
-                    END,
+                claim_tx_id = COALESCE(claim_tx_id, :claim_tx_id),
+                lockup_tx_id = COALESCE(lockup_tx_id, :lockup_tx_id),
+                mrh_tx_id = COALESCE(mrh_tx_id, :mrh_tx_id),
+
                 payer_amount_sat = COALESCE(:mrh_amount_sat, payer_amount_sat),
                 receiver_amount_sat = COALESCE(:mrh_amount_sat, receiver_amount_sat),
                 state = :state
@@ -315,6 +334,17 @@ impl Persister {
                 ":state": to_state,
             },
         )?;
+
+        // NOTE: Receive currently does not update any fields, bypassing the commit logic for now
+        // let updated_fields = None;
+        // Self::commit_outgoing(&tx, swap_id, RecordType::Receive, updated_fields)?;
+        // self.sync_trigger
+        //     .try_send(())
+        //     .map_err(|err| PaymentError::Generic {
+        //         err: format!("Could not trigger manual sync: {err:?}"),
+        //     })?;
+
+        tx.commit()?;
 
         Ok(())
     }
@@ -362,17 +392,17 @@ impl InternalCreateReverseResponse {
 mod tests {
     use anyhow::{anyhow, Result};
 
-    use crate::test_utils::persist::{new_persister, new_receive_swap};
+    use crate::test_utils::persist::{create_persister, new_receive_swap};
 
     use super::PaymentState;
 
     #[test]
     fn test_fetch_receive_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
-        let receive_swap = new_receive_swap(None);
+        let receive_swap = new_receive_swap(None, None);
 
-        storage.insert_receive_swap(&receive_swap)?;
+        storage.insert_or_update_receive_swap(&receive_swap)?;
         // Fetch swap by id
         assert!(storage.fetch_receive_swap_by_id(&receive_swap.id).is_ok());
         // Fetch swap by invoice
@@ -385,12 +415,12 @@ mod tests {
 
     #[test]
     fn test_list_receive_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
         // List general receive swaps
         let range = 0..3;
         for _ in range.clone() {
-            storage.insert_receive_swap(&new_receive_swap(None))?;
+            storage.insert_or_update_receive_swap(&new_receive_swap(None, None))?;
         }
 
         let con = storage.get_connection()?;
@@ -398,23 +428,20 @@ mod tests {
         assert_eq!(swaps.len(), range.len());
 
         // List ongoing receive swaps
-        storage.insert_receive_swap(&new_receive_swap(Some(PaymentState::Pending)))?;
-        let ongoing_swaps = storage.list_ongoing_receive_swaps(&con)?;
+        storage
+            .insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending), None))?;
+        let ongoing_swaps = storage.list_ongoing_receive_swaps(None)?;
         assert_eq!(ongoing_swaps.len(), 4);
-
-        // List pending receive swaps
-        let ongoing_swaps = storage.list_pending_receive_swaps()?;
-        assert_eq!(ongoing_swaps.len(), 1);
 
         Ok(())
     }
 
     #[test]
     fn test_update_receive_swap() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
 
-        let receive_swap = new_receive_swap(None);
-        storage.insert_receive_swap(&receive_swap)?;
+        let receive_swap = new_receive_swap(None, None);
+        storage.insert_or_update_receive_swap(&receive_swap)?;
 
         // Update metadata
         let new_state = PaymentState::Pending;
@@ -435,6 +462,34 @@ mod tests {
 
         assert_eq!(new_state, updated_receive_swap.state);
         assert_eq!(claim_tx_id, updated_receive_swap.claim_tx_id.as_deref());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_writing_stale_swap() -> Result<()> {
+        create_persister!(storage);
+
+        let receive_swap = new_receive_swap(None, None);
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write works if there are no updates in between
+        let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        receive_swap.lockup_tx_id = Some("tx_id".to_string());
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write works if there are no updates in between even if no field changes
+        let receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        storage.insert_or_update_receive_swap(&receive_swap)?;
+
+        // read - update - write fails if there are any updates in between
+        let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
+        receive_swap.lockup_tx_id = Some("tx_id_2".to_string());
+        // Concurrent update
+        storage.set_receive_swap_claim_tx_id(&receive_swap.id, "tx_id")?;
+        assert!(storage
+            .insert_or_update_receive_swap(&receive_swap)
+            .is_err());
 
         Ok(())
     }

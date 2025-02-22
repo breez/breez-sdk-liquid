@@ -1,13 +1,13 @@
 name: flutter_breez_liquid
 description: Flutter wrapper around Dart bindings for the Breez Liquid SDK
-version: 0.4.0-rc3
+version: 0.7.0-rc4
 homepage: https://breez.technology
 repository: https://github.com/breez/breez-sdk-liquid-flutter
 publish_to: 'none'
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
-  flutter: ">=3.22.0"
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:
@@ -22,7 +22,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

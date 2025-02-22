@@ -66,10 +66,6 @@ pub fn default_config(
     LiquidSdk::default_config(network, breez_api_key)
 }
 
-pub async fn parse(input: String) -> Result<InputType, PaymentError> {
-    LiquidSdk::parse(&input).await
-}
-
 #[frb(sync)]
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
@@ -81,7 +77,7 @@ pub struct BindingLiquidSdk {
 
 impl BindingLiquidSdk {
     pub async fn get_info(&self) -> Result<GetInfoResponse, SdkError> {
-        self.sdk.get_info().await.map_err(Into::into)
+        self.sdk.get_info().await
     }
 
     #[frb(sync)]
@@ -95,6 +91,10 @@ impl BindingLiquidSdk {
         req: CheckMessageRequest,
     ) -> Result<CheckMessageResponse, SdkError> {
         self.sdk.check_message(&req)
+    }
+
+    pub async fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        self.sdk.parse(&input).await
     }
 
     pub async fn add_event_listener(
@@ -183,6 +183,20 @@ impl BindingLiquidSdk {
         self.sdk.get_payment(&req).await
     }
 
+    pub async fn fetch_payment_proposed_fees(
+        &self,
+        req: FetchPaymentProposedFeesRequest,
+    ) -> Result<FetchPaymentProposedFeesResponse, SdkError> {
+        self.sdk.fetch_payment_proposed_fees(&req).await
+    }
+
+    pub async fn accept_payment_proposed_fees(
+        &self,
+        req: AcceptPaymentProposedFeesRequest,
+    ) -> Result<(), PaymentError> {
+        self.sdk.accept_payment_proposed_fees(&req).await
+    }
+
     pub async fn prepare_lnurl_pay(
         &self,
         req: PrepareLnUrlPayRequest,
@@ -256,7 +270,7 @@ impl BindingLiquidSdk {
 
     #[frb(name = "sync")]
     pub async fn sync(&self) -> Result<(), SdkError> {
-        self.sdk.sync().await.map_err(Into::into)
+        self.sdk.sync(false).await.map_err(Into::into)
     }
 
     pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
@@ -295,6 +309,13 @@ pub enum _Network {
     Testnet,
     Signet,
     Regtest,
+}
+
+#[frb(mirror(ExternalInputParser))]
+pub struct _ExternalInputParser {
+    pub provider_id: String,
+    pub input_regex: String,
+    pub parser_url: String,
 }
 
 #[frb(mirror(LNInvoice))]
@@ -359,16 +380,38 @@ pub struct _LNOffer {
 
 #[frb(mirror(InputType))]
 pub enum _InputType {
-    BitcoinAddress { address: BitcoinAddressData },
-    LiquidAddress { address: LiquidAddressData },
-    Bolt11 { invoice: LNInvoice },
-    Bolt12Offer { offer: LNOffer },
-    NodeId { node_id: String },
-    Url { url: String },
-    LnUrlPay { data: LnUrlPayRequestData },
-    LnUrlWithdraw { data: LnUrlWithdrawRequestData },
-    LnUrlAuth { data: LnUrlAuthRequestData },
-    LnUrlError { data: LnUrlErrorData },
+    BitcoinAddress {
+        address: BitcoinAddressData,
+    },
+    LiquidAddress {
+        address: LiquidAddressData,
+    },
+    Bolt11 {
+        invoice: LNInvoice,
+    },
+    Bolt12Offer {
+        offer: LNOffer,
+        bip353_address: Option<String>,
+    },
+    NodeId {
+        node_id: String,
+    },
+    Url {
+        url: String,
+    },
+    LnUrlPay {
+        data: LnUrlPayRequestData,
+        bip353_address: Option<String>,
+    },
+    LnUrlWithdraw {
+        data: LnUrlWithdrawRequestData,
+    },
+    LnUrlAuth {
+        data: LnUrlAuthRequestData,
+    },
+    LnUrlError {
+        data: LnUrlErrorData,
+    },
 }
 
 #[frb(mirror(BitcoinAddressData))]
@@ -385,6 +428,7 @@ pub struct _LiquidAddressData {
     pub address: String,
     pub network: Network,
     pub asset_id: Option<String>,
+    pub amount: Option<f64>,
     pub amount_sat: Option<u64>,
     pub label: Option<String>,
     pub message: Option<String>,

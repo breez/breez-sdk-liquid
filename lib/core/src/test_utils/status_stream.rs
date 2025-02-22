@@ -1,7 +1,6 @@
 #![cfg(test)]
 
 use anyhow::Result;
-use async_trait::async_trait;
 use boltz_client::boltz;
 use std::sync::Arc;
 
@@ -29,9 +28,8 @@ impl MockStatusStream {
     }
 }
 
-#[async_trait]
 impl SwapperStatusStream for MockStatusStream {
-    async fn start(
+    fn start(
         self: Arc<Self>,
         _callback: Box<dyn ReconnectHandler>,
         _shutdown: watch::Receiver<()>,

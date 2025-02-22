@@ -1,8 +1,8 @@
 use anyhow::Result;
 use log::debug;
-use rusqlite::{Row, Transaction, TransactionBehavior};
+use rusqlite::{Connection, Row, TransactionBehavior};
 
-use crate::error::PaymentError;
+use crate::{error::PaymentError, persist::where_clauses_to_string};
 
 use super::{Persister, ReservedAddress};
 
@@ -29,11 +29,7 @@ impl Persister {
     }
 
     fn get_reserved_address_query(where_clauses: Vec<String>) -> String {
-        let mut where_clause_str = String::new();
-        if !where_clauses.is_empty() {
-            where_clause_str = String::from("WHERE ");
-            where_clause_str.push_str(where_clauses.join(" AND ").as_str());
-        }
+        let where_clause_str = where_clauses_to_string(where_clauses);
 
         format!(
             "
@@ -80,7 +76,10 @@ impl Persister {
         Ok(())
     }
 
-    fn delete_reserved_address_inner(tx: &Transaction, address: &str) -> Result<(), PaymentError> {
+    pub(crate) fn delete_reserved_address_inner(
+        tx: &Connection,
+        address: &str,
+    ) -> Result<(), PaymentError> {
         tx.execute(
             "DELETE FROM reserved_addresses WHERE address = ?",
             [address],
@@ -101,11 +100,11 @@ impl Persister {
 mod tests {
     use anyhow::Result;
 
-    use crate::test_utils::persist::new_persister;
+    use crate::test_utils::persist::create_persister;
 
     #[test]
     fn test_next_expired_reserved_address() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
         let address = "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n";
 
         storage.insert_or_update_reserved_address(address, 100)?;
@@ -131,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_delete_reserved_address() -> Result<()> {
-        let (_temp_dir, storage) = new_persister()?;
+        create_persister!(storage);
         let address = "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n";
 
         storage.insert_or_update_reserved_address(address, 100)?;

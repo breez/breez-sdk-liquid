@@ -70,6 +70,10 @@ When receiving a payment, the SDK performs a reverse submarine swap, converting 
 
 Within each sub-project readme, there are instructions on how to build, test, and run.
 
+## **Contributing**
+
+Contributions are always welcome. Please read our [contribution guide](CONTRIBUTING.md) to get started.
+
 ## **SDK Development Roadmap**
 
 - [x]  Send/Receive Lightning payments
@@ -85,10 +89,15 @@ Within each sub-project readme, there are instructions on how to build, test, an
 - [x]  Webhook for receiving payments
 - [x]  Offline receive via notifications
 - [x]  Offline swaps via notifications
-- [ ]  Real-time sync
-- [ ]  External input parsers
-- [ ]  Bolt12
-- [ ]  Amountless BTC swaps
-- [ ]  Support USTD as an asset
+- [x]  Real-time sync
+- [x]  External input parsers
+- [x]  Bolt12 send
+- [x]  BIP353 pay codes
+- [x]  Amountless BTC swaps
+- [x]  Support USTD and other Liquid assets
+- [ ]  USDT <-> LBTC swaps
+- [ ]  Pay fees with USDT
+- [ ]  Bolt12 receive
+- [ ]  Lower minimum payment amount
 - [ ]  TLV support
 - [ ]  WebAssembly 

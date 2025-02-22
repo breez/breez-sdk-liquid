@@ -3,57 +3,34 @@ use std::str::FromStr;
 use boltz_client::{
     boltz::SwapTxKind,
     elements::Transaction,
+    fees::Fee,
     util::{liquid_genesis_hash, secrets::Preimage},
-    Amount, Bolt11Invoice, ElementsAddress as Address, LBtcSwapTx,
+    ElementsAddress as Address, LBtcSwapTx,
 };
 use log::info;
 
 use crate::{
     ensure_sdk,
     error::{PaymentError, SdkError},
-    prelude::{
-        ChainSwap, Direction, LiquidNetwork, ReceiveSwap, Swap, Utxo,
-        LOWBALL_FEE_RATE_SAT_PER_VBYTE, STANDARD_FEE_RATE_SAT_PER_VBYTE,
-    },
+    prelude::{ChainSwap, Direction, ReceiveSwap, Swap, Utxo, LIQUID_FEE_RATE_SAT_PER_VBYTE},
+    utils,
 };
 
-use super::BoltzSwapper;
+use super::{BoltzSwapper, ProxyUrlFetcher};
 
-impl BoltzSwapper {
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub(crate) fn validate_send_swap_preimage(
         &self,
         swap_id: &str,
         invoice: &str,
         preimage: &str,
     ) -> Result<(), PaymentError> {
-        Self::verify_payment_hash(preimage, invoice)?;
+        utils::verify_payment_hash(preimage, invoice)?;
         info!("Preimage is valid for Send Swap {swap_id}");
         Ok(())
     }
 
-    pub(crate) fn verify_payment_hash(preimage: &str, invoice: &str) -> Result<(), PaymentError> {
-        let preimage = Preimage::from_str(preimage)?;
-        let preimage_hash = preimage.sha256.to_string();
-
-        let invoice_payment_hash = match Bolt11Invoice::from_str(invoice) {
-            Ok(invoice) => Ok(invoice.payment_hash().to_string()),
-            Err(_) => match crate::utils::parse_bolt12_invoice(invoice) {
-                Ok(invoice) => Ok(invoice.payment_hash().to_string()),
-                Err(e) => Err(PaymentError::Generic {
-                    err: format!("Could not parse invoice: {e:?}"),
-                }),
-            },
-        }?;
-
-        ensure_sdk!(
-            invoice_payment_hash == preimage_hash,
-            PaymentError::InvalidPreimage
-        );
-
-        Ok(())
-    }
-
-    pub(crate) fn new_receive_claim_tx(
+    pub(crate) async fn new_receive_claim_tx(
         &self,
         swap: &ReceiveSwap,
         claim_address: String,
@@ -64,21 +41,23 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.boltz_url.clone(),
+            self.get_url().await?,
             swap.id.clone(),
         )?;
 
         let signed_tx = claim_tx_wrapper.sign_claim(
             &swap.get_claim_keypair()?,
             &Preimage::from_str(&swap.preimage)?,
-            Amount::from_sat(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), None, None),
+            Fee::Absolute(swap.claim_fees_sat),
+            self.get_cooperative_details(swap.id.clone(), None, None)
+                .await?,
+            true,
         )?;
 
         Ok(signed_tx)
     }
 
-    pub(crate) fn new_incoming_chain_claim_tx(
+    pub(crate) async fn new_incoming_chain_claim_tx(
         &self,
         swap: &ChainSwap,
         claim_address: String,
@@ -89,34 +68,32 @@ impl BoltzSwapper {
             swap_script,
             claim_address,
             &self.liquid_electrum_config,
-            self.boltz_url.clone(),
+            self.get_url().await?,
             swap.id.clone(),
         )?;
 
-        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap)?;
+        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap).await?;
 
         let signed_tx = claim_tx_wrapper.sign_claim(
             &claim_keypair,
             &Preimage::from_str(&swap.preimage)?,
-            Amount::from_sat(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig)),
+            Fee::Absolute(swap.claim_fees_sat),
+            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
+                .await?,
+            true,
         )?;
 
         Ok(signed_tx)
     }
 
     fn calculate_refund_fees(&self, refund_tx_size: usize) -> u64 {
-        let fee_rate = match self.config.network {
-            LiquidNetwork::Mainnet => LOWBALL_FEE_RATE_SAT_PER_VBYTE,
-            LiquidNetwork::Testnet => STANDARD_FEE_RATE_SAT_PER_VBYTE,
-        };
-        (refund_tx_size as f64 * fee_rate).ceil() as u64
+        (refund_tx_size as f64 * LIQUID_FEE_RATE_SAT_PER_VBYTE).ceil() as u64
     }
 
-    pub(crate) fn new_lbtc_refund_wrapper(
+    pub(crate) async fn new_lbtc_refund_wrapper(
         &self,
         swap: &Swap,
-        refund_address: &String,
+        refund_address: &str,
     ) -> Result<LBtcSwapTx, SdkError> {
         let refund_wrapper = match swap {
             Swap::Chain(swap) => match swap.direction {
@@ -132,7 +109,7 @@ impl BoltzSwapper {
                         swap_script.as_liquid_script()?,
                         refund_address,
                         &self.liquid_electrum_config,
-                        self.boltz_url.clone(),
+                        self.get_url().await?,
                         swap.id.clone(),
                     )
                 }
@@ -143,7 +120,7 @@ impl BoltzSwapper {
                     swap_script,
                     refund_address,
                     &self.liquid_electrum_config,
-                    self.boltz_url.clone(),
+                    self.get_url().await?,
                     swap.id.clone(),
                 )
             }
@@ -157,14 +134,14 @@ impl BoltzSwapper {
         Ok(refund_wrapper)
     }
 
-    pub(crate) fn new_lbtc_refund_tx(
+    pub(crate) async fn new_lbtc_refund_tx(
         &self,
         swap: &Swap,
         refund_address: &str,
         utxos: Vec<Utxo>,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
-        let (swap_script, refund_keypair, preimage) = match swap {
+        let (swap_script, refund_keypair) = match swap {
             Swap::Chain(swap) => {
                 ensure_sdk!(
                     swap.direction == Direction::Outgoing,
@@ -174,14 +151,9 @@ impl BoltzSwapper {
                 (
                     swap.get_lockup_swap_script()?.as_liquid_script()?,
                     swap.get_refund_keypair()?,
-                    Preimage::from_str(&swap.preimage)?,
                 )
             }
-            Swap::Send(swap) => (
-                swap.get_swap_script()?,
-                swap.get_refund_keypair()?,
-                Preimage::new(),
-            ),
+            Swap::Send(swap) => (swap.get_swap_script()?, swap.get_refund_keypair()?),
             Swap::Receive(_) => {
                 return Err(SdkError::generic(
                     "Cannot create LBTC refund tx for Receive swaps.",
@@ -210,18 +182,22 @@ impl BoltzSwapper {
             genesis_hash,
         };
 
-        let refund_tx_size = refund_tx.size(&refund_keypair, &preimage)?;
+        let refund_tx_size = refund_tx.size(&refund_keypair, is_cooperative, true)?;
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
-            true => self.get_cooperative_details(swap_id.clone(), None, None),
+            true => {
+                self.get_cooperative_details(swap_id.clone(), None, None)
+                    .await?
+            }
             false => None,
         };
 
         let signed_tx = refund_tx.sign_refund(
             &refund_keypair,
-            Amount::from_sat(broadcast_fees_sat),
+            Fee::Absolute(broadcast_fees_sat),
             cooperative,
+            true,
         )?;
         Ok(signed_tx)
     }

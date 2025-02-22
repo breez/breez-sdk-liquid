@@ -27,14 +27,17 @@ extension on String {
   }
 }
 
-String dylibPath(String profile) => Uri.base
-    .resolve(p.joinAll([
-      '../../lib/target',
-      if (Platform.isMacOS && hostTriple.startsWith('aarch64')) hostTriple,
-      profile,
-      'breez_sdk_liquid'.dylib,
-    ]))
-    .toFilePath();
+String dylibPath(String profile) =>
+    Uri.base
+        .resolve(
+          p.joinAll([
+            '../../lib/target',
+            if (Platform.isMacOS && hostTriple.startsWith('aarch64')) hostTriple,
+            profile,
+            'breez_sdk_liquid'.dylib,
+          ]),
+        )
+        .toFilePath();
 
 Future<void> initApi({String profile = 'frb-min'}) {
   return initialize(dylib: ExternalLibrary.open(dylibPath(profile)));

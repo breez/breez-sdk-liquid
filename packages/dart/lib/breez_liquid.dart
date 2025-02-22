@@ -27,9 +27,11 @@ class UnsupportedPlatform implements Exception {
 Future<void> initialize({ExternalLibrary? dylib}) async {
   try {
     dylib ??= await _loadPlatformSpecificLibrary();
-    _log.info(dylib != null
-        ? 'Initializing RustLib with the provided library'
-        : 'Initializing RustLib with the default ExternalLibrary');
+    _log.info(
+      dylib != null
+          ? 'Initializing RustLib with the provided library'
+          : 'Initializing RustLib with the default ExternalLibrary',
+    );
     await RustLib.init(externalLibrary: dylib);
   } catch (e, stacktrace) {
     _log.severe('Initialization failed: $e', e, stacktrace);

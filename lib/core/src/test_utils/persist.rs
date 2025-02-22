@@ -1,6 +1,5 @@
 #![cfg(test)]
 
-use anyhow::{anyhow, Result};
 use bip39::rand::{self, RngCore};
 use sdk_common::{
     bitcoin::{
@@ -9,12 +8,11 @@ use sdk_common::{
     },
     lightning::ln::PaymentSecret,
     lightning_invoice::{Currency, InvoiceBuilder},
+    prelude::invoice_pubkey,
 };
-use tempdir::TempDir;
 
 use crate::{
     model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
-    persist::Persister,
     test_utils::generate_random_string,
     utils,
 };
@@ -26,7 +24,10 @@ fn new_secret_key() -> SecretKey {
     SecretKey::from_slice(&buf).expect("Expected valid secret key")
 }
 
-pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
+pub(crate) fn new_send_swap(
+    payment_state: Option<PaymentState>,
+    receiver_amount_sat: Option<u64>,
+) -> SendSwap {
     let private_key = new_secret_key();
 
     let payment_hash = sha256::Hash::from_slice(&[0; 32][..]).expect("Expecting valid hash");
@@ -38,16 +39,32 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         .min_final_cltv_expiry_delta(144)
         .build_signed(|hash| Secp256k1::new().sign_ecdsa_recoverable(hash, &private_key))
         .expect("Expected valid invoice");
+    let destination_pubkey = invoice_pubkey(&invoice);
 
     SendSwap {
         id: generate_random_string(4),
         invoice: invoice.to_string(),
         bolt12_offer: None,
         payment_hash: Some(payment_hash.to_string()),
+        destination_pubkey: Some(destination_pubkey),
+        timeout_block_height: 1459611,
         description: Some("Send to BTC lightning".to_string()),
         preimage: None,
         payer_amount_sat: 1149,
-        receiver_amount_sat: 1000,
+        receiver_amount_sat: receiver_amount_sat.unwrap_or(1000),
+        pair_fees_json: r#"{
+            "hash": "b53c0ac3da051a78f67f6dd25f2ab0858492dc6881015b236d554227c85fda7d",
+            "rate": 1,
+            "limits": {
+                "maximal": 25000000,
+                "minimal": 1000,
+                "maximalZeroConf": 100000
+            },
+            "fees": {
+                "percentage": 0.1,
+                "minerFees": 148
+            }
+        }"#.to_string(),
         create_response_json: r#"{
             "accept_zero_conf": true,
             "address": "tlq1pqwq5ft2l0khw7fr2f0fzfz5c00lku06sy9sgqlzhuj8y5vgslfx6y2pffw53ksu76uv25zkss8vpam96y8n2ke826mfmklaeg057guneaf8hr0ckqh0z",
@@ -72,67 +89,66 @@ pub(crate) fn new_send_swap(payment_state: Option<PaymentState>) -> SendSwap {
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
         refund_private_key: "945affeef55f12227f1d4a3f80a17062a05b229ddc5a01591eb5ddf882df92e3".to_string(),
+        metadata: Default::default(),
     }
 }
 
-pub(crate) fn new_receive_swap(payment_state: Option<PaymentState>) -> ReceiveSwap {
+pub(crate) fn new_receive_swap(
+    payment_state: Option<PaymentState>,
+    receiver_amount_sat: Option<u64>,
+) -> ReceiveSwap {
     ReceiveSwap {
         id: generate_random_string(4),
-        preimage: "49ef4cb865d78519e5b3cf6aae6b409e1b471fe8ddbda744582e23665a2252cf".to_string(),
+        preimage: "7d3ef1b83ea380e570100c54efc164cd258f5014568eed41780b0561997c4f9f".to_string(),
+        timeout_block_height: 1459611,
         description: Some("Send to L-BTC address".to_string()),
-        create_response_json: r#"{
-            "swap_tree": {
-                "claim_leaf": {
-                    "output": "82012088a9140383457bbf2cec402b74a408fdfc43a800ee9a0088206a3c0b798ae842c0b54d8de3610ebcb4221574d0dc0be44547cf0a2acf860474ac",
-                    "version": 196
-                },
-                "refund_leaf": {
-                    "output": "20c95af4b20b6146d86487389306445ffb8893af21bbcad7fedfa2223df16bc190ad039b4516b1",
-                    "version": 196
-                }
-            },
-            "lockup_address": "tlq1pqdgzxrqac50pmn40f46alyuc9n90zafdu2x2r7ks5lmdu2n8u4tlh5nrnxv7nvdqjyehm3fqkzv5g0e2plxc0u3zj304hva3usshjf6ev9ezza8p5gsc",
-            "refund_public_key": "02c95af4b20b6146d86487389306445ffb8893af21bbcad7fedfa2223df16bc190",
-            "timeout_block_height": 1459611,
-            "onchain_amount": 721,
-            "blinding_key": "303a4865fa98083afb34d474db04d4dc45d122105aa0cffad1b97af81496e6d8"
-        }"#.to_string(),
-        claim_private_key: "179dc5137d2c211fb84e2159252832658afb6d03e095fb5cf324a2b782d2a5ca".to_string(),
-        invoice: "lntb10u1pngqdj3pp5ujsq2txha9nnjwm3sql0t3g8hy67d6qvrr0ykygtycej44jvdljqdpz2djkuepqw3hjqnpdgf2yxgrpv3j8yetnwvcqz95xqyp2xqrzjqf4rczme3t5y9s94fkx7xcgwhj6zy9t56rwqhez9gl8s52k0scz8gzzxeyqq28qqqqqqqqqqqqqqq9gq2ysp5fmynazrpmuz05vp8r5dxpu9cupkaus7hcd258saklp3v79azt6qs9qxpqysgq5sxknac9fwe69q5vzffgayjddskzhjeyu6h8vx45m4svchsy2e3rv6yc3puht7pjzvhwfl7ljamkzfy2dsa75fxd5j82ug0ty0y4xhgq82gc9k".to_string(),
-        payment_hash: Some("e4a0052cd7e967393b71803ef5c507b935e6e80c18de4b110b26332ad64c6fe4".to_string()),
+        create_response_json: r#"{"swap_tree":{"claim_leaf":{"output":"82012088a91476089e96a323d103b4d9546ab0b64505672197f58820d5272b21c51e7fe6a2e0d6b3ddafde514ff2b31ca70399a3a0960f19f3b1853dac","version":196},"refund_leaf":{"output":"20859b5e5e3b66c76e0920a21a41f4a64246caf2cf0084307c447ba94a2e3a483dad03842231b1","version":196}},"lockup_address":"lq1pq0ka6jmyx62herardll0ccu3zze4qvmh04vnzdw4c5338rp3yquggh47wr29jh6akr6mtw2zzrgn6nuv68setq76d2uk9fqs0l84z7t2jhw58m0crqu4","refund_public_key":"03859b5e5e3b66c76e0920a21a41f4a64246caf2cf0084307c447ba94a2e3a483d","timeout_block_height":3220100,"onchain_amount":971,"blinding_key":"ef121ccd2906a4cc80f8a9b33b18fa2ba4de7e9032b7b143bfc816494d46dc66"}"#.to_string(),
+        claim_private_key: "08e4555d4388552fe6a72a89953b3d333ddbb66b7ae2167f5f66327ec66cede1".to_string(),
+        invoice: "lnbc10u1pnez5ulsp5szkn8zq25p99m3kkhcyv5xfaszvya80gca2efduhp9v0g3qy9spqpp52m3vvah5xj8mzu6knwl4gtcymzg9w7lmm90yctwr39kae36sjpsqdpz2djkuepqw3hjqnpdgf2yxgrpv3j8yetnwvxqyp2xqcqz95rzjqt2jw2epc508le4zurtt8hd0meg5lu4nrjns8xdr5ztq7x0nkxzn6zzxeyqq28qqqqqqqqqqqqqqq9gq2y9qyysgq4kue7c5mrla8cxgzlpddvl62a3quzpkhlza84tkrxea3hmvq4zcnn2rcve7l9cu5xdxglflerp5rcyeyc88j33mht4fea60jj9e7cqspe058nk".to_string(),
+        payment_hash: Some("56e2c676f4348fb173569bbf542f04d890577bfbd95e4c2dc3896ddcc7509060".to_string()),
+        destination_pubkey: Some("02d96eadea3d780104449aca5c93461ce67c1564e2e1d73225fa67dd3b997a6018".to_string()),
         payer_amount_sat: 1000,
-        receiver_amount_sat: 587,
-        claim_fees_sat: 200,
+        receiver_amount_sat: receiver_amount_sat.unwrap_or(957),
+        pair_fees_json: r#"{"hash":"b32246ad7d9c9b1ff499a36e226b5e2fb5b83d78cbc8a70b6d3429b80bfc5876","rate":1.0,"limits":{"maximal":25000000,"minimal":1000},"fees":{"percentage":0.25,"minerFees":{"lockup":26,"claim":14}}}"#.to_string(),
+        claim_fees_sat: 14,
         claim_tx_id: None,
         lockup_tx_id: None,
-        mrh_address: "tlq1pq2amlulhea6ltq7x3eu9atsc2nnrer7yt7xve363zxedqwu2mk6ctcyv9awl8xf28cythreqklt5q0qqwsxzlm6wu4z6d574adl9zh2zmr0h85gt534n".to_string(),
-        mrh_script_pubkey: "tex1qnkznyyxwnxnkk0j94cnvq27h24jk6sqf0te55x".to_string(),
+        mrh_address: "lq1qqdgpjf28g2r27urtan4grfr9206adax5jm94uv68mvpe40lye6aa36x99kklezup4tcs5fvm8sgaz329stru560s8tz65fruz".to_string(),
         mrh_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
+        metadata: Default::default(),
     }
 }
 
-pub(crate) fn new_persister() -> Result<(TempDir, Persister)> {
-    let temp_dir = TempDir::new("liquid-sdk")?;
-    let persister = Persister::new(
-        temp_dir
-            .path()
-            .to_str()
-            .ok_or(anyhow!("Could not create temporary directory"))?,
-        LiquidNetwork::Testnet,
-    )?;
-    persister.init()?;
-    Ok((temp_dir, persister))
+macro_rules! create_persister {
+    ($name:ident) => {
+        let temp_dir = tempdir::TempDir::new("liquid-sdk")?;
+        let $name = std::sync::Arc::new(crate::persist::Persister::new(
+            temp_dir
+                .path()
+                .to_str()
+                .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
+            crate::model::LiquidNetwork::Testnet,
+            true,
+        )?);
+        $name.init()?;
+    };
 }
+pub(crate) use create_persister;
 
-pub(crate) fn new_payment_tx_data(payment_type: PaymentType) -> PaymentTxData {
+pub(crate) fn new_payment_tx_data(
+    network: LiquidNetwork,
+    payment_type: PaymentType,
+) -> PaymentTxData {
     PaymentTxData {
         tx_id: generate_random_string(4),
         timestamp: None,
-        amount_sat: 0,
+        asset_id: utils::lbtc_asset_id(network).to_string(),
+        amount: 0,
         fees_sat: 0,
         payment_type,
         is_confirmed: false,
+        unblinding_data: None,
     }
 }

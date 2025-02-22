@@ -175,13 +175,13 @@ pub(crate) mod lnurl;
 pub mod logger;
 pub mod model;
 pub mod persist;
-pub(crate) mod receive_swap;
-#[allow(dead_code)]
-mod restore;
+pub mod receive_swap;
+pub(crate) mod recover;
 pub mod sdk;
 pub(crate) mod send_swap;
 pub(crate) mod signer;
 pub(crate) mod swapper;
+pub(crate) mod sync;
 pub(crate) mod test_utils;
 pub(crate) mod utils;
 pub(crate) mod wallet;

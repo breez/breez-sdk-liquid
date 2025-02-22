@@ -4,9 +4,9 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use breez_sdk_liquid::prelude::*;
-use clap::{arg, Parser};
+use clap::{arg, ArgAction, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;
@@ -22,24 +22,35 @@ pub(crate) enum Command {
     /// Send a payment directly or via a swap
     SendPayment {
         /// Invoice which has to be paid (BOLT11)
-        #[arg(long)]
+        #[arg(short, long)]
         invoice: Option<String>,
 
         /// BOLT12 offer. If specified, amount_sat must also be set.
-        #[arg(long)]
+        #[arg(short, long)]
         offer: Option<String>,
 
         /// Either BIP21 URI or Liquid address we intend to pay to
-        #[arg(long)]
+        #[arg(short, long)]
         address: Option<String>,
 
-        /// The amount in satoshi to pay, in case of a direct Liquid address
-        /// or amount-less BIP21
-        #[arg(short, long)]
+        /// The amount to pay, in satoshi. The amount is optional if it is already provided in the
+        /// invoice or BIP21 URI.
+        #[arg(long)]
         amount_sat: Option<u64>,
 
+        /// Optional id of the asset, in case of a direct Liquid address
+        /// or amount-less BIP21
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
+
+        /// The amount to pay, in case of a Liquid payment. The amount is optional if it is already
+        /// provided in the BIP21 URI.
+        /// The asset id must also be provided.
+        #[arg(long)]
+        amount: Option<f64>,
+
         /// Whether or not this is a drain operation. If true, all available funds will be used.
-        #[arg(short, long)]
+        #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
 
         /// Delay for the send, in seconds
@@ -59,7 +70,7 @@ pub(crate) enum Command {
         receiver_amount_sat: Option<u64>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
-        #[arg(short, long)]
+        #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
 
         /// The optional fee rate to use, in sat/vbyte
@@ -72,11 +83,6 @@ pub(crate) enum Command {
         #[arg(short = 'm', long = "method")]
         payment_method: Option<PaymentMethod>,
 
-        /// Amount the payer will send, in satoshi
-        /// If not specified, it will generate a BIP21 URI/Liquid address with no amount
-        #[arg(short, long)]
-        payer_amount_sat: Option<u64>,
-
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
         description: Option<String>,
@@ -84,6 +90,21 @@ pub(crate) enum Command {
         /// Optional if true uses the hash of the description
         #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
         use_description_hash: Option<bool>,
+
+        /// The amount the payer should send, in satoshi. If not specified, it will generate a
+        /// BIP21 URI/address with no amount.
+        #[arg(long)]
+        amount_sat: Option<u64>,
+
+        /// Optional id of the asset to receive when the 'payment_method' is "liquid"
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
+
+        /// The amount the payer should send, in asset units. If not specified, it will
+        /// generate a BIP21 URI/address with no amount.
+        /// The asset id must also be provided.
+        #[arg(long)]
+        amount: Option<f64>,
     },
     /// Generates an URL to buy bitcoin from a 3rd party provider
     BuyBitcoin {
@@ -97,6 +118,10 @@ pub(crate) enum Command {
         /// The optional payment type filter. Either "send" or "receive"
         #[clap(name = "filter", short = 'r', long = "filter")]
         filters: Option<Vec<PaymentType>>,
+
+        /// The optional payment state. Either "pending", "complete", "failed", "pendingrefund" or "refundable"
+        #[clap(name = "state", short = 's', long = "state")]
+        states: Option<Vec<PaymentState>>,
 
         /// The optional from unix timestamp
         #[clap(name = "from_timestamp", short = 'f', long = "from")]
@@ -114,6 +139,10 @@ pub(crate) enum Command {
         #[clap(short = 'o', long = "offset")]
         offset: Option<u32>,
 
+        /// Optional id of the asset for Liquid payment method
+        #[clap(long = "asset")]
+        asset_id: Option<String>,
+
         /// Optional Liquid BIP21 URI/address for Liquid payment method
         #[clap(short = 'd', long = "destination")]
         destination: Option<String>,
@@ -121,12 +150,23 @@ pub(crate) enum Command {
         /// Optional Liquid/Bitcoin address for Bitcoin payment method
         #[clap(short = 'a', long = "address")]
         address: Option<String>,
+
+        /// Whether or not to sort the payments by ascending timestamp
+        #[clap(long = "ascending", action = ArgAction::SetTrue)]
+        sort_ascending: Option<bool>,
     },
     /// Retrieve a payment
+    #[command(group = clap::ArgGroup::new("payment_identifiers").args(&["payment_hash", "swap_id"]).required(true))]
     GetPayment {
         /// Lightning payment hash
-        payment_hash: String,
+        #[arg(long, short = 'p')]
+        payment_hash: Option<String>,
+        /// Swap ID or its hash
+        #[arg(long, short = 's')]
+        swap_id: Option<String>,
     },
+    /// Get and potentially accept proposed fees for WaitingFeeAcceptance Payment
+    ReviewPaymentProposedFees { swap_id: String },
     /// List refundable chain swaps
     ListRefundables,
     /// Prepare a refund transaction for an incomplete swap
@@ -189,6 +229,10 @@ pub(crate) enum Command {
     LnurlPay {
         /// LN Address or LNURL-pay endpoint
         lnurl: String,
+
+        /// Whether or not this is a drain operation. If true, all available funds will be used.
+        #[clap(short, long, action = ArgAction::SetTrue)]
+        drain: Option<bool>,
 
         /// Validates the success action URL
         #[clap(name = "validate_success_url", short = 'v', long = "validate")]
@@ -260,24 +304,43 @@ pub(crate) async fn handle_command(
     Ok(match command {
         Command::ReceivePayment {
             payment_method,
-            payer_amount_sat,
+            amount_sat,
+            amount,
+            asset_id,
             description,
             use_description_hash,
         } => {
+            let amount = match asset_id {
+                Some(asset_id) => Some(ReceiveAmount::Asset {
+                    asset_id,
+                    payer_amount: amount,
+                }),
+                None => {
+                    amount_sat.map(|payer_amount_sat| ReceiveAmount::Bitcoin { payer_amount_sat })
+                }
+            };
             let prepare_response = sdk
                 .prepare_receive_payment(&PrepareReceiveRequest {
-                    payer_amount_sat,
                     payment_method: payment_method.unwrap_or(PaymentMethod::Lightning),
+                    amount: amount.clone(),
                 })
                 .await?;
 
-            wait_confirmation!(
-                format!(
-                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_response.fees_sat
-                ),
-                "Payment receive halted"
-            );
+            let fees = prepare_response.fees_sat;
+            let confirmation_msg = match amount {
+                Some(_) => format!("Fees: {fees} sat. Are the fees acceptable? (y/N)"),
+                None => {
+                    let min = prepare_response.min_payer_amount_sat;
+                    let max = prepare_response.max_payer_amount_sat;
+                    let service_feerate = prepare_response.swapper_feerate;
+                    format!(
+                        "Fees: {fees} sat + {service_feerate:?}% of the sent amount. \
+                        Sender should send between {min:?} sat and {max:?} sat. \
+                        Are the fees acceptable? (y/N)"
+                    )
+                }
+            };
+            wait_confirmation!(confirmation_msg, "Payment receive halted");
 
             let response = sdk
                 .receive_payment(&ReceivePaymentRequest {
@@ -290,7 +353,7 @@ pub(crate) async fn handle_command(
             let mut result = command_result!(&response);
             result.push('\n');
 
-            match parse(&response.destination).await? {
+            match sdk.parse(&response.destination).await? {
                 InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
                 InputType::LiquidAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
@@ -318,7 +381,9 @@ pub(crate) async fn handle_command(
             invoice,
             offer,
             address,
+            amount,
             amount_sat,
+            asset_id,
             drain,
             delay,
         } => {
@@ -340,10 +405,16 @@ pub(crate) async fn handle_command(
                     "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
                 ))
             }?;
-            let amount = match (amount_sat, drain.unwrap_or(false)) {
-                (Some(amount_sat), _) => Some(PayAmount::Receiver { amount_sat }),
-                (_, true) => Some(PayAmount::Drain),
-                (_, _) => None,
+            let amount = match (asset_id, amount, amount_sat, drain.unwrap_or(false)) {
+                (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
+                    asset_id,
+                    receiver_amount,
+                }),
+                (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
+                    receiver_amount_sat,
+                }),
+                (_, _, _, true) => Some(PayAmount::Drain),
+                _ => None,
             };
 
             let prepare_response = sdk
@@ -386,8 +457,8 @@ pub(crate) async fn handle_command(
         } => {
             let amount = match drain.unwrap_or(false) {
                 true => PayAmount::Drain,
-                false => PayAmount::Receiver {
-                    amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
+                false => PayAmount::Bitcoin {
+                    receiver_amount_sat: receiver_amount_sat.ok_or(anyhow::anyhow!(
                         "Must specify `receiver_amount_sat` if not draining"
                     ))?,
                 },
@@ -469,41 +540,86 @@ pub(crate) async fn handle_command(
         }
         Command::ListPayments {
             filters,
+            states,
             from_timestamp,
             to_timestamp,
             limit,
             offset,
+            asset_id,
             destination,
             address,
+            sort_ascending,
         } => {
-            let details = match (destination, address) {
-                (Some(destination), None) => Some(ListPaymentDetails::Liquid { destination }),
-                (None, Some(address)) => Some(ListPaymentDetails::Bitcoin { address }),
+            let details = match (asset_id.clone(), destination.clone(), address) {
+                (None, Some(_), None) | (Some(_), None, None) | (Some(_), Some(_), None) => {
+                    Some(ListPaymentDetails::Liquid {
+                        asset_id,
+                        destination,
+                    })
+                }
+                (None, None, Some(address)) => Some(ListPaymentDetails::Bitcoin {
+                    address: Some(address),
+                }),
                 _ => None,
             };
 
             let payments = sdk
                 .list_payments(&ListPaymentsRequest {
                     filters,
+                    states,
                     from_timestamp,
                     to_timestamp,
                     limit,
                     offset,
                     details,
+                    sort_ascending,
                 })
                 .await?;
             command_result!(payments)
         }
-        Command::GetPayment { payment_hash } => {
-            let maybe_payment = sdk
-                .get_payment(&GetPaymentRequest::Lightning { payment_hash })
-                .await?;
+        Command::GetPayment {
+            payment_hash,
+            swap_id,
+        } => {
+            if payment_hash.is_none() && swap_id.is_none() {
+                bail!("No payment identifiers provided.");
+            }
+
+            let maybe_payment = if let Some(payment_hash) = payment_hash {
+                sdk.get_payment(&GetPaymentRequest::PaymentHash { payment_hash })
+                    .await?
+            } else if let Some(swap_id) = swap_id {
+                sdk.get_payment(&GetPaymentRequest::SwapId { swap_id })
+                    .await?
+            } else {
+                None
+            };
+
             match maybe_payment {
                 Some(payment) => command_result!(payment),
                 None => {
                     return Err(anyhow!("Payment not found."));
                 }
             }
+        }
+        Command::ReviewPaymentProposedFees { swap_id } => {
+            let fetch_response = sdk
+                .fetch_payment_proposed_fees(&FetchPaymentProposedFeesRequest { swap_id })
+                .await?;
+
+            let confirmation_msg = format!(
+                "Payer amount: {} sat. Fees: {} sat. Resulting received amount: {} sat. Are the fees acceptable? (y/N) ",
+                fetch_response.payer_amount_sat, fetch_response.fees_sat, fetch_response.receiver_amount_sat
+            );
+
+            wait_confirmation!(confirmation_msg, "Payment proposed fees review halted");
+
+            sdk.accept_payment_proposed_fees(&AcceptPaymentProposedFeesRequest {
+                response: fetch_response,
+            })
+            .await?;
+
+            command_result!("Proposed fees accepted successfully")
         }
         Command::ListRefundables => {
             let refundables = sdk.list_refundables().await?;
@@ -542,7 +658,7 @@ pub(crate) async fn handle_command(
             command_result!("Rescanned successfully")
         }
         Command::Sync => {
-            sdk.sync().await?;
+            sdk.sync(false).await?;
             command_result!("Synced successfully")
         }
         Command::RecommendedFees => {
@@ -566,26 +682,41 @@ pub(crate) async fn handle_command(
             command_result!("Liquid SDK instance disconnected")
         }
         Command::Parse { input } => {
-            let res = LiquidSdk::parse(&input).await?;
+            let res = sdk.parse(&input).await?;
             command_result!(res)
         }
         Command::LnurlPay {
             lnurl,
+            drain,
             validate_success_url,
         } => {
-            let input = LiquidSdk::parse(&lnurl).await?;
+            let input = sdk.parse(&lnurl).await?;
             let res = match input {
-                InputType::LnUrlPay { data: pd } => {
-                    let prompt = format!(
-                        "Amount to pay in millisatoshi (min {} msat, max {} msat): ",
-                        pd.min_sendable, pd.max_sendable
-                    );
+                InputType::LnUrlPay {
+                    data: pd,
+                    bip353_address,
+                } => {
+                    let amount = match drain.unwrap_or(false) {
+                        true => PayAmount::Drain,
+                        false => {
+                            let min_sendable = (pd.min_sendable as f64 / 1000.0).ceil() as u64;
+                            let max_sendable = pd.max_sendable / 1000;
+                            let prompt = format!(
+                                "Amount to pay (min {} sat, max {} sat): ",
+                                min_sendable, max_sendable
+                            );
+                            let amount_sat = rl.readline(&prompt)?;
+                            PayAmount::Bitcoin {
+                                receiver_amount_sat: amount_sat.parse::<u64>()?,
+                            }
+                        }
+                    };
 
-                    let amount_msat = rl.readline(&prompt)?;
                     let prepare_response = sdk
                         .prepare_lnurl_pay(PrepareLnUrlPayRequest {
                             data: pd,
-                            amount_msat: amount_msat.parse::<u64>()?,
+                            amount,
+                            bip353_address,
                             comment: None,
                             validate_success_action_url: validate_success_url,
                         })
@@ -610,7 +741,7 @@ pub(crate) async fn handle_command(
             command_result!(res)
         }
         Command::LnurlWithdraw { lnurl } => {
-            let input = LiquidSdk::parse(&lnurl).await?;
+            let input = sdk.parse(&lnurl).await?;
             let res = match input {
                 InputType::LnUrlWithdraw { data: pd } => {
                     let prompt = format!(
@@ -636,7 +767,7 @@ pub(crate) async fn handle_command(
         Command::LnurlAuth { lnurl } => {
             let lnurl_endpoint = lnurl.trim();
 
-            let res = match parse(lnurl_endpoint).await? {
+            let res = match sdk.parse(lnurl_endpoint).await? {
                 InputType::LnUrlAuth { data: ad } => {
                     let auth_res = sdk.lnurl_auth(ad).await?;
                     serde_json::to_string_pretty(&auth_res).map_err(|e| e.into())

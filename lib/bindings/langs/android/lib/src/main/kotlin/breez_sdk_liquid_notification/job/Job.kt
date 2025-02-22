@@ -9,7 +9,7 @@ interface Job : EventListener {
      */
     fun start(liquidSDK: BindingLiquidSdk)
 
-    /** When the short service timeout is reached it calls `onShutdown` 
+    /** When the short service timeout is reached it calls `onShutdown`
      *  to cleanup the job.
      */
     fun onShutdown()

@@ -11,9 +11,9 @@ import breez_sdk_liquid.EventListener
 import breez_sdk_liquid.Logger
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.connectSDK
-import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INFO
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INVOICE
+import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_FOREGROUND_SERVICE
 import breez_sdk_liquid_notification.Constants.SERVICE_TIMEOUT_MS
 import breez_sdk_liquid_notification.Constants.SHUTDOWN_DELAY_MS
@@ -22,19 +22,23 @@ import breez_sdk_liquid_notification.job.Job
 import breez_sdk_liquid_notification.job.LnurlPayInfoJob
 import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
 import breez_sdk_liquid_notification.job.SwapUpdatedJob
-import kotlin.io.path.Path
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.io.path.Path
 
 interface SdkForegroundService {
     fun onFinished(job: Job)
 }
 
-abstract class ForegroundService : SdkForegroundService, EventListener, Service() {
+abstract class ForegroundService :
+    Service(),
+    SdkForegroundService,
+    EventListener {
     private var liquidSDK: BindingLiquidSdk? = null
+
     @Suppress("MemberVisibilityCanBePrivate")
     val serviceScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     protected var logger: ServiceLogger = ServiceLogger()
@@ -48,9 +52,7 @@ abstract class ForegroundService : SdkForegroundService, EventListener, Service(
     //                      SERVICE LIFECYCLE                      //
     // =========================================================== //
 
-    override fun onBind(intent: Intent): IBinder? {
-        return null
-    }
+    override fun onBind(intent: Intent): IBinder? = null
 
     /** Called by a Job to signal that it is complete. */
     override fun onFinished(job: Job) {
@@ -63,20 +65,22 @@ abstract class ForegroundService : SdkForegroundService, EventListener, Service(
 
     /** Stop the service */
     private val serviceTimeoutHandler = Handler(Looper.getMainLooper())
-    private val serviceTimeoutRunnable: Runnable = Runnable {
-        logger.log(TAG, "Reached service timeout...", "DEBUG")
-        synchronized(this) {
-            jobs.forEach { job -> job.onShutdown() }
+    private val serviceTimeoutRunnable: Runnable =
+        Runnable {
+            logger.log(TAG, "Reached service timeout...", "DEBUG")
+            synchronized(this) {
+                jobs.forEach { job -> job.onShutdown() }
+            }
+
+            shutdown()
         }
 
-        shutdown()
-    }
-
     private val shutdownHandler = Handler(Looper.getMainLooper())
-    private val shutdownRunnable: Runnable = Runnable {
-        logger.log(TAG, "Reached scheduled shutdown...", "DEBUG")
-        shutdown()
-    }
+    private val shutdownRunnable: Runnable =
+        Runnable {
+            logger.log(TAG, "Reached scheduled shutdown...", "DEBUG")
+            shutdown()
+        }
 
     private fun resetDelayedCallbacks() {
         serviceTimeoutHandler.removeCallbacksAndMessages(null)
@@ -98,7 +102,11 @@ abstract class ForegroundService : SdkForegroundService, EventListener, Service(
     }
 
     /** Called when an intent is called for this service. */
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         super.onStartCommand(intent, flags, startId)
         resetDelayedCallbacks()
 
@@ -136,43 +144,51 @@ abstract class ForegroundService : SdkForegroundService, EventListener, Service(
 
     /** Get the job to be executed from the Message data in the Intent.
      *  This can be overridden to handle custom jobs. */
-    open fun getJobFromIntent(intent: Intent?): Job? {
-        return Message.createFromIntent(intent)?.let { message ->
+    open fun getJobFromIntent(intent: Intent?): Job? =
+        Message.createFromIntent(intent)?.let { message ->
             message.payload?.let { payload ->
                 when (message.type) {
-                    MESSAGE_TYPE_SWAP_UPDATED -> SwapUpdatedJob(
-                        applicationContext,
-                        this,
-                        payload,
-                        logger
-                    )
+                    MESSAGE_TYPE_SWAP_UPDATED ->
+                        SwapUpdatedJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
 
-                    MESSAGE_TYPE_LNURL_PAY_INFO -> LnurlPayInfoJob(
-                        applicationContext,
-                        this,
-                        payload,
-                        logger
-                    )
+                    MESSAGE_TYPE_LNURL_PAY_INFO ->
+                        LnurlPayInfoJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
 
-                    MESSAGE_TYPE_LNURL_PAY_INVOICE -> LnurlPayInvoiceJob(
-                        applicationContext,
-                        this,
-                        payload,
-                        logger
-                    )
+                    MESSAGE_TYPE_LNURL_PAY_INVOICE ->
+                        LnurlPayInvoiceJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
 
                     else -> null
                 }
             }
         }
-    }
 
-    private fun launchSdkConnection(connectRequest: ConnectRequest, job: Job) {
+    private fun launchSdkConnection(
+        connectRequest: ConnectRequest,
+        job: Job,
+    ) {
         val sdkListener = this
-        serviceScope.launch(Dispatchers.IO + CoroutineExceptionHandler { _, e ->
-            logger.log(TAG, "Breez Liquid SDK connection failed $e", "ERROR")
-            delayedShutdown()
-        }) {
+        serviceScope.launch(
+            Dispatchers.IO +
+                CoroutineExceptionHandler { _, e ->
+                    logger.log(TAG, "Breez Liquid SDK connection failed $e", "ERROR")
+                    delayedShutdown()
+                },
+        ) {
             liquidSDK ?: run {
                 liquidSDK = connectSDK(connectRequest, sdkListener, logger)
             }

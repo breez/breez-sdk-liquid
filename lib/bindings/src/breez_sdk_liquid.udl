@@ -64,10 +64,10 @@ interface InputType {
     BitcoinAddress(BitcoinAddressData address);
     LiquidAddress(LiquidAddressData address);
     Bolt11(LNInvoice invoice);
-    Bolt12Offer(LNOffer offer);
+    Bolt12Offer(LNOffer offer, string? bip353_address);
     NodeId(string node_id);
     Url(string url);
-    LnUrlPay(LnUrlPayRequestData data);
+    LnUrlPay(LnUrlPayRequestData data, string? bip353_address);
     LnUrlWithdraw(LnUrlWithdrawRequestData data);
     LnUrlAuth(LnUrlAuthRequestData data);
     LnUrlError(LnUrlErrorData data);
@@ -85,6 +85,7 @@ dictionary LiquidAddressData {
     string address;
     Network network;
     string? asset_id;
+    f64? amount;
     u64? amount_sat;
     string? label;
     string? message;
@@ -306,6 +307,7 @@ enum PaymentError {
     "PaymentInProgress",
     "AmountOutOfRange",
     "AmountMissing",
+    "AssetError",
     "Generic",
     "InvalidOrExpiredFees",
     "InsufficientFunds",
@@ -331,32 +333,58 @@ dictionary Config {
     string working_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
-    u32 zero_conf_min_fee_rate_msat;
+    string? sync_service_url;
     string? breez_api_key;
     string? cache_dir;
     u64? zero_conf_max_amount_sat;
+    boolean use_default_external_input_parsers = true;
+    sequence<ExternalInputParser>? external_input_parsers = null;
+    u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
+    sequence<AssetMetadata>? asset_metadata = null;
 };
 
 enum LiquidNetwork {
     "Mainnet",
     "Testnet",
+    "Regtest",
 };
 
 dictionary ConnectRequest {
     Config config;    
-    string mnemonic;
+    string? mnemonic = null;
+    string? passphrase = null;
+    sequence<u8>? seed = null;
 };
 
 dictionary ConnectWithSignerRequest {
   Config config;  
 };
 
-dictionary GetInfoResponse {
+dictionary AssetBalance {
+    string asset_id;
+    u64 balance_sat;
+    string? name;
+    string? ticker;
+    f64? balance;
+};
+
+dictionary BlockchainInfo {
+    u32 liquid_tip;
+    u32 bitcoin_tip;
+};
+
+dictionary WalletInfo {
     u64 balance_sat;
     u64 pending_send_sat;
     u64 pending_receive_sat;
     string fingerprint;
     string pubkey;
+    sequence<AssetBalance> asset_balances;
+};
+
+dictionary GetInfoResponse {
+    WalletInfo wallet_info;
+    BlockchainInfo blockchain_info;
 };
 
 dictionary SignMessageRequest {
@@ -379,7 +407,8 @@ dictionary CheckMessageResponse {
 
 dictionary PrepareLnUrlPayRequest {
     LnUrlPayRequestData data;
-    u64 amount_msat;
+    PayAmount amount;
+    string? bip353_address = null;
     string? comment = null;
     boolean? validate_success_action_url = null;
 };
@@ -387,6 +416,8 @@ dictionary PrepareLnUrlPayRequest {
 dictionary PrepareLnUrlPayResponse {
     SendDestination destination;
     u64 fees_sat;
+    LnUrlPayRequestData data;
+    string? comment = null;
     SuccessAction? success_action = null;
 };
 
@@ -402,8 +433,8 @@ dictionary PrepareSendRequest {
 [Enum]
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data);
-    Bolt11(LNInvoice invoice);
-    Bolt12(LNOffer offer, u64 receiver_amount_sat);
+    Bolt11(LNInvoice invoice, string? bip353_address);
+    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address);
 };
 
 dictionary PrepareSendResponse {
@@ -425,15 +456,24 @@ enum PaymentMethod {
     "LiquidAddress",
 };
 
+[Enum]
+interface ReceiveAmount {
+    Bitcoin(u64 payer_amount_sat);
+    Asset(string asset_id, f64? payer_amount);
+};
+
 dictionary PrepareReceiveRequest {
     PaymentMethod payment_method;
-    u64? payer_amount_sat = null;
+    ReceiveAmount? amount = null;
 };
 
 dictionary PrepareReceiveResponse {
-    u64? payer_amount_sat;
     PaymentMethod payment_method;
     u64 fees_sat;
+    ReceiveAmount? amount;
+    u64? min_payer_amount_sat;
+    u64? max_payer_amount_sat;
+    f64? swapper_feerate;
 };
 
 dictionary ReceivePaymentRequest {
@@ -464,7 +504,8 @@ dictionary OnchainPaymentLimitsResponse {
 
 [Enum]
 interface PayAmount {
-    Receiver(u64 amount_sat);
+    Bitcoin(u64 receiver_amount_sat);
+    Asset(string asset_id, f64 receiver_amount);
     Drain();
 };
 
@@ -514,29 +555,63 @@ dictionary RestoreRequest {
 
 dictionary ListPaymentsRequest {
     sequence<PaymentType>? filters = null;
+    sequence<PaymentState>? states = null;
     i64? from_timestamp = null;
     i64? to_timestamp = null;
     u32? offset = null;
     u32? limit = null;
     ListPaymentDetails? details = null;
+    boolean? sort_ascending = null;
 };
 
 [Enum]
 interface ListPaymentDetails {
-    Liquid(string destination);
-    Bitcoin(string address);
+    Liquid(string? asset_id, string? destination);
+    Bitcoin(string? address);
 };
 
 [Enum]
 interface GetPaymentRequest {
-    Lightning(string payment_hash);
+    PaymentHash(string payment_hash);
+    SwapId(string swap_id);
+};
+
+dictionary FetchPaymentProposedFeesRequest {
+    string swap_id;
+};
+
+dictionary FetchPaymentProposedFeesResponse {
+    string swap_id;
+    u64 fees_sat;
+    u64 payer_amount_sat;
+    u64 receiver_amount_sat;
+};
+
+dictionary AcceptPaymentProposedFeesRequest {
+    FetchPaymentProposedFeesResponse response;
+};
+
+dictionary LnUrlInfo {
+    string? ln_address;
+    string? lnurl_pay_comment;
+    string? lnurl_pay_domain;
+    string? lnurl_pay_metadata;
+    SuccessActionProcessed? lnurl_pay_success_action;
+    SuccessAction? lnurl_pay_unprocessed_success_action;
+    string? lnurl_withdraw_endpoint;
+};
+
+dictionary AssetInfo {
+    string name;
+    string ticker;
+    f64 amount;
 };
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, string? preimage, string? bolt11, string? bolt12_offer, string? payment_hash, string? refund_tx_id, u64? refund_tx_amount_sat);
-    Liquid(string destination, string description);
-    Bitcoin(string swap_id, string description, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? bip353_address, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Liquid(string asset_id, string destination, string description, AssetInfo? asset_info);
+    Bitcoin(string swap_id, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
 dictionary Payment {
@@ -546,8 +621,10 @@ dictionary Payment {
     PaymentType payment_type;
     PaymentState status;
     PaymentDetails details;
+    u64? swapper_fees_sat = null;
     string? destination = null;
     string? tx_id = null;
+    string? unblinding_data = null;
 };
 
 enum PaymentType {
@@ -563,12 +640,14 @@ enum PaymentState {
     "TimedOut",
     "Refundable",
     "RefundPending",
+    "WaitingFeeAcceptance",
 };
 
 dictionary RefundableSwap {
     string swap_address;
     u32 timestamp;
     u64 amount_sat;
+    string? last_refund_tx_id;
 };
 
 dictionary RecommendedFees {
@@ -588,7 +667,7 @@ dictionary PrepareRefundRequest {
 dictionary PrepareRefundResponse {
     u32 tx_vsize;
     u64 tx_fee_sat;
-    string? refund_tx_id = null;
+    string? last_refund_tx_id = null;
 };
 
 dictionary RefundRequest {
@@ -605,10 +684,12 @@ dictionary RefundResponse {
 interface SdkEvent {
     PaymentFailed(Payment details);
     PaymentPending(Payment details);
+    PaymentRefundable(Payment details);
     PaymentRefunded(Payment details);
     PaymentRefundPending(Payment details);
     PaymentSucceeded(Payment details);
     PaymentWaitingConfirmation(Payment details);
+    PaymentWaitingFeeAcceptance(Payment details);
     Synced();
 };
 
@@ -625,6 +706,19 @@ dictionary LogEntry {
     string level;
 };
 
+dictionary ExternalInputParser {
+    string provider_id;
+    string input_regex;
+    string parser_url;
+};
+
+dictionary AssetMetadata {
+    string asset_id;
+    string name;
+    string ticker;
+    u8 precision;
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);
@@ -637,9 +731,6 @@ namespace breez_sdk_liquid {
     
     [Throws=SdkError]
     Config default_config(LiquidNetwork network, string? breez_api_key);
-
-    [Throws=PaymentError]
-    InputType parse(string input);
 
     [Throws=PaymentError]
     LNInvoice parse_invoice(string input);
@@ -668,6 +759,12 @@ callback interface Signer {
 
     [Throws=SignerError]
     sequence<u8> hmac_sha256(sequence<u8> msg, string derivation_path);
+
+    [Throws=SignerError]
+    sequence<u8> ecies_encrypt(sequence<u8> msg);
+
+    [Throws=SignerError]
+    sequence<u8> ecies_decrypt(sequence<u8> msg);
 };
 
 interface BindingLiquidSdk {
@@ -685,6 +782,9 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     CheckMessageResponse check_message(CheckMessageRequest req);
+
+    [Throws=PaymentError]
+    InputType parse(string input);
 
     [Throws=PaymentError]
     PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
@@ -721,6 +821,12 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     Payment? get_payment(GetPaymentRequest req);
+
+    [Throws=SdkError]
+    FetchPaymentProposedFeesResponse fetch_payment_proposed_fees(FetchPaymentProposedFeesRequest req);
+
+    [Throws=PaymentError]
+    void accept_payment_proposed_fees(AcceptPaymentProposedFeesRequest req);
 
     [Throws=SdkError]
     sequence<RefundableSwap> list_refundables();

@@ -9,6 +9,7 @@ import (
 func main() {
 	mnemonic := "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
 	config, err := breez_sdk_liquid.DefaultConfig(breez_sdk_liquid.LiquidNetworkTestnet, nil)
+	config.SyncServiceUrl = nil
 
 	if err != nil {
 		log.Fatalf("Config creation failed: %#v", err)
@@ -16,7 +17,7 @@ func main() {
 
 	sdk, err := breez_sdk_liquid.Connect(breez_sdk_liquid.ConnectRequest{
 		Config:   config,
-		Mnemonic: mnemonic,
+		Mnemonic: &mnemonic,
 	})
 
 	if err != nil {
@@ -29,5 +30,5 @@ func main() {
 		log.Fatalf("GetInfo failed: %#v", err)
 	}
 
-	log.Print(info.Pubkey)
+	log.Print(info.WalletInfo.Pubkey)
 }

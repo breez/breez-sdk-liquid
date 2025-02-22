@@ -9,6 +9,7 @@ packages/flutter/ios/Classes/breez_sdk_liquidFFI.h
 packages/flutter/macos/Classes/breez_sdk_liquidFFI.h
 # Miscellaneous
 .DS_Store
+*.sln
 .idea/
 
 **/target

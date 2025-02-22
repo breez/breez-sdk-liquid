@@ -84,16 +84,6 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
-    @objc(parse:resolve:reject:)
-    func parse(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-        do {
-            var res = try BreezSDKLiquid.parse(input: input)
-            resolve(BreezSDKLiquidMapper.dictionaryOf(inputType: res))
-        } catch let err {
-            rejectErr(err: err, reject: reject)
-        }
-    }
-
     @objc(parseInvoice:resolve:reject:)
     func parseInvoice(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
@@ -182,6 +172,16 @@ class RNBreezSDKLiquid: RCTEventEmitter {
             let checkMessageRequest = try BreezSDKLiquidMapper.asCheckMessageRequest(checkMessageRequest: req)
             var res = try getBindingLiquidSdk().checkMessage(req: checkMessageRequest)
             resolve(BreezSDKLiquidMapper.dictionaryOf(checkMessageResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(parse:resolve:reject:)
+    func parse(_ input: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try getBindingLiquidSdk().parse(input: input)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(inputType: res))
         } catch let err {
             rejectErr(err: err, reject: reject)
         }
@@ -316,6 +316,28 @@ class RNBreezSDKLiquid: RCTEventEmitter {
             } else {
                 resolve(nil)
             }
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(fetchPaymentProposedFees:resolve:reject:)
+    func fetchPaymentProposedFees(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let fetchPaymentProposedFeesRequest = try BreezSDKLiquidMapper.asFetchPaymentProposedFeesRequest(fetchPaymentProposedFeesRequest: req)
+            var res = try getBindingLiquidSdk().fetchPaymentProposedFees(req: fetchPaymentProposedFeesRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(fetchPaymentProposedFeesResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(acceptPaymentProposedFees:resolve:reject:)
+    func acceptPaymentProposedFees(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let acceptPaymentProposedFeesRequest = try BreezSDKLiquidMapper.asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: req)
+            try getBindingLiquidSdk().acceptPaymentProposedFees(req: acceptPaymentProposedFeesRequest)
+            resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
         }

@@ -11,6 +11,9 @@ path = "uniffi-bindgen.rs"
 name = "breez_sdk_liquid_bindings"
 crate-type = ["staticlib", "cdylib", "lib"]
 
+[lints]
+workspace = true
+
 [dependencies]
 anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }

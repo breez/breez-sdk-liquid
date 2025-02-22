@@ -76,6 +76,9 @@ pub enum PaymentError {
     #[error("Amount is missing: {err}")]
     AmountMissing { err: String },
 
+    #[error("Asset error: {err}")]
+    AssetError { err: String },
+
     #[error("Invalid network: {err}")]
     InvalidNetwork { err: String },
 
@@ -125,6 +128,12 @@ pub enum PaymentError {
     SignerError { err: String },
 }
 impl PaymentError {
+    pub(crate) fn asset_error(err: &str) -> Self {
+        Self::AssetError {
+            err: err.to_string(),
+        }
+    }
+
     pub(crate) fn generic(err: &str) -> Self {
         Self::Generic {
             err: err.to_string(),
@@ -188,6 +197,14 @@ impl From<lwk_wollet::Error> for PaymentError {
     }
 }
 
+impl From<lwk_wollet::UrlError> for PaymentError {
+    fn from(err: lwk_wollet::UrlError) -> Self {
+        PaymentError::Generic {
+            err: format!("{err:?}"),
+        }
+    }
+}
+
 impl From<lwk_signer::SignerError> for PaymentError {
     fn from(err: lwk_signer::SignerError) -> Self {
         PaymentError::SignerError {
@@ -221,6 +238,14 @@ impl From<SdkError> for PaymentError {
 impl From<crate::bitcoin::util::bip32::Error> for PaymentError {
     fn from(err: crate::bitcoin::util::bip32::Error) -> Self {
         Self::SignerError {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<secp256k1::Error> for PaymentError {
+    fn from(err: secp256k1::Error) -> Self {
+        Self::Generic {
             err: err.to_string(),
         }
     }

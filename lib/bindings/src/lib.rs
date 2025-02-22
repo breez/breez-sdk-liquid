@@ -71,9 +71,6 @@ pub fn default_config(
     LiquidSdk::default_config(network, breez_api_key)
 }
 
-pub fn parse(input: String) -> Result<InputType, PaymentError> {
-    rt().block_on(async { LiquidSdk::parse(&input).await })
-}
 pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }
@@ -101,6 +98,10 @@ impl BindingLiquidSdk {
 
     pub fn check_message(&self, req: CheckMessageRequest) -> SdkResult<CheckMessageResponse> {
         self.sdk.check_message(&req)
+    }
+
+    pub fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        rt().block_on(async { self.sdk.parse(&input).await })
     }
 
     pub fn prepare_send_payment(
@@ -169,6 +170,20 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.get_payment(&req))
     }
 
+    pub fn fetch_payment_proposed_fees(
+        &self,
+        req: FetchPaymentProposedFeesRequest,
+    ) -> SdkResult<FetchPaymentProposedFeesResponse> {
+        rt().block_on(self.sdk.fetch_payment_proposed_fees(&req))
+    }
+
+    pub fn accept_payment_proposed_fees(
+        &self,
+        req: AcceptPaymentProposedFeesRequest,
+    ) -> Result<(), PaymentError> {
+        rt().block_on(self.sdk.accept_payment_proposed_fees(&req))
+    }
+
     pub fn prepare_lnurl_pay(
         &self,
         req: PrepareLnUrlPayRequest,
@@ -229,7 +244,7 @@ impl BindingLiquidSdk {
     }
 
     pub fn sync(&self) -> SdkResult<()> {
-        rt().block_on(self.sdk.sync()).map_err(Into::into)
+        rt().block_on(self.sdk.sync(false)).map_err(Into::into)
     }
 
     pub fn recommended_fees(&self) -> SdkResult<RecommendedFees> {

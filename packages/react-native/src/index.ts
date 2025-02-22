@@ -19,6 +19,10 @@ const BreezSDKLiquid = NativeModules.RNBreezSDKLiquid
 
 const BreezSDKLiquidEmitter = new NativeEventEmitter(BreezSDKLiquid)
 
+export interface AcceptPaymentProposedFeesRequest {
+    response: FetchPaymentProposedFeesResponse
+}
+
 export interface AesSuccessActionData {
     description: string
     ciphertext: string
@@ -28,6 +32,27 @@ export interface AesSuccessActionData {
 export interface AesSuccessActionDataDecrypted {
     description: string
     plaintext: string
+}
+
+export interface AssetBalance {
+    assetId: string
+    balanceSat: number
+    name?: string
+    ticker?: string
+    balance?: number
+}
+
+export interface AssetInfo {
+    name: string
+    ticker: string
+    amount: number
+}
+
+export interface AssetMetadata {
+    assetId: string
+    name: string
+    ticker: string
+    precision: number
 }
 
 export interface BackupRequest {
@@ -40,6 +65,11 @@ export interface BitcoinAddressData {
     amountSat?: number
     label?: string
     message?: string
+}
+
+export interface BlockchainInfo {
+    liquidTip: number
+    bitcoinTip: number
 }
 
 export interface BuyBitcoinRequest {
@@ -64,15 +94,21 @@ export interface Config {
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
-    zeroConfMinFeeRateMsat: number
+    syncServiceUrl?: string
     breezApiKey?: string
     cacheDir?: string
     zeroConfMaxAmountSat?: number
+    useDefaultExternalInputParsers: boolean
+    externalInputParsers?: ExternalInputParser[]
+    onchainFeeRateLeewaySatPerVbyte?: number
+    assetMetadata?: AssetMetadata[]
 }
 
 export interface ConnectRequest {
     config: Config
-    mnemonic: string
+    mnemonic?: string
+    passphrase?: string
+    seed?: number[]
 }
 
 export interface ConnectWithSignerRequest {
@@ -89,17 +125,31 @@ export interface CurrencyInfo {
     localeOverrides: LocaleOverrides[]
 }
 
+export interface ExternalInputParser {
+    providerId: string
+    inputRegex: string
+    parserUrl: string
+}
+
+export interface FetchPaymentProposedFeesRequest {
+    swapId: string
+}
+
+export interface FetchPaymentProposedFeesResponse {
+    swapId: string
+    feesSat: number
+    payerAmountSat: number
+    receiverAmountSat: number
+}
+
 export interface FiatCurrency {
     id: string
     info: CurrencyInfo
 }
 
 export interface GetInfoResponse {
-    balanceSat: number
-    pendingSendSat: number
-    pendingReceiveSat: number
-    fingerprint: string
-    pubkey: string
+    walletInfo: WalletInfo
+    blockchainInfo: BlockchainInfo
 }
 
 export interface LnInvoice {
@@ -143,6 +193,7 @@ export interface LiquidAddressData {
     address: string
     network: Network
     assetId?: string
+    amount?: number
     amountSat?: number
     label?: string
     message?: string
@@ -150,11 +201,13 @@ export interface LiquidAddressData {
 
 export interface ListPaymentsRequest {
     filters?: PaymentType[]
+    states?: PaymentState[]
     fromTimestamp?: number
     toTimestamp?: number
     offset?: number
     limit?: number
     details?: ListPaymentDetails
+    sortAscending?: boolean
 }
 
 export interface LnOfferBlindedPath {
@@ -170,6 +223,16 @@ export interface LnUrlAuthRequestData {
 
 export interface LnUrlErrorData {
     reason: string
+}
+
+export interface LnUrlInfo {
+    lnAddress?: string
+    lnurlPayComment?: string
+    lnurlPayDomain?: string
+    lnurlPayMetadata?: string
+    lnurlPaySuccessAction?: SuccessActionProcessed
+    lnurlPayUnprocessedSuccessAction?: SuccessAction
+    lnurlWithdrawEndpoint?: string
 }
 
 export interface LnUrlPayErrorData {
@@ -253,8 +316,10 @@ export interface Payment {
     paymentType: PaymentType
     status: PaymentState
     details: PaymentDetails
+    swapperFeesSat?: number
     destination?: string
     txId?: string
+    unblindingData?: string
 }
 
 export interface PrepareBuyBitcoinRequest {
@@ -270,7 +335,8 @@ export interface PrepareBuyBitcoinResponse {
 
 export interface PrepareLnUrlPayRequest {
     data: LnUrlPayRequestData
-    amountMsat: number
+    amount: PayAmount
+    bip353Address?: string
     comment?: string
     validateSuccessActionUrl?: boolean
 }
@@ -278,6 +344,8 @@ export interface PrepareLnUrlPayRequest {
 export interface PrepareLnUrlPayResponse {
     destination: SendDestination
     feesSat: number
+    data: LnUrlPayRequestData
+    comment?: string
     successAction?: SuccessAction
 }
 
@@ -294,13 +362,16 @@ export interface PreparePayOnchainResponse {
 
 export interface PrepareReceiveRequest {
     paymentMethod: PaymentMethod
-    payerAmountSat?: number
+    amount?: ReceiveAmount
 }
 
 export interface PrepareReceiveResponse {
-    payerAmountSat?: number
     paymentMethod: PaymentMethod
     feesSat: number
+    amount?: ReceiveAmount
+    minPayerAmountSat?: number
+    maxPayerAmountSat?: number
+    swapperFeerate?: number
 }
 
 export interface PrepareRefundRequest {
@@ -312,7 +383,7 @@ export interface PrepareRefundRequest {
 export interface PrepareRefundResponse {
     txVsize: number
     txFeeSat: number
-    refundTxId?: string
+    lastRefundTxId?: string
 }
 
 export interface PrepareSendRequest {
@@ -362,6 +433,7 @@ export interface RefundableSwap {
     swapAddress: string
     timestamp: number
     amountSat: number
+    lastRefundTxId?: string
 }
 
 export interface RestoreRequest {
@@ -411,6 +483,15 @@ export interface UrlSuccessActionData {
     matchesCallbackDomain: boolean
 }
 
+export interface WalletInfo {
+    balanceSat: number
+    pendingSendSat: number
+    pendingReceiveSat: number
+    fingerprint: string
+    pubkey: string
+    assetBalances: AssetBalance[]
+}
+
 export enum AesSuccessActionDataResultVariant {
     DECRYPTED = "decrypted",
     ERROR_STATUS = "errorStatus"
@@ -443,12 +524,16 @@ export enum BuyBitcoinProvider {
 }
 
 export enum GetPaymentRequestVariant {
-    LIGHTNING = "lightning"
+    PAYMENT_HASH = "paymentHash",
+    SWAP_ID = "swapId"
 }
 
-export interface GetPaymentRequest {
-    type: GetPaymentRequestVariant.LIGHTNING,
+export type GetPaymentRequest = {
+    type: GetPaymentRequestVariant.PAYMENT_HASH,
     paymentHash: string
+} | {
+    type: GetPaymentRequestVariant.SWAP_ID,
+    swapId: string
 }
 
 export enum InputTypeVariant {
@@ -476,6 +561,7 @@ export type InputType = {
 } | {
     type: InputTypeVariant.BOLT12_OFFER,
     offer: LnOffer
+    bip353Address?: string
 } | {
     type: InputTypeVariant.NODE_ID,
     nodeId: string
@@ -485,6 +571,7 @@ export type InputType = {
 } | {
     type: InputTypeVariant.LN_URL_PAY,
     data: LnUrlPayRequestData
+    bip353Address?: string
 } | {
     type: InputTypeVariant.LN_URL_WITHDRAW,
     data: LnUrlWithdrawRequestData
@@ -498,7 +585,8 @@ export type InputType = {
 
 export enum LiquidNetwork {
     MAINNET = "mainnet",
-    TESTNET = "testnet"
+    TESTNET = "testnet",
+    REGTEST = "regtest"
 }
 
 export enum ListPaymentDetailsVariant {
@@ -508,10 +596,11 @@ export enum ListPaymentDetailsVariant {
 
 export type ListPaymentDetails = {
     type: ListPaymentDetailsVariant.LIQUID,
-    destination: string
+    assetId?: string
+    destination?: string
 } | {
     type: ListPaymentDetailsVariant.BITCOIN,
-    address: string
+    address?: string
 }
 
 export enum LnUrlCallbackStatusVariant {
@@ -568,13 +657,18 @@ export enum Network {
 }
 
 export enum PayAmountVariant {
-    RECEIVER = "receiver",
+    BITCOIN = "bitcoin",
+    ASSET = "asset",
     DRAIN = "drain"
 }
 
 export type PayAmount = {
-    type: PayAmountVariant.RECEIVER,
-    amountSat: number
+    type: PayAmountVariant.BITCOIN,
+    receiverAmountSat: number
+} | {
+    type: PayAmountVariant.ASSET,
+    assetId: string
+    receiverAmount: number
 } | {
     type: PayAmountVariant.DRAIN
 }
@@ -589,20 +683,31 @@ export type PaymentDetails = {
     type: PaymentDetailsVariant.LIGHTNING,
     swapId: string
     description: string
+    liquidExpirationBlockheight: number
     preimage?: string
-    bolt11?: string
+    invoice?: string
     bolt12Offer?: string
     paymentHash?: string
+    destinationPubkey?: string
+    lnurlInfo?: LnUrlInfo
+    bip353Address?: string
+    claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
 } | {
     type: PaymentDetailsVariant.LIQUID,
+    assetId: string
     destination: string
     description: string
+    assetInfo?: AssetInfo
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string
     description: string
+    autoAcceptedFees: boolean
+    bitcoinExpirationBlockheight?: number
+    liquidExpirationBlockheight?: number
+    claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
 }
@@ -620,7 +725,8 @@ export enum PaymentState {
     FAILED = "failed",
     TIMED_OUT = "timedOut",
     REFUNDABLE = "refundable",
-    REFUND_PENDING = "refundPending"
+    REFUND_PENDING = "refundPending",
+    WAITING_FEE_ACCEPTANCE = "waitingFeeAcceptance"
 }
 
 export enum PaymentType {
@@ -628,13 +734,29 @@ export enum PaymentType {
     SEND = "send"
 }
 
+export enum ReceiveAmountVariant {
+    BITCOIN = "bitcoin",
+    ASSET = "asset"
+}
+
+export type ReceiveAmount = {
+    type: ReceiveAmountVariant.BITCOIN,
+    payerAmountSat: number
+} | {
+    type: ReceiveAmountVariant.ASSET,
+    assetId: string
+    payerAmount?: number
+}
+
 export enum SdkEventVariant {
     PAYMENT_FAILED = "paymentFailed",
     PAYMENT_PENDING = "paymentPending",
+    PAYMENT_REFUNDABLE = "paymentRefundable",
     PAYMENT_REFUNDED = "paymentRefunded",
     PAYMENT_REFUND_PENDING = "paymentRefundPending",
     PAYMENT_SUCCEEDED = "paymentSucceeded",
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
+    PAYMENT_WAITING_FEE_ACCEPTANCE = "paymentWaitingFeeAcceptance",
     SYNCED = "synced"
 }
 
@@ -643,6 +765,9 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.PAYMENT_PENDING,
+    details: Payment
+} | {
+    type: SdkEventVariant.PAYMENT_REFUNDABLE,
     details: Payment
 } | {
     type: SdkEventVariant.PAYMENT_REFUNDED,
@@ -655,6 +780,9 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.PAYMENT_WAITING_CONFIRMATION,
+    details: Payment
+} | {
+    type: SdkEventVariant.PAYMENT_WAITING_FEE_ACCEPTANCE,
     details: Payment
 } | {
     type: SdkEventVariant.SYNCED
@@ -672,10 +800,12 @@ export type SendDestination = {
 } | {
     type: SendDestinationVariant.BOLT11,
     invoice: LnInvoice
+    bip353Address?: string
 } | {
     type: SendDestinationVariant.BOLT12,
     offer: LnOffer
     receiverAmountSat: number
+    bip353Address?: string
 }
 
 export enum SuccessActionVariant {
@@ -743,11 +873,6 @@ export const defaultConfig = async (network: LiquidNetwork, breezApiKey: string 
     return response
 }
 
-export const parse = async (input: string): Promise<InputType> => {
-    const response = await BreezSDKLiquid.parse(input)
-    return response
-}
-
 export const parseInvoice = async (input: string): Promise<LnInvoice> => {
     const response = await BreezSDKLiquid.parseInvoice(input)
     return response
@@ -770,6 +895,11 @@ export const signMessage = async (req: SignMessageRequest): Promise<SignMessageR
 
 export const checkMessage = async (req: CheckMessageRequest): Promise<CheckMessageResponse> => {
     const response = await BreezSDKLiquid.checkMessage(req)
+    return response
+}
+
+export const parse = async (input: string): Promise<InputType> => {
+    const response = await BreezSDKLiquid.parse(input)
     return response
 }
 
@@ -831,6 +961,15 @@ export const listPayments = async (req: ListPaymentsRequest): Promise<Payment[]>
 export const getPayment = async (req: GetPaymentRequest): Promise<Payment | null> => {
     const response = await BreezSDKLiquid.getPayment(req)
     return response
+}
+
+export const fetchPaymentProposedFees = async (req: FetchPaymentProposedFeesRequest): Promise<FetchPaymentProposedFeesResponse> => {
+    const response = await BreezSDKLiquid.fetchPaymentProposedFees(req)
+    return response
+}
+
+export const acceptPaymentProposedFees = async (req: AcceptPaymentProposedFeesRequest): Promise<void> => {
+    await BreezSDKLiquid.acceptPaymentProposedFees(req)
 }
 
 export const listRefundables = async (): Promise<RefundableSwap[]> => {

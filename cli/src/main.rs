@@ -16,6 +16,9 @@ pub(crate) struct Args {
     #[clap(short, long)]
     pub(crate) data_dir: Option<String>,
 
+    #[clap(long, action)]
+    pub(crate) no_data_sync: bool,
+
     #[clap(short, long)]
     pub(crate) cache_dir: Option<String>,
 
@@ -24,6 +27,9 @@ pub(crate) struct Args {
 
     #[clap(short, long, value_parser = parse_network_arg)]
     pub(crate) network: Option<LiquidNetwork>,
+
+    #[clap(short, long)]
+    pub(crate) passphrase: Option<String>,
 }
 
 fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
@@ -39,7 +45,8 @@ fn show_results(result: Result<String>) -> Result<()> {
         })?,
     };
 
-    Ok(println!("{result_str}"))
+    println!("{result_str}");
+    Ok(())
 }
 
 struct CliEventListener {}
@@ -60,6 +67,9 @@ async fn main() -> Result<()> {
 
     LiquidSdk::init_logging(&data_dir_str, None)?;
 
+    let data_sync_url = std::env::var_os("SYNC_SERVICE_URL")
+        .map(|var| var.into_string().expect("Expected valid sync service url"));
+
     let persistence = CliPersistence { data_dir };
     let history_file = &persistence.history_file();
 
@@ -73,15 +83,23 @@ async fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic()?;
+    let passphrase = args.passphrase;
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
     config.working_dir = data_dir_str;
     config.cache_dir = args.cache_dir;
+    if args.no_data_sync {
+        config.sync_service_url = None;
+    } else if data_sync_url.is_some() {
+        config.sync_service_url = data_sync_url;
+    }
     let sdk = LiquidSdk::connect(ConnectRequest {
-        mnemonic: mnemonic.to_string(),
         config,
+        mnemonic: Some(mnemonic.to_string()),
+        passphrase,
+        seed: None,
     })
     .await?;
     let listener_id = sdk
@@ -91,6 +109,7 @@ async fn main() -> Result<()> {
     let cli_prompt = match network {
         LiquidNetwork::Mainnet => "breez-liquid-cli [mainnet]> ",
         LiquidNetwork::Testnet => "breez-liquid-cli [testnet]> ",
+        LiquidNetwork::Regtest => "breez-liquid-cli [regtest]> ",
     };
 
     loop {

@@ -964,10 +964,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@breeztech/react-native-breez-sdk-liquid@0.4.0-rc3":
-  version "0.4.0-rc3"
-  resolved "https://registry.yarnpkg.com/@breeztech/react-native-breez-sdk-liquid/-/react-native-breez-sdk-liquid-0.4.0-rc3.tgz#9a99abcc792e54302e54ebdddc4d72a9173ebeaa"
-  integrity sha512-3uMMz6BfYmx4KDs+YU+OwAYIJQTfJbtRzEHpa3PE7j4QBtfpffTp2MqN/HxkKqhw/98u/kfDdbklO5PmF+BrFg==
+"@breeztech/react-native-breez-sdk-liquid@0.7.0-rc4":
+  version "0.7.0-rc4"
+  resolved "https://registry.yarnpkg.com/@breeztech/react-native-breez-sdk-liquid/-/react-native-breez-sdk-liquid-0.7.0-rc4.tgz#4a7304741a2fbaf81f6da14d597b89cea5e099d7"
+  integrity sha512-m/1HwAca9PhhM7f/Vg7CAaDzR+fBkV3R5nHk4AS6vlTMjD4NJd/5hDsQNaJG9nrubZT5flN8EcqimUq2A6SQtA==
 
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
@@ -2880,9 +2880,9 @@ electron-to-chromium@^1.4.118:
   integrity sha512-0Rcpald12O11BUogJagX3HsCN3FE83DSqWjgXoHo5a72KUKMSfI39XBgJpgNNxS9fuGzytaFjE06kZkiVFy2qA==
 
 elliptic@^6.5.3, elliptic@^6.5.4:
-  version "6.5.4"
-  resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.4.tgz#da37cebd31e79a1367e941b592ed1fbebd58abbb"
-  integrity sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==
+  version "6.6.1"
+  resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.6.1.tgz#3b8ffb02670bf69e382c7f65bf524c97c5405c06"
+  integrity sha512-RaddvvMatK2LJHqFJ+YA4WysVN5Ita9E35botqIYspQ4TkRAlCicdzKOjlyv/1Za5RyTNn7di//eEV0uTAfe3g==
   dependencies:
     bn.js "^4.11.9"
     brorand "^1.1.0"

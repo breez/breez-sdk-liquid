@@ -1,9 +1,8 @@
-use std::path::PathBuf;
-
 use anyhow::{anyhow, Result};
-
+use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
+    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
     network::Chain,
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -11,23 +10,27 @@ use boltz_client::{
     ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
+use derivative::Derivative;
+use lwk_wollet::elements::AssetId;
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::cmp::PartialEq;
+use std::path::PathBuf;
+use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 use crate::error::{PaymentError, SdkError, SdkResult};
-use crate::receive_swap::{
-    DEFAULT_ZERO_CONF_MAX_SAT, DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
-    DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
-};
+use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
+use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
 
-// Both use f64 for the maximum precision when converting between units
-pub const STANDARD_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
-pub const LOWBALL_FEE_RATE_SAT_PER_VBYTE: f64 = 0.01;
+// Uses f64 for the maximum precision when converting between units
+pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
+pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
+pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
@@ -43,19 +46,40 @@ pub struct Config {
     /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
     pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
-    /// Send payment timeout. See [crate::sdk::LiquidSdk::send_payment]
+    /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
     pub payment_timeout_sec: u64,
-    /// Zero-conf minimum accepted fee-rate in millisatoshis per vbyte
-    pub zero_conf_min_fee_rate_msat: u32,
+    /// The url of the real-time sync service. Defaults to [BREEZ_SYNC_SERVICE_URL]
+    /// Setting this field to `None` will disable the service
+    pub sync_service_url: Option<String>,
     /// Maximum amount in satoshi to accept zero-conf payments with
-    /// Defaults to [crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT]
+    /// Defaults to [DEFAULT_ZERO_CONF_MAX_SAT]
     pub zero_conf_max_amount_sat: Option<u64>,
-    /// The Breez API key used for making requests to their mempool service
+    /// The Breez API key used for making requests to the sync service
     pub breez_api_key: Option<String>,
+    /// A set of external input parsers that are used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input
+    /// is not recognized. See [ExternalInputParser] for more details on how to configure
+    /// external parsing.
+    pub external_input_parsers: Option<Vec<ExternalInputParser>>,
+    /// The SDK includes some default external input parsers
+    /// ([DEFAULT_EXTERNAL_INPUT_PARSERS](crate::sdk::DEFAULT_EXTERNAL_INPUT_PARSERS)).
+    /// Set this to false in order to prevent their use.
+    pub use_default_external_input_parsers: bool,
+    /// For payments where the onchain fees can only be estimated on creation, this can be used
+    /// in order to automatically allow slightly more expensive fees. If the actual fee rate ends up
+    /// being above the sum of the initial estimate and this leeway, the payment will require
+    /// user fee acceptance. See [WaitingFeeAcceptance](PaymentState::WaitingFeeAcceptance).
+    ///
+    /// Defaults to zero.
+    pub onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
+    /// A set of asset metadata used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input is a
+    /// [LiquidAddressData] and the [asset_id](LiquidAddressData::asset_id) differs from the Liquid Bitcoin asset.
+    /// See [AssetMetadata] for more details on how define asset metadata.
+    /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
+    pub asset_metadata: Option<Vec<AssetMetadata>>,
 }
 
 impl Config {
-    pub fn mainnet(breez_api_key: String) -> Self {
+    pub fn mainnet(breez_api_key: Option<String>) -> Self {
         Config {
             liquid_electrum_url: "elements-mainnet.breez.technology:50002".to_string(),
             bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
@@ -64,9 +88,13 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_MAINNET,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
             zero_conf_max_amount_sat: None,
-            breez_api_key: Some(breez_api_key),
+            breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
         }
     }
 
@@ -79,9 +107,32 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
-            zero_conf_min_fee_rate_msat: DEFAULT_ZERO_CONF_MIN_FEE_RATE_TESTNET,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
+    pub fn regtest() -> Self {
+        Config {
+            liquid_electrum_url: "localhost:19002".to_string(),
+            bitcoin_electrum_url: "localhost:19001".to_string(),
+            mempoolspace_url: "http://localhost/api".to_string(),
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Regtest,
+            payment_timeout_sec: 15,
+            sync_service_url: Some("http://localhost:8088".to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key: None,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
         }
     }
 
@@ -94,6 +145,7 @@ impl Config {
             .join(match self.network {
                 LiquidNetwork::Mainnet => "mainnet",
                 LiquidNetwork::Testnet => "testnet",
+                LiquidNetwork::Regtest => "regtest",
             })
             .join(fingerprint_hex)
             .to_str()
@@ -108,10 +160,33 @@ impl Config {
             .unwrap_or(DEFAULT_ZERO_CONF_MAX_SAT)
     }
 
-    pub(crate) fn lowball_fee_rate_msat_per_vbyte(&self) -> Option<f32> {
+    pub(crate) fn lbtc_asset_id(&self) -> String {
+        utils::lbtc_asset_id(self.network).to_string()
+    }
+
+    pub(crate) fn get_all_external_input_parsers(&self) -> Vec<ExternalInputParser> {
+        let mut external_input_parsers = Vec::new();
+        if self.use_default_external_input_parsers {
+            let default_parsers = DEFAULT_EXTERNAL_INPUT_PARSERS
+                .iter()
+                .map(|(id, regex, url)| ExternalInputParser {
+                    provider_id: id.to_string(),
+                    input_regex: regex.to_string(),
+                    parser_url: url.to_string(),
+                })
+                .collect::<Vec<_>>();
+            external_input_parsers.extend(default_parsers);
+        }
+        external_input_parsers.extend(self.external_input_parsers.clone().unwrap_or_default());
+
+        external_input_parsers
+    }
+
+    pub(crate) fn default_boltz_url(&self) -> &str {
         match self.network {
-            LiquidNetwork::Mainnet => Some((LOWBALL_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32),
-            LiquidNetwork::Testnet => None,
+            LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
+            LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
+            LiquidNetwork::Regtest => BOLTZ_REGTEST,
         }
     }
 }
@@ -124,12 +199,15 @@ pub enum LiquidNetwork {
     Mainnet,
     /// Testnet Bitcoin and Liquid chains
     Testnet,
+    /// Regtest Bitcoin and Liquid chains
+    Regtest,
 }
 impl LiquidNetwork {
     pub fn as_bitcoin_chain(&self) -> Chain {
         match self {
             LiquidNetwork::Mainnet => Chain::Bitcoin,
             LiquidNetwork::Testnet => Chain::BitcoinTestnet,
+            LiquidNetwork::Regtest => Chain::BitcoinRegtest,
         }
     }
 }
@@ -139,6 +217,12 @@ impl From<LiquidNetwork> for ElementsNetwork {
         match value {
             LiquidNetwork::Mainnet => ElementsNetwork::Liquid,
             LiquidNetwork::Testnet => ElementsNetwork::LiquidTestnet,
+            LiquidNetwork::Regtest => ElementsNetwork::ElementsRegtest {
+                policy_asset: AssetId::from_str(
+                    "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+                )
+                .unwrap(),
+            },
         }
     }
 }
@@ -148,6 +232,7 @@ impl From<LiquidNetwork> for Chain {
         match value {
             LiquidNetwork::Mainnet => Chain::Liquid,
             LiquidNetwork::Testnet => Chain::LiquidTestnet,
+            LiquidNetwork::Regtest => Chain::LiquidRegtest,
         }
     }
 }
@@ -159,16 +244,18 @@ impl TryFrom<&str> for LiquidNetwork {
         match value.to_lowercase().as_str() {
             "mainnet" => Ok(LiquidNetwork::Mainnet),
             "testnet" => Ok(LiquidNetwork::Testnet),
+            "regtest" => Ok(LiquidNetwork::Regtest),
             _ => Err(anyhow!("Invalid network")),
         }
     }
 }
 
-impl From<LiquidNetwork> for sdk_common::prelude::Network {
+impl From<LiquidNetwork> for Network {
     fn from(value: LiquidNetwork) -> Self {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
             LiquidNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Regtest => Self::Regtest,
         }
     }
 }
@@ -178,6 +265,7 @@ impl From<LiquidNetwork> for sdk_common::bitcoin::Network {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
             LiquidNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Regtest => Self::Regtest,
         }
     }
 }
@@ -187,6 +275,7 @@ impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
         match value {
             LiquidNetwork::Mainnet => Self::Bitcoin,
             LiquidNetwork::Testnet => Self::Testnet,
+            LiquidNetwork::Regtest => Self::Regtest,
         }
     }
 }
@@ -202,10 +291,12 @@ pub trait EventListener: Send + Sync {
 pub enum SdkEvent {
     PaymentFailed { details: Payment },
     PaymentPending { details: Payment },
+    PaymentRefundable { details: Payment },
     PaymentRefunded { details: Payment },
     PaymentRefundPending { details: Payment },
     PaymentSucceeded { details: Payment },
     PaymentWaitingConfirmation { details: Payment },
+    PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
 }
 
@@ -235,14 +326,14 @@ impl From<bip32::Error> for SignerError {
 /// The sdk user can implement this trait to use their own signer.
 pub trait Signer: Send + Sync {
     /// The master xpub encoded as 78 bytes length as defined in bip32 specification.
-    /// For reference: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-Serialization_format
+    /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-Serialization_format>
     fn xpub(&self) -> Result<Vec<u8>, SignerError>;
 
     /// The derived xpub encoded as 78 bytes length as defined in bip32 specification.
     /// The derivation path is a string represents the shorter notation of the key tree to derive. For example:
     /// m/49'/1'/0'/0/0
     /// m/48'/1'/0'/0/0
-    /// For reference: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-The_key_tree
+    /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-The_key_tree>
     fn derive_xpub(&self, derivation_path: String) -> Result<Vec<u8>, SignerError>;
 
     /// Sign an ECDSA message using the private key derived from the given derivation path
@@ -251,18 +342,31 @@ pub trait Signer: Send + Sync {
     /// Sign an ECDSA message using the private key derived from the master key
     fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 
-    /// Return the master blinding key for SLIP77: https://github.com/satoshilabs/slips/blob/master/slip-0077.md
+    /// Return the master blinding key for SLIP77: <https://github.com/satoshilabs/slips/blob/master/slip-0077.md>
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError>;
 
     /// HMAC-SHA256 using the private key derived from the given derivation path
-    /// This is used to calculate the linking key of lnurl-auth specification: https://github.com/lnurl/luds/blob/luds/05.md
+    /// This is used to calculate the linking key of lnurl-auth specification: <https://github.com/lnurl/luds/blob/luds/05.md>
     fn hmac_sha256(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
+
+    /// Encrypts a message using (ECIES)[ecies::encrypt]
+    fn ecies_encrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
+
+    /// Decrypts a message using (ECIES)[ecies::decrypt]
+    fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
+/// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
 pub struct ConnectRequest {
+    /// The SDK [Config]
     pub config: Config,
-    pub mnemonic: String,
+    /// The optional Liquid wallet mnemonic
+    pub mnemonic: Option<String>,
+    /// The optional passphrase for the mnemonic
+    pub passphrase: Option<String>,
+    /// The optional Liquid wallet seed
+    pub seed: Option<Vec<u8>>,
 }
 
 pub struct ConnectWithSignerRequest {
@@ -290,19 +394,57 @@ pub enum PaymentMethod {
     LiquidAddress,
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub enum ReceiveAmount {
+    /// The amount in satoshi that should be paid
+    Bitcoin { payer_amount_sat: u64 },
+
+    /// The amount of an asset that should be paid
+    Asset {
+        asset_id: String,
+        payer_amount: Option<f64>,
+    },
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveRequest {
-    pub payer_amount_sat: Option<u64>,
     pub payment_method: PaymentMethod,
+
+    /// The amount to be paid in either Bitcoin or another asset
+    pub amount: Option<ReceiveAmount>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
-    pub payer_amount_sat: Option<u64>,
+    pub amount: Option<ReceiveAmount>,
+
+    /// Generally represents the total fees that would be paid to send or receive this payment.
+    ///
+    /// In case of Zero-Amount Receive Chain swaps, the swapper service fee (`swapper_feerate` times
+    /// the amount) is paid in addition to `fees_sat`. The swapper service feerate is already known
+    /// in the beginning, but the exact swapper service fee will only be known when the
+    /// `payer_amount_sat` is known.
+    ///
+    /// In all other types of swaps, the swapper service fee is included in `fees_sat`.
     pub fees_sat: u64,
+
+    /// The minimum amount the payer can send for this swap to succeed.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+    pub min_payer_amount_sat: Option<u64>,
+
+    /// The maximum amount the payer can send for this swap to succeed.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+    pub max_payer_amount_sat: Option<u64>,
+
+    /// The percentage of the sent amount that will count towards the service fee.
+    ///
+    /// When the method is [PaymentMethod::LiquidAddress], this is empty.
+    pub swapper_feerate: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -319,7 +461,7 @@ pub struct ReceivePaymentRequest {
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentResponse {
     /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
-    /// or an invoice, depending on the [PrepareReceivePaymentResponse] parameters
+    /// or an invoice, depending on the [PrepareReceiveResponse] parameters
     pub destination: String,
 }
 
@@ -369,10 +511,14 @@ pub enum SendDestination {
     },
     Bolt11 {
         invoice: LNInvoice,
+        /// A BIP353 address, in case one was used to resolve this BOLT11
+        bip353_address: Option<String>,
     },
     Bolt12 {
         offer: LNOffer,
         receiver_amount_sat: u64,
+        /// A BIP353 address, in case one was used to resolve this BOLT12
+        bip353_address: Option<String>,
     },
 }
 
@@ -395,17 +541,26 @@ pub struct SendPaymentResponse {
     pub payment: Payment,
 }
 
+/// Used to specify the amount to sent or to send all funds.
 #[derive(Debug, Serialize, Clone)]
 pub enum PayAmount {
     /// The amount in satoshi that will be received
-    Receiver { amount_sat: u64 },
-    /// Indicates that all available funds should be sent
+    Bitcoin { receiver_amount_sat: u64 },
+
+    /// The amount of an asset that will be received
+    Asset {
+        asset_id: String,
+        receiver_amount: f64,
+    },
+
+    /// Indicates that all available Bitcoin funds should be sent
     Drain,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].
 #[derive(Debug, Serialize, Clone)]
 pub struct PreparePayOnchainRequest {
+    /// The amount to send
     pub amount: PayAmount,
     /// The optional fee rate of the Bitcoin claim transaction in sat/vB. Defaults to the swapper estimated claim fee.
     pub fee_rate_sat_per_vbyte: Option<u32>,
@@ -442,7 +597,8 @@ pub struct PrepareRefundRequest {
 pub struct PrepareRefundResponse {
     pub tx_vsize: u32,
     pub tx_fee_sat: u64,
-    pub refund_tx_id: Option<String>,
+    /// The txid of the last broadcasted refund tx, if any
+    pub last_refund_tx_id: Option<String>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::refund].
@@ -462,9 +618,24 @@ pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
-/// Returned when calling [crate::sdk::LiquidSdk::get_info].
-#[derive(Debug, Serialize)]
-pub struct GetInfoResponse {
+/// An asset balance to denote the balance for each asset.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct AssetBalance {
+    pub asset_id: String,
+    pub balance_sat: u64,
+    pub name: Option<String>,
+    pub ticker: Option<String>,
+    pub balance: Option<f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct BlockchainInfo {
+    pub liquid_tip: u32,
+    pub bitcoin_tip: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WalletInfo {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
     /// Amount that is being used for ongoing Send swaps
@@ -475,6 +646,49 @@ pub struct GetInfoResponse {
     pub fingerprint: String,
     /// The wallet's pubkey. Used to verify signed messages.
     pub pubkey: String,
+    /// Asset balances of non Liquid Bitcoin assets
+    #[serde(default)]
+    pub asset_balances: Vec<AssetBalance>,
+}
+
+impl WalletInfo {
+    pub(crate) fn validate_sufficient_funds(
+        &self,
+        network: LiquidNetwork,
+        amount_sat: u64,
+        fees_sat: u64,
+        asset_id: &str,
+    ) -> Result<(), PaymentError> {
+        if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
+            ensure_sdk!(
+                amount_sat + fees_sat <= self.balance_sat,
+                PaymentError::InsufficientFunds
+            );
+        } else {
+            match self
+                .asset_balances
+                .iter()
+                .find(|ab| ab.asset_id.eq(asset_id))
+            {
+                Some(asset_balance) => ensure_sdk!(
+                    amount_sat <= asset_balance.balance_sat && fees_sat <= self.balance_sat,
+                    PaymentError::InsufficientFunds
+                ),
+                None => return Err(PaymentError::InsufficientFunds),
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::get_info].
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetInfoResponse {
+    /// The wallet information, such as the balance, fingerprint and public key
+    pub wallet_info: WalletInfo,
+    /// The latest synced blockchain information, such as the Liquid/Bitcoin tips
+    #[serde(default)]
+    pub blockchain_info: BlockchainInfo,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::sign_message].
@@ -513,7 +727,9 @@ pub struct CheckMessageResponse {
 pub struct BackupRequest {
     /// Path to the backup.
     ///
-    /// If not set, it defaults to `backup.sql` for mainnet and `backup-testnet.sql` for testnet.
+    /// If not set, it defaults to `backup.sql` for mainnet, `backup-testnet.sql` for testnet,
+    /// and `backup-regtest.sql` for regtest.
+    ///
     /// The file will be saved in [ConnectRequest]'s `data_dir`.
     pub backup_path: Option<String>,
 }
@@ -528,6 +744,7 @@ pub struct RestoreRequest {
 #[derive(Default)]
 pub struct ListPaymentsRequest {
     pub filters: Option<Vec<PaymentType>>,
+    pub states: Option<Vec<PaymentState>>,
     /// Epoch time, in seconds
     pub from_timestamp: Option<i64>,
     /// Epoch time, in seconds
@@ -535,23 +752,41 @@ pub struct ListPaymentsRequest {
     pub offset: Option<u32>,
     pub limit: Option<u32>,
     pub details: Option<ListPaymentDetails>,
+    pub sort_ascending: Option<bool>,
 }
 
 /// An argument of [ListPaymentsRequest] when calling [crate::sdk::LiquidSdk::list_payments].
 #[derive(Debug, Serialize)]
 pub enum ListPaymentDetails {
-    /// The Liquid BIP21 URI or address of the payment
-    Liquid { destination: String },
+    /// A Liquid payment
+    Liquid {
+        /// Optional asset id
+        asset_id: Option<String>,
+        /// Optional BIP21 URI or address
+        destination: Option<String>,
+    },
 
-    /// The Bitcoin address of the payment
-    Bitcoin { address: String },
+    /// A Bitcoin payment
+    Bitcoin {
+        /// Optional address
+        address: Option<String>,
+    },
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::get_payment].
 #[derive(Debug, Serialize)]
 pub enum GetPaymentRequest {
-    /// The Lightning payment hash of the payment
-    Lightning { payment_hash: String },
+    /// The payment hash of a Lightning payment
+    PaymentHash { payment_hash: String },
+    /// A swap id or its SHA256 hash
+    SwapId { swap_id: String },
+}
+
+/// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
+#[async_trait]
+pub(crate) trait BlockListener: Send + Sync {
+    async fn on_bitcoin_block(&self, height: u32);
+    async fn on_liquid_block(&self, height: u32);
 }
 
 // A swap enum variant
@@ -568,6 +803,59 @@ impl Swap {
             | Swap::Send(SendSwap { id, .. })
             | Swap::Receive(ReceiveSwap { id, .. }) => id.clone(),
         }
+    }
+
+    pub(crate) fn version(&self) -> u64 {
+        match self {
+            Swap::Chain(ChainSwap { metadata, .. })
+            | Swap::Send(SendSwap { metadata, .. })
+            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.version,
+        }
+    }
+
+    pub(crate) fn set_version(&mut self, version: u64) {
+        match self {
+            Swap::Chain(chain_swap) => {
+                chain_swap.metadata.version = version;
+            }
+            Swap::Send(send_swap) => {
+                send_swap.metadata.version = version;
+            }
+            Swap::Receive(receive_swap) => {
+                receive_swap.metadata.version = version;
+            }
+        }
+    }
+
+    pub(crate) fn is_local(&self) -> bool {
+        match self {
+            Swap::Chain(ChainSwap { metadata, .. })
+            | Swap::Send(SendSwap { metadata, .. })
+            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.is_local,
+        }
+    }
+
+    pub(crate) fn last_updated_at(&self) -> u32 {
+        match self {
+            Swap::Chain(ChainSwap { metadata, .. })
+            | Swap::Send(SendSwap { metadata, .. })
+            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.last_updated_at,
+        }
+    }
+}
+impl From<ChainSwap> for Swap {
+    fn from(swap: ChainSwap) -> Self {
+        Self::Chain(swap)
+    }
+}
+impl From<SendSwap> for Swap {
+    fn from(swap: SendSwap) -> Self {
+        Self::Send(swap)
+    }
+}
+impl From<ReceiveSwap> for Swap {
+    fn from(swap: ReceiveSwap) -> Self {
+        Self::Receive(swap)
     }
 }
 
@@ -592,7 +880,7 @@ impl SwapScriptV2 {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Direction {
     Incoming = 0,
     Outgoing = 1,
@@ -615,10 +903,19 @@ impl FromSql for Direction {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub(crate) struct SwapMetadata {
+    /// Version used for optimistic concurrency control within local db
+    pub(crate) version: u64,
+    pub(crate) last_updated_at: u32,
+    pub(crate) is_local: bool,
+}
+
 /// A chain swap
 ///
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
 pub(crate) struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
@@ -628,9 +925,18 @@ pub(crate) struct ChainSwap {
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
+    /// Payer amount defined at swap creation
     pub(crate) payer_amount_sat: u64,
+    /// The actual payer amount as seen on the user lockup tx. Might differ from `payer_amount_sat`
+    /// in the case of an over/underpayment
+    pub(crate) actual_payer_amount_sat: Option<u64>,
+    /// Receiver amount defined at swap creation
     pub(crate) receiver_amount_sat: u64,
+    /// The final receiver amount, in case of an amountless swap for which fees have been accepted
+    pub(crate) accepted_receiver_amount_sat: Option<u64>,
     pub(crate) claim_fees_sat: u64,
+    /// The [ChainPair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     pub(crate) accept_zero_conf: bool,
     /// JSON representation of [crate::persist::chain::InternalCreateChainResponse]
     pub(crate) create_response_json: String,
@@ -646,6 +952,10 @@ pub(crate) struct ChainSwap {
     pub(crate) state: PaymentState,
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
+    pub(crate) auto_accepted_fees: bool,
+    /// Swap metadata that is only valid when reading one from the local database
+    #[derivative(PartialEq = "ignore")]
+    pub(crate) metadata: SwapMetadata,
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
@@ -667,6 +977,13 @@ impl ChainSwap {
             claim_details: internal_create_response.claim_details,
             lockup_details: internal_create_response.lockup_details,
         })
+    }
+
+    pub(crate) fn get_boltz_pair(&self) -> Result<ChainPair> {
+        let pair: ChainPair = serde_json::from_str(&self.pair_fees_json)
+            .map_err(|e| anyhow!("Failed to deserialize ChainPair: {e:?}"))?;
+
+        Ok(pair)
     }
 
     pub(crate) fn get_claim_swap_script(&self) -> SdkResult<SwapScriptV2> {
@@ -718,11 +1035,12 @@ impl ChainSwap {
         Ok(script_pubkey)
     }
 
-    pub(crate) fn to_refundable(&self, refundable_amount_sat: u64) -> RefundableSwap {
+    pub(crate) fn to_refundable(&self, amount_sat: u64) -> RefundableSwap {
         RefundableSwap {
             swap_address: self.lockup_address.clone(),
             timestamp: self.created_at,
-            amount_sat: refundable_amount_sat,
+            amount_sat,
+            last_refund_tx_id: self.refund_tx_id.clone(),
         }
     }
 
@@ -745,10 +1063,26 @@ impl ChainSwap {
 
         Ok(create_response_json)
     }
+
+    pub(crate) fn is_waiting_fee_acceptance(&self) -> bool {
+        self.payer_amount_sat == 0 && self.accepted_receiver_amount_sat.is_none()
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub(crate) struct ChainSwapUpdate {
+    pub(crate) swap_id: String,
+    pub(crate) to_state: PaymentState,
+    pub(crate) server_lockup_tx_id: Option<String>,
+    pub(crate) user_lockup_tx_id: Option<String>,
+    pub(crate) claim_address: Option<String>,
+    pub(crate) claim_tx_id: Option<String>,
+    pub(crate) refund_tx_id: Option<String>,
 }
 
 /// A submarine swap, used for Send
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
 pub(crate) struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
@@ -756,10 +1090,13 @@ pub(crate) struct SendSwap {
     /// The bolt12 offer, if this swap sends to a Bolt12 offer
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
+    pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    /// The [SubmarinePair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     /// JSON representation of [crate::persist::send::InternalCreateSubmarineResponse]
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcast
@@ -767,8 +1104,12 @@ pub(crate) struct SendSwap {
     /// Persisted as soon as a refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
+    pub(crate) timeout_block_height: u64,
     pub(crate) state: PaymentState,
     pub(crate) refund_private_key: String,
+    /// Swap metadata that is only valid when reading one from the local database
+    #[derivative(PartialEq = "ignore")]
+    pub(crate) metadata: SwapMetadata,
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
@@ -833,7 +1174,8 @@ impl SendSwap {
 }
 
 /// A reverse swap, used for Receive
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
 pub(crate) struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
@@ -842,25 +1184,30 @@ pub(crate) struct ReceiveSwap {
     pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
     pub(crate) payment_hash: Option<String>,
+    pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
+    /// The [ReversePair] chosen on swap creation
+    pub(crate) pair_fees_json: String,
     pub(crate) claim_fees_sat: u64,
     /// Persisted as soon as a claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
-    /// Persisted only when the lockup tx is broadcast
+    /// The transaction id of the swapper's tx broadcast
     pub(crate) lockup_tx_id: Option<String>,
     /// The address reserved for a magic routing hint payment
     pub(crate) mrh_address: String,
-    /// The script pubkey for a magic routing hint payment
-    pub(crate) mrh_script_pubkey: String,
     /// Persisted only if a transaction is sent to the `mrh_address`
     pub(crate) mrh_tx_id: Option<String>,
     /// Until the lockup tx is seen in the mempool, it contains the swap creation time.
     /// Afterwards, it shows the lockup tx creation time.
     pub(crate) created_at: u32,
+    pub(crate) timeout_block_height: u32,
     pub(crate) state: PaymentState,
+    /// Swap metadata that is only valid when reading one from the local database
+    #[derivative(PartialEq = "ignore")]
+    pub(crate) metadata: SwapMetadata,
 }
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
@@ -939,11 +1286,15 @@ pub struct RefundableSwap {
     pub timestamp: u32,
     /// Amount that is refundable, from all UTXOs
     pub amount_sat: u64,
+    /// The txid of the last broadcasted refund tx, if any
+    pub last_refund_tx_id: Option<String>,
 }
 
 /// The payment state of an individual payment.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Hash)]
+#[derive(Clone, Copy, Debug, Default, EnumString, Eq, PartialEq, Serialize, Hash)]
+#[strum(serialize_all = "lowercase")]
 pub enum PaymentState {
+    #[default]
     Created = 0,
 
     /// ## Receive Swaps
@@ -1007,7 +1358,21 @@ pub enum PaymentState {
     ///
     /// When the refund tx is broadcast, `refund_tx_id` is set in the swap.
     RefundPending = 6,
+
+    /// ## Chain Swaps
+    ///
+    /// This is the state when the user needs to accept new fees before the payment can proceed.
+    ///
+    /// Use [LiquidSdk::fetch_payment_proposed_fees](crate::sdk::LiquidSdk::fetch_payment_proposed_fees)
+    /// to find out the current fees and
+    /// [LiquidSdk::accept_payment_proposed_fees](crate::sdk::LiquidSdk::accept_payment_proposed_fees)
+    /// to accept them, allowing the payment to proceed.
+    ///
+    /// Otherwise, this payment can be immediately refunded using
+    /// [prepare_refund](crate::sdk::LiquidSdk::prepare_refund)/[refund](crate::sdk::LiquidSdk::refund).
+    WaitingFeeAcceptance = 7,
 }
+
 impl ToSql for PaymentState {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::from(*self as i8))
@@ -1024,10 +1389,22 @@ impl FromSql for PaymentState {
                 4 => Ok(PaymentState::TimedOut),
                 5 => Ok(PaymentState::Refundable),
                 6 => Ok(PaymentState::RefundPending),
+                7 => Ok(PaymentState::WaitingFeeAcceptance),
                 _ => Err(FromSqlError::OutOfRange(i)),
             },
             _ => Err(FromSqlError::InvalidType),
         }
+    }
+}
+
+impl PaymentState {
+    pub(crate) fn is_refundable(&self) -> bool {
+        matches!(
+            self,
+            PaymentState::Refundable
+                | PaymentState::RefundPending
+                | PaymentState::WaitingFeeAcceptance
+        )
     }
 }
 
@@ -1094,10 +1471,13 @@ pub struct PaymentTxData {
     /// The point in time when the underlying tx was included in a block.
     pub timestamp: Option<u32>,
 
+    /// The asset id
+    pub asset_id: String,
+
     /// The onchain tx amount.
     ///
     /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
-    pub amount_sat: u64,
+    pub amount: u64,
 
     /// The onchain fees of this tx
     pub fees_sat: u64,
@@ -1106,6 +1486,10 @@ pub struct PaymentTxData {
 
     /// Onchain tx status
     pub is_confirmed: bool,
+
+    /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
+    pub unblinding_data: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1124,10 +1508,14 @@ pub struct PaymentSwapData {
     /// Swap creation timestamp
     pub created_at: u32,
 
+    /// The height of the block at which the swap will no longer be valid
+    pub expiration_blockheight: u32,
+
     pub preimage: Option<String>,
-    pub bolt11: Option<String>,
+    pub invoice: Option<String>,
     pub bolt12_offer: Option<String>,
     pub payment_hash: Option<String>,
+    pub destination_pubkey: Option<String>,
     pub description: String,
 
     /// Amount sent by the swap payer
@@ -1135,6 +1523,9 @@ pub struct PaymentSwapData {
 
     /// Amount received by the swap receiver
     pub receiver_amount_sat: u64,
+
+    /// The swapper service fee
+    pub swapper_fees_sat: u64,
 
     pub refund_tx_id: Option<String>,
     pub refund_tx_amount_sat: Option<u64>,
@@ -1148,8 +1539,60 @@ pub struct PaymentSwapData {
     pub status: PaymentState,
 }
 
+/// Represents the payment LNURL info
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+pub struct LnUrlInfo {
+    pub ln_address: Option<String>,
+    pub lnurl_pay_comment: Option<String>,
+    pub lnurl_pay_domain: Option<String>,
+    pub lnurl_pay_metadata: Option<String>,
+    pub lnurl_pay_success_action: Option<SuccessActionProcessed>,
+    pub lnurl_pay_unprocessed_success_action: Option<SuccessAction>,
+    pub lnurl_withdraw_endpoint: Option<String>,
+}
+
+/// Configuration for asset metadata. Each asset metadata item represents an entry in the
+/// [Liquid Asset Registry](https://docs.liquid.net/docs/blockstream-liquid-asset-registry).
+/// An example Liquid Asset in the registry would be [Tether USD](https://assets.blockstream.info/ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2.json>).
+#[derive(Debug, Clone, Serialize)]
+pub struct AssetMetadata {
+    /// The asset id of the registered asset
+    pub asset_id: String,
+    /// The name of the asset
+    pub name: String,
+    /// The ticker of the asset
+    pub ticker: String,
+    /// The precision used to display the asset amount.
+    /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
+    pub precision: u8,
+}
+
+impl AssetMetadata {
+    pub fn amount_to_sat(&self, amount: f64) -> u64 {
+        (amount * (10_u64.pow(self.precision.into()) as f64)) as u64
+    }
+
+    pub fn amount_from_sat(&self, amount_sat: u64) -> f64 {
+        amount_sat as f64 / (10_u64.pow(self.precision.into()) as f64)
+    }
+}
+
+/// Represents the Liquid payment asset info. The asset info is derived from
+/// the available [AssetMetadata] that is set in the [Config].
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct AssetInfo {
+    /// The name of the asset
+    pub name: String,
+    /// The ticker of the asset
+    pub ticker: String,
+    /// The amount calculated from the satoshi amount of the transaction, having its
+    /// decimal shifted to the left by the [precision](AssetMetadata::precision)
+    pub amount: f64,
+}
+
 /// The specific details of a payment, depending on its type
 #[derive(Debug, Clone, PartialEq, Serialize)]
+#[allow(clippy::large_enum_variant)]
 pub enum PaymentDetails {
     /// Swapping to or from Lightning
     Lightning {
@@ -1158,18 +1601,33 @@ pub enum PaymentDetails {
         /// Represents the invoice description
         description: String,
 
-        /// In case of a Send swap, this is the preimage of the paid invoice (proof of payment).
+        /// The height of the block at which the swap will no longer be valid
+        liquid_expiration_blockheight: u32,
+
+        /// The preimage of the paid invoice (proof of payment).
         preimage: Option<String>,
 
-        /// Represents the Bolt11 invoice associated with a payment
+        /// Represents the Bolt11/Bolt12 invoice associated with a payment
         /// In the case of a Send payment, this is the invoice paid by the swapper
         /// In the case of a Receive payment, this is the invoice paid by the user
-        bolt11: Option<String>,
+        invoice: Option<String>,
 
         bolt12_offer: Option<String>,
 
         /// The payment hash of the invoice
         payment_hash: Option<String>,
+
+        /// The invoice destination/payee pubkey
+        destination_pubkey: Option<String>,
+
+        /// The payment LNURL info
+        lnurl_info: Option<LnUrlInfo>,
+
+        /// The BIP353 address used to resolve this payment
+        bip353_address: Option<String>,
+
+        /// For a Receive payment, this is the claim tx id in case it has already been broadcast
+        claim_tx_id: Option<String>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
@@ -1184,6 +1642,12 @@ pub enum PaymentDetails {
 
         /// Represents the BIP21 `message` field
         description: String,
+
+        /// The asset id
+        asset_id: String,
+
+        /// The asset info derived from the [AssetMetadata]
+        asset_info: Option<AssetInfo>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {
@@ -1191,6 +1655,22 @@ pub enum PaymentDetails {
 
         /// Represents the invoice description
         description: String,
+
+        /// For an amountless receive swap, this indicates if fees were automatically accepted.
+        /// Fees are auto accepted when the swapper proposes fees that are within the initial
+        /// estimate, plus the `onchain_fee_rate_leeway_sat_per_vbyte` set in the [Config], if any.
+        auto_accepted_fees: bool,
+
+        /// The height of the Liquid block at which the swap will no longer be valid
+        /// It should always be populated in case of an outgoing chain swap
+        liquid_expiration_blockheight: Option<u32>,
+
+        /// The height of the Bitcoin block at which the swap will no longer be valid
+        /// It should always be populated in case of an incoming chain swap
+        bitcoin_expiration_blockheight: Option<u32>,
+
+        /// The claim tx id in case it has already been broadcast
+        claim_tx_id: Option<String>,
 
         /// For a Send swap which was refunded, this is the refund tx id
         refund_tx_id: Option<String>,
@@ -1223,6 +1703,23 @@ impl PaymentDetails {
             Self::Liquid { .. } => None,
         }
     }
+
+    pub(crate) fn get_description(&self) -> Option<String> {
+        match self {
+            Self::Lightning { description, .. }
+            | Self::Bitcoin { description, .. }
+            | Self::Liquid { description, .. } => Some(description.clone()),
+        }
+    }
+
+    pub(crate) fn is_lbtc_asset_id(&self, network: LiquidNetwork) -> bool {
+        match self {
+            Self::Liquid { asset_id, .. } => {
+                asset_id.eq(&utils::lbtc_asset_id(network).to_string())
+            }
+            _ => true,
+        }
+    }
 }
 
 /// Represents an SDK payment.
@@ -1235,6 +1732,10 @@ pub struct Payment {
     pub destination: Option<String>,
 
     pub tx_id: Option<String>,
+
+    /// Data to use in the `blinded` param when unblinding the transaction in an explorer.
+    /// See: <https://docs.liquid.net/docs/unblinding-transactions>
+    pub unblinding_data: Option<String>,
 
     /// Composite timestamp that can be used for sorting or displaying the payment.
     ///
@@ -1263,6 +1764,10 @@ pub struct Payment {
     /// - for Receive payments, this is zero
     pub fees_sat: u64,
 
+    /// Service fees paid to the swapper service. This is only set for swaps (i.e. doesn't apply to
+    /// direct Liquid payments).
+    pub swapper_fees_sat: Option<u64>,
+
     /// If it is a `Send` or `Receive` payment
     pub payment_type: PaymentType,
 
@@ -1278,30 +1783,29 @@ pub struct Payment {
     pub details: PaymentDetails,
 }
 impl Payment {
-    pub(crate) fn from_pending_swap(swap: PaymentSwapData, payment_type: PaymentType) -> Payment {
+    pub(crate) fn from_pending_swap(
+        swap: PaymentSwapData,
+        payment_type: PaymentType,
+        payment_details: PaymentDetails,
+    ) -> Payment {
         let amount_sat = match payment_type {
             PaymentType::Receive => swap.receiver_amount_sat,
             PaymentType::Send => swap.payer_amount_sat,
         };
 
         Payment {
-            destination: swap.bolt11.clone(),
+            destination: swap.invoice.clone(),
             tx_id: None,
+            unblinding_data: None,
             timestamp: swap.created_at,
             amount_sat,
-            fees_sat: swap.payer_amount_sat - swap.receiver_amount_sat,
+            fees_sat: swap
+                .payer_amount_sat
+                .saturating_sub(swap.receiver_amount_sat),
+            swapper_fees_sat: Some(swap.swapper_fees_sat),
             payment_type,
             status: swap.status,
-            details: PaymentDetails::Lightning {
-                swap_id: swap.swap_id,
-                preimage: swap.preimage,
-                bolt11: swap.bolt11,
-                bolt12_offer: swap.bolt12_offer,
-                payment_hash: swap.payment_hash,
-                description: swap.description,
-                refund_tx_id: swap.refund_tx_id,
-                refund_tx_amount_sat: swap.refund_tx_amount_sat,
-            },
+            details: payment_details,
         }
     }
 
@@ -1310,23 +1814,40 @@ impl Payment {
         swap: Option<PaymentSwapData>,
         details: PaymentDetails,
     ) -> Payment {
+        let (amount_sat, fees_sat) = match swap.as_ref() {
+            Some(s) => match tx.payment_type {
+                // For receive swaps, to avoid some edge case issues related to potential past
+                // overpayments, we use the actual claim value as the final received amount
+                // for fee calculation.
+                PaymentType::Receive => (tx.amount, s.payer_amount_sat.saturating_sub(tx.amount)),
+                PaymentType::Send => (
+                    s.receiver_amount_sat,
+                    s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
+                ),
+            },
+            None => match tx.payment_type {
+                PaymentType::Receive => (tx.amount, 0),
+                PaymentType::Send => (tx.amount, tx.fees_sat),
+            },
+        };
         Payment {
             tx_id: Some(tx.tx_id),
+            unblinding_data: tx.unblinding_data,
             // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
             // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
             // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.
             destination: match &swap {
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Receive,
-                    bolt11,
+                    invoice,
                     ..
-                }) => bolt11.clone(),
+                }) => invoice.clone(),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Send,
-                    bolt11,
+                    invoice,
                     bolt12_offer,
                     ..
-                }) => bolt11.clone().or(bolt12_offer.clone()),
+                }) => bolt12_offer.clone().or(invoice.clone()),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Chain,
                     claim_address,
@@ -1341,14 +1862,9 @@ impl Payment {
                 .timestamp
                 .or(swap.as_ref().map(|s| s.created_at))
                 .unwrap_or(utils::now()),
-            amount_sat: tx.amount_sat,
-            fees_sat: match swap.as_ref() {
-                Some(s) => s.payer_amount_sat - s.receiver_amount_sat,
-                None => match tx.payment_type {
-                    PaymentType::Receive => 0,
-                    PaymentType::Send => tx.fees_sat,
-                },
-            },
+            amount_sat,
+            fees_sat,
+            swapper_fees_sat: swap.as_ref().map(|s| s.swapper_fees_sat),
             payment_type: tx.payment_type,
             status: match &swap {
                 Some(swap) => swap.status,
@@ -1469,10 +1985,13 @@ impl From<SwapTree> for InternalSwapTree {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_lnurl_pay].
 #[derive(Debug, Serialize)]
 pub struct PrepareLnUrlPayRequest {
-    /// The [LnUrlPayRequestData] returned by [crate::input_parser::parse]
+    /// The [LnUrlPayRequestData] returned by [parse]
     pub data: LnUrlPayRequestData,
-    /// The amount in millisatoshis for this payment
-    pub amount_msat: u64,
+    /// The amount to send
+    pub amount: PayAmount,
+    /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
+    /// Returned by [parse].
+    pub bip353_address: Option<String>,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// Validates that, if there is a URL success action, the URL domain matches
@@ -1487,6 +2006,10 @@ pub struct PrepareLnUrlPayResponse {
     pub destination: SendDestination,
     /// The fees in satoshis to send the payment
     pub fees_sat: u64,
+    /// The [LnUrlPayRequestData] returned by [parse]
+    pub data: LnUrlPayRequestData,
+    /// An optional comment for this payment
+    pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if
     /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
     pub success_action: Option<SuccessAction>,
@@ -1534,7 +2057,7 @@ impl Transaction {
     pub(crate) fn txid(&self) -> String {
         match self {
             Transaction::Liquid(tx) => tx.txid().to_hex(),
-            Transaction::Bitcoin(tx) => tx.txid().to_hex(),
+            Transaction::Bitcoin(tx) => tx.compute_txid().to_hex(),
         }
     }
 }
@@ -1583,6 +2106,29 @@ impl Utxo {
     }
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
+#[derive(Debug, Clone)]
+pub struct FetchPaymentProposedFeesRequest {
+    pub swap_id: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
+#[derive(Debug, Clone, Serialize)]
+pub struct FetchPaymentProposedFeesResponse {
+    pub swap_id: String,
+    pub fees_sat: u64,
+    /// Amount sent by the swap payer
+    pub payer_amount_sat: u64,
+    /// Amount that will be received if these fees are accepted
+    pub receiver_amount_sat: u64,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::accept_payment_proposed_fees].
+#[derive(Debug, Clone)]
+pub struct AcceptPaymentProposedFeesRequest {
+    pub response: FetchPaymentProposedFeesResponse,
+}
+
 #[macro_export]
 macro_rules! get_invoice_amount {
     ($invoice:expr) => {
@@ -1608,4 +2154,20 @@ macro_rules! get_invoice_description {
             Bolt11InvoiceDescription::Hash(_) => None,
         }
     };
+}
+
+#[macro_export]
+macro_rules! get_updated_fields {
+    ($($var:ident),* $(,)?) => {{
+        let mut options = Vec::new();
+        $(
+            if $var.is_some() {
+                options.push(stringify!($var).to_string());
+            }
+        )*
+        match options.len() > 0 {
+            true => Some(options),
+            false => None,
+        }
+    }};
 }

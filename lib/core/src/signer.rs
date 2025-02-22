@@ -6,7 +6,7 @@ use boltz_client::PublicKey;
 use lwk_common::Signer as LwkSigner;
 use lwk_wollet::bitcoin::bip32::Xpriv;
 use lwk_wollet::bitcoin::Network;
-use lwk_wollet::elements_miniscript;
+use lwk_wollet::elements_miniscript::{self, ToPublicKey as _};
 use lwk_wollet::elements_miniscript::{
     bitcoin::{self, bip32::DerivationPath},
     elements::{
@@ -155,7 +155,11 @@ impl LwkSigner for SdkLwkSigner {
     }
 
     fn derive_xpub(&self, path: &DerivationPath) -> Result<Xpub, Self::Error> {
-        let pubkey_bytes = self.sdk_signer.derive_xpub(path.to_string())?;
+        let pubkey_bytes = if path.is_empty() {
+            self.sdk_signer.xpub()?
+        } else {
+            self.sdk_signer.derive_xpub(path.to_string())?
+        };
         let xpub = Xpub::decode(pubkey_bytes.as_slice())?;
         Ok(xpub)
     }
@@ -164,15 +168,20 @@ impl LwkSigner for SdkLwkSigner {
 pub struct SdkSigner {
     xprv: Xpriv,
     secp: Secp256k1<All>, // could be sign only, but it is likely the caller already has the All context.
-    mnemonic: Mnemonic,
+    seed: Vec<u8>,
     network: Network,
 }
 
 impl SdkSigner {
-    pub fn new(mnemonic: &str, is_mainnet: bool) -> Result<Self, NewError> {
-        let secp = Secp256k1::new();
+    pub fn new(mnemonic: &str, passphrase: &str, is_mainnet: bool) -> Result<Self, NewError> {
         let mnemonic: Mnemonic = mnemonic.parse()?;
-        let seed = mnemonic.to_seed("");
+        let seed = mnemonic.to_seed(passphrase).to_vec();
+
+        Self::new_with_seed(seed, is_mainnet)
+    }
+
+    pub fn new_with_seed(seed: Vec<u8>, is_mainnet: bool) -> Result<Self, NewError> {
+        let secp = Secp256k1::new();
 
         let network = if is_mainnet {
             bitcoin::Network::Bitcoin
@@ -185,13 +194,9 @@ impl SdkSigner {
         Ok(Self {
             xprv,
             secp,
-            mnemonic,
+            seed,
             network,
         })
-    }
-
-    fn seed(&self) -> [u8; 64] {
-        self.mnemonic.to_seed("")
     }
 }
 
@@ -220,15 +225,13 @@ impl Signer for SdkSigner {
     }
 
     fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError> {
-        let seed = self.seed();
-        let master_blinding_key = MasterBlindingKey::from_seed(&seed[..]);
+        let master_blinding_key = MasterBlindingKey::from_seed(&self.seed);
         Ok(master_blinding_key.as_bytes().to_vec())
     }
 
     fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
-        let seed = self.seed();
         let secp = Secp256k1::new();
-        let keypair = Xpriv::new_master(self.network, &seed)
+        let keypair = Xpriv::new_master(self.network, &self.seed)
             .map_err(|e| anyhow::anyhow!("Could not get signer keypair: {e}"))?
             .to_keypair(&secp);
         let s = msg.as_slice();
@@ -252,6 +255,21 @@ impl Signer for SdkSigner {
         Ok(Hmac::<sha256::Hash>::from_engine(engine)
             .as_byte_array()
             .to_vec())
+    }
+
+    fn ecies_encrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+        let keypair = self.xprv.to_keypair(&self.secp);
+        let rc_pub = keypair.public_key().to_public_key().to_bytes();
+        ecies::encrypt(&rc_pub, &msg).map_err(|err| SignerError::Generic {
+            err: format!("Could not encrypt data: {err}"),
+        })
+    }
+
+    fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError> {
+        let rc_prv = self.xprv.to_priv().to_bytes();
+        ecies::decrypt(&rc_prv, &msg).map_err(|err| SignerError::Generic {
+            err: format!("Could not decrypt data: {err}"),
+        })
     }
 }
 
@@ -288,7 +306,7 @@ mod tests {
 
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {
         let sw_signer = SwSigner::new(mnemonic, false).unwrap();
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
+        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
         (sw_signer, sdk_signer)
     }
@@ -439,7 +457,7 @@ mod tests {
         .unwrap();
 
         // 2. Create a wallet using SdkLwkSigner
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, false).unwrap());
+        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
         let sdk_wallet = Wollet::new(
             network,
