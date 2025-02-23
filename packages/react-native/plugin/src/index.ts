@@ -25,7 +25,7 @@ function withBreezPlugin(config: ExpoConfig, props?: PluginProps): ExpoConfig {
     config = withNotificationServiceExtension(config, { apiKey, keyService, mnemonicKeyName })
 
     // Android Configuration
-    config = withAndroidConfig(config, { apiKey, mnemonicKeyName})
+    config = withAndroidConfig(config, { apiKey, mnemonicKeyName })
 
     return config
 }
