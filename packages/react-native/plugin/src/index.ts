@@ -2,6 +2,7 @@ import type { ExpoConfig } from "@expo/config"
 import { createRunOncePlugin } from "@expo/config-plugins"
 import { warnOnce, sdkPackage } from "./utils"
 import { withNotificationServiceExtension } from "./withBreezIOS"
+import { withAndroidConfig } from "./withBreezAndroid"
 
 type PluginProps = {
     apiKey: string
@@ -23,7 +24,8 @@ function withBreezPlugin(config: ExpoConfig, props?: PluginProps): ExpoConfig {
     // iOS Configuration
     config = withNotificationServiceExtension(config, { apiKey, keyService, mnemonicKeyName })
 
-    // TODO: Android Configuration
+    // Android Configuration
+    config = withAndroidConfig(config, { apiKey, mnemonicKeyName})
 
     return config
 }
