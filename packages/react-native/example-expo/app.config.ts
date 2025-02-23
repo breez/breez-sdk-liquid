@@ -20,6 +20,7 @@ export default function defineConfig({ config }: ConfigContext): ExpoConfig {
             bundleIdentifier: "com.breeztech.expo-breez-sdk-liquid-example"
         },
         android: {
+            package: "com.breeztech.expo_breez_sdk_liquid_example",
             adaptiveIcon: {
                 foregroundImage: "./assets/adaptive-icon.png",
                 backgroundColor: "#ffffff"
