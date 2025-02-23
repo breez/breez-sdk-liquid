@@ -545,6 +545,10 @@ impl Recoverer {
     }
 
     /// Reconstruct Send Swap tx IDs from the onchain data and the immutable data
+    ///
+    /// The implementation tolerates a `tx_map` that is older than the `send_histories_by_swap_id`
+    /// in the sense that no incorrect data is recovered. Transactions that are missing from `tx_map`
+    /// are simply not recovered.
     fn recover_send_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -595,6 +599,10 @@ impl Recoverer {
     }
 
     /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable data
+    ///
+    /// The implementation tolerates a `tx_map` that is older than the `receive_histories_by_swap_id`
+    /// in the sense that no incorrect data is recovered. Transactions that are missing from `tx_map`
+    /// are simply not recovered.
     fn recover_receive_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -627,49 +635,11 @@ impl Recoverer {
                 .and_then(|h| mrh_txs.get(&h.txid))
                 .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
 
-            let (lockup_tx_id, claim_tx_id) = match history.lbtc_claim_script_history.len() {
-                // Only lockup tx available
-                1 => (Some(history.lbtc_claim_script_history[0].clone()), None),
-
-                2 => {
-                    let first = history.lbtc_claim_script_history[0].clone();
-                    let second = history.lbtc_claim_script_history[1].clone();
-
-                    if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                        // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
-                        (Some(second), Some(first))
-                    } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
-                        // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
-                        (Some(first), Some(second))
-                    } else {
-                        // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
-                        // If so, we expect them to be confirmed at different heights
-                        let first_conf_height = first.height;
-                        let second_conf_height = second.height;
-                        match (first.confirmed(), second.confirmed()) {
-                            // If they're both confirmed, the one with the lowest confirmation height is the lockup
-                            (true, true) => match first_conf_height < second_conf_height {
-                                true => (Some(first), None),
-                                false => (Some(second), None),
-                            },
-
-                            // If only one tx is confirmed, then that is the lockup
-                            (true, false) => (Some(first), None),
-                            (false, true) => (Some(second), None),
-
-                            // If neither is confirmed, this is an edge-case
-                            (false, false) => {
-                                warn!("Found unconfirmed lockup and refund txs while recovering data for Receive Swap {swap_id}");
-                                (None, None)
-                            }
-                        }
-                    }
-                }
-                n => {
-                    warn!("Script history with length {n} found while recovering data for Receive Swap {swap_id}");
-                    (None, None)
-                }
-            };
+            let (lockup_tx_id, claim_tx_id) = determine_incoming_lockup_and_claim_txs(
+                &history.lbtc_claim_script_history,
+                tx_map,
+                &swap_id,
+            );
 
             // Take only the lockup_tx_id and claim_tx_id if either are set,
             // otherwise take the mrh_tx_id and mrh_amount_sat
@@ -695,6 +665,10 @@ impl Recoverer {
     }
 
     /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable data
+    ///
+    /// The implementation tolerates a `tx_map` that is older than the `chain_send_histories_by_swap_id`
+    /// in the sense that no incorrect data is recovered. Transactions that are missing from `tx_map`
+    /// are simply not recovered.
     fn recover_send_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -773,6 +747,10 @@ impl Recoverer {
     }
 
     /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data
+    ///
+    /// The implementation tolerates a `tx_map` that is older than the `chain_receive_histories_by_swap_id`
+    /// in the sense that no incorrect data is recovered. Transactions that are missing from `tx_map`
+    /// are simply not recovered.
     fn recover_receive_chain_swap_tx_ids(
         &self,
         tx_map: &TxMap,
@@ -788,57 +766,33 @@ impl Recoverer {
         for (swap_id, history) in chain_receive_histories_by_swap_id {
             debug!("[Recover Chain Receive] Checking swap {swap_id}");
 
-            let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id, lbtc_claim_address) = match history
-                .lbtc_claim_script_history
-                .len()
-            {
-                // Only lockup tx available
-                1 => (
-                    Some(history.lbtc_claim_script_history[0].clone()),
-                    None,
-                    None,
-                ),
+            let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id) =
+                determine_incoming_lockup_and_claim_txs(
+                    &history.lbtc_claim_script_history,
+                    tx_map,
+                    &swap_id,
+                );
 
-                2 => {
-                    let first = &history.lbtc_claim_script_history[0];
-                    let second = &history.lbtc_claim_script_history[1];
-
-                    // If a history tx is a known incoming tx, it's the claim tx
-                    let (lockup_tx_id, claim_tx_id) =
-                        match tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                            true => (second, first),
-                            false => (first, second),
-                        };
-
-                    // Get the claim address from the claim tx output
-                    let claim_address = tx_map
-                        .incoming_tx_map
-                        .get(&claim_tx_id.txid)
-                        .and_then(|tx| {
-                            tx.outputs
-                                .iter()
-                                .find(|output| output.is_some())
-                                .and_then(|output| output.clone().map(|o| o.script_pubkey))
-                        })
-                        .and_then(|script| {
-                            ElementsAddress::from_script(
-                                &script,
-                                Some(self.master_blinding_key.blinding_key(&secp, &script)),
-                                &AddressParams::LIQUID,
-                            )
-                            .map(|addr| addr.to_string())
-                        });
-
-                    (
-                        Some(lockup_tx_id.clone()),
-                        Some(claim_tx_id.clone()),
-                        claim_address,
-                    )
-                }
-                n => {
-                    warn!("L-BTC script history with length {n} found while recovering data for Chain Receive Swap {swap_id}");
-                    (None, None, None)
-                }
+            let lbtc_claim_address = if let Some(claim_tx_id) = &lbtc_claim_tx_id {
+                tx_map
+                    .incoming_tx_map
+                    .get(&claim_tx_id.txid)
+                    .and_then(|tx| {
+                        tx.outputs
+                            .iter()
+                            .find(|output| output.is_some())
+                            .and_then(|output| output.clone().map(|o| o.script_pubkey))
+                    })
+                    .and_then(|script| {
+                        ElementsAddress::from_script(
+                            &script,
+                            Some(self.master_blinding_key.blinding_key(&secp, &script)),
+                            &AddressParams::LIQUID,
+                        )
+                        .map(|addr| addr.to_string())
+                    })
+            } else {
+                None
             };
 
             // Get the current confirmed amount available for the lockup script
@@ -929,5 +883,56 @@ impl Recoverer {
         }
 
         Ok(res)
+    }
+}
+
+fn determine_incoming_lockup_and_claim_txs(
+    history: &[HistoryTxId],
+    tx_map: &TxMap,
+    swap_id: &str,
+) -> (Option<HistoryTxId>, Option<HistoryTxId>) {
+    match history.len() {
+        // Only lockup tx available
+        1 => (Some(history[0].clone()), None),
+        2 => {
+            let first = history[0].clone();
+            let second = history[1].clone();
+
+            if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
+                // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
+                (Some(second), Some(first))
+            } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
+                // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
+                (Some(first), Some(second))
+            } else {
+                // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
+                // If so, we expect them to be confirmed at different heights
+                let first_conf_height = first.height;
+                let second_conf_height = second.height;
+                match (first.confirmed(), second.confirmed()) {
+                    // If they're both confirmed, the one with the lowest confirmation height is the lockup
+                    (true, true) => match first_conf_height < second_conf_height {
+                        true => (Some(first), None),
+                        false => (Some(second), None),
+                    },
+
+                    // If only one tx is confirmed, then that is the lockup
+                    (true, false) => (Some(first), None),
+                    (false, true) => (Some(second), None),
+
+                    // If neither is confirmed, this is an edge-case, and the most likely cause is an
+                    // out of date wallet tx_map that doesn't yet include one of the txs.
+                    (false, false) => {
+                        warn!("Found 2 unconfirmed txs in the claim script history of Swap {swap_id}. \
+                        Unable to determine if they include a swapper refund or a user claim");
+                        (None, None)
+                    }
+                }
+            }
+        }
+        n => {
+            warn!("Unexpected script history length {n} while recovering data for Swap {swap_id}");
+            (None, None)
+        }
     }
 }
