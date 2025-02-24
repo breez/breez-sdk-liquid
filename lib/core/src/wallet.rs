@@ -11,8 +11,7 @@ use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
-use lwk_wollet::clients::asyncr::EsploraClient;
-use lwk_wollet::clients::blocking::BlockchainBackend;
+use lwk_wollet::blocking::{BlockchainBackend as _, EsploraClient};
 use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
@@ -118,7 +117,7 @@ impl BlockchainClient {
         let state = wollet.state();
         let update = match self {
             Self::Electrum(client) => client.full_scan_to_index(&state, index)?,
-            Self::Esplora(_client) => todo!(),
+            Self::Esplora(client) => client.full_scan_to_index(&state, index)?,
         };
         if let Some(update) = update {
             wollet.apply_update(update)?;
@@ -149,7 +148,10 @@ impl BlockchainClient {
                 url,
                 use_waterfalls,
             } => {
-                let client = EsploraClient::new(network.into(), url, *use_waterfalls);
+                let client = match *use_waterfalls {
+                    true => EsploraClient::new(url, network.into()),
+                    false => EsploraClient::new_waterfalls(url, network.into()),
+                }?;
                 Ok(BlockchainClient::Esplora(client))
             }
             BlockchainExplorer::MempoolSpace { .. } => {
