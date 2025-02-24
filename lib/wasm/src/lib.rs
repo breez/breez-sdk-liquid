@@ -1,3 +1,6 @@
+mod error;
+pub mod models;
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
