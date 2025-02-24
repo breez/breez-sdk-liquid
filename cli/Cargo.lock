@@ -736,7 +736,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.7.0-rc4"
+version = "0.7.1"
 dependencies = [
  "anyhow",
  "async-trait",
