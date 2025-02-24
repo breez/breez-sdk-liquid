@@ -2476,6 +2476,34 @@ impl SseDecode for crate::bindings::BitcoinAddressData {
     }
 }
 
+impl SseDecode for crate::model::BlockchainExplorer {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_url = <String>::sse_decode(deserializer);
+                return crate::model::BlockchainExplorer::Electrum { url: var_url };
+            }
+            1 => {
+                let mut var_url = <String>::sse_decode(deserializer);
+                let mut var_useWaterfalls = <bool>::sse_decode(deserializer);
+                return crate::model::BlockchainExplorer::Esplora {
+                    url: var_url,
+                    use_waterfalls: var_useWaterfalls,
+                };
+            }
+            2 => {
+                let mut var_url = <String>::sse_decode(deserializer);
+                return crate::model::BlockchainExplorer::MempoolSpace { url: var_url };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::model::BlockchainInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2546,9 +2574,10 @@ impl SseDecode for crate::model::CheckMessageResponse {
 impl SseDecode for crate::model::Config {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_liquidElectrumUrl = <String>::sse_decode(deserializer);
-        let mut var_bitcoinElectrumUrl = <String>::sse_decode(deserializer);
-        let mut var_mempoolspaceUrl = <String>::sse_decode(deserializer);
+        let mut var_liquidExplorers =
+            <Vec<crate::model::BlockchainExplorer>>::sse_decode(deserializer);
+        let mut var_bitcoinExplorers =
+            <Vec<crate::model::BlockchainExplorer>>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
         let mut var_cacheDir = <Option<String>>::sse_decode(deserializer);
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
@@ -2563,9 +2592,8 @@ impl SseDecode for crate::model::Config {
         let mut var_assetMetadata =
             <Option<Vec<crate::model::AssetMetadata>>>::sse_decode(deserializer);
         return crate::model::Config {
-            liquid_electrum_url: var_liquidElectrumUrl,
-            bitcoin_electrum_url: var_bitcoinElectrumUrl,
-            mempoolspace_url: var_mempoolspaceUrl,
+            liquid_explorers: var_liquidExplorers,
+            bitcoin_explorers: var_bitcoinExplorers,
             working_dir: var_workingDir,
             cache_dir: var_cacheDir,
             network: var_network,
@@ -2893,6 +2921,18 @@ impl SseDecode for Vec<crate::model::AssetMetadata> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<crate::model::AssetMetadata>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::model::BlockchainExplorer> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::model::BlockchainExplorer>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -5047,6 +5087,42 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::BitcoinAddres
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::BlockchainExplorer {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::BlockchainExplorer::Electrum { url } => {
+                [0.into_dart(), url.into_into_dart().into_dart()].into_dart()
+            }
+            crate::model::BlockchainExplorer::Esplora {
+                url,
+                use_waterfalls,
+            } => [
+                1.into_dart(),
+                url.into_into_dart().into_dart(),
+                use_waterfalls.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::model::BlockchainExplorer::MempoolSpace { url } => {
+                [2.into_dart(), url.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::BlockchainExplorer
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::BlockchainExplorer>
+    for crate::model::BlockchainExplorer
+{
+    fn into_into_dart(self) -> crate::model::BlockchainExplorer {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::BlockchainInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5148,9 +5224,8 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::CheckMessageResponse>
 impl flutter_rust_bridge::IntoDart for crate::model::Config {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.liquid_electrum_url.into_into_dart().into_dart(),
-            self.bitcoin_electrum_url.into_into_dart().into_dart(),
-            self.mempoolspace_url.into_into_dart().into_dart(),
+            self.liquid_explorers.into_into_dart().into_dart(),
+            self.bitcoin_explorers.into_into_dart().into_dart(),
             self.working_dir.into_into_dart().into_dart(),
             self.cache_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
@@ -7414,6 +7489,33 @@ impl SseEncode for crate::bindings::BitcoinAddressData {
     }
 }
 
+impl SseEncode for crate::model::BlockchainExplorer {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::BlockchainExplorer::Electrum { url } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(url, serializer);
+            }
+            crate::model::BlockchainExplorer::Esplora {
+                url,
+                use_waterfalls,
+            } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(url, serializer);
+                <bool>::sse_encode(use_waterfalls, serializer);
+            }
+            crate::model::BlockchainExplorer::MempoolSpace { url } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(url, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::model::BlockchainInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7471,9 +7573,8 @@ impl SseEncode for crate::model::CheckMessageResponse {
 impl SseEncode for crate::model::Config {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.liquid_electrum_url, serializer);
-        <String>::sse_encode(self.bitcoin_electrum_url, serializer);
-        <String>::sse_encode(self.mempoolspace_url, serializer);
+        <Vec<crate::model::BlockchainExplorer>>::sse_encode(self.liquid_explorers, serializer);
+        <Vec<crate::model::BlockchainExplorer>>::sse_encode(self.bitcoin_explorers, serializer);
         <String>::sse_encode(self.working_dir, serializer);
         <Option<String>>::sse_encode(self.cache_dir, serializer);
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
@@ -7728,6 +7829,16 @@ impl SseEncode for Vec<crate::model::AssetMetadata> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::model::AssetMetadata>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::model::BlockchainExplorer> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::model::BlockchainExplorer>::sse_encode(item, serializer);
         }
     }
 }
@@ -9459,6 +9570,33 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::BlockchainExplorer> for wire_cst_blockchain_explorer {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::BlockchainExplorer {
+            match self.tag {
+                0 => {
+                    let ans = unsafe { self.kind.Electrum };
+                    crate::model::BlockchainExplorer::Electrum {
+                        url: ans.url.cst_decode(),
+                    }
+                }
+                1 => {
+                    let ans = unsafe { self.kind.Esplora };
+                    crate::model::BlockchainExplorer::Esplora {
+                        url: ans.url.cst_decode(),
+                        use_waterfalls: ans.use_waterfalls.cst_decode(),
+                    }
+                }
+                2 => {
+                    let ans = unsafe { self.kind.MempoolSpace };
+                    crate::model::BlockchainExplorer::MempoolSpace {
+                        url: ans.url.cst_decode(),
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
     impl CstDecode<crate::model::BlockchainInfo> for wire_cst_blockchain_info {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::BlockchainInfo {
@@ -9898,9 +10036,8 @@ mod io {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::Config {
             crate::model::Config {
-                liquid_electrum_url: self.liquid_electrum_url.cst_decode(),
-                bitcoin_electrum_url: self.bitcoin_electrum_url.cst_decode(),
-                mempoolspace_url: self.mempoolspace_url.cst_decode(),
+                liquid_explorers: self.liquid_explorers.cst_decode(),
+                bitcoin_explorers: self.bitcoin_explorers.cst_decode(),
                 working_dir: self.working_dir.cst_decode(),
                 cache_dir: self.cache_dir.cst_decode(),
                 network: self.network.cst_decode(),
@@ -10143,6 +10280,16 @@ mod io {
     impl CstDecode<Vec<crate::model::AssetMetadata>> for *mut wire_cst_list_asset_metadata {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::model::AssetMetadata> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
+    impl CstDecode<Vec<crate::model::BlockchainExplorer>> for *mut wire_cst_list_blockchain_explorer {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<crate::model::BlockchainExplorer> {
             let vec = unsafe {
                 let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -11540,6 +11687,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_blockchain_explorer {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: BlockchainExplorerKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_blockchain_explorer {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_blockchain_info {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -11595,9 +11755,8 @@ mod io {
     impl NewWithNullPtr for wire_cst_config {
         fn new_with_null_ptr() -> Self {
             Self {
-                liquid_electrum_url: core::ptr::null_mut(),
-                bitcoin_electrum_url: core::ptr::null_mut(),
-                mempoolspace_url: core::ptr::null_mut(),
+                liquid_explorers: core::ptr::null_mut(),
+                bitcoin_explorers: core::ptr::null_mut(),
                 working_dir: core::ptr::null_mut(),
                 cache_dir: core::ptr::null_mut(),
                 network: Default::default(),
@@ -13544,6 +13703,20 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_blockchain_explorer(
+        len: i32,
+    ) -> *mut wire_cst_list_blockchain_explorer {
+        let wrap = wire_cst_list_blockchain_explorer {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <wire_cst_blockchain_explorer>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_cst_new_list_external_input_parser(
         len: i32,
     ) -> *mut wire_cst_list_external_input_parser {
@@ -13824,6 +13997,36 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_blockchain_explorer {
+        tag: i32,
+        kind: BlockchainExplorerKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union BlockchainExplorerKind {
+        Electrum: wire_cst_BlockchainExplorer_Electrum,
+        Esplora: wire_cst_BlockchainExplorer_Esplora,
+        MempoolSpace: wire_cst_BlockchainExplorer_MempoolSpace,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_BlockchainExplorer_Electrum {
+        url: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_BlockchainExplorer_Esplora {
+        url: *mut wire_cst_list_prim_u_8_strict,
+        use_waterfalls: bool,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_BlockchainExplorer_MempoolSpace {
+        url: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_blockchain_info {
         liquid_tip: u32,
         bitcoin_tip: u32,
@@ -13849,9 +14052,8 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_config {
-        liquid_electrum_url: *mut wire_cst_list_prim_u_8_strict,
-        bitcoin_electrum_url: *mut wire_cst_list_prim_u_8_strict,
-        mempoolspace_url: *mut wire_cst_list_prim_u_8_strict,
+        liquid_explorers: *mut wire_cst_list_blockchain_explorer,
+        bitcoin_explorers: *mut wire_cst_list_blockchain_explorer,
         working_dir: *mut wire_cst_list_prim_u_8_strict,
         cache_dir: *mut wire_cst_list_prim_u_8_strict,
         network: i32,
@@ -14051,6 +14253,12 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_asset_metadata {
         ptr: *mut wire_cst_asset_metadata,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_list_blockchain_explorer {
+        ptr: *mut wire_cst_blockchain_explorer,
         len: i32,
     }
     #[repr(C)]
