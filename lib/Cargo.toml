@@ -37,8 +37,8 @@ anyhow = "1.0"
 log = "0.4.20"
 once_cell = "1.19"
 serde = { version = "1.0", features = ["derive"] }
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "3a0bfc219421b70bfc313b3fc8341169c1bb2741", features = ["liquid"] }
-sdk-macros = { git = "https://github.com/breez/breez-sdk", rev = "3a0bfc219421b70bfc313b3fc8341169c1bb2741" }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "249c838a6940bc9b43ee6d8fc3f3761845d275c9", features = ["liquid"] }
+sdk-macros = { git = "https://github.com/breez/breez-sdk", rev = "249c838a6940bc9b43ee6d8fc3f3761845d275c9" }
 thiserror = "1.0"
 # Version must match that used by uniffi-bindgen-go
 uniffi = "0.25.0"
