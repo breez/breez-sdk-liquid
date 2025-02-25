@@ -206,6 +206,16 @@ pub struct LnUrlWithdrawRequestData {
     pub max_withdrawable: u64,
 }
 
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LnUrlCallbackStatus)]
+pub enum LnUrlCallbackStatus {
+    Ok,
+    #[serde(rename = "ERROR")]
+    ErrorStatus {
+        #[serde(flatten)]
+        data: LnUrlErrorData,
+    },
+}
+
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LnUrlAuthRequestData)]
 pub struct LnUrlAuthRequestData {
     pub k1: String,
@@ -224,6 +234,18 @@ pub struct LnUrlWithdrawRequest {
     pub data: LnUrlWithdrawRequestData,
     pub amount_msat: u64,
     pub description: Option<String>,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LnUrlWithdrawSuccessData)]
+pub struct LnUrlWithdrawSuccessData {
+    pub invoice: LNInvoice,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LnUrlWithdrawResult)]
+pub enum LnUrlWithdrawResult {
+    Ok { data: LnUrlWithdrawSuccessData },
+    Timeout { data: LnUrlWithdrawSuccessData },
+    ErrorStatus { data: LnUrlErrorData },
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::Rate)]
