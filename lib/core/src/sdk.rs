@@ -2812,9 +2812,8 @@ impl LiquidSdk {
                     details: PaymentDetails::Liquid { .. },
                     ..
                 }) => {
-                    let updated_needed = maybe_payment.map_or(true, |payment| {
-                        payment.status == Pending && tx.height.is_some()
-                    });
+                    let updated_needed = maybe_payment
+                        .is_none_or(|payment| payment.status == Pending && tx.height.is_some());
                     if updated_needed {
                         // An unknown tx which needs inserting or a known Liquid payment tx
                         // that was in the mempool, but is now confirmed
