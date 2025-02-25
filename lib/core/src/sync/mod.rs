@@ -273,24 +273,52 @@ impl SyncService {
 
         // Step 3: Check whether or not record is applicable (from its schema_version)
         if !new_record.is_applicable()? {
+            log::debug!(
+                "realtime-sync: Could not apply record {}: schema version is too high",
+                new_record.id
+            );
             return Err(DecryptionError::SchemaNotApplicable);
         }
 
+        log::debug!(
+            "realtime-sync: Record {} schema version is applicable",
+            new_record.id
+        );
+
         // Step 4: Check whether we already have this record, and if the revision is newer
-        let maybe_sync_state = self.persister.get_sync_state_by_record_id(&new_record.id)?;
+        let maybe_sync_state = self
+            .persister
+            .get_sync_state_by_record_id(&new_record.id)
+            .map_err(|err| {
+                log::debug!("realtime-sync: Could not retrieve record's sync state: {err:?}");
+                err
+            })?;
         if let Some(sync_state) = &maybe_sync_state {
             if sync_state.record_revision >= new_record.revision {
+                log::debug!(
+                    "realtime-sync: Record {} was already persister (local revision is higher).",
+                    new_record.id
+                );
                 return Err(DecryptionError::AlreadyPersisted);
             }
         }
 
         // Step 5: Decrypt the incoming record
-        let mut decrypted_record = new_record.decrypt(self.signer.clone())?;
+        let mut decrypted_record = new_record.decrypt(self.signer.clone()).map_err(|err| {
+            log::debug!("realtime-sync: Could not decrypt record: {err:?}");
+            err
+        })?;
 
         // Step 6: Merge with outgoing records, if present
         let maybe_outgoing_changes = self
             .persister
-            .get_sync_outgoing_changes_by_id(&decrypted_record.id)?;
+            .get_sync_outgoing_changes_by_id(&decrypted_record.id)
+            .map_err(|err| {
+                log::debug!(
+                    "realtime-sync: Could not retrieve sync outgoing changes for merge: {err:?}"
+                );
+                err
+            })?;
 
         if let Some(outgoing_changes) = &maybe_outgoing_changes {
             if let Some(updated_fields) = &outgoing_changes.updated_fields {
@@ -393,7 +421,14 @@ impl SyncService {
             .partition(|result| result.record.data.is_swap());
 
         // Step 5: Recover the swap records' data from onchain, and commit it
-        for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
+        for (decryption_info, swap) in
+            self.handle_recovery(decrypted_swap_info)
+                .await
+                .map_err(|err| {
+                    log::debug!("realtime-sync: Could not handle swap record recovery: {err:?}");
+                    err
+                })?
+        {
             if let Err(e) = self.commit_record(&decryption_info, Some(swap)) {
                 log::warn!("Could not commit swap record: {e:?}");
                 continue;
@@ -412,7 +447,12 @@ impl SyncService {
 
         // Step 7: Clear succeded records
         if !succeded.is_empty() {
-            self.persister.remove_incoming_records(succeded)?;
+            self.persister
+                .remove_incoming_records(succeded)
+                .map_err(|err| {
+                    log::debug!("realtime-sync: Could not remove incoming records: {err:?}");
+                    err
+                })?;
         }
 
         Ok(())
