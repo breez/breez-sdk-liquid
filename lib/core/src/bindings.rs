@@ -274,7 +274,7 @@ impl BindingLiquidSdk {
     }
 
     pub async fn recommended_fees(&self) -> Result<RecommendedFees, SdkError> {
-        self.sdk.recommended_fees().await.map_err(Into::into)
+        self.sdk.recommended_fees().await
     }
 
     #[frb(sync)]

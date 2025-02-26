@@ -959,11 +959,11 @@ pub(crate) struct ChainSwap {
 }
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
-        utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
+        utils::decode_keypair(&self.claim_private_key)
     }
 
     pub(crate) fn get_refund_keypair(&self) -> SdkResult<Keypair> {
-        utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
+        utils::decode_keypair(&self.refund_private_key)
     }
 
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateChainResponse> {
@@ -1113,7 +1113,7 @@ pub(crate) struct SendSwap {
 }
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
-        utils::decode_keypair(&self.refund_private_key).map_err(Into::into)
+        utils::decode_keypair(&self.refund_private_key)
     }
 
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateSubmarineResponse> {
