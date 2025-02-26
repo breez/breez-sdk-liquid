@@ -35,7 +35,7 @@ pub(crate) fn new_chain_swap_handler(persister: Arc<Persister>) -> Result<ChainS
     let swapper = Arc::new(BoltzSwapper::new(
         config.clone(),
         Arc::new(MockProxyUrlFetcher::new()),
-    ));
+    )?);
     let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
