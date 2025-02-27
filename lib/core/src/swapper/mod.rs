@@ -135,7 +135,11 @@ pub trait Swapper: Send + Sync {
 }
 
 pub trait SwapperStatusStream: Send + Sync {
-    fn start(self: Arc<Self>, callback: Box<dyn ReconnectHandler>, shutdown: watch::Receiver<()>);
+    fn start(
+        self: Arc<Self>,
+        callback: Box<dyn SubscriptionHandler>,
+        shutdown: watch::Receiver<()>,
+    );
     fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
 }

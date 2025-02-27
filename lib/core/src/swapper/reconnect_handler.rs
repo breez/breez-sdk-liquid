@@ -8,16 +8,17 @@ use crate::persist::Persister;
 use super::SwapperStatusStream;
 
 #[async_trait]
-pub trait ReconnectHandler: Send + Sync {
-    async fn on_stream_reconnect(&self);
+pub trait SubscriptionHandler: Send + Sync {
+    async fn subscribe_swaps(&self);
 }
 
-pub(crate) struct SwapperReconnectHandler {
+#[derive(Clone)]
+pub(crate) struct SwapperSubscriptionHandler {
     persister: Arc<Persister>,
     status_stream: Arc<dyn SwapperStatusStream>,
 }
 
-impl SwapperReconnectHandler {
+impl SwapperSubscriptionHandler {
     pub(crate) fn new(
         persister: Arc<Persister>,
         status_stream: Arc<dyn SwapperStatusStream>,
@@ -30,8 +31,8 @@ impl SwapperReconnectHandler {
 }
 
 #[async_trait]
-impl ReconnectHandler for SwapperReconnectHandler {
-    async fn on_stream_reconnect(&self) {
+impl SubscriptionHandler for SwapperSubscriptionHandler {
+    async fn subscribe_swaps(&self) {
         match self.persister.list_ongoing_swaps() {
             Ok(initial_ongoing_swaps) => {
                 info!(

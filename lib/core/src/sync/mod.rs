@@ -3,9 +3,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use futures_util::TryFutureExt;
 use log::{info, trace, warn};
-use tokio::sync::watch;
+use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
 use tonic::Streaming;
@@ -29,6 +28,17 @@ use crate::{
 pub(crate) mod client;
 pub(crate) mod model;
 
+#[derive(Clone, Debug)]
+pub(crate) enum Event {
+    SyncedCompleted { data: SyncCompletedData },
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct SyncCompletedData {
+    pub(crate) pulled_records_count: u32,
+    pub(crate) pushed_records_count: u32,
+}
+
 pub(crate) struct SyncService {
     remote_url: String,
     client_id: String,
@@ -36,6 +46,7 @@ pub(crate) struct SyncService {
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
+    subscription_notifier: broadcast::Sender<Event>,
 }
 
 impl SyncService {
@@ -47,7 +58,7 @@ impl SyncService {
         client: Box<dyn SyncerClient>,
     ) -> Self {
         let client_id = uuid::Uuid::new_v4().to_string();
-
+        let (subscription_notifier, _) = broadcast::channel::<Event>(30);
         Self {
             client_id,
             remote_url,
@@ -55,7 +66,12 @@ impl SyncService {
             recoverer,
             signer,
             client,
+            subscription_notifier,
         }
+    }
+
+    pub(crate) fn subscribe_events(&self) -> broadcast::Receiver<Event> {
+        self.subscription_notifier.subscribe()
     }
 
     fn check_remote_change(&self) -> Result<()> {
@@ -72,8 +88,22 @@ impl SyncService {
 
     async fn run_event_loop(&self) {
         info!("realtime-sync: Running sync event loop");
-        if let Err(err) = self.pull().and_then(|_| self.push()).await {
-            log::debug!("Could not run sync event loop: {err:?}");
+        let Ok(pulled_records_count) = self.pull().await else {
+            warn!("realtime-sync: Could not pull records");
+            return;
+        };
+        let Ok(pushed_records_count) = self.push().await else {
+            warn!("realtime-sync: Could not push records");
+            return;
+        };
+
+        if let Err(e) = self.subscription_notifier.send(Event::SyncedCompleted {
+            data: SyncCompletedData {
+                pulled_records_count,
+                pushed_records_count,
+            },
+        }) {
+            warn!("realtime-sync: Could not send sync completed event {:?}", e);
         }
     }
 
@@ -358,7 +388,7 @@ impl SyncService {
         Ok(succeded.into_iter().zip(swaps.into_iter()).collect())
     }
 
-    pub(crate) async fn pull(&self) -> Result<()> {
+    pub(crate) async fn pull(&self) -> Result<u32> {
         // Step 1: Fetch and save incoming records from remote, then update local tip
         self.fetch_and_save_records().await?;
 
@@ -412,10 +442,10 @@ impl SyncService {
 
         // Step 7: Clear succeded records
         if !succeded.is_empty() {
-            self.persister.remove_incoming_records(succeded)?;
+            self.persister.remove_incoming_records(succeded.clone())?;
         }
 
-        Ok(())
+        Ok(succeded.len() as u32)
     }
 
     async fn handle_push(
@@ -476,7 +506,7 @@ impl SyncService {
         Ok(())
     }
 
-    async fn push(&self) -> Result<()> {
+    async fn push(&self) -> Result<u32> {
         let outgoing_changes = self.persister.get_sync_outgoing_changes()?;
 
         let mut succeded = vec![];
@@ -495,10 +525,11 @@ impl SyncService {
         }
 
         if !succeded.is_empty() {
-            self.persister.remove_sync_outgoing_changes(succeded)?;
+            self.persister
+                .remove_sync_outgoing_changes(succeded.clone())?;
         }
 
-        Ok(())
+        Ok(succeded.len() as u32)
     }
 }
 
