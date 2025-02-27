@@ -92,10 +92,12 @@ impl SendSwapHandler {
             // Boltz has detected the lockup in the mempool, we can speed up
             // the claim by doing so cooperatively
             SubSwapStates::TransactionClaimPending => {
-                self.cooperate_claim(&swap).await.map_err(|e| {
-                    error!("Could not cooperate Send Swap {id} claim: {e}");
-                    anyhow!("Could not post claim details. Err: {e:?}")
-                })?;
+                if swap.metadata.is_local {
+                    self.cooperate_claim(&swap).await.map_err(|e| {
+                        error!("Could not cooperate Send Swap {id} claim: {e}");
+                        anyhow!("Could not post claim details. Err: {e:?}")
+                    })?;
+                }
 
                 Ok(())
             }
