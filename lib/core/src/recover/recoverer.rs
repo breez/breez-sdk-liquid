@@ -11,6 +11,7 @@ use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
 use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 
+use super::handlers::SendSwapHandler;
 use super::model::*;
 
 use crate::prelude::{Direction, Swap};
@@ -198,13 +199,20 @@ impl Recoverer {
 
             match swap {
                 Swap::Send(send_swap) => {
-                    self.update_send_swap(
-                        send_swap,
-                        swap_id,
-                        &send_data,
-                        is_local_within_grace_period,
-                        liquid_tip,
-                    )?;
+                    if let Some(recovered_data) = send_data.get(swap_id) {
+                        // Use SendSwapHandler directly
+                        SendSwapHandler::update_swap(
+                            send_swap,
+                            swap_id,
+                            recovered_data,
+                            liquid_tip,
+                            is_local_within_grace_period,
+                        )?;
+                    } else {
+                        warn!(
+                            "Could not apply recovered data for Send swap {swap_id}: recovery data not found"
+                        );
+                    }
                 }
                 Swap::Receive(receive_swap) => {
                     self.update_receive_swap(
@@ -303,87 +311,6 @@ impl Recoverer {
                 None
             })
             .collect()
-    }
-
-    /// Update a send swap with recovered data
-    fn update_send_swap(
-        &self,
-        send_swap: &mut crate::prelude::SendSwap,
-        swap_id: &str,
-        send_data: &HashMap<String, RecoveredOnchainDataSend>,
-        is_local_within_grace_period: bool,
-        liquid_tip: u32,
-    ) -> Result<()> {
-        let Some(recovered_data) = send_data.get(swap_id) else {
-            warn!(
-                "Could not apply recovered data for Send swap {swap_id}: recovery data not found"
-            );
-            return Ok(());
-        };
-
-        // Skip updating if within grace period and would clear transactions
-        if self.should_skip_send_swap_recovery(
-            send_swap,
-            recovered_data,
-            is_local_within_grace_period,
-        ) {
-            return Ok(());
-        }
-
-        // Update transaction IDs
-        send_swap.lockup_tx_id = recovered_data
-            .lockup_tx_id
-            .clone()
-            .map(|h| h.txid.to_string());
-        send_swap.refund_tx_id = recovered_data
-            .refund_tx_id
-            .clone()
-            .map(|h| h.txid.to_string());
-
-        // Update preimage if valid
-        if let Some(preimage) = &recovered_data.preimage {
-            if send_swap.preimage.is_none() {
-                if let Ok(_) = utils::verify_payment_hash(preimage, &send_swap.invoice) {
-                    send_swap.preimage = Some(preimage.clone());
-                } else {
-                    error!("Failed to verify recovered preimage for swap {swap_id}");
-                }
-            }
-        }
-
-        // Update state based on recovered data
-        let timeout_block_height = send_swap.timeout_block_height as u32;
-        let is_expired = liquid_tip >= timeout_block_height;
-        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-            send_swap.state = new_state;
-        }
-
-        Ok(())
-    }
-
-    /// Check if send swap recovery should be skipped
-    fn should_skip_send_swap_recovery(
-        &self,
-        send_swap: &crate::prelude::SendSwap,
-        recovered_data: &RecoveredOnchainDataSend,
-        is_local_within_grace_period: bool,
-    ) -> bool {
-        let swap_id = &send_swap.id;
-        let lockup_is_cleared =
-            send_swap.lockup_tx_id.is_some() && recovered_data.lockup_tx_id.is_none();
-        let refund_is_cleared =
-            send_swap.refund_tx_id.is_some() && recovered_data.refund_tx_id.is_none();
-
-        if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
-            warn!(
-                "Local send swap {swap_id} was updated recently - skipping recovery \
-                as it would clear a tx that may have been broadcasted by us. Lockup clear: \
-                {lockup_is_cleared} - Refund clear: {refund_is_cleared}"
-            );
-            return true;
-        }
-
-        false
     }
 
     /// Update a receive swap with recovered data
