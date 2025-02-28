@@ -18,10 +18,10 @@ use crate::{
     prelude::{Direction, SendSwap, Swap, Utxo},
 };
 
-pub(crate) use reconnect_handler::*;
+pub(crate) use subscription_handler::*;
 
 pub(crate) mod boltz;
-pub(crate) mod reconnect_handler;
+pub(crate) mod subscription_handler;
 
 #[async_trait]
 pub trait Swapper: Send + Sync {
