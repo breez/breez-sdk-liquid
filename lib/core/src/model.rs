@@ -7,11 +7,11 @@ use boltz_client::{
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
-    ToHex,
+    ElementsAddress, ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
-use lwk_wollet::elements::AssetId;
+use lwk_wollet::elements::{script, AssetId, Script};
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -1004,6 +1004,31 @@ impl ChainSwap {
         Ok(swap_script)
     }
 
+    // pub(crate) fn claim_script_pubkey(&self) -> Result<ScriptBuf> {
+    //     match self.direction {
+    //         Direction::Incoming => Ok(self
+    //             .get_claim_swap_script()?
+    //             .as_liquid_script()?
+    //             .funding_addrs
+    //             .ok_or(anyhow!("No funding address found"))?
+    //             .script_pubkey()),
+    //         Direction::Outgoing => Ok(self
+    //             .get_claim_swap_script()?
+    //             .as_bitcoin_script()?
+    //             .funding_addrs
+    //             .ok_or(anyhow!("No funding address found"))?
+    //             .script_pubkey()),
+    //     }
+    // }
+
+    // pub(crate) fn lockup_script_pubkey(&self) -> Result<ScriptBuf> {
+    //     let lockup_swap_script = self.get_lockup_swap_script()?.as_liquid_script()?;
+    //     Ok(lockup_swap_script
+    //         .funding_addrs
+    //         .ok_or(anyhow!("No funding address found"))?
+    //         .script_pubkey())
+    // }
+
     pub(crate) fn get_lockup_swap_script(&self) -> SdkResult<SwapScriptV2> {
         let chain_swap_details = self.get_boltz_create_response()?.lockup_details;
         let our_pubkey = self.get_refund_keypair()?.public_key();
@@ -1214,6 +1239,14 @@ impl ReceiveSwap {
         utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
     }
 
+    pub(crate) fn claim_script(&self) -> Result<script::Script> {
+        Ok(self
+            .get_swap_script()?
+            .funding_addrs
+            .ok_or(anyhow!("No funding address found"))?
+            .script_pubkey())
+    }
+
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
         let internal_create_response: crate::persist::receive::InternalCreateReverseResponse =
             serde_json::from_str(&self.create_response_json).map_err(|e| {
@@ -1235,6 +1268,12 @@ impl ReceiveSwap {
             blinding_key: internal_create_response.blinding_key.clone(),
         };
         Ok(res)
+    }
+
+    pub(crate) fn mrh_script(&self) -> Option<script::Script> {
+        ElementsAddress::from_str(&self.mrh_address)
+            .map(|s| s.script_pubkey())
+            .ok()
     }
 
     pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
