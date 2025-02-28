@@ -319,7 +319,7 @@ impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
         })
     }
 }
-
+#[derive(Clone)]
 pub(crate) struct ReceiveSwapHistory {
     pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
     pub(crate) lbtc_mrh_script_history: Vec<HistoryTxId>,
@@ -366,6 +366,7 @@ impl TryFrom<ChainSwap> for SendChainSwapImmutableData {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct SendChainSwapHistory {
     pub(crate) lbtc_lockup_script_history: Vec<HistoryTxId>,
     pub(crate) btc_claim_script_history: Vec<HistoryTxId>,
@@ -413,6 +414,7 @@ impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct ReceiveChainSwapHistory {
     pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
     pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,

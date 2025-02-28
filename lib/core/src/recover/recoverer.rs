@@ -163,8 +163,7 @@ impl Recoverer {
     ///
     /// ### Arguments
     ///
-    /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
-    /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
+    /// - `swaps`: The swaps for which we want to recover onchain data.
     ///
     /// Returns the raw onchain tx map used for recovery.
     pub(crate) async fn recover_from_onchain(
@@ -173,251 +172,468 @@ impl Recoverer {
     ) -> Result<HashMap<Txid, WalletTx>> {
         let recovery_started_at = utils::now();
 
+        // Fetch raw transaction map and convert to our internal format
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
         let tx_map = TxMap::from_raw_tx_map(raw_tx_map.clone());
 
+        // Convert swaps to SwapsList and fetch history data
         let swaps_list = swaps.to_vec().try_into()?;
         let histories = self.fetch_swaps_histories(&swaps_list).await?;
 
-        let mut recovered_send_data = self.recover_send_swap_tx_ids(&tx_map, histories.send)?;
-        let recovered_send_data_without_preimage = recovered_send_data
-            .iter_mut()
-            .filter_map(|(swap_id, recovered_data)| {
-                if let Some(Swap::Send(send_swap)) = swaps.iter().find(|s| s.id() == *swap_id) {
-                    if send_swap.preimage.is_none() {
-                        return Some((swap_id.clone(), recovered_data));
-                    }
-                }
-                None
-            })
-            .collect::<HashMap<String, &mut RecoveredOnchainDataSend>>();
-        self.recover_preimages(recovered_send_data_without_preimage)
-            .await?;
-
-        let recovered_receive_data = self.recover_receive_swap_tx_ids(
-            &tx_map,
-            histories.receive,
-            &swaps_list.receive_swap_immutable_data_by_swap_id,
-        )?;
-        let recovered_chain_send_data = self.recover_send_chain_swap_tx_ids(
-            &tx_map,
-            histories.send_chain,
-            &swaps_list.send_chain_swap_immutable_data_by_swap_id,
-        )?;
-        let recovered_chain_receive_data = self.recover_receive_chain_swap_tx_ids(
-            &tx_map,
-            histories.receive_chain,
-            &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
-        )?;
-
+        // Fetch chain tips for expiration checks
         let bitcoin_tip = self.bitcoin_chain_service.tip()?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
 
+        // Recover data for each swap type
+        let (send_data, receive_data, chain_send_data, chain_receive_data) = self
+            .recover_all_swap_data(&tx_map, &histories, &swaps_list)
+            .await?;
+
+        // Apply recovered data to the swaps
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
-
             let is_local_within_grace_period = swap.is_local()
                 && recovery_started_at.saturating_sub(swap.last_updated_at())
                     < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
 
             match swap {
                 Swap::Send(send_swap) => {
-                    let Some(recovered_data) = recovered_send_data.get_mut(swap_id) else {
-                        warn!("Could not apply recovered data for Send swap {swap_id}: recovery data not found");
-                        continue;
-                    };
-
-                    let lockup_is_cleared =
-                        send_swap.lockup_tx_id.is_some() && recovered_data.lockup_tx_id.is_none();
-                    let refund_is_cleared =
-                        send_swap.refund_tx_id.is_some() && recovered_data.refund_tx_id.is_none();
-                    if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
-                        warn!(
-                            "Local send swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us. Lockup clear: \
-                        {lockup_is_cleared} - Refund clear: {refund_is_cleared}"
-                        );
-                        continue;
-                    }
-
-                    send_swap.lockup_tx_id = recovered_data
-                        .lockup_tx_id
-                        .clone()
-                        .map(|h| h.txid.to_string());
-                    send_swap.refund_tx_id = recovered_data
-                        .refund_tx_id
-                        .clone()
-                        .map(|h| h.txid.to_string());
-                    match (&send_swap.preimage, &recovered_data.preimage) {
-                        // Update the preimage only if we don't have one already (e.g. from
-                        // real-time sync)
-                        (Some(_), _) | (None, None) => {}
-
-                        // Keep only verified preimages
-                        (None, Some(recovered_preimage)) => {
-                            match utils::verify_payment_hash(recovered_preimage, &send_swap.invoice)
-                            {
-                                Ok(_) => send_swap.preimage = Some(recovered_preimage.clone()),
-                                Err(e) => {
-                                    error!("Failed to verify recovered preimage for swap {swap_id}: {e}");
-                                    recovered_data.claim_tx_id = None;
-                                }
-                            }
-                        }
-                    }
-                    // Set the state only AFTER the preimage and claim_tx_id have been verified
-                    let timeout_block_height = send_swap.timeout_block_height as u32;
-                    let is_expired = liquid_tip >= timeout_block_height;
-                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                        send_swap.state = new_state;
-                    }
+                    self.update_send_swap(
+                        send_swap,
+                        swap_id,
+                        &send_data,
+                        is_local_within_grace_period,
+                        liquid_tip,
+                    )?;
                 }
                 Swap::Receive(receive_swap) => {
-                    let Some(recovered_data) = recovered_receive_data.get(swap_id) else {
-                        warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
-                        continue;
-                    };
-
-                    let claim_is_cleared =
-                        receive_swap.claim_tx_id.is_some() && recovered_data.claim_tx_id.is_none();
-                    if is_local_within_grace_period && claim_is_cleared {
-                        warn!(
-                            "Local receive swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us (claim)"
-                        );
-                        continue;
-                    }
-
-                    let timeout_block_height = receive_swap.timeout_block_height;
-                    let is_expired = liquid_tip >= timeout_block_height;
-                    if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                        receive_swap.state = new_state;
-                    }
-                    receive_swap.claim_tx_id = recovered_data
-                        .claim_tx_id
-                        .clone()
-                        .map(|history_tx_id| history_tx_id.txid.to_string());
-                    receive_swap.mrh_tx_id = recovered_data
-                        .mrh_tx_id
-                        .clone()
-                        .map(|history_tx_id| history_tx_id.txid.to_string());
-                    receive_swap.lockup_tx_id = recovered_data
-                        .lockup_tx_id
-                        .clone()
-                        .map(|history_tx_id| history_tx_id.txid.to_string());
-                    if let Some(mrh_amount_sat) = recovered_data.mrh_amount_sat {
-                        receive_swap.payer_amount_sat = mrh_amount_sat;
-                        receive_swap.receiver_amount_sat = mrh_amount_sat;
-                    }
+                    self.update_receive_swap(
+                        receive_swap,
+                        swap_id,
+                        &receive_data,
+                        is_local_within_grace_period,
+                        liquid_tip,
+                    )?;
                 }
                 Swap::Chain(chain_swap) => match chain_swap.direction {
                     Direction::Incoming => {
-                        let Some(recovered_data) = recovered_chain_receive_data.get(swap_id) else {
-                            warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
-                            continue;
-                        };
-
-                        let claim_is_cleared = chain_swap.claim_tx_id.is_some()
-                            && recovered_data.lbtc_claim_tx_id.is_none();
-                        let refund_is_cleared = chain_swap.refund_tx_id.is_some()
-                            && recovered_data.btc_refund_tx_id.is_none();
-                        if is_local_within_grace_period && (claim_is_cleared || refund_is_cleared) {
-                            warn!(
-                            "Local incoming chain swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us. Claim clear: \
-                        {claim_is_cleared} - Refund clear: {refund_is_cleared}"
-                        );
-                            continue;
-                        }
-
-                        if recovered_data.btc_user_lockup_amount_sat > 0 {
-                            chain_swap.actual_payer_amount_sat =
-                                Some(recovered_data.btc_user_lockup_amount_sat);
-                        }
-                        let is_expired =
-                            bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
-                        let (expected_user_lockup_amount_sat, swap_limits) =
-                            match chain_swap.payer_amount_sat {
-                                0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
-                                expected => (Some(expected), None),
-                            };
-                        if let Some(new_state) = recovered_data.derive_partial_state(
-                            expected_user_lockup_amount_sat,
-                            swap_limits,
-                            is_expired,
-                            chain_swap.is_waiting_fee_acceptance(),
-                        ) {
-                            chain_swap.state = new_state;
-                        }
-                        chain_swap.server_lockup_tx_id = recovered_data
-                            .lbtc_server_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap
-                            .claim_address
-                            .clone_from(&recovered_data.lbtc_claim_address);
-                        chain_swap.user_lockup_tx_id = recovered_data
-                            .btc_user_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.claim_tx_id = recovered_data
-                            .lbtc_claim_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.refund_tx_id = recovered_data
-                            .btc_refund_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
+                        self.update_chain_receive_swap(
+                            chain_swap,
+                            swap_id,
+                            &chain_receive_data,
+                            is_local_within_grace_period,
+                            bitcoin_tip.height as u32,
+                        )?;
                     }
                     Direction::Outgoing => {
-                        let Some(recovered_data) = recovered_chain_send_data.get(swap_id) else {
-                            warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
-                            continue;
-                        };
-
-                        let lockup_is_cleared = chain_swap.user_lockup_tx_id.is_some()
-                            && recovered_data.lbtc_user_lockup_tx_id.is_none();
-                        let refund_is_cleared = chain_swap.refund_tx_id.is_some()
-                            && recovered_data.lbtc_refund_tx_id.is_none();
-                        let claim_is_cleared = chain_swap.claim_tx_id.is_some()
-                            && recovered_data.btc_claim_tx_id.is_none();
-                        if is_local_within_grace_period
-                            && (lockup_is_cleared || refund_is_cleared || claim_is_cleared)
-                        {
-                            warn!(
-                            "Local outgoing chain swap {swap_id} was updated recently - skipping recovery \
-                        as it would clear a tx that may have been broadcasted by us. Lockup clear: \
-                        {lockup_is_cleared} - Refund clear: {refund_is_cleared} - Claim clear: {claim_is_cleared}"
-                        );
-                            continue;
-                        }
-
-                        let is_expired = liquid_tip >= chain_swap.timeout_block_height;
-                        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
-                            chain_swap.state = new_state;
-                        }
-                        chain_swap.server_lockup_tx_id = recovered_data
-                            .btc_server_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.user_lockup_tx_id = recovered_data
-                            .lbtc_user_lockup_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.claim_tx_id = recovered_data
-                            .btc_claim_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
-                        chain_swap.refund_tx_id = recovered_data
-                            .lbtc_refund_tx_id
-                            .clone()
-                            .map(|h| h.txid.to_string());
+                        self.update_chain_send_swap(
+                            chain_swap,
+                            swap_id,
+                            &chain_send_data,
+                            is_local_within_grace_period,
+                            liquid_tip,
+                        )?;
                     }
                 },
             }
         }
 
         Ok(raw_tx_map)
+    }
+
+    /// Recovers data for all swap types
+    async fn recover_all_swap_data(
+        &self,
+        tx_map: &TxMap,
+        histories: &SwapsHistories,
+        swaps_list: &SwapsList,
+    ) -> Result<(
+        HashMap<String, RecoveredOnchainDataSend>,
+        HashMap<String, RecoveredOnchainDataReceive>,
+        HashMap<String, RecoveredOnchainDataChainSend>,
+        HashMap<String, RecoveredOnchainDataChainReceive>,
+    )> {
+        // Recover send swap data
+        let mut recovered_send_data =
+            self.recover_send_swap_tx_ids(tx_map, histories.send.clone())?;
+
+        // Process swaps that need preimage recovery
+        let swaps_needing_preimages =
+            self.get_swaps_needing_preimage_recovery(&mut recovered_send_data);
+        self.recover_preimages(swaps_needing_preimages).await?;
+
+        // Recover other swap types
+        let recovered_receive_data = self.recover_receive_swap_tx_ids(
+            tx_map,
+            histories.receive.clone(),
+            &swaps_list.receive_swap_immutable_data_by_swap_id,
+        )?;
+
+        let recovered_chain_send_data = self.recover_send_chain_swap_tx_ids(
+            tx_map,
+            histories.send_chain.clone(),
+            &swaps_list.send_chain_swap_immutable_data_by_swap_id,
+        )?;
+
+        let recovered_chain_receive_data = self.recover_receive_chain_swap_tx_ids(
+            tx_map,
+            histories.receive_chain.clone(),
+            &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
+        )?;
+
+        Ok((
+            recovered_send_data,
+            recovered_receive_data,
+            recovered_chain_send_data,
+            recovered_chain_receive_data,
+        ))
+    }
+
+    /// Get swaps that need preimage recovery
+    fn get_swaps_needing_preimage_recovery<'a>(
+        &self,
+        recovered_send_data: &'a mut HashMap<String, RecoveredOnchainDataSend>,
+    ) -> HashMap<String, &'a mut RecoveredOnchainDataSend> {
+        recovered_send_data
+            .iter_mut()
+            .filter_map(|(swap_id, recovered_data)| {
+                if recovered_data.claim_tx_id.is_some() && recovered_data.preimage.is_none() {
+                    return Some((swap_id.clone(), recovered_data));
+                }
+                None
+            })
+            .collect()
+    }
+
+    /// Update a send swap with recovered data
+    fn update_send_swap(
+        &self,
+        send_swap: &mut crate::prelude::SendSwap,
+        swap_id: &str,
+        send_data: &HashMap<String, RecoveredOnchainDataSend>,
+        is_local_within_grace_period: bool,
+        liquid_tip: u32,
+    ) -> Result<()> {
+        let Some(recovered_data) = send_data.get(swap_id) else {
+            warn!(
+                "Could not apply recovered data for Send swap {swap_id}: recovery data not found"
+            );
+            return Ok(());
+        };
+
+        // Skip updating if within grace period and would clear transactions
+        if self.should_skip_send_swap_recovery(
+            send_swap,
+            recovered_data,
+            is_local_within_grace_period,
+        ) {
+            return Ok(());
+        }
+
+        // Update transaction IDs
+        send_swap.lockup_tx_id = recovered_data
+            .lockup_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        send_swap.refund_tx_id = recovered_data
+            .refund_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+
+        // Update preimage if valid
+        if let Some(preimage) = &recovered_data.preimage {
+            if send_swap.preimage.is_none() {
+                if let Ok(_) = utils::verify_payment_hash(preimage, &send_swap.invoice) {
+                    send_swap.preimage = Some(preimage.clone());
+                } else {
+                    error!("Failed to verify recovered preimage for swap {swap_id}");
+                }
+            }
+        }
+
+        // Update state based on recovered data
+        let timeout_block_height = send_swap.timeout_block_height as u32;
+        let is_expired = liquid_tip >= timeout_block_height;
+        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+            send_swap.state = new_state;
+        }
+
+        Ok(())
+    }
+
+    /// Check if send swap recovery should be skipped
+    fn should_skip_send_swap_recovery(
+        &self,
+        send_swap: &crate::prelude::SendSwap,
+        recovered_data: &RecoveredOnchainDataSend,
+        is_local_within_grace_period: bool,
+    ) -> bool {
+        let swap_id = &send_swap.id;
+        let lockup_is_cleared =
+            send_swap.lockup_tx_id.is_some() && recovered_data.lockup_tx_id.is_none();
+        let refund_is_cleared =
+            send_swap.refund_tx_id.is_some() && recovered_data.refund_tx_id.is_none();
+
+        if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
+            warn!(
+                "Local send swap {swap_id} was updated recently - skipping recovery \
+                as it would clear a tx that may have been broadcasted by us. Lockup clear: \
+                {lockup_is_cleared} - Refund clear: {refund_is_cleared}"
+            );
+            return true;
+        }
+
+        false
+    }
+
+    /// Update a receive swap with recovered data
+    fn update_receive_swap(
+        &self,
+        receive_swap: &mut crate::prelude::ReceiveSwap,
+        swap_id: &str,
+        receive_data: &HashMap<String, RecoveredOnchainDataReceive>,
+        is_local_within_grace_period: bool,
+        liquid_tip: u32,
+    ) -> Result<()> {
+        let Some(recovered_data) = receive_data.get(swap_id) else {
+            warn!("Could not apply recovered data for Receive swap {swap_id}: recovery data not found");
+            return Ok(());
+        };
+
+        // Skip updating if within grace period and would clear transactions
+        if self.should_skip_receive_swap_recovery(
+            receive_swap,
+            recovered_data,
+            is_local_within_grace_period,
+        ) {
+            return Ok(());
+        }
+
+        // Update state based on chain tip
+        let timeout_block_height = receive_swap.timeout_block_height;
+        let is_expired = liquid_tip >= timeout_block_height;
+        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+            receive_swap.state = new_state;
+        }
+
+        // Update transaction IDs
+        receive_swap.claim_tx_id = recovered_data
+            .claim_tx_id
+            .clone()
+            .map(|history_tx_id| history_tx_id.txid.to_string());
+        receive_swap.mrh_tx_id = recovered_data
+            .mrh_tx_id
+            .clone()
+            .map(|history_tx_id| history_tx_id.txid.to_string());
+        receive_swap.lockup_tx_id = recovered_data
+            .lockup_tx_id
+            .clone()
+            .map(|history_tx_id| history_tx_id.txid.to_string());
+
+        // Update amounts if we have MRH data
+        if let Some(mrh_amount_sat) = recovered_data.mrh_amount_sat {
+            receive_swap.payer_amount_sat = mrh_amount_sat;
+            receive_swap.receiver_amount_sat = mrh_amount_sat;
+        }
+
+        Ok(())
+    }
+
+    /// Check if receive swap recovery should be skipped
+    fn should_skip_receive_swap_recovery(
+        &self,
+        receive_swap: &crate::prelude::ReceiveSwap,
+        recovered_data: &RecoveredOnchainDataReceive,
+        is_local_within_grace_period: bool,
+    ) -> bool {
+        let swap_id = &receive_swap.id;
+
+        let claim_is_cleared =
+            receive_swap.claim_tx_id.is_some() && recovered_data.claim_tx_id.is_none();
+
+        if is_local_within_grace_period && claim_is_cleared {
+            warn!(
+                "Local receive swap {swap_id} was updated recently - skipping recovery \
+                as it would clear a tx that may have been broadcasted by us (claim)"
+            );
+            return true;
+        }
+
+        false
+    }
+
+    /// Update a chain receive swap with recovered data
+    fn update_chain_receive_swap(
+        &self,
+        chain_swap: &mut crate::prelude::ChainSwap,
+        swap_id: &str,
+        chain_receive_data: &HashMap<String, RecoveredOnchainDataChainReceive>,
+        is_local_within_grace_period: bool,
+        bitcoin_tip: u32,
+    ) -> Result<()> {
+        let Some(recovered_data) = chain_receive_data.get(swap_id) else {
+            warn!("Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found");
+            return Ok(());
+        };
+
+        // Skip updating if within grace period and would clear transactions
+        if self.should_skip_chain_receive_swap_recovery(
+            chain_swap,
+            recovered_data,
+            is_local_within_grace_period,
+        ) {
+            return Ok(());
+        }
+
+        // Update amount if available
+        if recovered_data.btc_user_lockup_amount_sat > 0 {
+            chain_swap.actual_payer_amount_sat = Some(recovered_data.btc_user_lockup_amount_sat);
+        }
+
+        // Update state based on chain tip
+        let is_expired = bitcoin_tip >= chain_swap.timeout_block_height;
+        let (expected_user_lockup_amount_sat, swap_limits) = match chain_swap.payer_amount_sat {
+            0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
+            expected => (Some(expected), None),
+        };
+
+        if let Some(new_state) = recovered_data.derive_partial_state(
+            expected_user_lockup_amount_sat,
+            swap_limits,
+            is_expired,
+            chain_swap.is_waiting_fee_acceptance(),
+        ) {
+            chain_swap.state = new_state;
+        }
+
+        // Update transaction IDs
+        chain_swap.server_lockup_tx_id = recovered_data
+            .lbtc_server_lockup_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        chain_swap
+            .claim_address
+            .clone_from(&recovered_data.lbtc_claim_address);
+        chain_swap.user_lockup_tx_id = recovered_data
+            .btc_user_lockup_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        chain_swap.claim_tx_id = recovered_data
+            .lbtc_claim_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        chain_swap.refund_tx_id = recovered_data
+            .btc_refund_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+
+        Ok(())
+    }
+
+    /// Check if chain receive swap recovery should be skipped
+    fn should_skip_chain_receive_swap_recovery(
+        &self,
+        chain_swap: &crate::prelude::ChainSwap,
+        recovered_data: &RecoveredOnchainDataChainReceive,
+        is_local_within_grace_period: bool,
+    ) -> bool {
+        let swap_id = &chain_swap.id;
+
+        let claim_is_cleared =
+            chain_swap.claim_tx_id.is_some() && recovered_data.lbtc_claim_tx_id.is_none();
+        let refund_is_cleared =
+            chain_swap.refund_tx_id.is_some() && recovered_data.btc_refund_tx_id.is_none();
+
+        if is_local_within_grace_period && (claim_is_cleared || refund_is_cleared) {
+            warn!(
+                "Local incoming chain swap {swap_id} was updated recently - skipping recovery \
+                as it would clear a tx that may have been broadcasted by us. Claim clear: \
+                {claim_is_cleared} - Refund clear: {refund_is_cleared}"
+            );
+            return true;
+        }
+
+        false
+    }
+
+    /// Update a chain send swap with recovered data
+    fn update_chain_send_swap(
+        &self,
+        chain_swap: &mut crate::prelude::ChainSwap,
+        swap_id: &str,
+        chain_send_data: &HashMap<String, RecoveredOnchainDataChainSend>,
+        is_local_within_grace_period: bool,
+        liquid_tip: u32,
+    ) -> Result<()> {
+        let Some(recovered_data) = chain_send_data.get(swap_id) else {
+            warn!("Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found");
+            return Ok(());
+        };
+
+        // Skip updating if within grace period and would clear transactions
+        if self.should_skip_chain_send_swap_recovery(
+            chain_swap,
+            recovered_data,
+            is_local_within_grace_period,
+        ) {
+            return Ok(());
+        }
+
+        // Update state based on chain tip
+        let is_expired = liquid_tip >= chain_swap.timeout_block_height;
+        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+            chain_swap.state = new_state;
+        }
+
+        // Update transaction IDs
+        chain_swap.server_lockup_tx_id = recovered_data
+            .btc_server_lockup_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        chain_swap.user_lockup_tx_id = recovered_data
+            .lbtc_user_lockup_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        chain_swap.claim_tx_id = recovered_data
+            .btc_claim_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+        chain_swap.refund_tx_id = recovered_data
+            .lbtc_refund_tx_id
+            .clone()
+            .map(|h| h.txid.to_string());
+
+        Ok(())
+    }
+
+    /// Check if chain send swap recovery should be skipped
+    fn should_skip_chain_send_swap_recovery(
+        &self,
+        chain_swap: &crate::prelude::ChainSwap,
+        recovered_data: &RecoveredOnchainDataChainSend,
+        is_local_within_grace_period: bool,
+    ) -> bool {
+        let swap_id = &chain_swap.id;
+
+        let lockup_is_cleared = chain_swap.user_lockup_tx_id.is_some()
+            && recovered_data.lbtc_user_lockup_tx_id.is_none();
+        let refund_is_cleared =
+            chain_swap.refund_tx_id.is_some() && recovered_data.lbtc_refund_tx_id.is_none();
+        let claim_is_cleared =
+            chain_swap.claim_tx_id.is_some() && recovered_data.btc_claim_tx_id.is_none();
+
+        if is_local_within_grace_period
+            && (lockup_is_cleared || refund_is_cleared || claim_is_cleared)
+        {
+            warn!(
+                "Local outgoing chain swap {swap_id} was updated recently - skipping recovery \
+                as it would clear a tx that may have been broadcasted by us. Lockup clear: \
+                {lockup_is_cleared} - Refund clear: {refund_is_cleared} - Claim clear: {claim_is_cleared}"
+            );
+            return true;
+        }
+
+        false
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
