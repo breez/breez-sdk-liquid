@@ -18,10 +18,10 @@ use crate::{
     prelude::{Direction, SendSwap, Swap, Utxo},
 };
 
-pub(crate) use reconnect_handler::*;
+pub(crate) use subscription_handler::*;
 
 pub(crate) mod boltz;
-pub(crate) mod reconnect_handler;
+pub(crate) mod subscription_handler;
 
 #[async_trait]
 pub trait Swapper: Send + Sync {
@@ -135,7 +135,11 @@ pub trait Swapper: Send + Sync {
 }
 
 pub trait SwapperStatusStream: Send + Sync {
-    fn start(self: Arc<Self>, callback: Box<dyn ReconnectHandler>, shutdown: watch::Receiver<()>);
+    fn start(
+        self: Arc<Self>,
+        callback: Box<dyn SubscriptionHandler>,
+        shutdown: watch::Receiver<()>,
+    );
     fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
 }

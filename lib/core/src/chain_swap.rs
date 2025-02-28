@@ -260,7 +260,7 @@ impl ChainSwapHandler {
                             ..Default::default()
                         })?;
 
-                        if swap.accept_zero_conf {
+                        if swap.accept_zero_conf && swap.metadata.is_local {
                             self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
@@ -304,10 +304,12 @@ impl ChainSwapHandler {
                         match verify_res {
                             Ok(_) => {
                                 info!("Server lockup transaction was verified for incoming Chain Swap {}", swap.id);
-                                self.claim(&id).await.map_err(|e| {
-                                    error!("Could not cooperate Chain Swap {id} claim: {e}");
-                                    anyhow!("Could not post claim details. Err: {e:?}")
-                                })?;
+                                if swap.metadata.is_local {
+                                    self.claim(&id).await.map_err(|e| {
+                                        error!("Could not cooperate Chain Swap {id} claim: {e}");
+                                        anyhow!("Could not post claim details. Err: {e:?}")
+                                    })?;
+                                }
                             }
                             Err(e) => {
                                 warn!("Server lockup transaction for incoming Chain Swap {} could not be verified. txid: {}, err: {}", swap.id, transaction.id, e);
@@ -613,7 +615,7 @@ impl ChainSwapHandler {
                             ..Default::default()
                         })?;
 
-                        if swap.accept_zero_conf {
+                        if swap.accept_zero_conf && swap.metadata.is_local {
                             self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
@@ -663,10 +665,12 @@ impl ChainSwapHandler {
                             server_lockup_tx_id: Some(transaction.id),
                             ..Default::default()
                         })?;
-                        self.claim(&id).await.map_err(|e| {
-                            error!("Could not cooperate Chain Swap {id} claim: {e}");
-                            anyhow!("Could not post claim details. Err: {e:?}")
-                        })?;
+                        if swap.metadata.is_local {
+                            self.claim(&id).await.map_err(|e| {
+                                error!("Could not cooperate Chain Swap {id} claim: {e}");
+                                anyhow!("Could not post claim details. Err: {e:?}")
+                            })?;
+                        }
                     }
                     Some(claim_tx_id) => {
                         warn!("Claim tx for Chain Swap {id} was already broadcast: txid {claim_tx_id}")

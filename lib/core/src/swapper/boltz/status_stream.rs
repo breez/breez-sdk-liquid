@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -13,7 +14,7 @@ use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
 
 use crate::model::Config;
-use crate::swapper::{ReconnectHandler, SwapperStatusStream};
+use crate::swapper::{SubscriptionHandler, SwapperStatusStream};
 
 use super::{split_proxy_url, ProxyUrlFetcher};
 
@@ -80,7 +81,7 @@ impl SwapperStatusStream for BoltzStatusStream {
 
     fn start(
         self: Arc<Self>,
-        callback: Box<dyn ReconnectHandler>,
+        callback: Box<dyn SubscriptionHandler>,
         mut shutdown: watch::Receiver<()>,
     ) {
         let keep_alive_ping_interval = Duration::from_secs(15);
@@ -91,9 +92,10 @@ impl SwapperStatusStream for BoltzStatusStream {
                 debug!("Start of ws stream loop");
                 match self.connect().await {
                     Ok(mut ws_stream) => {
+                        let mut tracked_swap_ids: HashSet<String> = HashSet::new();
                         let mut subscription_stream = self.subscription_notifier.subscribe();
 
-                        callback.on_stream_reconnect().await;
+                        callback.subscribe_swaps().await;
 
                         let mut interval = tokio::time::interval(keep_alive_ping_interval);
                         interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
@@ -113,7 +115,12 @@ impl SwapperStatusStream for BoltzStatusStream {
                                 },
 
                                 swap_res = subscription_stream.recv() => match swap_res {
-                                    Ok(swap_id) => self.send_subscription(swap_id, &mut ws_stream).await,
+                                    Ok(swap_id) => {
+                                      if !tracked_swap_ids.contains(&swap_id) {
+                                        self.send_subscription(swap_id.clone(), &mut ws_stream).await;
+                                        tracked_swap_ids.insert(swap_id.clone());
+                                      }
+                                    },
                                     Err(e) => error!("Received error on subscription stream: {e:?}"),
                                 },
 

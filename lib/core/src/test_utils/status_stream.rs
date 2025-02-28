@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use tokio::sync::{broadcast, watch};
 
-use crate::swapper::{ReconnectHandler, SwapperStatusStream};
+use crate::swapper::{SubscriptionHandler, SwapperStatusStream};
 
 pub(crate) struct MockStatusStream {
     pub update_notifier: broadcast::Sender<boltz::Update>,
@@ -31,7 +31,7 @@ impl MockStatusStream {
 impl SwapperStatusStream for MockStatusStream {
     fn start(
         self: Arc<Self>,
-        _callback: Box<dyn ReconnectHandler>,
+        _callback: Box<dyn SubscriptionHandler>,
         _shutdown: watch::Receiver<()>,
     ) {
     }
