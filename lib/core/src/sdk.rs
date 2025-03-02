@@ -3138,21 +3138,34 @@ impl LiquidSdk {
             .persister
             .get_is_first_sync_complete()?
             .unwrap_or(false);
+
+        let sync_payments_with_chain_data = async {
+            match self.sync_payments_with_chain_data(partial_sync).await {
+                Ok(_) => {
+                    if is_first_sync {
+                        self.persister.set_is_first_sync_complete(true)?;
+                    }
+                    Result::<()>::Ok(())
+                }
+                Err(err) => anyhow::bail!("Could not sync payments with chain data: {err:?}"),
+            }
+        };
+
         match is_first_sync {
             true => {
                 self.event_manager.pause_notifications();
-                self.sync_payments_with_chain_data(partial_sync).await?;
+                let result = sync_payments_with_chain_data.await;
                 self.event_manager.resume_notifications();
-                self.persister.set_is_first_sync_complete(true)?;
+                result
             }
-            false => {
-                self.sync_payments_with_chain_data(partial_sync).await?;
-            }
-        }
+            false => sync_payments_with_chain_data.await,
+        }?;
+
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Synchronized (partial: {partial_sync}) with mempool and onchain data ({duration_ms} ms)");
 
         self.notify_event_listeners(SdkEvent::Synced).await?;
+
         Ok(())
     }
 
