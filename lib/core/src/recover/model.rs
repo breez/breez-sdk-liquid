@@ -5,6 +5,7 @@ use anyhow::anyhow;
 use boltz_client::boltz::PairLimits;
 use boltz_client::ElementsAddress;
 use electrum_client::GetBalanceRes;
+use electrum_client::GetHistoryRes;
 use lwk_wollet::elements::Txid;
 use lwk_wollet::History;
 use lwk_wollet::WalletTx;
@@ -29,9 +30,22 @@ impl HistoryTxId {
         self.height > 0
     }
 }
+impl From<GetHistoryRes> for HistoryTxId {
+    fn from(value: GetHistoryRes) -> Self {
+        Self::from(&value)
+    }
+}
 impl From<History> for HistoryTxId {
     fn from(value: History) -> Self {
         Self::from(&value)
+    }
+}
+impl From<&GetHistoryRes> for HistoryTxId {
+    fn from(value: &GetHistoryRes) -> Self {
+        Self {
+            txid: Txid::from_raw_hash(value.tx_hash.to_raw_hash()),
+            height: value.height,
+        }
     }
 }
 impl From<&History> for HistoryTxId {

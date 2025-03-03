@@ -7,6 +7,7 @@ use boltz_client::{
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
     ElementsLockTime, Secp256k1, Serialize, ToHex,
 };
+use electrum_client::GetHistoryRes;
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::{
@@ -18,7 +19,7 @@ use tokio::sync::broadcast;
 
 use crate::model::{BlockListener, ChainSwapUpdate, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
 use crate::{
-    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    chain::{bitcoin::service::BitcoinChainService, liquid::service::LiquidChainService},
     ensure_sdk,
     error::{PaymentError, SdkError, SdkResult},
     model::{
@@ -174,9 +175,14 @@ impl ChainSwapHandler {
         let swap_id = &swap.id;
         let swap_script = swap.get_claim_swap_script()?;
         let script_history = match swap.direction {
-            Direction::Incoming => self.fetch_liquid_script_history(&swap_script).await,
-            Direction::Outgoing => self.fetch_bitcoin_script_history(&swap_script).await,
-        }?;
+            Direction::Incoming => self.fetch_liquid_script_history(&swap_script).await?,
+            Direction::Outgoing => self
+                .fetch_bitcoin_script_history(&swap_script)
+                .await?
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+        };
         let tx_history = script_history
             .iter()
             .find(|h| h.txid.to_hex().eq(&tx_id))
@@ -1215,7 +1221,7 @@ impl ChainSwapHandler {
                 "No history found for user lockup script for swap {}",
                 chain_swap.id
             ))?
-            .txid
+            .tx_hash
             .to_raw_hash()
             .into();
 
@@ -1372,9 +1378,14 @@ impl ChainSwapHandler {
     async fn user_lockup_tx_exists(&self, chain_swap: &ChainSwap) -> Result<bool> {
         let swap_script = chain_swap.get_lockup_swap_script()?;
         let script_history = match chain_swap.direction {
-            Direction::Incoming => self.fetch_bitcoin_script_history(&swap_script).await,
-            Direction::Outgoing => self.fetch_liquid_script_history(&swap_script).await,
-        }?;
+            Direction::Incoming => self
+                .fetch_bitcoin_script_history(&swap_script)
+                .await?
+                .into_iter()
+                .map(Into::into)
+                .collect(),
+            Direction::Outgoing => self.fetch_liquid_script_history(&swap_script).await?,
+        };
 
         match chain_swap.user_lockup_tx_id.clone() {
             Some(user_lockup_tx_id) => {
@@ -1436,7 +1447,7 @@ impl ChainSwapHandler {
     async fn fetch_bitcoin_script_history(
         &self,
         swap_script: &SwapScriptV2,
-    ) -> Result<Vec<History>> {
+    ) -> Result<Vec<GetHistoryRes>> {
         let address = swap_script
             .as_bitcoin_script()?
             .to_address(self.config.network.as_bitcoin_chain())
