@@ -1,9 +1,11 @@
+use std::collections::HashMap;
+
 use anyhow::{bail, Context, Result};
 use electrum_client::bitcoin::{Script, Transaction, Txid};
 use electrum_client::{ElectrumApi as _, GetBalanceRes, GetHistoryRes};
 use lwk_wollet::ElectrumOptions;
 
-use crate::model::{BlockchainExplorer, LiquidNetwork};
+use crate::model::{BlockchainExplorer, LiquidNetwork, RecommendedFees};
 
 pub(crate) enum BitcoinClient {
     Electrum {
@@ -48,9 +50,6 @@ impl BitcoinClient {
                 Ok(BitcoinClient::Esplora {
                     inner: Box::new(client),
                 })
-            }
-            BlockchainExplorer::MempoolSpace { .. } => {
-                bail!("Cannot create client from MempoolSpace url")
             }
         }
     }
@@ -141,6 +140,31 @@ impl BitcoinClient {
             BitcoinClient::Esplora { .. } => {
                 // TODO Add support for get balance
                 unimplemented!()
+            }
+        })
+    }
+
+    pub(crate) fn get_recommended_fees(&self) -> Result<RecommendedFees> {
+        Ok(match self {
+            BitcoinClient::Electrum { .. } => unreachable!(),
+            BitcoinClient::Esplora { inner } => {
+                let fee_estimates: HashMap<u16, u64> = inner
+                    .get_fee_estimates()?
+                    .into_iter()
+                    .map(|(k, v)| (k, v as u64))
+                    .collect();
+
+                let get_fee_estimate =
+                    |block: &u16| fee_estimates.get(block).cloned().unwrap_or_default();
+
+                // See https://github.com/Blockstream/esplora/blob/master/API.md#fee-estimates
+                RecommendedFees {
+                    fastest_fee: get_fee_estimate(&1),
+                    half_hour_fee: get_fee_estimate(&3),
+                    hour_fee: get_fee_estimate(&6),
+                    economy_fee: get_fee_estimate(&144),
+                    minimum_fee: get_fee_estimate(&1008),
+                }
             }
         })
     }

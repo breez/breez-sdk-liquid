@@ -41,9 +41,6 @@ pub enum BlockchainExplorer {
         /// Whether or not to use the "waterfalls" extension
         use_waterfalls: bool,
     },
-    MempoolSpace {
-        url: String,
-    },
 }
 
 /// Configuration for the Liquid SDK
@@ -102,14 +99,9 @@ impl Config {
                     url: "elements-mainnet.breez.technology:50002".to_string(),
                 },
             ],
-            bitcoin_explorers: vec![
-                BlockchainExplorer::Electrum {
-                    url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
-                },
-                BlockchainExplorer::MempoolSpace {
-                    url: "https://mempool.space/api".to_string(),
-                },
-            ],
+            bitcoin_explorers: vec![BlockchainExplorer::Electrum {
+                url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
+            }],
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
@@ -135,14 +127,9 @@ impl Config {
                     url: "elements-testnet.blockstream.info:50002".to_string(),
                 },
             ],
-            bitcoin_explorers: vec![
-                BlockchainExplorer::Electrum {
-                    url: "bitcoin-testnet.blockstream.info:50002".to_string(),
-                },
-                BlockchainExplorer::MempoolSpace {
-                    url: "https://mempool.space/testnet/api".to_string(),
-                },
-            ],
+            bitcoin_explorers: vec![BlockchainExplorer::Electrum {
+                url: "bitcoin-testnet.blockstream.info:50002".to_string(),
+            }],
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Testnet,
@@ -162,14 +149,9 @@ impl Config {
             bitcoin_explorers: vec![BlockchainExplorer::Electrum {
                 url: "localhost:19001".to_string(),
             }],
-            liquid_explorers: vec![
-                BlockchainExplorer::Electrum {
-                    url: "localhost:19002".to_string(),
-                },
-                BlockchainExplorer::MempoolSpace {
-                    url: "http://localhost/api".to_string(),
-                },
-            ],
+            liquid_explorers: vec![BlockchainExplorer::Electrum {
+                url: "localhost:19002".to_string(),
+            }],
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Regtest,
@@ -270,13 +252,6 @@ impl Config {
     pub(crate) fn bitcoin_esplora_explorers(&self) -> Vec<&String> {
         Self::get_explorers(&self.bitcoin_explorers, |be| match be {
             BlockchainExplorer::Esplora { url, .. } => Some(url),
-            _ => None,
-        })
-    }
-
-    pub(crate) fn bitcoin_mempool_space_explorers(&self) -> Vec<&String> {
-        Self::get_explorers(&self.bitcoin_explorers, |be| match be {
-            BlockchainExplorer::MempoolSpace { url, .. } => Some(url),
             _ => None,
         })
     }

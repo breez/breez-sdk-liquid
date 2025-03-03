@@ -15,11 +15,11 @@ use electrum_client::{
     GetBalanceRes, GetHistoryRes,
 };
 use log::info;
-use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
+use sdk_common::bitcoin::hashes::hex::ToHex;
 
 use crate::{
     get_client,
-    model::{Config, RecommendedFees},
+    model::{BlockchainExplorer, Config, RecommendedFees},
     prelude::Utxo,
 };
 
@@ -264,8 +264,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
-        self
-            .scripts_get_balance(&[script])?
+        self.scripts_get_balance(&[script])?
             .into_iter()
             .nth(0)
             .context("Script balance not found")
@@ -353,18 +352,18 @@ impl BitcoinChainService for HybridBitcoinChainService {
             bail!("Cannot fetch recommended fees without specifying a Bitcoin Esplora backend.");
         }
 
-        for mempool_space_url in self.config.bitcoin_mempool_space_explorers() {
-            let res = get_parse_and_log_response(
-                &format!("{mempool_space_url}/v1/fees/recommended"),
-                true,
-            )
-            .await
-            .map_err(Into::<anyhow::Error>::into);
-
-            match res {
-                Ok(fees) => return Ok(fees),
-                Err(err) => {
-                    log::warn!("Could not fetch recommended fees from {mempool_space_url}: {err:?}")
+        for explorer in &self.config.bitcoin_explorers {
+            match explorer {
+                BlockchainExplorer::Electrum { .. } => continue,
+                BlockchainExplorer::Esplora { .. } => {
+                    let Ok(client) =
+                        BitcoinClient::try_from_explorer(explorer, self.config.network)
+                    else {
+                        continue;
+                    };
+                    if let Ok(fees) = client.get_recommended_fees() {
+                        return Ok(fees);
+                    }
                 }
             }
         }
