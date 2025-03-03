@@ -6,8 +6,8 @@ use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
-use chain::bitcoin::HybridBitcoinChainService;
-use chain::liquid::{HybridLiquidChainService, LiquidChainService};
+use chain::bitcoin::service::{BitcoinChainService, HybridBitcoinChainService};
+use chain::liquid::service::{HybridLiquidChainService, LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::{StreamExt, TryFutureExt};
@@ -32,7 +32,6 @@ use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use x509_parser::parse_x509_certificate;
 
-use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
 use crate::ensure_sdk;
 use crate::error::SdkError;
@@ -374,7 +373,7 @@ impl LiquidSdk {
                         };
                         // Get the Bitcoin tip and process a new block
                         let t0 = Instant::now();
-                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip().map(|tip| tip.height as u32);
+                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip();
                         let duration_ms = Instant::now().duration_since(t0).as_millis();
                         info!("Fetched bitcoin tip at ({duration_ms} ms)");
                         let is_new_bitcoin_block = match &bitcoin_tip_res {
@@ -2680,7 +2679,7 @@ impl LiquidSdk {
             .collect();
         match partial_sync {
             false => {
-                let bitcoin_height = self.bitcoin_chain_service.tip()?.height as u32;
+                let bitcoin_height = self.bitcoin_chain_service.tip()?;
                 let liquid_height = self.liquid_chain_service.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
