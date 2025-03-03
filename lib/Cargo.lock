@@ -552,6 +552,12 @@ dependencies = [
 
 [[package]]
 name = "base64"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
+
+[[package]]
+name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
@@ -826,6 +832,7 @@ dependencies = [
  "ecies",
  "electrum-client",
  "env_logger 0.11.5",
+ "esplora-client",
  "flutter_rust_bridge",
  "futures-util",
  "glob",
@@ -1515,6 +1522,21 @@ checksum = "534c5cf6194dfab3db3242765c03bbe257cf92f22b38f6bc0c58d59108a820ba"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "esplora-client"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0da3c186d286e046253ccdc4bb71aa87ef872e4eff2045947c0c4fe3d2b2efc"
+dependencies = [
+ "bitcoin 0.32.4",
+ "hex-conservative",
+ "log",
+ "minreq",
+ "reqwest 0.11.20",
+ "serde",
+ "tokio",
 ]
 
 [[package]]
@@ -2878,7 +2900,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.8.0"
-source = "git+https://github.com/breez/lwk?rev=0274e68611da6adc2e0c09dc3d982e290ae201a4#0274e68611da6adc2e0c09dc3d982e290ae201a4"
+source = "git+https://github.com/breez/lwk?rev=9e256839c26e47378c21c373d1376aa87802663a#9e256839c26e47378c21c373d1376aa87802663a"
 dependencies = [
  "aes-gcm-siv",
  "age",
@@ -2981,6 +3003,7 @@ version = "2.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36a8e50e917e18a37d500d27d40b7bc7d127e71c0c94fb2d83f43b4afd308390"
 dependencies = [
+ "base64 0.12.3",
  "log",
  "serde",
  "serde_json",
@@ -3777,6 +3800,7 @@ dependencies = [
  "serde_urlencoded",
  "tokio",
  "tokio-native-tls",
+ "tokio-socks",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -4804,6 +4828,18 @@ checksum = "0c7bc40d0e5a97695bb96e27995cd3a08538541b0a846f65bba7a359f36700d4"
 dependencies = [
  "rustls 0.23.12",
  "rustls-pki-types",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-socks"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d4770b8024672c1101b3f6733eab95b18007dbe0847a8afe341fcf79e06043f"
+dependencies = [
+ "either",
+ "futures-util",
+ "thiserror",
  "tokio",
 ]
 

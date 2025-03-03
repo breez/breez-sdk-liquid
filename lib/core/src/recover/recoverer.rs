@@ -18,7 +18,7 @@ use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{
-    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    chain::{bitcoin::service::BitcoinChainService, liquid::service::LiquidChainService},
     recover::model::{BtcScript, HistoryTxId, LBtcScript},
     utils,
 };
@@ -210,7 +210,7 @@ impl Recoverer {
             &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
         )?;
 
-        let bitcoin_tip = self.bitcoin_chain_service.tip()?;
+        let bitcoin_tip = self.bitcoin_chain_service.tip().await?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
 
         for swap in swaps.iter_mut() {
@@ -334,8 +334,7 @@ impl Recoverer {
                             chain_swap.actual_payer_amount_sat =
                                 Some(recovered_data.btc_user_lockup_amount_sat);
                         }
-                        let is_expired =
-                            bitcoin_tip.height as u32 >= chain_swap.timeout_block_height;
+                        let is_expired = bitcoin_tip >= chain_swap.timeout_block_height;
                         let (expected_user_lockup_amount_sat, swap_limits) =
                             match chain_swap.payer_amount_sat {
                                 0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
@@ -456,7 +455,8 @@ impl Recoverer {
         let t0 = std::time::Instant::now();
         let btc_script_histories = self
             .bitcoin_chain_service
-            .get_scripts_history(&swap_btc_scripts)?;
+            .get_scripts_history(&swap_btc_scripts)
+            .await?;
 
         info!(
             "Recoverer executed bitcoin get_scripts_history for {} scripts in {} milliseconds",
@@ -467,7 +467,7 @@ impl Recoverer {
         let btx_script_tx_ids: Vec<lwk_wollet::bitcoin::Txid> = btc_script_histories
             .iter()
             .flatten()
-            .map(|h| h.txid.to_raw_hash())
+            .map(|h| h.tx_hash.to_raw_hash())
             .map(lwk_wollet::bitcoin::Txid::from_raw_hash)
             .collect::<Vec<lwk_wollet::bitcoin::Txid>>();
 
@@ -487,7 +487,8 @@ impl Recoverer {
         let t0 = std::time::Instant::now();
         let btc_script_txs = self
             .bitcoin_chain_service
-            .get_transactions(&btx_script_tx_ids)?;
+            .get_transactions(&btx_script_tx_ids)
+            .await?;
         info!(
             "Recoverer executed bitcoin get_transactions for {} transactions in {} milliseconds",
             btx_script_tx_ids.len(),
@@ -497,7 +498,8 @@ impl Recoverer {
         let t0 = std::time::Instant::now();
         let btc_script_balances = self
             .bitcoin_chain_service
-            .scripts_get_balance(&swap_btc_scripts)?;
+            .scripts_get_balance(&swap_btc_scripts)
+            .await?;
         info!(
             "Recoverer executed bitcoin scripts_get_balance for {} scripts in {} milliseconds",
             swap_btc_scripts.len(),
@@ -510,7 +512,10 @@ impl Recoverer {
                 .into_iter()
                 .zip(btc_script_histories.iter())
                 .map(|(script, history)| {
-                    let relevant_tx_ids: Vec<Txid> = history.iter().map(|h| h.txid).collect();
+                    let relevant_tx_ids: Vec<Txid> = history
+                        .iter()
+                        .map(|h| Txid::from_raw_hash(h.tx_hash.to_raw_hash()))
+                        .collect();
                     let relevant_txs: Vec<boltz_client::bitcoin::Transaction> = btc_script_txs
                         .iter()
                         .filter(|&tx| {

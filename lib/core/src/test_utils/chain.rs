@@ -14,16 +14,15 @@ use boltz_client::{
 use electrum_client::GetBalanceRes;
 use electrum_client::{
     bitcoin::{consensus::deserialize, OutPoint, Script, TxOut},
-    HeaderNotification,
+    GetHistoryRes,
 };
 use lwk_wollet::{
-    bitcoin::constants::genesis_block,
     elements::{BlockHash, Txid as ElementsTxid},
     History,
 };
 
 use crate::{
-    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    chain::{bitcoin::service::BitcoinChainService, liquid::service::LiquidChainService},
     prelude::{RecommendedFees, Utxo},
     utils,
 };
@@ -43,6 +42,16 @@ impl From<MockHistory> for lwk_wollet::History {
             height: h.height,
             block_hash: h.block_hash,
             block_timestamp: h.block_timestamp,
+        }
+    }
+}
+
+impl From<MockHistory> for GetHistoryRes {
+    fn from(h: MockHistory) -> Self {
+        Self {
+            tx_hash: electrum_client::bitcoin::Txid::from_raw_hash(h.txid.to_raw_hash()),
+            height: h.height,
+            fee: None,
         }
     }
 }
@@ -92,13 +101,6 @@ impl LiquidChainService for MockLiquidChainService {
         _txids: &[lwk_wollet::elements::Txid],
     ) -> Result<Vec<lwk_wollet::elements::Transaction>> {
         Ok(vec![])
-    }
-
-    async fn get_script_history(
-        &self,
-        _scripts: &ElementsScript,
-    ) -> Result<Vec<lwk_wollet::History>> {
-        Ok(self.get_history().into_iter().map(Into::into).collect())
     }
 
     async fn get_script_history_with_retry(
@@ -167,43 +169,29 @@ impl MockBitcoinChainService {
 
 #[async_trait]
 impl BitcoinChainService for MockBitcoinChainService {
-    fn tip(&self) -> Result<HeaderNotification> {
-        Ok(HeaderNotification {
-            height: 0,
-            header: genesis_block(lwk_wollet::bitcoin::Network::Testnet).header,
-        })
+    async fn tip(&self) -> Result<u32> {
+        Ok(0)
     }
 
-    fn broadcast(
+    async fn broadcast(
         &self,
         tx: &boltz_client::bitcoin::Transaction,
     ) -> Result<boltz_client::bitcoin::Txid, anyhow::Error> {
         Ok(tx.compute_txid())
     }
 
-    fn get_transactions(
+    async fn get_transactions(
         &self,
         _txids: &[boltz_client::bitcoin::Txid],
     ) -> Result<Vec<boltz_client::bitcoin::Transaction>> {
         Ok(self.txs.lock().unwrap().clone())
     }
 
-    fn get_script_history(&self, _script: &Script) -> Result<Vec<lwk_wollet::History>> {
-        Ok(self
-            .history
-            .lock()
-            .unwrap()
-            .clone()
-            .into_iter()
-            .map(Into::into)
-            .collect())
-    }
-
     async fn get_script_history_with_retry(
         &self,
         _script: &Script,
         _retries: u64,
-    ) -> Result<Vec<lwk_wollet::History>> {
+    ) -> Result<Vec<GetHistoryRes>> {
         Ok(self
             .history
             .lock()
@@ -214,19 +202,20 @@ impl BitcoinChainService for MockBitcoinChainService {
             .collect())
     }
 
-    fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<GetHistoryRes>>> {
         Ok(vec![])
     }
 
-    fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
         Ok(self
-            .get_scripts_utxos(&[script])?
+            .get_scripts_utxos(&[script])
+            .await?
             .first()
             .cloned()
             .unwrap_or_default())
     }
 
-    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
+    async fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
         let scripts_utxos = scripts
             .iter()
             .map(|s| {
@@ -242,7 +231,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         Ok(scripts_utxos)
     }
 
-    fn script_get_balance(
+    async fn script_get_balance(
         &self,
         _script: &boltz_client::bitcoin::Script,
     ) -> Result<electrum_client::GetBalanceRes> {
@@ -252,7 +241,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         })
     }
 
-    fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+    async fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
         Ok(vec![])
     }
 
