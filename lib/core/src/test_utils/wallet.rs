@@ -22,7 +22,7 @@ use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction, Txid},
     elements_miniscript::{slip77::MasterBlindingKey, ToPublicKey as _},
     secp256k1::{All, Message},
-    Tip, WalletTx,
+    WalletTx,
 };
 
 pub(crate) struct MockWallet {
@@ -85,8 +85,8 @@ impl OnchainWallet for MockWallet {
         Ok(TEST_P2TR_ADDR.clone())
     }
 
-    async fn tip(&self) -> Tip {
-        unimplemented!()
+    async fn tip(&self) -> u32 {
+        0
     }
 
     fn pubkey(&self) -> Result<String> {
