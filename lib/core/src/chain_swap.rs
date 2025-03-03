@@ -868,6 +868,7 @@ impl ChainSwapHandler {
                     SdkTransaction::Bitcoin(tx) => self
                         .bitcoin_chain_service
                         .broadcast(&tx)
+                        .await
                         .map(|tx_id| tx_id.to_hex())
                         .map_err(|err| PaymentError::Generic {
                             err: err.to_string(),
@@ -995,7 +996,10 @@ impl ChainSwapHandler {
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .script_pubkey();
-        let utxos = self.bitcoin_chain_service.get_script_utxos(&script_pk)?;
+        let utxos = self
+            .bitcoin_chain_service
+            .get_script_utxos(&script_pk)
+            .await?;
 
         let SdkTransaction::Bitcoin(refund_tx) = self
             .swapper
@@ -1014,7 +1018,8 @@ impl ChainSwapHandler {
         };
         let refund_tx_id = self
             .bitcoin_chain_service
-            .broadcast(&refund_tx)?
+            .broadcast(&refund_tx)
+            .await?
             .to_string();
 
         info!("Successfully broadcast refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}");
@@ -1228,7 +1233,8 @@ impl ChainSwapHandler {
         // Get full transaction
         let txs = self
             .bitcoin_chain_service
-            .get_transactions(&[first_tx_id])?;
+            .get_transactions(&[first_tx_id])
+            .await?;
         let user_lockup_tx = txs.first().ok_or(anyhow!(
             "No transactions found for user lockup script for swap {}",
             chain_swap.id

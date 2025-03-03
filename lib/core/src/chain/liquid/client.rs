@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 use lwk_wollet::{
-    blocking::{BlockchainBackend, EsploraClient},
-    elements::{BlockHash, BlockHeader, Script, Transaction, Txid},
+    asyncr::{EsploraClient, EsploraClientBuilder},
+    blocking::BlockchainBackend,
+    elements::{BlockHeader, Script, Transaction, Txid},
     ElectrumClient, ElectrumOptions, ElectrumUrl, History,
 };
 
@@ -45,10 +44,9 @@ impl LiquidClient {
                 url,
                 use_waterfalls,
             } => {
-                let client = match *use_waterfalls {
-                    true => EsploraClient::new(url, network.into()),
-                    false => EsploraClient::new_waterfalls(url, network.into()),
-                }?;
+                let client = EsploraClientBuilder::new(url, network.into())
+                    .waterfalls(*use_waterfalls)
+                    .build();
                 Ok(LiquidClient::Esplora {
                     inner: Box::new(client),
                 })
@@ -56,7 +54,7 @@ impl LiquidClient {
         }
     }
 
-    pub(crate) fn update_wallet(
+    pub(crate) async fn update_wallet(
         &mut self,
         wollet: &mut lwk_wollet::Wollet,
         index: u32,
@@ -64,7 +62,7 @@ impl LiquidClient {
         let state = wollet.state();
         let update = match self {
             Self::Electrum { inner, .. } => inner.full_scan_to_index(&state, index)?,
-            Self::Esplora { inner, .. } => inner.full_scan_to_index(&state, index)?,
+            Self::Esplora { inner, .. } => inner.full_scan_to_index(wollet, index).await?,
         };
         if let Some(update) = update {
             wollet.apply_update(update)?;
@@ -73,46 +71,35 @@ impl LiquidClient {
     }
 }
 
-impl BlockchainBackend for LiquidClient {
-    fn tip(&mut self) -> Result<BlockHeader, lwk_wollet::Error> {
-        match self {
-            LiquidClient::Electrum { inner } => inner.tip(),
-            LiquidClient::Esplora { inner } => inner.tip(),
-        }
+impl LiquidClient {
+    pub(crate) async fn tip(&mut self) -> Result<BlockHeader> {
+        Ok(match self {
+            LiquidClient::Electrum { inner } => inner.tip()?,
+            LiquidClient::Esplora { inner } => inner.tip().await?,
+        })
     }
 
-    fn broadcast(&self, tx: &Transaction) -> Result<Txid, lwk_wollet::Error> {
-        match self {
-            LiquidClient::Electrum { inner } => inner.broadcast(tx),
-            LiquidClient::Esplora { inner } => inner.broadcast(tx),
-        }
+    pub(crate) async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
+        Ok(match self {
+            LiquidClient::Electrum { inner } => inner.broadcast(tx)?,
+            LiquidClient::Esplora { inner } => inner.broadcast(tx).await?,
+        })
     }
 
-    fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>, lwk_wollet::Error> {
-        match self {
-            LiquidClient::Electrum { inner } => inner.get_transactions(txids),
-            LiquidClient::Esplora { inner } => inner.get_transactions(txids),
-        }
+    pub(crate) async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+        Ok(match self {
+            LiquidClient::Electrum { inner } => inner.get_transactions(txids)?,
+            LiquidClient::Esplora { inner } => inner.get_transactions(txids).await?,
+        })
     }
 
-    fn get_headers(
-        &self,
-        heights: &[u32],
-        height_blockhash: &HashMap<u32, BlockHash>,
-    ) -> Result<Vec<BlockHeader>, lwk_wollet::Error> {
-        match self {
-            LiquidClient::Electrum { inner } => inner.get_headers(heights, height_blockhash),
-            LiquidClient::Esplora { inner } => inner.get_headers(heights, height_blockhash),
-        }
-    }
-
-    fn get_scripts_history(
+    pub(crate) async fn get_scripts_history(
         &self,
         scripts: &[&Script],
-    ) -> Result<Vec<Vec<History>>, lwk_wollet::Error> {
-        match self {
-            LiquidClient::Electrum { inner } => inner.get_scripts_history(scripts),
-            LiquidClient::Esplora { inner } => inner.get_scripts_history(scripts),
-        }
+    ) -> Result<Vec<Vec<History>>> {
+        Ok(match self {
+            LiquidClient::Electrum { inner } => inner.get_scripts_history(scripts)?,
+            LiquidClient::Esplora { inner } => inner.get_scripts_history(scripts).await?,
+        })
     }
 }

@@ -210,12 +210,12 @@ impl LiquidOnchainWallet {
     async fn execute_scan(&self, client: &mut LiquidClient, index: u32) -> Result<()> {
         let mut wallet = self.wallet.lock().await;
         if let Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) =
-            client.update_wallet(&mut wallet, index)
+            client.update_wallet(&mut wallet, index).await
         {
             warn!("Full scan failed with update height too old, wiping storage and retrying");
             let mut new_wallet =
                 Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
-            client.update_wallet(&mut new_wallet, index)?;
+            client.update_wallet(&mut new_wallet, index).await?;
             *wallet = new_wallet;
         };
         Ok(())

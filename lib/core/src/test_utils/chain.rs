@@ -169,18 +169,18 @@ impl MockBitcoinChainService {
 
 #[async_trait]
 impl BitcoinChainService for MockBitcoinChainService {
-    fn tip(&self) -> Result<u32> {
+    async fn tip(&self) -> Result<u32> {
         Ok(0)
     }
 
-    fn broadcast(
+    async fn broadcast(
         &self,
         tx: &boltz_client::bitcoin::Transaction,
     ) -> Result<boltz_client::bitcoin::Txid, anyhow::Error> {
         Ok(tx.compute_txid())
     }
 
-    fn get_transactions(
+    async fn get_transactions(
         &self,
         _txids: &[boltz_client::bitcoin::Txid],
     ) -> Result<Vec<boltz_client::bitcoin::Transaction>> {
@@ -202,19 +202,20 @@ impl BitcoinChainService for MockBitcoinChainService {
             .collect())
     }
 
-    fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<GetHistoryRes>>> {
+    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<GetHistoryRes>>> {
         Ok(vec![])
     }
 
-    fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
         Ok(self
-            .get_scripts_utxos(&[script])?
+            .get_scripts_utxos(&[script])
+            .await?
             .first()
             .cloned()
             .unwrap_or_default())
     }
 
-    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
+    async fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
         let scripts_utxos = scripts
             .iter()
             .map(|s| {
@@ -230,7 +231,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         Ok(scripts_utxos)
     }
 
-    fn script_get_balance(
+    async fn script_get_balance(
         &self,
         _script: &boltz_client::bitcoin::Script,
     ) -> Result<electrum_client::GetBalanceRes> {
@@ -240,7 +241,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         })
     }
 
-    fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+    async fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
         Ok(vec![])
     }
 
