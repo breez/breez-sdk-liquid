@@ -1,17 +1,16 @@
-use std::sync::{Mutex, RwLock};
 use std::time::Duration;
 
 use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
 use boltz_client::ToHex;
 use log::info;
-use lwk_wollet::blocking::BlockchainBackend as _;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{
     elements::{Address, OutPoint, Script, Transaction, Txid},
     hashes::{sha256, Hash},
     History,
 };
+use tokio::sync::{Mutex, RwLock};
 
 use crate::get_client;
 use crate::prelude::Utxo;
@@ -85,15 +84,15 @@ impl HybridLiquidChainService {
         bail!("Could not create Liquid chain service client: no working clients found");
     }
 
-    fn set_client(&self) -> Result<()> {
-        let lock = self.client.read().unwrap();
+    async fn set_client(&self) -> Result<()> {
+        let lock = self.client.read().await;
         if let Some(client) = lock.as_ref() {
             if client.is_available() {
                 return Ok(());
             }
         }
 
-        let mut lock = self.client.write().unwrap();
+        let mut lock = self.client.write().await;
         *lock = Some(self.init_client()?);
         Ok(())
     }
@@ -102,19 +101,15 @@ impl HybridLiquidChainService {
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
-        self.set_client()?;
+        self.set_client().await?;
 
-        let mut lock = self
-            .client
-            .write()
-            .map_err(|err| anyhow!("Could not write to client lock: {err:?}"))?;
+        let mut lock = self.client.write().await;
         let Some(client) = lock.as_mut() else {
             bail!("Liquid client not set"); // unreachable
         };
 
-        let new_tip = client.tip().ok().map(|t| t.height);
-        let mut last_tip: std::sync::MutexGuard<'_, Option<u32>> =
-            self.last_known_tip.lock().unwrap();
+        let new_tip = client.tip().await.ok().map(|t| t.height);
+        let mut last_tip = self.last_known_tip.lock().await;
         match new_tip {
             Some(height) => {
                 *last_tip = Some(height);
@@ -126,8 +121,7 @@ impl LiquidChainService for HybridLiquidChainService {
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
         get_client!(self, client);
-        let txid = client.broadcast(tx)?;
-        Ok(Txid::from_raw_hash(txid.to_raw_hash()))
+        client.broadcast(tx).await
     }
 
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
@@ -136,12 +130,12 @@ impl LiquidChainService for HybridLiquidChainService {
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         get_client!(self, client);
-        Ok(client.get_transactions(txids)?)
+        client.get_transactions(txids).await
     }
 
     async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
         get_client!(self, client);
-        Ok(client.get_scripts_history(scripts)?)
+        client.get_scripts_history(scripts).await
     }
 
     async fn get_script_history_with_retry(

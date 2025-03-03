@@ -210,7 +210,7 @@ impl Recoverer {
             &swaps_list.receive_chain_swap_immutable_data_by_swap_id,
         )?;
 
-        let bitcoin_tip = self.bitcoin_chain_service.tip()?;
+        let bitcoin_tip = self.bitcoin_chain_service.tip().await?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
 
         for swap in swaps.iter_mut() {
@@ -455,7 +455,8 @@ impl Recoverer {
         let t0 = std::time::Instant::now();
         let btc_script_histories = self
             .bitcoin_chain_service
-            .get_scripts_history(&swap_btc_scripts)?;
+            .get_scripts_history(&swap_btc_scripts)
+            .await?;
 
         info!(
             "Recoverer executed bitcoin get_scripts_history for {} scripts in {} milliseconds",
@@ -486,7 +487,8 @@ impl Recoverer {
         let t0 = std::time::Instant::now();
         let btc_script_txs = self
             .bitcoin_chain_service
-            .get_transactions(&btx_script_tx_ids)?;
+            .get_transactions(&btx_script_tx_ids)
+            .await?;
         info!(
             "Recoverer executed bitcoin get_transactions for {} transactions in {} milliseconds",
             btx_script_tx_ids.len(),
@@ -496,7 +498,8 @@ impl Recoverer {
         let t0 = std::time::Instant::now();
         let btc_script_balances = self
             .bitcoin_chain_service
-            .scripts_get_balance(&swap_btc_scripts)?;
+            .scripts_get_balance(&swap_btc_scripts)
+            .await?;
         info!(
             "Recoverer executed bitcoin scripts_get_balance for {} scripts in {} milliseconds",
             swap_btc_scripts.len(),

@@ -373,7 +373,7 @@ impl LiquidSdk {
                         };
                         // Get the Bitcoin tip and process a new block
                         let t0 = Instant::now();
-                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip();
+                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip().await;
                         let duration_ms = Instant::now().duration_since(t0).as_millis();
                         info!("Fetched bitcoin tip at ({duration_ms} ms)");
                         let is_new_bitcoin_block = match &bitcoin_tip_res {
@@ -2463,7 +2463,8 @@ impl LiquidSdk {
             .collect();
         let scripts_utxos = self
             .bitcoin_chain_service
-            .get_scripts_utxos(&lockup_scripts)?;
+            .get_scripts_utxos(&lockup_scripts)
+            .await?;
 
         let mut refundables = vec![];
         for (chain_swap, script_utxos) in chain_swaps.into_iter().zip(scripts_utxos) {
@@ -2679,7 +2680,7 @@ impl LiquidSdk {
             .collect();
         match partial_sync {
             false => {
-                let bitcoin_height = self.bitcoin_chain_service.tip()?;
+                let bitcoin_height = self.bitcoin_chain_service.tip().await?;
                 let liquid_height = self.liquid_chain_service.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 

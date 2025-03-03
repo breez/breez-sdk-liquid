@@ -12,7 +12,7 @@ pub(crate) enum BitcoinClient {
         inner: Box<electrum_client::Client>,
     },
     Esplora {
-        inner: Box<esplora_client::BlockingClient>,
+        inner: Box<esplora_client::AsyncClient>,
     },
 }
 
@@ -46,7 +46,7 @@ impl BitcoinClient {
                 let client = esplora_client::Builder::new(url)
                     .timeout(3)
                     .max_retries(5)
-                    .build_blocking();
+                    .build_async()?;
                 Ok(BitcoinClient::Esplora {
                     inner: Box::new(client),
                 })
@@ -54,7 +54,7 @@ impl BitcoinClient {
         }
     }
 
-    pub(crate) fn tip(&mut self) -> Result<u32> {
+    pub(crate) async fn tip(&mut self) -> Result<u32> {
         match self {
             BitcoinClient::Electrum { inner } => {
                 let mut maybe_popped_header = None;
@@ -77,35 +77,35 @@ impl BitcoinClient {
                     }
                 }
             }
-            BitcoinClient::Esplora { inner } => Ok(inner.get_height()?),
+            BitcoinClient::Esplora { inner } => Ok(inner.get_height().await?),
         }
     }
 
-    pub(crate) fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
+    pub(crate) async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
         Ok(match self {
             BitcoinClient::Electrum { inner } => inner.transaction_broadcast(tx)?,
             BitcoinClient::Esplora { inner } => {
-                inner.broadcast(tx)?;
+                inner.broadcast(tx).await?;
                 tx.compute_txid()
             }
         })
     }
 
-    pub(crate) fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+    pub(crate) async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         Ok(match self {
             BitcoinClient::Electrum { inner } => inner.batch_transaction_get(txids)?,
             BitcoinClient::Esplora { inner } => {
                 // TODO Add support for batch search
                 let mut result = vec![];
                 for txid in txids {
-                    result.push(inner.get_tx(txid)?.context("Transaction not found")?);
+                    result.push(inner.get_tx(txid).await?.context("Transaction not found")?);
                 }
                 result
             }
         })
     }
 
-    pub(crate) fn get_scripts_history(
+    pub(crate) async fn get_scripts_history(
         &self,
         scripts: &[&Script],
     ) -> Result<Vec<Vec<GetHistoryRes>>> {
@@ -115,7 +115,7 @@ impl BitcoinClient {
                 // TODO Add support for batch search
                 let mut histories = vec![];
                 for script in scripts {
-                    let txs = inner.scripthash_txs(script, None)?;
+                    let txs = inner.scripthash_txs(script, None).await?;
                     let history = txs
                         .into_iter()
                         .map(|tx| GetHistoryRes {
@@ -134,7 +134,10 @@ impl BitcoinClient {
         })
     }
 
-    pub(crate) fn get_scripts_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+    pub(crate) async fn get_scripts_balance(
+        &self,
+        scripts: &[&Script],
+    ) -> Result<Vec<GetBalanceRes>> {
         Ok(match self {
             BitcoinClient::Electrum { inner } => inner.batch_script_get_balance(scripts)?,
             BitcoinClient::Esplora { .. } => {
@@ -144,12 +147,13 @@ impl BitcoinClient {
         })
     }
 
-    pub(crate) fn get_recommended_fees(&self) -> Result<RecommendedFees> {
+    pub(crate) async fn get_recommended_fees(&self) -> Result<RecommendedFees> {
         Ok(match self {
             BitcoinClient::Electrum { .. } => unreachable!(),
             BitcoinClient::Esplora { inner } => {
                 let fee_estimates: HashMap<u16, u64> = inner
-                    .get_fee_estimates()?
+                    .get_fee_estimates()
+                    .await?
                     .into_iter()
                     .map(|(k, v)| (k, v as u64))
                     .collect();
