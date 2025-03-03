@@ -306,15 +306,10 @@ impl TryFrom<Vec<Swap>> for SwapsList {
 }
 
 impl SwapsList {
-    /// Get a swap by its ID
-    pub(crate) fn get_swap_by_id(&self, swap_id: &str) -> Option<&Swap> {
-        self.swaps_by_id.get(swap_id)
-    }
-
     fn send_swaps_by_script(&self) -> HashMap<LBtcScript, &Swap> {
         let mut result = HashMap::new();
 
-        for (id, swap) in &self.swaps_by_id {
+        for swap in self.swaps_by_id.values() {
             if let Swap::Send(send_swap) = swap {
                 if let Ok(script) = send_swap.get_swap_script() {
                     if let Some(funding_addr) = script.funding_addrs {
@@ -347,7 +342,7 @@ impl SwapsList {
     fn receive_swaps_by_claim_script(&self) -> HashMap<LBtcScript, &Swap> {
         let mut result = HashMap::new();
 
-        for (_, swap) in &self.swaps_by_id {
+        for swap in self.swaps_by_id.values() {
             if let Swap::Receive(receive_swap) = swap {
                 if let Ok(script) = receive_swap.get_swap_script() {
                     if let Some(funding_addr) = script.funding_addrs {
@@ -364,7 +359,7 @@ impl SwapsList {
     fn receive_swaps_by_mrh_script(&self) -> HashMap<LBtcScript, &Swap> {
         let mut result = HashMap::new();
 
-        for (_, swap) in &self.swaps_by_id {
+        for swap in self.swaps_by_id.values() {
             if let Swap::Receive(receive_swap) = swap {
                 if let Ok(mrh_address) = ElementsAddress::from_str(&receive_swap.mrh_address) {
                     let mrh_script = mrh_address.script_pubkey();
@@ -387,54 +382,48 @@ impl SwapsList {
         lbtc_script_to_history_map
             .iter()
             .for_each(|(lbtc_script, lbtc_script_history)| {
-                if let Some(swap) = receive_swaps_by_claim_script.get(lbtc_script) {
-                    if let Swap::Receive(imm) = swap {
-                        // The MRH script history filtered by the swap timeout block height
-                        let mrh_script_history = imm
-                            .mrh_script()
-                            .clone()
-                            .and_then(|mrh_script| {
-                                lbtc_script_to_history_map.get(&mrh_script).map(|h| {
-                                    h.iter()
-                                        .filter(|&tx_history| {
-                                            tx_history.height < imm.timeout_block_height as i32
-                                        })
-                                        .cloned()
-                                        .collect::<Vec<HistoryTxId>>()
-                                })
+                if let Some(Swap::Receive(imm)) = receive_swaps_by_claim_script.get(lbtc_script) {
+                    // The MRH script history filtered by the swap timeout block height
+                    let mrh_script_history = imm
+                        .mrh_script()
+                        .clone()
+                        .and_then(|mrh_script| {
+                            lbtc_script_to_history_map.get(&mrh_script).map(|h| {
+                                h.iter()
+                                    .filter(|&tx_history| {
+                                        tx_history.height < imm.timeout_block_height as i32
+                                    })
+                                    .cloned()
+                                    .collect::<Vec<HistoryTxId>>()
                             })
-                            .unwrap_or_default();
-                        data.insert(
-                            imm.id.clone(),
-                            ReceiveSwapHistory {
-                                lbtc_claim_script_history: lbtc_script_history.clone(),
-                                lbtc_mrh_script_history: mrh_script_history,
-                            },
-                        );
-                    }
+                        })
+                        .unwrap_or_default();
+                    data.insert(
+                        imm.id.clone(),
+                        ReceiveSwapHistory {
+                            lbtc_claim_script_history: lbtc_script_history.clone(),
+                            lbtc_mrh_script_history: mrh_script_history,
+                        },
+                    );
                 }
-                if let Some(swap) = receive_swaps_by_mrh_script.get(lbtc_script) {
-                    if let Swap::Receive(imm) = swap {
-                        let claim_script_history = lbtc_script_to_history_map
-                            .get(&imm.claim_script().unwrap_or_default())
-                            .cloned()
-                            .unwrap_or_default();
-                        // The MRH script history filtered by the swap timeout block height
-                        let mrh_script_history = lbtc_script_history
-                            .iter()
-                            .filter(|&tx_history| {
-                                tx_history.height < imm.timeout_block_height as i32
-                            })
-                            .cloned()
-                            .collect::<Vec<HistoryTxId>>();
-                        data.insert(
-                            imm.id.clone(),
-                            ReceiveSwapHistory {
-                                lbtc_claim_script_history: claim_script_history,
-                                lbtc_mrh_script_history: mrh_script_history,
-                            },
-                        );
-                    }
+                if let Some(Swap::Receive(imm)) = receive_swaps_by_mrh_script.get(lbtc_script) {
+                    let claim_script_history = lbtc_script_to_history_map
+                        .get(&imm.claim_script().unwrap_or_default())
+                        .cloned()
+                        .unwrap_or_default();
+                    // The MRH script history filtered by the swap timeout block height
+                    let mrh_script_history = lbtc_script_history
+                        .iter()
+                        .filter(|&tx_history| tx_history.height < imm.timeout_block_height as i32)
+                        .cloned()
+                        .collect::<Vec<HistoryTxId>>();
+                    data.insert(
+                        imm.id.clone(),
+                        ReceiveSwapHistory {
+                            lbtc_claim_script_history: claim_script_history,
+                            lbtc_mrh_script_history: mrh_script_history,
+                        },
+                    );
                 }
             });
         Ok(data)
@@ -443,7 +432,7 @@ impl SwapsList {
     fn send_chain_swaps_by_lbtc_lockup_script(&self) -> HashMap<LBtcScript, &Swap> {
         let mut result = HashMap::new();
 
-        for (_, swap) in &self.swaps_by_id {
+        for swap in self.swaps_by_id.values() {
             if let Swap::Chain(chain_swap) = swap {
                 if chain_swap.direction == Direction::Outgoing {
                     if let Ok(lockup_script) = chain_swap.get_lockup_swap_script() {
@@ -473,36 +462,34 @@ impl SwapsList {
         lbtc_script_to_history_map
             .iter()
             .for_each(|(lbtc_lockup_script, lbtc_script_history)| {
-                if let Some(swap) = send_chain_swaps_by_lbtc_script.get(lbtc_lockup_script) {
-                    if let Swap::Chain(imm) = swap {
-                        let claim_script_pubkey = imm
-                            .get_claim_swap_script()
-                            .map_err(anyhow::Error::new)
-                            .and_then(|c| c.as_bitcoin_script())
-                            .and_then(|b| {
-                                b.funding_addrs.ok_or(anyhow!("No funding address found"))
-                            })
-                            .and_then(|op| Ok(op.script_pubkey()))
-                            .unwrap_or_default();
+                if let Some(Swap::Chain(imm)) =
+                    send_chain_swaps_by_lbtc_script.get(lbtc_lockup_script)
+                {
+                    let claim_script_pubkey = imm
+                        .get_claim_swap_script()
+                        .map_err(anyhow::Error::new)
+                        .and_then(|c| c.as_bitcoin_script())
+                        .and_then(|b| b.funding_addrs.ok_or(anyhow!("No funding address found")))
+                        .map(|op| op.script_pubkey())
+                        .unwrap_or_default();
 
-                        let btc_script_history = btc_script_to_history_map
-                            .get(&claim_script_pubkey)
-                            .cloned()
-                            .unwrap_or_default();
-                        let btc_script_txs = btc_script_to_txs_map
-                            .get(&claim_script_pubkey)
-                            .cloned()
-                            .unwrap_or_default();
+                    let btc_script_history = btc_script_to_history_map
+                        .get(&claim_script_pubkey)
+                        .cloned()
+                        .unwrap_or_default();
+                    let btc_script_txs = btc_script_to_txs_map
+                        .get(&claim_script_pubkey)
+                        .cloned()
+                        .unwrap_or_default();
 
-                        data.insert(
-                            imm.id.clone(),
-                            SendChainSwapHistory {
-                                lbtc_lockup_script_history: lbtc_script_history.clone(),
-                                btc_claim_script_history: btc_script_history,
-                                btc_claim_script_txs: btc_script_txs,
-                            },
-                        );
-                    }
+                    data.insert(
+                        imm.id.clone(),
+                        SendChainSwapHistory {
+                            lbtc_lockup_script_history: lbtc_script_history.clone(),
+                            btc_claim_script_history: btc_script_history,
+                            btc_claim_script_txs: btc_script_txs,
+                        },
+                    );
                 }
             });
         data
@@ -511,7 +498,7 @@ impl SwapsList {
     fn receive_chain_swaps_by_lbtc_claim_script(&self) -> HashMap<LBtcScript, &Swap> {
         let mut result = HashMap::new();
 
-        for (_, swap) in &self.swaps_by_id {
+        for swap in self.swaps_by_id.values() {
             if let Swap::Chain(chain_swap) = swap {
                 if chain_swap.direction == Direction::Incoming {
                     if let Ok(claim_script) = chain_swap.get_claim_swap_script() {
@@ -542,40 +529,38 @@ impl SwapsList {
         lbtc_script_to_history_map
             .iter()
             .for_each(|(lbtc_script_pk, lbtc_script_history)| {
-                if let Some(swap) = receive_chain_swaps_by_lbtc_script.get(lbtc_script_pk) {
-                    if let Swap::Chain(imm) = swap {
-                        let lockup_script_pubkey = imm
-                            .get_lockup_swap_script()
-                            .map_err(anyhow::Error::new)
-                            .and_then(|c| c.as_bitcoin_script())
-                            .and_then(|b| {
-                                b.funding_addrs.ok_or(anyhow!("No funding address found"))
-                            })
-                            .and_then(|op| Ok(op.script_pubkey()))
-                            .unwrap_or_default();
+                if let Some(Swap::Chain(imm)) =
+                    receive_chain_swaps_by_lbtc_script.get(lbtc_script_pk)
+                {
+                    let lockup_script_pubkey = imm
+                        .get_lockup_swap_script()
+                        .map_err(anyhow::Error::new)
+                        .and_then(|c| c.as_bitcoin_script())
+                        .and_then(|b| b.funding_addrs.ok_or(anyhow!("No funding address found")))
+                        .map(|op| op.script_pubkey())
+                        .unwrap_or_default();
 
-                        let btc_script_history = btc_script_to_history_map
-                            .get(&lockup_script_pubkey)
-                            .cloned()
-                            .unwrap_or_default();
-                        let btc_script_txs = btc_script_to_txs_map
-                            .get(&lockup_script_pubkey)
-                            .cloned()
-                            .unwrap_or_default();
-                        let btc_script_balance = btc_script_to_balance_map
-                            .get(&lockup_script_pubkey)
-                            .cloned();
+                    let btc_script_history = btc_script_to_history_map
+                        .get(&lockup_script_pubkey)
+                        .cloned()
+                        .unwrap_or_default();
+                    let btc_script_txs = btc_script_to_txs_map
+                        .get(&lockup_script_pubkey)
+                        .cloned()
+                        .unwrap_or_default();
+                    let btc_script_balance = btc_script_to_balance_map
+                        .get(&lockup_script_pubkey)
+                        .cloned();
 
-                        data.insert(
-                            imm.id.clone(),
-                            ReceiveChainSwapHistory {
-                                lbtc_claim_script_history: lbtc_script_history.clone(),
-                                btc_lockup_script_history: btc_script_history,
-                                btc_lockup_script_txs: btc_script_txs,
-                                btc_lockup_script_balance: btc_script_balance,
-                            },
-                        );
-                    }
+                    data.insert(
+                        imm.id.clone(),
+                        ReceiveChainSwapHistory {
+                            lbtc_claim_script_history: lbtc_script_history.clone(),
+                            btc_lockup_script_history: btc_script_history,
+                            btc_lockup_script_txs: btc_script_txs,
+                            btc_lockup_script_balance: btc_script_balance,
+                        },
+                    );
                 }
             });
         data

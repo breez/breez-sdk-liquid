@@ -11,7 +11,7 @@ use boltz_client::{
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
-use lwk_wollet::elements::{script, AssetId, Script};
+use lwk_wollet::elements::{script, AssetId};
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;

@@ -1,6 +1,9 @@
 use anyhow::Result;
-use log::{error, warn};
+use boltz_client::ToHex;
+use log::{debug, error, warn};
+use lwk_wollet::elements::Txid;
 
+use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
 use crate::recover::model::*;
 use crate::utils;
@@ -31,6 +34,44 @@ impl SendSwapHandler {
         }
 
         false
+    }
+
+    /// Recover and update a send swap with data from the chain
+    pub async fn recover_and_update_swap(
+        send_swap: &mut SendSwap,
+        tx_map: &TxMap,
+        history: &[HistoryTxId],
+        liquid_chain_service: &dyn LiquidChainService,
+        current_block_height: u32,
+        is_local_within_grace_period: bool,
+    ) -> Result<()> {
+        let swap_id = send_swap.id.clone();
+        debug!("[Recover Send] Recovering data for swap {swap_id}");
+
+        // First obtain transaction IDs from the history
+        let mut recovered_data = Self::recover_onchain_data(tx_map, &swap_id, history)?;
+
+        // Recover preimage if needed
+        if let Some(claim_tx_id) = &recovered_data.claim_tx_id {
+            if let Ok(claim_txs) = liquid_chain_service
+                .get_transactions(&[claim_tx_id.txid])
+                .await
+            {
+                if !claim_txs.is_empty() {
+                    let preimage = Self::recover_preimage(&claim_txs[0], &swap_id).await?;
+                    recovered_data.preimage = preimage;
+                }
+            }
+        }
+
+        // Update the swap with recovered data
+        Self::update_swap(
+            send_swap,
+            &swap_id,
+            &recovered_data,
+            current_block_height,
+            is_local_within_grace_period,
+        )
     }
 
     /// Update a send swap with recovered data
@@ -76,5 +117,94 @@ impl SendSwapHandler {
         }
 
         Ok(())
+    }
+
+    /// Reconstruct Send Swap tx IDs from the onchain data
+    ///
+    /// The implementation tolerates a `tx_map` that is older than the history in the sense that
+    /// no incorrect data is recovered. Transactions that are missing from `tx_map` are simply not recovered.
+    fn recover_onchain_data(
+        tx_map: &TxMap,
+        swap_id: &str,
+        history: &[HistoryTxId],
+    ) -> Result<RecoveredOnchainDataSend> {
+        // If a history tx is one of our outgoing txs, it's a lockup tx
+        let lockup_tx_id = history
+            .iter()
+            .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
+            .cloned();
+
+        let claim_tx_id = if lockup_tx_id.is_some() {
+            // A history tx that is neither a known incoming or outgoing tx is a claim tx.
+            //
+            // Only find the claim_tx from the history if we find a lockup_tx. Not doing so will select
+            // the first tx as the claim, whereas we should check that the claim is not the lockup.
+            history
+                .iter()
+                .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+                .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
+                .cloned()
+        } else {
+            error!("No lockup tx found when recovering data for Send Swap {swap_id}");
+            None
+        };
+
+        // If a history tx is one of our incoming txs, it's a refund tx
+        let refund_tx_id = history
+            .iter()
+            .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
+            .cloned();
+
+        Ok(RecoveredOnchainDataSend {
+            lockup_tx_id,
+            claim_tx_id,
+            refund_tx_id,
+            preimage: None,
+        })
+    }
+
+    /// Tries to recover the preimage for a send swap from its claim tx
+    async fn recover_preimage(
+        claim_tx: &lwk_wollet::elements::Transaction,
+        swap_id: &str,
+    ) -> Result<Option<String>> {
+        match Self::extract_preimage_from_claim_tx(claim_tx, swap_id) {
+            Ok(preimage) => Ok(Some(preimage)),
+            Err(e) => {
+                error!(
+                    "Couldn't get swap preimage from claim tx {} for swap {swap_id}: {e}",
+                    claim_tx.txid()
+                );
+                Ok(None)
+            }
+        }
+    }
+
+    /// Extracts the preimage from a claim tx
+    pub fn extract_preimage_from_claim_tx(
+        claim_tx: &lwk_wollet::elements::Transaction,
+        swap_id: &str,
+    ) -> Result<String> {
+        use lwk_wollet::bitcoin::Witness;
+        use lwk_wollet::hashes::{sha256, Hash as _};
+
+        let input = claim_tx
+            .input
+            .first()
+            .ok_or_else(|| anyhow::anyhow!("Found no input for claim tx"))?;
+
+        let script_witness_bytes = input.clone().witness.script_witness;
+        log::debug!("Found Send Swap {swap_id} claim tx witness: {script_witness_bytes:?}");
+        let script_witness = Witness::from(script_witness_bytes);
+
+        let preimage_bytes = script_witness
+            .nth(1)
+            .ok_or_else(|| anyhow::anyhow!("Claim tx witness has no preimage"))?;
+        let preimage = sha256::Hash::from_slice(preimage_bytes)
+            .map_err(|e| anyhow::anyhow!("Claim tx witness has invalid preimage: {e}"))?;
+        let preimage_hex = preimage.to_hex();
+        log::debug!("Found Send Swap {swap_id} claim tx preimage: {preimage_hex}");
+
+        Ok(preimage_hex)
     }
 }

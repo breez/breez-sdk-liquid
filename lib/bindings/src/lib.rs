@@ -89,7 +89,7 @@ impl BindingLiquidSdk {
     }
 
     pub fn get_info(&self) -> Result<GetInfoResponse, SdkError> {
-        rt().block_on(self.sdk.get_info()).map_err(Into::into)
+        rt().block_on(self.sdk.get_info())
     }
 
     pub fn sign_message(&self, req: SignMessageRequest) -> SdkResult<SignMessageResponse> {
@@ -189,11 +189,10 @@ impl BindingLiquidSdk {
         req: PrepareLnUrlPayRequest,
     ) -> Result<PrepareLnUrlPayResponse, LnUrlPayError> {
         rt().block_on(self.sdk.prepare_lnurl_pay(req))
-            .map_err(Into::into)
     }
 
     pub fn lnurl_pay(&self, req: model::LnUrlPayRequest) -> Result<LnUrlPayResult, LnUrlPayError> {
-        rt().block_on(self.sdk.lnurl_pay(req)).map_err(Into::into)
+        rt().block_on(self.sdk.lnurl_pay(req))
     }
 
     pub fn lnurl_withdraw(
@@ -201,7 +200,6 @@ impl BindingLiquidSdk {
         req: LnUrlWithdrawRequest,
     ) -> Result<LnUrlWithdrawResult, LnUrlWithdrawError> {
         rt().block_on(self.sdk.lnurl_withdraw(req))
-            .map_err(Into::into)
     }
 
     pub fn lnurl_auth(
@@ -244,7 +242,7 @@ impl BindingLiquidSdk {
     }
 
     pub fn sync(&self) -> SdkResult<()> {
-        rt().block_on(self.sdk.sync(false)).map_err(Into::into)
+        rt().block_on(self.sdk.sync(false))
     }
 
     pub fn recommended_fees(&self) -> SdkResult<RecommendedFees> {

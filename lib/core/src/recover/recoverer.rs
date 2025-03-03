@@ -1,14 +1,11 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
-use boltz_client::{ElementsAddress, ToHex as _};
 use electrum_client::GetBalanceRes;
-use log::{debug, error, info, warn};
-use lwk_wollet::bitcoin::Witness;
-use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
+use log::{info, warn};
+use lwk_wollet::elements::Txid;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
-use lwk_wollet::hashes::{sha256, Hash as _};
 use lwk_wollet::WalletTx;
 
 use super::handlers::{
@@ -28,7 +25,7 @@ use crate::{
 
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
-    swapper: Arc<dyn Swapper>,
+    //swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
@@ -37,7 +34,7 @@ pub(crate) struct Recoverer {
 impl Recoverer {
     pub(crate) fn new(
         master_blinding_key: Vec<u8>,
-        swapper: Arc<dyn Swapper>,
+        _: Arc<dyn Swapper>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<dyn BitcoinChainService>,
@@ -46,115 +43,11 @@ impl Recoverer {
             master_blinding_key: MasterBlindingKey::from_hex(
                 &master_blinding_key.to_lower_hex_string(),
             )?,
-            swapper,
+            //swapper,
             onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
         })
-    }
-
-    async fn recover_cooperative_preimages(
-        &self,
-        recovered_send_data: &mut HashMap<String, &mut RecoveredOnchainDataSend>,
-    ) -> HashMap<String, Txid> {
-        let mut failed = HashMap::new();
-        for (swap_id, recovered_data) in recovered_send_data {
-            let Some(claim_tx_id) = &recovered_data.claim_tx_id else {
-                continue;
-            };
-
-            match self.swapper.get_submarine_preimage(swap_id).await {
-                Ok(preimage) => recovered_data.preimage = Some(preimage),
-                Err(err) => {
-                    warn!("Could not recover Send swap {swap_id} preimage cooperatively: {err:?}");
-                    failed.insert(swap_id.clone(), claim_tx_id.txid);
-                }
-            }
-        }
-        failed
-    }
-
-    async fn recover_non_cooperative_preimages(
-        &self,
-        recovered_send_data: &mut HashMap<String, &mut RecoveredOnchainDataSend>,
-        failed_cooperative: HashMap<String, Txid>,
-    ) -> Result<()> {
-        let claim_tx_ids: Vec<Txid> = failed_cooperative.values().cloned().collect();
-        let claim_txs = self
-            .liquid_chain_service
-            .get_transactions(claim_tx_ids.as_slice())
-            .await
-            .map_err(|e| anyhow!("Failed to fetch claim txs from recovery: {e}"))?;
-
-        let claim_tx_ids_len = claim_tx_ids.len();
-        let claim_txs_len = claim_txs.len();
-        ensure!(
-            claim_tx_ids_len == claim_txs_len,
-            anyhow!("Got {claim_txs_len} send claim transactions, expected {claim_tx_ids_len}")
-        );
-
-        let claim_txs_by_swap_id: HashMap<String, lwk_wollet::elements::Transaction> =
-            failed_cooperative.into_keys().zip(claim_txs).collect();
-
-        for (swap_id, claim_tx) in claim_txs_by_swap_id {
-            let Some(recovered_data) = recovered_send_data.get_mut(&swap_id) else {
-                continue;
-            };
-
-            match Self::get_send_swap_preimage_from_claim_tx(&swap_id, &claim_tx) {
-                Ok(preimage) => recovered_data.preimage = Some(preimage),
-                Err(e) => {
-                    error!(
-                        "Couldn't get non-cooperative swap preimage from claim tx {} for swap {swap_id}: {e}",
-                        claim_tx.txid()
-                    );
-                    // Keep only claim tx for which there is a recovered or synced preimage
-                    recovered_data.claim_tx_id = None;
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    async fn recover_preimages(
-        &self,
-        mut recovered_send_data: HashMap<String, &mut RecoveredOnchainDataSend>,
-    ) -> Result<()> {
-        // Recover the preimages by querying the swapper, only if there is a claim_tx_id
-        let failed_cooperative = self
-            .recover_cooperative_preimages(&mut recovered_send_data)
-            .await;
-
-        // For those which failed, recover the preimages by querying onchain (non-cooperative case)
-        self.recover_non_cooperative_preimages(&mut recovered_send_data, failed_cooperative)
-            .await
-    }
-
-    pub(crate) fn get_send_swap_preimage_from_claim_tx(
-        swap_id: &str,
-        claim_tx: &lwk_wollet::elements::Transaction,
-    ) -> Result<String, anyhow::Error> {
-        debug!("Send Swap {swap_id} has claim tx {}", claim_tx.txid());
-
-        let input = claim_tx
-            .input
-            .first()
-            .ok_or_else(|| anyhow!("Found no input for claim tx"))?;
-
-        let script_witness_bytes = input.clone().witness.script_witness;
-        log::info!("Found Send Swap {swap_id} claim tx witness: {script_witness_bytes:?}");
-        let script_witness = Witness::from(script_witness_bytes);
-
-        let preimage_bytes = script_witness
-            .nth(1)
-            .ok_or_else(|| anyhow!("Claim tx witness has no preimage"))?;
-        let preimage = sha256::Hash::from_slice(preimage_bytes)
-            .map_err(|e| anyhow!("Claim tx witness has invalid preimage: {e}"))?;
-        let preimage_hex = preimage.to_hex();
-        debug!("Found Send Swap {swap_id} claim tx preimage: {preimage_hex}");
-
-        Ok(preimage_hex)
     }
 
     /// For each swap, recovers data from chain services.
@@ -187,11 +80,6 @@ impl Recoverer {
         let bitcoin_tip = self.bitcoin_chain_service.tip()?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
 
-        // Recover data for each swap type
-        let (send_data, receive_data, chain_send_data, chain_receive_data) = self
-            .recover_all_swap_data(&tx_map, &histories, &swaps_list)
-            .await?;
-
         // Apply recovered data to the swaps
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
@@ -201,129 +89,93 @@ impl Recoverer {
 
             match swap {
                 Swap::Send(send_swap) => {
-                    if let Some(recovered_data) = send_data.get(swap_id) {
-                        SendSwapHandler::update_swap(
+                    // Get history for this swap
+                    if let Some(history) = histories.send.get(swap_id) {
+                        // Let the handler do both recovery and update in one step
+                        if let Err(e) = SendSwapHandler::recover_and_update_swap(
                             send_swap,
-                            swap_id,
-                            recovered_data,
+                            &tx_map,
+                            history,
+                            self.liquid_chain_service.as_ref(),
                             liquid_tip,
                             is_local_within_grace_period,
-                        )?;
+                        )
+                        .await
+                        {
+                            warn!("Error recovering data for Send swap {swap_id}: {e}");
+                        }
                     } else {
                         warn!(
-                            "Could not apply recovered data for Send swap {swap_id}: recovery data not found"
+                            "Could not apply recovered data for Send swap {swap_id}: history not found"
                         );
                     }
                 }
                 Swap::Receive(receive_swap) => {
-                    if let Some(recovered_data) = receive_data.get(swap_id) {
-                        ReceiveSwapHandler::update_swap(
+                    // Get history for this swap
+                    if let Some(history) = histories.receive.get(swap_id) {
+                        // Let the handler do both recovery and update in one step
+                        if let Err(e) = ReceiveSwapHandler::recover_and_update_swap(
                             receive_swap,
-                            swap_id,
-                            recovered_data,
+                            &tx_map,
+                            history,
                             liquid_tip,
                             is_local_within_grace_period,
-                        )?;
+                        ) {
+                            warn!("Error recovering data for Receive swap {swap_id}: {e}");
+                        }
                     } else {
                         warn!(
-                            "Could not apply recovered data for Receive swap {swap_id}: recovery data not found"
+                            "Could not apply recovered data for Receive swap {swap_id}: history not found"
                         );
                     }
                 }
-                Swap::Chain(chain_swap) => match chain_swap.direction {
-                    Direction::Incoming => {
-                        if let Some(recovered_data) = chain_receive_data.get(swap_id) {
-                            ChainReceiveSwapHandler::update_swap(
-                                chain_swap,
-                                swap_id,
-                                recovered_data,
-                                bitcoin_tip.height as u32,
-                                is_local_within_grace_period,
-                            )?;
-                        } else {
-                            warn!(
-                                "Could not apply recovered data for incoming Chain swap {swap_id}: recovery data not found"
-                            );
+                Swap::Chain(chain_swap) => {
+                    match chain_swap.direction {
+                        Direction::Incoming => {
+                            // Get history for this incoming chain swap
+                            if let Some(history) = histories.receive_chain.get(swap_id) {
+                                // Let the handler do both recovery and update in one step
+                                if let Err(e) = ChainReceiveSwapHandler::recover_and_update_swap(
+                                    chain_swap,
+                                    &tx_map,
+                                    history,
+                                    &self.master_blinding_key,
+                                    bitcoin_tip.height as u32,
+                                    is_local_within_grace_period,
+                                ) {
+                                    warn!("Error recovering data for incoming Chain swap {swap_id}: {e}");
+                                }
+                            } else {
+                                warn!(
+                                    "Could not apply recovered data for incoming Chain swap {swap_id}: history not found"
+                                );
+                            }
+                        }
+                        Direction::Outgoing => {
+                            // Get history for this outgoing chain swap
+                            if let Some(history) = histories.send_chain.get(swap_id) {
+                                // Let the handler do both recovery and update in one step
+                                if let Err(e) = ChainSendSwapHandler::recover_and_update_swap(
+                                    chain_swap,
+                                    &tx_map,
+                                    history,
+                                    liquid_tip,
+                                    is_local_within_grace_period,
+                                ) {
+                                    warn!("Error recovering data for outgoing Chain swap {swap_id}: {e}");
+                                }
+                            } else {
+                                warn!(
+                                    "Could not apply recovered data for outgoing Chain swap {swap_id}: history not found"
+                                );
+                            }
                         }
                     }
-                    Direction::Outgoing => {
-                        if let Some(recovered_data) = chain_send_data.get(swap_id) {
-                            ChainSendSwapHandler::update_swap(
-                                chain_swap,
-                                swap_id,
-                                recovered_data,
-                                liquid_tip,
-                                is_local_within_grace_period,
-                            )?;
-                        } else {
-                            warn!(
-                                "Could not apply recovered data for outgoing Chain swap {swap_id}: recovery data not found"
-                            );
-                        }
-                    }
-                },
+                }
             }
         }
 
         Ok(raw_tx_map)
-    }
-
-    /// Recovers data for all swap types
-    async fn recover_all_swap_data(
-        &self,
-        tx_map: &TxMap,
-        histories: &SwapsHistories,
-        swaps_list: &SwapsList,
-    ) -> Result<(
-        HashMap<String, RecoveredOnchainDataSend>,
-        HashMap<String, RecoveredOnchainDataReceive>,
-        HashMap<String, RecoveredOnchainDataChainSend>,
-        HashMap<String, RecoveredOnchainDataChainReceive>,
-    )> {
-        // Recover send swap data
-        let mut recovered_send_data =
-            self.recover_send_swap_tx_ids(tx_map, histories.send.clone())?;
-
-        // Process swaps that need preimage recovery
-        let swaps_needing_preimages =
-            self.get_swaps_needing_preimage_recovery(&mut recovered_send_data);
-        self.recover_preimages(swaps_needing_preimages).await?;
-
-        // Recover other swap types
-        let recovered_receive_data =
-            self.recover_receive_swap_tx_ids(tx_map, histories.receive.clone(), swaps_list)?;
-
-        let recovered_chain_send_data =
-            self.recover_send_chain_swap_tx_ids(tx_map, histories.send_chain.clone(), swaps_list)?;
-
-        let recovered_chain_receive_data = self.recover_receive_chain_swap_tx_ids(
-            tx_map,
-            histories.receive_chain.clone(),
-            swaps_list,
-        )?;
-
-        Ok((
-            recovered_send_data,
-            recovered_receive_data,
-            recovered_chain_send_data,
-            recovered_chain_receive_data,
-        ))
-    }
-
-    /// Get swaps that need preimage recovery
-    fn get_swaps_needing_preimage_recovery<'a>(
-        &self,
-        recovered_send_data: &'a mut HashMap<String, RecoveredOnchainDataSend>,
-    ) -> HashMap<String, &'a mut RecoveredOnchainDataSend> {
-        recovered_send_data
-            .iter_mut()
-            .filter_map(|(swap_id, recovered_data)| {
-                if recovered_data.claim_tx_id.is_some() && recovered_data.preimage.is_none() {
-                    return Some((swap_id.clone(), recovered_data));
-                }
-                None
-            })
-            .collect()
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
@@ -448,412 +300,5 @@ impl Recoverer {
                 &btc_script_to_balance_map,
             ),
         })
-    }
-
-    /// Reconstruct Send Swap tx IDs from the onchain data and the immutable data
-    ///
-    /// The implementation tolerates a `tx_map` that is older than the `send_histories_by_swap_id`
-    /// in the sense that no incorrect data is recovered. Transactions that are missing from `tx_map`
-    /// are simply not recovered.
-    fn recover_send_swap_tx_ids(
-        &self,
-        tx_map: &TxMap,
-        send_histories_by_swap_id: HashMap<String, SendSwapHistory>,
-    ) -> Result<HashMap<String, RecoveredOnchainDataSend>> {
-        let mut res: HashMap<String, RecoveredOnchainDataSend> = HashMap::new();
-        for (swap_id, history) in send_histories_by_swap_id {
-            debug!("[Recover Send] Checking swap {swap_id}");
-
-            // If a history tx is one of our outgoing txs, it's a lockup tx
-            let lockup_tx_id = history
-                .iter()
-                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
-                .cloned();
-            let claim_tx_id = if lockup_tx_id.is_some() {
-                // A history tx that is neither a known incoming or outgoing tx is a claim tx.
-                //
-                // Only find the claim_tx from the history if we find a lockup_tx. Not doing so will select
-                // the first tx as the claim, whereas we should check that the claim is not the lockup.
-                history
-                    .iter()
-                    .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
-                    .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
-                    .cloned()
-            } else {
-                error!("No lockup tx found when recovering data for Send Swap {swap_id}");
-                None
-            };
-
-            // If a history tx is one of our incoming txs, it's a refund tx
-            let refund_tx_id = history
-                .iter()
-                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
-                .cloned();
-
-            res.insert(
-                swap_id,
-                RecoveredOnchainDataSend {
-                    lockup_tx_id,
-                    claim_tx_id,
-                    refund_tx_id,
-                    preimage: None,
-                },
-            );
-        }
-
-        Ok(res)
-    }
-
-    /// Reconstruct Receive Swap tx IDs from the onchain data and the immutable data
-    fn recover_receive_swap_tx_ids(
-        &self,
-        tx_map: &TxMap,
-        receive_histories_by_swap_id: HashMap<String, ReceiveSwapHistory>,
-        swaps_list: &SwapsList,
-    ) -> Result<HashMap<String, RecoveredOnchainDataReceive>> {
-        let mut res: HashMap<String, RecoveredOnchainDataReceive> = HashMap::new();
-        for (swap_id, history) in receive_histories_by_swap_id {
-            debug!("[Recover Receive] Checking swap {swap_id}");
-
-            // Find the swap
-            let Some(swap) = swaps_list.get_swap_by_id(&swap_id) else {
-                continue;
-            };
-
-            // Get the receive swap data
-            let Swap::Receive(receive_swap) = swap else {
-                continue;
-            };
-
-            // The MRH script history txs filtered by the swap timestamp
-            let swap_timestamp = receive_swap.created_at;
-            let mrh_txs: HashMap<Txid, WalletTx> = history
-                .lbtc_mrh_script_history
-                .iter()
-                .filter_map(|h| tx_map.incoming_tx_map.get(&h.txid))
-                .filter(|tx| tx.timestamp.map(|t| t > swap_timestamp).unwrap_or(true))
-                .map(|tx| (tx.txid, tx.clone()))
-                .collect();
-            let mrh_tx_id = history
-                .lbtc_mrh_script_history
-                .iter()
-                .find(|&tx| mrh_txs.contains_key::<Txid>(&tx.txid))
-                .cloned();
-            let mrh_amount_sat = mrh_tx_id
-                .clone()
-                .and_then(|h| mrh_txs.get(&h.txid))
-                .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
-
-            let (lockup_tx_id, claim_tx_id) = determine_incoming_lockup_and_claim_txs(
-                &history.lbtc_claim_script_history,
-                tx_map,
-                &swap_id,
-            );
-
-            // Take only the lockup_tx_id and claim_tx_id if either are set,
-            // otherwise take the mrh_tx_id and mrh_amount_sat
-            let recovered_onchain_data = match (lockup_tx_id.as_ref(), claim_tx_id.as_ref()) {
-                (Some(_), None) | (Some(_), Some(_)) => RecoveredOnchainDataReceive {
-                    lockup_tx_id,
-                    claim_tx_id,
-                    mrh_tx_id: None,
-                    mrh_amount_sat: None,
-                },
-                _ => RecoveredOnchainDataReceive {
-                    lockup_tx_id: None,
-                    claim_tx_id: None,
-                    mrh_tx_id,
-                    mrh_amount_sat,
-                },
-            };
-
-            res.insert(swap_id, recovered_onchain_data);
-        }
-
-        Ok(res)
-    }
-
-    /// Reconstruct Chain Send Swap tx IDs from the onchain data and the immutable data
-    fn recover_send_chain_swap_tx_ids(
-        &self,
-        tx_map: &TxMap,
-        chain_send_histories_by_swap_id: HashMap<String, SendChainSwapHistory>,
-        swaps_list: &SwapsList,
-    ) -> Result<HashMap<String, RecoveredOnchainDataChainSend>> {
-        let mut res: HashMap<String, RecoveredOnchainDataChainSend> = HashMap::new();
-        for (swap_id, history) in chain_send_histories_by_swap_id {
-            debug!("[Recover Chain Send] Checking swap {swap_id}");
-
-            // If a history tx is one of our outgoing txs, it's a lockup tx
-            let lbtc_user_lockup_tx_id = history
-                .lbtc_lockup_script_history
-                .iter()
-                .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
-                .cloned();
-            if lbtc_user_lockup_tx_id.is_none() {
-                error!("No lockup tx found when recovering data for Chain Send Swap {swap_id}");
-            }
-
-            // If a history tx is one of our incoming txs, it's a refund tx
-            let lbtc_refund_tx_id = history
-                .lbtc_lockup_script_history
-                .iter()
-                .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
-                .cloned();
-
-            // Find the swap and extract the claim script
-            let Some(swap) = swaps_list.get_swap_by_id(&swap_id) else {
-                continue;
-            };
-
-            let Swap::Chain(chain_swap) = swap else {
-                continue;
-            };
-
-            let claim_script = chain_swap
-                .get_claim_swap_script()
-                .ok()
-                .and_then(|script| script.as_bitcoin_script().ok())
-                .and_then(|script| script.funding_addrs.map(|addr| addr.script_pubkey()))
-                .ok_or_else(|| {
-                    anyhow!("BTC claim script not found for Onchain Send Swap {swap_id}")
-                })?;
-
-            let (btc_server_lockup_tx_id, btc_claim_tx_id) = match history
-                .btc_claim_script_history
-                .len()
-            {
-                // Only lockup tx available
-                1 => (Some(history.btc_claim_script_history[0].clone()), None),
-
-                2 => {
-                    let first_tx = history.btc_claim_script_txs[0].clone();
-                    let first_tx_id = history.btc_claim_script_history[0].clone();
-                    let second_tx_id = history.btc_claim_script_history[1].clone();
-
-                    // We check the full tx, to determine if this is the BTC lockup tx
-                    let is_first_tx_lockup_tx = first_tx
-                        .output
-                        .iter()
-                        .any(|out| matches!(&out.script_pubkey, x if x == &claim_script));
-
-                    match is_first_tx_lockup_tx {
-                        true => (Some(first_tx_id), Some(second_tx_id)),
-                        false => (Some(second_tx_id), Some(first_tx_id)),
-                    }
-                }
-                n => {
-                    warn!("BTC script history with length {n} found while recovering data for Chain Send Swap {swap_id}");
-                    (None, None)
-                }
-            };
-
-            res.insert(
-                swap_id,
-                RecoveredOnchainDataChainSend {
-                    lbtc_user_lockup_tx_id,
-                    lbtc_refund_tx_id,
-                    btc_server_lockup_tx_id,
-                    btc_claim_tx_id,
-                },
-            );
-        }
-
-        Ok(res)
-    }
-
-    /// Reconstruct Chain Receive Swap tx IDs from the onchain data and the immutable data
-    fn recover_receive_chain_swap_tx_ids(
-        &self,
-        tx_map: &TxMap,
-        chain_receive_histories_by_swap_id: HashMap<String, ReceiveChainSwapHistory>,
-        swaps_list: &SwapsList,
-    ) -> Result<HashMap<String, RecoveredOnchainDataChainReceive>> {
-        let secp = secp256k1_zkp::Secp256k1::new();
-
-        let mut res: HashMap<String, RecoveredOnchainDataChainReceive> = HashMap::new();
-        for (swap_id, history) in chain_receive_histories_by_swap_id {
-            debug!("[Recover Chain Receive] Checking swap {swap_id}");
-
-            let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id) =
-                determine_incoming_lockup_and_claim_txs(
-                    &history.lbtc_claim_script_history,
-                    tx_map,
-                    &swap_id,
-                );
-
-            let lbtc_claim_address = if let Some(claim_tx_id) = &lbtc_claim_tx_id {
-                tx_map
-                    .incoming_tx_map
-                    .get(&claim_tx_id.txid)
-                    .and_then(|tx| {
-                        tx.outputs
-                            .iter()
-                            .find(|output| output.is_some())
-                            .and_then(|output| output.clone().map(|o| o.script_pubkey))
-                    })
-                    .and_then(|script| {
-                        ElementsAddress::from_script(
-                            &script,
-                            Some(self.master_blinding_key.blinding_key(&secp, &script)),
-                            &AddressParams::LIQUID,
-                        )
-                        .map(|addr| addr.to_string())
-                    })
-            } else {
-                None
-            };
-
-            // Find the swap and extract the lockup script
-            let Some(swap) = swaps_list.get_swap_by_id(&swap_id) else {
-                continue;
-            };
-
-            let Swap::Chain(chain_swap) = swap else {
-                continue;
-            };
-
-            let lockup_script = chain_swap
-                .get_lockup_swap_script()
-                .ok()
-                .and_then(|script| script.as_bitcoin_script().ok())
-                .and_then(|script| script.funding_addrs.map(|addr| addr.script_pubkey()))
-                .ok_or_else(|| {
-                    anyhow!("BTC lockup script not found for Onchain Receive Swap {swap_id}")
-                })?;
-
-            // Get the current confirmed amount available for the lockup script
-            let btc_user_lockup_address_balance_sat = history
-                .btc_lockup_script_balance
-                .map(|balance| balance.confirmed)
-                .unwrap_or_default();
-
-            // The btc_lockup_script_history can contain 3 kinds of txs, of which only 2 are expected:
-            // - 1) btc_user_lockup_tx_id (initial BTC funds sent by the sender)
-            // - 2A) btc_server_claim_tx_id (the swapper tx that claims the BTC funds, in success case)
-            // - 2B) btc_refund_tx_id (refund tx we initiate, in failure case or with lockup address reuse)
-            // The exact type of the second is found in the next step.
-            let (btc_lockup_incoming_txs, btc_lockup_outgoing_txs): (Vec<_>, Vec<_>) =
-                history.btc_lockup_script_txs.iter().partition(|tx| {
-                    tx.output
-                        .iter()
-                        .any(|out| matches!(&out.script_pubkey, x if x == &lockup_script))
-                });
-            // Get the user lockup tx from the first incoming txs
-            let btc_user_lockup_tx_id = btc_lockup_incoming_txs
-                .first()
-                .and_then(|tx| {
-                    history
-                        .btc_lockup_script_history
-                        .iter()
-                        .find(|h| h.txid.as_raw_hash() == tx.compute_txid().as_raw_hash())
-                })
-                .cloned();
-            let btc_user_lockup_amount_sat = btc_lockup_incoming_txs
-                .first()
-                .and_then(|tx| {
-                    tx.output
-                        .iter()
-                        .find(|out| out.script_pubkey == lockup_script)
-                        .map(|out| out.value)
-                })
-                .unwrap_or_default()
-                .to_sat();
-            let btc_outgoing_tx_ids: Vec<HistoryTxId> = btc_lockup_outgoing_txs
-                .iter()
-                .filter_map(|tx| {
-                    history
-                        .btc_lockup_script_history
-                        .iter()
-                        .find(|h| h.txid.as_raw_hash() == tx.compute_txid().as_raw_hash())
-                })
-                .cloned()
-                .collect();
-            // Get the last unconfirmed tx from the outgoing txs, else take the last outgoing tx
-            let btc_last_outgoing_tx_id = btc_outgoing_tx_ids
-                .iter()
-                .rev()
-                .find(|h| h.height == 0)
-                .or(btc_outgoing_tx_ids.last())
-                .cloned();
-
-            // The first outgoing BTC tx is only a refund in case we didn't claim.
-            // If we claimed, then the first tx was the swapper BTC claim tx.
-            // If there are more than 1 outgoing txs then this is a refund from lockup address re-use,
-            // so take the last unconfirmed tx else take the last confirmed tx.
-            let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
-                true => match btc_lockup_outgoing_txs.len() > 1 {
-                    true => btc_last_outgoing_tx_id,
-                    false => None,
-                },
-                false => btc_last_outgoing_tx_id,
-            };
-
-            res.insert(
-                swap_id,
-                RecoveredOnchainDataChainReceive {
-                    lbtc_server_lockup_tx_id,
-                    lbtc_claim_tx_id,
-                    lbtc_claim_address,
-                    btc_user_lockup_tx_id,
-                    btc_user_lockup_address_balance_sat,
-                    btc_user_lockup_amount_sat,
-                    btc_refund_tx_id,
-                },
-            );
-        }
-
-        Ok(res)
-    }
-}
-
-fn determine_incoming_lockup_and_claim_txs(
-    history: &[HistoryTxId],
-    tx_map: &TxMap,
-    swap_id: &str,
-) -> (Option<HistoryTxId>, Option<HistoryTxId>) {
-    match history.len() {
-        // Only lockup tx available
-        1 => (Some(history[0].clone()), None),
-        2 => {
-            let first = history[0].clone();
-            let second = history[1].clone();
-
-            if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
-                (Some(second), Some(first))
-            } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
-                // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
-                (Some(first), Some(second))
-            } else {
-                // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
-                // If so, we expect them to be confirmed at different heights
-                let first_conf_height = first.height;
-                let second_conf_height = second.height;
-                match (first.confirmed(), second.confirmed()) {
-                    // If they're both confirmed, the one with the lowest confirmation height is the lockup
-                    (true, true) => match first_conf_height < second_conf_height {
-                        true => (Some(first), None),
-                        false => (Some(second), None),
-                    },
-
-                    // If only one tx is confirmed, then that is the lockup
-                    (true, false) => (Some(first), None),
-                    (false, true) => (Some(second), None),
-
-                    // If neither is confirmed, this is an edge-case, and the most likely cause is an
-                    // out of date wallet tx_map that doesn't yet include one of the txs.
-                    (false, false) => {
-                        warn!("Found 2 unconfirmed txs in the claim script history of Swap {swap_id}. \
-                        Unable to determine if they include a swapper refund or a user claim");
-                        (None, None)
-                    }
-                }
-            }
-        }
-        n => {
-            warn!("Unexpected script history length {n} while recovering data for Swap {swap_id}");
-            (None, None)
-        }
     }
 }

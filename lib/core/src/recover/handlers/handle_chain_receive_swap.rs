@@ -1,5 +1,8 @@
 use anyhow::Result;
-use log::warn;
+use boltz_client::ElementsAddress;
+use log::{debug, warn};
+use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
+use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 
 use crate::prelude::*;
 use crate::recover::model::*;
@@ -33,10 +36,46 @@ impl ChainReceiveSwapHandler {
         false
     }
 
+    /// Recover and update a chain receive swap with data from the chain
+    pub fn recover_and_update_swap(
+        chain_swap: &mut ChainSwap,
+        tx_map: &TxMap,
+        history: &ReceiveChainSwapHistory,
+        master_blinding_key: &MasterBlindingKey,
+        current_block_height: u32,
+        is_local_within_grace_period: bool,
+    ) -> Result<()> {
+        let swap_id = &chain_swap.id.clone();
+        debug!("[Recover Chain Receive] Recovering data for swap {swap_id}");
+
+        // Extract lockup script from swap
+        let lockup_script = chain_swap
+            .get_lockup_swap_script()
+            .ok()
+            .and_then(|script| script.as_bitcoin_script().ok())
+            .and_then(|script| script.funding_addrs.map(|addr| addr.script_pubkey()))
+            .ok_or_else(|| {
+                anyhow::anyhow!("BTC lockup script not found for Onchain Receive Swap {swap_id}")
+            })?;
+
+        // First obtain transaction IDs from the history
+        let recovered_data =
+            Self::recover_onchain_data(tx_map, history, &lockup_script, master_blinding_key)?;
+
+        // Update the swap with recovered data
+        Self::update_swap(
+            chain_swap,
+            swap_id,
+            &recovered_data,
+            current_block_height,
+            is_local_within_grace_period,
+        )
+    }
+
     /// Update a chain receive swap with recovered data
     pub fn update_swap(
         chain_swap: &mut ChainSwap,
-        swap_id: &str,
+        _: &str,
         recovered_data: &RecoveredOnchainDataChainReceive,
         current_block_height: u32,
         is_local_within_grace_period: bool,
@@ -72,9 +111,7 @@ impl ChainReceiveSwapHandler {
             .lbtc_server_lockup_tx_id
             .clone()
             .map(|h| h.txid.to_string());
-        chain_swap
-            .claim_address
-            .clone_from(&recovered_data.lbtc_claim_address);
+        chain_swap.claim_address = recovered_data.lbtc_claim_address.clone();
         chain_swap.user_lockup_tx_id = recovered_data
             .btc_user_lockup_tx_id
             .clone()
@@ -89,5 +126,175 @@ impl ChainReceiveSwapHandler {
             .map(|h| h.txid.to_string());
 
         Ok(())
+    }
+
+    /// Reconstruct Chain Receive Swap tx IDs from the onchain data
+    ///
+    /// The implementation tolerates a `tx_map` that is older than the history in the sense that
+    /// no incorrect data is recovered. Transactions that are missing from `tx_map` are simply not recovered.
+    fn recover_onchain_data(
+        tx_map: &TxMap,
+        history: &ReceiveChainSwapHistory,
+        lockup_script: &BtcScript,
+        master_blinding_key: &MasterBlindingKey,
+    ) -> Result<RecoveredOnchainDataChainReceive> {
+        let secp = secp256k1_zkp::Secp256k1::new();
+
+        // Determine lockup and claim txs
+        let (lbtc_server_lockup_tx_id, lbtc_claim_tx_id) =
+            determine_incoming_lockup_and_claim_txs(&history.lbtc_claim_script_history, tx_map);
+
+        // Get claim address from tx
+        let lbtc_claim_address = if let Some(claim_tx_id) = &lbtc_claim_tx_id {
+            tx_map
+                .incoming_tx_map
+                .get(&claim_tx_id.txid)
+                .and_then(|tx| {
+                    tx.outputs
+                        .iter()
+                        .find(|output| output.is_some())
+                        .and_then(|output| output.clone().map(|o| o.script_pubkey))
+                })
+                .and_then(|script| {
+                    ElementsAddress::from_script(
+                        &script,
+                        Some(master_blinding_key.blinding_key(&secp, &script)),
+                        &AddressParams::LIQUID,
+                    )
+                    .map(|addr| addr.to_string())
+                })
+        } else {
+            None
+        };
+
+        // Get current confirmed amount for lockup script
+        let btc_user_lockup_address_balance_sat = history
+            .btc_lockup_script_balance
+            .as_ref()
+            .map(|balance| balance.confirmed)
+            .unwrap_or_default();
+
+        // Process Bitcoin transactions
+        let (btc_lockup_incoming_txs, btc_lockup_outgoing_txs): (Vec<_>, Vec<_>) =
+            history.btc_lockup_script_txs.iter().partition(|tx| {
+                tx.output
+                    .iter()
+                    .any(|out| matches!(&out.script_pubkey, x if x == lockup_script))
+            });
+
+        // Get user lockup tx from first incoming tx
+        let btc_user_lockup_tx_id = btc_lockup_incoming_txs
+            .first()
+            .and_then(|tx| {
+                history
+                    .btc_lockup_script_history
+                    .iter()
+                    .find(|h| h.txid.as_raw_hash() == tx.compute_txid().as_raw_hash())
+            })
+            .cloned();
+
+        // Get the lockup amount
+        let btc_user_lockup_amount_sat = btc_lockup_incoming_txs
+            .first()
+            .and_then(|tx| {
+                tx.output
+                    .iter()
+                    .find(|out| out.script_pubkey == *lockup_script)
+                    .map(|out| out.value)
+            })
+            .unwrap_or_default()
+            .to_sat();
+
+        // Collect outgoing tx IDs
+        let btc_outgoing_tx_ids: Vec<HistoryTxId> = btc_lockup_outgoing_txs
+            .iter()
+            .filter_map(|tx| {
+                history
+                    .btc_lockup_script_history
+                    .iter()
+                    .find(|h| h.txid.as_raw_hash() == tx.compute_txid().as_raw_hash())
+            })
+            .cloned()
+            .collect();
+
+        // Get last unconfirmed tx or last tx
+        let btc_last_outgoing_tx_id = btc_outgoing_tx_ids
+            .iter()
+            .rev()
+            .find(|h| h.height == 0)
+            .or(btc_outgoing_tx_ids.last())
+            .cloned();
+
+        // Determine the refund tx based on claim status
+        let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
+            true => match btc_lockup_outgoing_txs.len() > 1 {
+                true => btc_last_outgoing_tx_id,
+                false => None,
+            },
+            false => btc_last_outgoing_tx_id,
+        };
+
+        Ok(RecoveredOnchainDataChainReceive {
+            lbtc_server_lockup_tx_id,
+            lbtc_claim_tx_id,
+            lbtc_claim_address,
+            btc_user_lockup_tx_id,
+            btc_user_lockup_address_balance_sat,
+            btc_user_lockup_amount_sat,
+            btc_refund_tx_id,
+        })
+    }
+}
+
+/// Helper function for determining lockup and claim transactions in incoming swaps
+fn determine_incoming_lockup_and_claim_txs(
+    history: &[HistoryTxId],
+    tx_map: &TxMap,
+) -> (Option<HistoryTxId>, Option<HistoryTxId>) {
+    match history.len() {
+        // Only lockup tx available
+        1 => (Some(history[0].clone()), None),
+        2 => {
+            let first = history[0].clone();
+            let second = history[1].clone();
+
+            if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
+                // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
+                (Some(second), Some(first))
+            } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
+                // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
+                (Some(first), Some(second))
+            } else {
+                // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
+                // If so, we expect them to be confirmed at different heights
+                let first_conf_height = first.height;
+                let second_conf_height = second.height;
+                match (first.confirmed(), second.confirmed()) {
+                    // If they're both confirmed, the one with the lowest confirmation height is the lockup
+                    (true, true) => match first_conf_height < second_conf_height {
+                        true => (Some(first), None),
+                        false => (Some(second), None),
+                    },
+
+                    // If only one tx is confirmed, then that is the lockup
+                    (true, false) => (Some(first), None),
+                    (false, true) => (Some(second), None),
+
+                    // If neither is confirmed, this is an edge-case, and the most likely cause is an
+                    // out of date wallet tx_map that doesn't yet include one of the txs.
+                    (false, false) => {
+                        log::warn!(
+                            "Found 2 unconfirmed txs in the claim script history. \
+                            Unable to determine if they include a swapper refund or a user claim"
+                        );
+                        (None, None)
+                    }
+                }
+            }
+        }
+        n => {
+            log::warn!("Unexpected script history length {n} while recovering data for swap");
+            (None, None)
+        }
     }
 }
