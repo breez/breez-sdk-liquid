@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::model::{Signer, SignerError};
+use anyhow::anyhow;
 use bip39::Mnemonic;
 use boltz_client::PublicKey;
 use lwk_common::Signer as LwkSigner;
@@ -23,6 +23,8 @@ use lwk_wollet::elements_miniscript::{
 use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
 use lwk_wollet::secp256k1::Message;
+
+use crate::model::{Signer, SignerError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SignError {
@@ -56,6 +58,9 @@ pub enum NewError {
 
     #[error(transparent)]
     Bip32(#[from] bip32::Error),
+
+    #[error(transparent)]
+    Seed(#[from] anyhow::Error),
 }
 
 /// A software signer
@@ -181,8 +186,11 @@ impl SdkSigner {
     }
 
     pub fn new_with_seed(seed: Vec<u8>, is_mainnet: bool) -> Result<Self, NewError> {
-        let secp = Secp256k1::new();
+        if seed.len() < 32 {
+            return Err(NewError::Seed(anyhow!("Seed must be at least 32 bytes")));
+        }
 
+        let secp = Secp256k1::new();
         let network = if is_mainnet {
             bitcoin::Network::Bitcoin
         } else {
@@ -277,6 +285,7 @@ impl Signer for SdkSigner {
 mod tests {
     use super::*;
     use bip32::KeySource;
+    use bip39::rand::{self, RngCore};
     use bitcoin::PublicKey;
     use elements::{
         pset::{Input, Output, PartiallySignedTransaction},
@@ -352,6 +361,25 @@ mod tests {
         );
         pset.add_output(output);
         pset
+    }
+
+    #[test]
+    fn test_invalid_signer() {
+        let mut rng = rand::thread_rng();
+
+        assert!(SwSigner::new("", false).is_err());
+
+        assert!(SdkSigner::new("", "", false).is_err());
+
+        assert!(SdkSigner::new_with_seed(vec![], false).is_err());
+
+        let mut seed1 = [0u8; 31];
+        rng.fill_bytes(&mut seed1);
+        assert!(SdkSigner::new_with_seed(seed1.to_vec(), false).is_err());
+
+        let mut seed2 = [0u8; 32];
+        rng.fill_bytes(&mut seed2);
+        assert!(SdkSigner::new_with_seed(seed2.to_vec(), false).is_ok());
     }
 
     #[test]
