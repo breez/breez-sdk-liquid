@@ -173,7 +173,7 @@ impl Recoverer {
         &self,
         swaps: &mut [Swap],
     ) -> Result<HashMap<Txid, WalletTx>> {
-        let wallet_tip = self.onchain_wallet.tip().await.height();
+        let wallet_tip = self.onchain_wallet.tip().await;
         let liquid_tip = self.liquid_chain_service.tip().await?;
         if wallet_tip.abs_diff(liquid_tip) > LIQUID_TIP_LEEWAY {
             let msg = format!("Skipping recovery: wallet and liquid chain service tips are too far apart - chain_service_tip {liquid_tip} wallet_tip {wallet_tip}");

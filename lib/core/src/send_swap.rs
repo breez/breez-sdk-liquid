@@ -488,7 +488,7 @@ impl SendSwapHandler {
         }
 
         let swap_script = swap.get_swap_script()?;
-        let current_height = self.onchain_wallet.tip().await.height();
+        let current_height = self.onchain_wallet.tip().await;
         let locktime_from_height = LockTime::from_height(current_height)?;
 
         info!("Checking Send Swap {} expiration: locktime_from_height = {locktime_from_height:?},  swap_script.locktime = {:?}", swap.id, swap_script.locktime);
