@@ -150,7 +150,6 @@ sealed class BlockchainExplorer with _$BlockchainExplorer {
     /// Whether or not to use the "waterfalls" extension
     required bool useWaterfalls,
   }) = BlockchainExplorer_Esplora;
-  const factory BlockchainExplorer.mempoolSpace({required String url}) = BlockchainExplorer_MempoolSpace;
 }
 
 class BlockchainInfo {

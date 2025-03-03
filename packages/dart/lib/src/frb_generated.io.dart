@@ -2305,12 +2305,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Esplora.use_waterfalls = pre_use_waterfalls;
       return;
     }
-    if (apiObj is BlockchainExplorer_MempoolSpace) {
-      var pre_url = cst_encode_String(apiObj.url);
-      wireObj.tag = 2;
-      wireObj.kind.MempoolSpace.url = pre_url;
-      return;
-    }
   }
 
   @protected
@@ -7116,16 +7110,10 @@ final class wire_cst_BlockchainExplorer_Esplora extends ffi.Struct {
   external bool use_waterfalls;
 }
 
-final class wire_cst_BlockchainExplorer_MempoolSpace extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
-}
-
 final class BlockchainExplorerKind extends ffi.Union {
   external wire_cst_BlockchainExplorer_Electrum Electrum;
 
   external wire_cst_BlockchainExplorer_Esplora Esplora;
-
-  external wire_cst_BlockchainExplorer_MempoolSpace MempoolSpace;
 }
 
 final class wire_cst_blockchain_explorer extends ffi.Struct {

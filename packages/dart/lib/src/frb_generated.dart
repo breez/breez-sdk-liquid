@@ -1538,8 +1538,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           url: dco_decode_String(raw[1]),
           useWaterfalls: dco_decode_bool(raw[2]),
         );
-      case 2:
-        return BlockchainExplorer_MempoolSpace(url: dco_decode_String(raw[1]));
       default:
         throw Exception("unreachable");
     }
@@ -3563,9 +3561,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_url = sse_decode_String(deserializer);
         var var_useWaterfalls = sse_decode_bool(deserializer);
         return BlockchainExplorer_Esplora(url: var_url, useWaterfalls: var_useWaterfalls);
-      case 2:
-        var var_url = sse_decode_String(deserializer);
-        return BlockchainExplorer_MempoolSpace(url: var_url);
       default:
         throw UnimplementedError('');
     }
@@ -6047,9 +6042,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(1, serializer);
         sse_encode_String(url, serializer);
         sse_encode_bool(useWaterfalls, serializer);
-      case BlockchainExplorer_MempoolSpace(url: final url):
-        sse_encode_i_32(2, serializer);
-        sse_encode_String(url, serializer);
     }
   }
 

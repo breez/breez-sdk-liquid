@@ -2493,10 +2493,6 @@ impl SseDecode for crate::model::BlockchainExplorer {
                     use_waterfalls: var_useWaterfalls,
                 };
             }
-            2 => {
-                let mut var_url = <String>::sse_decode(deserializer);
-                return crate::model::BlockchainExplorer::MempoolSpace { url: var_url };
-            }
             _ => {
                 unimplemented!("");
             }
@@ -5102,9 +5098,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::BlockchainExplorer {
                 use_waterfalls.into_into_dart().into_dart(),
             ]
             .into_dart(),
-            crate::model::BlockchainExplorer::MempoolSpace { url } => {
-                [2.into_dart(), url.into_into_dart().into_dart()].into_dart()
-            }
             _ => {
                 unimplemented!("");
             }
@@ -7505,10 +7498,6 @@ impl SseEncode for crate::model::BlockchainExplorer {
                 <String>::sse_encode(url, serializer);
                 <bool>::sse_encode(use_waterfalls, serializer);
             }
-            crate::model::BlockchainExplorer::MempoolSpace { url } => {
-                <i32>::sse_encode(2, serializer);
-                <String>::sse_encode(url, serializer);
-            }
             _ => {
                 unimplemented!("");
             }
@@ -9585,12 +9574,6 @@ mod io {
                     crate::model::BlockchainExplorer::Esplora {
                         url: ans.url.cst_decode(),
                         use_waterfalls: ans.use_waterfalls.cst_decode(),
-                    }
-                }
-                2 => {
-                    let ans = unsafe { self.kind.MempoolSpace };
-                    crate::model::BlockchainExplorer::MempoolSpace {
-                        url: ans.url.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -14006,7 +13989,6 @@ mod io {
     pub union BlockchainExplorerKind {
         Electrum: wire_cst_BlockchainExplorer_Electrum,
         Esplora: wire_cst_BlockchainExplorer_Esplora,
-        MempoolSpace: wire_cst_BlockchainExplorer_MempoolSpace,
         nil__: (),
     }
     #[repr(C)]
@@ -14019,11 +14001,6 @@ mod io {
     pub struct wire_cst_BlockchainExplorer_Esplora {
         url: *mut wire_cst_list_prim_u_8_strict,
         use_waterfalls: bool,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_BlockchainExplorer_MempoolSpace {
-        url: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

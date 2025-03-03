@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use lwk_wollet::{
     blocking::{BlockchainBackend, EsploraClient},
     elements::{BlockHash, BlockHeader, Script, Transaction, Txid},
@@ -52,9 +52,6 @@ impl LiquidClient {
                 Ok(LiquidClient::Esplora {
                     inner: Box::new(client),
                 })
-            }
-            BlockchainExplorer::MempoolSpace { .. } => {
-                bail!("Cannot create client from MempoolSpace url")
             }
         }
     }
