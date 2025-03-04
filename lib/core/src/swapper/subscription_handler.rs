@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use log::{error, info};
 
 use crate::persist::Persister;
 
 use super::SwapperStatusStream;
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub trait SubscriptionHandler: Send + Sync {
     async fn subscribe_swaps(&self);
 }
@@ -30,7 +29,7 @@ impl SwapperSubscriptionHandler {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl SubscriptionHandler for SwapperSubscriptionHandler {
     async fn subscribe_swaps(&self) {
         match self.persister.list_ongoing_swaps() {

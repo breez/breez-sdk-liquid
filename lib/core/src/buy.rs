@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use sdk_common::prelude::{BreezServer, BuyBitcoinProviderApi, MoonpayProvider};
 
 use crate::{
@@ -9,7 +8,7 @@ use crate::{
     prelude::LiquidNetwork,
 };
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub(crate) trait BuyBitcoinApi: Send + Sync {
     /// Initiate buying Bitcoin and return a URL to the selected third party provider
     async fn buy_bitcoin(
@@ -35,7 +34,7 @@ impl BuyBitcoinService {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl BuyBitcoinApi for BuyBitcoinService {
     async fn buy_bitcoin(
         &self,

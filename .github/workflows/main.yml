@@ -34,6 +34,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
@@ -46,12 +49,21 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check Rust Clippy
-        run: |
-          cd lib
-          cargo clippy -- -D warnings
-          cd ../cli
-          cargo clippy -- -D warnings
+      - name: Clippy bindings
+        working-directory: lib/bindings 
+        run: cargo clippy -- -D warnings
+
+      - name: Clippy core
+        working-directory: lib/core 
+        run: cargo clippy -- -D warnings
+
+      - name: Clippy WASM
+        working-directory: lib/wasm 
+        run: cargo clippy --target=wasm32-unknown-unknown -- -D warnings
+
+      - name: Clippy cli
+        working-directory: cli 
+        run: cargo clippy -- -D warnings
 
   build:
     name: Cargo Build
@@ -59,6 +71,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
@@ -71,8 +86,17 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cargo build
-        working-directory: lib
+      - name: Cargo build bindings
+        working-directory: lib/bindings
+        run: cargo build
+
+      - name: Cargo build core
+        working-directory: lib/core
+        run: cargo build
+
+      - name: Cargo build WASM
+        working-directory: lib/wasm
+        run: cargo build --target=wasm32-unknown-unknown
 
       - name: Check git status
         env:
@@ -170,6 +194,34 @@ jobs:
           export CLASSPATH=$(pwd)/jna-5.12.1.jar;
           cd lib/bindings
           cargo test
+
+  build-wasm:
+    name: Test WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test WASM
+        working-directory: lib/wasm
+        run: wasm-pack test --headless --firefox
 
   notification-plugin:
     name: Check notification plugin

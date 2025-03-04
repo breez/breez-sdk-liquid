@@ -396,7 +396,10 @@ mod tests {
 
     use super::PaymentState;
 
-    #[test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
     fn test_fetch_receive_swap() -> Result<()> {
         create_persister!(storage);
 
@@ -413,7 +416,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_list_receive_swap() -> Result<()> {
         create_persister!(storage);
 
@@ -436,7 +439,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_update_receive_swap() -> Result<()> {
         create_persister!(storage);
 
@@ -466,7 +469,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_writing_stale_swap() -> Result<()> {
         create_persister!(storage);
 

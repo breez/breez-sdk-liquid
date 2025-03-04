@@ -1032,7 +1032,10 @@ mod tests {
 
     use super::{PaymentState, PaymentType};
 
-    #[test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
     fn test_get_payments() -> Result<()> {
         create_persister!(storage);
 
@@ -1056,7 +1059,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_list_ongoing_swaps() -> Result<()> {
         create_persister!(storage);
 
