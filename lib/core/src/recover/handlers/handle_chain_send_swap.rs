@@ -1,12 +1,35 @@
 use anyhow::Result;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
+use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
 
 /// Handler for updating chain send swaps with recovered data
 pub(crate) struct ChainSendSwapHandler;
+
+#[async_trait]
+impl SwapRecoverHandler for ChainSendSwapHandler {
+    async fn recover_swap(
+        &self,
+        swap: &mut Swap,
+        context: &SwapsHistories,
+        is_local_within_grace_period: bool,
+    ) -> Result<bool> {
+        if let Swap::Chain(chain_send_swap) = swap {
+            if chain_send_swap.direction == Direction::Outgoing {
+                return Self::recover_and_update_swap(
+                    chain_send_swap,
+                    context,
+                    is_local_within_grace_period,
+                )
+                .map(|_| true);
+            }
+        }
+        Ok(false)
+    }
+}
 
 impl ChainSendSwapHandler {
     /// Check if chain send swap recovery should be skipped
@@ -198,4 +221,61 @@ impl ChainSendSwapHandler {
             btc_claim_tx_id,
         })
     }
+}
+
+pub(crate) struct RecoveredOnchainDataChainSend {
+    /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
+    pub(crate) lbtc_user_lockup_tx_id: Option<HistoryTxId>,
+    /// LBTC tx initiated by the SDK to itself, in case the initial funds have to be refunded.
+    pub(crate) lbtc_refund_tx_id: Option<HistoryTxId>,
+    /// BTC tx locking up funds by the swapper
+    pub(crate) btc_server_lockup_tx_id: Option<HistoryTxId>,
+    /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
+    pub(crate) btc_claim_tx_id: Option<HistoryTxId>,
+}
+
+// TODO: We have to be careful around overwriting the RefundPending state, as this swap monitored
+// after the expiration of the swap and if new funds are detected on the lockup script they are refunded.
+// Perhaps we should check in the recovery the lockup balance and set accordingly.
+impl RecoveredOnchainDataChainSend {
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+        match &self.lbtc_user_lockup_tx_id {
+            Some(_) => match (&self.btc_claim_tx_id, &self.lbtc_refund_tx_id) {
+                (Some(btc_claim_tx_id), None) => match btc_claim_tx_id.confirmed() {
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
+                },
+                (None, Some(lbtc_refund_tx_id)) => match lbtc_refund_tx_id.confirmed() {
+                    true => Some(PaymentState::Failed),
+                    false => Some(PaymentState::RefundPending),
+                },
+                (Some(btc_claim_tx_id), Some(lbtc_refund_tx_id)) => {
+                    match btc_claim_tx_id.confirmed() {
+                        true => match lbtc_refund_tx_id.confirmed() {
+                            true => Some(PaymentState::Complete),
+                            false => Some(PaymentState::RefundPending),
+                        },
+                        false => Some(PaymentState::Pending),
+                    }
+                }
+                (None, None) => match is_expired {
+                    true => Some(PaymentState::RefundPending),
+                    false => Some(PaymentState::Pending),
+                },
+            },
+            None => match is_expired {
+                true => Some(PaymentState::Failed),
+                // We have no onchain data to support deriving the state as the swap could
+                // potentially be Created or TimedOut. In this case we return None.
+                false => None,
+            },
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct SendChainSwapHistory {
+    pub(crate) lbtc_lockup_script_history: Vec<HistoryTxId>,
+    pub(crate) btc_claim_script_history: Vec<HistoryTxId>,
+    pub(crate) btc_claim_script_txs: Vec<boltz_client::bitcoin::Transaction>,
 }

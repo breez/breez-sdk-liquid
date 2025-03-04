@@ -62,6 +62,13 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
 
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
     let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
+    let recoverer = Arc::new(Recoverer::new(
+        signer.slip77_master_blinding_key()?,
+        swapper.clone(),
+        onchain_wallet.clone(),
+        liquid_chain_service.clone(),
+        bitcoin_chain_service.clone(),
+    )?);
 
     let send_swap_handler = SendSwapHandler::new(
         config.clone(),
@@ -69,6 +76,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         persister.clone(),
         swapper.clone(),
         liquid_chain_service.clone(),
+        recoverer,
     );
 
     let receive_swap_handler = ReceiveSwapHandler::new(

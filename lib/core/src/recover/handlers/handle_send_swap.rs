@@ -4,6 +4,7 @@ use anyhow::Result;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
+use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
@@ -12,6 +13,24 @@ use crate::utils;
 
 /// Handler for updating send swaps with recovered data
 pub(crate) struct SendSwapHandler;
+
+#[async_trait]
+impl SwapRecoverHandler for SendSwapHandler {
+    async fn recover_swap(
+        &self,
+        swap: &mut Swap,
+        context: &SwapsHistories,
+        is_local_within_grace_period: bool,
+    ) -> Result<bool> {
+        if let Swap::Send(send_swap) = swap {
+            Self::recover_and_update_swap(send_swap, context, is_local_within_grace_period)
+                .await
+                .map(|_| true)
+        } else {
+            Ok(false)
+        }
+    }
+}
 
 impl SendSwapHandler {
     /// Check if send swap recovery should be skipped
@@ -226,5 +245,38 @@ impl SendSwapHandler {
         log::debug!("Found Send Swap {swap_id} claim tx preimage: {preimage_hex}");
 
         Ok(preimage_hex)
+    }
+}
+
+pub(crate) struct RecoveredOnchainDataSend {
+    pub(crate) lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) claim_tx_id: Option<HistoryTxId>,
+    pub(crate) refund_tx_id: Option<HistoryTxId>,
+    pub(crate) preimage: Option<String>,
+}
+
+impl RecoveredOnchainDataSend {
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+        match &self.lockup_tx_id {
+            Some(_) => match &self.claim_tx_id {
+                Some(_) => Some(PaymentState::Complete),
+                None => match &self.refund_tx_id {
+                    Some(refund_tx_id) => match refund_tx_id.confirmed() {
+                        true => Some(PaymentState::Failed),
+                        false => Some(PaymentState::RefundPending),
+                    },
+                    None => match is_expired {
+                        true => Some(PaymentState::RefundPending),
+                        false => Some(PaymentState::Pending),
+                    },
+                },
+            },
+            None => match is_expired {
+                true => Some(PaymentState::Failed),
+                // We have no onchain data to support deriving the state as the swap could
+                // potentially be Created or TimedOut. In this case we return None.
+                false => None,
+            },
+        }
     }
 }

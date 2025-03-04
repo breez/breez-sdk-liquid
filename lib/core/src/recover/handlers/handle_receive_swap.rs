@@ -5,12 +5,30 @@ use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
 use std::collections::HashMap;
 use std::str::FromStr;
+use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
 
 /// Handler for updating receive swaps with recovered data
 pub(crate) struct ReceiveSwapHandler;
+
+#[async_trait]
+impl SwapRecoverHandler for ReceiveSwapHandler {
+    async fn recover_swap(
+        &self,
+        swap: &mut Swap,
+        context: &SwapsHistories,
+        is_local_within_grace_period: bool,
+    ) -> Result<bool> {
+        if let Swap::Receive(receive_swap) = swap {
+            Self::recover_and_update_swap(receive_swap, context, is_local_within_grace_period)
+                .map(|_| true)
+        } else {
+            Ok(false)
+        }
+    }
+}
 
 impl ReceiveSwapHandler {
     /// Check if receive swap recovery should be skipped
@@ -241,4 +259,46 @@ fn determine_incoming_lockup_and_claim_txs(
             (None, None)
         }
     }
+}
+
+pub(crate) struct RecoveredOnchainDataReceive {
+    pub(crate) lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) claim_tx_id: Option<HistoryTxId>,
+    pub(crate) mrh_tx_id: Option<HistoryTxId>,
+    pub(crate) mrh_amount_sat: Option<u64>,
+}
+
+impl RecoveredOnchainDataReceive {
+    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+        match &self.lockup_tx_id {
+            Some(_) => match &self.claim_tx_id {
+                Some(claim_tx_id) => match claim_tx_id.confirmed() {
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
+                },
+                None => match is_expired {
+                    true => Some(PaymentState::Failed),
+                    false => Some(PaymentState::Pending),
+                },
+            },
+            None => match &self.mrh_tx_id {
+                Some(mrh_tx_id) => match mrh_tx_id.confirmed() {
+                    true => Some(PaymentState::Complete),
+                    false => Some(PaymentState::Pending),
+                },
+                // We have no onchain data to support deriving the state as the swap could
+                // potentially be Created. In this case we return None.
+                None => match is_expired {
+                    true => Some(PaymentState::Failed),
+                    false => None,
+                },
+            },
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct ReceiveSwapHistory {
+    pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
+    pub(crate) lbtc_mrh_script_history: Vec<HistoryTxId>,
 }

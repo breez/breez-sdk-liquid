@@ -1,14 +1,39 @@
 use anyhow::Result;
+use boltz_client::boltz::PairLimits;
 use boltz_client::ElementsAddress;
+use electrum_client::GetBalanceRes;
 use log::{debug, warn};
 use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
 
 /// Handler for updating chain receive swaps with recovered data
 pub(crate) struct ChainReceiveSwapHandler;
+
+#[async_trait]
+impl SwapRecoverHandler for ChainReceiveSwapHandler {
+    async fn recover_swap(
+        &self,
+        swap: &mut Swap,
+        context: &SwapsHistories,
+        is_local_within_grace_period: bool,
+    ) -> Result<bool> {
+        if let Swap::Chain(chain_receive_swap) = swap {
+            if chain_receive_swap.direction == Direction::Incoming {
+                return Self::recover_and_update_swap(
+                    chain_receive_swap,
+                    context,
+                    is_local_within_grace_period,
+                )
+                .map(|_| true);
+            }
+        }
+        Ok(false)
+    }
+}
 
 impl ChainReceiveSwapHandler {
     /// Check if chain receive swap recovery should be skipped
@@ -329,4 +354,93 @@ fn determine_incoming_lockup_and_claim_txs(
             (None, None)
         }
     }
+}
+
+pub(crate) struct RecoveredOnchainDataChainReceive {
+    /// LBTC tx locking up funds by the swapper
+    pub(crate) lbtc_server_lockup_tx_id: Option<HistoryTxId>,
+    /// LBTC tx that claims to our wallet. The final step in a successful swap.
+    pub(crate) lbtc_claim_tx_id: Option<HistoryTxId>,
+    /// LBTC tx out address for the claim tx.
+    pub(crate) lbtc_claim_address: Option<String>,
+    /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
+    pub(crate) btc_user_lockup_tx_id: Option<HistoryTxId>,
+    /// BTC total funds currently available at the swap funding address.
+    pub(crate) btc_user_lockup_address_balance_sat: u64,
+    /// BTC sent to lockup address as part of lockup tx.
+    pub(crate) btc_user_lockup_amount_sat: u64,
+    /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
+    pub(crate) btc_refund_tx_id: Option<HistoryTxId>,
+}
+
+impl RecoveredOnchainDataChainReceive {
+    pub(crate) fn derive_partial_state(
+        &self,
+        expected_user_lockup_amount_sat: Option<u64>,
+        swap_limits: Option<PairLimits>,
+        is_expired: bool,
+        is_waiting_fee_acceptance: bool,
+    ) -> Option<PaymentState> {
+        let unexpected_amount =
+            expected_user_lockup_amount_sat.is_some_and(|expected_lockup_amount_sat| {
+                expected_lockup_amount_sat != self.btc_user_lockup_amount_sat
+            });
+        let amount_out_of_bounds = swap_limits.is_some_and(|limits| {
+            self.btc_user_lockup_amount_sat < limits.minimal
+                || self.btc_user_lockup_amount_sat > limits.maximal
+        });
+        let is_expired_refundable = is_expired && self.btc_user_lockup_address_balance_sat > 0;
+        let is_refundable = is_expired_refundable || unexpected_amount || amount_out_of_bounds;
+        match &self.btc_user_lockup_tx_id {
+            Some(_) => match (&self.lbtc_claim_tx_id, &self.btc_refund_tx_id) {
+                (Some(lbtc_claim_tx_id), None) => match lbtc_claim_tx_id.confirmed() {
+                    true => match is_expired_refundable {
+                        true => Some(PaymentState::Refundable),
+                        false => Some(PaymentState::Complete),
+                    },
+                    false => Some(PaymentState::Pending),
+                },
+                (None, Some(btc_refund_tx_id)) => match btc_refund_tx_id.confirmed() {
+                    true => match is_expired_refundable {
+                        true => Some(PaymentState::Refundable),
+                        false => Some(PaymentState::Failed),
+                    },
+                    false => Some(PaymentState::RefundPending),
+                },
+                (Some(lbtc_claim_tx_id), Some(btc_refund_tx_id)) => {
+                    match lbtc_claim_tx_id.confirmed() {
+                        true => match btc_refund_tx_id.confirmed() {
+                            true => match is_expired_refundable {
+                                true => Some(PaymentState::Refundable),
+                                false => Some(PaymentState::Complete),
+                            },
+                            false => Some(PaymentState::RefundPending),
+                        },
+                        false => Some(PaymentState::Pending),
+                    }
+                }
+                (None, None) => match is_refundable {
+                    true => Some(PaymentState::Refundable),
+                    false => match is_waiting_fee_acceptance {
+                        true => Some(PaymentState::WaitingFeeAcceptance),
+                        false => Some(PaymentState::Pending),
+                    },
+                },
+            },
+            None => match is_expired {
+                true => Some(PaymentState::Failed),
+                // We have no onchain data to support deriving the state as the swap could
+                // potentially be Created. In this case we return None.
+                false => None,
+            },
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct ReceiveChainSwapHistory {
+    pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
+    pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,
+    pub(crate) btc_lockup_script_txs: Vec<boltz_client::bitcoin::Transaction>,
+    pub(crate) btc_lockup_script_balance: Option<GetBalanceRes>,
 }

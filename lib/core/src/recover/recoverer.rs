@@ -1,3 +1,4 @@
+use std::vec;
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
@@ -13,7 +14,7 @@ use super::handlers::{
 };
 use super::model::*;
 
-use crate::prelude::{Direction, Swap};
+use crate::prelude::Swap;
 use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
@@ -29,6 +30,7 @@ pub(crate) struct Recoverer {
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
+    recover_handlers: Vec<Box<dyn SwapRecoverHandler>>,
 }
 
 impl Recoverer {
@@ -47,6 +49,12 @@ impl Recoverer {
             onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
+            recover_handlers: vec![
+                Box::new(SendSwapHandler),
+                Box::new(ReceiveSwapHandler),
+                Box::new(ChainSendSwapHandler),
+                Box::new(ChainReceiveSwapHandler),
+            ],
         })
     }
 
@@ -93,57 +101,12 @@ impl Recoverer {
             let is_local_within_grace_period = swap.is_local()
                 && recovery_started_at.saturating_sub(swap.last_updated_at())
                     < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
-
-            match swap {
-                Swap::Send(send_swap) => {
-                    // Get history for this swap
-                    if let Err(e) = SendSwapHandler::recover_and_update_swap(
-                        send_swap,
-                        &histories,
-                        is_local_within_grace_period,
-                    )
+            for handler in self.recover_handlers.iter() {
+                if let Err(err) = handler
+                    .recover_swap(swap, &histories, is_local_within_grace_period)
                     .await
-                    {
-                        warn!("Error recovering data for Send swap {swap_id}: {e}");
-                    }
-                }
-                Swap::Receive(receive_swap) => {
-                    // Get history for this swap
-                    if let Err(e) = ReceiveSwapHandler::recover_and_update_swap(
-                        receive_swap,
-                        &histories,
-                        is_local_within_grace_period,
-                    ) {
-                        warn!("Error recovering data for Receive swap {swap_id}: {e}");
-                    }
-                }
-                Swap::Chain(chain_swap) => {
-                    match chain_swap.direction {
-                        Direction::Incoming => {
-                            // Get history for this incoming chain swap
-                            if let Err(e) = ChainReceiveSwapHandler::recover_and_update_swap(
-                                chain_swap,
-                                &histories,
-                                is_local_within_grace_period,
-                            ) {
-                                warn!(
-                                    "Error recovering data for incoming Chain swap {swap_id}: {e}"
-                                );
-                            }
-                        }
-                        Direction::Outgoing => {
-                            // Get history for this outgoing chain swap
-                            if let Err(e) = ChainSendSwapHandler::recover_and_update_swap(
-                                chain_swap,
-                                &histories,
-                                is_local_within_grace_period,
-                            ) {
-                                warn!(
-                                    "Error recovering data for outgoing Chain swap {swap_id}: {e}"
-                                );
-                            }
-                        }
-                    }
+                {
+                    warn!("Error recovering data for swap {swap_id}: {err}");
                 }
             }
         }
