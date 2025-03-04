@@ -636,6 +636,7 @@ pub struct AssetInfo {
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PaymentDetails)]
+#[allow(clippy::large_enum_variant)]
 pub enum PaymentDetails {
     Lightning {
         swap_id: String,
@@ -741,6 +742,7 @@ pub struct LnUrlPayRequest {
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::model::LnUrlPayResult)]
+#[allow(clippy::large_enum_variant)]
 pub enum LnUrlPayResult {
     EndpointSuccess { data: LnUrlPaySuccessData },
     EndpointError { data: LnUrlErrorData },

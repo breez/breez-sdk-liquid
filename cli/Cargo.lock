@@ -1156,6 +1156,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "dns-parser"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4d33be9473d06f75f58220f71f7a9317aca647dc061dbd3c361b0bef505fbea"
+dependencies = [
+ "byteorder",
+ "quick-error",
+]
+
+[[package]]
 name = "ecies"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3835,7 +3845,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=249c838a6940bc9b43ee6d8fc3f3761845d275c9#249c838a6940bc9b43ee6d8fc3f3761845d275c9"
+source = "git+https://github.com/breez/breez-sdk?rev=24e29929f495f113158f2f9db11c098cc1493bee#24e29929f495f113158f2f9db11c098cc1493bee"
 dependencies = [
  "aes",
  "anyhow",
@@ -3844,6 +3854,7 @@ dependencies = [
  "bip21",
  "bitcoin 0.29.2",
  "cbc",
+ "dns-parser",
  "elements",
  "getrandom 0.2.14",
  "hex",
@@ -3878,7 +3889,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=249c838a6940bc9b43ee6d8fc3f3761845d275c9#249c838a6940bc9b43ee6d8fc3f3761845d275c9"
+source = "git+https://github.com/breez/breez-sdk?rev=24e29929f495f113158f2f9db11c098cc1493bee#24e29929f495f113158f2f9db11c098cc1493bee"
 dependencies = [
  "proc-macro2",
  "quote",

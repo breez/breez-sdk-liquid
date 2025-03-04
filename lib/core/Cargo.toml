@@ -69,6 +69,7 @@ lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-
 lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
 
 [dev-dependencies]
+sdk-common = { workspace = true, features = ["test-utils"] }
 paste = "1.0.15"
 tempdir = "0.3.7"
 
