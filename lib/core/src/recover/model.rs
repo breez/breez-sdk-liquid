@@ -1,19 +1,21 @@
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::Arc;
 
-use anyhow::anyhow;
 use boltz_client::boltz::PairLimits;
 use boltz_client::ElementsAddress;
 use electrum_client::GetBalanceRes;
 use lwk_wollet::elements::Txid;
+use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::History;
 use lwk_wollet::WalletTx;
 
+use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
+use crate::swapper::Swapper;
 
 pub(crate) type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = lwk_wollet::elements::Script;
-pub(crate) type SendSwapHistory = Vec<HistoryTxId>;
 
 #[derive(Clone, Debug)]
 pub(crate) struct HistoryTxId {
@@ -306,266 +308,6 @@ impl TryFrom<Vec<Swap>> for SwapsList {
 }
 
 impl SwapsList {
-    fn send_swaps_by_script(&self) -> HashMap<LBtcScript, &Swap> {
-        let mut result = HashMap::new();
-
-        for swap in self.swaps_by_id.values() {
-            if let Swap::Send(send_swap) = swap {
-                if let Ok(script) = send_swap.get_swap_script() {
-                    if let Some(funding_addr) = script.funding_addrs {
-                        let lockup_script = funding_addr.script_pubkey();
-                        result.insert(lockup_script, swap);
-                    }
-                }
-            }
-        }
-
-        result
-    }
-
-    pub(crate) fn send_histories_by_swap_id(
-        &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-    ) -> HashMap<String, SendSwapHistory> {
-        let send_swaps_by_script = self.send_swaps_by_script();
-
-        let mut data: HashMap<String, SendSwapHistory> = HashMap::new();
-        for (lbtc_script, history) in lbtc_script_to_history_map {
-            if let Some(swap) = send_swaps_by_script.get(lbtc_script) {
-                data.insert(swap.id(), history.clone());
-            }
-        }
-
-        data
-    }
-
-    fn receive_swaps_by_claim_script(&self) -> HashMap<LBtcScript, &Swap> {
-        let mut result = HashMap::new();
-
-        for swap in self.swaps_by_id.values() {
-            if let Swap::Receive(receive_swap) = swap {
-                if let Ok(script) = receive_swap.get_swap_script() {
-                    if let Some(funding_addr) = script.funding_addrs {
-                        let claim_script = funding_addr.script_pubkey();
-                        result.insert(claim_script, swap);
-                    }
-                }
-            }
-        }
-
-        result
-    }
-
-    fn receive_swaps_by_mrh_script(&self) -> HashMap<LBtcScript, &Swap> {
-        let mut result = HashMap::new();
-
-        for swap in self.swaps_by_id.values() {
-            if let Swap::Receive(receive_swap) = swap {
-                if let Ok(mrh_address) = ElementsAddress::from_str(&receive_swap.mrh_address) {
-                    let mrh_script = mrh_address.script_pubkey();
-                    result.insert(mrh_script, swap);
-                }
-            }
-        }
-
-        result
-    }
-
-    pub(crate) fn receive_histories_by_swap_id(
-        &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-    ) -> anyhow::Result<HashMap<String, ReceiveSwapHistory>> {
-        let receive_swaps_by_claim_script = self.receive_swaps_by_claim_script();
-        let receive_swaps_by_mrh_script = self.receive_swaps_by_mrh_script();
-
-        let mut data: HashMap<String, ReceiveSwapHistory> = HashMap::new();
-        lbtc_script_to_history_map
-            .iter()
-            .for_each(|(lbtc_script, lbtc_script_history)| {
-                if let Some(Swap::Receive(imm)) = receive_swaps_by_claim_script.get(lbtc_script) {
-                    // The MRH script history filtered by the swap timeout block height
-                    let mrh_script_history = imm
-                        .mrh_script()
-                        .clone()
-                        .and_then(|mrh_script| {
-                            lbtc_script_to_history_map.get(&mrh_script).map(|h| {
-                                h.iter()
-                                    .filter(|&tx_history| {
-                                        tx_history.height < imm.timeout_block_height as i32
-                                    })
-                                    .cloned()
-                                    .collect::<Vec<HistoryTxId>>()
-                            })
-                        })
-                        .unwrap_or_default();
-                    data.insert(
-                        imm.id.clone(),
-                        ReceiveSwapHistory {
-                            lbtc_claim_script_history: lbtc_script_history.clone(),
-                            lbtc_mrh_script_history: mrh_script_history,
-                        },
-                    );
-                }
-                if let Some(Swap::Receive(imm)) = receive_swaps_by_mrh_script.get(lbtc_script) {
-                    let claim_script_history = lbtc_script_to_history_map
-                        .get(&imm.claim_script().unwrap_or_default())
-                        .cloned()
-                        .unwrap_or_default();
-                    // The MRH script history filtered by the swap timeout block height
-                    let mrh_script_history = lbtc_script_history
-                        .iter()
-                        .filter(|&tx_history| tx_history.height < imm.timeout_block_height as i32)
-                        .cloned()
-                        .collect::<Vec<HistoryTxId>>();
-                    data.insert(
-                        imm.id.clone(),
-                        ReceiveSwapHistory {
-                            lbtc_claim_script_history: claim_script_history,
-                            lbtc_mrh_script_history: mrh_script_history,
-                        },
-                    );
-                }
-            });
-        Ok(data)
-    }
-
-    fn send_chain_swaps_by_lbtc_lockup_script(&self) -> HashMap<LBtcScript, &Swap> {
-        let mut result = HashMap::new();
-
-        for swap in self.swaps_by_id.values() {
-            if let Swap::Chain(chain_swap) = swap {
-                if chain_swap.direction == Direction::Outgoing {
-                    if let Ok(lockup_script) = chain_swap.get_lockup_swap_script() {
-                        if let Ok(liquid_script) = lockup_script.as_liquid_script() {
-                            if let Some(funding_addr) = liquid_script.funding_addrs {
-                                let script = funding_addr.script_pubkey();
-                                result.insert(script, swap);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        result
-    }
-
-    pub(crate) fn send_chain_histories_by_swap_id(
-        &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-        btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
-        btc_script_to_txs_map: &HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
-    ) -> HashMap<String, SendChainSwapHistory> {
-        let send_chain_swaps_by_lbtc_script = self.send_chain_swaps_by_lbtc_lockup_script();
-
-        let mut data: HashMap<String, SendChainSwapHistory> = HashMap::new();
-        lbtc_script_to_history_map
-            .iter()
-            .for_each(|(lbtc_lockup_script, lbtc_script_history)| {
-                if let Some(Swap::Chain(imm)) =
-                    send_chain_swaps_by_lbtc_script.get(lbtc_lockup_script)
-                {
-                    let claim_script_pubkey = imm
-                        .get_claim_swap_script()
-                        .map_err(anyhow::Error::new)
-                        .and_then(|c| c.as_bitcoin_script())
-                        .and_then(|b| b.funding_addrs.ok_or(anyhow!("No funding address found")))
-                        .map(|op| op.script_pubkey())
-                        .unwrap_or_default();
-
-                    let btc_script_history = btc_script_to_history_map
-                        .get(&claim_script_pubkey)
-                        .cloned()
-                        .unwrap_or_default();
-                    let btc_script_txs = btc_script_to_txs_map
-                        .get(&claim_script_pubkey)
-                        .cloned()
-                        .unwrap_or_default();
-
-                    data.insert(
-                        imm.id.clone(),
-                        SendChainSwapHistory {
-                            lbtc_lockup_script_history: lbtc_script_history.clone(),
-                            btc_claim_script_history: btc_script_history,
-                            btc_claim_script_txs: btc_script_txs,
-                        },
-                    );
-                }
-            });
-        data
-    }
-
-    fn receive_chain_swaps_by_lbtc_claim_script(&self) -> HashMap<LBtcScript, &Swap> {
-        let mut result = HashMap::new();
-
-        for swap in self.swaps_by_id.values() {
-            if let Swap::Chain(chain_swap) = swap {
-                if chain_swap.direction == Direction::Incoming {
-                    if let Ok(claim_script) = chain_swap.get_claim_swap_script() {
-                        if let Ok(liquid_script) = claim_script.as_liquid_script() {
-                            if let Some(funding_addr) = liquid_script.funding_addrs {
-                                let script = funding_addr.script_pubkey();
-                                result.insert(script, swap);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        result
-    }
-
-    pub(super) fn receive_chain_histories_by_swap_id(
-        &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-        btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
-        btc_script_to_txs_map: &HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
-        btc_script_to_balance_map: &HashMap<BtcScript, GetBalanceRes>,
-    ) -> HashMap<String, ReceiveChainSwapHistory> {
-        let receive_chain_swaps_by_lbtc_script = self.receive_chain_swaps_by_lbtc_claim_script();
-
-        let mut data: HashMap<String, ReceiveChainSwapHistory> = HashMap::new();
-        lbtc_script_to_history_map
-            .iter()
-            .for_each(|(lbtc_script_pk, lbtc_script_history)| {
-                if let Some(Swap::Chain(imm)) =
-                    receive_chain_swaps_by_lbtc_script.get(lbtc_script_pk)
-                {
-                    let lockup_script_pubkey = imm
-                        .get_lockup_swap_script()
-                        .map_err(anyhow::Error::new)
-                        .and_then(|c| c.as_bitcoin_script())
-                        .and_then(|b| b.funding_addrs.ok_or(anyhow!("No funding address found")))
-                        .map(|op| op.script_pubkey())
-                        .unwrap_or_default();
-
-                    let btc_script_history = btc_script_to_history_map
-                        .get(&lockup_script_pubkey)
-                        .cloned()
-                        .unwrap_or_default();
-                    let btc_script_txs = btc_script_to_txs_map
-                        .get(&lockup_script_pubkey)
-                        .cloned()
-                        .unwrap_or_default();
-                    let btc_script_balance = btc_script_to_balance_map
-                        .get(&lockup_script_pubkey)
-                        .cloned();
-
-                    data.insert(
-                        imm.id.clone(),
-                        ReceiveChainSwapHistory {
-                            lbtc_claim_script_history: lbtc_script_history.clone(),
-                            btc_lockup_script_history: btc_script_history,
-                            btc_lockup_script_txs: btc_script_txs,
-                            btc_lockup_script_balance: btc_script_balance,
-                        },
-                    );
-                }
-            });
-        data
-    }
-
     pub(crate) fn get_swap_lbtc_scripts(&self) -> Vec<LBtcScript> {
         let mut swap_scripts = Vec::new();
 
@@ -656,8 +398,14 @@ impl SwapsList {
 }
 
 pub(crate) struct SwapsHistories {
-    pub(crate) send: HashMap<String, SendSwapHistory>,
-    pub(crate) receive: HashMap<String, ReceiveSwapHistory>,
-    pub(crate) send_chain: HashMap<String, SendChainSwapHistory>,
-    pub(crate) receive_chain: HashMap<String, ReceiveChainSwapHistory>,
+    pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, Vec<HistoryTxId>>,
+    pub(crate) btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>>,
+    pub(crate) btc_script_to_txs_map: HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
+    pub(crate) btc_script_to_balance_map: HashMap<BtcScript, GetBalanceRes>,
+    pub(crate) liquid_chain_service: Arc<dyn LiquidChainService>,
+    pub(crate) swapper: Arc<dyn Swapper>,
+    pub(crate) tx_map: TxMap,
+    pub(crate) master_blinding_key: MasterBlindingKey,
+    pub(crate) liquid_tip_height: u32,
+    pub(crate) bitcoin_tip_height: u32,
 }

@@ -39,10 +39,7 @@ impl ChainReceiveSwapHandler {
     /// Recover and update a chain receive swap with data from the chain
     pub fn recover_and_update_swap(
         chain_swap: &mut ChainSwap,
-        tx_map: &TxMap,
-        history: &ReceiveChainSwapHistory,
-        master_blinding_key: &MasterBlindingKey,
-        current_block_height: u32,
+        context: &SwapsHistories,
         is_local_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();
@@ -58,16 +55,51 @@ impl ChainReceiveSwapHandler {
                 anyhow::anyhow!("BTC lockup script not found for Onchain Receive Swap {swap_id}")
             })?;
 
+        let claim_script = chain_swap
+            .get_claim_swap_script()
+            .ok()
+            .and_then(|script| script.as_liquid_script().ok())
+            .and_then(|script| script.funding_addrs.map(|addr| addr.script_pubkey()))
+            .ok_or_else(|| {
+                anyhow::anyhow!("BTC claim script not found for Onchain Send Swap {swap_id}")
+            })?;
+
+        let history = &ReceiveChainSwapHistory {
+            lbtc_claim_script_history: context
+                .lbtc_script_to_history_map
+                .get(&claim_script)
+                .cloned()
+                .unwrap_or_default(),
+            btc_lockup_script_history: context
+                .btc_script_to_history_map
+                .get(&lockup_script)
+                .cloned()
+                .unwrap_or(Vec::new()),
+            btc_lockup_script_txs: context
+                .btc_script_to_txs_map
+                .get(&lockup_script)
+                .cloned()
+                .unwrap_or(Vec::new()),
+            btc_lockup_script_balance: context
+                .btc_script_to_balance_map
+                .get(&lockup_script)
+                .cloned(),
+        };
+
         // First obtain transaction IDs from the history
-        let recovered_data =
-            Self::recover_onchain_data(tx_map, history, &lockup_script, master_blinding_key)?;
+        let recovered_data = Self::recover_onchain_data(
+            &context.tx_map,
+            history,
+            &lockup_script,
+            &context.master_blinding_key,
+        )?;
 
         // Update the swap with recovered data
         Self::update_swap(
             chain_swap,
             swap_id,
             &recovered_data,
-            current_block_height,
+            context.bitcoin_tip_height,
             is_local_within_grace_period,
         )
     }

@@ -5,7 +5,6 @@ use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
 
-use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
 use crate::recover::model::*;
 use crate::swapper::Swapper;
@@ -42,27 +41,37 @@ impl SendSwapHandler {
     /// Recover and update a send swap with data from the chain
     pub async fn recover_and_update_swap(
         send_swap: &mut SendSwap,
-        tx_map: &TxMap,
-        history: &[HistoryTxId],
-        liquid_chain_service: &dyn LiquidChainService,
-        current_block_height: u32,
+        context: &SwapsHistories,
         is_local_within_grace_period: bool,
-        swapper: Arc<dyn Swapper>,
     ) -> Result<()> {
         let swap_id = send_swap.id.clone();
         debug!("[Recover Send] Recovering data for swap {swap_id}");
+        let swap_script = send_swap.get_swap_script()?;
+        let lockup_script = swap_script
+            .funding_addrs
+            .ok_or(anyhow::anyhow!("err"))?
+            .script_pubkey();
+
+        let empty_history = Vec::<HistoryTxId>::new();
+        let history = context
+            .lbtc_script_to_history_map
+            .get(&lockup_script)
+            .unwrap_or(&empty_history);
 
         // First obtain transaction IDs from the history
-        let mut recovered_data = Self::recover_onchain_data(tx_map, &swap_id, history)?;
+        let mut recovered_data = Self::recover_onchain_data(&context.tx_map, &swap_id, history)?;
 
         // Recover preimage if needed
         if let Some(claim_tx_id) = &recovered_data.claim_tx_id {
-            if let Ok(claim_txs) = liquid_chain_service
+            if let Ok(claim_txs) = context
+                .liquid_chain_service
                 .get_transactions(&[claim_tx_id.txid])
                 .await
             {
                 if !claim_txs.is_empty() {
-                    let preimage = Self::recover_preimage(&claim_txs[0], &swap_id, swapper).await?;
+                    let preimage =
+                        Self::recover_preimage(&claim_txs[0], &swap_id, context.swapper.clone())
+                            .await?;
                     recovered_data.preimage = preimage;
                 }
             }
@@ -73,7 +82,7 @@ impl SendSwapHandler {
             send_swap,
             &swap_id,
             &recovered_data,
-            current_block_height,
+            context.liquid_tip_height,
             is_local_within_grace_period,
         )
     }

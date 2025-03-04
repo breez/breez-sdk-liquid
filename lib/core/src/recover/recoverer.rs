@@ -70,15 +70,22 @@ impl Recoverer {
 
         // Fetch raw transaction map and convert to our internal format
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
-        let tx_map = TxMap::from_raw_tx_map(raw_tx_map.clone());
-
-        // Convert swaps to SwapsList and fetch history data
-        let swaps_list = swaps.to_vec().try_into()?;
-        let histories = self.fetch_swaps_histories(&swaps_list).await?;
 
         // Fetch chain tips for expiration checks
         let bitcoin_tip = self.bitcoin_chain_service.tip()?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
+
+        // Convert swaps to SwapsList and fetch history data
+        let swaps_list = swaps.to_vec().try_into()?;
+        let histories = self
+            .fetch_swaps_histories(
+                &swaps_list,
+                TxMap::from_raw_tx_map(raw_tx_map.clone()),
+                liquid_tip,
+                bitcoin_tip.height as u32,
+                self.master_blinding_key,
+            )
+            .await?;
 
         // Apply recovered data to the swaps
         for swap in swaps.iter_mut() {
@@ -90,84 +97,49 @@ impl Recoverer {
             match swap {
                 Swap::Send(send_swap) => {
                     // Get history for this swap
-                    if let Some(history) = histories.send.get(swap_id) {
-                        // Let the handler do both recovery and update in one step
-                        if let Err(e) = SendSwapHandler::recover_and_update_swap(
-                            send_swap,
-                            &tx_map,
-                            history,
-                            self.liquid_chain_service.as_ref(),
-                            liquid_tip,
-                            is_local_within_grace_period,
-                            self.swapper.clone(),
-                        )
-                        .await
-                        {
-                            warn!("Error recovering data for Send swap {swap_id}: {e}");
-                        }
-                    } else {
-                        warn!(
-                            "Could not apply recovered data for Send swap {swap_id}: history not found"
-                        );
+                    if let Err(e) = SendSwapHandler::recover_and_update_swap(
+                        send_swap,
+                        &histories,
+                        is_local_within_grace_period,
+                    )
+                    .await
+                    {
+                        warn!("Error recovering data for Send swap {swap_id}: {e}");
                     }
                 }
                 Swap::Receive(receive_swap) => {
                     // Get history for this swap
-                    if let Some(history) = histories.receive.get(swap_id) {
-                        // Let the handler do both recovery and update in one step
-                        if let Err(e) = ReceiveSwapHandler::recover_and_update_swap(
-                            receive_swap,
-                            &tx_map,
-                            history,
-                            liquid_tip,
-                            is_local_within_grace_period,
-                        ) {
-                            warn!("Error recovering data for Receive swap {swap_id}: {e}");
-                        }
-                    } else {
-                        warn!(
-                            "Could not apply recovered data for Receive swap {swap_id}: history not found"
-                        );
+                    if let Err(e) = ReceiveSwapHandler::recover_and_update_swap(
+                        receive_swap,
+                        &histories,
+                        is_local_within_grace_period,
+                    ) {
+                        warn!("Error recovering data for Receive swap {swap_id}: {e}");
                     }
                 }
                 Swap::Chain(chain_swap) => {
                     match chain_swap.direction {
                         Direction::Incoming => {
                             // Get history for this incoming chain swap
-                            if let Some(history) = histories.receive_chain.get(swap_id) {
-                                // Let the handler do both recovery and update in one step
-                                if let Err(e) = ChainReceiveSwapHandler::recover_and_update_swap(
-                                    chain_swap,
-                                    &tx_map,
-                                    history,
-                                    &self.master_blinding_key,
-                                    bitcoin_tip.height as u32,
-                                    is_local_within_grace_period,
-                                ) {
-                                    warn!("Error recovering data for incoming Chain swap {swap_id}: {e}");
-                                }
-                            } else {
+                            if let Err(e) = ChainReceiveSwapHandler::recover_and_update_swap(
+                                chain_swap,
+                                &histories,
+                                is_local_within_grace_period,
+                            ) {
                                 warn!(
-                                    "Could not apply recovered data for incoming Chain swap {swap_id}: history not found"
+                                    "Error recovering data for incoming Chain swap {swap_id}: {e}"
                                 );
                             }
                         }
                         Direction::Outgoing => {
                             // Get history for this outgoing chain swap
-                            if let Some(history) = histories.send_chain.get(swap_id) {
-                                // Let the handler do both recovery and update in one step
-                                if let Err(e) = ChainSendSwapHandler::recover_and_update_swap(
-                                    chain_swap,
-                                    &tx_map,
-                                    history,
-                                    liquid_tip,
-                                    is_local_within_grace_period,
-                                ) {
-                                    warn!("Error recovering data for outgoing Chain swap {swap_id}: {e}");
-                                }
-                            } else {
+                            if let Err(e) = ChainSendSwapHandler::recover_and_update_swap(
+                                chain_swap,
+                                &histories,
+                                is_local_within_grace_period,
+                            ) {
                                 warn!(
-                                    "Could not apply recovered data for outgoing Chain swap {swap_id}: history not found"
+                                    "Error recovering data for outgoing Chain swap {swap_id}: {e}"
                                 );
                             }
                         }
@@ -180,7 +152,14 @@ impl Recoverer {
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
-    async fn fetch_swaps_histories(&self, swaps_list: &SwapsList) -> Result<SwapsHistories> {
+    async fn fetch_swaps_histories(
+        &self,
+        swaps_list: &SwapsList,
+        tx_map: TxMap,
+        liquid_tip_height: u32,
+        bitcoin_tip_height: u32,
+        master_blinding_key: MasterBlindingKey,
+    ) -> Result<SwapsHistories> {
         let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts();
 
         let t0 = std::time::Instant::now();
@@ -287,19 +266,16 @@ impl Recoverer {
             .collect();
 
         Ok(SwapsHistories {
-            send: swaps_list.send_histories_by_swap_id(&lbtc_script_to_history_map),
-            receive: swaps_list.receive_histories_by_swap_id(&lbtc_script_to_history_map)?,
-            send_chain: swaps_list.send_chain_histories_by_swap_id(
-                &lbtc_script_to_history_map,
-                &btc_script_to_history_map,
-                &btc_script_to_txs_map,
-            ),
-            receive_chain: swaps_list.receive_chain_histories_by_swap_id(
-                &lbtc_script_to_history_map,
-                &btc_script_to_history_map,
-                &btc_script_to_txs_map,
-                &btc_script_to_balance_map,
-            ),
+            lbtc_script_to_history_map,
+            btc_script_to_history_map,
+            btc_script_to_txs_map,
+            btc_script_to_balance_map,
+            tx_map,
+            liquid_tip_height,
+            bitcoin_tip_height,
+            master_blinding_key,
+            liquid_chain_service: self.liquid_chain_service.clone(),
+            swapper: self.swapper.clone(),
         })
     }
 }

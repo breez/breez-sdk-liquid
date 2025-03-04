@@ -1,8 +1,10 @@
 use anyhow::Result;
+use boltz_client::ElementsAddress;
 use log::{debug, warn};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use crate::prelude::*;
 use crate::recover::model::*;
@@ -35,24 +37,52 @@ impl ReceiveSwapHandler {
     /// Recover and update a receive swap with data from the chain
     pub fn recover_and_update_swap(
         receive_swap: &mut ReceiveSwap,
-        tx_map: &TxMap,
-        history: &ReceiveSwapHistory,
-        current_block_height: u32,
+        context: &SwapsHistories,
         is_local_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &receive_swap.id.clone();
         debug!("[Recover Receive] Recovering data for swap {swap_id}");
 
+        let mrh_script = ElementsAddress::from_str(&receive_swap.mrh_address)
+            .map_err(|_| anyhow::anyhow!("Invalid MRH address for swap {swap_id}"))?
+            .script_pubkey();
+        let claim_script = receive_swap.claim_script()?;
+        let history = ReceiveSwapHistory {
+            lbtc_mrh_script_history: context
+                .lbtc_script_to_history_map
+                .get(&mrh_script)
+                .cloned()
+                .unwrap_or_default()
+                .iter()
+                .filter(|&tx_history| tx_history.height < receive_swap.timeout_block_height as i32)
+                .cloned()
+                .collect(),
+
+            lbtc_claim_script_history: context
+                .lbtc_script_to_history_map
+                .get(&claim_script)
+                .cloned()
+                .unwrap_or_default()
+                .iter()
+                .filter(|&tx_history| tx_history.height < receive_swap.timeout_block_height as i32)
+                .cloned()
+                .collect(),
+        };
+
         // First obtain recovered data from the history
-        let recovered_data =
-            Self::recover_onchain_data(tx_map, swap_id, history, receive_swap.created_at)?;
+        let recovered_data = Self::recover_onchain_data(
+            &context.tx_map,
+            swap_id,
+            &history,
+            receive_swap.created_at,
+        )?;
 
         // Update the swap with recovered data
         Self::update_swap(
             receive_swap,
             swap_id,
             &recovered_data,
-            current_block_height,
+            context.liquid_tip_height,
             is_local_within_grace_period,
         )
     }

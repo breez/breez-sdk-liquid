@@ -7,7 +7,7 @@ use boltz_client::{
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
-    ElementsAddress, ToHex,
+    ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
@@ -1268,12 +1268,6 @@ impl ReceiveSwap {
             blinding_key: internal_create_response.blinding_key.clone(),
         };
         Ok(res)
-    }
-
-    pub(crate) fn mrh_script(&self) -> Option<script::Script> {
-        ElementsAddress::from_str(&self.mrh_address)
-            .map(|s| s.script_pubkey())
-            .ok()
     }
 
     pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, PaymentError> {
