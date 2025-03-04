@@ -25,7 +25,7 @@ use crate::{
 
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
-    //swapper: Arc<dyn Swapper>,
+    swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
@@ -34,7 +34,7 @@ pub(crate) struct Recoverer {
 impl Recoverer {
     pub(crate) fn new(
         master_blinding_key: Vec<u8>,
-        _: Arc<dyn Swapper>,
+        swapper: Arc<dyn Swapper>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<dyn BitcoinChainService>,
@@ -43,7 +43,7 @@ impl Recoverer {
             master_blinding_key: MasterBlindingKey::from_hex(
                 &master_blinding_key.to_lower_hex_string(),
             )?,
-            //swapper,
+            swapper,
             onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
@@ -99,6 +99,7 @@ impl Recoverer {
                             self.liquid_chain_service.as_ref(),
                             liquid_tip,
                             is_local_within_grace_period,
+                            self.swapper.clone(),
                         )
                         .await
                         {

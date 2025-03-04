@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
@@ -6,6 +8,7 @@ use lwk_wollet::elements::Txid;
 use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
 use crate::recover::model::*;
+use crate::swapper::Swapper;
 use crate::utils;
 
 /// Handler for updating send swaps with recovered data
@@ -44,6 +47,7 @@ impl SendSwapHandler {
         liquid_chain_service: &dyn LiquidChainService,
         current_block_height: u32,
         is_local_within_grace_period: bool,
+        swapper: Arc<dyn Swapper>,
     ) -> Result<()> {
         let swap_id = send_swap.id.clone();
         debug!("[Recover Send] Recovering data for swap {swap_id}");
@@ -58,7 +62,7 @@ impl SendSwapHandler {
                 .await
             {
                 if !claim_txs.is_empty() {
-                    let preimage = Self::recover_preimage(&claim_txs[0], &swap_id).await?;
+                    let preimage = Self::recover_preimage(&claim_txs[0], &swap_id, swapper).await?;
                     recovered_data.preimage = preimage;
                 }
             }
@@ -167,7 +171,14 @@ impl SendSwapHandler {
     async fn recover_preimage(
         claim_tx: &lwk_wollet::elements::Transaction,
         swap_id: &str,
+        swapper: Arc<dyn Swapper>,
     ) -> Result<Option<String>> {
+        // Try cooperative first
+        if let Ok(preimage) = swapper.get_submarine_preimage(swap_id).await {
+            println!("Found Send Swap {swap_id} preimage cooperatively: {preimage}");
+            return Ok(Some(preimage));
+        }
+        warn!("Could not recover Send swap {swap_id} preimage cooperatively");
         match Self::extract_preimage_from_claim_tx(claim_tx, swap_id) {
             Ok(preimage) => Ok(Some(preimage)),
             Err(e) => {

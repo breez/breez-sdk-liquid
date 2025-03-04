@@ -18,6 +18,7 @@ use crate::model::{
 };
 use crate::persist::model::PaymentTxDetails;
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
+use crate::recover::recoverer::Recoverer;
 use crate::swapper::Swapper;
 use crate::utils;
 use crate::wallet::OnchainWallet;
@@ -35,6 +36,7 @@ pub(crate) struct SendSwapHandler {
     swapper: Arc<dyn Swapper>,
     chain_service: Arc<dyn LiquidChainService>,
     subscription_notifier: broadcast::Sender<String>,
+    recoverer: Arc<Recoverer>,
 }
 
 #[async_trait]
@@ -55,6 +57,7 @@ impl SendSwapHandler {
         persister: Arc<Persister>,
         swapper: Arc<dyn Swapper>,
         chain_service: Arc<dyn LiquidChainService>,
+        recoverer: Arc<Recoverer>,
     ) -> Self {
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         Self {
@@ -64,6 +67,7 @@ impl SendSwapHandler {
             swapper,
             chain_service,
             subscription_notifier,
+            recoverer,
         }
     }
 
@@ -111,6 +115,13 @@ impl SendSwapHandler {
                     }
                     None => {
                         debug!("The claim tx was a script path spend (non-cooperative claim)");
+                        let mut swaps = vec![Swap::Send(swap.clone())];
+                        self.recoverer.recover_from_onchain(&mut swaps).await?;
+
+                        let Swap::Send(s) = swaps[0].clone() else {
+                            return Err(anyhow!("Expected a Send swap"));
+                        };
+                        self.update_swap(s)?;
                         // let preimage = self
                         //     .get_preimage_from_script_path_claim_spend(&swap)
                         //     .await?;
