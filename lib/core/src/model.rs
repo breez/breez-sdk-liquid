@@ -1004,31 +1004,6 @@ impl ChainSwap {
         Ok(swap_script)
     }
 
-    // pub(crate) fn claim_script_pubkey(&self) -> Result<ScriptBuf> {
-    //     match self.direction {
-    //         Direction::Incoming => Ok(self
-    //             .get_claim_swap_script()?
-    //             .as_liquid_script()?
-    //             .funding_addrs
-    //             .ok_or(anyhow!("No funding address found"))?
-    //             .script_pubkey()),
-    //         Direction::Outgoing => Ok(self
-    //             .get_claim_swap_script()?
-    //             .as_bitcoin_script()?
-    //             .funding_addrs
-    //             .ok_or(anyhow!("No funding address found"))?
-    //             .script_pubkey()),
-    //     }
-    // }
-
-    // pub(crate) fn lockup_script_pubkey(&self) -> Result<ScriptBuf> {
-    //     let lockup_swap_script = self.get_lockup_swap_script()?.as_liquid_script()?;
-    //     Ok(lockup_swap_script
-    //         .funding_addrs
-    //         .ok_or(anyhow!("No funding address found"))?
-    //         .script_pubkey())
-    // }
-
     pub(crate) fn get_lockup_swap_script(&self) -> SdkResult<SwapScriptV2> {
         let chain_swap_details = self.get_boltz_create_response()?.lockup_details;
         let our_pubkey = self.get_refund_keypair()?.public_key();
