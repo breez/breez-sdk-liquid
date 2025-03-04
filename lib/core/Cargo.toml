@@ -29,6 +29,7 @@ lwk_signer = { version = "0.8.0", default-features = false }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [ "backup", "bundled" ] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 sdk-common = { workspace = true }
+sdk-macros = { workspace = true }
 rusqlite_migration =  { git = "https://github.com/hydra-yse/rusqlite_migration", branch = "rusqlite-v0.33.0" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
@@ -76,6 +77,10 @@ uuid = { version = "1.8.0", features = ["v4", "js"] }
 sdk-common = { workspace = true, features = ["test-utils"] }
 paste = "1.0.15"
 tempdir = "0.3.7"
+
+# WASM dev dependencies
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dev-dependencies]
+wasm-bindgen-test = "0.3.33"
 
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }

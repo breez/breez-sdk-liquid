@@ -3848,6 +3848,9 @@ mod tests {
     };
     use paste::paste;
 
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
     struct NewSwapArgs {
         direction: Direction,
         accepts_zero_conf: bool,
@@ -3968,7 +3971,7 @@ mod tests {
         }};
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_receive_swap_update_tracking() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
@@ -4084,7 +4087,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_send_swap_update_tracking() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
@@ -4140,7 +4143,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_chain_swap_update_tracking() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
@@ -4371,7 +4374,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_zero_amount_chain_swap_zero_leeway() -> Result<()> {
         let user_lockup_sat = 50_000;
 
@@ -4431,7 +4434,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_zero_amount_chain_swap_with_leeway() -> Result<()> {
         let user_lockup_sat = 50_000;
         let onchain_fee_rate_leeway_sat_per_vbyte = 5;

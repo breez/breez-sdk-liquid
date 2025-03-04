@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use electrum_client::{
     bitcoin::{
         consensus::{deserialize, serialize},
@@ -28,7 +27,7 @@ use crate::{
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]
-#[async_trait]
+#[sdk_macros::async_trait]
 pub trait BitcoinChainService: Send + Sync {
     /// Get the blockchain latest block
     fn tip(&self) -> Result<HeaderNotification>;
@@ -117,7 +116,7 @@ impl HybridBitcoinChainService {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl BitcoinChainService for HybridBitcoinChainService {
     fn tip(&self) -> Result<HeaderNotification> {
         let client = self.get_client()?;

@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use sdk_common::{
     bitcoin::util::bip32::{ChildNumber, DerivationPath},
     prelude::{LnUrlResult, LnurlAuthSigner},
@@ -18,7 +17,7 @@ impl SdkLnurlAuthSigner {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl LnurlAuthSigner for SdkLnurlAuthSigner {
     async fn derive_bip32_pub_key(&self, derivation_path: &[ChildNumber]) -> LnUrlResult<Vec<u8>> {
         let derivation: DerivationPath = derivation_path.to_vec().into();

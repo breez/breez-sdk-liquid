@@ -299,6 +299,9 @@ mod tests {
     };
     use std::collections::BTreeMap;
 
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
     fn get_descriptor<S: LwkSigner>(
         signer: &S,
         is_mainnet: bool,
@@ -363,7 +366,7 @@ mod tests {
         pset
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_invalid_signer() {
         let mut rng = rand::thread_rng();
 
@@ -382,7 +385,7 @@ mod tests {
         assert!(SdkSigner::new_with_seed(seed2.to_vec(), false).is_ok());
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_sign() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
@@ -408,7 +411,7 @@ mod tests {
         assert_eq!(tx_sw, tx_sdk);
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_slip77_master_blinding_key() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
@@ -422,7 +425,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_derive_xpub() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
@@ -434,7 +437,7 @@ mod tests {
         assert_eq!(sw_xpub, sdk_xpub, "Derived xpubs should be identical");
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_identifier() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
@@ -448,7 +451,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_fingerprint() {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
@@ -469,7 +472,7 @@ mod tests {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_sdk_signer_vs_sw_signer() {
         // Use a test mnemonic (don't use this in production!)
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
