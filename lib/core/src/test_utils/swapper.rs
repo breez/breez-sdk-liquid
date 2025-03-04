@@ -1,7 +1,6 @@
 #![cfg(test)]
 
 use anyhow::Result;
-use async_trait::async_trait;
 use boltz_client::{
     boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
@@ -113,7 +112,7 @@ impl MockSwapper {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl Swapper for MockSwapper {
     async fn create_chain_swap(
         &self,
@@ -385,7 +384,7 @@ impl MockProxyUrlFetcher {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl ProxyUrlFetcher for MockProxyUrlFetcher {
     async fn fetch(&self) -> Result<&Option<String>> {
         Ok(&None)

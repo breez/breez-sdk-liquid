@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use async_trait::async_trait;
 use boltz_client::{
     boltz::{
         ChainPair, CreateChainRequest, CreateChainResponse, CreateReverseRequest,
@@ -23,7 +22,7 @@ pub(crate) use subscription_handler::*;
 pub(crate) mod boltz;
 pub(crate) mod subscription_handler;
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub trait Swapper: Send + Sync {
     /// Create a new chain swap
     async fn create_chain_swap(
@@ -144,7 +143,7 @@ pub trait SwapperStatusStream: Send + Sync {
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub(crate) trait ProxyUrlFetcher: Send + Sync + 'static {
     async fn fetch(&self) -> Result<&Option<String>>;
 }

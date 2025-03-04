@@ -1,7 +1,6 @@
 use std::sync::{Arc, OnceLock};
 
 use anyhow::Result;
-use async_trait::async_trait;
 use sdk_common::prelude::BreezServer;
 use url::Url;
 
@@ -37,7 +36,7 @@ impl BoltzProxyFetcher {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl ProxyUrlFetcher for BoltzProxyFetcher {
     async fn fetch(&self) -> Result<&Option<String>> {
         if let Some(swapper_proxy_url) = self.url.get() {

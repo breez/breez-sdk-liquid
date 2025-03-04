@@ -1,7 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, bail, Context, Result};
-use async_trait::async_trait;
 use boltz_client::{
     boltz::{self},
     swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
@@ -46,7 +45,7 @@ pub(crate) struct ChainSwapHandler {
     subscription_notifier: broadcast::Sender<String>,
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl BlockListener for ChainSwapHandler {
     async fn on_bitcoin_block(&self, height: u32) {
         if let Err(e) = self.claim_outgoing(height).await {
@@ -1491,7 +1490,10 @@ mod tests {
         },
     };
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_chain_swap_state_transitions() -> Result<()> {
         create_persister!(persister);
 

@@ -6,7 +6,6 @@ use crate::{
     prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
 use anyhow::Result;
-use async_trait::async_trait;
 use boltz_client::{
     boltz::{
         BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
@@ -154,7 +153,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
     /// Create a new chain swap
     async fn create_chain_swap(

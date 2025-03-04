@@ -1,7 +1,6 @@
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, bail, Result};
-use async_trait::async_trait;
 use boltz_client::swaps::boltz::RevSwapStates;
 use boltz_client::{boltz, Serialize, ToHex};
 use log::{debug, error, info, warn};
@@ -33,7 +32,7 @@ pub(crate) struct ReceiveSwapHandler {
     liquid_chain_service: Arc<dyn LiquidChainService>,
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl BlockListener for ReceiveSwapHandler {
     async fn on_bitcoin_block(&self, _height: u32) {}
 
@@ -546,7 +545,10 @@ mod tests {
         },
     };
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_receive_swap_state_transitions() -> Result<()> {
         create_persister!(persister);
 
