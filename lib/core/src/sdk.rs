@@ -440,8 +440,15 @@ impl LiquidSdk {
                             .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
                         };
 
-                        // Only partial sync when there are no new Liquid or Bitcoin blocks
-                        let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
+                        // Only partial sync when there are no new Liquid or Bitcoin blocks and
+                        // we have already completed the first wallet sync
+                        let is_first_sync_complete = cloned
+                            .persister
+                            .get_is_first_sync_complete()
+                            .ok()
+                            .flatten()
+                            .unwrap_or(false);
+                        let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not() && is_first_sync_complete;
                         _ = cloned.sync(partial_sync).await;
 
                         // Update swap handlers
