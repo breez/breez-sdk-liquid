@@ -239,6 +239,7 @@ impl LiquidSdk {
             persister.clone(),
             swapper.clone(),
             liquid_chain_service.clone(),
+            recoverer.clone(),
         );
 
         let receive_swap_handler = ReceiveSwapHandler::new(
