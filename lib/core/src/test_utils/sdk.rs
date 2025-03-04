@@ -1,21 +1,14 @@
 #![cfg(test)]
 
 use anyhow::{anyhow, Result};
-use sdk_common::prelude::{BreezServer, STAGING_BREEZSERVER_URL};
+use sdk_common::prelude::{MockRestClient, RestClient, STAGING_BREEZSERVER_URL};
 use std::sync::Arc;
 
-use tokio::sync::{watch, RwLock};
-
 use crate::{
-    buy::BuyBitcoinService,
-    chain_swap::ChainSwapHandler,
-    event::EventManager,
     model::{Config, Signer},
     persist::Persister,
-    receive_swap::ReceiveSwapHandler,
     recover::recoverer::Recoverer,
-    sdk::LiquidSdk,
-    send_swap::SendSwapHandler,
+    sdk::{LiquidSdk, LiquidSdkBuilder},
 };
 
 use super::{
@@ -30,7 +23,7 @@ pub(crate) fn new_liquid_sdk(
     persister: Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
-) -> Result<LiquidSdk> {
+) -> Result<Arc<LiquidSdk>> {
     let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
@@ -51,7 +44,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     liquid_chain_service: Arc<MockLiquidChainService>,
     bitcoin_chain_service: Arc<MockBitcoinChainService>,
     onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
-) -> Result<LiquidSdk> {
+) -> Result<Arc<LiquidSdk>> {
     let mut config = Config::testnet(None);
     config.working_dir = persister
         .get_database_dir()
@@ -61,33 +54,8 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     config.onchain_fee_rate_leeway_sat_per_vbyte = onchain_fee_rate_leeway_sat_per_vbyte;
 
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
+    let rest_client: Arc<dyn RestClient> = Arc::new(MockRestClient::new());
     let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
-
-    let send_swap_handler = SendSwapHandler::new(
-        config.clone(),
-        onchain_wallet.clone(),
-        persister.clone(),
-        swapper.clone(),
-        liquid_chain_service.clone(),
-    );
-
-    let receive_swap_handler = ReceiveSwapHandler::new(
-        config.clone(),
-        onchain_wallet.clone(),
-        persister.clone(),
-        swapper.clone(),
-        liquid_chain_service.clone(),
-    );
-
-    let chain_swap_handler = Arc::new(ChainSwapHandler::new(
-        config.clone(),
-        onchain_wallet.clone(),
-        persister.clone(),
-        swapper.clone(),
-        liquid_chain_service.clone(),
-        bitcoin_chain_service.clone(),
-    )?);
-
     let recoverer = Arc::new(Recoverer::new(
         signer.slip77_master_blinding_key()?,
         swapper.clone(),
@@ -96,38 +64,19 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         bitcoin_chain_service.clone(),
     )?);
 
-    let event_manager = Arc::new(EventManager::new());
-    let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
-
-    let breez_server = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.into(), None)?);
-
-    let buy_bitcoin_service =
-        Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
-
     let (_incoming_tx, _outgoing_records, sync_service) =
         new_sync_service(persister.clone(), recoverer.clone(), signer.clone())?;
-    let sync_service = Some(Arc::new(sync_service));
+    let sync_service = Arc::new(sync_service);
 
-    Ok(LiquidSdk {
-        config,
-        onchain_wallet,
-        signer,
-        persister,
-        event_manager,
-        status_stream,
-        swapper,
-        recoverer,
-        liquid_chain_service,
-        bitcoin_chain_service,
-        fiat_api: breez_server,
-        is_started: RwLock::new(true),
-        shutdown_sender,
-        shutdown_receiver,
-        send_swap_handler,
-        receive_swap_handler,
-        sync_service,
-        chain_swap_handler,
-        buy_bitcoin_service,
-        external_input_parsers: Vec::new(),
-    })
+    LiquidSdkBuilder::new(config, STAGING_BREEZSERVER_URL.into(), signer)?
+        .bitcoin_chain_service(bitcoin_chain_service)
+        .liquid_chain_service(liquid_chain_service)
+        .onchain_wallet(onchain_wallet)
+        .persister(persister)
+        .recoverer(recoverer)
+        .rest_client(rest_client)
+        .status_stream(status_stream)
+        .swapper(swapper)
+        .sync_service(sync_service)
+        .build()
 }

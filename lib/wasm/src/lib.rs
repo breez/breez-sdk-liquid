@@ -112,7 +112,7 @@ impl BindingLiquidSdk {
 
     #[wasm_bindgen(js_name = "buyBitcoin")]
     pub async fn buy_bitcoin(&self, req: BuyBitcoinRequest) -> WasmResult<String> {
-        Ok(self.sdk.buy_bitcoin(&req.into()).await?.into())
+        Ok(self.sdk.buy_bitcoin(&req.into()).await?)
     }
 
     #[wasm_bindgen(js_name = "listPayments")]
@@ -148,11 +148,8 @@ impl BindingLiquidSdk {
         &self,
         req: AcceptPaymentProposedFeesRequest,
     ) -> WasmResult<()> {
-        Ok(self
-            .sdk
-            .accept_payment_proposed_fees(&req.into())
-            .await?
-            .into())
+        self.sdk.accept_payment_proposed_fees(&req.into()).await?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "prepareLnurlPay")]
@@ -186,12 +183,14 @@ impl BindingLiquidSdk {
 
     #[wasm_bindgen(js_name = "registerWebhook")]
     pub async fn register_webhook(&self, webhook_url: String) -> WasmResult<()> {
-        Ok(self.sdk.register_webhook(webhook_url).await?.into())
+        self.sdk.register_webhook(webhook_url).await?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "unregisterWebhook")]
     pub async fn unregister_webhook(&self) -> WasmResult<()> {
-        Ok(self.sdk.unregister_webhook().await?.into())
+        self.sdk.unregister_webhook().await?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "fetchFiatRates")]
@@ -242,12 +241,14 @@ impl BindingLiquidSdk {
 
     #[wasm_bindgen(js_name = "rescanOnchainSwaps")]
     pub async fn rescan_onchain_swaps(&self) -> WasmResult<()> {
-        Ok(self.sdk.rescan_onchain_swaps().await?.into())
+        self.sdk.rescan_onchain_swaps().await?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "sync")]
     pub async fn sync(&self) -> WasmResult<()> {
-        Ok(self.sdk.sync(false).await?.into())
+        self.sdk.sync(false).await?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "recommendedFees")]
@@ -257,21 +258,25 @@ impl BindingLiquidSdk {
 
     #[wasm_bindgen(js_name = "emptyWalletCache")]
     pub fn empty_wallet_cache(&self) -> WasmResult<()> {
-        Ok(self.sdk.empty_wallet_cache()?.into())
+        self.sdk.empty_wallet_cache()?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "backup")]
     pub fn backup(&self, req: BackupRequest) -> WasmResult<()> {
-        Ok(self.sdk.backup(req.into())?.into())
+        self.sdk.backup(req.into())?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "restore")]
     pub fn restore(&self, req: RestoreRequest) -> WasmResult<()> {
-        Ok(self.sdk.restore(req.into())?.into())
+        self.sdk.restore(req.into())?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "disconnect")]
     pub async fn disconnect(&self) -> WasmResult<()> {
-        Ok(self.sdk.disconnect().await?.into())
+        self.sdk.disconnect().await?;
+        Ok(())
     }
 }

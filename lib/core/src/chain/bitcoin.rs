@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    sync::{Mutex, OnceLock},
+    sync::{Arc, Mutex, OnceLock},
     time::Duration,
 };
 
@@ -16,7 +16,10 @@ use electrum_client::{
 };
 use log::info;
 use lwk_wollet::{bitcoin::ScriptBuf, ElectrumOptions, ElectrumUrl, Error, History};
-use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::get_parse_and_log_response};
+use sdk_common::{
+    bitcoin::hashes::hex::ToHex,
+    prelude::{get_and_check_success, parse_json, RestClient},
+};
 
 use crate::{
     model::{Config, LiquidNetwork, RecommendedFees},
@@ -82,14 +85,16 @@ pub trait BitcoinChainService: Send + Sync {
 }
 
 pub(crate) struct HybridBitcoinChainService {
-    client: OnceLock<Client>,
     config: Config,
+    rest_client: Arc<dyn RestClient>,
+    client: OnceLock<Client>,
     last_known_tip: Mutex<Option<HeaderNotification>>,
 }
 impl HybridBitcoinChainService {
-    pub fn new(config: Config) -> Result<Self, Error> {
+    pub fn new(config: Config, rest_client: Arc<dyn RestClient>) -> Result<Self, Error> {
         Ok(Self {
             config,
+            rest_client,
             client: OnceLock::new(),
             last_known_tip: Mutex::new(None),
         })
@@ -364,11 +369,11 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {
-        get_parse_and_log_response(
+        let (response, _) = get_and_check_success(
+            self.rest_client.as_ref(),
             &format!("{}/v1/fees/recommended", self.config.mempoolspace_url),
-            true,
         )
-        .await
-        .map_err(Into::into)
+        .await?;
+        Ok(parse_json(&response)?)
     }
 }
