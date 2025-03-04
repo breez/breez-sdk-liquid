@@ -317,12 +317,30 @@ pub enum LiquidNetwork {
     Regtest,
 }
 
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SdkEvent)]
+pub enum SdkEvent {
+    PaymentFailed { details: Payment },
+    PaymentPending { details: Payment },
+    PaymentRefundable { details: Payment },
+    PaymentRefunded { details: Payment },
+    PaymentRefundPending { details: Payment },
+    PaymentSucceeded { details: Payment },
+    PaymentWaitingConfirmation { details: Payment },
+    PaymentWaitingFeeAcceptance { details: Payment },
+    Synced,
+}
+
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ConnectRequest)]
 pub struct ConnectRequest {
     pub config: Config,
     pub mnemonic: Option<String>,
     pub passphrase: Option<String>,
     pub seed: Option<Vec<u8>>,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ConnectWithSignerRequest)]
+pub struct ConnectWithSignerRequest {
+    pub config: Config,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PaymentMethod)]
@@ -716,6 +734,12 @@ pub struct PrepareBuyBitcoinResponse {
 pub struct BuyBitcoinRequest {
     pub prepare_response: PrepareBuyBitcoinResponse,
     pub redirect_url: Option<String>,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LogEntry)]
+pub struct LogEntry {
+    pub line: String,
+    pub level: String,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareLnUrlPayRequest)]

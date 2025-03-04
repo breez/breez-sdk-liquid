@@ -43,6 +43,7 @@ wasm_error_wrapper!(
     LnUrlAuthError,
     LnUrlPayError,
     LnUrlWithdrawError,
+    log::ParseLevelError,
     PaymentError,
     SdkError,
     &str,

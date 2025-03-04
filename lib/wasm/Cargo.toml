@@ -13,6 +13,9 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }
+console_log = "1"
+js-sys = "0.3.77"
+log = { workspace = true }
 sdk-macros = { workspace = true }
 serde = { workspace = true }
 tsify-next = "0.5.5"

@@ -3747,9 +3747,10 @@ impl LiquidSdk {
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
         let external_parsers = &self.external_input_parsers;
-        let input_type = parse_with_rest_client(self.rest_client.as_ref(), input, Some(external_parsers))
-            .await
-            .map_err(|e| PaymentError::generic(&e.to_string()))?;
+        let input_type =
+            parse_with_rest_client(self.rest_client.as_ref(), input, Some(external_parsers))
+                .await
+                .map_err(|e| PaymentError::generic(&e.to_string()))?;
 
         let res = match input_type {
             InputType::LiquidAddress { ref address } => match &address.asset_id {

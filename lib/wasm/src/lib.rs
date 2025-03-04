@@ -1,11 +1,19 @@
 mod error;
-pub mod models;
+mod event;
+pub mod model;
+mod signer;
 
+use std::str::FromStr;
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use breez_sdk_liquid::sdk::LiquidSdk;
-use models::*;
+use log::Level;
+use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
+
+use crate::event::{EventListener, WasmEventListener};
+use crate::model::*;
 
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
@@ -18,6 +26,16 @@ pub async fn connect(req: ConnectRequest) -> WasmResult<BindingLiquidSdk> {
     Ok(BindingLiquidSdk { sdk })
 }
 
+#[wasm_bindgen(js_name = "connectWithSigner")]
+pub async fn connect_with_signer(
+    req: ConnectWithSignerRequest,
+    signer: Signer,
+) -> WasmResult<BindingLiquidSdk> {
+    let wasm_signer = Box::new(WasmSigner { signer });
+    let sdk = LiquidSdk::connect_with_signer(req.into(), wasm_signer).await?;
+    Ok(BindingLiquidSdk { sdk })
+}
+
 #[wasm_bindgen(js_name = "defaultConfig")]
 pub fn default_config(network: LiquidNetwork, breez_api_key: Option<String>) -> WasmResult<Config> {
     Ok(LiquidSdk::default_config(network.into(), breez_api_key)?.into())
@@ -26,6 +44,12 @@ pub fn default_config(network: LiquidNetwork, breez_api_key: Option<String>) -> 
 #[wasm_bindgen(js_name = "parseInvoice")]
 pub fn parse_invoice(input: String) -> WasmResult<LNInvoice> {
     Ok(LiquidSdk::parse_invoice(&input)?.into())
+}
+
+#[wasm_bindgen(js_name = "initLogger")]
+pub fn init_logger(level: String) -> WasmResult<()> {
+    Ok(console_log::init_with_level(Level::from_str(&level)?)
+        .map_err(|_| anyhow!("Logger already created"))?)
 }
 
 #[wasm_bindgen]
@@ -48,6 +72,20 @@ impl BindingLiquidSdk {
     #[wasm_bindgen(js_name = "parse")]
     pub async fn parse(&self, input: String) -> WasmResult<InputType> {
         Ok(self.sdk.parse(&input).await?.into())
+    }
+
+    #[wasm_bindgen(js_name = "addEventListener")]
+    pub async fn add_event_listener(&self, listener: EventListener) -> WasmResult<String> {
+        Ok(self
+            .sdk
+            .add_event_listener(Box::new(WasmEventListener { listener }))
+            .await?)
+    }
+
+    #[wasm_bindgen(js_name = "removeEventListener")]
+    pub async fn remove_event_listener(&self, id: String) -> WasmResult<()> {
+        self.sdk.remove_event_listener(id).await?;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = "prepareSendPayment")]

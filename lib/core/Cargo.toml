@@ -58,15 +58,19 @@ electrum-client = { version = "0.21.0", default-features = false, features = [
     "proxy",
 ] }
 boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "12c9e546f15706b563ba7e49f2be7e8a5e7ada90" }
+lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
+maybe-sync = { version = "0.1.1", features = ["sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
 
 # WASM dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+console_log = "1"
 lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
+maybe-sync = "0.1.1"
+uuid = { version = "1.8.0", features = ["v4", "js"] }
 
 [dev-dependencies]
 sdk-common = { workspace = true, features = ["test-utils"] }
