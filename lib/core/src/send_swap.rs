@@ -381,68 +381,6 @@ impl SendSwapHandler {
         Ok(())
     }
 
-    // pub(crate) async fn get_preimage_from_script_path_claim_spend(
-    //     &self,
-    //     swap: &SendSwap,
-    // ) -> Result<String, PaymentError> {
-    //     info!("Retrieving preimage from non-cooperative claim tx");
-
-    //     let id = &swap.id;
-    //     let swap_script = swap.get_swap_script()?;
-    //     let swap_script_pk = swap_script
-    //         .to_address(self.config.network.into())?
-    //         .script_pubkey();
-    //     debug!("Found Send Swap swap_script_pk: {swap_script_pk:?}");
-
-    //     // Get tx history of the swap script (lockup address)
-    //     let history: Vec<_> = self
-    //         .chain_service
-    //         .get_script_history(&swap_script_pk)
-    //         .await?;
-
-    //     // We expect at most 2 txs: lockup and maybe the claim
-    //     ensure_sdk!(
-    //         history.len() <= 2,
-    //         PaymentError::Generic {
-    //             err: format!("Lockup address history for Send Swap {id} has more than 2 txs")
-    //         }
-    //     );
-
-    //     match history.get(1) {
-    //         None => Err(PaymentError::Generic {
-    //             err: format!("Send Swap {id} has no claim tx"),
-    //         }),
-    //         Some(claim_tx_entry) => {
-    //             let claim_tx_id = claim_tx_entry.txid;
-    //             let claim_tx = self
-    //                 .chain_service
-    //                 .get_transactions(&[claim_tx_id])
-    //                 .await
-    //                 .map_err(|e| anyhow!("Failed to fetch claim txs {claim_tx_id:?}: {e}"))?
-    //                 .first()
-    //                 .cloned()
-    //                 .ok_or(anyhow!("Claim tx not found for Send swap {id}"))?;
-
-    //             Ok(
-    //                 crate::recover::handlers::SendSwapHandler::extract_preimage_from_claim_tx(
-    //                     id, &claim_tx,
-    //                 )?,
-    //             )
-    //         }
-    //     }
-    // }
-
-    // async fn validate_send_swap_preimage(
-    //     &self,
-    //     swap_id: &str,
-    //     invoice: &str,
-    //     preimage: &str,
-    // ) -> Result<(), PaymentError> {
-    //     utils::verify_payment_hash(preimage, invoice)?;
-    //     info!("Preimage is valid for Send Swap {swap_id}");
-    //     Ok(())
-    // }
-
     pub(crate) async fn refund(
         &self,
         swap: &SendSwap,
