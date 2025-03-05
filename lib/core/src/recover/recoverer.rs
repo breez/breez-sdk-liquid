@@ -1,4 +1,3 @@
-use std::vec;
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
@@ -14,6 +13,7 @@ use super::handlers::{
 };
 use super::model::*;
 
+use crate::model::Direction;
 use crate::prelude::Swap;
 use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;
@@ -32,7 +32,6 @@ pub(crate) struct Recoverer {
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
-    recover_handlers: Vec<Box<dyn SwapRecoverHandler>>,
 }
 
 impl Recoverer {
@@ -51,12 +50,6 @@ impl Recoverer {
             onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
-            recover_handlers: vec![
-                Box::new(SendSwapHandler),
-                Box::new(ReceiveSwapHandler),
-                Box::new(ChainSendSwapHandler),
-                Box::new(ChainReceiveSwapHandler),
-            ],
         })
     }
 
@@ -94,8 +87,8 @@ impl Recoverer {
 
         // Convert swaps to SwapsList and fetch history data
         let swaps_list = swaps.to_vec().try_into()?;
-        let histories = self
-            .fetch_swaps_histories(
+        let recovery_context = self
+            .create_recovery_context(
                 &swaps_list,
                 TxMap::from_raw_tx_map(raw_tx_map.clone()),
                 liquid_tip,
@@ -110,13 +103,45 @@ impl Recoverer {
             let is_local_within_grace_period = swap.is_local()
                 && recovery_started_at.saturating_sub(swap.last_updated_at())
                     < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
-            for handler in self.recover_handlers.iter() {
-                if let Err(err) = handler
-                    .recover_swap(swap, &histories, is_local_within_grace_period)
+            let res = match swap {
+                Swap::Send(s) => {
+                    SendSwapHandler::recover_swap(
+                        s,
+                        &recovery_context,
+                        is_local_within_grace_period,
+                    )
                     .await
-                {
-                    warn!("Error recovering data for swap {swap_id}: {err}");
                 }
+
+                Swap::Receive(s) => {
+                    ReceiveSwapHandler::recover_swap(
+                        s,
+                        &recovery_context,
+                        is_local_within_grace_period,
+                    )
+                    .await
+                }
+                Swap::Chain(s) => match s.direction {
+                    Direction::Outgoing => {
+                        ChainSendSwapHandler::recover_swap(
+                            s,
+                            &recovery_context,
+                            is_local_within_grace_period,
+                        )
+                        .await
+                    }
+                    Direction::Incoming => {
+                        ChainReceiveSwapHandler::recover_swap(
+                            s,
+                            &recovery_context,
+                            is_local_within_grace_period,
+                        )
+                        .await
+                    }
+                },
+            };
+            if let Err(err) = res {
+                warn!("Error recovering data for swap {swap_id}: {err}");
             }
         }
 
@@ -124,20 +149,46 @@ impl Recoverer {
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
-    async fn fetch_swaps_histories(
+    async fn create_recovery_context(
         &self,
         swaps_list: &SwapsList,
         tx_map: TxMap,
         liquid_tip_height: u32,
         bitcoin_tip_height: u32,
         master_blinding_key: MasterBlindingKey,
-    ) -> Result<SwapsHistories> {
-        let swap_lbtc_scripts = swaps_list.get_swap_lbtc_scripts();
+    ) -> Result<RecoveryContext> {
+        // Fetch history data for each lbtc swap script
+        let lbtc_script_to_history_map = self
+            .create_lbtc_history_map(swaps_list.get_swap_lbtc_scripts())
+            .await?;
 
+        // Fetch history data for each btc swap script
+        let (btc_script_to_history_map, btc_script_to_txs_map, btc_script_to_balance_map) = self
+            .create_btc_history_maps(swaps_list.get_swap_btc_scripts())
+            .await?;
+
+        Ok(RecoveryContext {
+            lbtc_script_to_history_map,
+            btc_script_to_history_map,
+            btc_script_to_txs_map,
+            btc_script_to_balance_map,
+            tx_map,
+            liquid_tip_height,
+            bitcoin_tip_height,
+            master_blinding_key,
+            liquid_chain_service: self.liquid_chain_service.clone(),
+            swapper: self.swapper.clone(),
+        })
+    }
+
+    async fn create_lbtc_history_map(
+        &self,
+        swap_lbtc_scripts: Vec<LBtcScript>,
+    ) -> Result<HashMap<LBtcScript, Vec<HistoryTxId>>> {
         let t0 = std::time::Instant::now();
         let lbtc_script_histories = self
             .liquid_chain_service
-            .get_scripts_history(&swap_lbtc_scripts.iter().collect::<Vec<&LBtcScript>>())
+            .get_scripts_history(&swap_lbtc_scripts.to_vec())
             .await?;
         info!(
             "Recoverer executed liquid get_scripts_history for {} scripts in {} milliseconds",
@@ -148,16 +199,26 @@ impl Recoverer {
         let lbtc_swap_scripts_len = swap_lbtc_scripts.len();
         let lbtc_script_histories_len = lbtc_script_histories.len();
         ensure!(
-                lbtc_swap_scripts_len == lbtc_script_histories_len,
-                anyhow!("Got {lbtc_script_histories_len} L-BTC script histories, expected {lbtc_swap_scripts_len}")
-            );
+              lbtc_swap_scripts_len == lbtc_script_histories_len,
+              anyhow!("Got {lbtc_script_histories_len} L-BTC script histories, expected {lbtc_swap_scripts_len}")
+          );
         let lbtc_script_to_history_map: HashMap<LBtcScript, Vec<HistoryTxId>> = swap_lbtc_scripts
             .into_iter()
             .zip(lbtc_script_histories.into_iter())
             .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
             .collect();
 
-        let swap_btc_script_bufs = swaps_list.get_swap_btc_scripts();
+        Ok(lbtc_script_to_history_map)
+    }
+
+    async fn create_btc_history_maps(
+        &self,
+        swap_btc_script_bufs: Vec<BtcScript>,
+    ) -> Result<(
+        HashMap<BtcScript, Vec<HistoryTxId>>,
+        HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
+        HashMap<BtcScript, GetBalanceRes>,
+    )> {
         let swap_btc_scripts = swap_btc_script_bufs
             .iter()
             .map(|x| x.as_script())
@@ -184,9 +245,9 @@ impl Recoverer {
         let btc_swap_scripts_len = swap_btc_script_bufs.len();
         let btc_script_histories_len = btc_script_histories.len();
         ensure!(
-                btc_swap_scripts_len == btc_script_histories_len,
-                anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
-            );
+            btc_swap_scripts_len == btc_script_histories_len,
+            anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
+        );
         let btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>> = swap_btc_script_bufs
             .clone()
             .into_iter()
@@ -232,22 +293,16 @@ impl Recoverer {
                     (script, relevant_txs)
                 })
                 .collect();
+
         let btc_script_to_balance_map: HashMap<BtcScript, GetBalanceRes> = swap_btc_script_bufs
             .into_iter()
             .zip(btc_script_balances)
             .collect();
 
-        Ok(SwapsHistories {
-            lbtc_script_to_history_map,
+        Ok((
             btc_script_to_history_map,
             btc_script_to_txs_map,
             btc_script_to_balance_map,
-            tx_map,
-            liquid_tip_height,
-            bitcoin_tip_height,
-            master_blinding_key,
-            liquid_chain_service: self.liquid_chain_service.clone(),
-            swapper: self.swapper.clone(),
-        })
+        ))
     }
 }

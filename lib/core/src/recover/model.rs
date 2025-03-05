@@ -8,25 +8,13 @@ use lwk_wollet::elements::Txid;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::History;
 use lwk_wollet::WalletTx;
-use tonic::async_trait;
 
 use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
 use crate::swapper::Swapper;
-use anyhow::Result;
 
 pub(crate) type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = lwk_wollet::elements::Script;
-
-#[async_trait]
-pub(crate) trait SwapRecoverHandler: Send + Sync {
-    async fn recover_swap(
-        &self,
-        swap: &mut Swap,
-        context: &SwapsHistories,
-        is_local_within_grace_period: bool,
-    ) -> Result<bool>;
-}
 
 #[derive(Clone, Debug)]
 pub(crate) struct HistoryTxId {
@@ -187,7 +175,7 @@ impl SwapsList {
     }
 }
 
-pub(crate) struct SwapsHistories {
+pub(crate) struct RecoveryContext {
     pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, Vec<HistoryTxId>>,
     pub(crate) btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>>,
     pub(crate) btc_script_to_txs_map: HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,

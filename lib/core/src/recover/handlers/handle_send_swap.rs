@@ -4,7 +4,6 @@ use anyhow::Result;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
-use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
@@ -13,24 +12,6 @@ use crate::utils;
 
 /// Handler for updating send swaps with recovered data
 pub(crate) struct SendSwapHandler;
-
-#[async_trait]
-impl SwapRecoverHandler for SendSwapHandler {
-    async fn recover_swap(
-        &self,
-        swap: &mut Swap,
-        context: &SwapsHistories,
-        is_local_within_grace_period: bool,
-    ) -> Result<bool> {
-        if let Swap::Send(send_swap) = swap {
-            Self::recover_and_update_swap(send_swap, context, is_local_within_grace_period)
-                .await
-                .map(|_| true)
-        } else {
-            Ok(false)
-        }
-    }
-}
 
 impl SendSwapHandler {
     /// Check if send swap recovery should be skipped
@@ -58,9 +39,9 @@ impl SendSwapHandler {
     }
 
     /// Recover and update a send swap with data from the chain
-    pub async fn recover_and_update_swap(
+    pub async fn recover_swap(
         send_swap: &mut SendSwap,
-        context: &SwapsHistories,
+        context: &RecoveryContext,
         is_local_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = send_swap.id.clone();

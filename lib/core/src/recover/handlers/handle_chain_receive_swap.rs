@@ -5,35 +5,12 @@ use electrum_client::GetBalanceRes;
 use log::{debug, warn};
 use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
-use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
 
 /// Handler for updating chain receive swaps with recovered data
 pub(crate) struct ChainReceiveSwapHandler;
-
-#[async_trait]
-impl SwapRecoverHandler for ChainReceiveSwapHandler {
-    async fn recover_swap(
-        &self,
-        swap: &mut Swap,
-        context: &SwapsHistories,
-        is_local_within_grace_period: bool,
-    ) -> Result<bool> {
-        if let Swap::Chain(chain_receive_swap) = swap {
-            if chain_receive_swap.direction == Direction::Incoming {
-                return Self::recover_and_update_swap(
-                    chain_receive_swap,
-                    context,
-                    is_local_within_grace_period,
-                )
-                .map(|_| true);
-            }
-        }
-        Ok(false)
-    }
-}
 
 impl ChainReceiveSwapHandler {
     /// Check if chain receive swap recovery should be skipped
@@ -62,9 +39,9 @@ impl ChainReceiveSwapHandler {
     }
 
     /// Recover and update a chain receive swap with data from the chain
-    pub fn recover_and_update_swap(
+    pub async fn recover_swap(
         chain_swap: &mut ChainSwap,
-        context: &SwapsHistories,
+        context: &RecoveryContext,
         is_local_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();

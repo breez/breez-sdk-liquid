@@ -5,30 +5,12 @@ use lwk_wollet::elements::Txid;
 use lwk_wollet::WalletTx;
 use std::collections::HashMap;
 use std::str::FromStr;
-use tonic::async_trait;
 
 use crate::prelude::*;
 use crate::recover::model::*;
 
 /// Handler for updating receive swaps with recovered data
 pub(crate) struct ReceiveSwapHandler;
-
-#[async_trait]
-impl SwapRecoverHandler for ReceiveSwapHandler {
-    async fn recover_swap(
-        &self,
-        swap: &mut Swap,
-        context: &SwapsHistories,
-        is_local_within_grace_period: bool,
-    ) -> Result<bool> {
-        if let Swap::Receive(receive_swap) = swap {
-            Self::recover_and_update_swap(receive_swap, context, is_local_within_grace_period)
-                .map(|_| true)
-        } else {
-            Ok(false)
-        }
-    }
-}
 
 impl ReceiveSwapHandler {
     /// Check if receive swap recovery should be skipped
@@ -53,9 +35,9 @@ impl ReceiveSwapHandler {
     }
 
     /// Recover and update a receive swap with data from the chain
-    pub fn recover_and_update_swap(
+    pub(crate) async fn recover_swap(
         receive_swap: &mut ReceiveSwap,
-        context: &SwapsHistories,
+        context: &RecoveryContext,
         is_local_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &receive_swap.id.clone();

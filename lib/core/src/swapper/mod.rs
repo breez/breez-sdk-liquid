@@ -11,6 +11,7 @@ use boltz_client::{
     network::Chain,
     Amount,
 };
+use mockall::automock;
 use tokio::sync::{broadcast, watch};
 
 use crate::{
@@ -23,6 +24,7 @@ pub(crate) use subscription_handler::*;
 pub(crate) mod boltz;
 pub(crate) mod subscription_handler;
 
+#[automock]
 #[async_trait]
 pub trait Swapper: Send + Sync {
     /// Create a new chain swap
