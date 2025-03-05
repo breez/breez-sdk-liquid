@@ -17,7 +17,6 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "12c9e546f15706b563ba7e49f2be7e8a5e7ada90" }
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
@@ -26,33 +25,25 @@ flutter_rust_bridge = { version = "=2.8.0", features = [
 ], optional = true }
 log = { workspace = true }
 lwk_common = "0.8.0"
-lwk_signer = "0.8.0"
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
-#lwk_wollet = "0.8.0"
+lwk_signer = { version = "0.8.0", default-features = false }
 rusqlite = { version = "0.31", features = ["backup", "bundled"] }
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+# TODO: Change on top of main once PR is merged
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "19ed955c6fa854ad6cd2beb2eca9127d8099c506", features = ["liquid"] }
 rusqlite_migration = "1.0"
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "84578d9abe1dd0d59867f93a22a92220ab16a52e", features = ["liquid"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
 strum_macros = "0.25"
 thiserror = { workspace = true }
-tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
-openssl = { version = "0.10", features = ["vendored"] }
-tokio = { version = "1", features = ["rt", "macros"] }
-tokio-stream = { version = "0.1.14", features = ["sync"] }
 url = "2.5.0"
 futures-util = { version = "0.3.28", default-features = false, features = [
     "sink",
     "std",
 ] }
-async-trait = "0.1.80"
+async-trait = "0.1.86"
 hex = "0.4"
-reqwest = { version = "=0.11.20", features = ["json"] }
-electrum-client = { version = "0.21.0", default-features = false, features = [
-    "use-rustls-ring",
-    "proxy",
-] }
+reqwest = { version = "0.12", features = [ "json" ] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
@@ -60,8 +51,21 @@ prost = "0.13.3"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
+
+[target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
+electrum-client = { version = "0.21.0", default-features = false, features = [
+    "use-rustls-ring",
+    "proxy",
+] }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "12c9e546f15706b563ba7e49f2be7e8a5e7ada90" }
+tokio-stream = { version = "0.1.14", features = ["sync"] }
+tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
+lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
+
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
 
 [dev-dependencies]
 paste = "1.0.15"
