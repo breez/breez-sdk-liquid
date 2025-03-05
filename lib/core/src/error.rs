@@ -100,9 +100,6 @@ pub enum PaymentError {
     #[error("The generated preimage is not valid")]
     InvalidPreimage,
 
-    #[error("Lwk error: {err}")]
-    LwkError { err: String },
-
     #[error("Boltz did not return any pairs from the request")]
     PairsNotFound,
 
@@ -190,7 +187,7 @@ impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
         match err {
             lwk_wollet::Error::InsufficientFunds => PaymentError::InsufficientFunds,
-            _ => PaymentError::LwkError {
+            _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
         }
