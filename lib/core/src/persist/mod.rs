@@ -478,8 +478,9 @@ impl Persister {
                 SELECT * FROM chain_swaps
                 WHERE 
                     COALESCE(user_lockup_tx_id, claim_tx_id) IS NOT NULL
-                    AND state NOT IN (0, 4)      -- Ignore Created and TimedOut
-            ) cs                                 -- Chain Swap data
+                    OR state IN (5, 6)  -- Always include Refundable and RefundPending
+                    AND state NOT IN (0, 4)  -- Ignore Created and TimedOut
+            ) cs                           
                 ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
