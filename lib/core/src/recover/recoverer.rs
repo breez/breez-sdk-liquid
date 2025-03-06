@@ -23,6 +23,8 @@ use crate::{
     utils,
 };
 
+const LIQUID_TIP_LEEWAY: u32 = 3;
+
 pub(crate) struct Recoverer {
     master_blinding_key: MasterBlindingKey,
     swapper: Arc<dyn Swapper>,
@@ -171,6 +173,13 @@ impl Recoverer {
         &self,
         swaps: &mut [Swap],
     ) -> Result<HashMap<Txid, WalletTx>> {
+        let wallet_tip = self.onchain_wallet.tip().await;
+        let liquid_tip = self.liquid_chain_service.tip().await?;
+        if wallet_tip.abs_diff(liquid_tip) > LIQUID_TIP_LEEWAY {
+            log::debug!("Wallet and liquid chain service tips are too far apart, starting manual wallet sync");
+            self.onchain_wallet.full_scan().await?;
+        }
+
         let recovery_started_at = utils::now();
 
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;

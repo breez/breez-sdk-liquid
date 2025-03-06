@@ -15,8 +15,7 @@ use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
-    ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
-    WolletDescriptor,
+    ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, WalletTx, Wollet, WolletDescriptor,
 };
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -81,7 +80,7 @@ pub trait OnchainWallet: Send + Sync {
     async fn next_unused_address(&self) -> Result<Address, PaymentError>;
 
     /// Get the current tip of the blockchain the wallet is aware of
-    async fn tip(&self) -> Tip;
+    async fn tip(&self) -> u32;
 
     /// Get the public key of the wallet
     fn pubkey(&self) -> Result<String>;
@@ -313,7 +312,7 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
-        let tip = self.tip().await.height();
+        let tip = self.tip().await;
         let address = match self.persister.next_expired_reserved_address(tip)? {
             Some(reserved_address) => {
                 debug!(
@@ -343,8 +342,8 @@ impl OnchainWallet for LiquidOnchainWallet {
     }
 
     /// Get the current tip of the blockchain the wallet is aware of
-    async fn tip(&self) -> Tip {
-        self.wallet.lock().await.tip()
+    async fn tip(&self) -> u32 {
+        self.wallet.lock().await.tip().height()
     }
 
     /// Get the public key of the wallet
