@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use boltz_client::{
     bitcoin::ScriptBuf,
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
@@ -13,6 +12,7 @@ use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
+use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use sdk_common::prelude::*;
@@ -281,7 +281,7 @@ impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
 }
 
 /// Trait that can be used to react to various [SdkEvent]s emitted by the SDK.
-pub trait EventListener: Send + Sync {
+pub trait EventListener: MaybeSend + MaybeSync {
     fn on_event(&self, e: SdkEvent);
 }
 
@@ -324,7 +324,7 @@ impl From<bip32::Error> for SignerError {
 
 /// A trait that can be used to sign messages and verify signatures.
 /// The sdk user can implement this trait to use their own signer.
-pub trait Signer: Send + Sync {
+pub trait Signer: MaybeSend + MaybeSync {
     /// The master xpub encoded as 78 bytes length as defined in bip32 specification.
     /// For reference: <https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki#user-content-Serialization_format>
     fn xpub(&self) -> Result<Vec<u8>, SignerError>;
@@ -783,7 +783,7 @@ pub enum GetPaymentRequest {
 }
 
 /// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
-#[async_trait]
+#[sdk_macros::async_trait]
 pub(crate) trait BlockListener: Send + Sync {
     async fn on_bitcoin_block(&self, height: u32);
     async fn on_liquid_block(&self, height: u32);

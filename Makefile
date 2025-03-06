@@ -4,13 +4,26 @@ fmt:
 	cd lib && cargo fmt
 	cd cli && cargo fmt
 
-clippy:
-	cd lib && cargo clippy -- -D warnings
-	cd lib && cargo clippy --tests -- -D warnings
+clippy: cargo-clippy wasm-clippy
+
+cargo-clippy:
+	cd lib/bindings && cargo clippy -- -D warnings
+	cd lib/bindings && cargo clippy --tests -- -D warnings
+	cd lib/core && cargo clippy -- -D warnings
+	cd lib/core && cargo clippy --tests -- -D warnings
 	cd cli && cargo clippy -- -D warnings
 
-test:
-	cd lib && cargo test
+wasm-clippy:
+	make -C ./lib/wasm clippy
+
+test: cargo-test wasm-test
+
+cargo-test:
+	cd lib/bindings && cargo test
+	cd lib/core && cargo test
+
+wasm-test:
+	make -C ./lib/wasm test
 
 codegen: flutter-codegen react-native-codegen
 

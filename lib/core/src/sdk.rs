@@ -72,11 +72,284 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(30);
 
+pub(crate) struct LiquidSdkBuilder {
+    config: Config,
+    signer: Arc<Box<dyn Signer>>,
+    breez_server: Arc<BreezServer>,
+    bitcoin_chain_service: Option<Arc<dyn BitcoinChainService>>,
+    liquid_chain_service: Option<Arc<dyn LiquidChainService>>,
+    onchain_wallet: Option<Arc<dyn OnchainWallet>>,
+    persister: Option<Arc<Persister>>,
+    recoverer: Option<Arc<Recoverer>>,
+    rest_client: Option<Arc<dyn RestClient>>,
+    status_stream: Option<Arc<dyn SwapperStatusStream>>,
+    swapper: Option<Arc<dyn Swapper>>,
+    sync_service: Option<Arc<SyncService>>,
+}
+
+#[allow(dead_code)]
+impl LiquidSdkBuilder {
+    pub fn new(
+        config: Config,
+        server_url: String,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> Result<LiquidSdkBuilder> {
+        let breez_server = Arc::new(BreezServer::new(server_url, None)?);
+        Ok(LiquidSdkBuilder {
+            config,
+            signer,
+            breez_server,
+            bitcoin_chain_service: None,
+            liquid_chain_service: None,
+            onchain_wallet: None,
+            persister: None,
+            recoverer: None,
+            rest_client: None,
+            status_stream: None,
+            swapper: None,
+            sync_service: None,
+        })
+    }
+
+    pub fn bitcoin_chain_service(
+        &mut self,
+        bitcoin_chain_service: Arc<dyn BitcoinChainService>,
+    ) -> &mut Self {
+        self.bitcoin_chain_service = Some(bitcoin_chain_service.clone());
+        self
+    }
+
+    pub fn liquid_chain_service(
+        &mut self,
+        liquid_chain_service: Arc<dyn LiquidChainService>,
+    ) -> &mut Self {
+        self.liquid_chain_service = Some(liquid_chain_service.clone());
+        self
+    }
+
+    pub fn recoverer(&mut self, recoverer: Arc<Recoverer>) -> &mut Self {
+        self.recoverer = Some(recoverer.clone());
+        self
+    }
+
+    pub fn onchain_wallet(&mut self, onchain_wallet: Arc<dyn OnchainWallet>) -> &mut Self {
+        self.onchain_wallet = Some(onchain_wallet.clone());
+        self
+    }
+
+    pub fn persister(&mut self, persister: Arc<Persister>) -> &mut Self {
+        self.persister = Some(persister.clone());
+        self
+    }
+
+    pub fn rest_client(&mut self, rest_client: Arc<dyn RestClient>) -> &mut Self {
+        self.rest_client = Some(rest_client.clone());
+        self
+    }
+
+    pub fn status_stream(&mut self, status_stream: Arc<dyn SwapperStatusStream>) -> &mut Self {
+        self.status_stream = Some(status_stream.clone());
+        self
+    }
+
+    pub fn swapper(&mut self, swapper: Arc<dyn Swapper>) -> &mut Self {
+        self.swapper = Some(swapper.clone());
+        self
+    }
+
+    pub fn sync_service(&mut self, sync_service: Arc<SyncService>) -> &mut Self {
+        self.sync_service = Some(sync_service.clone());
+        self
+    }
+
+    pub fn build(&self) -> Result<Arc<LiquidSdk>> {
+        if let Some(breez_api_key) = &self.config.breez_api_key {
+            LiquidSdk::validate_breez_api_key(breez_api_key)?
+        }
+
+        fs::create_dir_all(&self.config.working_dir)?;
+        let fingerprint_hex: String =
+            Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
+        let working_dir = self
+            .config
+            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)?;
+        let cache_dir = self.config.get_wallet_dir(
+            self.config
+                .cache_dir
+                .as_ref()
+                .unwrap_or(&self.config.working_dir),
+            &fingerprint_hex,
+        )?;
+
+        let sync_enabled = self
+            .config
+            .sync_service_url
+            .clone()
+            .map(|_| true)
+            .unwrap_or(false);
+
+        let persister = match self.persister.clone() {
+            Some(persister) => persister,
+            None => {
+                let persister = Arc::new(Persister::new(
+                    &working_dir,
+                    self.config.network,
+                    sync_enabled,
+                )?);
+                persister.init()?;
+                persister.replace_asset_metadata(self.config.asset_metadata.clone())?;
+                persister
+            }
+        };
+
+        let rest_client: Arc<dyn RestClient> = match self.rest_client.clone() {
+            Some(rest_client) => rest_client,
+            None => Arc::new(ReqwestRestClient::new()?),
+        };
+
+        let bitcoin_chain_service: Arc<dyn BitcoinChainService> =
+            match self.bitcoin_chain_service.clone() {
+                Some(bitcoin_chain_service) => bitcoin_chain_service,
+                None => Arc::new(HybridBitcoinChainService::new(
+                    self.config.clone(),
+                    rest_client.clone(),
+                )?),
+            };
+
+        let liquid_chain_service: Arc<dyn LiquidChainService> =
+            match self.liquid_chain_service.clone() {
+                Some(liquid_chain_service) => liquid_chain_service,
+                None => Arc::new(HybridLiquidChainService::new(self.config.clone())?),
+            };
+
+        let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
+            Some(onchain_wallet) => onchain_wallet,
+            None => Arc::new(LiquidOnchainWallet::new(
+                self.config.clone(),
+                &cache_dir,
+                persister.clone(),
+                self.signer.clone(),
+            )?),
+        };
+
+        let event_manager = Arc::new(EventManager::new());
+        let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
+
+        let swapper: Arc<dyn Swapper> = match self.swapper.clone() {
+            Some(swapper) => swapper,
+            None => {
+                let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
+                Arc::new(BoltzSwapper::new(self.config.clone(), proxy_url_fetcher))
+            }
+        };
+
+        let status_stream: Arc<dyn SwapperStatusStream> = match self.status_stream.clone() {
+            Some(status_stream) => status_stream,
+            None => Arc::from(swapper.create_status_stream()),
+        };
+
+        let recoverer = match self.recoverer.clone() {
+            Some(recoverer) => recoverer,
+            None => Arc::new(Recoverer::new(
+                self.signer.slip77_master_blinding_key()?,
+                swapper.clone(),
+                onchain_wallet.clone(),
+                liquid_chain_service.clone(),
+                bitcoin_chain_service.clone(),
+            )?),
+        };
+
+        let sync_service = match self.sync_service.clone() {
+            Some(sync_service) => Some(sync_service),
+            None => match self.config.sync_service_url.clone() {
+                Some(sync_service_url) => {
+                    if BREEZ_SYNC_SERVICE_URL == sync_service_url
+                        && self.config.breez_api_key.is_none()
+                    {
+                        anyhow::bail!(
+                            "Cannot start the Breez real-time sync service without providing a valid API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key",
+                        );
+                    }
+
+                    let syncer_client =
+                        Box::new(BreezSyncerClient::new(self.config.breez_api_key.clone()));
+                    Some(Arc::new(SyncService::new(
+                        sync_service_url,
+                        persister.clone(),
+                        recoverer.clone(),
+                        self.signer.clone(),
+                        syncer_client,
+                    )))
+                }
+                None => None,
+            },
+        };
+
+        let send_swap_handler = SendSwapHandler::new(
+            self.config.clone(),
+            onchain_wallet.clone(),
+            persister.clone(),
+            swapper.clone(),
+            liquid_chain_service.clone(),
+        );
+
+        let receive_swap_handler = ReceiveSwapHandler::new(
+            self.config.clone(),
+            onchain_wallet.clone(),
+            persister.clone(),
+            swapper.clone(),
+            liquid_chain_service.clone(),
+        );
+
+        let chain_swap_handler = Arc::new(ChainSwapHandler::new(
+            self.config.clone(),
+            onchain_wallet.clone(),
+            persister.clone(),
+            swapper.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+        )?);
+
+        let buy_bitcoin_service = Arc::new(BuyBitcoinService::new(
+            self.config.clone(),
+            self.breez_server.clone(),
+        ));
+
+        let external_input_parsers = self.config.get_all_external_input_parsers();
+
+        let sdk = Arc::new(LiquidSdk {
+            config: self.config.clone(),
+            onchain_wallet,
+            signer: self.signer.clone(),
+            persister: persister.clone(),
+            rest_client,
+            event_manager,
+            status_stream: status_stream.clone(),
+            swapper,
+            recoverer,
+            bitcoin_chain_service,
+            liquid_chain_service,
+            fiat_api: self.breez_server.clone(),
+            is_started: RwLock::new(false),
+            shutdown_sender,
+            shutdown_receiver,
+            send_swap_handler,
+            receive_swap_handler,
+            sync_service,
+            chain_swap_handler,
+            buy_bitcoin_service,
+            external_input_parsers,
+        });
+        Ok(sdk)
+    }
+}
+
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
     pub(crate) signer: Arc<Box<dyn Signer>>,
     pub(crate) persister: Arc<Persister>,
+    pub(crate) rest_client: Arc<dyn RestClient>,
     pub(crate) event_manager: Arc<EventManager>,
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,
     pub(crate) swapper: Arc<dyn Swapper>,
@@ -135,7 +408,12 @@ impl LiquidSdk {
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
     ) -> Result<Arc<LiquidSdk>> {
-        let sdk = LiquidSdk::new(req.config, Arc::new(signer))?;
+        let sdk = LiquidSdkBuilder::new(
+            req.config,
+            PRODUCTION_BREEZSERVER_URL.into(),
+            Arc::new(signer),
+        )?
+        .build()?;
         sdk.start()
             .inspect_err(|e| error!("Failed to start an SDK instance: {:?}", e))
             .await?;
@@ -165,129 +443,6 @@ impl LiquidSdk {
         }
 
         Ok(())
-    }
-
-    fn new(config: Config, signer: Arc<Box<dyn Signer>>) -> Result<Arc<Self>> {
-        if let Some(breez_api_key) = &config.breez_api_key {
-            Self::validate_breez_api_key(breez_api_key)?
-        }
-
-        fs::create_dir_all(&config.working_dir)?;
-        let fingerprint_hex: String =
-            Xpub::decode(signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
-        let working_dir = config.get_wallet_dir(&config.working_dir, &fingerprint_hex)?;
-        let cache_dir = config.get_wallet_dir(
-            config.cache_dir.as_ref().unwrap_or(&config.working_dir),
-            &fingerprint_hex,
-        )?;
-
-        let sync_enabled = config
-            .sync_service_url
-            .clone()
-            .map(|_| true)
-            .unwrap_or(false);
-        let persister = Arc::new(Persister::new(&working_dir, config.network, sync_enabled)?);
-        persister.init()?;
-        persister.replace_asset_metadata(config.asset_metadata.clone())?;
-
-        let liquid_chain_service = Arc::new(HybridLiquidChainService::new(config.clone())?);
-        let bitcoin_chain_service = Arc::new(HybridBitcoinChainService::new(config.clone())?);
-
-        let onchain_wallet = Arc::new(LiquidOnchainWallet::new(
-            config.clone(),
-            &cache_dir,
-            persister.clone(),
-            signer.clone(),
-        )?);
-
-        let event_manager = Arc::new(EventManager::new());
-        let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
-
-        let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
-        let swapper = Arc::new(BoltzSwapper::new(config.clone(), proxy_url_fetcher));
-        let status_stream = Arc::<dyn SwapperStatusStream>::from(swapper.create_status_stream());
-
-        let recoverer = Arc::new(Recoverer::new(
-            signer.slip77_master_blinding_key()?,
-            swapper.clone(),
-            onchain_wallet.clone(),
-            liquid_chain_service.clone(),
-            bitcoin_chain_service.clone(),
-        )?);
-
-        let mut sync_service = None;
-        if let Some(sync_service_url) = config.sync_service_url.clone() {
-            if BREEZ_SYNC_SERVICE_URL == sync_service_url && config.breez_api_key.is_none() {
-                anyhow::bail!(
-                    "Cannot start the Breez real-time sync service without providing a valid API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key",
-                );
-            }
-
-            let syncer_client = Box::new(BreezSyncerClient::new(config.breez_api_key.clone()));
-            sync_service = Some(Arc::new(SyncService::new(
-                sync_service_url,
-                persister.clone(),
-                recoverer.clone(),
-                signer.clone(),
-                syncer_client,
-            )));
-        }
-
-        let send_swap_handler = SendSwapHandler::new(
-            config.clone(),
-            onchain_wallet.clone(),
-            persister.clone(),
-            swapper.clone(),
-            liquid_chain_service.clone(),
-        );
-
-        let receive_swap_handler = ReceiveSwapHandler::new(
-            config.clone(),
-            onchain_wallet.clone(),
-            persister.clone(),
-            swapper.clone(),
-            liquid_chain_service.clone(),
-        );
-
-        let chain_swap_handler = Arc::new(ChainSwapHandler::new(
-            config.clone(),
-            onchain_wallet.clone(),
-            persister.clone(),
-            swapper.clone(),
-            liquid_chain_service.clone(),
-            bitcoin_chain_service.clone(),
-        )?);
-
-        let breez_server = Arc::new(BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None)?);
-
-        let buy_bitcoin_service =
-            Arc::new(BuyBitcoinService::new(config.clone(), breez_server.clone()));
-
-        let external_input_parsers = config.get_all_external_input_parsers();
-
-        let sdk = Arc::new(LiquidSdk {
-            config: config.clone(),
-            onchain_wallet,
-            signer: signer.clone(),
-            persister: persister.clone(),
-            event_manager,
-            status_stream: status_stream.clone(),
-            swapper,
-            recoverer,
-            bitcoin_chain_service,
-            liquid_chain_service,
-            fiat_api: breez_server,
-            is_started: RwLock::new(false),
-            shutdown_sender,
-            shutdown_receiver,
-            send_swap_handler,
-            receive_swap_handler,
-            sync_service,
-            chain_swap_handler,
-            buy_bitcoin_service,
-            external_input_parsers,
-        });
-        Ok(sdk)
     }
 
     /// Starts an SDK instance.
@@ -3296,6 +3451,7 @@ impl LiquidSdk {
         };
 
         match validate_lnurl_pay(
+            self.rest_client.as_ref(),
             amount_msat,
             &req.comment,
             &req.data,
@@ -3492,7 +3648,9 @@ impl LiquidSdk {
             });
         };
 
-        let res = validate_lnurl_withdraw(req.data.clone(), invoice.clone()).await?;
+        let res =
+            validate_lnurl_withdraw(self.rest_client.as_ref(), req.data.clone(), invoice.clone())
+                .await?;
         if let LnUrlWithdrawResult::Ok { data: _ } = res {
             if let Some(ReceiveSwap {
                 claim_tx_id: Some(tx_id),
@@ -3526,7 +3684,12 @@ impl LiquidSdk {
         &self,
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
-        Ok(perform_lnurl_auth(&req_data, &SdkLnurlAuthSigner::new(self.signer.clone())).await?)
+        Ok(perform_lnurl_auth(
+            self.rest_client.as_ref(),
+            &req_data,
+            &SdkLnurlAuthSigner::new(self.signer.clone()),
+        )
+        .await?)
     }
 
     /// Register for webhook callbacks at the given `webhook_url`. Each created swap after registering the
@@ -3591,9 +3754,10 @@ impl LiquidSdk {
     /// Can optionally be configured to use external input parsers by providing `external_input_parsers` in [Config].
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
         let external_parsers = &self.external_input_parsers;
-        let input_type = parse(input, Some(external_parsers))
-            .await
-            .map_err(|e| PaymentError::generic(&e.to_string()))?;
+        let input_type =
+            parse_with_rest_client(self.rest_client.as_ref(), input, Some(external_parsers))
+                .await
+                .map_err(|e| PaymentError::generic(&e.to_string()))?;
 
         let res = match input_type {
             InputType::LiquidAddress { ref address } => match &address.asset_id {
@@ -3690,6 +3854,9 @@ mod tests {
         },
     };
     use paste::paste;
+
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     struct NewSwapArgs {
         direction: Direction,
@@ -3811,7 +3978,7 @@ mod tests {
         }};
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_receive_swap_update_tracking() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
@@ -3819,14 +3986,14 @@ mod tests {
         let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
-        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
+        let sdk = new_liquid_sdk_with_chain_services(
             persister.clone(),
             swapper.clone(),
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             None,
-        )?);
+        )?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -3927,7 +4094,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_send_swap_update_tracking() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
@@ -3983,7 +4150,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_chain_swap_update_tracking() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::default());
@@ -3991,14 +4158,14 @@ mod tests {
         let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
-        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
+        let sdk = new_liquid_sdk_with_chain_services(
             persister.clone(),
             swapper.clone(),
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             None,
-        )?);
+        )?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -4214,7 +4381,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_zero_amount_chain_swap_zero_leeway() -> Result<()> {
         let user_lockup_sat = 50_000;
 
@@ -4224,14 +4391,14 @@ mod tests {
         let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
-        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
+        let sdk = new_liquid_sdk_with_chain_services(
             persister.clone(),
             swapper.clone(),
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             None,
-        )?);
+        )?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -4274,7 +4441,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_zero_amount_chain_swap_with_leeway() -> Result<()> {
         let user_lockup_sat = 50_000;
         let onchain_fee_rate_leeway_sat_per_vbyte = 5;
@@ -4285,14 +4452,14 @@ mod tests {
         let liquid_chain_service = Arc::new(MockLiquidChainService::new());
         let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
 
-        let sdk = Arc::new(new_liquid_sdk_with_chain_services(
+        let sdk = new_liquid_sdk_with_chain_services(
             persister.clone(),
             swapper.clone(),
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             Some(onchain_fee_rate_leeway_sat_per_vbyte),
-        )?);
+        )?;
 
         LiquidSdk::track_swap_updates(&sdk);
 

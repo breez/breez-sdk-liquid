@@ -6,7 +6,6 @@ use std::time::Instant;
 use std::{path::Path, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
@@ -34,7 +33,7 @@ use lwk_wollet::secp256k1::Message;
 
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub trait OnchainWallet: Send + Sync {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
@@ -183,7 +182,7 @@ impl LiquidOnchainWallet {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl OnchainWallet for LiquidOnchainWallet {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
@@ -441,7 +440,10 @@ mod tests {
     use anyhow::Result;
     use tempdir::TempDir;
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_sign_and_check_message() -> Result<()> {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());

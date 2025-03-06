@@ -2,7 +2,6 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use futures_util::TryFutureExt;
@@ -38,7 +37,7 @@ pub(crate) struct SendSwapHandler {
     subscription_notifier: broadcast::Sender<String>,
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl BlockListener for SendSwapHandler {
     async fn on_bitcoin_block(&self, _height: u32) {}
 
@@ -610,7 +609,10 @@ mod tests {
         },
     };
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_send_swap_state_transitions() -> Result<()> {
         create_persister!(storage);
         let send_swap_handler = new_send_swap_handler(storage.clone())?;
