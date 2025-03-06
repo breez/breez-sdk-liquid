@@ -5576,10 +5576,6 @@ final class wire_cst_PaymentError_InvalidInvoice extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
-final class wire_cst_PaymentError_LwkError extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
-}
-
 final class wire_cst_PaymentError_ReceiveError extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -5610,8 +5606,6 @@ final class PaymentErrorKind extends ffi.Union {
   external wire_cst_PaymentError_InvalidDescription InvalidDescription;
 
   external wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
-
-  external wire_cst_PaymentError_LwkError LwkError;
 
   external wire_cst_PaymentError_ReceiveError ReceiveError;
 

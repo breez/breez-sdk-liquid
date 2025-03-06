@@ -25,7 +25,6 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.invalidDescription({required String err}) = PaymentError_InvalidDescription;
   const factory PaymentError.invalidInvoice({required String err}) = PaymentError_InvalidInvoice;
   const factory PaymentError.invalidPreimage() = PaymentError_InvalidPreimage;
-  const factory PaymentError.lwkError({required String err}) = PaymentError_LwkError;
   const factory PaymentError.pairsNotFound() = PaymentError_PairsNotFound;
   const factory PaymentError.paymentTimeout() = PaymentError_PaymentTimeout;
   const factory PaymentError.persistError() = PaymentError_PersistError;

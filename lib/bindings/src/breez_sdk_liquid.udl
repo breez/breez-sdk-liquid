@@ -315,7 +315,6 @@ enum PaymentError {
     "InvalidInvoice",
     "InvalidNetwork",
     "InvalidPreimage",
-    "LwkError",
     "PairsNotFound",
     "PaymentTimeout",
     "PersistError",

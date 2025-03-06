@@ -1961,16 +1961,23 @@ impl LiquidSdk {
                     Some(payment) => return Ok(payment),
                     None => {
                         debug!("Timeout occurred without payment, set swap to timed out");
-                        match swap {
-                            Swap::Send(_) => self.send_swap_handler.update_swap_info(&expected_swap_id, TimedOut, None, None, None)?,
+                        let update_res = match swap {
+                            Swap::Send(_) => self.send_swap_handler.update_swap_info(&expected_swap_id, TimedOut, None, None, None),
                             Swap::Chain(_) => self.chain_swap_handler.update_swap_info(&ChainSwapUpdate {
-                                    swap_id: expected_swap_id,
+                                    swap_id: expected_swap_id.clone(),
                                     to_state: TimedOut,
                                     ..Default::default()
-                                })?,
-                            _ => ()
+                                }),
+                            _ => Ok(())
+                        };
+                        return match update_res {
+                            Ok(_) => Err(PaymentError::PaymentTimeout),
+                            Err(_) => {
+                                // Not able to transition the payment state to TimedOut, which means the payment
+                                // state progressed but we didn't see the event before the timeout
+                                self.persister.get_payment(&expected_swap_id).ok().flatten().ok_or(PaymentError::generic("Payment not found"))
+                            }
                         }
-                        return Err(PaymentError::PaymentTimeout)
                     },
                 },
                 event = events_stream.recv() => match event {

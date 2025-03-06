@@ -1099,10 +1099,6 @@ typedef struct wire_cst_PaymentError_InvalidInvoice {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_InvalidInvoice;
 
-typedef struct wire_cst_PaymentError_LwkError {
-  struct wire_cst_list_prim_u_8_strict *err;
-} wire_cst_PaymentError_LwkError;
-
 typedef struct wire_cst_PaymentError_ReceiveError {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_ReceiveError;
@@ -1127,7 +1123,6 @@ typedef union PaymentErrorKind {
   struct wire_cst_PaymentError_Generic Generic;
   struct wire_cst_PaymentError_InvalidDescription InvalidDescription;
   struct wire_cst_PaymentError_InvalidInvoice InvalidInvoice;
-  struct wire_cst_PaymentError_LwkError LwkError;
   struct wire_cst_PaymentError_ReceiveError ReceiveError;
   struct wire_cst_PaymentError_Refunded Refunded;
   struct wire_cst_PaymentError_SendError SendError;
