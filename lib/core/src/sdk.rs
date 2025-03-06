@@ -3661,7 +3661,7 @@ mod tests {
         boltz::{self, SwapUpdateTxDetails},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
-    use lwk_wollet::{elements::Txid, hashes::hex::DisplayHex};
+    use lwk_wollet::hashes::hex::DisplayHex;
 
     use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
     use crate::test_utils::chain_swap::{
@@ -3670,11 +3670,12 @@ mod tests {
     };
     use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
     use crate::test_utils::wallet::TEST_LIQUID_RECEIVE_LOCKUP_TX;
+    use crate::{bitcoin, elements};
     use crate::{
-        model::{Direction, PaymentState, Swap},
+        model::{Direction, History, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
-            chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
+            chain::{MockBitcoinChainService, MockLiquidChainService},
             chain_swap::{new_chain_swap, TEST_BITCOIN_INCOMING_USER_LOCKUP_TX},
             persist::{create_persister, new_receive_swap, new_send_swap},
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
@@ -3857,11 +3858,9 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service.set_history(vec![MockHistory {
+                liquid_chain_service.set_history(vec![History::<elements::Txid> {
                     txid: mock_tx_id,
                     height,
-                    block_hash: None,
-                    block_timestamp: None,
                 }]);
 
                 let persisted_swap = trigger_swap_update!(
@@ -3891,11 +3890,9 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service.set_history(vec![MockHistory {
+                liquid_chain_service.set_history(vec![History::<elements::Txid> {
                     txid: mock_tx_id,
                     height,
-                    block_hash: None,
-                    block_timestamp: None,
                 }]);
 
                 let persisted_swap = trigger_swap_update!(
@@ -4060,19 +4057,15 @@ mod tests {
                     if let Some(user_lockup_tx_id) = user_lockup_tx_id {
                         match direction {
                             Direction::Incoming => {
-                                bitcoin_chain_service.set_history(vec![MockHistory {
-                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                bitcoin_chain_service.set_history(vec![History::<bitcoin::Txid> {
+                                    txid: bitcoin::Txid::from_str(user_lockup_tx_id).unwrap(),
                                     height: 0,
-                                    block_hash: None,
-                                    block_timestamp: None,
                                 }]);
                             }
                             Direction::Outgoing => {
-                                liquid_chain_service.set_history(vec![MockHistory {
-                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                liquid_chain_service.set_history(vec![History::<elements::Txid> {
+                                    txid: elements::Txid::from_str(user_lockup_tx_id).unwrap(),
                                     height: 0,
-                                    block_hash: None,
-                                    block_timestamp: None,
                                 }]);
                             }
                         }
@@ -4107,11 +4100,9 @@ mod tests {
                     ChainSwapStates::TransactionConfirmed,
                 ] {
                     if direction == Direction::Incoming {
-                        bitcoin_chain_service.set_history(vec![MockHistory {
-                            txid: Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
+                        bitcoin_chain_service.set_history(vec![History::<bitcoin::Txid> {
+                            txid: bitcoin::Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
                             height: 0,
-                            block_hash: None,
-                            block_timestamp: None,
                         }]);
                         bitcoin_chain_service.set_transactions(&[&mock_user_lockup_tx_hex]);
                     }

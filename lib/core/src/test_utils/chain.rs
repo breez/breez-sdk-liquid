@@ -2,23 +2,17 @@
 
 use std::sync::Mutex;
 
+use crate::{
+    bitcoin, elements,
+    model::{BtcScriptBalance, History},
+};
 use anyhow::Result;
 use async_trait::async_trait;
-use boltz_client::{
-    elements::{
-        hex::FromHex, OutPoint as ElementsOutPoint, Script as ElementsScript,
-        TxOut as ElementsTxOut,
-    },
-    Amount,
-};
-use electrum_client::GetBalanceRes;
-use electrum_client::{
-    bitcoin::{consensus::deserialize, OutPoint, Script, TxOut},
-    GetHistoryRes,
-};
-use lwk_wollet::{
-    elements::{BlockHash, Txid as ElementsTxid},
-    History,
+use bitcoin::{consensus::deserialize, OutPoint, Script, TxOut};
+use boltz_client::Amount;
+use elements::{
+    hex::FromHex, OutPoint as ElementsOutPoint, Script as ElementsScript, TxOut as ElementsTxOut,
+    Txid as ElementsTxid,
 };
 
 use crate::{
@@ -27,38 +21,9 @@ use crate::{
     utils,
 };
 
-#[derive(Clone)]
-pub(crate) struct MockHistory {
-    pub txid: ElementsTxid,
-    pub height: i32,
-    pub block_hash: Option<BlockHash>,
-    pub block_timestamp: Option<u32>,
-}
-
-impl From<MockHistory> for lwk_wollet::History {
-    fn from(h: MockHistory) -> Self {
-        lwk_wollet::History {
-            txid: h.txid,
-            height: h.height,
-            block_hash: h.block_hash,
-            block_timestamp: h.block_timestamp,
-        }
-    }
-}
-
-impl From<MockHistory> for GetHistoryRes {
-    fn from(h: MockHistory) -> Self {
-        Self {
-            tx_hash: electrum_client::bitcoin::Txid::from_raw_hash(h.txid.to_raw_hash()),
-            height: h.height,
-            fee: None,
-        }
-    }
-}
-
 #[derive(Default)]
 pub(crate) struct MockLiquidChainService {
-    history: Mutex<Vec<MockHistory>>,
+    history: Mutex<Vec<History<ElementsTxid>>>,
 }
 
 impl MockLiquidChainService {
@@ -66,12 +31,12 @@ impl MockLiquidChainService {
         MockLiquidChainService::default()
     }
 
-    pub(crate) fn set_history(&self, history: Vec<MockHistory>) -> &Self {
+    pub(crate) fn set_history(&self, history: Vec<History<ElementsTxid>>) -> &Self {
         *self.history.lock().unwrap() = history;
         self
     }
 
-    pub(crate) fn get_history(&self) -> Vec<MockHistory> {
+    pub(crate) fn get_history(&self) -> Vec<History<ElementsTxid>> {
         self.history.lock().unwrap().clone()
     }
 }
@@ -82,24 +47,21 @@ impl LiquidChainService for MockLiquidChainService {
         Ok(0)
     }
 
-    async fn broadcast(
-        &self,
-        tx: &lwk_wollet::elements::Transaction,
-    ) -> Result<lwk_wollet::elements::Txid> {
+    async fn broadcast(&self, tx: &elements::Transaction) -> Result<elements::Txid> {
         Ok(tx.txid())
     }
 
     async fn get_transaction_hex(
         &self,
-        _txid: &lwk_wollet::elements::Txid,
-    ) -> Result<Option<lwk_wollet::elements::Transaction>> {
+        _txid: &elements::Txid,
+    ) -> Result<Option<elements::Transaction>> {
         unimplemented!()
     }
 
     async fn get_transactions(
         &self,
-        _txids: &[lwk_wollet::elements::Txid],
-    ) -> Result<Vec<lwk_wollet::elements::Transaction>> {
+        _txids: &[elements::Txid],
+    ) -> Result<Vec<elements::Transaction>> {
         Ok(vec![])
     }
 
@@ -107,11 +69,14 @@ impl LiquidChainService for MockLiquidChainService {
         &self,
         _script: &ElementsScript,
         _retries: u64,
-    ) -> Result<Vec<lwk_wollet::History>> {
+    ) -> Result<Vec<History<ElementsTxid>>> {
         Ok(self.get_history().into_iter().map(Into::into).collect())
     }
 
-    async fn get_scripts_history(&self, _scripts: &[&ElementsScript]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(
+        &self,
+        _scripts: &[&ElementsScript],
+    ) -> Result<Vec<Vec<History<elements::Txid>>>> {
         Ok(vec![])
     }
 
@@ -124,18 +89,18 @@ impl LiquidChainService for MockLiquidChainService {
 
     async fn verify_tx(
         &self,
-        _address: &boltz_client::ElementsAddress,
+        _address: &elements::Address,
         _tx_id: &str,
         tx_hex: &str,
         _verify_confirmation: bool,
-    ) -> Result<lwk_wollet::elements::Transaction> {
+    ) -> Result<elements::Transaction> {
         utils::deserialize_tx_hex(tx_hex)
     }
 }
 
 pub(crate) struct MockBitcoinChainService {
-    history: Mutex<Vec<MockHistory>>,
-    txs: Mutex<Vec<boltz_client::bitcoin::Transaction>>,
+    history: Mutex<Vec<History<bitcoin::Txid>>>,
+    txs: Mutex<Vec<bitcoin::Transaction>>,
     script_balance_sat: Mutex<u64>,
 }
 
@@ -148,7 +113,7 @@ impl MockBitcoinChainService {
         }
     }
 
-    pub(crate) fn set_history(&self, history: Vec<MockHistory>) -> &Self {
+    pub(crate) fn set_history(&self, history: Vec<History<bitcoin::Txid>>) -> &Self {
         *self.history.lock().unwrap() = history;
         self
     }
@@ -173,17 +138,14 @@ impl BitcoinChainService for MockBitcoinChainService {
         Ok(0)
     }
 
-    async fn broadcast(
-        &self,
-        tx: &boltz_client::bitcoin::Transaction,
-    ) -> Result<boltz_client::bitcoin::Txid, anyhow::Error> {
+    async fn broadcast(&self, tx: &bitcoin::Transaction) -> Result<bitcoin::Txid, anyhow::Error> {
         Ok(tx.compute_txid())
     }
 
     async fn get_transactions(
         &self,
-        _txids: &[boltz_client::bitcoin::Txid],
-    ) -> Result<Vec<boltz_client::bitcoin::Transaction>> {
+        _txids: &[bitcoin::Txid],
+    ) -> Result<Vec<bitcoin::Transaction>> {
         Ok(self.txs.lock().unwrap().clone())
     }
 
@@ -191,7 +153,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _script: &Script,
         _retries: u64,
-    ) -> Result<Vec<GetHistoryRes>> {
+    ) -> Result<Vec<History<bitcoin::Txid>>> {
         Ok(self
             .history
             .lock()
@@ -202,7 +164,10 @@ impl BitcoinChainService for MockBitcoinChainService {
             .collect())
     }
 
-    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<GetHistoryRes>>> {
+    async fn get_scripts_history(
+        &self,
+        _scripts: &[&Script],
+    ) -> Result<Vec<Vec<History<bitcoin::Txid>>>> {
         Ok(vec![])
     }
 
@@ -234,14 +199,14 @@ impl BitcoinChainService for MockBitcoinChainService {
     async fn script_get_balance(
         &self,
         _script: &boltz_client::bitcoin::Script,
-    ) -> Result<electrum_client::GetBalanceRes> {
-        Ok(GetBalanceRes {
+    ) -> Result<BtcScriptBalance> {
+        Ok(BtcScriptBalance {
             confirmed: 0,
             unconfirmed: 0,
         })
     }
 
-    async fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+    async fn scripts_get_balance(&self, _scripts: &[&Script]) -> Result<Vec<BtcScriptBalance>> {
         Ok(vec![])
     }
 
@@ -249,8 +214,8 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _script: &boltz_client::bitcoin::Script,
         _retries: u64,
-    ) -> Result<electrum_client::GetBalanceRes> {
-        Ok(GetBalanceRes {
+    ) -> Result<BtcScriptBalance> {
+        Ok(BtcScriptBalance {
             confirmed: *self.script_balance_sat.lock().unwrap(),
             unconfirmed: 0,
         })

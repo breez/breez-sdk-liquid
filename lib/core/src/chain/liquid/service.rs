@@ -1,15 +1,13 @@
 use std::time::Duration;
 
+use crate::prelude::*;
+
 use anyhow::{anyhow, bail, Result};
 use async_trait::async_trait;
-use boltz_client::ToHex;
+use elements::{hex::FromHex, Address, OutPoint, Script, Transaction, Txid};
 use log::info;
-use lwk_wollet::elements::hex::FromHex;
-use lwk_wollet::{
-    elements::{Address, OutPoint, Script, Transaction, Txid},
-    hashes::{sha256, Hash},
-    History,
-};
+use lwk_wollet::hashes::{sha256, Hash};
+use sdk_common::bitcoin::hashes::hex::ToHex;
 use tokio::sync::{Mutex, RwLock};
 
 use crate::get_client;
@@ -35,14 +33,14 @@ pub trait LiquidChainService: Send + Sync {
     /// Get the transactions involved in a list of scripts.
     ///
     /// The data is fetched in a single call from the Electrum endpoint.
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History<Txid>>>>;
 
     /// Get the transactions involved in a list of scripts
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<Vec<History>>;
+    ) -> Result<Vec<History<Txid>>>;
 
     /// Get the utxos associated with a script pubkey
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
@@ -133,16 +131,21 @@ impl LiquidChainService for HybridLiquidChainService {
         client.get_transactions(txids).await
     }
 
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History<Txid>>>> {
         get_client!(self, client);
-        client.get_scripts_history(scripts).await
+        Ok(client
+            .get_scripts_history(scripts)
+            .await?
+            .into_iter()
+            .map(|h| h.into_iter().map(Into::into).collect())
+            .collect())
     }
 
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<Vec<History>> {
+    ) -> Result<Vec<History<Txid>>> {
         let script_hash = sha256::Hash::hash(script.as_bytes())
             .to_byte_array()
             .to_hex();

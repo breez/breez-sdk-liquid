@@ -1,16 +1,17 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Context, Result};
-use electrum_client::bitcoin::{Script, Transaction, Txid};
-use electrum_client::{ElectrumApi as _, GetBalanceRes, GetHistoryRes};
-use lwk_wollet::ElectrumOptions;
+
+use crate::prelude::*;
+use bitcoin::{Script, Transaction, Txid};
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+use {electrum_client::ElectrumApi as _, lwk_wollet::ElectrumOptions};
 
 use crate::model::{BlockchainExplorer, LiquidNetwork, RecommendedFees};
 
 pub(crate) enum BitcoinClient {
-    Electrum {
-        inner: Box<electrum_client::Client>,
-    },
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum { inner: Box<electrum_client::Client> },
     Esplora {
         inner: Box<esplora_client::AsyncClient>,
     },
@@ -19,6 +20,7 @@ pub(crate) enum BitcoinClient {
 impl BitcoinClient {
     pub(crate) fn is_available(&self) -> bool {
         match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BitcoinClient::Electrum { inner } => inner.ping().is_ok(),
             BitcoinClient::Esplora { .. } => true,
         }
@@ -29,6 +31,7 @@ impl BitcoinClient {
         network: LiquidNetwork,
     ) -> Result<Self> {
         match exp {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => {
                 let (tls, validate_domain) = match network {
                     LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
@@ -56,6 +59,7 @@ impl BitcoinClient {
 
     pub(crate) async fn tip(&mut self) -> Result<u32> {
         match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BitcoinClient::Electrum { inner } => {
                 let mut maybe_popped_header = None;
                 while let Some(header) = inner.block_headers_pop_raw()? {
@@ -83,6 +87,7 @@ impl BitcoinClient {
 
     pub(crate) async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BitcoinClient::Electrum { inner } => inner.transaction_broadcast(tx)?,
             BitcoinClient::Esplora { inner } => {
                 inner.broadcast(tx).await?;
@@ -93,6 +98,7 @@ impl BitcoinClient {
 
     pub(crate) async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BitcoinClient::Electrum { inner } => inner.batch_transaction_get(txids)?,
             BitcoinClient::Esplora { inner } => {
                 // TODO Add support for batch search
@@ -108,9 +114,14 @@ impl BitcoinClient {
     pub(crate) async fn get_scripts_history(
         &self,
         scripts: &[&Script],
-    ) -> Result<Vec<Vec<GetHistoryRes>>> {
+    ) -> Result<Vec<Vec<History<Txid>>>> {
         Ok(match self {
-            BitcoinClient::Electrum { inner } => inner.batch_script_get_history(scripts)?,
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BitcoinClient::Electrum { inner } => inner
+                .batch_script_get_history(scripts)?
+                .into_iter()
+                .map(|histories| histories.into_iter().map(Into::into).collect())
+                .collect(),
             BitcoinClient::Esplora { inner } => {
                 // TODO Add support for batch search
                 let mut histories = vec![];
@@ -118,13 +129,12 @@ impl BitcoinClient {
                     let txs = inner.scripthash_txs(script, None).await?;
                     let history = txs
                         .into_iter()
-                        .map(|tx| GetHistoryRes {
+                        .map(|tx| History::<Txid> {
                             height: match tx.vin.iter().any(|input| input.prevout.is_none()) {
                                 true => -1,
                                 false => 0,
                             },
-                            tx_hash: tx.txid,
-                            fee: Some(tx.fee),
+                            txid: tx.txid,
                         })
                         .collect();
                     histories.push(history);
@@ -137,9 +147,14 @@ impl BitcoinClient {
     pub(crate) async fn get_scripts_balance(
         &self,
         scripts: &[&Script],
-    ) -> Result<Vec<GetBalanceRes>> {
+    ) -> Result<Vec<BtcScriptBalance>> {
         Ok(match self {
-            BitcoinClient::Electrum { inner } => inner.batch_script_get_balance(scripts)?,
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BitcoinClient::Electrum { inner } => inner
+                .batch_script_get_balance(scripts)?
+                .into_iter()
+                .map(Into::into)
+                .collect(),
             BitcoinClient::Esplora { .. } => {
                 // TODO Add support for get balance
                 unimplemented!()
@@ -149,6 +164,7 @@ impl BitcoinClient {
 
     pub(crate) async fn get_recommended_fees(&self) -> Result<RecommendedFees> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BitcoinClient::Electrum { .. } => unreachable!(),
             BitcoinClient::Esplora { inner } => {
                 let fee_estimates: HashMap<u16, u64> = inner

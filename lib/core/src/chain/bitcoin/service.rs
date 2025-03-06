@@ -1,14 +1,12 @@
 use std::{collections::HashMap, time::Duration};
 
+use crate::prelude::*;
 use anyhow::{anyhow, bail, Context, Result};
 use async_trait::async_trait;
-use electrum_client::{
-    bitcoin::{
-        consensus::deserialize,
-        hashes::{sha256, Hash},
-        Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
-    },
-    GetBalanceRes, GetHistoryRes,
+use bitcoin::{
+    consensus::deserialize,
+    hashes::{sha256, Hash},
+    Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
 };
 use log::info;
 use sdk_common::bitcoin::hashes::hex::ToHex;
@@ -36,14 +34,14 @@ pub trait BitcoinChainService: Send + Sync {
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
 
     /// Get the transactions involved in a list of scripts.
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<GetHistoryRes>>>;
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History<Txid>>>>;
 
     /// Get the transactions involved for a script
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<Vec<GetHistoryRes>>;
+    ) -> Result<Vec<History<Txid>>>;
 
     /// Get the utxos associated with a script pubkey
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
@@ -52,17 +50,17 @@ pub trait BitcoinChainService: Send + Sync {
     async fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>>;
 
     /// Return the confirmed and unconfirmed balances of a script hash
-    async fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
+    async fn script_get_balance(&self, script: &Script) -> Result<BtcScriptBalance>;
 
     /// Return the confirmed and unconfirmed balances of a list of script hashes
-    async fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>>;
+    async fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<BtcScriptBalance>>;
 
     /// Return the confirmed and unconfirmed balances of a script hash
     async fn script_get_balance_with_retry(
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<GetBalanceRes>;
+    ) -> Result<BtcScriptBalance>;
 
     /// Verify that a transaction appears in the address script history
     async fn verify_tx(
@@ -148,7 +146,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         client.get_transactions(txids).await
     }
 
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<GetHistoryRes>>> {
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History<Txid>>>> {
         get_client!(self, client);
         client.get_scripts_history(scripts).await
     }
@@ -157,7 +155,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<Vec<GetHistoryRes>> {
+    ) -> Result<Vec<History<Txid>>> {
         let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         info!("Fetching script history for {}", script_hash);
 
@@ -197,7 +195,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         let tx_confirmed_map: HashMap<_, _> = scripts_history
             .iter()
             .flatten()
-            .map(|h| (Txid::from_raw_hash(h.tx_hash.to_raw_hash()), h.height > 0))
+            .map(|h| (h.txid, h.height > 0))
             .collect();
         let txs = self
             .get_transactions(&tx_confirmed_map.keys().cloned().collect::<Vec<_>>())
@@ -213,9 +211,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                         .iter()
                         .filter_map(|h| {
                             txs.iter()
-                                .find(|tx| {
-                                    tx.compute_txid().as_raw_hash() == h.tx_hash.as_raw_hash()
-                                })
+                                .find(|tx| tx.compute_txid().as_raw_hash() == h.txid.as_raw_hash())
                                 .cloned()
                         })
                         .collect::<Vec<_>>(),
@@ -264,7 +260,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(scripts_utxos)
     }
 
-    async fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
+    async fn script_get_balance(&self, script: &Script) -> Result<BtcScriptBalance> {
         self.scripts_get_balance(&[script])
             .await?
             .into_iter()
@@ -272,7 +268,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
             .context("Script balance not found")
     }
 
-    async fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
+    async fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<BtcScriptBalance>> {
         get_client!(self, client);
         Ok(client.get_scripts_balance(scripts).await?)
     }
@@ -281,10 +277,10 @@ impl BitcoinChainService for HybridBitcoinChainService {
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<GetBalanceRes> {
+    ) -> Result<BtcScriptBalance> {
         let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         info!("Fetching script balance for {}", script_hash);
-        let mut script_balance = GetBalanceRes {
+        let mut script_balance = BtcScriptBalance {
             confirmed: 0,
             unconfirmed: 0,
         };
@@ -293,7 +289,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         while retry <= retries {
             script_balance = self.script_get_balance(script).await?;
             match script_balance {
-                GetBalanceRes {
+                BtcScriptBalance {
                     confirmed: 0,
                     unconfirmed: 0,
                 } => {
@@ -319,14 +315,14 @@ impl BitcoinChainService for HybridBitcoinChainService {
     ) -> Result<Transaction> {
         let script = address.script_pubkey();
         let script_history = self.get_script_history_with_retry(&script, 10).await?;
-        let lockup_tx_history = script_history.iter().find(|h| h.tx_hash.to_hex().eq(tx_id));
+        let lockup_tx_history = script_history.iter().find(|h| h.txid.to_hex().eq(tx_id));
 
         match lockup_tx_history {
             Some(history) => {
                 info!("Bitcoin transaction found, verifying transaction content...");
                 let tx: Transaction = deserialize(&hex::decode(tx_hex)?)?;
                 let tx_hex = tx.compute_txid().to_hex();
-                if !tx_hex.eq(&history.tx_hash.to_hex()) {
+                if !tx_hex.eq(&history.txid.to_hex()) {
                     return Err(anyhow!(
                         "Bitcoin transaction id and hex do not match: {} vs {}",
                         tx_id,
