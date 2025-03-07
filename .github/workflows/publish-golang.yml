@@ -38,37 +38,37 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-linux-android
+          name: bindings-aarch64-linux-android-uniffi-25
           path: breez_sdk_liquid/lib/android-aarch64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-linux-android
+          name: bindings-x86_64-linux-android-uniffi-25
           path: breez_sdk_liquid/lib/android-amd64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-apple-darwin
+          name: bindings-aarch64-apple-darwin-uniffi-25
           path: breez_sdk_liquid/lib/darwin-aarch64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-apple-darwin
+          name: bindings-x86_64-apple-darwin-uniffi-25
           path: breez_sdk_liquid/lib/darwin-amd64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-unknown-linux-gnu
+          name: bindings-aarch64-unknown-linux-gnu-uniffi-25
           path: breez_sdk_liquid/lib/linux-aarch64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-unknown-linux-gnu
+          name: bindings-x86_64-unknown-linux-gnu-uniffi-25
           path: breez_sdk_liquid/lib/linux-amd64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-pc-windows-msvc
+          name: bindings-x86_64-pc-windows-msvc-uniffi-25
           path: breez_sdk_liquid/lib/windows-amd64
 
       - name: Archive Go release

@@ -20,8 +20,8 @@ breez-sdk-liquid = { path = "../core" }
 log = { workspace = true }
 uniffi = { workspace = true, features = [ "bindgen-tests", "cli" ] }
 # Bindgen used by KMP, version has to match the one supported by KMP
-uniffi_bindgen = "0.25.2"
-uniffi_bindgen_kotlin_multiplatform = { git = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings", rev = "e8e3a88df5b657787c1198425c16008232b26548" }
+uniffi_bindgen = "0.28.0"
+uniffi_bindgen_kotlin_multiplatform = { git = "https://gitlab.com/trixnity/uniffi-kotlin-multiplatform-bindings", rev = "b84c88b6a6b37eba9ad740e1d3185d1e62e7da40" }
 camino = "1.1.1"
 thiserror = { workspace = true }
 tokio = { version = "1", features = ["rt"] }
