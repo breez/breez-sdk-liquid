@@ -577,8 +577,6 @@ pub mod duplicates {
     use serde::{Deserialize, Serialize};
     use thiserror::Error;
 
-    use crate::error::PaymentError;
-
     #[derive(Clone, Debug, Error)]
     pub enum LnUrlPayError {
         /// This error is raised when attempting to pay an invoice that has already being paid.
@@ -669,14 +667,6 @@ pub mod duplicates {
         }
     }
 
-    impl From<PaymentError> for sdk_common::prelude::LnUrlPayError {
-        fn from(value: PaymentError) -> Self {
-            Self::Generic {
-                err: format!("{value}"),
-            }
-        }
-    }
-
     #[derive(Debug, Error)]
     pub enum LnUrlWithdrawError {
         /// This error is raised when a general error occurs not specific to other error variants
@@ -726,14 +716,6 @@ pub mod duplicates {
                 sdk_common::prelude::LnUrlWithdrawError::ServiceConnectivity { err } => {
                     Self::ServiceConnectivity { err }
                 }
-            }
-        }
-    }
-
-    impl From<PaymentError> for sdk_common::prelude::LnUrlWithdrawError {
-        fn from(value: PaymentError) -> Self {
-            Self::Generic {
-                err: format!("{value}"),
             }
         }
     }

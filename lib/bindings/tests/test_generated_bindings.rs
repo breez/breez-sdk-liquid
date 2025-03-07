@@ -1,6 +1,10 @@
+#[cfg(feature = "uniffi-28")]
+extern crate uniffi_28 as uniffi;
+
+#[cfg(feature = "uniffi-25")]
 use std::process::Command;
 
-#[cfg(not(feature = "uniffi-25"))]
+#[cfg(feature = "uniffi-28")]
 uniffi::build_foreign_language_testcases!(
     "tests/bindings/test_breez_sdk_liquid.swift",
     "tests/bindings/test_breez_sdk_liquid.kts",

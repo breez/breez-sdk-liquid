@@ -111,35 +111,50 @@ jobs:
         run: cargo test
 
   build-bindings:
-    name: Test bindings${{ matrix.uniffi }}
+    name: Test bindings
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        uniffi: ['', '-uniffi-25']
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Downgrade Uniffi
-        if: matrix.uniffi == '-uniffi-25'
-        working-directory: lib
-        run: |
-          sed -i.bak -e 's/^uniffi = .*/uniffi = "0.25.0"/' Cargo.toml
-          rm Cargo.toml.bak
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
 
-      - name: Downgrade bindings Uniffi
-        if: matrix.uniffi == '-uniffi-25'
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Build bindings
         working-directory: lib/bindings
+        run: cargo build
+
+      - name: Run bindings tests
         run: |
-          rm uniffi-bindgen.rs
-          mv uniffi-25-bindgen.rs uniffi-bindgen.rs
-          sed -i.bak -e 's/^uniffi_bindgen = .*/uniffi_bindgen = "0.25.2"/' Cargo.toml
-          sed -i.bak -e 's/^uniffi_bindgen_kotlin_multiplatform = .*/uniffi_bindgen_kotlin_multiplatform = { git = "https:\/\/gitlab.com\/trixnity\/uniffi-kotlin-multiplatform-bindings", rev = "e8e3a88df5b657787c1198425c16008232b26548" }/' Cargo.toml
-          rm Cargo.toml.bak
+          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
+          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
+          cd lib/bindings
+          cargo test
+
+  build-bindings-uniffi-25:
+    name: Test bindings Uniffi 0.25
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.uniffi }}
+          key: -uniffi-25
           workspaces: |
             lib -> target
             cli -> target
@@ -151,23 +166,20 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup dotnet
-        if: matrix.uniffi == '-uniffi-25'
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '7.0.x'
 
       - name: Setup go
-        if: matrix.uniffi == '-uniffi-25'
         uses: actions/setup-go@v4
         with:
           go-version: '1.19.9'
 
       - name: Build bindings
         working-directory: lib/bindings
-        run: cargo build
+        run: cargo build --no-default-features --features uniffi-25
 
       - name: Build C# bindings
-        if: matrix.uniffi == '-uniffi-25'
         working-directory: lib/bindings       
         run: |
           cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.8.0+v0.25.0
@@ -175,7 +187,6 @@ jobs:
           cp ../target/debug/libbreez_sdk_liquid_bindings.so ffi/csharp
 
       - name: Build golang bindings
-        if: matrix.uniffi == '-uniffi-25'
         working-directory: lib/bindings       
         run: |
           cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.1+v0.25.0
@@ -183,26 +194,9 @@ jobs:
           cp ../target/debug/libbreez_sdk_liquid_bindings.so ffi/golang
           cp -r ffi/golang/breez_sdk_liquid tests/bindings/golang/
 
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
       - name: Run bindings tests
-        if: matrix.uniffi != '-uniffi-25'
-        run: |
-          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
-          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
-          cd lib/bindings
-          cargo test
-
-      - name: Run bindings tests
-        if: matrix.uniffi == '-uniffi-25'
-        run: |
-          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
-          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
-          cd lib/bindings
-          cargo test --features uniffi-25
+        working-directory: lib/bindings       
+        run: cargo test --no-default-features --features uniffi-25
 
   notification-plugin:
     name: Check notification plugin
@@ -236,7 +230,7 @@ jobs:
       - name: Build Android bindings
         working-directory: lib/bindings       
         run: |
-          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
+          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
 
       - name: Run Android build
         working-directory: lib/bindings/langs/android  
@@ -246,7 +240,7 @@ jobs:
       - name: Build Swift bindings
         working-directory: lib/bindings       
         run: |
-          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
+          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
           mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers

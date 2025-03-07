@@ -62,23 +62,6 @@ jobs:
         ref: ${{ inputs.ref }}
         repository: ${{ inputs.repository || github.repository }}
 
-    - name: Downgrade Uniffi
-      if: matrix.uniffi == '-uniffi-25'
-      working-directory: lib
-      run: |
-        sed -i.bak -e 's/^uniffi = .*/uniffi = "0.25.0"/' Cargo.toml
-        rm Cargo.toml.bak
-
-    - name: Downgrade bindings Uniffi
-      if: matrix.uniffi == '-uniffi-25'
-      working-directory: lib/bindings
-      run: |
-        rm uniffi-bindgen.rs
-        mv uniffi-25-bindgen.rs uniffi-bindgen.rs
-        sed -i.bak -e 's/^uniffi_bindgen = .*/uniffi_bindgen = "0.25.2"/' Cargo.toml
-        sed -i.bak -e 's/^uniffi_bindgen_kotlin_multiplatform = .*/uniffi_bindgen_kotlin_multiplatform = { git = "https:\/\/gitlab.com\/trixnity\/uniffi-kotlin-multiplatform-bindings", rev = "e8e3a88df5b657787c1198425c16008232b26548" }/' Cargo.toml
-        rm Cargo.toml.bak
-
     - name: Install rust toolchain
       run: |
         rustup set auto-self-update disable
@@ -105,8 +88,14 @@ jobs:
         xcode-version: latest-stable
 
     - name: Build bindings
+      if: matrix.uniffi != '-uniffi-25'
       working-directory: lib/bindings
       run: cargo build --release --target ${{ matrix.target }}
+
+    - name: Build bindings Uniffi 0.25
+      if: matrix.uniffi == '-uniffi-25'
+      working-directory: lib/bindings
+      run: cargo build --no-default-features --features=uniffi-25 --release --target ${{ matrix.target }}
     
     - name: Archive release
       uses: actions/upload-artifact@v4
