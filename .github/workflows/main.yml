@@ -111,14 +111,35 @@ jobs:
         run: cargo test
 
   build-bindings:
-    name: Test bindings
+    name: Test bindings${{ matrix.uniffi }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        uniffi: ['', '-uniffi-25']
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Downgrade Uniffi
+        if: matrix.uniffi == '-uniffi-25'
+        working-directory: lib
+        run: |
+          sed -i.bak -e 's/^uniffi = .*/uniffi = "0.25.0"/' Cargo.toml
+          rm Cargo.toml.bak
+
+      - name: Downgrade bindings Uniffi
+        if: matrix.uniffi == '-uniffi-25'
+        working-directory: lib/bindings
+        run: |
+          rm uniffi-bindgen.rs
+          mv uniffi-25-bindgen.rs uniffi-bindgen.rs
+          sed -i.bak -e 's/^uniffi_bindgen = .*/uniffi_bindgen = "0.25.2"/' Cargo.toml
+          sed -i.bak -e 's/^uniffi_bindgen_kotlin_multiplatform = .*/uniffi_bindgen_kotlin_multiplatform = { git = "https:\/\/gitlab.com\/trixnity\/uniffi-kotlin-multiplatform-bindings", rev = "e8e3a88df5b657787c1198425c16008232b26548" }/' Cargo.toml
+          rm Cargo.toml.bak
+
       - uses: Swatinem/rust-cache@v2
         with:
+          key: ${{ matrix.uniffi }}
           workspaces: |
             lib -> target
             cli -> target
@@ -130,16 +151,23 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup dotnet
-        if: ${{ !inputs.skip-tests }}
+        if: matrix.uniffi == '-uniffi-25'
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '7.0.x'
+
+      - name: Setup go
+        if: matrix.uniffi == '-uniffi-25'
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19.9'
 
       - name: Build bindings
         working-directory: lib/bindings
         run: cargo build
 
       - name: Build C# bindings
+        if: matrix.uniffi == '-uniffi-25'
         working-directory: lib/bindings       
         run: |
           cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.8.0+v0.25.0
@@ -147,6 +175,7 @@ jobs:
           cp ../target/debug/libbreez_sdk_liquid_bindings.so ffi/csharp
 
       - name: Build golang bindings
+        if: matrix.uniffi == '-uniffi-25'
         working-directory: lib/bindings       
         run: |
           cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.1+v0.25.0
@@ -154,22 +183,26 @@ jobs:
           cp ../target/debug/libbreez_sdk_liquid_bindings.so ffi/golang
           cp -r ffi/golang/breez_sdk_liquid tests/bindings/golang/
 
-      - name: Setup go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.19.9'
-
       - name: Setup python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
       - name: Run bindings tests
+        if: matrix.uniffi != '-uniffi-25'
         run: |
           curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
           export CLASSPATH=$(pwd)/jna-5.12.1.jar;
           cd lib/bindings
           cargo test
+
+      - name: Run bindings tests
+        if: matrix.uniffi == '-uniffi-25'
+        run: |
+          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
+          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
+          cd lib/bindings
+          cargo test --features uniffi-25
 
   notification-plugin:
     name: Check notification plugin

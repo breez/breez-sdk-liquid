@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[cfg(not(feature = "uniffi-25"))]
 uniffi::build_foreign_language_testcases!(
     "tests/bindings/test_breez_sdk_liquid.swift",
     "tests/bindings/test_breez_sdk_liquid.kts",
@@ -7,6 +8,7 @@ uniffi::build_foreign_language_testcases!(
 );
 
 #[test]
+#[cfg(feature = "uniffi-25")]
 fn test_csharp() {
     let output = Command::new("dotnet")
         .arg("run")
@@ -21,6 +23,7 @@ fn test_csharp() {
 }
 
 #[test]
+#[cfg(feature = "uniffi-25")]
 fn test_golang() {
     let output = Command::new("go")
         .env(
