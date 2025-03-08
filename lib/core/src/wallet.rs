@@ -11,23 +11,19 @@ use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
-use lwk_wollet::clients::asyncr::EsploraClient;
-use lwk_wollet::clients::blocking::BlockchainBackend;
 use lwk_wollet::elements::{AssetId, Txid};
-use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
-    ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, Tip, WalletTx, Wollet,
-    WolletDescriptor,
+    ElementsNetwork, FsPersister, Tip, WalletTx, Wollet, WolletDescriptor,
 };
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 
+use crate::chain::liquid::client::LiquidClient;
 use crate::model::Signer;
 use crate::persist::Persister;
-use crate::prelude::BlockchainExplorer;
 use crate::signer::SdkLwkSigner;
 use crate::{
     ensure_sdk,
@@ -104,78 +100,23 @@ pub trait OnchainWallet: Send + Sync {
     async fn full_scan(&self) -> Result<()>;
 }
 
-enum BlockchainClient {
-    Electrum(Box<ElectrumClient>),
-    Esplora(EsploraClient),
-}
-
-impl BlockchainClient {
-    pub(crate) fn update_wallet(
-        &mut self,
-        wollet: &mut Wollet,
-        index: u32,
-    ) -> Result<(), lwk_wollet::Error> {
-        let state = wollet.state();
-        let update = match self {
-            Self::Electrum(client) => client.full_scan_to_index(&state, index)?,
-            Self::Esplora(_client) => todo!(),
-        };
-        if let Some(update) = update {
-            wollet.apply_update(update)?;
-        }
-        Ok(())
-    }
-}
-
-impl BlockchainClient {
-    pub(crate) fn try_from_explorer(
-        exp: &BlockchainExplorer,
-        network: LiquidNetwork,
-    ) -> Result<Self> {
-        match exp {
-            BlockchainExplorer::Electrum { url } => {
-                let (tls, validate_domain) = match network {
-                    LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
-                    LiquidNetwork::Regtest => (false, false),
-                };
-                let url = ElectrumUrl::new(url, tls, validate_domain)?;
-                let client =
-                    ElectrumClient::with_options(&url, ElectrumOptions { timeout: Some(3) })?;
-                // Ensure we ping so we know the client is working
-                client.ping()?;
-                Ok(BlockchainClient::Electrum(Box::new(client)))
-            }
-            BlockchainExplorer::Esplora {
-                url,
-                use_waterfalls,
-            } => {
-                let client = EsploraClient::new(network.into(), url, *use_waterfalls);
-                Ok(BlockchainClient::Esplora(client))
-            }
-            BlockchainExplorer::MempoolSpace { .. } => {
-                bail!("Cannot create client from MempoolSpace url")
-            }
-        }
-    }
-}
-
 pub(crate) struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
-    client: Mutex<(BlockchainClient, usize)>,
+    client: Mutex<(LiquidClient, usize)>,
     working_dir: String,
     pub(crate) signer: SdkLwkSigner,
 }
 
 impl LiquidOnchainWallet {
-    fn get_client(config: &Config, index: usize) -> Result<(BlockchainClient, usize)> {
+    fn get_client(config: &Config, index: usize) -> Result<(LiquidClient, usize)> {
         let explorer = config
             .liquid_explorers
             .get(index)
             .context("Expected existing liquid explorer")?;
         Ok((
-            BlockchainClient::try_from_explorer(explorer, config.network)?,
+            LiquidClient::try_from_explorer(explorer, config.network)?,
             index,
         ))
     }
@@ -183,7 +124,7 @@ impl LiquidOnchainWallet {
     fn get_next_available_client(
         config: &Config,
         start_index: usize,
-    ) -> Result<(BlockchainClient, usize)> {
+    ) -> Result<(LiquidClient, usize)> {
         let total_explorers = config.liquid_explorers.len();
         for index in start_index..start_index + total_explorers {
             if let Ok(res) = Self::get_client(config, index % total_explorers) {
@@ -266,15 +207,15 @@ impl LiquidOnchainWallet {
         Ok(descriptor_str.parse()?)
     }
 
-    async fn execute_scan(&self, client: &mut BlockchainClient, index: u32) -> Result<()> {
+    async fn execute_scan(&self, client: &mut LiquidClient, index: u32) -> Result<()> {
         let mut wallet = self.wallet.lock().await;
         if let Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) =
-            client.update_wallet(&mut wallet, index)
+            client.update_wallet(&mut wallet, index).await
         {
             warn!("Full scan failed with update height too old, wiping storage and retrying");
             let mut new_wallet =
                 Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
-            client.update_wallet(&mut new_wallet, index)?;
+            client.update_wallet(&mut new_wallet, index).await?;
             *wallet = new_wallet;
         };
         Ok(())

@@ -636,14 +636,9 @@ typedef struct wire_cst_BlockchainExplorer_Esplora {
   bool use_waterfalls;
 } wire_cst_BlockchainExplorer_Esplora;
 
-typedef struct wire_cst_BlockchainExplorer_MempoolSpace {
-  struct wire_cst_list_prim_u_8_strict *url;
-} wire_cst_BlockchainExplorer_MempoolSpace;
-
 typedef union BlockchainExplorerKind {
   struct wire_cst_BlockchainExplorer_Electrum Electrum;
   struct wire_cst_BlockchainExplorer_Esplora Esplora;
-  struct wire_cst_BlockchainExplorer_MempoolSpace MempoolSpace;
 } BlockchainExplorerKind;
 
 typedef struct wire_cst_blockchain_explorer {
