@@ -155,9 +155,23 @@ impl BitcoinClient {
                 .into_iter()
                 .map(Into::into)
                 .collect(),
-            BitcoinClient::Esplora { .. } => {
-                // TODO Add support for get balance
-                unimplemented!()
+            BitcoinClient::Esplora { inner } => {
+                let mut result = vec![];
+                for script in scripts {
+                    let mut balance = BtcScriptBalance {
+                        confirmed: 0,
+                        unconfirmed: 0,
+                    };
+                    for utxo in inner.scripthash_outputs(script).await? {
+                        if utxo.status.confirmed {
+                            balance.confirmed += utxo.value;
+                        } else {
+                            balance.unconfirmed += utxo.value as i64;
+                        }
+                    }
+                    result.push(balance);
+                }
+                result
             }
         })
     }
