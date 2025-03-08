@@ -8,8 +8,9 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-
-class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class BreezSDKLiquidModule(
+    reactContext: ReactApplicationContext,
+) : ReactContextBaseJavaModule(reactContext) {
     private lateinit var executor: ExecutorService
     private var bindingLiquidSdk: BindingLiquidSdk? = null
 
@@ -23,9 +24,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
         executor = Executors.newFixedThreadPool(3)
     }
 
-    override fun getName(): String {
-        return TAG
-    }
+    override fun getName(): String = TAG
 
     @Throws(SdkException::class)
     fun getBindingLiquidSdk(): BindingLiquidSdk {
@@ -55,9 +54,12 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
     @ReactMethod
     fun removeListeners(count: Int) {}
 
-        
     @ReactMethod
-    fun defaultConfig(network: String, breezApiKey: String, promise: Promise) {
+    fun defaultConfig(
+        network: String,
+        breezApiKey: String,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
                 val networkTmp = asLiquidNetwork(network)
@@ -72,9 +74,12 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-        
+
     @ReactMethod
-    fun parseInvoice(input: String, promise: Promise) {
+    fun parseInvoice(
+        input: String,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
                 val res = parseInvoice(input)
@@ -84,7 +89,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun setLogger(promise: Promise) {
         executor.execute {
@@ -101,7 +106,10 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
-    fun connect(req: ReadableMap, promise: Promise) {
+    fun connect(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         if (bindingLiquidSdk != null) {
             promise.reject("Generic", "Already initialized")
             return
@@ -109,7 +117,8 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
 
         executor.execute {
             try {
-                var connectRequest = asConnectRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
+                var connectRequest =
+                    asConnectRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ConnectRequest")) }
 
                 ensureWorkingDir(connectRequest.config.workingDir)
 
@@ -137,9 +146,11 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
         }
     }
 
-    
     @ReactMethod
-    fun removeEventListener(id: String, promise: Promise) {
+    fun removeEventListener(
+        id: String,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
                 getBindingLiquidSdk().removeEventListener(id)
@@ -149,7 +160,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun getInfo(promise: Promise) {
         executor.execute {
@@ -161,12 +172,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun signMessage(req: ReadableMap, promise: Promise) {
+    fun signMessage(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val signMessageRequest = asSignMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SignMessageRequest")) }
+                val signMessageRequest =
+                    asSignMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SignMessageRequest")) }
                 val res = getBindingLiquidSdk().signMessage(signMessageRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -174,12 +189,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun checkMessage(req: ReadableMap, promise: Promise) {
+    fun checkMessage(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val checkMessageRequest = asCheckMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "CheckMessageRequest")) }
+                val checkMessageRequest =
+                    asCheckMessageRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "CheckMessageRequest")) }
                 val res = getBindingLiquidSdk().checkMessage(checkMessageRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -187,9 +206,12 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun parse(input: String, promise: Promise) {
+    fun parse(
+        input: String,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
                 val res = getBindingLiquidSdk().parse(input)
@@ -199,12 +221,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun prepareSendPayment(req: ReadableMap, promise: Promise) {
+    fun prepareSendPayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val prepareSendRequest = asPrepareSendRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest")) }
+                val prepareSendRequest =
+                    asPrepareSendRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareSendRequest")) }
                 val res = getBindingLiquidSdk().prepareSendPayment(prepareSendRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -212,12 +238,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun sendPayment(req: ReadableMap, promise: Promise) {
+    fun sendPayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val sendPaymentRequest = asSendPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SendPaymentRequest")) }
+                val sendPaymentRequest =
+                    asSendPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SendPaymentRequest")) }
                 val res = getBindingLiquidSdk().sendPayment(sendPaymentRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -225,12 +255,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun prepareReceivePayment(req: ReadableMap, promise: Promise) {
+    fun prepareReceivePayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val prepareReceiveRequest = asPrepareReceiveRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveRequest")) }
+                val prepareReceiveRequest =
+                    asPrepareReceiveRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareReceiveRequest")) }
                 val res = getBindingLiquidSdk().prepareReceivePayment(prepareReceiveRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -238,12 +273,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun receivePayment(req: ReadableMap, promise: Promise) {
+    fun receivePayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val receivePaymentRequest = asReceivePaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ReceivePaymentRequest")) }
+                val receivePaymentRequest =
+                    asReceivePaymentRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ReceivePaymentRequest")) }
                 val res = getBindingLiquidSdk().receivePayment(receivePaymentRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -251,7 +291,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun fetchLightningLimits(promise: Promise) {
         executor.execute {
@@ -263,7 +303,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun fetchOnchainLimits(promise: Promise) {
         executor.execute {
@@ -275,12 +315,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun preparePayOnchain(req: ReadableMap, promise: Promise) {
+    fun preparePayOnchain(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val preparePayOnchainRequest = asPreparePayOnchainRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PreparePayOnchainRequest")) }
+                val preparePayOnchainRequest =
+                    asPreparePayOnchainRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PreparePayOnchainRequest")) }
                 val res = getBindingLiquidSdk().preparePayOnchain(preparePayOnchainRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -288,12 +333,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun payOnchain(req: ReadableMap, promise: Promise) {
+    fun payOnchain(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val payOnchainRequest = asPayOnchainRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PayOnchainRequest")) }
+                val payOnchainRequest =
+                    asPayOnchainRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PayOnchainRequest")) }
                 val res = getBindingLiquidSdk().payOnchain(payOnchainRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -301,12 +350,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun prepareBuyBitcoin(req: ReadableMap, promise: Promise) {
+    fun prepareBuyBitcoin(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val prepareBuyBitcoinRequest = asPrepareBuyBitcoinRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareBuyBitcoinRequest")) }
+                val prepareBuyBitcoinRequest =
+                    asPrepareBuyBitcoinRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareBuyBitcoinRequest")) }
                 val res = getBindingLiquidSdk().prepareBuyBitcoin(prepareBuyBitcoinRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -314,12 +368,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun buyBitcoin(req: ReadableMap, promise: Promise) {
+    fun buyBitcoin(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val buyBitcoinRequest = asBuyBitcoinRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "BuyBitcoinRequest")) }
+                val buyBitcoinRequest =
+                    asBuyBitcoinRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "BuyBitcoinRequest")) }
                 val res = getBindingLiquidSdk().buyBitcoin(buyBitcoinRequest)
                 promise.resolve(res)
             } catch (e: Exception) {
@@ -327,12 +385,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun listPayments(req: ReadableMap, promise: Promise) {
+    fun listPayments(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val listPaymentsRequest = asListPaymentsRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ListPaymentsRequest")) }
+                val listPaymentsRequest =
+                    asListPaymentsRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "ListPaymentsRequest")) }
                 val res = getBindingLiquidSdk().listPayments(listPaymentsRequest)
                 promise.resolve(readableArrayOf(res))
             } catch (e: Exception) {
@@ -340,12 +402,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun getPayment(req: ReadableMap, promise: Promise) {
+    fun getPayment(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val reqTmp = asGetPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "GetPaymentRequest")) }
+                val reqTmp =
+                    asGetPaymentRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "GetPaymentRequest")) }
                 val res = getBindingLiquidSdk().getPayment(reqTmp)
                 promise.resolve(res?.let { readableMapOf(res) })
             } catch (e: Exception) {
@@ -353,12 +419,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun fetchPaymentProposedFees(req: ReadableMap, promise: Promise) {
+    fun fetchPaymentProposedFees(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val fetchPaymentProposedFeesRequest = asFetchPaymentProposedFeesRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "FetchPaymentProposedFeesRequest")) }
+                val fetchPaymentProposedFeesRequest =
+                    asFetchPaymentProposedFeesRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "FetchPaymentProposedFeesRequest")) }
                 val res = getBindingLiquidSdk().fetchPaymentProposedFees(fetchPaymentProposedFeesRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -366,12 +437,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun acceptPaymentProposedFees(req: ReadableMap, promise: Promise) {
+    fun acceptPaymentProposedFees(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val acceptPaymentProposedFeesRequest = asAcceptPaymentProposedFeesRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "AcceptPaymentProposedFeesRequest")) }
+                val acceptPaymentProposedFeesRequest =
+                    asAcceptPaymentProposedFeesRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "AcceptPaymentProposedFeesRequest")) }
                 getBindingLiquidSdk().acceptPaymentProposedFees(acceptPaymentProposedFeesRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
@@ -379,7 +455,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun listRefundables(promise: Promise) {
         executor.execute {
@@ -391,12 +467,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun prepareRefund(req: ReadableMap, promise: Promise) {
+    fun prepareRefund(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val prepareRefundRequest = asPrepareRefundRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareRefundRequest")) }
+                val prepareRefundRequest =
+                    asPrepareRefundRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareRefundRequest")) }
                 val res = getBindingLiquidSdk().prepareRefund(prepareRefundRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -404,12 +485,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun refund(req: ReadableMap, promise: Promise) {
+    fun refund(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val refundRequest = asRefundRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "RefundRequest")) }
+                val refundRequest =
+                    asRefundRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "RefundRequest")) }
                 val res = getBindingLiquidSdk().refund(refundRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -417,7 +502,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun rescanOnchainSwaps(promise: Promise) {
         executor.execute {
@@ -429,7 +514,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun sync(promise: Promise) {
         executor.execute {
@@ -441,7 +526,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun recommendedFees(promise: Promise) {
         executor.execute {
@@ -453,12 +538,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun backup(req: ReadableMap, promise: Promise) {
+    fun backup(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val backupRequest = asBackupRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "BackupRequest")) }
+                val backupRequest =
+                    asBackupRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "BackupRequest")) }
                 getBindingLiquidSdk().backup(backupRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
@@ -466,12 +555,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun restore(req: ReadableMap, promise: Promise) {
+    fun restore(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val restoreRequest = asRestoreRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
+                val restoreRequest =
+                    asRestoreRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "RestoreRequest")) }
                 getBindingLiquidSdk().restore(restoreRequest)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
@@ -479,7 +572,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun disconnect(promise: Promise) {
         executor.execute {
@@ -492,12 +585,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun prepareLnurlPay(req: ReadableMap, promise: Promise) {
+    fun prepareLnurlPay(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val prepareLnUrlPayRequest = asPrepareLnUrlPayRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareLnUrlPayRequest")) }
+                val prepareLnUrlPayRequest =
+                    asPrepareLnUrlPayRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareLnUrlPayRequest")) }
                 val res = getBindingLiquidSdk().prepareLnurlPay(prepareLnUrlPayRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -505,12 +603,16 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun lnurlPay(req: ReadableMap, promise: Promise) {
+    fun lnurlPay(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val lnUrlPayRequest = asLnUrlPayRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "LnUrlPayRequest")) }
+                val lnUrlPayRequest =
+                    asLnUrlPayRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "LnUrlPayRequest")) }
                 val res = getBindingLiquidSdk().lnurlPay(lnUrlPayRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -518,12 +620,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun lnurlWithdraw(req: ReadableMap, promise: Promise) {
+    fun lnurlWithdraw(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val lnUrlWithdrawRequest = asLnUrlWithdrawRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "LnUrlWithdrawRequest")) }
+                val lnUrlWithdrawRequest =
+                    asLnUrlWithdrawRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "LnUrlWithdrawRequest")) }
                 val res = getBindingLiquidSdk().lnurlWithdraw(lnUrlWithdrawRequest)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -531,12 +638,17 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun lnurlAuth(reqData: ReadableMap, promise: Promise) {
+    fun lnurlAuth(
+        reqData: ReadableMap,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
-                val lnUrlAuthRequestData = asLnUrlAuthRequestData(reqData) ?: run { throw SdkException.Generic(errMissingMandatoryField("reqData", "LnUrlAuthRequestData")) }
+                val lnUrlAuthRequestData =
+                    asLnUrlAuthRequestData(reqData)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("reqData", "LnUrlAuthRequestData")) }
                 val res = getBindingLiquidSdk().lnurlAuth(lnUrlAuthRequestData)
                 promise.resolve(readableMapOf(res))
             } catch (e: Exception) {
@@ -544,9 +656,12 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
-    fun registerWebhook(webhookUrl: String, promise: Promise) {
+    fun registerWebhook(
+        webhookUrl: String,
+        promise: Promise,
+    ) {
         executor.execute {
             try {
                 getBindingLiquidSdk().registerWebhook(webhookUrl)
@@ -556,7 +671,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun unregisterWebhook(promise: Promise) {
         executor.execute {
@@ -568,7 +683,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun fetchFiatRates(promise: Promise) {
         executor.execute {
@@ -580,7 +695,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-    
+
     @ReactMethod
     fun listFiatCurrencies(promise: Promise) {
         executor.execute {
@@ -592,5 +707,4 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
             }
         }
     }
-
 }
