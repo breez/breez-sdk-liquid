@@ -37,14 +37,25 @@ all: bindings-swift bindings-android python-darwin react-native
 ## Android 
 .PHONY: android
 android: aarch64-linux-android x86_64-linux-android
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
+
+android-uniffi-25: aarch64-linux-android-uniffi-25 x86_64-linux-android-uniffi-25
+	cargo run --no-default-features --features=uniffi-25 --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
 
 aarch64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --release	
 	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/arm64-v8a/
 
+aarch64-linux-android-uniffi-25: $(SOURCES) ndk-home
+	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release	
+	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/arm64-v8a/
+
 x86_64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --release
+	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86_64/
+
+x86_64-linux-android-uniffi-25: $(SOURCES) ndk-home
+	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release
 	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86_64/
 
 bindings-android: android
@@ -58,9 +69,9 @@ bindings-android: android
 .PHONY: kotlin
 kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
 
-bindings-kotlin-multiplatform: ios-universal android
+bindings-kotlin-multiplatform: ios-universal-uniffi-25 android-uniffi-25
 	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain
 	cp -r ffi/kotlin/jniLibs/ langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/jniLibs/
 	cp -r ffi/kmp/* langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/
@@ -88,6 +99,17 @@ ios-universal: $(SOURCES)
 	# build universal lib for arm sim and x86 sim
 	lipo -create -output ../target/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-ios-sim/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-ios/release/libbreez_sdk_liquid_bindings.a
 
+ios-universal-uniffi-25: $(SOURCES)		
+	mkdir -p ../target/ios-universal/release
+	mkdir -p ../target/ios-universal-sim/release
+	cargo build --no-default-features --features uniffi-25 --release --target aarch64-apple-ios ;\
+	cargo build --no-default-features --features uniffi-25 --release --target x86_64-apple-ios ;\
+	cargo build --no-default-features --features uniffi-25 --release --target aarch64-apple-ios-sim ;\
+	# build universal lib for arm device and x86 sim
+	lipo -create -output ../target/ios-universal/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-ios/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-ios/release/libbreez_sdk_liquid_bindings.a
+	# build universal lib for arm sim and x86 sim
+	lipo -create -output ../target/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-ios-sim/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-ios/release/libbreez_sdk_liquid_bindings.a
+
 darwin-universal: $(SOURCES)
 	mkdir -p ../target/darwin-universal/release
 	cargo lipo --release --targets aarch64-apple-darwin
@@ -95,14 +117,21 @@ darwin-universal: $(SOURCES)
 	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib
 	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.a
 
+darwin-universal-uniffi-25: $(SOURCES)
+	mkdir -p ../target/darwin-universal/release
+	cargo lipo --no-default-features --features uniffi-25 --release --targets aarch64-apple-darwin
+	cargo lipo --no-default-features --features uniffi-25 --release --targets x86_64-apple-darwin
+	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib
+	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.a
+
 ## Swift
 swift-ios: ios-universal
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl -l swift -o ffi/swift-ios
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl -l swift -o ffi/swift-ios
 	cp ../target/ios-universal/release/libbreez_sdk_liquid_bindings.a ffi/swift-ios
 	cd ffi/swift-ios && "swiftc" "-emit-module" "-module-name" "breez_sdk_liquid_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-ios/breez_sdk_liquidFFI.modulemap" "-I" "."  "-L" "." "-lbreez_sdk_liquid_bindings" breez_sdk_liquid.swift
 
 swift-darwin: darwin-universal
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl -l swift -o ffi/swift-darwin
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl -l swift -o ffi/swift-darwin
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/swift-darwin
 	cd ffi/swift-darwin && "swiftc" "-emit-module" "-module-name" "breez_sdk_liquid_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-darwin/breez_sdk_liquidFFI.modulemap" "-I" "."  "-L" "." "-lbreez_sdk_liquid_bindings" breez_sdk_liquid.swift
 
@@ -110,7 +139,7 @@ bindings-swift: ios-universal darwin-universal build-ios-framework
 
 build-ios-framework:
 	mkdir -p langs/swift/Sources/BreezSDKLiquid
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
 	mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
 	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
 	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers
@@ -122,19 +151,19 @@ build-ios-framework:
 	rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
 	rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
 
-csharp-darwin: darwin-universal
+csharp-darwin: darwin-universal-uniffi-25
 	cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.8.0+v0.25.0
 	uniffi-bindgen-cs src/breez_sdk_liquid.udl -o ffi/csharp -c ./uniffi.toml
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/csharp
 
 csharp-linux: $(SOURCES)
 	cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.8.0+v0.25.0
-	cargo build --release --target $(TARGET)
+	cargo build --no-default-features --features uniffi-25 --release --target $(TARGET)
 	uniffi-bindgen-cs src/breez_sdk_liquid.udl -o ffi/csharp -c ./uniffi.toml
 	cp ../target/$(TARGET)/release/libbreez_sdk_liquid_bindings.so ffi/csharp
 
 ## Go
-golang-darwin: darwin-universal
+golang-darwin: darwin-universal-uniffi-25
 	cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.1+v0.25.0
 	uniffi-bindgen-go src/breez_sdk_liquid.udl -o ffi/golang -c ./uniffi.toml
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/golang
@@ -142,7 +171,7 @@ golang-darwin: darwin-universal
 
 golang-linux: $(SOURCES)
 	cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.1+v0.25.0
-	cargo build --release --target $(TARGET)
+	cargo build --no-default-features --features uniffi-25 --release --target $(TARGET)
 	uniffi-bindgen-go src/breez_sdk_liquid.udl -o ffi/golang -c ./uniffi.toml
 	cp ../target/$(TARGET)/release/libbreez_sdk_liquid_bindings.so ffi/golang
 	cp -r ffi/golang/breez_sdk_liquid tests/bindings/golang/
@@ -150,11 +179,11 @@ golang-linux: $(SOURCES)
 ## Python
 python-linux: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language python -o ffi/python
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language python -o ffi/python
 	cp ../target/$(TARGET)/release/libbreez_sdk_liquid_bindings.so ffi/python
 
 python-darwin: darwin-universal
-	cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language python -o ffi/python
+	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language python -o ffi/python
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/python
 
 ## React Native

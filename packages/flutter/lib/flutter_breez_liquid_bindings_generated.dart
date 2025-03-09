@@ -1746,7 +1746,24 @@ class FlutterBreezLiquidBindings {
   late final _dummy_method_to_enforce_bundling =
       _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
 
-  /// Scaffolding functions
+  ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdk(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdk(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdkPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<RustCallStatus>)>>('uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdk');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdk =
+      _uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdkPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
   void uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk(
     ffi.Pointer<ffi.Void> ptr,
     ffi.Pointer<RustCallStatus> out_status,
@@ -2474,56 +2491,50 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhookPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
 
-  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener(
-    ForeignCallback callback_stub,
-    ffi.Pointer<RustCallStatus> out_status,
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener(
+    ffi.Pointer<UniffiVTableCallbackInterfaceEventListener> vtable,
   ) {
-    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener(
-      callback_stub,
-      out_status,
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener(
+      vtable,
     );
   }
 
-  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistenerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>>(
-          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener');
-  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener =
-      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistenerPtr
-          .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistenerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<UniffiVTableCallbackInterfaceEventListener>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistenerPtr
+          .asFunction<void Function(ffi.Pointer<UniffiVTableCallbackInterfaceEventListener>)>();
 
-  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger(
-    ForeignCallback callback_stub,
-    ffi.Pointer<RustCallStatus> out_status,
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_logger(
+    ffi.Pointer<UniffiVTableCallbackInterfaceLogger> vtable,
   ) {
-    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger(
-      callback_stub,
-      out_status,
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_logger(
+      vtable,
     );
   }
 
-  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_loggerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>>(
-          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger');
-  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger =
-      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_loggerPtr
-          .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_loggerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<UniffiVTableCallbackInterfaceLogger>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_logger');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_logger =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_loggerPtr
+          .asFunction<void Function(ffi.Pointer<UniffiVTableCallbackInterfaceLogger>)>();
 
-  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer(
-    ForeignCallback callback_stub,
-    ffi.Pointer<RustCallStatus> out_status,
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer(
+    ffi.Pointer<UniffiVTableCallbackInterfaceSigner> vtable,
   ) {
-    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer(
-      callback_stub,
-      out_status,
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer(
+      vtable,
     );
   }
 
-  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>>(
-          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer');
-  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer =
-      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_signerPtr
-          .asFunction<void Function(ForeignCallback, ffi.Pointer<RustCallStatus>)>();
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signerPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<UniffiVTableCallbackInterfaceSigner>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signerPtr
+          .asFunction<void Function(ffi.Pointer<UniffiVTableCallbackInterfaceSigner>)>();
 
   ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_func_connect(
     RustBuffer req,
@@ -2626,7 +2637,7 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rustbuffer_allocPtr =
-      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Int32, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rustbuffer_alloc');
   late final _ffi_breez_sdk_liquid_bindings_rustbuffer_alloc =
       _ffi_breez_sdk_liquid_bindings_rustbuffer_allocPtr
@@ -2679,46 +2690,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rustbuffer_reservePtr =
-      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Int32, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<RustBuffer Function(RustBuffer, ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rustbuffer_reserve');
   late final _ffi_breez_sdk_liquid_bindings_rustbuffer_reserve =
       _ffi_breez_sdk_liquid_bindings_rustbuffer_reservePtr
           .asFunction<RustBuffer Function(RustBuffer, int, ffi.Pointer<RustCallStatus>)>();
 
-  void ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set(
-    UniFfiRustFutureContinuation callback,
-  ) {
-    return _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set(
-      callback,
-    );
-  }
-
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_setPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(UniFfiRustFutureContinuation)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set');
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set =
-      _ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_setPtr
-          .asFunction<void Function(UniFfiRustFutureContinuation)>();
-
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_u8(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_u8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_u8Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8(
       handle,
@@ -2726,14 +2725,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_u8(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_u8(
       handle,
@@ -2741,14 +2739,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_u8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u8 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_u8Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u8Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_u8(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8(
@@ -2758,31 +2755,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Uint8 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Uint8 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_u8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_u8Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_i8(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i8');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_i8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_i8Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8(
       handle,
@@ -2790,14 +2790,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_i8(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_i8(
       handle,
@@ -2805,14 +2804,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_i8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i8 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_i8Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i8Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_i8(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8(
@@ -2822,31 +2820,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8Ptr =
-      _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Int8 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_i8');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_i8Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_u16(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_u16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_u16Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16(
       handle,
@@ -2854,14 +2855,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_u16(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_u16(
       handle,
@@ -2869,14 +2869,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_u16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u16 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_u16Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u16Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_u16(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16(
@@ -2886,31 +2885,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Uint16 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_u16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_u16Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_i16(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i16');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_i16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_i16Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16(
       handle,
@@ -2918,14 +2920,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_i16(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_i16(
       handle,
@@ -2933,14 +2934,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_i16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i16 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_i16Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i16Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_i16(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16(
@@ -2950,31 +2950,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16Ptr =
-      _lookup<ffi.NativeFunction<ffi.Int16 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Int16 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_i16');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_i16Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_u32(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_u32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_u32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32(
       handle,
@@ -2982,14 +2985,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_u32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_u32(
       handle,
@@ -2997,14 +2999,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_u32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u32 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_u32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u32Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_u32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32(
@@ -3014,31 +3015,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Uint32 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Uint32 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_u32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_u32Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_i32(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_i32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_i32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32(
       handle,
@@ -3046,14 +3050,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_i32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_i32(
       handle,
@@ -3061,14 +3064,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_i32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i32 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_i32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i32Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_i32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32(
@@ -3078,31 +3080,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Int32 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Int32 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_i32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_i32Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_u64(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_u64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_u64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_u64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64(
       handle,
@@ -3110,14 +3115,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_u64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_u64(
       handle,
@@ -3125,14 +3129,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_u64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_u64 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_u64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_u64Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_u64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64(
@@ -3142,31 +3145,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Uint64 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Uint64 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_u64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_u64Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_i64(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_i64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_i64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_i64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64(
       handle,
@@ -3174,14 +3180,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_i64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_i64(
       handle,
@@ -3189,14 +3194,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_i64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_i64 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_i64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_i64Ptr.asFunction<void Function(int)>();
 
   int ffi_breez_sdk_liquid_bindings_rust_future_complete_i64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64(
@@ -3206,31 +3210,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Int64 Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Int64 Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_i64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_i64Ptr
-          .asFunction<int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<int Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_f32(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_f32');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_f32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_f32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32(
       handle,
@@ -3238,14 +3245,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_f32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_f32(
       handle,
@@ -3253,14 +3259,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_f32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f32 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_f32Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_f32Ptr.asFunction<void Function(int)>();
 
   double ffi_breez_sdk_liquid_bindings_rust_future_complete_f32(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32(
@@ -3270,31 +3275,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32Ptr =
-      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Float Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_f32');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_f32Ptr
-          .asFunction<double Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<double Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_f64(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_f64');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64Ptr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_f64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64 =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_f64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64(
       handle,
@@ -3302,14 +3310,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64Ptr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_f64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_f64(
       handle,
@@ -3317,14 +3324,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_f64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_f64 =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_f64Ptr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_f64Ptr.asFunction<void Function(int)>();
 
   double ffi_breez_sdk_liquid_bindings_rust_future_complete_f64(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64(
@@ -3334,31 +3340,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Double Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Double Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_f64');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64 =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_f64Ptr
-          .asFunction<double Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<double Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointerPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_pointerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer(
       handle,
@@ -3366,14 +3375,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointerPtr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_pointer(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_pointer(
       handle,
@@ -3381,14 +3389,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_pointerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_pointer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_pointer =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_pointerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_pointerPtr.asFunction<void Function(int)>();
 
   ffi.Pointer<ffi.Void> ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer(
@@ -3397,33 +3404,35 @@ class FlutterBreezLiquidBindings {
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointerPtr = _lookup<
-      ffi.NativeFunction<
-          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>,
-              ffi.Pointer<RustCallStatus>)>>('ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointerPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
+          'ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_pointerPtr
-          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<ffi.Pointer<ffi.Void> Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_bufferPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_bufferPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_bufferPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer(
       handle,
@@ -3431,14 +3440,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_bufferPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_bufferPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_bufferPtr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer(
       handle,
@@ -3446,14 +3454,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_bufferPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_bufferPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_rust_bufferPtr.asFunction<void Function(int)>();
 
   RustBuffer ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer(
@@ -3463,31 +3470,34 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_bufferPtr =
-      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<RustBuffer Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_bufferPtr
-          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<RustBuffer Function(int, ffi.Pointer<RustCallStatus>)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_poll_void(
-    ffi.Pointer<ffi.Void> handle,
-    ffi.Pointer<ffi.Void> uniffi_callback,
+    int handle,
+    UniffiRustFutureContinuationCallback callback,
+    int callback_data,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_poll_void(
       handle,
-      uniffi_callback,
+      callback,
+      callback_data,
     );
   }
 
-  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_voidPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>>(
-          'ffi_breez_sdk_liquid_bindings_rust_future_poll_void');
+  late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_voidPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Uint64, UniffiRustFutureContinuationCallback, ffi.Uint64)>>(
+      'ffi_breez_sdk_liquid_bindings_rust_future_poll_void');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_poll_void =
       _ffi_breez_sdk_liquid_bindings_rust_future_poll_voidPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>)>();
+          .asFunction<void Function(int, UniffiRustFutureContinuationCallback, int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_cancel_void(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_cancel_void(
       handle,
@@ -3495,14 +3505,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_voidPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_cancel_void');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_cancel_void =
-      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_voidPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_cancel_voidPtr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_free_void(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_free_void(
       handle,
@@ -3510,14 +3519,13 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_voidPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_free_void');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_free_void =
-      _ffi_breez_sdk_liquid_bindings_rust_future_free_voidPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+      _ffi_breez_sdk_liquid_bindings_rust_future_free_voidPtr.asFunction<void Function(int)>();
 
   void ffi_breez_sdk_liquid_bindings_rust_future_complete_void(
-    ffi.Pointer<ffi.Void> handle,
+    int handle,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _ffi_breez_sdk_liquid_bindings_rust_future_complete_void(
@@ -3527,11 +3535,11 @@ class FlutterBreezLiquidBindings {
   }
 
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_voidPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Uint64, ffi.Pointer<RustCallStatus>)>>(
           'ffi_breez_sdk_liquid_bindings_rust_future_complete_void');
   late final _ffi_breez_sdk_liquid_bindings_rust_future_complete_void =
       _ffi_breez_sdk_liquid_bindings_rust_future_complete_voidPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<void Function(int, ffi.Pointer<RustCallStatus>)>();
 
   int uniffi_breez_sdk_liquid_bindings_checksum_func_connect() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_func_connect();
@@ -5693,10 +5701,10 @@ typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
 /// ⚠️ Attention: If you change this #else block (ending in `#endif // def UNIFFI_SHARED_H`) you *must* ⚠️
 /// ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
 final class RustBuffer extends ffi.Struct {
-  @ffi.Int32()
+  @ffi.Uint64()
   external int capacity;
 
-  @ffi.Int32()
+  @ffi.Uint64()
   external int len;
 
   external ffi.Pointer<ffi.Uint8> data;
@@ -5717,16 +5725,204 @@ final class RustCallStatus extends ffi.Struct {
   external RustBuffer errorBuf;
 }
 
-typedef ForeignCallback = ffi.Pointer<ffi.NativeFunction<ForeignCallbackFunction>>;
-typedef ForeignCallbackFunction = ffi.Int32 Function(
-    ffi.Uint64, ffi.Int32, ffi.Pointer<ffi.Uint8>, ffi.Int32, ffi.Pointer<RustBuffer>);
-typedef DartForeignCallbackFunction = int Function(
-    int, int, ffi.Pointer<ffi.Uint8>, int, ffi.Pointer<RustBuffer>);
+final class UniffiForeignFuture extends ffi.Struct {
+  @ffi.Uint64()
+  external int handle;
 
-/// Continuation callback for UniFFI Futures
-typedef UniFfiRustFutureContinuation = ffi.Pointer<ffi.NativeFunction<UniFfiRustFutureContinuationFunction>>;
-typedef UniFfiRustFutureContinuationFunction = ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Int8);
-typedef DartUniFfiRustFutureContinuationFunction = void Function(ffi.Pointer<ffi.Void>, int);
+  external UniffiForeignFutureFree free;
+}
+
+typedef UniffiForeignFutureFree = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureFreeFunction>>;
+typedef UniffiForeignFutureFreeFunction = ffi.Void Function(ffi.Uint64);
+typedef DartUniffiForeignFutureFreeFunction = void Function(int);
+
+final class UniffiForeignFutureStructU8 extends ffi.Struct {
+  @ffi.Uint8()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructI8 extends ffi.Struct {
+  @ffi.Int8()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructU16 extends ffi.Struct {
+  @ffi.Uint16()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructI16 extends ffi.Struct {
+  @ffi.Int16()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructU32 extends ffi.Struct {
+  @ffi.Uint32()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructI32 extends ffi.Struct {
+  @ffi.Int32()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructU64 extends ffi.Struct {
+  @ffi.Uint64()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructI64 extends ffi.Struct {
+  @ffi.Int64()
+  external int returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructF32 extends ffi.Struct {
+  @ffi.Float()
+  external double returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructF64 extends ffi.Struct {
+  @ffi.Double()
+  external double returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructPointer extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructRustBuffer extends ffi.Struct {
+  external RustBuffer returnValue;
+
+  external RustCallStatus callStatus;
+}
+
+final class UniffiForeignFutureStructVoid extends ffi.Struct {
+  external RustCallStatus callStatus;
+}
+
+final class UniffiVTableCallbackInterfaceEventListener extends ffi.Struct {
+  external UniffiCallbackInterfaceEventListenerMethod0 onEvent;
+
+  external UniffiCallbackInterfaceFree uniffiFree;
+}
+
+typedef UniffiCallbackInterfaceEventListenerMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceEventListenerMethod0Function>>;
+typedef UniffiCallbackInterfaceEventListenerMethod0Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceEventListenerMethod0Function = void Function(
+    int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceFree = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceFreeFunction>>;
+typedef UniffiCallbackInterfaceFreeFunction = ffi.Void Function(ffi.Uint64);
+typedef DartUniffiCallbackInterfaceFreeFunction = void Function(int);
+
+final class UniffiVTableCallbackInterfaceLogger extends ffi.Struct {
+  external UniffiCallbackInterfaceLoggerMethod0 log;
+
+  external UniffiCallbackInterfaceFree uniffiFree;
+}
+
+typedef UniffiCallbackInterfaceLoggerMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceLoggerMethod0Function>>;
+typedef UniffiCallbackInterfaceLoggerMethod0Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceLoggerMethod0Function = void Function(
+    int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+
+final class UniffiVTableCallbackInterfaceSigner extends ffi.Struct {
+  external UniffiCallbackInterfaceSignerMethod0 xpub;
+
+  external UniffiCallbackInterfaceSignerMethod1 deriveXpub;
+
+  external UniffiCallbackInterfaceSignerMethod2 signEcdsa;
+
+  external UniffiCallbackInterfaceSignerMethod3 signEcdsaRecoverable;
+
+  external UniffiCallbackInterfaceSignerMethod4 slip77MasterBlindingKey;
+
+  external UniffiCallbackInterfaceSignerMethod5 hmacSha256;
+
+  external UniffiCallbackInterfaceSignerMethod6 eciesEncrypt;
+
+  external UniffiCallbackInterfaceSignerMethod7 eciesDecrypt;
+
+  external UniffiCallbackInterfaceFree uniffiFree;
+}
+
+typedef UniffiCallbackInterfaceSignerMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod0Function>>;
+typedef UniffiCallbackInterfaceSignerMethod0Function = ffi.Void Function(
+    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod0Function = void Function(
+    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod1
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod1Function>>;
+typedef UniffiCallbackInterfaceSignerMethod1Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod1Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod2
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod2Function>>;
+typedef UniffiCallbackInterfaceSignerMethod2Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod2Function = void Function(
+    int, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod3
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod3Function>>;
+typedef UniffiCallbackInterfaceSignerMethod3Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod3Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod4
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod4Function>>;
+typedef UniffiCallbackInterfaceSignerMethod4Function = ffi.Void Function(
+    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod4Function = void Function(
+    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod5
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod5Function>>;
+typedef UniffiCallbackInterfaceSignerMethod5Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod5Function = void Function(
+    int, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod6
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod6Function>>;
+typedef UniffiCallbackInterfaceSignerMethod6Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod6Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod7
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod7Function>>;
+typedef UniffiCallbackInterfaceSignerMethod7Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod7Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiRustFutureContinuationCallback
+    = ffi.Pointer<ffi.NativeFunction<UniffiRustFutureContinuationCallbackFunction>>;
+typedef UniffiRustFutureContinuationCallbackFunction = ffi.Void Function(ffi.Uint64, ffi.Int8);
+typedef DartUniffiRustFutureContinuationCallbackFunction = void Function(int, int);
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
