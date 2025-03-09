@@ -2,7 +2,7 @@
 mod test {
     use crate::{
         chain::liquid::MockLiquidChainService,
-        model::{ChainSwap,  PaymentState, SwapMetadata},
+        model::{ChainSwap, PaymentState, SwapMetadata},
         recover::{
             handlers::ChainSendSwapHandler,
             model::{HistoryTxId, RecoveryContext, TxMap},
@@ -10,12 +10,16 @@ mod test {
         swapper::MockSwapper,
     };
     use boltz_client::{
-        bitcoin::{self, OutPoint}, Amount, LockTime
+        bitcoin::{self, OutPoint},
+        Amount, LockTime,
     };
     use lwk_wollet::{
-        bitcoin::{transaction::Version, ScriptBuf, Sequence}, elements::{self, AssetId, Transaction, TxIn, TxInWitness}, elements_miniscript::slip77::MasterBlindingKey, WalletTx
+        bitcoin::{transaction::Version, ScriptBuf, Sequence},
+        elements::{self, AssetId, Transaction, TxIn, TxInWitness},
+        elements_miniscript::slip77::MasterBlindingKey,
+        WalletTx,
     };
-  
+
     use std::{
         collections::{BTreeMap, HashMap},
         str::FromStr,
@@ -63,9 +67,13 @@ mod test {
             &btc_claim_script,
             &[
                 (btc_lockup_tx_id, 102), // Server lockup tx
-                (btc_claim_tx_id, 101),   // Claim tx
+                (btc_claim_tx_id, 101),  // Claim tx
             ],
-            &[create_btc_transaction(btc_lockup_tx_id, &btc_claim_script, 100000)],
+            &[create_btc_transaction(
+                btc_lockup_tx_id,
+                &btc_claim_script,
+                100000,
+            )],
         );
 
         // Test recover swap
@@ -79,8 +87,14 @@ mod test {
         // Verify results
         assert!(result.is_ok());
         assert_eq!(chain_swap.state, PaymentState::Complete);
-        assert_eq!(chain_swap.user_lockup_tx_id, Some(lbtc_lockup_tx_id.to_string()));
-        assert_eq!(chain_swap.server_lockup_tx_id, Some(btc_lockup_tx_id.to_string()));
+        assert_eq!(
+            chain_swap.user_lockup_tx_id,
+            Some(lbtc_lockup_tx_id.to_string())
+        );
+        assert_eq!(
+            chain_swap.server_lockup_tx_id,
+            Some(btc_lockup_tx_id.to_string())
+        );
         assert_eq!(chain_swap.claim_tx_id, Some(btc_claim_tx_id.to_string()));
         assert_eq!(chain_swap.refund_tx_id, None);
     }
@@ -119,7 +133,10 @@ mod test {
         // Verify results
         assert!(result.is_ok());
         assert_eq!(chain_swap.state, PaymentState::Pending); // Not expired -> Pending
-        assert_eq!(chain_swap.user_lockup_tx_id, Some(lbtc_lockup_tx_id.to_string()));
+        assert_eq!(
+            chain_swap.user_lockup_tx_id,
+            Some(lbtc_lockup_tx_id.to_string())
+        );
         assert_eq!(chain_swap.server_lockup_tx_id, None);
         assert_eq!(chain_swap.claim_tx_id, None);
         assert_eq!(chain_swap.refund_tx_id, None);
@@ -169,7 +186,10 @@ mod test {
         // Verify results
         assert!(result.is_ok());
         assert_eq!(chain_swap.state, PaymentState::Failed);
-        assert_eq!(chain_swap.user_lockup_tx_id, Some(lbtc_lockup_tx_id.to_string()));
+        assert_eq!(
+            chain_swap.user_lockup_tx_id,
+            Some(lbtc_lockup_tx_id.to_string())
+        );
         assert_eq!(chain_swap.refund_tx_id, Some(lbtc_refund_tx_id.to_string()));
         assert_eq!(chain_swap.server_lockup_tx_id, None);
         assert_eq!(chain_swap.claim_tx_id, None);
@@ -212,7 +232,10 @@ mod test {
         // Verify results
         assert!(result.is_ok());
         assert_eq!(chain_swap.state, PaymentState::RefundPending); // Expired -> RefundPending
-        assert_eq!(chain_swap.user_lockup_tx_id, Some(lbtc_lockup_tx_id.to_string()));
+        assert_eq!(
+            chain_swap.user_lockup_tx_id,
+            Some(lbtc_lockup_tx_id.to_string())
+        );
         assert_eq!(chain_swap.refund_tx_id, None);
     }
 
@@ -260,10 +283,22 @@ mod test {
         // Verify results
         assert!(result.is_ok());
         // Original txids should be preserved due to grace period
-        assert_eq!(chain_swap.user_lockup_tx_id, Some("existing-lockup-tx-id".to_string()));
-        assert_eq!(chain_swap.refund_tx_id, Some("existing-refund-tx-id".to_string()));
-        assert_eq!(chain_swap.server_lockup_tx_id, Some("existing-server-lockup-tx-id".to_string()));
-        assert_eq!(chain_swap.claim_tx_id, Some("existing-claim-tx-id".to_string()));
+        assert_eq!(
+            chain_swap.user_lockup_tx_id,
+            Some("existing-lockup-tx-id".to_string())
+        );
+        assert_eq!(
+            chain_swap.refund_tx_id,
+            Some("existing-refund-tx-id".to_string())
+        );
+        assert_eq!(
+            chain_swap.server_lockup_tx_id,
+            Some("existing-server-lockup-tx-id".to_string())
+        );
+        assert_eq!(
+            chain_swap.claim_tx_id,
+            Some("existing-claim-tx-id".to_string())
+        );
     }
 
     // Helper function to setup test data
@@ -282,7 +317,7 @@ mod test {
             user_lockup_tx_id: None,
             server_lockup_tx_id: None,
             claim_tx_id: None,
-            refund_tx_id: None, 
+            refund_tx_id: None,
             claim_address: None,
             created_at: 1000,
             timeout_block_height: 1000,
@@ -290,7 +325,7 @@ mod test {
             metadata: SwapMetadata {
                 version: 1,
                 last_updated_at: 1000,
-                is_local: true,                
+                is_local: true,
             },
             direction: crate::model::Direction::Outgoing,
             lockup_address: "lq1pqgpec4sq2mav432r8ukrr80d59rfpjv6qlqc5jrmwl5u5l2qazsh0astupq4jfr7r58sxp4kfvxy3nm49e9x4ecs9jurmwp45xmmavhejmcdcajegnpt".to_string(),
@@ -408,12 +443,16 @@ mod test {
                 height: *height as i32,
             });
         }
-                
+
         // Add to history map
-        context.btc_script_to_history_map.insert(script.clone(), history);
+        context
+            .btc_script_to_history_map
+            .insert(script.clone(), history);
 
         // Add to txs map
-        context.btc_script_to_txs_map.insert(script.clone(), txs.to_vec());
+        context
+            .btc_script_to_txs_map
+            .insert(script.clone(), txs.to_vec());
 
         context
     }
@@ -446,7 +485,7 @@ mod test {
     fn create_empty_lbtc_transaction() -> Transaction {
         Transaction {
             version: 2,
-            lock_time:elements::LockTime::from_height(0).unwrap(),
+            lock_time: elements::LockTime::from_height(0).unwrap(),
             input: vec![TxIn {
                 previous_output: Default::default(),
                 is_pegin: false,
@@ -460,7 +499,11 @@ mod test {
     }
 
     // Create a simple BTC transaction
-    fn create_btc_transaction(tx_id_hex: &str, claim_script: &bitcoin::ScriptBuf, amount: u64) -> bitcoin::Transaction {
+    fn create_btc_transaction(
+        tx_id_hex: &str,
+        claim_script: &bitcoin::ScriptBuf,
+        amount: u64,
+    ) -> bitcoin::Transaction {
         let prev_tx_id = bitcoin::Txid::from_str(tx_id_hex).unwrap();
         bitcoin::Transaction {
             version: Version::TWO,
@@ -475,7 +518,7 @@ mod test {
                 witness: bitcoin::Witness::new(),
             }],
             output: vec![bitcoin::TxOut {
-                value:  Amount::from_sat(amount),
+                value: Amount::from_sat(amount),
                 script_pubkey: claim_script.clone(),
             }],
         }
