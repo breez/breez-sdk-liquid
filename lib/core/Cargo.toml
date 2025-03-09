@@ -63,6 +63,7 @@ tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
+mockall = "0.13.1"
 
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
