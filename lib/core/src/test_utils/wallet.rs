@@ -105,7 +105,7 @@ impl OnchainWallet for MockWallet {
         unimplemented!()
     }
 
-    async fn full_scan(&self) -> Result<(), PaymentError> {
+    async fn full_scan(&self) -> Result<()> {
         Ok(())
     }
 }
