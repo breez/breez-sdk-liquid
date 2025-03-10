@@ -4,11 +4,13 @@ use lwk_wollet::{
     elements::{BlockHeader, Script, Transaction, Txid},
     History,
 };
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 use lwk_wollet::{blocking::BlockchainBackend, ElectrumClient, ElectrumOptions, ElectrumUrl};
 
 use crate::model::{BlockchainExplorer, LiquidNetwork};
 
 pub(crate) enum LiquidClient {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     Electrum {
         inner: Box<ElectrumClient>,
     },
@@ -30,6 +32,7 @@ impl LiquidClient {
         network: LiquidNetwork,
     ) -> Result<Self> {
         match exp {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => {
                 let (tls, validate_domain) = match network {
                     LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
@@ -64,6 +67,7 @@ impl LiquidClient {
         index: u32,
     ) -> Result<(), lwk_wollet::Error> {
         let update = match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             Self::Electrum { inner, .. } => {
                 let state = wollet.state();
                 inner.full_scan_to_index(&state, index)?
@@ -80,6 +84,7 @@ impl LiquidClient {
 impl LiquidClient {
     pub(crate) async fn tip(&mut self) -> Result<BlockHeader> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             LiquidClient::Electrum { inner } => inner.tip()?,
             LiquidClient::Esplora { inner } => inner.tip().await?,
         })
@@ -87,6 +92,7 @@ impl LiquidClient {
 
     pub(crate) async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             LiquidClient::Electrum { inner } => inner.broadcast(tx)?,
             LiquidClient::Esplora { inner } => inner.broadcast(tx).await?,
         })
@@ -94,6 +100,7 @@ impl LiquidClient {
 
     pub(crate) async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             LiquidClient::Electrum { inner } => inner.get_transactions(txids)?,
             LiquidClient::Esplora { inner } => inner.get_transactions(txids).await?,
         })
@@ -104,6 +111,7 @@ impl LiquidClient {
         scripts: &[&Script],
     ) -> Result<Vec<Vec<History>>> {
         Ok(match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             LiquidClient::Electrum { inner } => inner.get_scripts_history(scripts)?,
             LiquidClient::Esplora { inner } => inner.get_scripts_history(scripts).await?,
         })

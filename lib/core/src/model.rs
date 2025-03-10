@@ -33,9 +33,8 @@ pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 #[derive(Clone, Debug, Serialize)]
 pub enum BlockchainExplorer {
-    Electrum {
-        url: String,
-    },
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum { url: String },
     Esplora {
         url: String,
         /// Whether or not to use the "waterfalls" extension
@@ -95,13 +94,17 @@ impl Config {
                     url: "https://waterfalls.liquidwebwallet.org/liquid/api".to_string(),
                     use_waterfalls: true,
                 },
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
                 BlockchainExplorer::Electrum {
                     url: "elements-mainnet.breez.technology:50002".to_string(),
                 },
             ],
-            bitcoin_explorers: vec![BlockchainExplorer::Electrum {
-                url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
-            }],
+            bitcoin_explorers: vec![
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                BlockchainExplorer::Electrum {
+                    url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
+                },
+            ],
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
@@ -123,13 +126,17 @@ impl Config {
                     url: "https://waterfalls.liquidwebwallet.org/liquidtestnet/api".to_string(),
                     use_waterfalls: true,
                 },
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
                 BlockchainExplorer::Electrum {
                     url: "elements-testnet.blockstream.info:50002".to_string(),
                 },
             ],
-            bitcoin_explorers: vec![BlockchainExplorer::Electrum {
-                url: "bitcoin-testnet.blockstream.info:50002".to_string(),
-            }],
+            bitcoin_explorers: vec![
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                BlockchainExplorer::Electrum {
+                    url: "bitcoin-testnet.blockstream.info:50002".to_string(),
+                },
+            ],
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Testnet,
@@ -146,12 +153,18 @@ impl Config {
 
     pub fn regtest() -> Self {
         Config {
-            bitcoin_explorers: vec![BlockchainExplorer::Electrum {
-                url: "localhost:19001".to_string(),
-            }],
-            liquid_explorers: vec![BlockchainExplorer::Electrum {
-                url: "localhost:19002".to_string(),
-            }],
+            bitcoin_explorers: vec![
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                BlockchainExplorer::Electrum {
+                    url: "localhost:19001".to_string(),
+                },
+            ],
+            liquid_explorers: vec![
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                BlockchainExplorer::Electrum {
+                    url: "localhost:19002".to_string(),
+                },
+            ],
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Regtest,
@@ -227,6 +240,7 @@ impl Config {
         v.iter().filter_map(predicate).collect()
     }
 
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub(crate) fn liquid_electrum_explorers(&self) -> Vec<&String> {
         Self::get_explorers(&self.liquid_explorers, |be| match be {
             BlockchainExplorer::Electrum { url } => Some(url),
@@ -242,6 +256,7 @@ impl Config {
         })
     }
 
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub(crate) fn bitcoin_electrum_explorers(&self) -> Vec<&String> {
         Self::get_explorers(&self.bitcoin_explorers, |be| match be {
             BlockchainExplorer::Electrum { url } => Some(url),
