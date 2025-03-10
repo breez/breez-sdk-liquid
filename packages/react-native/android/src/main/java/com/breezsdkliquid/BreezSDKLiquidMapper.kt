@@ -418,9 +418,8 @@ fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
             arrayOf(
-                "liquidElectrumUrl",
-                "bitcoinElectrumUrl",
-                "mempoolspaceUrl",
+                "liquidExplorers",
+                "bitcoinExplorers",
                 "workingDir",
                 "network",
                 "paymentTimeoutSec",
@@ -430,9 +429,8 @@ fun asConfig(config: ReadableMap): Config? {
     ) {
         return null
     }
-    val liquidElectrumUrl = config.getString("liquidElectrumUrl")!!
-    val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
-    val mempoolspaceUrl = config.getString("mempoolspaceUrl")!!
+    val liquidExplorers = config.getArray("liquidExplorers")?.let { asBlockchainExplorerList(it) }!!
+    val bitcoinExplorers = config.getArray("bitcoinExplorers")?.let { asBlockchainExplorerList(it) }!!
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
@@ -479,9 +477,8 @@ fun asConfig(config: ReadableMap): Config? {
             null
         }
     return Config(
-        liquidElectrumUrl,
-        bitcoinElectrumUrl,
-        mempoolspaceUrl,
+        liquidExplorers,
+        bitcoinExplorers,
         workingDir,
         network,
         paymentTimeoutSec,
@@ -498,9 +495,8 @@ fun asConfig(config: ReadableMap): Config? {
 
 fun readableMapOf(config: Config): ReadableMap =
     readableMapOf(
-        "liquidElectrumUrl" to config.liquidElectrumUrl,
-        "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
-        "mempoolspaceUrl" to config.mempoolspaceUrl,
+        "liquidExplorers" to readableArrayOf(config.liquidExplorers),
+        "bitcoinExplorers" to readableArrayOf(config.bitcoinExplorers),
         "workingDir" to config.workingDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
@@ -2994,6 +2990,48 @@ fun asAmountList(arr: ReadableArray): List<Amount> {
     return list
 }
 
+fun asBlockchainExplorer(blockchainExplorer: ReadableMap): BlockchainExplorer? {
+    val type = blockchainExplorer.getString("type")
+
+    if (type == "electrum") {
+        val url = blockchainExplorer.getString("url")!!
+        return BlockchainExplorer.Electrum(url)
+    }
+    if (type == "esplora") {
+        val url = blockchainExplorer.getString("url")!!
+        val useWaterfalls = blockchainExplorer.getBoolean("useWaterfalls")
+        return BlockchainExplorer.Esplora(url, useWaterfalls)
+    }
+    return null
+}
+
+fun readableMapOf(blockchainExplorer: BlockchainExplorer): ReadableMap? {
+    val map = Arguments.createMap()
+    when (blockchainExplorer) {
+        is BlockchainExplorer.Electrum -> {
+            pushToMap(map, "type", "electrum")
+            pushToMap(map, "url", blockchainExplorer.url)
+        }
+        is BlockchainExplorer.Esplora -> {
+            pushToMap(map, "type", "esplora")
+            pushToMap(map, "url", blockchainExplorer.url)
+            pushToMap(map, "useWaterfalls", blockchainExplorer.useWaterfalls)
+        }
+    }
+    return map
+}
+
+fun asBlockchainExplorerList(arr: ReadableArray): List<BlockchainExplorer> {
+    val list = ArrayList<BlockchainExplorer>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBlockchainExplorer(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBuyBitcoinProvider(type: String): BuyBitcoinProvider = BuyBitcoinProvider.valueOf(camelToUpperSnakeCase(type))
 
 fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
@@ -3940,6 +3978,7 @@ fun pushToArray(
         null -> array.pushNull()
         is AssetBalance -> array.pushMap(readableMapOf(value))
         is AssetMetadata -> array.pushMap(readableMapOf(value))
+        is BlockchainExplorer -> array.pushMap(readableMapOf(value))
         is ExternalInputParser -> array.pushMap(readableMapOf(value))
         is FiatCurrency -> array.pushMap(readableMapOf(value))
         is LnOfferBlindedPath -> array.pushMap(readableMapOf(value))
