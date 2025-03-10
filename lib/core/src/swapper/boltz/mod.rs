@@ -59,14 +59,14 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             config: config.clone(),
             liquid_electrum_client: ElectrumLiquidClient::new(
                 config.network.into(),
-                &config.liquid_electrum_url,
+                config.liquid_explorer.url(),
                 tls,
                 validate_domain,
                 100,
             )?,
             bitcoin_electrum_client: ElectrumBitcoinClient::new(
                 config.network.as_bitcoin_chain(),
-                &config.bitcoin_electrum_url,
+                config.bitcoin_explorer.url(),
                 tls,
                 validate_domain,
                 100,

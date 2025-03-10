@@ -87,6 +87,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw);
 
   @protected
+  BlockchainExplorer dco_decode_blockchain_explorer(dynamic raw);
+
+  @protected
   BlockchainInfo dco_decode_blockchain_info(dynamic raw);
 
   @protected
@@ -722,6 +725,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer);
+
+  @protected
+  BlockchainExplorer sse_decode_blockchain_explorer(SseDeserializer deserializer);
 
   @protected
   BlockchainInfo sse_decode_blockchain_info(SseDeserializer deserializer);
@@ -2263,6 +2269,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_blockchain_explorer(
+    BlockchainExplorer apiObj,
+    wire_cst_blockchain_explorer wireObj,
+  ) {
+    if (apiObj is BlockchainExplorer_Electrum) {
+      var pre_url = cst_encode_String(apiObj.url);
+      wireObj.tag = 0;
+      wireObj.kind.Electrum.url = pre_url;
+      return;
+    }
+    if (apiObj is BlockchainExplorer_Esplora) {
+      var pre_url = cst_encode_String(apiObj.url);
+      var pre_use_waterfalls = cst_encode_bool(apiObj.useWaterfalls);
+      wireObj.tag = 1;
+      wireObj.kind.Esplora.url = pre_url;
+      wireObj.kind.Esplora.use_waterfalls = pre_use_waterfalls;
+      return;
+    }
+  }
+
+  @protected
   void cst_api_fill_to_wire_blockchain_info(BlockchainInfo apiObj, wire_cst_blockchain_info wireObj) {
     wireObj.liquid_tip = cst_encode_u_32(apiObj.liquidTip);
     wireObj.bitcoin_tip = cst_encode_u_32(apiObj.bitcoinTip);
@@ -2682,9 +2709,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void cst_api_fill_to_wire_config(Config apiObj, wire_cst_config wireObj) {
-    wireObj.liquid_electrum_url = cst_encode_String(apiObj.liquidElectrumUrl);
-    wireObj.bitcoin_electrum_url = cst_encode_String(apiObj.bitcoinElectrumUrl);
-    wireObj.mempoolspace_url = cst_encode_String(apiObj.mempoolspaceUrl);
+    cst_api_fill_to_wire_blockchain_explorer(apiObj.liquidExplorer, wireObj.liquid_explorer);
+    cst_api_fill_to_wire_blockchain_explorer(apiObj.bitcoinExplorer, wireObj.bitcoin_explorer);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
     wireObj.cache_dir = cst_encode_opt_String(apiObj.cacheDir);
     wireObj.network = cst_encode_liquid_network(apiObj.network);
@@ -4076,6 +4102,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_blockchain_explorer(BlockchainExplorer self, SseSerializer serializer);
 
   @protected
   void sse_encode_blockchain_info(BlockchainInfo self, SseSerializer serializer);
@@ -7056,6 +7085,30 @@ final class wire_cst_sdk_event extends ffi.Struct {
   external SdkEventKind kind;
 }
 
+final class wire_cst_BlockchainExplorer_Electrum extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+}
+
+final class wire_cst_BlockchainExplorer_Esplora extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+
+  @ffi.Bool()
+  external bool use_waterfalls;
+}
+
+final class BlockchainExplorerKind extends ffi.Union {
+  external wire_cst_BlockchainExplorer_Electrum Electrum;
+
+  external wire_cst_BlockchainExplorer_Esplora Esplora;
+}
+
+final class wire_cst_blockchain_explorer extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external BlockchainExplorerKind kind;
+}
+
 final class wire_cst_external_input_parser extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> provider_id;
 
@@ -7090,11 +7143,9 @@ final class wire_cst_list_asset_metadata extends ffi.Struct {
 }
 
 final class wire_cst_config extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
+  external wire_cst_blockchain_explorer liquid_explorer;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
+  external wire_cst_blockchain_explorer bitcoin_explorer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 

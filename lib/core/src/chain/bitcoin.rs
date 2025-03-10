@@ -15,10 +15,7 @@ use electrum_client::{
 };
 use log::info;
 use lwk_wollet::{bitcoin::ScriptBuf, ElectrumOptions, ElectrumUrl, Error, History};
-use sdk_common::{
-    bitcoin::hashes::hex::ToHex,
-    prelude::{get_and_check_success, parse_json, RestClient},
-};
+use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::RestClient};
 
 use crate::{
     model::{Config, LiquidNetwork, RecommendedFees},
@@ -108,7 +105,7 @@ impl HybridBitcoinChainService {
             LiquidNetwork::Regtest => (false, false),
         };
         let electrum_url =
-            ElectrumUrl::new(&self.config.bitcoin_electrum_url, tls, validate_domain)?;
+            ElectrumUrl::new(self.config.bitcoin_explorer.url(), tls, validate_domain)?;
         let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
 
         let client = self.client.get_or_init(|| client);
@@ -368,11 +365,18 @@ impl BitcoinChainService for HybridBitcoinChainService {
     }
 
     async fn recommended_fees(&self) -> Result<RecommendedFees> {
-        let (response, _) = get_and_check_success(
-            self.rest_client.as_ref(),
-            &format!("{}/v1/fees/recommended", self.config.mempoolspace_url),
-        )
-        .await?;
-        Ok(parse_json(&response)?)
+        let fees: Vec<u64> = self
+            .get_client()?
+            .batch_estimate_fee([1, 3, 6, 25, 1008])?
+            .into_iter()
+            .map(|v| v as u64)
+            .collect();
+        Ok(RecommendedFees {
+            fastest_fee: fees[0],
+            half_hour_fee: fees[1],
+            hour_fee: fees[2],
+            economy_fee: fees[3],
+            minimum_fee: fees[4],
+        })
     }
 }

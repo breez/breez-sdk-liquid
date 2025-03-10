@@ -398,7 +398,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             };
 
             let electrum_url =
-                ElectrumUrl::new(&self.config.liquid_electrum_url, tls, validate_domain)?;
+                ElectrumUrl::new(self.config.liquid_explorer.url(), tls, validate_domain)?;
             *electrum_client = Some(ElectrumClient::with_options(
                 &electrum_url,
                 ElectrumOptions { timeout: Some(3) },
