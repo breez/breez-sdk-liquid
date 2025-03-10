@@ -7,14 +7,13 @@ use boltz_client::{
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
-    ToHex,
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
-use lwk_wollet::elements::AssetId;
-use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
+use lwk_wollet::{bitcoin::bip32, elements::AssetId, ElementsNetwork};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
+use sdk_common::bitcoin::hashes::hex::ToHex as _;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::cmp::PartialEq;
@@ -2194,6 +2193,62 @@ pub struct FetchPaymentProposedFeesResponse {
 #[derive(Debug, Clone)]
 pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct History<Txid> {
+    pub(crate) txid: Txid,
+    /// Confirmation height of txid
+    ///
+    /// -1 means unconfirmed with unconfirmed parents
+    ///  0 means unconfirmed with confirmed parents
+    pub(crate) height: i32,
+}
+impl<Txid> History<Txid> {
+    pub(crate) fn confirmed(&self) -> bool {
+        self.height > 0
+    }
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+impl From<electrum_client::GetHistoryRes> for History<lwk_wollet::bitcoin::Txid> {
+    fn from(value: electrum_client::GetHistoryRes) -> Self {
+        Self {
+            txid: value.tx_hash,
+            height: value.height,
+        }
+    }
+}
+impl From<lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
+    fn from(value: lwk_wollet::History) -> Self {
+        Self::from(&value)
+    }
+}
+impl From<&lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
+    fn from(value: &lwk_wollet::History) -> Self {
+        Self {
+            txid: value.txid,
+            height: value.height,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct BtcScriptBalance {
+    /// Confirmed balance in Satoshis for the address.
+    pub(crate) confirmed: u64,
+    /// Unconfirmed balance in Satoshis for the address.
+    ///
+    /// Some servers (e.g. `electrs`) return this as a negative value.
+    pub(crate) unconfirmed: i64,
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
+    fn from(val: electrum_client::GetBalanceRes) -> Self {
+        Self {
+            confirmed: val.confirmed,
+            unconfirmed: val.unconfirmed,
+        }
+    }
 }
 
 #[macro_export]

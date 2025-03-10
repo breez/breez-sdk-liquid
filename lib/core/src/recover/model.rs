@@ -3,57 +3,27 @@ use std::str::FromStr;
 
 use anyhow::anyhow;
 use boltz_client::boltz::PairLimits;
-use boltz_client::ElementsAddress;
-use electrum_client::GetBalanceRes;
-use lwk_wollet::elements::Txid;
-use lwk_wollet::History;
 use lwk_wollet::WalletTx;
 
 use crate::prelude::*;
 
-pub(crate) type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
-pub(crate) type LBtcScript = lwk_wollet::elements::Script;
-pub(crate) type SendSwapHistory = Vec<HistoryTxId>;
-
-#[derive(Clone, Debug)]
-pub(crate) struct HistoryTxId {
-    pub txid: Txid,
-    /// Confirmation height of txid
-    ///
-    /// -1 means unconfirmed with unconfirmed parents
-    ///  0 means unconfirmed with confirmed parents
-    pub height: i32,
-}
-impl HistoryTxId {
-    pub(crate) fn confirmed(&self) -> bool {
-        self.height > 0
-    }
-}
-impl From<History> for HistoryTxId {
-    fn from(value: History) -> Self {
-        Self::from(&value)
-    }
-}
-impl From<&History> for HistoryTxId {
-    fn from(value: &History) -> Self {
-        Self {
-            txid: value.txid,
-            height: value.height,
-        }
-    }
-}
+pub(crate) type BtcScript = bitcoin::ScriptBuf;
+pub(crate) type LBtcScript = elements::Script;
+pub(crate) type SendSwapHistory = Vec<History<elements::Txid>>;
 
 /// A map of all our known LWK onchain txs, indexed by tx ID. Essentially our own cache of the LWK txs.
 pub(crate) struct TxMap {
-    pub(crate) outgoing_tx_map: HashMap<Txid, WalletTx>,
-    pub(crate) incoming_tx_map: HashMap<Txid, WalletTx>,
+    pub(crate) outgoing_tx_map: HashMap<elements::Txid, WalletTx>,
+    pub(crate) incoming_tx_map: HashMap<elements::Txid, WalletTx>,
 }
 impl TxMap {
-    pub(crate) fn from_raw_tx_map(raw_tx_map: HashMap<Txid, WalletTx>) -> Self {
-        let (outgoing_tx_map, incoming_tx_map): (HashMap<Txid, WalletTx>, HashMap<Txid, WalletTx>) =
-            raw_tx_map
-                .into_iter()
-                .partition(|(_, tx)| tx.balance.values().sum::<i64>() < 0);
+    pub(crate) fn from_raw_tx_map(raw_tx_map: HashMap<elements::Txid, WalletTx>) -> Self {
+        let (outgoing_tx_map, incoming_tx_map): (
+            HashMap<elements::Txid, WalletTx>,
+            HashMap<elements::Txid, WalletTx>,
+        ) = raw_tx_map
+            .into_iter()
+            .partition(|(_, tx)| tx.balance.values().sum::<i64>() < 0);
 
         Self {
             outgoing_tx_map,
@@ -63,9 +33,9 @@ impl TxMap {
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
-    pub(crate) lockup_tx_id: Option<HistoryTxId>,
-    pub(crate) claim_tx_id: Option<HistoryTxId>,
-    pub(crate) refund_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<History<elements::Txid>>,
+    pub(crate) claim_tx_id: Option<History<elements::Txid>>,
+    pub(crate) refund_tx_id: Option<History<elements::Txid>>,
     pub(crate) preimage: Option<String>,
 }
 
@@ -96,9 +66,9 @@ impl RecoveredOnchainDataSend {
 }
 
 pub(crate) struct RecoveredOnchainDataReceive {
-    pub(crate) lockup_tx_id: Option<HistoryTxId>,
-    pub(crate) claim_tx_id: Option<HistoryTxId>,
-    pub(crate) mrh_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<History<elements::Txid>>,
+    pub(crate) claim_tx_id: Option<History<elements::Txid>>,
+    pub(crate) mrh_tx_id: Option<History<elements::Txid>>,
     pub(crate) mrh_amount_sat: Option<u64>,
 }
 
@@ -133,13 +103,13 @@ impl RecoveredOnchainDataReceive {
 
 pub(crate) struct RecoveredOnchainDataChainSend {
     /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
-    pub(crate) lbtc_user_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_user_lockup_tx_id: Option<History<elements::Txid>>,
     /// LBTC tx initiated by the SDK to itself, in case the initial funds have to be refunded.
-    pub(crate) lbtc_refund_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_refund_tx_id: Option<History<elements::Txid>>,
     /// BTC tx locking up funds by the swapper
-    pub(crate) btc_server_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_server_lockup_tx_id: Option<History<bitcoin::Txid>>,
     /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
-    pub(crate) btc_claim_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_claim_tx_id: Option<History<bitcoin::Txid>>,
 }
 
 // TODO: We have to be careful around overwriting the RefundPending state, as this swap monitored
@@ -183,19 +153,19 @@ impl RecoveredOnchainDataChainSend {
 
 pub(crate) struct RecoveredOnchainDataChainReceive {
     /// LBTC tx locking up funds by the swapper
-    pub(crate) lbtc_server_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_server_lockup_tx_id: Option<History<elements::Txid>>,
     /// LBTC tx that claims to our wallet. The final step in a successful swap.
-    pub(crate) lbtc_claim_tx_id: Option<HistoryTxId>,
+    pub(crate) lbtc_claim_tx_id: Option<History<elements::Txid>>,
     /// LBTC tx out address for the claim tx.
     pub(crate) lbtc_claim_address: Option<String>,
     /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
-    pub(crate) btc_user_lockup_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_user_lockup_tx_id: Option<History<bitcoin::Txid>>,
     /// BTC total funds currently available at the swap funding address.
     pub(crate) btc_user_lockup_address_balance_sat: u64,
     /// BTC sent to lockup address as part of lockup tx.
     pub(crate) btc_user_lockup_amount_sat: u64,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
-    pub(crate) btc_refund_tx_id: Option<HistoryTxId>,
+    pub(crate) btc_refund_tx_id: Option<History<bitcoin::Txid>>,
 }
 
 impl RecoveredOnchainDataChainReceive {
@@ -302,7 +272,7 @@ impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
     fn try_from(swap: ReceiveSwap) -> std::result::Result<Self, Self::Error> {
         let swap_script = swap.get_swap_script()?;
         let create_response = swap.get_boltz_create_response()?;
-        let mrh_address = ElementsAddress::from_str(&swap.mrh_address).ok();
+        let mrh_address = elements::Address::from_str(&swap.mrh_address).ok();
 
         let funding_address = swap_script.funding_addrs.ok_or(anyhow!(
             "No funding address found for Receive Swap {}",
@@ -321,8 +291,8 @@ impl TryFrom<ReceiveSwap> for ReceiveSwapImmutableData {
 }
 
 pub(crate) struct ReceiveSwapHistory {
-    pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
-    pub(crate) lbtc_mrh_script_history: Vec<HistoryTxId>,
+    pub(crate) lbtc_claim_script_history: Vec<History<elements::Txid>>,
+    pub(crate) lbtc_mrh_script_history: Vec<History<elements::Txid>>,
 }
 
 #[derive(Clone)]
@@ -367,8 +337,8 @@ impl TryFrom<ChainSwap> for SendChainSwapImmutableData {
 }
 
 pub(crate) struct SendChainSwapHistory {
-    pub(crate) lbtc_lockup_script_history: Vec<HistoryTxId>,
-    pub(crate) btc_claim_script_history: Vec<HistoryTxId>,
+    pub(crate) lbtc_lockup_script_history: Vec<History<elements::Txid>>,
+    pub(crate) btc_claim_script_history: Vec<History<bitcoin::Txid>>,
     pub(crate) btc_claim_script_txs: Vec<boltz_client::bitcoin::Transaction>,
 }
 
@@ -414,10 +384,10 @@ impl TryFrom<ChainSwap> for ReceiveChainSwapImmutableData {
 }
 
 pub(crate) struct ReceiveChainSwapHistory {
-    pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
-    pub(crate) btc_lockup_script_history: Vec<HistoryTxId>,
-    pub(crate) btc_lockup_script_txs: Vec<boltz_client::bitcoin::Transaction>,
-    pub(crate) btc_lockup_script_balance: Option<GetBalanceRes>,
+    pub(crate) lbtc_claim_script_history: Vec<History<elements::Txid>>,
+    pub(crate) btc_lockup_script_history: Vec<History<bitcoin::Txid>>,
+    pub(crate) btc_lockup_script_txs: Vec<bitcoin::Transaction>,
+    pub(crate) btc_lockup_script_balance: Option<BtcScriptBalance>,
 }
 
 /// Swap immutable data
@@ -508,7 +478,7 @@ impl SwapsList {
 
     pub(crate) fn send_histories_by_swap_id(
         &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
+        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<History<elements::Txid>>>,
     ) -> HashMap<String, SendSwapHistory> {
         let send_swaps_by_script = self.send_swaps_by_script();
 
@@ -541,7 +511,7 @@ impl SwapsList {
 
     pub(crate) fn receive_histories_by_swap_id(
         &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
+        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<History<elements::Txid>>>,
     ) -> HashMap<String, ReceiveSwapHistory> {
         let receive_swaps_by_claim_script = self.receive_swaps_by_claim_script();
         let receive_swaps_by_mrh_script = self.receive_swaps_by_mrh_script();
@@ -562,7 +532,7 @@ impl SwapsList {
                                         tx_history.height < imm.timeout_block_height as i32
                                     })
                                     .cloned()
-                                    .collect::<Vec<HistoryTxId>>()
+                                    .collect::<Vec<History<elements::Txid>>>()
                             })
                         })
                         .unwrap_or_default();
@@ -584,7 +554,7 @@ impl SwapsList {
                         .iter()
                         .filter(|&tx_history| tx_history.height < imm.timeout_block_height as i32)
                         .cloned()
-                        .collect::<Vec<HistoryTxId>>();
+                        .collect::<Vec<History<elements::Txid>>>();
                     data.insert(
                         imm.swap_id.clone(),
                         ReceiveSwapHistory {
@@ -609,9 +579,9 @@ impl SwapsList {
 
     pub(crate) fn send_chain_histories_by_swap_id(
         &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-        btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
-        btc_script_to_txs_map: &HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
+        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<History<elements::Txid>>>,
+        btc_script_to_history_map: &HashMap<BtcScript, Vec<History<bitcoin::Txid>>>,
+        btc_script_to_txs_map: &HashMap<BtcScript, Vec<bitcoin::Transaction>>,
     ) -> HashMap<String, SendChainSwapHistory> {
         let send_chain_swaps_by_lbtc_script = self.send_chain_swaps_by_lbtc_lockup_script();
 
@@ -654,10 +624,10 @@ impl SwapsList {
 
     pub(super) fn receive_chain_histories_by_swap_id(
         &self,
-        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<HistoryTxId>>,
-        btc_script_to_history_map: &HashMap<BtcScript, Vec<HistoryTxId>>,
-        btc_script_to_txs_map: &HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
-        btc_script_to_balance_map: &HashMap<BtcScript, GetBalanceRes>,
+        lbtc_script_to_history_map: &HashMap<LBtcScript, Vec<History<elements::Txid>>>,
+        btc_script_to_history_map: &HashMap<BtcScript, Vec<History<bitcoin::Txid>>>,
+        btc_script_to_txs_map: &HashMap<BtcScript, Vec<bitcoin::Transaction>>,
+        btc_script_to_balance_map: &HashMap<BtcScript, BtcScriptBalance>,
     ) -> HashMap<String, ReceiveChainSwapHistory> {
         let receive_chain_swaps_by_lbtc_script = self.receive_chain_swaps_by_lbtc_claim_script();
 

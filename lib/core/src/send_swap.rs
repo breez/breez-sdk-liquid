@@ -12,7 +12,7 @@ use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
 use tokio::sync::broadcast;
 
-use crate::chain::liquid::LiquidChainService;
+use crate::chain::liquid::service::LiquidChainService;
 use crate::model::{
     BlockListener, Config, PaymentState::*, SendSwap, LIQUID_FEE_RATE_MSAT_PER_VBYTE,
 };
@@ -387,10 +387,13 @@ impl SendSwapHandler {
         debug!("Found Send Swap swap_script_pk: {swap_script_pk:?}");
 
         // Get tx history of the swap script (lockup address)
-        let history: Vec<_> = self
+        let history = self
             .chain_service
-            .get_script_history(&swap_script_pk)
-            .await?;
+            .get_scripts_history(&[&swap_script_pk])
+            .await?
+            .into_iter()
+            .nth(0)
+            .unwrap_or_default();
 
         // We expect at most 2 txs: lockup and maybe the claim
         ensure_sdk!(

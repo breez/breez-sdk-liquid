@@ -11,7 +11,7 @@ use lwk_wollet::hashes::hex::DisplayHex;
 use lwk_wollet::secp256k1::SecretKey;
 use tokio::sync::broadcast;
 
-use crate::chain::liquid::LiquidChainService;
+use crate::chain::liquid::service::LiquidChainService;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::Swap;

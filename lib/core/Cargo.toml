@@ -51,6 +51,9 @@ prost = "0.13.3"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
+esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = [
+    "async-https-rustls"
+] }
 
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
 electrum-client = { version = "0.21.0", default-features = false, features = [
@@ -62,10 +65,10 @@ tokio-stream = { version = "0.1.14", features = ["sync"] }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
+lwk_wollet = { git = "https://github.com/breez/lwk", rev = "9e256839c26e47378c21c373d1376aa87802663a" }
 
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
+lwk_wollet = { git = "https://github.com/breez/lwk", rev = "9e256839c26e47378c21c373d1376aa87802663a", default-features = false, features = [ "esplora" ] }
 
 [dev-dependencies]
 paste = "1.0.15"

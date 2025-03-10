@@ -1,23 +1,20 @@
-use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
-use async_trait::async_trait;
-use boltz_client::ToHex;
-use electrum_client::{Client, ElectrumApi};
-use elements::encode::serialize as elements_serialize;
-use log::info;
-use lwk_wollet::elements::hex::FromHex;
-use lwk_wollet::{bitcoin, elements, ElectrumOptions};
-use lwk_wollet::{
-    elements::{Address, OutPoint, Script, Transaction, Txid},
-    hashes::{sha256, Hash},
-    ElectrumUrl, History,
-};
+use crate::prelude::*;
 
-use crate::model::LiquidNetwork;
+use anyhow::{anyhow, bail, Result};
+use async_trait::async_trait;
+use elements::{hex::FromHex, Address, OutPoint, Script, Transaction, Txid};
+use log::info;
+use lwk_wollet::hashes::{sha256, Hash};
+use sdk_common::bitcoin::hashes::hex::ToHex;
+use tokio::sync::{Mutex, RwLock};
+
+use crate::get_client;
 use crate::prelude::Utxo;
 use crate::{model::Config, utils};
+
+use super::client::LiquidClient;
 
 #[async_trait]
 pub trait LiquidChainService: Send + Sync {
@@ -33,20 +30,17 @@ pub trait LiquidChainService: Send + Sync {
     /// Get a list of transactions
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
 
-    /// Get the transactions involved in a script
-    async fn get_script_history(&self, scripts: &Script) -> Result<Vec<History>>;
-
     /// Get the transactions involved in a list of scripts.
     ///
     /// The data is fetched in a single call from the Electrum endpoint.
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History<Txid>>>>;
 
     /// Get the transactions involved in a list of scripts
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<Vec<History>>;
+    ) -> Result<Vec<History<Txid>>>;
 
     /// Get the utxos associated with a script pubkey
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
@@ -62,63 +56,58 @@ pub trait LiquidChainService: Send + Sync {
 }
 
 pub(crate) struct HybridLiquidChainService {
-    client: OnceLock<Client>,
     config: Config,
     last_known_tip: Mutex<Option<u32>>,
+    client: RwLock<Option<LiquidClient>>,
 }
 
 impl HybridLiquidChainService {
     pub(crate) fn new(config: Config) -> Result<Self> {
         Ok(Self {
             config,
-            client: OnceLock::new(),
+            client: RwLock::new(None),
             last_known_tip: Mutex::new(None),
         })
     }
 
-    fn get_client(&self) -> Result<&Client> {
-        if let Some(c) = self.client.get() {
-            return Ok(c);
+    fn init_client(&self) -> Result<LiquidClient> {
+        for explorer in &self.config.liquid_explorers {
+            if let Ok(client) = LiquidClient::try_from_explorer(explorer, self.config.network) {
+                if client.is_available() {
+                    return Ok(client);
+                }
+            }
         }
-        let (tls, validate_domain) = match self.config.network {
-            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
-            LiquidNetwork::Regtest => (false, false),
-        };
-        let electrum_url =
-            ElectrumUrl::new(&self.config.liquid_electrum_url, tls, validate_domain)?;
-        let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
 
-        let client = self.client.get_or_init(|| client);
-        Ok(client)
+        bail!("Could not create Liquid chain service client: no working clients found");
+    }
+
+    async fn set_client(&self) -> Result<()> {
+        let lock = self.client.read().await;
+        if let Some(client) = lock.as_ref() {
+            if client.is_available() {
+                return Ok(());
+            }
+        }
+
+        let mut lock = self.client.write().await;
+        *lock = Some(self.init_client()?);
+        Ok(())
     }
 }
 
 #[async_trait]
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
-        let client = self.get_client()?;
-        let mut maybe_popped_header = None;
-        while let Some(header) = client.block_headers_pop_raw()? {
-            maybe_popped_header = Some(header)
-        }
+        self.set_client().await?;
 
-        let new_tip: Option<u32> = match maybe_popped_header {
-            Some(popped_header) => Some(popped_header.height.try_into()?),
-            None => {
-                // https://github.com/bitcoindevkit/rust-electrum-client/issues/124
-                // It might be that the client has reconnected and subscriptions don't persist
-                // across connections. Calling `client.ping()` won't help here because the
-                // successful retry will prevent us knowing about the reconnect.
-                if let Ok(header) = client.block_headers_subscribe_raw() {
-                    Some(header.height.try_into()?)
-                } else {
-                    None
-                }
-            }
+        let mut lock = self.client.write().await;
+        let Some(client) = lock.as_mut() else {
+            bail!("Liquid client not set"); // unreachable
         };
 
-        let mut last_tip: std::sync::MutexGuard<'_, Option<u32>> =
-            self.last_known_tip.lock().unwrap();
+        let new_tip = client.tip().await.ok().map(|t| t.height);
+        let mut last_tip = self.last_known_tip.lock().await;
         match new_tip {
             Some(height) => {
                 *last_tip = Some(height);
@@ -129,10 +118,8 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        let txid = self
-            .get_client()?
-            .transaction_broadcast_raw(&elements_serialize(tx))?;
-        Ok(Txid::from_raw_hash(txid.to_raw_hash()))
+        get_client!(self, client);
+        client.broadcast(tx).await
     }
 
     async fn get_transaction_hex(&self, txid: &Txid) -> Result<Option<Transaction>> {
@@ -140,47 +127,17 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        let txids: Vec<bitcoin::Txid> = txids
-            .iter()
-            .map(|t| bitcoin::Txid::from_raw_hash(t.to_raw_hash()))
-            .collect();
-
-        let mut result = vec![];
-        for tx in self.get_client()?.batch_transaction_get_raw(&txids)? {
-            let tx: Transaction = elements::encode::deserialize(&tx)?;
-            result.push(tx);
-        }
-        Ok(result)
+        get_client!(self, client);
+        client.get_transactions(txids).await
     }
 
-    async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
-        let scripts = &[script];
-        let scripts: Vec<&bitcoin::Script> = scripts
-            .iter()
-            .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
-            .collect();
-
-        let mut history_vec: Vec<Vec<History>> = self
-            .get_client()?
-            .batch_script_get_history(&scripts)?
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History<Txid>>>> {
+        get_client!(self, client);
+        Ok(client
+            .get_scripts_history(scripts)
+            .await?
             .into_iter()
-            .map(|e| e.into_iter().map(Into::into).collect())
-            .collect();
-        let h = history_vec.pop();
-        Ok(h.unwrap_or_default())
-    }
-
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        let scripts: Vec<&bitcoin::Script> = scripts
-            .iter()
-            .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))
-            .collect();
-
-        Ok(self
-            .get_client()?
-            .batch_script_get_history(&scripts)?
-            .into_iter()
-            .map(|e| e.into_iter().map(Into::into).collect())
+            .map(|h| h.into_iter().map(Into::into).collect())
             .collect())
     }
 
@@ -188,27 +145,32 @@ impl LiquidChainService for HybridLiquidChainService {
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<Vec<History>> {
+    ) -> Result<Vec<History<Txid>>> {
         let script_hash = sha256::Hash::hash(script.as_bytes())
             .to_byte_array()
             .to_hex();
         info!("Fetching script history for {}", script_hash);
-        let mut script_history = vec![];
 
         let mut retry = 0;
         while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
+            let history = self
+                .get_scripts_history(&[script])
+                .await?
+                .into_iter()
+                .nth(0);
+
+            match history.as_ref().is_some_and(|h| !h.is_empty()) {
+                true => return Ok(history.unwrap()),
+                false => {
                     retry += 1;
                     info!("Script history for {script_hash} is empty, retrying in 1 second... ({retry} of {retries})");
                     // Waiting 1s between retries, so we detect the new tx as soon as possible
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
-                false => break,
             }
         }
-        Ok(script_history)
+
+        Ok(vec![])
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
