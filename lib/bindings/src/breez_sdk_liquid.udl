@@ -325,10 +325,15 @@ enum PaymentError {
     "SignerError",
 };
 
+[Enum]
+interface BlockchainExplorer {
+    Electrum(string url);
+    Esplora(string url, boolean use_waterfalls);
+};
+
 dictionary Config {
-    string liquid_electrum_url;
-    string bitcoin_electrum_url;
-    string mempoolspace_url;
+    BlockchainExplorer liquid_explorer;
+    BlockchainExplorer bitcoin_explorer;
     string working_dir;
     LiquidNetwork network;
     u64 payment_timeout_sec;
