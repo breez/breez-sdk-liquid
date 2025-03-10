@@ -86,7 +86,7 @@ impl HybridLiquidChainService {
             LiquidNetwork::Regtest => (false, false),
         };
         let electrum_url =
-            ElectrumUrl::new(&self.config.liquid_electrum_url, tls, validate_domain)?;
+            ElectrumUrl::new(self.config.liquid_explorer.url(), tls, validate_domain)?;
         let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
 
         let client = self.client.get_or_init(|| client);

@@ -4985,6 +4985,30 @@ final class wire_cst_sdk_event extends ffi.Struct {
   external SdkEventKind kind;
 }
 
+final class wire_cst_BlockchainExplorer_Electrum extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+}
+
+final class wire_cst_BlockchainExplorer_Esplora extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+
+  @ffi.Bool()
+  external bool use_waterfalls;
+}
+
+final class BlockchainExplorerKind extends ffi.Union {
+  external wire_cst_BlockchainExplorer_Electrum Electrum;
+
+  external wire_cst_BlockchainExplorer_Esplora Esplora;
+}
+
+final class wire_cst_blockchain_explorer extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external BlockchainExplorerKind kind;
+}
+
 final class wire_cst_external_input_parser extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> provider_id;
 
@@ -5019,11 +5043,9 @@ final class wire_cst_list_asset_metadata extends ffi.Struct {
 }
 
 final class wire_cst_config extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> liquid_electrum_url;
+  external wire_cst_blockchain_explorer liquid_explorer;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_electrum_url;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> mempoolspace_url;
+  external wire_cst_blockchain_explorer bitcoin_explorer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
