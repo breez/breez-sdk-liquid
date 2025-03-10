@@ -16,6 +16,236 @@ final _privateConstructorUsedError = UnsupportedError(
 );
 
 /// @nodoc
+mixin _$BlockchainExplorer {
+  String get url => throw _privateConstructorUsedError;
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $BlockchainExplorerCopyWith<BlockchainExplorer> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $BlockchainExplorerCopyWith<$Res> {
+  factory $BlockchainExplorerCopyWith(BlockchainExplorer value, $Res Function(BlockchainExplorer) then) =
+      _$BlockchainExplorerCopyWithImpl<$Res, BlockchainExplorer>;
+  @useResult
+  $Res call({String url});
+}
+
+/// @nodoc
+class _$BlockchainExplorerCopyWithImpl<$Res, $Val extends BlockchainExplorer>
+    implements $BlockchainExplorerCopyWith<$Res> {
+  _$BlockchainExplorerCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? url = null}) {
+    return _then(
+      _value.copyWith(
+            url:
+                null == url
+                    ? _value.url
+                    : url // ignore: cast_nullable_to_non_nullable
+                        as String,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$BlockchainExplorer_ElectrumImplCopyWith<$Res> implements $BlockchainExplorerCopyWith<$Res> {
+  factory _$$BlockchainExplorer_ElectrumImplCopyWith(
+    _$BlockchainExplorer_ElectrumImpl value,
+    $Res Function(_$BlockchainExplorer_ElectrumImpl) then,
+  ) = __$$BlockchainExplorer_ElectrumImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String url});
+}
+
+/// @nodoc
+class __$$BlockchainExplorer_ElectrumImplCopyWithImpl<$Res>
+    extends _$BlockchainExplorerCopyWithImpl<$Res, _$BlockchainExplorer_ElectrumImpl>
+    implements _$$BlockchainExplorer_ElectrumImplCopyWith<$Res> {
+  __$$BlockchainExplorer_ElectrumImplCopyWithImpl(
+    _$BlockchainExplorer_ElectrumImpl _value,
+    $Res Function(_$BlockchainExplorer_ElectrumImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? url = null}) {
+    return _then(
+      _$BlockchainExplorer_ElectrumImpl(
+        url:
+            null == url
+                ? _value.url
+                : url // ignore: cast_nullable_to_non_nullable
+                    as String,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$BlockchainExplorer_ElectrumImpl extends BlockchainExplorer_Electrum {
+  const _$BlockchainExplorer_ElectrumImpl({required this.url}) : super._();
+
+  @override
+  final String url;
+
+  @override
+  String toString() {
+    return 'BlockchainExplorer.electrum(url: $url)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$BlockchainExplorer_ElectrumImpl &&
+            (identical(other.url, url) || other.url == url));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, url);
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$BlockchainExplorer_ElectrumImplCopyWith<_$BlockchainExplorer_ElectrumImpl> get copyWith =>
+      __$$BlockchainExplorer_ElectrumImplCopyWithImpl<_$BlockchainExplorer_ElectrumImpl>(this, _$identity);
+}
+
+abstract class BlockchainExplorer_Electrum extends BlockchainExplorer {
+  const factory BlockchainExplorer_Electrum({required final String url}) = _$BlockchainExplorer_ElectrumImpl;
+  const BlockchainExplorer_Electrum._() : super._();
+
+  @override
+  String get url;
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$BlockchainExplorer_ElectrumImplCopyWith<_$BlockchainExplorer_ElectrumImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$BlockchainExplorer_EsploraImplCopyWith<$Res> implements $BlockchainExplorerCopyWith<$Res> {
+  factory _$$BlockchainExplorer_EsploraImplCopyWith(
+    _$BlockchainExplorer_EsploraImpl value,
+    $Res Function(_$BlockchainExplorer_EsploraImpl) then,
+  ) = __$$BlockchainExplorer_EsploraImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String url, bool useWaterfalls});
+}
+
+/// @nodoc
+class __$$BlockchainExplorer_EsploraImplCopyWithImpl<$Res>
+    extends _$BlockchainExplorerCopyWithImpl<$Res, _$BlockchainExplorer_EsploraImpl>
+    implements _$$BlockchainExplorer_EsploraImplCopyWith<$Res> {
+  __$$BlockchainExplorer_EsploraImplCopyWithImpl(
+    _$BlockchainExplorer_EsploraImpl _value,
+    $Res Function(_$BlockchainExplorer_EsploraImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? url = null, Object? useWaterfalls = null}) {
+    return _then(
+      _$BlockchainExplorer_EsploraImpl(
+        url:
+            null == url
+                ? _value.url
+                : url // ignore: cast_nullable_to_non_nullable
+                    as String,
+        useWaterfalls:
+            null == useWaterfalls
+                ? _value.useWaterfalls
+                : useWaterfalls // ignore: cast_nullable_to_non_nullable
+                    as bool,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$BlockchainExplorer_EsploraImpl extends BlockchainExplorer_Esplora {
+  const _$BlockchainExplorer_EsploraImpl({required this.url, required this.useWaterfalls}) : super._();
+
+  @override
+  final String url;
+
+  /// Whether or not to use the "waterfalls" extension
+  @override
+  final bool useWaterfalls;
+
+  @override
+  String toString() {
+    return 'BlockchainExplorer.esplora(url: $url, useWaterfalls: $useWaterfalls)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$BlockchainExplorer_EsploraImpl &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.useWaterfalls, useWaterfalls) || other.useWaterfalls == useWaterfalls));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, url, useWaterfalls);
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$BlockchainExplorer_EsploraImplCopyWith<_$BlockchainExplorer_EsploraImpl> get copyWith =>
+      __$$BlockchainExplorer_EsploraImplCopyWithImpl<_$BlockchainExplorer_EsploraImpl>(this, _$identity);
+}
+
+abstract class BlockchainExplorer_Esplora extends BlockchainExplorer {
+  const factory BlockchainExplorer_Esplora({required final String url, required final bool useWaterfalls}) =
+      _$BlockchainExplorer_EsploraImpl;
+  const BlockchainExplorer_Esplora._() : super._();
+
+  @override
+  String get url;
+
+  /// Whether or not to use the "waterfalls" extension
+  bool get useWaterfalls;
+
+  /// Create a copy of BlockchainExplorer
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$BlockchainExplorer_EsploraImplCopyWith<_$BlockchainExplorer_EsploraImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
 mixin _$GetPaymentRequest {}
 
 /// @nodoc

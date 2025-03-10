@@ -1528,6 +1528,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BlockchainExplorer dco_decode_blockchain_explorer(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return BlockchainExplorer_Electrum(url: dco_decode_String(raw[1]));
+      case 1:
+        return BlockchainExplorer_Esplora(
+          url: dco_decode_String(raw[1]),
+          useWaterfalls: dco_decode_bool(raw[2]),
+        );
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
   BlockchainInfo dco_decode_blockchain_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1912,22 +1928,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 14) throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
+    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
     return Config(
-      liquidElectrumUrl: dco_decode_String(arr[0]),
-      bitcoinElectrumUrl: dco_decode_String(arr[1]),
-      mempoolspaceUrl: dco_decode_String(arr[2]),
-      workingDir: dco_decode_String(arr[3]),
-      cacheDir: dco_decode_opt_String(arr[4]),
-      network: dco_decode_liquid_network(arr[5]),
-      paymentTimeoutSec: dco_decode_u_64(arr[6]),
-      syncServiceUrl: dco_decode_opt_String(arr[7]),
-      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[8]),
-      breezApiKey: dco_decode_opt_String(arr[9]),
-      externalInputParsers: dco_decode_opt_list_external_input_parser(arr[10]),
-      useDefaultExternalInputParsers: dco_decode_bool(arr[11]),
-      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[12]),
-      assetMetadata: dco_decode_opt_list_asset_metadata(arr[13]),
+      liquidExplorers: dco_decode_list_blockchain_explorer(arr[0]),
+      bitcoinExplorers: dco_decode_list_blockchain_explorer(arr[1]),
+      workingDir: dco_decode_String(arr[2]),
+      cacheDir: dco_decode_opt_String(arr[3]),
+      network: dco_decode_liquid_network(arr[4]),
+      paymentTimeoutSec: dco_decode_u_64(arr[5]),
+      syncServiceUrl: dco_decode_opt_String(arr[6]),
+      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
+      breezApiKey: dco_decode_opt_String(arr[8]),
+      externalInputParsers: dco_decode_opt_list_external_input_parser(arr[9]),
+      useDefaultExternalInputParsers: dco_decode_bool(arr[10]),
+      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[11]),
+      assetMetadata: dco_decode_opt_list_asset_metadata(arr[12]),
     );
   }
 
@@ -2139,6 +2154,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<AssetMetadata> dco_decode_list_asset_metadata(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_asset_metadata).toList();
+  }
+
+  @protected
+  List<BlockchainExplorer> dco_decode_list_blockchain_explorer(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_blockchain_explorer).toList();
   }
 
   @protected
@@ -3526,6 +3547,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BlockchainExplorer sse_decode_blockchain_explorer(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_url = sse_decode_String(deserializer);
+        return BlockchainExplorer_Electrum(url: var_url);
+      case 1:
+        var var_url = sse_decode_String(deserializer);
+        var var_useWaterfalls = sse_decode_bool(deserializer);
+        return BlockchainExplorer_Esplora(url: var_url, useWaterfalls: var_useWaterfalls);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
   BlockchainInfo sse_decode_blockchain_info(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_liquidTip = sse_decode_u_32(deserializer);
@@ -3911,9 +3950,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Config sse_decode_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_liquidElectrumUrl = sse_decode_String(deserializer);
-    var var_bitcoinElectrumUrl = sse_decode_String(deserializer);
-    var var_mempoolspaceUrl = sse_decode_String(deserializer);
+    var var_liquidExplorers = sse_decode_list_blockchain_explorer(deserializer);
+    var var_bitcoinExplorers = sse_decode_list_blockchain_explorer(deserializer);
     var var_workingDir = sse_decode_String(deserializer);
     var var_cacheDir = sse_decode_opt_String(deserializer);
     var var_network = sse_decode_liquid_network(deserializer);
@@ -3926,9 +3964,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_onchainFeeRateLeewaySatPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_assetMetadata = sse_decode_opt_list_asset_metadata(deserializer);
     return Config(
-      liquidElectrumUrl: var_liquidElectrumUrl,
-      bitcoinElectrumUrl: var_bitcoinElectrumUrl,
-      mempoolspaceUrl: var_mempoolspaceUrl,
+      liquidExplorers: var_liquidExplorers,
+      bitcoinExplorers: var_bitcoinExplorers,
       workingDir: var_workingDir,
       cacheDir: var_cacheDir,
       network: var_network,
@@ -4189,6 +4226,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <AssetMetadata>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_asset_metadata(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<BlockchainExplorer> sse_decode_list_blockchain_explorer(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <BlockchainExplorer>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_blockchain_explorer(deserializer));
     }
     return ans_;
   }
@@ -5978,6 +6027,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_blockchain_explorer(BlockchainExplorer self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case BlockchainExplorer_Electrum(url: final url):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(url, serializer);
+      case BlockchainExplorer_Esplora(url: final url, useWaterfalls: final useWaterfalls):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(url, serializer);
+        sse_encode_bool(useWaterfalls, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_blockchain_info(BlockchainInfo self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.liquidTip, serializer);
@@ -6383,9 +6446,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_config(Config self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.liquidElectrumUrl, serializer);
-    sse_encode_String(self.bitcoinElectrumUrl, serializer);
-    sse_encode_String(self.mempoolspaceUrl, serializer);
+    sse_encode_list_blockchain_explorer(self.liquidExplorers, serializer);
+    sse_encode_list_blockchain_explorer(self.bitcoinExplorers, serializer);
     sse_encode_String(self.workingDir, serializer);
     sse_encode_opt_String(self.cacheDir, serializer);
     sse_encode_liquid_network(self.network, serializer);
@@ -6593,6 +6655,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_asset_metadata(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_blockchain_explorer(List<BlockchainExplorer> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_blockchain_explorer(item, serializer);
     }
   }
 
