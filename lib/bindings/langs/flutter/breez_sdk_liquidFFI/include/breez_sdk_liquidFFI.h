@@ -24,24 +24,10 @@
 
 typedef struct RustBuffer
 {
-    int32_t capacity;
-    int32_t len;
+    uint64_t capacity;
+    uint64_t len;
     uint8_t *_Nullable data;
 } RustBuffer;
-
-typedef int32_t (*ForeignCallback)(uint64_t, int32_t, const uint8_t *_Nonnull, int32_t, RustBuffer *_Nonnull);
-
-// Task defined in Rust that Swift executes
-typedef void (*UniFfiRustTaskCallback)(const void * _Nullable, int8_t);
-
-// Callback to execute Rust tasks using a Swift Task
-//
-// Args:
-//   executor: ForeignExecutor lowered into a size_t value
-//   delay: Delay in MS
-//   task: UniFfiRustTaskCallback to call
-//   task_data: data to pass the task callback
-typedef int8_t (*UniFfiForeignExecutorCallback)(size_t, uint32_t, UniFfiRustTaskCallback _Nullable, const void * _Nullable);
 
 typedef struct ForeignBytes
 {
@@ -58,374 +44,1145 @@ typedef struct RustCallStatus {
 // ⚠️ Attention: If you change this #else block (ending in `#endif // def UNIFFI_SHARED_H`) you *must* ⚠️
 // ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
 #endif // def UNIFFI_SHARED_H
+#ifndef UNIFFI_FFIDEF_RUST_FUTURE_CONTINUATION_CALLBACK
+#define UNIFFI_FFIDEF_RUST_FUTURE_CONTINUATION_CALLBACK
+typedef void (*UniffiRustFutureContinuationCallback)(uint64_t, int8_t
+    );
 
-// Continuation callback for UniFFI Futures
-typedef void (*UniFfiRustFutureContinuation)(void * _Nonnull, int8_t);
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_FREE
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_FREE
+typedef void (*UniffiForeignFutureFree)(uint64_t
+    );
 
-// Scaffolding functions
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_FREE
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_FREE
+typedef void (*UniffiCallbackInterfaceFree)(uint64_t
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE
+typedef struct UniffiForeignFuture {
+    uint64_t handle;
+    UniffiForeignFutureFree _Nonnull free;
+} UniffiForeignFuture;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U8
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U8
+typedef struct UniffiForeignFutureStructU8 {
+    uint8_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructU8;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U8
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U8
+typedef void (*UniffiForeignFutureCompleteU8)(uint64_t, UniffiForeignFutureStructU8
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I8
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I8
+typedef struct UniffiForeignFutureStructI8 {
+    int8_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructI8;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I8
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I8
+typedef void (*UniffiForeignFutureCompleteI8)(uint64_t, UniffiForeignFutureStructI8
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U16
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U16
+typedef struct UniffiForeignFutureStructU16 {
+    uint16_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructU16;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U16
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U16
+typedef void (*UniffiForeignFutureCompleteU16)(uint64_t, UniffiForeignFutureStructU16
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I16
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I16
+typedef struct UniffiForeignFutureStructI16 {
+    int16_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructI16;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I16
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I16
+typedef void (*UniffiForeignFutureCompleteI16)(uint64_t, UniffiForeignFutureStructI16
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U32
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U32
+typedef struct UniffiForeignFutureStructU32 {
+    uint32_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructU32;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U32
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U32
+typedef void (*UniffiForeignFutureCompleteU32)(uint64_t, UniffiForeignFutureStructU32
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I32
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I32
+typedef struct UniffiForeignFutureStructI32 {
+    int32_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructI32;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I32
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I32
+typedef void (*UniffiForeignFutureCompleteI32)(uint64_t, UniffiForeignFutureStructI32
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U64
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_U64
+typedef struct UniffiForeignFutureStructU64 {
+    uint64_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructU64;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U64
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_U64
+typedef void (*UniffiForeignFutureCompleteU64)(uint64_t, UniffiForeignFutureStructU64
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I64
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_I64
+typedef struct UniffiForeignFutureStructI64 {
+    int64_t returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructI64;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I64
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_I64
+typedef void (*UniffiForeignFutureCompleteI64)(uint64_t, UniffiForeignFutureStructI64
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_F32
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_F32
+typedef struct UniffiForeignFutureStructF32 {
+    float returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructF32;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_F32
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_F32
+typedef void (*UniffiForeignFutureCompleteF32)(uint64_t, UniffiForeignFutureStructF32
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_F64
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_F64
+typedef struct UniffiForeignFutureStructF64 {
+    double returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructF64;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_F64
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_F64
+typedef void (*UniffiForeignFutureCompleteF64)(uint64_t, UniffiForeignFutureStructF64
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_POINTER
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_POINTER
+typedef struct UniffiForeignFutureStructPointer {
+    void*_Nonnull returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructPointer;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_POINTER
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_POINTER
+typedef void (*UniffiForeignFutureCompletePointer)(uint64_t, UniffiForeignFutureStructPointer
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_RUST_BUFFER
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_RUST_BUFFER
+typedef struct UniffiForeignFutureStructRustBuffer {
+    RustBuffer returnValue;
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructRustBuffer;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_RUST_BUFFER
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_RUST_BUFFER
+typedef void (*UniffiForeignFutureCompleteRustBuffer)(uint64_t, UniffiForeignFutureStructRustBuffer
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_VOID
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_STRUCT_VOID
+typedef struct UniffiForeignFutureStructVoid {
+    RustCallStatus callStatus;
+} UniffiForeignFutureStructVoid;
+
+#endif
+#ifndef UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_VOID
+#define UNIFFI_FFIDEF_FOREIGN_FUTURE_COMPLETE_VOID
+typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureStructVoid
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_EVENT_LISTENER_METHOD0
+typedef void (*UniffiCallbackInterfaceEventListenerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_LOGGER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_LOGGER_METHOD0
+typedef void (*UniffiCallbackInterfaceLoggerMethod0)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD0
+typedef void (*UniffiCallbackInterfaceSignerMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD1
+typedef void (*UniffiCallbackInterfaceSignerMethod1)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD2
+typedef void (*UniffiCallbackInterfaceSignerMethod2)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD3
+typedef void (*UniffiCallbackInterfaceSignerMethod3)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD4
+typedef void (*UniffiCallbackInterfaceSignerMethod4)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD5
+typedef void (*UniffiCallbackInterfaceSignerMethod5)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD6
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD6
+typedef void (*UniffiCallbackInterfaceSignerMethod6)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD7
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD7
+typedef void (*UniffiCallbackInterfaceSignerMethod7)(uint64_t, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_EVENT_LISTENER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_EVENT_LISTENER
+typedef struct UniffiVTableCallbackInterfaceEventListener {
+    UniffiCallbackInterfaceEventListenerMethod0 _Nonnull onEvent;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceEventListener;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_LOGGER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_LOGGER
+typedef struct UniffiVTableCallbackInterfaceLogger {
+    UniffiCallbackInterfaceLoggerMethod0 _Nonnull log;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceLogger;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_SIGNER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_SIGNER
+typedef struct UniffiVTableCallbackInterfaceSigner {
+    UniffiCallbackInterfaceSignerMethod0 _Nonnull xpub;
+    UniffiCallbackInterfaceSignerMethod1 _Nonnull deriveXpub;
+    UniffiCallbackInterfaceSignerMethod2 _Nonnull signEcdsa;
+    UniffiCallbackInterfaceSignerMethod3 _Nonnull signEcdsaRecoverable;
+    UniffiCallbackInterfaceSignerMethod4 _Nonnull slip77MasterBlindingKey;
+    UniffiCallbackInterfaceSignerMethod5 _Nonnull hmacSha256;
+    UniffiCallbackInterfaceSignerMethod6 _Nonnull eciesEncrypt;
+    UniffiCallbackInterfaceSignerMethod7 _Nonnull eciesDecrypt;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfaceSigner;
+
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_CLONE_BINDINGLIQUIDSDK
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_CLONE_BINDINGLIQUIDSDK
+void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_clone_bindingliquidsdk(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FREE_BINDINGLIQUIDSDK
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FREE_BINDINGLIQUIDSDK
 void uniffi_breez_sdk_liquid_bindings_fn_free_bindingliquidsdk(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_ACCEPT_PAYMENT_PROPOSED_FEES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_ACCEPT_PAYMENT_PROPOSED_FEES
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_accept_payment_proposed_fees(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_ADD_EVENT_LISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_ADD_EVENT_LISTENER
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_add_event_listener(void*_Nonnull ptr, uint64_t listener, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_BACKUP
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_backup(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_BUY_BITCOIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_BUY_BITCOIN
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_buy_bitcoin(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_CHECK_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_CHECK_MESSAGE
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_check_message(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_DISCONNECT
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_disconnect(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_FIAT_RATES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_FIAT_RATES
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_fiat_rates(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_LIGHTNING_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_LIGHTNING_LIMITS
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_lightning_limits(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_ONCHAIN_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_ONCHAIN_LIMITS
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_onchain_limits(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_PAYMENT_PROPOSED_FEES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_FETCH_PAYMENT_PROPOSED_FEES
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_fetch_payment_proposed_fees(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_GET_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_GET_INFO
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_info(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_GET_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_GET_PAYMENT
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_get_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LIST_FIAT_CURRENCIES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LIST_FIAT_CURRENCIES
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_fiat_currencies(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LIST_PAYMENTS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LIST_PAYMENTS
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_payments(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LIST_REFUNDABLES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LIST_REFUNDABLES
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_list_refundables(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LNURL_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LNURL_AUTH
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_auth(void*_Nonnull ptr, RustBuffer req_data, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LNURL_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LNURL_PAY
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_pay(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LNURL_WITHDRAW
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_LNURL_WITHDRAW
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_lnurl_withdraw(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PARSE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PARSE
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_parse(void*_Nonnull ptr, RustBuffer input, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PAY_ONCHAIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PAY_ONCHAIN
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_pay_onchain(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_BUY_BITCOIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_BUY_BITCOIN
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_buy_bitcoin(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_LNURL_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_LNURL_PAY
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_lnurl_pay(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_PAY_ONCHAIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_PAY_ONCHAIN
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_pay_onchain(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_RECEIVE_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_RECEIVE_PAYMENT
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_receive_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_REFUND
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_REFUND
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_refund(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_SEND_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_PREPARE_SEND_PAYMENT
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_prepare_send_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RECEIVE_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RECEIVE_PAYMENT
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_receive_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RECOMMENDED_FEES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RECOMMENDED_FEES
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_recommended_fees(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_REFUND
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_REFUND
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_refund(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_REGISTER_WEBHOOK
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_REGISTER_WEBHOOK
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_register_webhook(void*_Nonnull ptr, RustBuffer webhook_url, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_REMOVE_EVENT_LISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_REMOVE_EVENT_LISTENER
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_remove_event_listener(void*_Nonnull ptr, RustBuffer id, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RESCAN_ONCHAIN_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RESCAN_ONCHAIN_SWAPS
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_rescan_onchain_swaps(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RESTORE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_RESTORE
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_restore(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_SEND_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_SEND_PAYMENT
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_send_payment(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_SIGN_MESSAGE
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sign_message(void*_Nonnull ptr, RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_SYNC
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_SYNC
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sync(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_UNREGISTER_WEBHOOK
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_BINDINGLIQUIDSDK_UNREGISTER_WEBHOOK
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhook(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
-void uniffi_breez_sdk_liquid_bindings_fn_init_callback_eventlistener(ForeignCallback _Nonnull callback_stub, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_EVENTLISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_EVENTLISTENER
+void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener(UniffiVTableCallbackInterfaceEventListener* _Nonnull vtable
 );
-void uniffi_breez_sdk_liquid_bindings_fn_init_callback_logger(ForeignCallback _Nonnull callback_stub, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_LOGGER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_LOGGER
+void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_logger(UniffiVTableCallbackInterfaceLogger* _Nonnull vtable
 );
-void uniffi_breez_sdk_liquid_bindings_fn_init_callback_signer(ForeignCallback _Nonnull callback_stub, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_SIGNER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_SIGNER
+void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer(UniffiVTableCallbackInterfaceSigner* _Nonnull vtable
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT
 void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect(RustBuffer req, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT_WITH_SIGNER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT_WITH_SIGNER
 void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(RustBuffer req, uint64_t signer, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_DEFAULT_CONFIG
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_DEFAULT_CONFIG
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(RustBuffer network, RustBuffer breez_api_key, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_PARSE_INVOICE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_PARSE_INVOICE
 RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_parse_invoice(RustBuffer input, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_SET_LOGGER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_SET_LOGGER
 void uniffi_breez_sdk_liquid_bindings_fn_func_set_logger(uint64_t logger, RustCallStatus *_Nonnull out_status
 );
-RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_alloc(int32_t size, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_ALLOC
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_ALLOC
+RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_alloc(uint64_t size, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_FROM_BYTES
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_FROM_BYTES
 RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_from_bytes(ForeignBytes bytes, RustCallStatus *_Nonnull out_status
 );
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_FREE
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_FREE
 void ffi_breez_sdk_liquid_bindings_rustbuffer_free(RustBuffer buf, RustCallStatus *_Nonnull out_status
 );
-RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_reserve(RustBuffer buf, int32_t additional, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_RESERVE
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUSTBUFFER_RESERVE
+RustBuffer ffi_breez_sdk_liquid_bindings_rustbuffer_reserve(RustBuffer buf, uint64_t additional, RustCallStatus *_Nonnull out_status
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_continuation_callback_set(UniFfiRustFutureContinuation _Nonnull callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U8
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_u8(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_u8(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U8
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u8(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U8
+void ffi_breez_sdk_liquid_bindings_rust_future_free_u8(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_u8(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U8
+uint8_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u8(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-uint8_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u8(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I8
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_i8(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_i8(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I8
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i8(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I8
+void ffi_breez_sdk_liquid_bindings_rust_future_free_i8(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_i8(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I8
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I8
+int8_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i8(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-int8_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i8(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U16
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_u16(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_u16(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U16
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u16(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U16
+void ffi_breez_sdk_liquid_bindings_rust_future_free_u16(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_u16(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U16
+uint16_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u16(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-uint16_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u16(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I16
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_i16(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_i16(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I16
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i16(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I16
+void ffi_breez_sdk_liquid_bindings_rust_future_free_i16(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_i16(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I16
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I16
+int16_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i16(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-int16_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i16(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U32
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_u32(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_u32(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U32
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u32(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U32
+void ffi_breez_sdk_liquid_bindings_rust_future_free_u32(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_u32(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U32
+uint32_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u32(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-uint32_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u32(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I32
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_i32(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_i32(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I32
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i32(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I32
+void ffi_breez_sdk_liquid_bindings_rust_future_free_i32(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_i32(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I32
+int32_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i32(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-int32_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i32(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_U64
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_u64(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_u64(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_U64
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_u64(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_U64
+void ffi_breez_sdk_liquid_bindings_rust_future_free_u64(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_u64(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_U64
+uint64_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u64(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-uint64_t ffi_breez_sdk_liquid_bindings_rust_future_complete_u64(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_I64
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_i64(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_i64(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_I64
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_i64(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_I64
+void ffi_breez_sdk_liquid_bindings_rust_future_free_i64(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_i64(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_I64
+int64_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i64(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-int64_t ffi_breez_sdk_liquid_bindings_rust_future_complete_i64(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_F32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_F32
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_f32(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_f32(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_F32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_F32
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f32(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_F32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_F32
+void ffi_breez_sdk_liquid_bindings_rust_future_free_f32(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_f32(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_F32
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_F32
+float ffi_breez_sdk_liquid_bindings_rust_future_complete_f32(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-float ffi_breez_sdk_liquid_bindings_rust_future_complete_f32(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_F64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_F64
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_f64(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_f64(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_F64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_F64
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_f64(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_F64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_F64
+void ffi_breez_sdk_liquid_bindings_rust_future_free_f64(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_f64(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_F64
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_F64
+double ffi_breez_sdk_liquid_bindings_rust_future_complete_f64(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-double ffi_breez_sdk_liquid_bindings_rust_future_complete_f64(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_POINTER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_POINTER
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_pointer(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_POINTER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_POINTER
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_pointer(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_POINTER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_POINTER
+void ffi_breez_sdk_liquid_bindings_rust_future_free_pointer(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_pointer(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_POINTER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_POINTER
+void*_Nonnull ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-void*_Nonnull ffi_breez_sdk_liquid_bindings_rust_future_complete_pointer(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_RUST_BUFFER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_RUST_BUFFER
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_rust_buffer(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_RUST_BUFFER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_RUST_BUFFER
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_rust_buffer(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_RUST_BUFFER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_RUST_BUFFER
+void ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_rust_buffer(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_RUST_BUFFER
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_RUST_BUFFER
+RustBuffer ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-RustBuffer ffi_breez_sdk_liquid_bindings_rust_future_complete_rust_buffer(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_VOID
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_POLL_VOID
+void ffi_breez_sdk_liquid_bindings_rust_future_poll_void(uint64_t handle, UniffiRustFutureContinuationCallback _Nonnull callback, uint64_t callback_data
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_poll_void(void* _Nonnull handle, void* _Nonnull uniffi_callback
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_VOID
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_CANCEL_VOID
+void ffi_breez_sdk_liquid_bindings_rust_future_cancel_void(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_cancel_void(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_VOID
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_FREE_VOID
+void ffi_breez_sdk_liquid_bindings_rust_future_free_void(uint64_t handle
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_free_void(void* _Nonnull handle
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_VOID
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_RUST_FUTURE_COMPLETE_VOID
+void ffi_breez_sdk_liquid_bindings_rust_future_complete_void(uint64_t handle, RustCallStatus *_Nonnull out_status
 );
-void ffi_breez_sdk_liquid_bindings_rust_future_complete_void(void* _Nonnull handle, RustCallStatus *_Nonnull out_status
-);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_CONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_CONNECT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_connect(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_CONNECT_WITH_SIGNER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_CONNECT_WITH_SIGNER
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_connect_with_signer(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_DEFAULT_CONFIG
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_DEFAULT_CONFIG
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_default_config(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_PARSE_INVOICE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_PARSE_INVOICE
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_parse_invoice(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_SET_LOGGER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_FUNC_SET_LOGGER
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_func_set_logger(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_ACCEPT_PAYMENT_PROPOSED_FEES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_ACCEPT_PAYMENT_PROPOSED_FEES
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_accept_payment_proposed_fees(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_ADD_EVENT_LISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_ADD_EVENT_LISTENER
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_add_event_listener(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_BACKUP
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_BACKUP
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_backup(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_BUY_BITCOIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_BUY_BITCOIN
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_buy_bitcoin(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_CHECK_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_CHECK_MESSAGE
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_check_message(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_DISCONNECT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_DISCONNECT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_disconnect(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_FIAT_RATES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_FIAT_RATES
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_fiat_rates(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_LIGHTNING_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_LIGHTNING_LIMITS
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_lightning_limits(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_ONCHAIN_LIMITS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_ONCHAIN_LIMITS
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_onchain_limits(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_PAYMENT_PROPOSED_FEES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_FETCH_PAYMENT_PROPOSED_FEES
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_fetch_payment_proposed_fees(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_GET_INFO
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_GET_INFO
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_info(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_GET_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_GET_PAYMENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_get_payment(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LIST_FIAT_CURRENCIES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LIST_FIAT_CURRENCIES
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_fiat_currencies(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LIST_PAYMENTS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LIST_PAYMENTS
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_payments(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LIST_REFUNDABLES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LIST_REFUNDABLES
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_list_refundables(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LNURL_AUTH
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LNURL_AUTH
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_auth(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LNURL_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LNURL_PAY
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_pay(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LNURL_WITHDRAW
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_LNURL_WITHDRAW
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_lnurl_withdraw(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PARSE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PARSE
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_parse(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PAY_ONCHAIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PAY_ONCHAIN
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_pay_onchain(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_BUY_BITCOIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_BUY_BITCOIN
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_buy_bitcoin(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_LNURL_PAY
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_LNURL_PAY
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_lnurl_pay(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_PAY_ONCHAIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_PAY_ONCHAIN
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_pay_onchain(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_RECEIVE_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_RECEIVE_PAYMENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_receive_payment(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_REFUND
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_REFUND
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_refund(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_SEND_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_PREPARE_SEND_PAYMENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_prepare_send_payment(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RECEIVE_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RECEIVE_PAYMENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_receive_payment(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RECOMMENDED_FEES
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RECOMMENDED_FEES
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_recommended_fees(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_REFUND
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_REFUND
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_refund(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_REGISTER_WEBHOOK
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_REGISTER_WEBHOOK
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_register_webhook(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_REMOVE_EVENT_LISTENER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_REMOVE_EVENT_LISTENER
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_remove_event_listener(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RESCAN_ONCHAIN_SWAPS
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RESCAN_ONCHAIN_SWAPS
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_rescan_onchain_swaps(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RESTORE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_RESTORE
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_restore(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_SEND_PAYMENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_SEND_PAYMENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_send_payment(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_SIGN_MESSAGE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_SIGN_MESSAGE
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sign_message(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_SYNC
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_SYNC
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_sync(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_UNREGISTER_WEBHOOK
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_BINDINGLIQUIDSDK_UNREGISTER_WEBHOOK
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhook(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_LOGGER_LOG
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_LOGGER_LOG
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_XPUB
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_XPUB
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_DERIVE_XPUB
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_DERIVE_XPUB
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_derive_xpub(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_SIGN_ECDSA
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_SIGN_ECDSA
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_SIGN_ECDSA_RECOVERABLE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_SIGN_ECDSA_RECOVERABLE
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_sign_ecdsa_recoverable(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_SLIP77_MASTER_BLINDING_KEY
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_SLIP77_MASTER_BLINDING_KEY
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_slip77_master_blinding_key(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_HMAC_SHA256
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_HMAC_SHA256
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_hmac_sha256(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_ECIES_ENCRYPT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_ECIES_ENCRYPT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_encrypt(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_ECIES_DECRYPT
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_SIGNER_ECIES_DECRYPT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_signer_ecies_decrypt(void
     
 );
+#endif
+#ifndef UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_UNIFFI_CONTRACT_VERSION
+#define UNIFFI_FFIDEF_FFI_BREEZ_SDK_LIQUID_BINDINGS_UNIFFI_CONTRACT_VERSION
 uint32_t ffi_breez_sdk_liquid_bindings_uniffi_contract_version(void
     
 );
+#endif
 

@@ -44,7 +44,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-android-jniLibs
+          name: bindings-android-jniLibs-uniffi-25
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/jniLibs
 
       - uses: actions/download-artifact@v4
@@ -59,17 +59,17 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-apple-ios
+          name: bindings-aarch64-apple-ios-uniffi-25
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-arm64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-apple-ios-sim
+          name: bindings-aarch64-apple-ios-sim-uniffi-25
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-arm64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-apple-ios
+          name: bindings-x86_64-apple-ios-uniffi-25
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-x64
 
       - name: Build Kotlin Multiplatform project
