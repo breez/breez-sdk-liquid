@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Result;
 use log::{debug, info};
 use tokio::sync::{broadcast, RwLock};
+use uuid::Uuid;
 
 use crate::model::{EventListener, SdkEvent};
 
@@ -26,10 +26,7 @@ impl EventManager {
     }
 
     pub async fn add(&self, listener: Box<dyn EventListener>) -> Result<String> {
-        let id = format!(
-            "{:X}",
-            SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis()
-        );
+        let id = Uuid::new_v4().to_string();
         (*self.listeners.write().await).insert(id.clone(), listener);
         Ok(id)
     }

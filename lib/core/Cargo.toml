@@ -28,8 +28,8 @@ lwk_common = "0.8.0"
 lwk_signer = { version = "0.8.0", default-features = false }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [ "backup", "bundled" ] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
-# TODO: Change on top of main once PR is merged
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "19ed955c6fa854ad6cd2beb2eca9127d8099c506", features = ["liquid"] }
+sdk-common = { workspace = true }
+sdk-macros = { workspace = true }
 rusqlite_migration =  { git = "https://github.com/hydra-yse/rusqlite_migration", branch = "rusqlite-v0.33.0" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
@@ -52,24 +52,35 @@ ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
 
+# Non-WASM dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
 electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
     "proxy",
 ] }
 boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "12c9e546f15706b563ba7e49f2be7e8a5e7ada90" }
+lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
+maybe-sync = { version = "0.1.1", features = ["sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 tokio-tungstenite = { version = "0.21.0", features = ["native-tls-vendored"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
 
+# WASM dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
+console_log = "1"
 lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
+maybe-sync = "0.1.1"
+uuid = { version = "1.8.0", features = ["v4", "js"] }
 
 [dev-dependencies]
+sdk-common = { workspace = true, features = ["test-utils"] }
 paste = "1.0.15"
 tempdir = "0.3.7"
+
+# WASM dev dependencies
+[target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dev-dependencies]
+wasm-bindgen-test = "0.3.33"
 
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }

@@ -194,7 +194,10 @@ mod tests {
 
     use crate::test_utils::persist::create_persister;
 
-    #[test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
     fn test_cached_items() -> Result<()> {
         create_persister!(persister);
 
@@ -209,7 +212,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_get_last_derivation_index() -> Result<()> {
         create_persister!(persister);
 
@@ -231,7 +234,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_next_derivation_index() -> Result<()> {
         create_persister!(persister);
 

@@ -10,7 +10,6 @@ use crate::{
     wallet::OnchainWallet,
 };
 use anyhow::Result;
-use async_trait::async_trait;
 use bip39::Mnemonic;
 use boltz_client::{Keypair, Secp256k1};
 use lazy_static::lazy_static;
@@ -42,7 +41,7 @@ impl MockWallet {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl OnchainWallet for MockWallet {
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
         Ok(vec![])

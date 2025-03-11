@@ -2,7 +2,6 @@ use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use async_trait::async_trait;
 use boltz_client::ToHex;
 use electrum_client::{Client, ElectrumApi};
 use elements::encode::serialize as elements_serialize;
@@ -19,7 +18,7 @@ use crate::model::LiquidNetwork;
 use crate::prelude::Utxo;
 use crate::{model::Config, utils};
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub trait LiquidChainService: Send + Sync {
     /// Get the blockchain latest block
     async fn tip(&self) -> Result<u32>;
@@ -93,7 +92,7 @@ impl HybridLiquidChainService {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl LiquidChainService for HybridLiquidChainService {
     async fn tip(&self) -> Result<u32> {
         let client = self.get_client()?;

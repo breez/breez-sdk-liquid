@@ -176,7 +176,10 @@ mod tests {
     use crate::error::PaymentError;
     use crate::utils::verify_payment_hash;
 
-    #[test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
     fn test_verify_payment_hash() -> anyhow::Result<()> {
         let bolt11_invoice = "lnbc10u1pnczjaupp55392fur38rc2y9vzmhdy0tclvfels0lvlmzgvmhpg6q2mndxzmrsdqqcqzzsxqyz5vqsp5ya6pvchlsvl3mzqh3zw4hg3tz5pww77q6rcwfr52qchyrp7s6krs9p4gqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqysgqgnp0sskk0ljjew8vkc3udhzgquzs79evf5wezfaex9q4gjk5qcn8m3luauyte93lgassd8skh5m90glhtt52ry2wtftzrjn4h076z7sqdjry3d";
         let bolt11_preimage = "c17a0a28d0523596ec909c2d439c0c2315b5bd996bf4ff48be50b2df08fb8ac1";

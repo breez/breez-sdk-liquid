@@ -556,7 +556,10 @@ mod tests {
 
     use super::model::{data::SyncData, Record, RecordType};
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_incoming_sync_create_and_update() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
@@ -656,7 +659,7 @@ mod tests {
         Ok(record)
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_outgoing_sync() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
@@ -776,7 +779,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_sync_clean() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
@@ -843,7 +846,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_last_derivation_index_update() -> Result<()> {
         create_persister!(persister);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));

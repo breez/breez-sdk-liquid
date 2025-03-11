@@ -3,7 +3,6 @@
 use std::sync::Mutex;
 
 use anyhow::Result;
-use async_trait::async_trait;
 use boltz_client::{
     elements::{
         hex::FromHex, OutPoint as ElementsOutPoint, Script as ElementsScript,
@@ -67,7 +66,7 @@ impl MockLiquidChainService {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl LiquidChainService for MockLiquidChainService {
     async fn tip(&self) -> Result<u32> {
         Ok(0)
@@ -165,7 +164,7 @@ impl MockBitcoinChainService {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl BitcoinChainService for MockBitcoinChainService {
     fn tip(&self) -> Result<HeaderNotification> {
         Ok(HeaderNotification {

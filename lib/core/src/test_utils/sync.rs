@@ -17,7 +17,6 @@ use crate::{
     },
 };
 use anyhow::Result;
-use async_trait::async_trait;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
     Mutex,
@@ -41,7 +40,7 @@ impl MockSyncerClient {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl SyncerClient for MockSyncerClient {
     async fn connect(&self, _connect_url: String) -> Result<()> {
         todo!()

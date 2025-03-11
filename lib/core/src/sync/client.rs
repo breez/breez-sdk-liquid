@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Error, Result};
 
-use async_trait::async_trait;
 use log::debug;
 use tokio::sync::Mutex;
 use tonic::{
@@ -17,7 +16,7 @@ use super::model::{
     ListenChangesRequest, Notification, SetRecordReply, SetRecordRequest,
 };
 
-#[async_trait]
+#[sdk_macros::async_trait]
 pub(crate) trait SyncerClient: Send + Sync {
     async fn connect(&self, connect_url: String) -> Result<()>;
     async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply>;
@@ -78,7 +77,7 @@ impl BreezSyncerClient {
     }
 }
 
-#[async_trait]
+#[sdk_macros::async_trait]
 impl SyncerClient for BreezSyncerClient {
     async fn connect(&self, connect_url: String) -> Result<()> {
         let mut grpc_channel = self.grpc_channel.lock().await;

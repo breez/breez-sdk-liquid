@@ -44,7 +44,10 @@ mod tests {
         test_utils::persist::{create_persister, new_receive_swap, new_send_swap},
     };
 
-    #[test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
     fn test_backup_and_restore() -> Result<()> {
         create_persister!(local);
 

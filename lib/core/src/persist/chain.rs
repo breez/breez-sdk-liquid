@@ -512,7 +512,10 @@ mod tests {
     use crate::test_utils::persist::create_persister;
     use anyhow::Result;
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_writing_stale_swap() -> Result<()> {
         create_persister!(storage);
 
@@ -538,7 +541,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_list_local_swaps() -> Result<()> {
         create_persister!(storage);
 
