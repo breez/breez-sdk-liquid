@@ -13,6 +13,8 @@ import {
     removeEventListener,
     prepareReceivePayment,
     prepareSendPayment,
+    ReceiveAmount,
+    ReceiveAmountVariant,
     receivePayment,
     sendPayment,
     PaymentMethod
@@ -86,7 +88,8 @@ export default function App() {
 
                 /* Receive lightning payment */
 
-                const prepareReceiveRes = await prepareReceivePayment({ payerAmountSat: 1000, paymentMethod: PaymentMethod.LIGHTNING })
+                let amount: ReceiveAmount = { type: ReceiveAmountVariant.BITCOIN, payerAmountSat: 1000 }
+                let prepareReceiveRes = await prepareReceivePayment({ amount, paymentMethod: PaymentMethod.LIGHTNING })
                 addLine("prepareReceivePayment", JSON.stringify(prepareReceiveRes))
                 // Get the fees required for this payment
                 addLine("Payment fees", `${prepareReceiveRes.feesSat}`)
