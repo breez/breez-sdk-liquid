@@ -29,6 +29,7 @@ It’s a nodeless Lightning integration that offers a self-custodial, end-to-end
 - [x]  Multi-device support
 - [x]  Real-time state backup
 - [x]  Keys are only held by users
+- [x]  USDT and multi-asset support
 - [x]  Fiat on-ramps
 - [x]  Open-source
 
