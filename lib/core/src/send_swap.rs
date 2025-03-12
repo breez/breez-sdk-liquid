@@ -72,7 +72,7 @@ impl SendSwapHandler {
     }
 
     /// Handles status updates from Boltz for Send swaps
-    pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltz::SwapStatus) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
         let swap_state = SubSwapStates::from_str(status)

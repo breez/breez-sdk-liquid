@@ -23,8 +23,6 @@ use crate::{
     utils,
 };
 
-use super::status_stream::MockStatusStream;
-
 #[derive(Default)]
 pub struct ZeroAmountSwapMockConfig {
     pub user_lockup_sat: u64,
@@ -336,10 +334,6 @@ impl Swapper for MockSwapper {
     ) -> Result<String, PaymentError> {
         let tx = utils::deserialize_tx_hex(tx_hex)?;
         Ok(tx.txid().to_string())
-    }
-
-    fn create_status_stream(&self) -> Box<dyn crate::swapper::SwapperStatusStream> {
-        Box::new(MockStatusStream::new())
     }
 
     async fn check_for_mrh(

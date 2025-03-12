@@ -1,11 +1,8 @@
 use std::str::FromStr;
 
 use boltz_client::{
-    boltz::SwapTxKind,
-    elements::Transaction,
-    fees::Fee,
-    util::{liquid_genesis_hash, secrets::Preimage},
-    ElementsAddress as Address, LBtcSwapTx,
+    boltz::SwapTxKind, elements::Transaction, fees::Fee, network::LiquidClient,
+    util::secrets::Preimage, ElementsAddress as Address, LBtcSwapTx,
 };
 use log::info;
 
@@ -40,19 +37,22 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
-            &self.liquid_electrum_config,
+            &self.liquid_electrum_client,
             self.get_url().await?,
             swap.id.clone(),
-        )?;
+        )
+        .await?;
 
-        let signed_tx = claim_tx_wrapper.sign_claim(
-            &swap.get_claim_keypair()?,
-            &Preimage::from_str(&swap.preimage)?,
-            Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), None, None)
-                .await?,
-            true,
-        )?;
+        let signed_tx = claim_tx_wrapper
+            .sign_claim(
+                &swap.get_claim_keypair()?,
+                &Preimage::from_str(&swap.preimage)?,
+                Fee::Absolute(swap.claim_fees_sat),
+                self.get_cooperative_details(swap.id.clone(), None, None)
+                    .await?,
+                true,
+            )
+            .await?;
 
         Ok(signed_tx)
     }
@@ -67,21 +67,24 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
-            &self.liquid_electrum_config,
+            &self.liquid_electrum_client,
             self.get_url().await?,
             swap.id.clone(),
-        )?;
+        )
+        .await?;
 
         let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap).await?;
 
-        let signed_tx = claim_tx_wrapper.sign_claim(
-            &claim_keypair,
-            &Preimage::from_str(&swap.preimage)?,
-            Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
-                .await?,
-            true,
-        )?;
+        let signed_tx = claim_tx_wrapper
+            .sign_claim(
+                &claim_keypair,
+                &Preimage::from_str(&swap.preimage)?,
+                Fee::Absolute(swap.claim_fees_sat),
+                self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
+                    .await?,
+                true,
+            )
+            .await?;
 
         Ok(signed_tx)
     }
@@ -108,10 +111,11 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     LBtcSwapTx::new_refund(
                         swap_script.as_liquid_script()?,
                         refund_address,
-                        &self.liquid_electrum_config,
+                        &self.liquid_electrum_client,
                         self.get_url().await?,
                         swap.id.clone(),
                     )
+                    .await
                 }
             },
             Swap::Send(swap) => {
@@ -119,10 +123,11 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                 LBtcSwapTx::new_refund(
                     swap_script,
                     refund_address,
-                    &self.liquid_electrum_config,
+                    &self.liquid_electrum_client,
                     self.get_url().await?,
                     swap.id.clone(),
                 )
+                .await
             }
             Swap::Receive(swap) => {
                 return Err(SdkError::generic(format!(
@@ -165,7 +170,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let address = Address::from_str(refund_address)
             .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
 
-        let genesis_hash = liquid_genesis_hash(&self.liquid_electrum_config)?;
+        let genesis_hash = self.liquid_electrum_client.get_genesis_hash().await?;
 
         let (funding_outpoint, funding_tx_out) =
             *utxos
@@ -193,12 +198,14 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             false => None,
         };
 
-        let signed_tx = refund_tx.sign_refund(
-            &refund_keypair,
-            Fee::Absolute(broadcast_fees_sat),
-            cooperative,
-            true,
-        )?;
+        let signed_tx = refund_tx
+            .sign_refund(
+                &refund_keypair,
+                Fee::Absolute(broadcast_fees_sat),
+                cooperative,
+                true,
+            )
+            .await?;
         Ok(signed_tx)
     }
 }

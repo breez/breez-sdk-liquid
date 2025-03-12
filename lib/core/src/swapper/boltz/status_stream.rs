@@ -2,65 +2,31 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
-use boltz_client::swaps::boltz::{self, Subscription, SwapUpdate};
-use futures_util::{SinkExt, StreamExt};
+use crate::swapper::{
+    boltz::BoltzSwapper, ProxyUrlFetcher, SubscriptionHandler, SwapperStatusStream,
+};
+use anyhow::Result;
+use boltz_client::boltz::{
+    self,
+    tokio_tungstenite_wasm::{Message, WebSocketStream},
+    WsRequest, WsResponse,
+};
+use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
-use tokio::net::TcpStream;
 use tokio::sync::{broadcast, watch};
 use tokio::time::MissedTickBehavior;
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
-use url::Url;
 
-use crate::model::Config;
-use crate::swapper::{SubscriptionHandler, SwapperStatusStream};
-
-use super::{split_proxy_url, ProxyUrlFetcher};
-
-pub(crate) struct BoltzStatusStream {
-    config: Config,
-    proxy_url: Arc<dyn ProxyUrlFetcher>,
-    subscription_notifier: broadcast::Sender<String>,
-    update_notifier: broadcast::Sender<boltz::Update>,
-}
-
-impl BoltzStatusStream {
-    pub(crate) fn new(config: Config, proxy_url: Arc<dyn ProxyUrlFetcher>) -> Self {
-        let (subscription_notifier, _) = broadcast::channel::<String>(30);
-        let (update_notifier, _) = broadcast::channel::<boltz::Update>(30);
-
-        Self {
-            config,
-            proxy_url,
-            subscription_notifier,
-            update_notifier,
-        }
-    }
-
-    async fn connect(&self) -> Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
-        let default_url = self.config.default_boltz_url().to_string();
-        let url = match self.proxy_url.fetch().await {
-            Ok(Some(url)) => split_proxy_url(url).0.unwrap_or(default_url),
-            _ => default_url,
-        };
-        let url = url.replace("http", "ws") + "/ws";
-        let (socket, _) = connect_async(Url::parse(&url)?)
-            .await
-            .map_err(|e| anyhow!("Failed to connect to websocket: {e:?}"))?;
-        Ok(socket)
-    }
-
+impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     async fn send_subscription(
         &self,
         swap_id: String,
-        ws_stream: &mut WebSocketStream<MaybeTlsStream<TcpStream>>,
+        sender: &mut SplitSink<WebSocketStream, Message>,
     ) {
         info!("Subscribing to status updates for swap ID {swap_id}");
 
-        let subscription = Subscription::new(&swap_id);
+        let subscription = WsRequest::subscribe_swap_request(&swap_id);
         match serde_json::to_string(&subscription) {
-            Ok(subscribe_json) => match ws_stream.send(Message::Text(subscribe_json)).await {
+            Ok(subscribe_json) => match sender.send(Message::Text(subscribe_json.into())).await {
                 Ok(_) => info!("Subscribed"),
                 Err(e) => error!("Failed to subscribe to {swap_id}: {e:?}"),
             },
@@ -69,16 +35,7 @@ impl BoltzStatusStream {
     }
 }
 
-impl SwapperStatusStream for BoltzStatusStream {
-    fn track_swap_id(&self, swap_id: &str) -> Result<()> {
-        let _ = self.subscription_notifier.send(swap_id.to_string());
-        Ok(())
-    }
-
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::Update> {
-        self.update_notifier.subscribe()
-    }
-
+impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
     fn start(
         self: Arc<Self>,
         callback: Box<dyn SubscriptionHandler>,
@@ -87,11 +44,22 @@ impl SwapperStatusStream for BoltzStatusStream {
         let keep_alive_ping_interval = Duration::from_secs(15);
         let reconnect_delay = Duration::from_secs(2);
 
+        let swapper = Arc::clone(&self);
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
-                match self.connect().await {
-                    Ok(mut ws_stream) => {
+                let client = match swapper.get_client().await {
+                    Ok(client) => client,
+                    Err(e) => {
+                        warn!("Failed to get swapper client: {e:?}");
+                        tokio::time::sleep(reconnect_delay).await;
+                        continue;
+                    }
+                };
+                match client.inner.connect_ws().await {
+                    Ok(ws_stream) => {
+                        let (mut sender, mut receiver) = ws_stream.split();
+
                         let mut tracked_swap_ids: HashSet<String> = HashSet::new();
                         let mut subscription_stream = self.subscription_notifier.subscribe();
 
@@ -108,23 +76,29 @@ impl SwapperStatusStream for BoltzStatusStream {
                                 },
 
                                 _ = interval.tick() => {
-                                    match ws_stream.send(Message::Ping(vec![])).await {
-                                        Ok(_) => debug!("Sent keep-alive ping"),
-                                        Err(e) => warn!("Failed to send keep-alive ping: {e:?}"),
+                                    match serde_json::to_string(&WsRequest::Ping) {
+                                        Ok(ping_msg) => {
+                                            match sender.send(Message::Text(ping_msg.into())).await {
+                                                Ok(_) => debug!("Sent keep-alive ping"),
+                                                Err(e) => warn!("Failed to send keep-alive ping: {e:?}"),
+                                            }
+                                        },
+                                        Err(e) => error!("Failed to serialize ping message: {e:?}"),
                                     }
                                 },
+
 
                                 swap_res = subscription_stream.recv() => match swap_res {
                                     Ok(swap_id) => {
                                       if !tracked_swap_ids.contains(&swap_id) {
-                                        self.send_subscription(swap_id.clone(), &mut ws_stream).await;
+                                        self.send_subscription(swap_id.clone(), &mut sender).await;
                                         tracked_swap_ids.insert(swap_id.clone());
                                       }
                                     },
                                     Err(e) => error!("Received error on subscription stream: {e:?}"),
                                 },
 
-                                maybe_next = ws_stream.next() => match maybe_next {
+                                maybe_next = receiver.next() => match maybe_next {
                                     Some(msg) => match msg {
                                         Ok(Message::Close(_)) => {
                                             warn!("Received close msg, exiting socket loop");
@@ -132,42 +106,36 @@ impl SwapperStatusStream for BoltzStatusStream {
                                             break;
                                         },
                                         Ok(Message::Text(payload)) => {
+                                            let payload = payload.as_str();
                                             info!("Received text msg: {payload:?}");
-                                            match serde_json::from_str::<SwapUpdate>(&payload) {
-                                                // Subscription confirmation
-                                                Ok(SwapUpdate::Subscription { .. }) => {}
+                                            match serde_json::from_str::<WsResponse>(payload) {
+                                                // Subscribing/unsubscribing confirmation
+                                                Ok(WsResponse::Subscribe { .. }) | Ok(WsResponse::Unsubscribe { .. }) => {}
 
                                                 // Status update(s)
-                                                Ok(SwapUpdate::Update {
-                                                    args,
-                                                    ..
-                                                }) => {
-                                                    for update in args {
+                                                Ok(WsResponse::Update(update)) => {
+                                                    for update in update.args {
                                                         let _ = self.update_notifier.send(update);
                                                     }
                                                 }
 
-                                                // Error related to subscription, like "Unknown swap ID"
-                                                Ok(SwapUpdate::Error {
-                                                    args,
-                                                    ..
-                                                }) => error!("Received a status update error: {args:?}"),
+                                                // A response to one of our pings
+                                                Ok(WsResponse::Pong) => debug!("Received pong"),
 
-                                                Err(e) => warn!("WS response is invalid SwapUpdate: {e:?}"),
+                                                // Either an invalid response, or an error related to subscription
+                                                Err(e) => error!("Failed to parse websocket response: {e:?} - response: {payload}"),
                                             }
                                         },
-                                        Ok(Message::Ping(_)) => debug!("Received ping"),
-                                        Ok(Message::Pong(_)) => debug!("Received pong"),
                                         Ok(msg) => warn!("Unhandled msg: {msg:?}"),
                                         Err(e) => {
                                             error!("Received stream error: {e:?}");
-                                            let _ = ws_stream.close(None).await;
+                                            let _ = sender.close().await;
                                             break;
                                         }
                                     },
                                     None => {
                                         warn!("Received nothing from the stream");
-                                        let _ = ws_stream.close(None).await;
+                                        let _ = sender.close().await;
                                         tokio::time::sleep(reconnect_delay).await;
                                         break;
                                     },
@@ -176,11 +144,20 @@ impl SwapperStatusStream for BoltzStatusStream {
                         }
                     }
                     Err(e) => {
-                        warn!("Error connecting to stream: {e}");
+                        warn!("Error connecting to stream: {e:?}");
                         tokio::time::sleep(reconnect_delay).await;
                     }
                 }
             }
         });
+    }
+
+    fn track_swap_id(&self, swap_id: &str) -> Result<()> {
+        let _ = self.subscription_notifier.send(swap_id.to_string());
+        Ok(())
+    }
+
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::SwapStatus> {
+        self.update_notifier.subscribe()
     }
 }
