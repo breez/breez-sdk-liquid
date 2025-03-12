@@ -1,4 +1,4 @@
-version = '0.7.1' # generated; do not edit
+version = '0.7.2-dev1' # generated; do not edit
 
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint flutter_breez_liquid.podspec` to validate before publishing.
