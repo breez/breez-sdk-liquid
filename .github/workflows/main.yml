@@ -153,15 +153,55 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Build bindings
+        working-directory: lib/bindings
+        run: cargo build
+
+      - name: Run bindings tests
+        run: |
+          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
+          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
+          cd lib/bindings
+          cargo test
+
+  build-bindings-uniffi-25:
+    name: Test bindings Uniffi 0.25
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: -uniffi-25
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup dotnet
-        if: ${{ !inputs.skip-tests }}
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '7.0.x'
 
+      - name: Setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19.9'
+
       - name: Build bindings
         working-directory: lib/bindings
-        run: cargo build
+        run: cargo build --no-default-features --features uniffi-25
 
       - name: Build C# bindings
         working-directory: lib/bindings       
@@ -178,22 +218,9 @@ jobs:
           cp ../target/debug/libbreez_sdk_liquid_bindings.so ffi/golang
           cp -r ffi/golang/breez_sdk_liquid tests/bindings/golang/
 
-      - name: Setup go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.19.9'
-
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
       - name: Run bindings tests
-        run: |
-          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
-          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
-          cd lib/bindings
-          cargo test
+        working-directory: lib/bindings       
+        run: cargo test --no-default-features --features uniffi-25
 
   build-wasm:
     name: Test WASM
@@ -255,7 +282,7 @@ jobs:
       - name: Build Android bindings
         working-directory: lib/bindings       
         run: |
-          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
+          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
 
       - name: Run Android build
         working-directory: lib/bindings/langs/android  
@@ -265,7 +292,7 @@ jobs:
       - name: Build Swift bindings
         working-directory: lib/bindings       
         run: |
-          cargo run --features=uniffi/cli --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
+          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
           mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers

@@ -1,6 +1,6 @@
 use anyhow::Error;
 use lwk_wollet::secp256k1;
-use sdk_common::prelude::LnUrlAuthError;
+use sdk_common::prelude::{LnUrlAuthError, LnUrlPayError, LnUrlWithdrawError};
 
 pub type SdkResult<T, E = SdkError> = Result<T, E>;
 
@@ -249,9 +249,25 @@ impl From<secp256k1::Error> for PaymentError {
 }
 
 impl From<PaymentError> for LnUrlAuthError {
-    fn from(value: PaymentError) -> Self {
+    fn from(err: PaymentError) -> Self {
         Self::Generic {
-            err: format!("Failed to perform LNURL-auth: {value:?}"),
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<PaymentError> for LnUrlPayError {
+    fn from(err: PaymentError) -> Self {
+        Self::Generic {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<PaymentError> for LnUrlWithdrawError {
+    fn from(err: PaymentError) -> Self {
+        Self::Generic {
+            err: err.to_string(),
         }
     }
 }
