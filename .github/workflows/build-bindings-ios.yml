@@ -173,5 +173,5 @@ jobs:
       - name: Upload dummy ios ${{ matrix.target }} artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bindings-${{ matrix.target }}{{ matrix.uniffi }}
+          name: bindings-${{ matrix.target }}${{ matrix.uniffi }}
           path: ./*
