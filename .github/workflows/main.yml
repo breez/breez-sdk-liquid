@@ -34,9 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
-
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
@@ -57,13 +54,34 @@ jobs:
         working-directory: lib/core 
         run: cargo clippy -- -D warnings
 
-      - name: Clippy WASM
-        working-directory: lib/wasm 
-        run: cargo clippy --target=wasm32-unknown-unknown -- -D warnings
-
       - name: Clippy cli
         working-directory: cli 
         run: cargo clippy -- -D warnings
+
+  clippy-wasm:
+    name: Cargo Clippy WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clippy
+        working-directory: lib/wasm 
+        run: cargo clippy --target=wasm32-unknown-unknown -- -D warnings
 
   build:
     name: Cargo Build
@@ -94,7 +112,42 @@ jobs:
         working-directory: lib/core
         run: cargo build
 
-      - name: Cargo build WASM
+      - name: Check git status
+        env:
+          GIT_PAGER: cat
+        run: |
+          status=$(git status --porcelain)
+          if [[ -n "$status" ]]; then
+            echo "Git status has changes"
+            echo "$status"
+            git diff
+            exit 1
+          else
+            echo "No changes in git status"
+          fi
+
+  build-wasm:
+    name: Cargo Build WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cargo build
         working-directory: lib/wasm
         run: cargo build --target=wasm32-unknown-unknown
 
@@ -222,7 +275,7 @@ jobs:
         working-directory: lib/bindings       
         run: cargo test --no-default-features --features uniffi-25
 
-  build-wasm:
+  test-wasm:
     name: Test WASM
     runs-on: ubuntu-latest
     steps:

@@ -29,11 +29,14 @@ flutter_rust_bridge = { version = "=2.8.0", features = [
 log = { workspace = true }
 lwk_common = "0.8.0"
 lwk_signer = { version = "0.8.0", default-features = false }
-rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [ "backup", "bundled" ] }
+rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
+    "backup",
+    "bundled",
+] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 sdk-common = { workspace = true }
 sdk-macros = { workspace = true }
-rusqlite_migration =  { git = "https://github.com/hydra-yse/rusqlite_migration", branch = "rusqlite-v0.33.0" }
+rusqlite_migration = { git = "https://github.com/hydra-yse/rusqlite_migration", branch = "rusqlite-v0.33.0" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -46,7 +49,7 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 ] }
 async-trait = "0.1.86"
 hex = "0.4"
-reqwest = { version = "0.12", features = [ "json" ] }
+reqwest = { version = "0.12", features = ["json"] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
@@ -72,7 +75,9 @@ uuid = { version = "1.8.0", features = ["v4"] }
 # WASM dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [ "esplora" ] }
+lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [
+    "esplora",
+] }
 maybe-sync = "0.1.1"
 uuid = { version = "1.8.0", features = ["v4", "js"] }
 
