@@ -235,18 +235,19 @@ impl LiquidSdkBuilder {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
-        let boltz_swapper = Arc::new(BoltzSwapper::new(self.config.clone(), proxy_url_fetcher)?);
-
-        let swapper: Arc<dyn Swapper> = match self.swapper.clone() {
-            Some(swapper) => swapper,
-            None => boltz_swapper.clone(),
-        };
-
-        let status_stream: Arc<dyn SwapperStatusStream> = match self.status_stream.clone() {
-            Some(status_stream) => status_stream,
-            None => boltz_swapper.clone(),
-        };
+        let (swapper, status_stream): (Arc<dyn Swapper>, Arc<dyn SwapperStatusStream>) =
+            match (self.swapper.clone(), self.status_stream.clone()) {
+                (Some(swapper), Some(status_stream)) => (swapper, status_stream),
+                (maybe_swapper, maybe_status_stream) => {
+                    let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
+                    let boltz_swapper =
+                        Arc::new(BoltzSwapper::new(self.config.clone(), proxy_url_fetcher)?);
+                    (
+                        maybe_swapper.unwrap_or(boltz_swapper.clone()),
+                        maybe_status_stream.unwrap_or(boltz_swapper),
+                    )
+                }
+            };
 
         let recoverer = match self.recoverer.clone() {
             Some(recoverer) => recoverer,
