@@ -656,20 +656,26 @@ impl Persister {
                 }
                 None => match maybe_chain_swap_id {
                     Some(chain_swap_id) => {
-                        let payer_amount_sat = match maybe_chain_swap_actual_payer_amount_sat {
-                            Some(actual_payer_amount_sat) => actual_payer_amount_sat,
-                            None => maybe_chain_swap_payer_amount_sat.unwrap_or(0),
+                        let (payer_amount_sat, receiver_amount_sat) = match (
+                            maybe_chain_swap_actual_payer_amount_sat,
+                            maybe_chain_swap_payer_amount_sat,
+                        ) {
+                            // For amountless chain swaps use the actual payer amount when
+                            // set as the payer amount and receiver amount
+                            (Some(actual_payer_amount_sat), Some(0)) => {
+                                (actual_payer_amount_sat, actual_payer_amount_sat)
+                            }
+                            // Otherwise use the precalculated payer and receiver amounts
+                            _ => (
+                                maybe_chain_swap_payer_amount_sat.unwrap_or(0),
+                                maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
+                            ),
                         };
                         let receiver_amount_sat =
                             match maybe_chain_swap_accepted_receiver_amount_sat {
+                                // If the accepted receiver amount is set, use it
                                 Some(accepted_receiver_amount_sat) => accepted_receiver_amount_sat,
-                                None => match (
-                                    maybe_chain_swap_actual_payer_amount_sat,
-                                    maybe_chain_swap_payer_amount_sat,
-                                ) {
-                                    (Some(actual), Some(0)) => actual, // For amountless chain swaps WaitingFeeAcceptance, show zero fees
-                                    _ => maybe_chain_swap_receiver_amount_sat.unwrap_or(0),
-                                },
+                                None => receiver_amount_sat,
                             };
                         let swapper_fees_sat = maybe_chain_swap_pair_fees
                             .map(|pair| pair.fees.percentage)
