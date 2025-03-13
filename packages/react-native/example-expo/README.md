@@ -6,7 +6,7 @@ Ideally, the environment variable should be added to your EAS Project config as 
 
 ## Expo managed workflow
 
-This library includes a Expo Plugin that builds all the required notification services within EAS managed workflow. Make sure to add the Breez Liquid Plugin within your `app.config` as shown in this example.
+This library includes a Expo Plugin that builds all the required notification services within [EAS managed workflow](https://docs.expo.dev/eas/). Make sure to add the Breez Liquid Plugin within your `app.config` as shown in this example.
 
 ### iOS Entitlements
 
