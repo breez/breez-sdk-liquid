@@ -15,7 +15,10 @@ mod test {
     use lwk_wollet::WalletTx;
     use std::{collections::HashMap, str::FromStr, sync::Arc};
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_claim_tx() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();
@@ -55,7 +58,7 @@ mod test {
         assert_eq!(receive_swap.lockup_tx_id, Some(lockup_tx_id.to_string()));
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_mrh_tx() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();
@@ -87,7 +90,7 @@ mod test {
         assert_eq!(receive_swap.mrh_tx_id, Some(mrh_tx_id.to_string()));
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_expired_swap() {
         // Setup mock data
         let (mut receive_swap, mut recovery_context) = setup_test_data();
@@ -110,7 +113,7 @@ mod test {
         assert_eq!(receive_swap.mrh_tx_id, None);
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_lockup_no_claim() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();
@@ -141,7 +144,7 @@ mod test {
         assert_eq!(receive_swap.lockup_tx_id, Some(lockup_tx_id.to_string()));
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_lockup_expired() {
         // Setup mock data
         let (mut receive_swap, mut recovery_context) = setup_test_data();
@@ -175,7 +178,7 @@ mod test {
         assert_eq!(receive_swap.lockup_tx_id, Some(lockup_tx_id.to_string()));
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_no_transactions() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();
@@ -195,7 +198,7 @@ mod test {
         assert_eq!(receive_swap.lockup_tx_id, None); // No lockup tx
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recovery_within_grace_period_claim() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();
@@ -220,7 +223,7 @@ mod test {
         );
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_unconfirmed_tx() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();

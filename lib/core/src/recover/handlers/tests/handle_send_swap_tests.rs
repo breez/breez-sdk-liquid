@@ -7,7 +7,10 @@ mod test {
         },
     };
 
-    #[test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_and_claim() {
         let recovered_data = RecoveredOnchainDataSend {
             lockup_tx_id: Some(create_history_txid("1111", 100)),
@@ -27,7 +30,7 @@ mod test {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_and_refund() {
         // Test with confirmed refund
         let recovered_data = RecoveredOnchainDataSend {
@@ -66,7 +69,7 @@ mod test {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_only() {
         let recovered_data = RecoveredOnchainDataSend {
             lockup_tx_id: Some(create_history_txid("1111", 100)),
@@ -88,7 +91,7 @@ mod test {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_derive_partial_state_with_no_txs() {
         let recovered_data = RecoveredOnchainDataSend {
             lockup_tx_id: None,
@@ -107,7 +110,7 @@ mod test {
         );
     }
 
-    #[test]
+    #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_claim_refund() {
         // This is an edge case where both claim and refund txs exist
         let recovered_data = RecoveredOnchainDataSend {

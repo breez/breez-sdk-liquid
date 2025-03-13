@@ -20,7 +20,10 @@ mod test {
     };
     use std::{collections::HashMap, str::FromStr, sync::Arc};
 
-    #[tokio::test]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_btc_lockup_and_lbtc_claim() {
         // Setup mock data
         let (mut chain_swap, recovery_context) = setup_test_data();
@@ -87,7 +90,7 @@ mod test {
         assert_eq!(chain_swap.refund_tx_id, None);
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_btc_lockup_only() {
         // Setup mock data
         let (mut chain_swap, recovery_context) = setup_test_data();
@@ -129,7 +132,7 @@ mod test {
         assert_eq!(chain_swap.refund_tx_id, None);
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_btc_lockup_and_refund() {
         // Setup mock data
         let (mut chain_swap, recovery_context) = setup_test_data();
@@ -173,7 +176,7 @@ mod test {
         assert_eq!(chain_swap.claim_tx_id, None);
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_expired_swap() {
         // Setup mock data
         let (mut chain_swap, mut recovery_context) = setup_test_data();
@@ -225,7 +228,7 @@ mod test {
         assert_eq!(chain_swap.refund_tx_id, None);
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_incorrect_amount() {
         // Setup mock data
         let (mut chain_swap, recovery_context) = setup_test_data();
@@ -268,7 +271,7 @@ mod test {
         assert_eq!(chain_swap.actual_payer_amount_sat, Some(50000));
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_no_transactions() {
         // Setup mock data
         let (mut chain_swap, recovery_context) = setup_test_data();
@@ -290,7 +293,7 @@ mod test {
         assert_eq!(chain_swap.claim_tx_id, None);
     }
 
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recovery_within_grace_period() {
         // Setup mock data
         let (mut chain_swap, recovery_context) = setup_test_data();

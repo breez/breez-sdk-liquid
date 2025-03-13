@@ -15,8 +15,11 @@ mod test {
     use std::str::FromStr;
     use std::sync::Arc;
 
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
     /// Test recovery with a claim transaction and preimage
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_claim_tx_and_preimage() {
         // Setup mock data
         let (mut send_swap, recovery_context) = setup_test_data();
@@ -76,7 +79,7 @@ mod test {
     }
 
     /// Test recovery with a lockup and refund transaction
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_refund_tx() {
         // Setup mock data
         let (mut send_swap, recovery_context) = setup_test_data();
@@ -119,7 +122,7 @@ mod test {
     }
 
     /// Test recovery with only a lockup tx (not expired)
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_lockup_only() {
         // Setup mock data
         let (mut send_swap, recovery_context) = setup_test_data();
@@ -152,7 +155,7 @@ mod test {
     }
 
     /// Test recovery with only a lockup tx (expired)
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_lockup_expired() {
         // Setup mock data
         let (mut send_swap, mut recovery_context) = setup_test_data();
@@ -188,7 +191,7 @@ mod test {
     }
 
     /// Test recovery with unconfirmed refund tx
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_unconfirmed_refund() {
         // Setup mock data
         let (mut send_swap, recovery_context) = setup_test_data();
@@ -231,7 +234,7 @@ mod test {
     }
 
     /// Test recovery with no transactions
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recover_with_no_transactions() {
         // Setup mock data
         let (mut send_swap, recovery_context) = setup_test_data();
@@ -252,7 +255,7 @@ mod test {
     }
 
     /// Test recovery when swap is within grace period
-    #[tokio::test]
+    #[sdk_macros::async_test_all]
     async fn test_recovery_within_grace_period() {
         // Setup mock data
         let (mut send_swap, recovery_context) = setup_test_data();
