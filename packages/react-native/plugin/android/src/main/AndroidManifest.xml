@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application>
+        <receiver
+            android:name=".NotificationService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="expo.modules.notifications.NOTIFICATION_EVENT" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".ForegroundService"
+            android:foregroundServiceType="shortService"
+            android:exported="false"
+            android:stopWithTask="false">
+        </service>
+    </application>
+
+</manifest>
