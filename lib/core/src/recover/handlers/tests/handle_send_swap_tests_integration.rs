@@ -2,7 +2,7 @@
 mod test {
     use crate::chain::liquid::MockLiquidChainService;
     use crate::prelude::*;
-    use crate::recover::handlers::tests::test::create_mock_wallet_tx;
+    use crate::recover::handlers::tests::test::create_mock_lbtc_wallet_tx;
     use crate::recover::handlers::SendSwapHandler;
     use crate::recover::model::*;
     use crate::swapper::MockSwapper;
@@ -360,7 +360,7 @@ mod test {
             .insert(script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, -100000); // Negative amount for outgoing
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, -100000); // Negative amount for outgoing
 
         // Add to outgoing tx map
         context.tx_map.outgoing_tx_map.insert(tx_id, wallet_tx);
@@ -425,7 +425,7 @@ mod test {
             .insert(script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount as i64); // Positive amount for incoming
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64); // Positive amount for incoming
 
         // Add to incoming tx map
         context

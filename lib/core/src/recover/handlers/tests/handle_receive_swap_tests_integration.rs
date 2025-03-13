@@ -4,7 +4,7 @@ mod test {
         chain::liquid::MockLiquidChainService,
         model::{PaymentState, ReceiveSwap, SwapMetadata},
         recover::{
-            handlers::{tests::test::create_mock_wallet_tx, ReceiveSwapHandler},
+            handlers::{tests::test::create_mock_lbtc_wallet_tx, ReceiveSwapHandler},
             model::{HistoryTxId, RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
@@ -341,7 +341,7 @@ mod test {
             .insert(claim_script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount as i64);
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64);
 
         // Add to incoming tx map
         context
@@ -408,7 +408,7 @@ mod test {
             .insert(mrh_script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount as i64);
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64);
 
         // Add to incoming tx map
         context

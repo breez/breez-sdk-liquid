@@ -48,28 +48,6 @@ mod test {
         }
     }
 
-    // Create a mock wallet transaction
-    pub(crate) fn create_mock_wallet_tx(tx_id_hex: &str, height: u32, amount: i64) -> WalletTx {
-        create_mock_lbtc_wallet_tx(tx_id_hex, height, amount)
-        // let tx_id = Txid::from_str(tx_id_hex).unwrap();
-
-        // // Create balance for the transaction
-        // let mut balance = BTreeMap::new();
-        // balance.insert(AssetId::default(), amount as i64);
-
-        // WalletTx {
-        //     txid: tx_id,
-        //     tx: create_empty_transaction(),
-        //     height: Some(height),
-        //     fee: 1000,
-        //     timestamp: Some(1001), // Just after swap creation time
-        //     balance,
-        //     outputs: Vec::new(),
-        //     inputs: Vec::new(),
-        //     type_: "".to_string(),
-        // }
-    }
-
     // Create a mock LBTC wallet transaction
     pub(crate) fn create_mock_lbtc_wallet_tx(
         tx_id_hex: &str,

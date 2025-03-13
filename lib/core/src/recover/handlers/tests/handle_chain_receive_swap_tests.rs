@@ -124,7 +124,7 @@ mod test {
             recovered_data.derive_partial_state(Some(100000), None, false, true),
             Some(PaymentState::WaitingFeeAcceptance)
         );
-        // Expired - should be Refundable
+        // Expired without balance - should be Pending
         assert_eq!(
             recovered_data.derive_partial_state(Some(100000), None, true, false),
             Some(PaymentState::Pending)
