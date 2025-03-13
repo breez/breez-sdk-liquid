@@ -49,7 +49,7 @@ impl SendSwapHandler {
         let swap_script = send_swap.get_swap_script()?;
         let lockup_script = swap_script
             .funding_addrs
-            .ok_or(anyhow::anyhow!("err"))?
+            .ok_or(anyhow::anyhow!("no funding address found"))?
             .script_pubkey();
 
         let empty_history = Vec::<HistoryTxId>::new();
@@ -62,17 +62,25 @@ impl SendSwapHandler {
         let mut recovered_data = Self::recover_onchain_data(&context.tx_map, &swap_id, history)?;
 
         // Recover preimage if needed
-        if let Some(claim_tx_id) = &recovered_data.claim_tx_id {
-            if let Ok(claim_txs) = context
-                .liquid_chain_service
-                .get_transactions(&[claim_tx_id.txid])
-                .await
+        if let (Some(claim_tx_id), None) = (&recovered_data.claim_tx_id, &send_swap.preimage) {
+            match Self::recover_preimage(
+                context,
+                claim_tx_id.txid,
+                &swap_id,
+                context.swapper.clone(),
+            )
+            .await
             {
-                if !claim_txs.is_empty() {
-                    let preimage =
-                        Self::recover_preimage(&claim_txs[0], &swap_id, context.swapper.clone())
-                            .await?;
-                    recovered_data.preimage = preimage;
+                Ok(Some(preimage)) => {
+                    recovered_data.preimage = Some(preimage);
+                }
+                Ok(None) => {
+                    warn!("No preimage found for Send Swap {swap_id}");
+                    recovered_data.claim_tx_id = None;
+                }
+                Err(e) => {
+                    error!("Failed to recover preimage for swap {swap_id}: {e}");
+                    recovered_data.claim_tx_id = None
                 }
             }
         }
@@ -112,12 +120,10 @@ impl SendSwapHandler {
 
         // Update preimage if valid
         if let Some(preimage) = &recovered_data.preimage {
-            if send_swap.preimage.is_none() {
-                match utils::verify_payment_hash(preimage, &send_swap.invoice) {
-                    Ok(_) => send_swap.preimage = Some(preimage.clone()),
-                    Err(e) => {
-                        error!("Failed to verify recovered preimage for swap {swap_id}: {e}");
-                    }
+            match utils::verify_payment_hash(preimage, &send_swap.invoice) {
+                Ok(_) => send_swap.preimage = Some(preimage.clone()),
+                Err(e) => {
+                    error!("Failed to verify recovered preimage for swap {swap_id}: {e}");
                 }
             }
         }
@@ -178,7 +184,8 @@ impl SendSwapHandler {
 
     /// Tries to recover the preimage for a send swap from its claim tx
     async fn recover_preimage(
-        claim_tx: &lwk_wollet::elements::Transaction,
+        context: &RecoveryContext,
+        claim_tx_id: Txid,
         swap_id: &str,
         swapper: Arc<dyn Swapper>,
     ) -> Result<Option<String>> {
@@ -188,13 +195,15 @@ impl SendSwapHandler {
             return Ok(Some(preimage));
         }
         warn!("Could not recover Send swap {swap_id} preimage cooperatively");
-        match Self::extract_preimage_from_claim_tx(claim_tx, swap_id) {
-            Ok(preimage) => Ok(Some(preimage)),
-            Err(e) => {
-                error!(
-                    "Couldn't get swap preimage from claim tx {} for swap {swap_id}: {e}",
-                    claim_tx.txid()
-                );
+        let claim_txs = context
+            .liquid_chain_service
+            .get_transactions(&[claim_tx_id])
+            .await?;
+
+        match claim_txs.is_empty() {
+            false => Self::extract_preimage_from_claim_tx(&claim_txs[0], swap_id).map(Some),
+            true => {
+                warn!("Could not recover Send swap {swap_id} preimage non cooperatively");
                 Ok(None)
             }
         }

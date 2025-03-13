@@ -62,8 +62,7 @@ pub trait Swapper: Send + Sync {
     /// Get a submarine pair information
     async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
 
-    /// Get a submarine swap's preimage
-    #[allow(dead_code)]
+    /// Get a submarine swap's preimage    
     async fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError>;
 
     /// Get send swap claim tx details which includes the preimage as a proof of payment.

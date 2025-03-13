@@ -115,23 +115,23 @@ impl SwapsList {
                     match chain_swap.direction {
                         Direction::Outgoing => {
                             // For outgoing chain swaps, add lockup script
-                            if let Ok(lockup_script) = chain_swap.get_lockup_swap_script() {
-                                if let Ok(liquid_script) = lockup_script.as_liquid_script() {
-                                    if let Some(funding_addr) = liquid_script.funding_addrs {
-                                        swap_scripts.push(funding_addr.script_pubkey());
-                                    }
-                                }
-                            }
+                            _ = chain_swap
+                                .get_lockup_swap_script()
+                                .and_then(|lockup_script| {
+                                    Ok(lockup_script.as_liquid_script()?.funding_addrs.map(
+                                        |funding_addr| {
+                                            swap_scripts.push(funding_addr.script_pubkey())
+                                        },
+                                    ))
+                                })
                         }
                         Direction::Incoming => {
                             // For incoming chain swaps, add claim script
-                            if let Ok(claim_script) = chain_swap.get_claim_swap_script() {
-                                if let Ok(liquid_script) = claim_script.as_liquid_script() {
-                                    if let Some(funding_addr) = liquid_script.funding_addrs {
-                                        swap_scripts.push(funding_addr.script_pubkey());
-                                    }
-                                }
-                            }
+                            _ = chain_swap.get_claim_swap_script().and_then(|claim_script| {
+                                Ok(claim_script.as_liquid_script()?.funding_addrs.map(
+                                    |funding_addr| swap_scripts.push(funding_addr.script_pubkey()),
+                                ))
+                            })
                         }
                     }
                 }
@@ -149,23 +149,21 @@ impl SwapsList {
                 match chain_swap.direction {
                     Direction::Outgoing => {
                         // For outgoing chain swaps, add claim script (BTC)
-                        if let Ok(claim_script) = chain_swap.get_claim_swap_script() {
-                            if let Ok(bitcoin_script) = claim_script.as_bitcoin_script() {
-                                if let Some(funding_addr) = bitcoin_script.funding_addrs {
-                                    swap_scripts.push(funding_addr.script_pubkey());
-                                }
-                            }
-                        }
+                        _ = chain_swap.get_claim_swap_script().and_then(|claim_script| {
+                            Ok(claim_script.as_bitcoin_script()?.funding_addrs.map(
+                                |funding_addr| swap_scripts.push(funding_addr.script_pubkey()),
+                            ))
+                        })
                     }
                     Direction::Incoming => {
                         // For incoming chain swaps, add lockup script (BTC)
-                        if let Ok(lockup_script) = chain_swap.get_lockup_swap_script() {
-                            if let Ok(bitcoin_script) = lockup_script.as_bitcoin_script() {
-                                if let Some(funding_addr) = bitcoin_script.funding_addrs {
-                                    swap_scripts.push(funding_addr.script_pubkey());
-                                }
-                            }
-                        }
+                        _ = chain_swap
+                            .get_lockup_swap_script()
+                            .and_then(|lockup_script| {
+                                Ok(lockup_script.as_bitcoin_script()?.funding_addrs.map(
+                                    |funding_addr| swap_scripts.push(funding_addr.script_pubkey()),
+                                ))
+                            })
                     }
                 }
             }

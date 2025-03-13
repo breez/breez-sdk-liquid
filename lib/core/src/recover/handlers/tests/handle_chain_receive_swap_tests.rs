@@ -2,14 +2,12 @@
 mod test {
     use crate::{
         model::PaymentState,
-        recover::{
-            handlers::handle_chain_receive_swap::RecoveredOnchainDataChainReceive,
-            model::HistoryTxId,
+        recover::handlers::{
+            handle_chain_receive_swap::RecoveredOnchainDataChainReceive,
+            tests::test::create_history_txid,
         },
     };
     use boltz_client::boltz::PairLimits;
-    use lwk_wollet::elements::Txid;
-    use lwk_wollet::hashes::Hash;
 
     #[test]
     fn test_derive_partial_state_with_btc_lockup_and_lbtc_claim() {
@@ -254,17 +252,5 @@ mod test {
             recovered_data.derive_partial_state(Some(100000), None, true, false),
             Some(PaymentState::Complete)
         );
-    }
-
-    // Helper function to create a HistoryTxId for testing
-    fn create_history_txid(hex_id: &str, height: i32) -> HistoryTxId {
-        let txid_bytes = hex::decode(format!("{:0>64}", hex_id)).unwrap();
-        let mut txid_array = [0u8; 32];
-        txid_array.copy_from_slice(&txid_bytes);
-
-        HistoryTxId {
-            txid: Txid::from_slice(&txid_array).unwrap(),
-            height,
-        }
     }
 }

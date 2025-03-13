@@ -78,7 +78,7 @@ impl Recoverer {
 
         let recovery_started_at = utils::now();
 
-        // Fetch raw transaction map and convert to our internal format
+        // Create wallet transactions map
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
         // Fetch chain tips for expiration checks
@@ -159,12 +159,12 @@ impl Recoverer {
     ) -> Result<RecoveryContext> {
         // Fetch history data for each lbtc swap script
         let lbtc_script_to_history_map = self
-            .create_lbtc_history_map(swaps_list.get_swap_lbtc_scripts())
+            .fetch_lbtc_history_map(swaps_list.get_swap_lbtc_scripts())
             .await?;
 
         // Fetch history data for each btc swap script
         let (btc_script_to_history_map, btc_script_to_txs_map, btc_script_to_balance_map) = self
-            .create_btc_history_maps(swaps_list.get_swap_btc_scripts())
+            .fetch_btc_script_maps(swaps_list.get_swap_btc_scripts())
             .await?;
 
         Ok(RecoveryContext {
@@ -181,7 +181,7 @@ impl Recoverer {
         })
     }
 
-    async fn create_lbtc_history_map(
+    async fn fetch_lbtc_history_map(
         &self,
         swap_lbtc_scripts: Vec<LBtcScript>,
     ) -> Result<HashMap<LBtcScript, Vec<HistoryTxId>>> {
@@ -211,7 +211,7 @@ impl Recoverer {
         Ok(lbtc_script_to_history_map)
     }
 
-    async fn create_btc_history_maps(
+    async fn fetch_btc_script_maps(
         &self,
         swap_btc_script_bufs: Vec<BtcScript>,
     ) -> Result<(

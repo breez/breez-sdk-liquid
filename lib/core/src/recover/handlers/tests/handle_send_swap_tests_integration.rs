@@ -2,15 +2,16 @@
 mod test {
     use crate::chain::liquid::MockLiquidChainService;
     use crate::prelude::*;
+    use crate::recover::handlers::tests::test::create_mock_wallet_tx;
     use crate::recover::handlers::SendSwapHandler;
     use crate::recover::model::*;
     use crate::swapper::MockSwapper;
     use lwk_wollet::elements::script::Script;
-    use lwk_wollet::elements::{AssetId, LockTime, Transaction, TxIn, TxInWitness, Txid};
+    use lwk_wollet::elements::{LockTime, Transaction, TxIn, TxInWitness, Txid};
     use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
     use lwk_wollet::WalletTx;
     use mockall::predicate::*;
-    use std::collections::{BTreeMap, HashMap};
+    use std::collections::HashMap;
     use std::str::FromStr;
     use std::sync::Arc;
 
@@ -430,30 +431,6 @@ mod test {
             .insert(tx_id, wallet_tx.clone());
 
         (context, wallet_tx)
-    }
-
-    // Create a mock wallet transaction
-    fn create_mock_wallet_tx(tx_id_hex: &str, height: u32, amount: i64) -> WalletTx {
-        let tx_id = Txid::from_str(tx_id_hex).unwrap();
-
-        WalletTx {
-            txid: tx_id,
-            tx: create_empty_transaction(),
-            height: Some(height),
-            fee: 1000,
-            timestamp: Some(1001), // Just after swap creation time
-            balance: {
-                let mut map = BTreeMap::new();
-                map.insert(
-                    AssetId::from_slice(&[0; 32]).unwrap(), // Default asset ID
-                    amount,
-                );
-                map
-            },
-            outputs: Vec::new(),
-            inputs: Vec::new(),
-            type_: "".to_string(),
-        }
     }
 
     fn create_empty_transaction() -> Transaction {

@@ -21,8 +21,12 @@ impl ChainSendSwapHandler {
             && recovered_data.lbtc_user_lockup_tx_id.is_none();
         let refund_is_cleared =
             chain_swap.refund_tx_id.is_some() && recovered_data.lbtc_refund_tx_id.is_none();
+        let claim_is_cleared =
+            chain_swap.claim_tx_id.is_some() && recovered_data.btc_claim_tx_id.is_none();
 
-        if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
+        if is_local_within_grace_period
+            && (lockup_is_cleared || refund_is_cleared || claim_is_cleared)
+        {
             warn!(
                 "Local outgoing chain swap {swap_id} was updated recently - skipping recovery \
                 as it would clear a tx that may have been broadcasted by us. Lockup clear: \
@@ -87,7 +91,6 @@ impl ChainSendSwapHandler {
         // Update the swap with recovered data
         Self::update_swap(
             chain_swap,
-            swap_id,
             &recovered_data,
             context.liquid_tip_height,
             is_local_within_grace_period,
@@ -97,7 +100,6 @@ impl ChainSendSwapHandler {
     /// Update a chain send swap with recovered data
     pub fn update_swap(
         chain_swap: &mut ChainSwap,
-        _: &str,
         recovered_data: &RecoveredOnchainDataChainSend,
         current_block_height: u32,
         is_local_within_grace_period: bool,

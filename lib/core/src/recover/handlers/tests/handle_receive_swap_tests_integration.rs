@@ -4,22 +4,16 @@ mod test {
         chain::liquid::MockLiquidChainService,
         model::{PaymentState, ReceiveSwap, SwapMetadata},
         recover::{
-            handlers::ReceiveSwapHandler,
+            handlers::{tests::test::create_mock_wallet_tx, ReceiveSwapHandler},
             model::{HistoryTxId, RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
     };
     use boltz_client::ElementsAddress;
-    use lwk_wollet::elements::{
-        AssetId, LockTime, Script, Sequence, Transaction, TxIn, TxInWitness, Txid,
-    };
+    use lwk_wollet::elements::{Script, Txid};
     use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
     use lwk_wollet::WalletTx;
-    use std::{
-        collections::{BTreeMap, HashMap},
-        str::FromStr,
-        sync::Arc,
-    };
+    use std::{collections::HashMap, str::FromStr, sync::Arc};
 
     #[tokio::test]
     async fn test_recover_with_claim_tx() {
@@ -344,7 +338,7 @@ mod test {
             .insert(claim_script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount);
+        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount as i64);
 
         // Add to incoming tx map
         context
@@ -411,7 +405,7 @@ mod test {
             .insert(mrh_script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount);
+        let wallet_tx = create_mock_wallet_tx(tx_id_hex, height, amount as i64);
 
         // Add to incoming tx map
         context
@@ -420,42 +414,5 @@ mod test {
             .insert(tx_id, wallet_tx.clone());
 
         (context, wallet_tx)
-    }
-
-    // Create a mock wallet transaction
-    fn create_mock_wallet_tx(tx_id_hex: &str, height: u32, amount: u64) -> WalletTx {
-        let tx_id = Txid::from_str(tx_id_hex).unwrap();
-
-        // Create balance for the transaction
-        let mut balance = BTreeMap::new();
-        balance.insert(AssetId::default(), amount as i64);
-
-        WalletTx {
-            txid: tx_id,
-            tx: create_empty_transaction(),
-            height: Some(height),
-            fee: 1000,
-            timestamp: Some(1001), // Just after swap creation time
-            balance,
-            outputs: Vec::new(),
-            inputs: Vec::new(),
-            type_: "".to_string(),
-        }
-    }
-
-    fn create_empty_transaction() -> Transaction {
-        Transaction {
-            version: 2,
-            lock_time: LockTime::from_height(0).unwrap(),
-            input: vec![TxIn {
-                previous_output: Default::default(),
-                is_pegin: false,
-                script_sig: Script::new(),
-                sequence: Sequence::default(),
-                asset_issuance: Default::default(),
-                witness: TxInWitness::empty(),
-            }],
-            output: vec![],
-        }
     }
 }

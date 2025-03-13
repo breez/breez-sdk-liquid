@@ -4,7 +4,7 @@ mod test {
         chain::liquid::MockLiquidChainService,
         model::{ChainSwap, PaymentState, SwapMetadata},
         recover::{
-            handlers::ChainReceiveSwapHandler,
+            handlers::{tests::test::create_mock_lbtc_wallet_tx, ChainReceiveSwapHandler},
             model::{HistoryTxId, RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
@@ -15,15 +15,10 @@ mod test {
     };
     use electrum_client::GetBalanceRes;
     use lwk_wollet::{
-        elements::{self, AssetId, Transaction, TxIn, TxInWitness, Txid},
+        elements::{self, Txid},
         elements_miniscript::slip77::MasterBlindingKey,
-        WalletTx,
     };
-    use std::{
-        collections::{BTreeMap, HashMap},
-        str::FromStr,
-        sync::Arc,
-    };
+    use std::{collections::HashMap, str::FromStr, sync::Arc};
 
     #[tokio::test]
     async fn test_recover_with_btc_lockup_and_lbtc_claim() {
@@ -556,46 +551,5 @@ mod test {
             .insert(claim_script.clone(), history);
 
         context
-    }
-
-    // Create a mock LBTC wallet transaction
-    fn create_mock_lbtc_wallet_tx(tx_id_hex: &str, height: u32, amount: i64) -> WalletTx {
-        let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
-
-        WalletTx {
-            txid: tx_id,
-            tx: create_empty_lbtc_transaction(),
-            height: Some(height),
-            fee: 1000,
-            timestamp: Some(1001), // Just after swap creation time
-            balance: {
-                let mut map = BTreeMap::new();
-                map.insert(
-                    AssetId::from_slice(&[0; 32]).unwrap(), // Default asset ID
-                    amount,
-                );
-                map
-            },
-            outputs: vec![],
-            inputs: Vec::new(),
-            type_: "".to_string(),
-        }
-    }
-
-    // Create an empty LBTC transaction
-    fn create_empty_lbtc_transaction() -> Transaction {
-        Transaction {
-            version: 2,
-            lock_time: elements::LockTime::from_height(0).unwrap(),
-            input: vec![TxIn {
-                previous_output: Default::default(),
-                is_pegin: false,
-                script_sig: elements::Script::new(),
-                sequence: elements::Sequence::default(),
-                asset_issuance: Default::default(),
-                witness: TxInWitness::empty(),
-            }],
-            output: vec![],
-        }
     }
 }

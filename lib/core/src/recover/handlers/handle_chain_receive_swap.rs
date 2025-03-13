@@ -3,11 +3,13 @@ use boltz_client::boltz::PairLimits;
 use boltz_client::ElementsAddress;
 use electrum_client::GetBalanceRes;
 use log::{debug, warn};
-use lwk_wollet::elements::{secp256k1_zkp, AddressParams, Txid};
+use lwk_wollet::elements::{secp256k1_zkp, AddressParams};
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 
 use crate::prelude::*;
 use crate::recover::model::*;
+
+use super::determine_incoming_lockup_and_claim_txs;
 
 /// Handler for updating chain receive swaps with recovered data
 pub(crate) struct ChainReceiveSwapHandler;
@@ -99,7 +101,6 @@ impl ChainReceiveSwapHandler {
         // Update the swap with recovered data
         Self::update_swap(
             chain_swap,
-            swap_id,
             &recovered_data,
             context.bitcoin_tip_height,
             is_local_within_grace_period,
@@ -109,7 +110,6 @@ impl ChainReceiveSwapHandler {
     /// Update a chain receive swap with recovered data
     pub fn update_swap(
         chain_swap: &mut ChainSwap,
-        _: &str,
         recovered_data: &RecoveredOnchainDataChainReceive,
         current_block_height: u32,
         is_local_within_grace_period: bool,
@@ -277,59 +277,6 @@ impl ChainReceiveSwapHandler {
             btc_user_lockup_amount_sat,
             btc_refund_tx_id,
         })
-    }
-}
-
-/// Helper function for determining lockup and claim transactions in incoming swaps
-fn determine_incoming_lockup_and_claim_txs(
-    history: &[HistoryTxId],
-    tx_map: &TxMap,
-) -> (Option<HistoryTxId>, Option<HistoryTxId>) {
-    match history.len() {
-        // Only lockup tx available
-        1 => (Some(history[0].clone()), None),
-        2 => {
-            let first = history[0].clone();
-            let second = history[1].clone();
-
-            if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
-                (Some(second), Some(first))
-            } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
-                // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
-                (Some(first), Some(second))
-            } else {
-                // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
-                // If so, we expect them to be confirmed at different heights
-                let first_conf_height = first.height;
-                let second_conf_height = second.height;
-                match (first.confirmed(), second.confirmed()) {
-                    // If they're both confirmed, the one with the lowest confirmation height is the lockup
-                    (true, true) => match first_conf_height < second_conf_height {
-                        true => (Some(first), None),
-                        false => (Some(second), None),
-                    },
-
-                    // If only one tx is confirmed, then that is the lockup
-                    (true, false) => (Some(first), None),
-                    (false, true) => (Some(second), None),
-
-                    // If neither is confirmed, this is an edge-case, and the most likely cause is an
-                    // out of date wallet tx_map that doesn't yet include one of the txs.
-                    (false, false) => {
-                        log::warn!(
-                            "Found 2 unconfirmed txs in the claim script history. \
-                            Unable to determine if they include a swapper refund or a user claim"
-                        );
-                        (None, None)
-                    }
-                }
-            }
-        }
-        n => {
-            log::warn!("Unexpected script history length {n} while recovering data for swap");
-            (None, None)
-        }
     }
 }
 

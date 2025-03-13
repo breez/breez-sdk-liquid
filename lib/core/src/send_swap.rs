@@ -123,12 +123,6 @@ impl SendSwapHandler {
                             return Err(anyhow!("Expected a Send swap"));
                         };
                         self.update_swap(s)?;
-                        // let preimage = self
-                        //     .get_preimage_from_script_path_claim_spend(&swap)
-                        //     .await?;
-                        // self.validate_send_swap_preimage(id, &swap.invoice, &preimage)
-                        //     .await?;
-                        // self.update_swap_info(id, Complete, Some(&preimage), None, None)?;
                     }
                 }
 

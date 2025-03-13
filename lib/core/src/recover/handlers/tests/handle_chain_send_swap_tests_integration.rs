@@ -4,7 +4,7 @@ mod test {
         chain::liquid::MockLiquidChainService,
         model::{ChainSwap, PaymentState, SwapMetadata},
         recover::{
-            handlers::ChainSendSwapHandler,
+            handlers::{tests::test::create_mock_lbtc_wallet_tx, ChainSendSwapHandler},
             model::{HistoryTxId, RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
@@ -15,16 +15,11 @@ mod test {
     };
     use lwk_wollet::{
         bitcoin::{transaction::Version, ScriptBuf, Sequence},
-        elements::{self, AssetId, Transaction, TxIn, TxInWitness},
+        elements::{self},
         elements_miniscript::slip77::MasterBlindingKey,
-        WalletTx,
     };
 
-    use std::{
-        collections::{BTreeMap, HashMap},
-        str::FromStr,
-        sync::Arc,
-    };
+    use std::{collections::HashMap, str::FromStr, sync::Arc};
 
     #[tokio::test]
     async fn test_recover_with_lbtc_lockup_and_btc_claim() {
@@ -455,47 +450,6 @@ mod test {
             .insert(script.clone(), txs.to_vec());
 
         context
-    }
-
-    // Create a mock LBTC wallet transaction
-    fn create_mock_lbtc_wallet_tx(tx_id_hex: &str, height: u32, amount: i64) -> WalletTx {
-        let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
-
-        WalletTx {
-            txid: tx_id,
-            tx: create_empty_lbtc_transaction(),
-            height: Some(height),
-            fee: 1000,
-            timestamp: Some(1001), // Just after swap creation time
-            balance: {
-                let mut map = BTreeMap::new();
-                map.insert(
-                    AssetId::from_slice(&[0; 32]).unwrap(), // Default asset ID
-                    amount,
-                );
-                map
-            },
-            outputs: Vec::new(),
-            inputs: Vec::new(),
-            type_: "".to_string(),
-        }
-    }
-
-    // Create an empty LBTC transaction
-    fn create_empty_lbtc_transaction() -> Transaction {
-        Transaction {
-            version: 2,
-            lock_time: elements::LockTime::from_height(0).unwrap(),
-            input: vec![TxIn {
-                previous_output: Default::default(),
-                is_pegin: false,
-                script_sig: elements::Script::new(),
-                sequence: elements::Sequence::default(),
-                asset_issuance: Default::default(),
-                witness: TxInWitness::empty(),
-            }],
-            output: vec![],
-        }
     }
 
     // Create a simple BTC transaction

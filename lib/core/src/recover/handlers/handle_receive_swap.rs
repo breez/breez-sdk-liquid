@@ -9,6 +9,8 @@ use std::str::FromStr;
 use crate::prelude::*;
 use crate::recover::model::*;
 
+use super::determine_incoming_lockup_and_claim_txs;
+
 /// Handler for updating receive swaps with recovered data
 pub(crate) struct ReceiveSwapHandler;
 
@@ -70,17 +72,12 @@ impl ReceiveSwapHandler {
         };
 
         // First obtain recovered data from the history
-        let recovered_data = Self::recover_onchain_data(
-            &context.tx_map,
-            swap_id,
-            &history,
-            receive_swap.created_at,
-        )?;
+        let recovered_data =
+            Self::recover_onchain_data(&context.tx_map, &history, receive_swap.created_at)?;
 
         // Update the swap with recovered data
         Self::update_swap(
             receive_swap,
-            swap_id,
             &recovered_data,
             context.liquid_tip_height,
             is_local_within_grace_period,
@@ -90,7 +87,6 @@ impl ReceiveSwapHandler {
     /// Update a receive swap with recovered data
     pub fn update_swap(
         receive_swap: &mut ReceiveSwap,
-        _: &str,
         recovered_data: &RecoveredOnchainDataReceive,
         current_block_height: u32,
         is_local_within_grace_period: bool,
@@ -136,7 +132,6 @@ impl ReceiveSwapHandler {
     /// no incorrect data is recovered. Transactions that are missing from `tx_map` are simply not recovered.
     fn recover_onchain_data(
         tx_map: &TxMap,
-        swap_id: &str,
         history: &ReceiveSwapHistory,
         swap_timestamp: u32,
     ) -> Result<RecoveredOnchainDataReceive> {
@@ -160,11 +155,8 @@ impl ReceiveSwapHandler {
             .and_then(|h| mrh_txs.get(&h.txid))
             .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
 
-        let (lockup_tx_id, claim_tx_id) = determine_incoming_lockup_and_claim_txs(
-            &history.lbtc_claim_script_history,
-            tx_map,
-            swap_id,
-        );
+        let (lockup_tx_id, claim_tx_id) =
+            determine_incoming_lockup_and_claim_txs(&history.lbtc_claim_script_history, tx_map);
 
         // Take only the lockup_tx_id and claim_tx_id if either are set,
         // otherwise take the mrh_tx_id and mrh_amount_sat
@@ -184,62 +176,6 @@ impl ReceiveSwapHandler {
         };
 
         Ok(recovered_onchain_data)
-    }
-}
-
-/// Helper function for determining lockup and claim transactions in incoming swaps
-fn determine_incoming_lockup_and_claim_txs(
-    history: &[HistoryTxId],
-    tx_map: &TxMap,
-    swap_id: &str,
-) -> (Option<HistoryTxId>, Option<HistoryTxId>) {
-    match history.len() {
-        // Only lockup tx available
-        1 => (Some(history[0].clone()), None),
-        2 => {
-            let first = history[0].clone();
-            let second = history[1].clone();
-
-            if tx_map.incoming_tx_map.contains_key::<Txid>(&first.txid) {
-                // If the first tx is a known incoming tx, it's the claim tx and the second is the lockup
-                (Some(second), Some(first))
-            } else if tx_map.incoming_tx_map.contains_key::<Txid>(&second.txid) {
-                // If the second tx is a known incoming tx, it's the claim tx and the first is the lockup
-                (Some(first), Some(second))
-            } else {
-                // If none of the 2 txs is the claim tx, then the txs are lockup and swapper refund
-                // If so, we expect them to be confirmed at different heights
-                let first_conf_height = first.height;
-                let second_conf_height = second.height;
-                match (first.confirmed(), second.confirmed()) {
-                    // If they're both confirmed, the one with the lowest confirmation height is the lockup
-                    (true, true) => match first_conf_height < second_conf_height {
-                        true => (Some(first), None),
-                        false => (Some(second), None),
-                    },
-
-                    // If only one tx is confirmed, then that is the lockup
-                    (true, false) => (Some(first), None),
-                    (false, true) => (Some(second), None),
-
-                    // If neither is confirmed, this is an edge-case, and the most likely cause is an
-                    // out of date wallet tx_map that doesn't yet include one of the txs.
-                    (false, false) => {
-                        log::warn!(
-                            "Found 2 unconfirmed txs in the claim script history of Swap {swap_id}. \
-                            Unable to determine if they include a swapper refund or a user claim"
-                        );
-                        (None, None)
-                    }
-                }
-            }
-        }
-        n => {
-            log::warn!(
-                "Unexpected script history length {n} while recovering data for Swap {swap_id}"
-            );
-            (None, None)
-        }
     }
 }
 
