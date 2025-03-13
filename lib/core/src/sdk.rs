@@ -280,6 +280,7 @@ impl LiquidSdkBuilder {
                         recoverer.clone(),
                         self.signer.clone(),
                         syncer_client,
+                        onchain_wallet.clone(),
                     )))
                 }
                 None => None,

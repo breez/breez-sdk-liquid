@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
 use electrum_client::GetBalanceRes;
-use log::{info, warn};
+use log::{debug, info, warn};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
@@ -72,7 +72,7 @@ impl Recoverer {
         let wallet_tip = self.onchain_wallet.tip().await;
         let liquid_tip = self.liquid_chain_service.tip().await?;
         if wallet_tip.abs_diff(liquid_tip) > LIQUID_TIP_LEEWAY {
-            log::debug!("Wallet and liquid chain service tips are too far apart, starting manual wallet sync");
+            debug!("Wallet and liquid chain service tips are too far apart, starting manual wallet sync");
             self.onchain_wallet.full_scan().await?;
         }
 

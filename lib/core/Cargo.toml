@@ -28,8 +28,8 @@ flutter_rust_bridge = { version = "=2.8.0", features = [
     "chrono",
 ], optional = true }
 log = { workspace = true }
-lwk_common = "0.8.0"
-lwk_signer = { version = "0.8.0", default-features = false }
+lwk_common = "0.9.0"
+lwk_signer = { version = "0.9.0", default-features = false }
 mockall = "0.13.1"
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
@@ -66,7 +66,7 @@ electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
     "proxy",
 ] }
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3" }
+lwk_wollet = { version = "0.9.0" }
 maybe-sync = { version = "0.1.1", features = ["sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
@@ -75,7 +75,7 @@ uuid = { version = "1.8.0", features = ["v4"] }
 # WASM dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
-lwk_wollet = { git = "https://github.com/breez/lwk", branch = "breez-sdk-liquid-0.6.3", default-features = false, features = [
+lwk_wollet = { version = "0.9.0", default-features = false, features = [
     "esplora",
 ] }
 maybe-sync = "0.1.1"
