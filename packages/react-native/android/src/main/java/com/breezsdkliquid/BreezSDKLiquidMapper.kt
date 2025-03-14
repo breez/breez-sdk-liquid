@@ -156,7 +156,8 @@ fun asAssetInfo(assetInfo: ReadableMap): AssetInfo? {
     val name = assetInfo.getString("name")!!
     val ticker = assetInfo.getString("ticker")!!
     val amount = assetInfo.getDouble("amount")
-    return AssetInfo(name, ticker, amount)
+    val fees = if (hasNonNullKey(assetInfo, "fees")) assetInfo.getDouble("fees") else null
+    return AssetInfo(name, ticker, amount, fees)
 }
 
 fun readableMapOf(assetInfo: AssetInfo): ReadableMap =
@@ -164,6 +165,7 @@ fun readableMapOf(assetInfo: AssetInfo): ReadableMap =
         "name" to assetInfo.name,
         "ticker" to assetInfo.ticker,
         "amount" to assetInfo.amount,
+        "fees" to assetInfo.fees,
     )
 
 fun asAssetInfoList(arr: ReadableArray): List<AssetInfo> {
@@ -194,7 +196,8 @@ fun asAssetMetadata(assetMetadata: ReadableMap): AssetMetadata? {
     val name = assetMetadata.getString("name")!!
     val ticker = assetMetadata.getString("ticker")!!
     val precision = assetMetadata.getInt("precision").toUByte()
-    return AssetMetadata(assetId, name, ticker, precision)
+    val fiatId = if (hasNonNullKey(assetMetadata, "fiatId")) assetMetadata.getString("fiatId") else null
+    return AssetMetadata(assetId, name, ticker, precision, fiatId)
 }
 
 fun readableMapOf(assetMetadata: AssetMetadata): ReadableMap =
@@ -203,6 +206,7 @@ fun readableMapOf(assetMetadata: AssetMetadata): ReadableMap =
         "name" to assetMetadata.name,
         "ticker" to assetMetadata.ticker,
         "precision" to assetMetadata.precision,
+        "fiatId" to assetMetadata.fiatId,
     )
 
 fun asAssetMetadataList(arr: ReadableArray): List<AssetMetadata> {
@@ -2285,21 +2289,22 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
             prepareSendResponse,
             arrayOf(
                 "destination",
-                "feesSat",
             ),
         )
     ) {
         return null
     }
     val destination = prepareSendResponse.getMap("destination")?.let { asSendDestination(it) }!!
-    val feesSat = prepareSendResponse.getDouble("feesSat").toULong()
-    return PrepareSendResponse(destination, feesSat)
+    val feesSat = if (hasNonNullKey(prepareSendResponse, "feesSat")) prepareSendResponse.getDouble("feesSat").toULong() else null
+    val fees = if (hasNonNullKey(prepareSendResponse, "fees")) prepareSendResponse.getDouble("fees") else null
+    return PrepareSendResponse(destination, feesSat, fees)
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
     readableMapOf(
         "destination" to readableMapOf(prepareSendResponse.destination),
         "feesSat" to prepareSendResponse.feesSat,
+        "fees" to prepareSendResponse.fees,
     )
 
 fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
@@ -2688,12 +2693,14 @@ fun asSendPaymentRequest(sendPaymentRequest: ReadableMap): SendPaymentRequest? {
         return null
     }
     val prepareResponse = sendPaymentRequest.getMap("prepareResponse")?.let { asPrepareSendResponse(it) }!!
-    return SendPaymentRequest(prepareResponse)
+    val assetPaysFees = if (hasNonNullKey(sendPaymentRequest, "assetPaysFees")) sendPaymentRequest.getBoolean("assetPaysFees") else null
+    return SendPaymentRequest(prepareResponse, assetPaysFees)
 }
 
 fun readableMapOf(sendPaymentRequest: SendPaymentRequest): ReadableMap =
     readableMapOf(
         "prepareResponse" to readableMapOf(sendPaymentRequest.prepareResponse),
+        "assetPaysFees" to sendPaymentRequest.assetPaysFees,
     )
 
 fun asSendPaymentRequestList(arr: ReadableArray): List<SendPaymentRequest> {
