@@ -2,12 +2,14 @@
 mod test {
     use crate::chain::liquid::MockLiquidChainService;
     use crate::prelude::*;
-    use crate::recover::handlers::tests::test::create_mock_lbtc_wallet_tx;
+    use crate::recover::handlers::tests::test::{
+        create_empty_lbtc_transaction, create_mock_lbtc_wallet_tx,
+    };
     use crate::recover::handlers::SendSwapHandler;
     use crate::recover::model::*;
     use crate::swapper::MockSwapper;
     use lwk_wollet::elements::script::Script;
-    use lwk_wollet::elements::{LockTime, Transaction, TxIn, TxInWitness, Txid};
+    use lwk_wollet::elements::Txid;
     use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
     use lwk_wollet::WalletTx;
     use mockall::predicate::*;
@@ -39,7 +41,7 @@ mod test {
         // Setup claim tx with preimage
         let claim_tx_id = "2222222222222222222222222222222222222222222222222222222222222222";
         let preimage = "49666c97f6cea07fa5780c22ece1f0c9957caf1e3c37b9037b4f64dc6d09be7f"; // base64 of "somepreimage1234567890"
-        let claim_tx = create_empty_transaction();
+        let claim_tx = create_empty_lbtc_transaction();
 
         // Setup the mock chain service to return our claim tx
         let mut mock_liquid_chain_service = MockLiquidChainService::new();
@@ -434,21 +436,5 @@ mod test {
             .insert(tx_id, wallet_tx.clone());
 
         (context, wallet_tx)
-    }
-
-    fn create_empty_transaction() -> Transaction {
-        Transaction {
-            version: 2,
-            lock_time: LockTime::from_height(0).unwrap(),
-            input: vec![TxIn {
-                previous_output: Default::default(),
-                is_pegin: false,
-                script_sig: Script::new(),
-                sequence: lwk_wollet::elements::Sequence::default(),
-                asset_issuance: Default::default(),
-                witness: TxInWitness::empty(),
-            }],
-            output: vec![],
-        }
     }
 }

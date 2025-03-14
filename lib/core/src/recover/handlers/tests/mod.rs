@@ -32,7 +32,7 @@ mod test {
     }
 
     // Create an empty LBTC transaction
-    fn create_empty_lbtc_transaction() -> Transaction {
+    pub(crate) fn create_empty_lbtc_transaction() -> Transaction {
         Transaction {
             version: 2,
             lock_time: elements::LockTime::from_height(0).unwrap(),
