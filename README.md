@@ -11,27 +11,26 @@ To provide the best experience for their end-users, developers can choose betwee
 
 **The Breez SDK is free for developers.**
 
-## **What Is the Breez SDK - Nodeless *(Liquid Implementation)*?**
+## **What Is the Breez SDK - Nodeless *(Liquid Implementation)*?**
 
-It’s a nodeless Lightning integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps.
+It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll able to:
 
-**Core Functions**
-
-- **Sending payments** *via protocols such as: bolt11, lnurl-pay, lightning address, btc address.*
-- **Receiving payments** *via protocols such as: bolt11, lnurl-withdraw, btc address.*
-- **Interacting with a wallet** *e.g. balance, max allow to pay, max allow to receive, on-chain balance.*
-
+- **Send payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Pay, Lightning address, BTC address
+- **Receive payments** via various protocols such as: Bolt11, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
+  
 **Key Features**
 
-- [x]  On-chain interoperability
-- [x]  LNURL functionality
-- [x]  Multi-app support
-- [x]  Multi-device support
-- [x]  Real-time state backup
-- [x]  Keys are only held by users
-- [x]  USDT and multi-asset support
-- [x]  Fiat on-ramps
-- [x]  Open-source
+- [x] Send and receive Lightning payments 
+- [x] On-chain interoperability
+- [x] Complete LNURL functionality
+- [x] Multi-app support
+- [x] Multi-device support
+- [x] Real-time state backup
+- [x] Keys are only held by users
+- [x] USDT and multi-asset support on Liquid
+- [x] Built-in fiat on-ramp
+- [x] Free open-source solution
+
 
 ## Getting Started 
 
