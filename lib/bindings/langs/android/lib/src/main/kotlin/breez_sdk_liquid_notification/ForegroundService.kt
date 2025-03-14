@@ -15,9 +15,11 @@ import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INFO
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INVOICE
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_FOREGROUND_SERVICE
+import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_REPLACEABLE
 import breez_sdk_liquid_notification.Constants.SERVICE_TIMEOUT_MS
 import breez_sdk_liquid_notification.Constants.SHUTDOWN_DELAY_MS
 import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyForegroundService
+import breez_sdk_liquid_notification.NotificationHelper.Companion.cancelNotification
 import breez_sdk_liquid_notification.job.Job
 import breez_sdk_liquid_notification.job.LnurlPayInfoJob
 import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
@@ -97,6 +99,7 @@ abstract class ForegroundService :
 
     open fun shutdown() {
         logger.log(TAG, "Shutting down foreground service", "DEBUG")
+        cancelNotification(applicationContext, NOTIFICATION_ID_REPLACEABLE)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
