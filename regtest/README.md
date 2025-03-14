@@ -2,6 +2,14 @@
 
 Based on [Boltz Regtest](https://github.com/BoltzExchange/regtest) (included as a submodule in `./boltz`)
 
+## Setup
+
+To use the regtest environment, git submodules have to be initialized.
+
+```bash
+git submodule update --init
+```
+
 ## Usage
 
 ```bash
@@ -12,4 +20,4 @@ Based on [Boltz Regtest](https://github.com/BoltzExchange/regtest) (included as 
 ./stop.sh
 ```
 
-See `boltz/README.md` for more info.
+See [Boltz Regtest README](https://github.com/BoltzExchange/regtest/blob/master/README.md) for more info.
