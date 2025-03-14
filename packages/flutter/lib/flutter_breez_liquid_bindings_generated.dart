@@ -4849,6 +4849,10 @@ final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
   external ffi.Pointer<wire_cst_asset_info> asset_info;
+
+  external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {

@@ -542,6 +542,8 @@ typedef struct wire_cst_PaymentDetails_Liquid {
   struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *asset_id;
   struct wire_cst_asset_info *asset_info;
+  struct wire_cst_ln_url_info *lnurl_info;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_PaymentDetails_Liquid;
 
 typedef struct wire_cst_PaymentDetails_Bitcoin {

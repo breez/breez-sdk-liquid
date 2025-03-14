@@ -1457,7 +1457,7 @@ impl LiquidSdk {
                 invoice,
                 bip353_address,
             } => {
-                let response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
+                let mut response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
                 if bip353_address.is_some() {
                     if let (Some(tx_id), Some(destination)) =
                         (&response.payment.tx_id, &response.payment.destination)
@@ -1470,6 +1470,10 @@ impl LiquidSdk {
                                 lnurl_info: None,
                                 bip353_address: bip353_address.clone(),
                             })?;
+                        // Get the payment with the bip353_address details
+                        if let Some(payment) = self.persister.get_payment(tx_id)? {
+                            response.payment = payment;
+                        }
                     }
                 }
                 Ok(response)
@@ -1483,7 +1487,7 @@ impl LiquidSdk {
                     .swapper
                     .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
                     .await?;
-                let response = self
+                let mut response = self
                     .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
                     .await?;
                 if bip353_address.is_some() {
@@ -1498,6 +1502,10 @@ impl LiquidSdk {
                                 lnurl_info: None,
                                 bip353_address: bip353_address.clone(),
                             })?;
+                        // Get the payment with the bip353_address details
+                        if let Some(payment) = self.persister.get_payment(tx_id)? {
+                            response.payment = payment;
+                        }
                     }
                 }
                 Ok(response)
@@ -1672,6 +1680,8 @@ impl LiquidSdk {
             destination,
             description: description.unwrap_or("Liquid transfer".to_string()),
             asset_info,
+            lnurl_info: None,
+            bip353_address: None,
         };
 
         Ok(SendPaymentResponse {
@@ -3511,7 +3521,7 @@ impl LiquidSdk {
         req: model::LnUrlPayRequest,
     ) -> Result<LnUrlPayResult, LnUrlPayError> {
         let prepare_response = req.prepare_response;
-        let payment = self
+        let mut payment = self
             .send_payment(&SendPaymentRequest {
                 prepare_response: PrepareSendResponse {
                     destination: prepare_response.destination.clone(),
@@ -3589,7 +3599,7 @@ impl LiquidSdk {
         {
             self.persister
                 .insert_or_update_payment_details(PaymentTxDetails {
-                    tx_id,
+                    tx_id: tx_id.clone(),
                     destination,
                     description,
                     lnurl_info: Some(LnUrlInfo {
@@ -3603,6 +3613,8 @@ impl LiquidSdk {
                     }),
                     bip353_address: None,
                 })?;
+            // Get the payment with the lnurl_info details
+            payment = self.persister.get_payment(&tx_id)?.unwrap_or(payment);
         }
 
         Ok(LnUrlPayResult::EndpointSuccess {

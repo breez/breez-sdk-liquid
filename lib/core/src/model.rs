@@ -1648,6 +1648,12 @@ pub enum PaymentDetails {
 
         /// The asset info derived from the [AssetMetadata]
         asset_info: Option<AssetInfo>,
+
+        /// The payment LNURL info
+        lnurl_info: Option<LnUrlInfo>,
+
+        /// The BIP353 address used to resolve this payment
+        bip353_address: Option<String>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {

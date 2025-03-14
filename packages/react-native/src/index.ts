@@ -700,6 +700,8 @@ export type PaymentDetails = {
     destination: string
     description: string
     assetInfo?: AssetInfo
+    lnurlInfo?: LnUrlInfo
+    bip353Address?: string
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string

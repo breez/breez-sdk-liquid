@@ -4233,7 +4233,14 @@ enum BreezSDKLiquidMapper {
                 _assetInfo = try asAssetInfo(assetInfo: assetInfoTmp)
             }
 
-            return PaymentDetails.liquid(assetId: _assetId, destination: _destination, description: _description, assetInfo: _assetInfo)
+            var _lnurlInfo: LnUrlInfo?
+            if let lnurlInfoTmp = paymentDetails["lnurlInfo"] as? [String: Any?] {
+                _lnurlInfo = try asLnUrlInfo(lnUrlInfo: lnurlInfoTmp)
+            }
+
+            let _bip353Address = paymentDetails["bip353Address"] as? String
+
+            return PaymentDetails.liquid(assetId: _assetId, destination: _destination, description: _description, assetInfo: _assetInfo, lnurlInfo: _lnurlInfo, bip353Address: _bip353Address)
         }
         if type == "bitcoin" {
             guard let _swapId = paymentDetails["swapId"] as? String else {
@@ -4284,7 +4291,7 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .liquid(
-            assetId, destination, description, assetInfo
+            assetId, destination, description, assetInfo, lnurlInfo, bip353Address
         ):
             return [
                 "type": "liquid",
@@ -4292,6 +4299,8 @@ enum BreezSDKLiquidMapper {
                 "destination": destination,
                 "description": description,
                 "assetInfo": assetInfo == nil ? nil : dictionaryOf(assetInfo: assetInfo!),
+                "lnurlInfo": lnurlInfo == nil ? nil : dictionaryOf(lnUrlInfo: lnurlInfo!),
+                "bip353Address": bip353Address == nil ? nil : bip353Address,
             ]
 
         case let .bitcoin(

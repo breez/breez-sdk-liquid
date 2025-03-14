@@ -896,6 +896,12 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// The asset info derived from the [AssetMetadata]
     AssetInfo? assetInfo,
+
+    /// The payment LNURL info
+    LnUrlInfo? lnurlInfo,
+
+    /// The BIP353 address used to resolve this payment
+    String? bip353Address,
   }) = PaymentDetails_Liquid;
 
   /// Swapping to or from the Bitcoin chain

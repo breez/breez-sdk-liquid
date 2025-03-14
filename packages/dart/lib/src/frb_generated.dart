@@ -2773,6 +2773,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           description: dco_decode_String(raw[2]),
           assetId: dco_decode_String(raw[3]),
           assetInfo: dco_decode_opt_box_autoadd_asset_info(raw[4]),
+          lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[5]),
+          bip353Address: dco_decode_opt_String(raw[6]),
         );
       case 2:
         return PaymentDetails_Bitcoin(
@@ -5089,11 +5091,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_description = sse_decode_String(deserializer);
         var var_assetId = sse_decode_String(deserializer);
         var var_assetInfo = sse_decode_opt_box_autoadd_asset_info(deserializer);
+        var var_lnurlInfo = sse_decode_opt_box_autoadd_ln_url_info(deserializer);
+        var var_bip353Address = sse_decode_opt_String(deserializer);
         return PaymentDetails_Liquid(
           destination: var_destination,
           description: var_description,
           assetId: var_assetId,
           assetInfo: var_assetInfo,
+          lnurlInfo: var_lnurlInfo,
+          bip353Address: var_bip353Address,
         );
       case 2:
         var var_swapId = sse_decode_String(deserializer);
@@ -7319,12 +7325,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         description: final description,
         assetId: final assetId,
         assetInfo: final assetInfo,
+        lnurlInfo: final lnurlInfo,
+        bip353Address: final bip353Address,
       ):
         sse_encode_i_32(1, serializer);
         sse_encode_String(destination, serializer);
         sse_encode_String(description, serializer);
         sse_encode_String(assetId, serializer);
         sse_encode_opt_box_autoadd_asset_info(assetInfo, serializer);
+        sse_encode_opt_box_autoadd_ln_url_info(lnurlInfo, serializer);
+        sse_encode_opt_String(bip353Address, serializer);
       case PaymentDetails_Bitcoin(
         swapId: final swapId,
         description: final description,
