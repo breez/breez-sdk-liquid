@@ -3479,9 +3479,8 @@ impl LiquidSdk {
                             bip353_address: req.bip353_address,
                         }
                     } else {
-                        return Err(LnUrlPayError::Generic {
-                            err: "SendDestination for LNURL Pay is not BOLT11 invoice".to_string(),
-                        });
+                        // Destination is a Liquid address for the drain request
+                        prepare_response.destination
                     };
 
                 Ok(PrepareLnUrlPayResponse {
