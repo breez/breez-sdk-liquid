@@ -1300,7 +1300,14 @@ abstract class _$$PaymentDetails_LiquidImplCopyWith<$Res> implements $PaymentDet
   ) = __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String destination, String description, String assetId, AssetInfo? assetInfo});
+  $Res call({
+    String destination,
+    String description,
+    String assetId,
+    AssetInfo? assetInfo,
+    LnUrlInfo? lnurlInfo,
+    String? bip353Address,
+  });
 }
 
 /// @nodoc
@@ -1321,6 +1328,8 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
     Object? description = null,
     Object? assetId = null,
     Object? assetInfo = freezed,
+    Object? lnurlInfo = freezed,
+    Object? bip353Address = freezed,
   }) {
     return _then(
       _$PaymentDetails_LiquidImpl(
@@ -1344,6 +1353,16 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
                 ? _value.assetInfo
                 : assetInfo // ignore: cast_nullable_to_non_nullable
                     as AssetInfo?,
+        lnurlInfo:
+            freezed == lnurlInfo
+                ? _value.lnurlInfo
+                : lnurlInfo // ignore: cast_nullable_to_non_nullable
+                    as LnUrlInfo?,
+        bip353Address:
+            freezed == bip353Address
+                ? _value.bip353Address
+                : bip353Address // ignore: cast_nullable_to_non_nullable
+                    as String?,
       ),
     );
   }
@@ -1357,6 +1376,8 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
     required this.description,
     required this.assetId,
     this.assetInfo,
+    this.lnurlInfo,
+    this.bip353Address,
   }) : super._();
 
   /// Represents either a Liquid BIP21 URI or pure address
@@ -1375,9 +1396,17 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
   @override
   final AssetInfo? assetInfo;
 
+  /// The payment LNURL info
+  @override
+  final LnUrlInfo? lnurlInfo;
+
+  /// The BIP353 address used to resolve this payment
+  @override
+  final String? bip353Address;
+
   @override
   String toString() {
-    return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo)';
+    return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address)';
   }
 
   @override
@@ -1388,11 +1417,14 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
             (identical(other.destination, destination) || other.destination == destination) &&
             (identical(other.description, description) || other.description == description) &&
             (identical(other.assetId, assetId) || other.assetId == assetId) &&
-            (identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo));
+            (identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo) &&
+            (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, destination, description, assetId, assetInfo);
+  int get hashCode =>
+      Object.hash(runtimeType, destination, description, assetId, assetInfo, lnurlInfo, bip353Address);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1409,6 +1441,8 @@ abstract class PaymentDetails_Liquid extends PaymentDetails {
     required final String description,
     required final String assetId,
     final AssetInfo? assetInfo,
+    final LnUrlInfo? lnurlInfo,
+    final String? bip353Address,
   }) = _$PaymentDetails_LiquidImpl;
   const PaymentDetails_Liquid._() : super._();
 
@@ -1424,6 +1458,12 @@ abstract class PaymentDetails_Liquid extends PaymentDetails {
 
   /// The asset info derived from the [AssetMetadata]
   AssetInfo? get assetInfo;
+
+  /// The payment LNURL info
+  LnUrlInfo? get lnurlInfo;
+
+  /// The BIP353 address used to resolve this payment
+  String? get bip353Address;
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.

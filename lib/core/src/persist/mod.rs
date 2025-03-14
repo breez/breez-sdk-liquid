@@ -825,6 +825,8 @@ impl Persister {
                         .unwrap_or("Liquid transfer".to_string()),
                     asset_id,
                     asset_info,
+                    lnurl_info: maybe_payment_details_lnurl_info,
+                    bip353_address: maybe_payment_details_bip353_address,
                 }
             }
         };

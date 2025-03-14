@@ -3959,11 +3959,15 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_assetId = <String>::sse_decode(deserializer);
                 let mut var_assetInfo = <Option<crate::model::AssetInfo>>::sse_decode(deserializer);
+                let mut var_lnurlInfo = <Option<crate::model::LnUrlInfo>>::sse_decode(deserializer);
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Liquid {
                     destination: var_destination,
                     description: var_description,
                     asset_id: var_assetId,
                     asset_info: var_assetInfo,
+                    lnurl_info: var_lnurlInfo,
+                    bip353_address: var_bip353Address,
                 };
             }
             2 => {
@@ -6284,12 +6288,16 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 description,
                 asset_id,
                 asset_info,
+                lnurl_info,
+                bip353_address,
             } => [
                 1.into_dart(),
                 destination.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
                 asset_id.into_into_dart().into_dart(),
                 asset_info.into_into_dart().into_dart(),
+                lnurl_info.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::model::PaymentDetails::Bitcoin {
@@ -8578,12 +8586,16 @@ impl SseEncode for crate::model::PaymentDetails {
                 description,
                 asset_id,
                 asset_info,
+                lnurl_info,
+                bip353_address,
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(destination, serializer);
                 <String>::sse_encode(description, serializer);
                 <String>::sse_encode(asset_id, serializer);
                 <Option<crate::model::AssetInfo>>::sse_encode(asset_info, serializer);
+                <Option<crate::model::LnUrlInfo>>::sse_encode(lnurl_info, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
             }
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
@@ -10803,6 +10815,8 @@ mod io {
                         description: ans.description.cst_decode(),
                         asset_id: ans.asset_id.cst_decode(),
                         asset_info: ans.asset_info.cst_decode(),
+                        lnurl_info: ans.lnurl_info.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                     }
                 }
                 2 => {
@@ -14598,6 +14612,8 @@ mod io {
         description: *mut wire_cst_list_prim_u_8_strict,
         asset_id: *mut wire_cst_list_prim_u_8_strict,
         asset_info: *mut wire_cst_asset_info,
+        lnurl_info: *mut wire_cst_ln_url_info,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

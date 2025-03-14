@@ -3479,7 +3479,18 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Liquid(assetId, destination, description, assetInfo)
+        val lnurlInfo =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "lnurlInfo",
+                )
+            ) {
+                paymentDetails.getMap("lnurlInfo")?.let { asLnUrlInfo(it) }
+            } else {
+                null
+            }
+        val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
+        return PaymentDetails.Liquid(assetId, destination, description, assetInfo, lnurlInfo, bip353Address)
     }
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
@@ -3556,6 +3567,8 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "destination", paymentDetails.destination)
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "assetInfo", paymentDetails.assetInfo?.let { readableMapOf(it) })
+            pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
+            pushToMap(map, "bip353Address", paymentDetails.bip353Address)
         }
         is PaymentDetails.Bitcoin -> {
             pushToMap(map, "type", "bitcoin")
