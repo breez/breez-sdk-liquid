@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use log::{info, trace, warn};
+use log::{debug, info, trace, warn};
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
@@ -428,15 +428,32 @@ impl SyncService {
                 .into_iter()
                 .partition(|result| matches!(result.record.data, SyncData::LastDerivationIndex(_)));
 
-        // Step 5: Apply derivation index updates and sync wallet (step 6 requires an updated wallet)
-        for decryption_info in decrypted_last_derivation_index_info {
-            if let Err(e) = self.commit_record(&decryption_info, None) {
-                warn!("Could not commit last derivation index record: {e:?}");
-                continue;
+        // Step 5: Apply derivation index updates and sync wallet if required (step 6 requires an updated wallet)
+        if !decrypted_last_derivation_index_info.is_empty() {
+            let initial_last_derivation_index = self
+                .persister
+                .get_last_derivation_index()?
+                .unwrap_or_default();
+            for decryption_info in decrypted_last_derivation_index_info {
+                if let Err(e) = self.commit_record(&decryption_info, None) {
+                    warn!("Could not commit last derivation index record: {e:?}");
+                    continue;
+                }
+                succeded.push(decryption_info.record.id);
             }
-            succeded.push(decryption_info.record.id);
+            let updated_last_derivation_index = self
+                .persister
+                .get_last_derivation_index()?
+                .unwrap_or_default();
+
+            if updated_last_derivation_index > initial_last_derivation_index
+                && !decrypted_swap_info.is_empty()
+            {
+                debug!("Last derivation index updated ({initial_last_derivation_index} -> {updated_last_derivation_index}) \
+                on pull that contains swap records. Starting wallet full scan...");
+                self.onchain_wallet.full_scan().await?;
+            }
         }
-        self.onchain_wallet.full_scan().await?;
 
         // Step 6: Recover the swap records' data from onchain, and commit it
         for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
