@@ -1,0 +1,3 @@
+[submodule "regtest/boltz"]
+	path = regtest/boltz
+	url = https://github.com/BoltzExchange/regtest.git
