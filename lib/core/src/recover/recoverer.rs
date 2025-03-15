@@ -169,7 +169,6 @@ impl Recoverer {
     ///
     /// ### Arguments
     ///
-    /// - `tx_map`: all known onchain txs of this wallet at this time, essentially our own LWK cache.
     /// - `swaps`: immutable data of the swaps for which we want to recover onchain data.
     ///
     /// Returns the raw onchain tx map used for recovery.
