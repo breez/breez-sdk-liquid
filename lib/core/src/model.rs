@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use boltz_client::{
     bitcoin::ScriptBuf,
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
-    network::Chain,
+    network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
@@ -203,11 +203,11 @@ pub enum LiquidNetwork {
     Regtest,
 }
 impl LiquidNetwork {
-    pub fn as_bitcoin_chain(&self) -> Chain {
+    pub fn as_bitcoin_chain(&self) -> BitcoinChain {
         match self {
-            LiquidNetwork::Mainnet => Chain::Bitcoin,
-            LiquidNetwork::Testnet => Chain::BitcoinTestnet,
-            LiquidNetwork::Regtest => Chain::BitcoinRegtest,
+            LiquidNetwork::Mainnet => BitcoinChain::Bitcoin,
+            LiquidNetwork::Testnet => BitcoinChain::BitcoinTestnet,
+            LiquidNetwork::Regtest => BitcoinChain::BitcoinRegtest,
         }
     }
 }
@@ -229,10 +229,16 @@ impl From<LiquidNetwork> for ElementsNetwork {
 
 impl From<LiquidNetwork> for Chain {
     fn from(value: LiquidNetwork) -> Self {
+        Chain::Liquid(value.into())
+    }
+}
+
+impl From<LiquidNetwork> for LiquidChain {
+    fn from(value: LiquidNetwork) -> Self {
         match value {
-            LiquidNetwork::Mainnet => Chain::Liquid,
-            LiquidNetwork::Testnet => Chain::LiquidTestnet,
-            LiquidNetwork::Regtest => Chain::LiquidRegtest,
+            LiquidNetwork::Mainnet => LiquidChain::Liquid,
+            LiquidNetwork::Testnet => LiquidChain::LiquidTestnet,
+            LiquidNetwork::Regtest => LiquidChain::LiquidRegtest,
         }
     }
 }

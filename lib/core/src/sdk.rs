@@ -235,18 +235,19 @@ impl LiquidSdkBuilder {
         let event_manager = Arc::new(EventManager::new());
         let (shutdown_sender, shutdown_receiver) = watch::channel::<()>(());
 
-        let swapper: Arc<dyn Swapper> = match self.swapper.clone() {
-            Some(swapper) => swapper,
-            None => {
-                let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
-                Arc::new(BoltzSwapper::new(self.config.clone(), proxy_url_fetcher))
-            }
-        };
-
-        let status_stream: Arc<dyn SwapperStatusStream> = match self.status_stream.clone() {
-            Some(status_stream) => status_stream,
-            None => Arc::from(swapper.create_status_stream()),
-        };
+        let (swapper, status_stream): (Arc<dyn Swapper>, Arc<dyn SwapperStatusStream>) =
+            match (self.swapper.clone(), self.status_stream.clone()) {
+                (Some(swapper), Some(status_stream)) => (swapper, status_stream),
+                (maybe_swapper, maybe_status_stream) => {
+                    let proxy_url_fetcher = Arc::new(BoltzProxyFetcher::new(persister.clone()));
+                    let boltz_swapper =
+                        Arc::new(BoltzSwapper::new(self.config.clone(), proxy_url_fetcher)?);
+                    (
+                        maybe_swapper.unwrap_or(boltz_swapper.clone()),
+                        maybe_status_stream.unwrap_or(boltz_swapper),
+                    )
+                }
+            };
 
         let recoverer = match self.recoverer.clone() {
             Some(recoverer) => recoverer,
@@ -3829,7 +3830,7 @@ mod tests {
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
-        boltz::{self, SwapUpdateTxDetails},
+        boltz::{self, TransactionInfo},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
     use lwk_wollet::{elements::Txid, hashes::hex::DisplayHex};
@@ -3960,11 +3961,12 @@ mod tests {
 
             $status_stream
                 .clone()
-                .send_mock_update(boltz::Update {
+                .send_mock_update(boltz::SwapStatus {
                     id: swap.id(),
                     status: $status.to_string(),
                     transaction: $transaction,
                     zero_conf_rejected: $zero_conf_rejected,
+                    ..Default::default()
                 })
                 .await
                 .unwrap();
@@ -4044,10 +4046,12 @@ mod tests {
                     persister,
                     status_stream,
                     status,
-                    Some(SwapUpdateTxDetails {
+                    Some(TransactionInfo {
                         id: mock_tx_id.to_string(),
-                        hex: lwk_wollet::elements::encode::serialize(&mock_tx)
-                            .to_lower_hex_string(),
+                        hex: Some(
+                            lwk_wollet::elements::encode::serialize(&mock_tx).to_lower_hex_string()
+                        ),
+                        eta: None,
                     }),
                     None
                 );
@@ -4078,10 +4082,12 @@ mod tests {
                     persister,
                     status_stream,
                     status,
-                    Some(SwapUpdateTxDetails {
+                    Some(TransactionInfo {
                         id: mock_tx_id.to_string(),
-                        hex: lwk_wollet::elements::encode::serialize(&mock_tx)
-                            .to_lower_hex_string(),
+                        hex: Some(
+                            lwk_wollet::elements::encode::serialize(&mock_tx).to_lower_hex_string()
+                        ),
+                        eta: None
                     }),
                     None
                 );
@@ -4295,9 +4301,10 @@ mod tests {
                         persister,
                         status_stream,
                         status,
-                        Some(SwapUpdateTxDetails {
+                        Some(TransactionInfo {
                             id: mock_user_lockup_tx_id.clone(),
-                            hex: mock_user_lockup_tx_hex.clone(),
+                            hex: Some(mock_user_lockup_tx_hex.clone()),
+                            eta: None
                         }), // sets `update.transaction`
                         Some(true) // sets `update.zero_conf_rejected`
                     );
@@ -4323,9 +4330,10 @@ mod tests {
                         persister,
                         status_stream,
                         ChainSwapStates::TransactionServerMempool,
-                        Some(SwapUpdateTxDetails {
+                        Some(TransactionInfo {
                             id: mock_server_lockup_tx_id.clone(),
-                            hex: mock_server_lockup_tx_hex.clone(),
+                            hex: Some(mock_server_lockup_tx_hex.clone()),
+                            eta: None,
                         }),
                         None
                     );
@@ -4351,9 +4359,10 @@ mod tests {
                     persister,
                     status_stream,
                     ChainSwapStates::TransactionServerConfirmed,
-                    Some(SwapUpdateTxDetails {
+                    Some(TransactionInfo {
                         id: mock_server_lockup_tx_id,
-                        hex: mock_server_lockup_tx_hex,
+                        hex: Some(mock_server_lockup_tx_hex),
+                        eta: None,
                     }),
                     None
                 );

@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 use anyhow::{anyhow, bail, Context, Result};
 use boltz_client::{
     boltz::{self},
-    swaps::boltz::{ChainSwapStates, CreateChainResponse, SwapUpdateTxDetails},
+    swaps::boltz::{ChainSwapStates, CreateChainResponse, TransactionInfo},
     ElementsLockTime, Secp256k1, Serialize, ToHex,
 };
 use futures_util::TryFutureExt;
@@ -89,7 +89,7 @@ impl ChainSwapHandler {
     }
 
     /// Handles status updates from Boltz for Chain swaps
-    pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltz::SwapStatus) -> Result<()> {
         let id = &update.id;
         let swap = self.fetch_chain_swap_by_id(id)?;
 
@@ -191,7 +191,11 @@ impl ChainSwapHandler {
         Ok(())
     }
 
-    async fn on_new_incoming_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
+    async fn on_new_incoming_status(
+        &self,
+        swap: &ChainSwap,
+        update: &boltz::SwapStatus,
+    ) -> Result<()> {
         let id = update.id.clone();
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
@@ -511,7 +515,11 @@ impl ChainSwapHandler {
         }
     }
 
-    async fn on_new_outgoing_status(&self, swap: &ChainSwap, update: &boltz::Update) -> Result<()> {
+    async fn on_new_outgoing_status(
+        &self,
+        swap: &ChainSwap,
+        update: &boltz::SwapStatus,
+    ) -> Result<()> {
         let id = update.id.clone();
         let status = &update.status;
         let swap_state = ChainSwapStates::from_str(status)
@@ -1239,7 +1247,7 @@ impl ChainSwapHandler {
     async fn verify_server_lockup_tx(
         &self,
         chain_swap: &ChainSwap,
-        swap_update_tx: &SwapUpdateTxDetails,
+        swap_update_tx: &TransactionInfo,
         verify_confirmation: bool,
     ) -> Result<()> {
         match chain_swap.direction {
@@ -1265,7 +1273,7 @@ impl ChainSwapHandler {
     async fn verify_incoming_server_lockup_tx(
         &self,
         chain_swap: &ChainSwap,
-        swap_update_tx: &SwapUpdateTxDetails,
+        swap_update_tx: &TransactionInfo,
         verify_confirmation: bool,
     ) -> Result<()> {
         let swap_script = chain_swap.get_claim_swap_script()?;
@@ -1275,14 +1283,13 @@ impl ChainSwapHandler {
         let address = liquid_swap_script
             .to_address(self.config.network.into())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
+        let tx_hex = swap_update_tx
+            .hex
+            .as_ref()
+            .ok_or(anyhow!("Transaction info without hex"))?;
         let tx = self
             .liquid_chain_service
-            .verify_tx(
-                &address,
-                &swap_update_tx.id,
-                &swap_update_tx.hex,
-                verify_confirmation,
-            )
+            .verify_tx(&address, &swap_update_tx.id, tx_hex, verify_confirmation)
             .await?;
         // Verify RBF
         let rbf_explicit = tx.input.iter().any(|tx_in| tx_in.sequence.is_rbf());
@@ -1328,7 +1335,7 @@ impl ChainSwapHandler {
     async fn verify_outgoing_server_lockup_tx(
         &self,
         chain_swap: &ChainSwap,
-        swap_update_tx: &SwapUpdateTxDetails,
+        swap_update_tx: &TransactionInfo,
         verify_confirmation: bool,
     ) -> Result<()> {
         let swap_script = chain_swap.get_claim_swap_script()?;
@@ -1338,14 +1345,13 @@ impl ChainSwapHandler {
             .as_bitcoin_script()?
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Failed to get swap script address {e:?}"))?;
+        let tx_hex = swap_update_tx
+            .hex
+            .as_ref()
+            .ok_or(anyhow!("Transaction info without hex"))?;
         let tx = self
             .bitcoin_chain_service
-            .verify_tx(
-                &address,
-                &swap_update_tx.id,
-                &swap_update_tx.hex,
-                verify_confirmation,
-            )
+            .verify_tx(&address, &swap_update_tx.id, tx_hex, verify_confirmation)
             .await?;
         // Verify RBF
         let rbf_explicit = tx.input.iter().any(|input| input.sequence.is_rbf());

@@ -29,10 +29,11 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     BtcSwapTx::new_refund(
                         swap_script.as_bitcoin_script()?,
                         refund_address,
-                        &self.bitcoin_electrum_config,
+                        &self.bitcoin_electrum_client,
                         self.get_url().await?,
                         swap.id.clone(),
                     )
+                    .await
                 }
                 Direction::Outgoing => {
                     return Err(SdkError::generic(format!(
@@ -97,11 +98,13 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             false => None,
         };
 
-        let signed_tx = refund_tx.sign_refund(
-            &refund_keypair,
-            Fee::Absolute(broadcast_fees_sat),
-            cooperative,
-        )?;
+        let signed_tx = refund_tx
+            .sign_refund(
+                &refund_keypair,
+                Fee::Absolute(broadcast_fees_sat),
+                cooperative,
+            )
+            .await?;
         Ok(signed_tx)
     }
 
@@ -115,20 +118,23 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let claim_tx_wrapper = BtcSwapTx::new_claim(
             claim_swap_script,
             claim_address,
-            &self.bitcoin_electrum_config,
+            &self.bitcoin_electrum_client,
             self.get_url().await?,
             swap.id.clone(),
-        )?;
+        )
+        .await?;
 
         let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap).await?;
 
-        let signed_tx = claim_tx_wrapper.sign_claim(
-            &claim_keypair,
-            &Preimage::from_str(&swap.preimage)?,
-            Fee::Absolute(swap.claim_fees_sat),
-            self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
-                .await?,
-        )?;
+        let signed_tx = claim_tx_wrapper
+            .sign_claim(
+                &claim_keypair,
+                &Preimage::from_str(&swap.preimage)?,
+                Fee::Absolute(swap.claim_fees_sat),
+                self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
+                    .await?,
+            )
+            .await?;
 
         Ok(signed_tx)
     }

@@ -67,7 +67,7 @@ impl ReceiveSwapHandler {
     }
 
     /// Handles status updates from Boltz for Receive swaps
-    pub(crate) async fn on_new_status(&self, update: &boltz::Update) -> Result<()> {
+    pub(crate) async fn on_new_status(&self, update: &boltz::SwapStatus) -> Result<()> {
         let id = &update.id;
         let status = &update.status;
         let swap_state = RevSwapStates::from_str(status)
@@ -113,8 +113,11 @@ impl ReceiveSwapHandler {
                 }
 
                 // Looking for lockup script history to verify lockup was broadcasted
+                let tx_hex = transaction.hex.ok_or(anyhow!(
+                    "Missing lockup transaction hex in swap status update"
+                ))?;
                 let lockup_tx = match self
-                    .verify_lockup_tx(&receive_swap, &transaction.id, &transaction.hex, false)
+                    .verify_lockup_tx(&receive_swap, &transaction.id, &tx_hex, false)
                     .await
                 {
                     Ok(lockup_tx) => lockup_tx,
@@ -192,8 +195,11 @@ impl ReceiveSwapHandler {
                 }
 
                 // Looking for lockup script history to verify lockup was broadcasted and confirmed
+                let tx_hex = transaction.hex.ok_or(anyhow!(
+                    "Missing lockup transaction hex in swap status update"
+                ))?;
                 let lockup_tx = match self
-                    .verify_lockup_tx(&receive_swap, &transaction.id, &transaction.hex, true)
+                    .verify_lockup_tx(&receive_swap, &transaction.id, &tx_hex, true)
                     .await
                 {
                     Ok(lockup_tx) => lockup_tx,

@@ -118,8 +118,6 @@ pub trait Swapper: Send + Sync {
     /// Broadcasts a transaction and returns its id
     async fn broadcast_tx(&self, chain: Chain, tx_hex: &str) -> Result<String, PaymentError>;
 
-    fn create_status_stream(&self) -> Box<dyn SwapperStatusStream>;
-
     /// Look for a valid Magic Routing Hint. If found, validate it and extract the BIP21 info (amount, address).
     async fn check_for_mrh(
         &self,
@@ -139,8 +137,8 @@ pub trait SwapperStatusStream: Send + Sync {
         callback: Box<dyn SubscriptionHandler>,
         shutdown: watch::Receiver<()>,
     );
-    fn track_swap_id(&self, swap_id: &str) -> anyhow::Result<()>;
-    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::Update>;
+    fn track_swap_id(&self, swap_id: &str) -> Result<()>;
+    fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::SwapStatus>;
 }
 
 #[sdk_macros::async_trait]
