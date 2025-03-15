@@ -257,6 +257,7 @@ impl LiquidSdkBuilder {
                 onchain_wallet.clone(),
                 liquid_chain_service.clone(),
                 bitcoin_chain_service.clone(),
+                persister.clone(),
             )?),
         };
 

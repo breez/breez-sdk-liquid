@@ -62,6 +62,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         onchain_wallet.clone(),
         liquid_chain_service.clone(),
         bitcoin_chain_service.clone(),
+        persister.clone(),
     )?);
 
     let (_incoming_tx, _outgoing_records, sync_service) =
