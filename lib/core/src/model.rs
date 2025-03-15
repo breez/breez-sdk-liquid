@@ -193,7 +193,7 @@ impl Config {
 
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
 /// Bitcoin network used.
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Serialize)]
 pub enum LiquidNetwork {
     /// Mainnet Bitcoin and Liquid chains
     Mainnet,
@@ -526,13 +526,18 @@ pub enum SendDestination {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
-    pub fees_sat: u64,
+    /// The optional estimated fee in satioshi. Is only no set
+    /// when there is the option to pay fees using the asset being sent.
+    pub fees_sat: Option<u64>,
+    /// The optional estimated fee in the asset being sent
+    pub fees: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].
 #[derive(Debug, Serialize)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
+    pub asset_pays_fees: Option<bool>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].
@@ -656,9 +661,10 @@ impl WalletInfo {
         &self,
         network: LiquidNetwork,
         amount_sat: u64,
-        fees_sat: u64,
+        fees_sat: Option<u64>,
         asset_id: &str,
     ) -> Result<(), PaymentError> {
+        let fees_sat = fees_sat.unwrap_or(0);
         if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
             ensure_sdk!(
                 amount_sat + fees_sat <= self.balance_sat,
@@ -1565,6 +1571,8 @@ pub struct AssetMetadata {
     /// The precision used to display the asset amount.
     /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
     pub precision: u8,
+    /// The optional ID of the fiat currency used to represent the asset
+    pub fiat_id: Option<String>,
 }
 
 impl AssetMetadata {
@@ -1588,6 +1596,9 @@ pub struct AssetInfo {
     /// The amount calculated from the satoshi amount of the transaction, having its
     /// decimal shifted to the left by the [precision](AssetMetadata::precision)
     pub amount: f64,
+    /// The optional fees when paid using the asset, having its
+    /// decimal shifted to the left by the [precision](AssetMetadata::precision)
+    pub fees: Option<f64>,
 }
 
 /// The specific details of a payment, depending on its type
@@ -1825,10 +1836,21 @@ impl Payment {
                     s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
                 ),
             },
-            None => match tx.payment_type {
-                PaymentType::Receive => (tx.amount, 0),
-                PaymentType::Send => (tx.amount, tx.fees_sat),
-            },
+            None => {
+                let (amount_sat, fees_sat) = match tx.payment_type {
+                    PaymentType::Receive => (tx.amount, 0),
+                    PaymentType::Send => (tx.amount, tx.fees_sat),
+                };
+                // If the payment is a Liquid payment, we only show the amount if the asset
+                // is LBTC and only show the fees if the asset info has no set fees
+                match details {
+                    PaymentDetails::Liquid {
+                        asset_info: Some(ref asset_info),
+                        ..
+                    } if asset_info.ticker != "BTC" => (0, asset_info.fees.map_or(fees_sat, |_| 0)),
+                    _ => (amount_sat, fees_sat),
+                }
+            }
         };
         Payment {
             tx_id: Some(tx.tx_id),

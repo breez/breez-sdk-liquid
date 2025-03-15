@@ -18,10 +18,10 @@ use lwk_wollet::{
         self,
         bip32::{DerivationPath, Xpriv, Xpub},
     },
-    elements::{hex::ToHex, Address, Transaction, Txid},
+    elements::{hex::ToHex, pset::PartiallySignedTransaction, Address, AssetId, Transaction, Txid},
     elements_miniscript::{slip77::MasterBlindingKey, ToPublicKey as _},
     secp256k1::{All, Message},
-    WalletTx,
+    WalletTx, WalletTxOut,
 };
 
 pub(crate) struct MockWallet {
@@ -49,6 +49,10 @@ impl OnchainWallet for MockWallet {
 
     async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError> {
         Ok(Default::default())
+    }
+
+    async fn asset_utxos(&self, _asset_id: &AssetId) -> Result<Vec<WalletTxOut>, PaymentError> {
+        Ok(vec![])
     }
 
     async fn build_tx(
@@ -80,7 +84,18 @@ impl OnchainWallet for MockWallet {
         Ok(TEST_LIQUID_TX.clone())
     }
 
+    async fn sign_pset(
+        &self,
+        _pset: PartiallySignedTransaction,
+    ) -> Result<Transaction, PaymentError> {
+        Ok(TEST_LIQUID_TX.clone())
+    }
+
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
+        Ok(TEST_P2TR_ADDR.clone())
+    }
+
+    async fn next_unused_change_address(&self) -> Result<Address, PaymentError> {
         Ok(TEST_P2TR_ADDR.clone())
     }
 
