@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
-use log::{debug, info, trace, warn};
+use log::{info, trace, warn};
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
@@ -20,7 +20,6 @@ use crate::sync::model::data::{
 use crate::sync::model::DecryptionInfo;
 use crate::sync::model::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
-use crate::wallet::OnchainWallet;
 use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
     prelude::Signer,
@@ -48,7 +47,6 @@ pub(crate) struct SyncService {
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
     subscription_notifier: broadcast::Sender<Event>,
-    onchain_wallet: Arc<dyn OnchainWallet>,
 }
 
 impl SyncService {
@@ -58,7 +56,6 @@ impl SyncService {
         recoverer: Arc<Recoverer>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
-        onchain_wallet: Arc<dyn OnchainWallet>,
     ) -> Self {
         let client_id = uuid::Uuid::new_v4().to_string();
         let (subscription_notifier, _) = broadcast::channel::<Event>(30);
@@ -70,7 +67,6 @@ impl SyncService {
             signer,
             client,
             subscription_notifier,
-            onchain_wallet,
         }
     }
 
@@ -428,31 +424,13 @@ impl SyncService {
                 .into_iter()
                 .partition(|result| matches!(result.record.data, SyncData::LastDerivationIndex(_)));
 
-        // Step 5: Apply derivation index updates and sync wallet if required (step 6 requires an updated wallet)
-        if !decrypted_last_derivation_index_info.is_empty() {
-            let initial_last_derivation_index = self
-                .persister
-                .get_last_derivation_index()?
-                .unwrap_or_default();
-            for decryption_info in decrypted_last_derivation_index_info {
-                if let Err(e) = self.commit_record(&decryption_info, None) {
-                    warn!("Could not commit last derivation index record: {e:?}");
-                    continue;
-                }
-                succeded.push(decryption_info.record.id);
+        // Step 5: Apply derivation index updates (step 6 requires having knowledge of the last derivation index)
+        for decryption_info in decrypted_last_derivation_index_info {
+            if let Err(e) = self.commit_record(&decryption_info, None) {
+                warn!("Could not commit last derivation index record: {e:?}");
+                continue;
             }
-            let updated_last_derivation_index = self
-                .persister
-                .get_last_derivation_index()?
-                .unwrap_or_default();
-
-            if updated_last_derivation_index > initial_last_derivation_index
-                && !decrypted_swap_info.is_empty()
-            {
-                debug!("Last derivation index updated ({initial_last_derivation_index} -> {updated_last_derivation_index}) \
-                on pull that contains swap records. Starting wallet full scan...");
-                self.onchain_wallet.full_scan().await?;
-            }
+            succeded.push(decryption_info.record.id);
         }
 
         // Step 6: Recover the swap records' data from onchain, and commit it
@@ -602,6 +580,7 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
         let sync_data = vec![
@@ -615,12 +594,8 @@ mod tests {
             Record::new(sync_data[2].clone(), 3, signer.clone())?,
         ];
 
-        let (incoming_tx, _outgoing_records, sync_service) = new_sync_service(
-            persister.clone(),
-            recoverer,
-            signer.clone(),
-            onchain_wallet.clone(),
-        )?;
+        let (incoming_tx, _outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         for record in incoming_records {
             incoming_tx.send(record).await?;
@@ -706,14 +681,11 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
-        let (_incoming_tx, outgoing_records, sync_service) = new_sync_service(
-            persister.clone(),
-            recoverer,
-            signer.clone(),
-            onchain_wallet.clone(),
-        )?;
+        let (_incoming_tx, outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Test insert
         persister.insert_or_update_receive_swap(&new_receive_swap(None, None))?;
@@ -830,14 +802,11 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
-        let (incoming_tx, _outgoing_records, sync_service) = new_sync_service(
-            persister.clone(),
-            recoverer,
-            signer.clone(),
-            onchain_wallet.clone(),
-        )?;
+        let (incoming_tx, _outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Clean incoming
         let record = Record::new(
@@ -901,14 +870,11 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
-        let (incoming_tx, outgoing_records, sync_service) = new_sync_service(
-            persister.clone(),
-            recoverer,
-            signer.clone(),
-            onchain_wallet.clone(),
-        )?;
+        let (incoming_tx, outgoing_records, sync_service) =
+            new_sync_service(persister.clone(), recoverer, signer.clone())?;
 
         // Check pull
         assert_eq!(persister.get_cached_item(KEY_LAST_DERIVATION_INDEX)?, None);

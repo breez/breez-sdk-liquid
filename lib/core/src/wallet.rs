@@ -407,6 +407,9 @@ impl OnchainWallet for LiquidOnchainWallet {
                 }
                 Err(e) => Err(e.into()),
             };
+
+        self.persister.set_last_scanned_derivation_index(index)?;
+
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
         info!("lwk wallet full_scan duration: ({duration_ms} ms)");
         res

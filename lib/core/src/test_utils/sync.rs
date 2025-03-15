@@ -2,7 +2,6 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use crate::wallet::OnchainWallet;
 use crate::{
     persist::Persister,
     prelude::{Direction, Signer},
@@ -94,7 +93,6 @@ pub(crate) fn new_sync_service(
     persister: Arc<Persister>,
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
-    onchain_wallet: Arc<dyn OnchainWallet>,
 ) -> Result<(
     Sender<Record>,
     Arc<Mutex<HashMap<String, Record>>>,
@@ -109,7 +107,6 @@ pub(crate) fn new_sync_service(
         recoverer,
         signer.clone(),
         client,
-        onchain_wallet,
     );
 
     Ok((incoming_tx, outgoing_records, sync_service))
