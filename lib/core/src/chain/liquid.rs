@@ -13,11 +13,13 @@ use lwk_wollet::{
     hashes::{sha256, Hash},
     ElectrumUrl, History,
 };
+use mockall::automock;
 
 use crate::model::LiquidNetwork;
 use crate::prelude::Utxo;
 use crate::{model::Config, utils};
 
+#[automock]
 #[sdk_macros::async_trait]
 pub trait LiquidChainService: Send + Sync {
     /// Get the blockchain latest block
@@ -38,7 +40,7 @@ pub trait LiquidChainService: Send + Sync {
     /// Get the transactions involved in a list of scripts.
     ///
     /// The data is fetched in a single call from the Electrum endpoint.
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
+    async fn get_scripts_history(&self, scripts: &[Script]) -> Result<Vec<Vec<History>>>;
 
     /// Get the transactions involved in a list of scripts
     async fn get_script_history_with_retry(
@@ -169,7 +171,7 @@ impl LiquidChainService for HybridLiquidChainService {
         Ok(h.unwrap_or_default())
     }
 
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, scripts: &[Script]) -> Result<Vec<Vec<History>>> {
         let scripts: Vec<&bitcoin::Script> = scripts
             .iter()
             .map(|t| bitcoin::Script::from_bytes(t.as_bytes()))

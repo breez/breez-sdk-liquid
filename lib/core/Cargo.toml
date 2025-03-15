@@ -70,6 +70,7 @@ maybe-sync = { version = "0.1.1", features = ["sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
+mockall = "0.13.1"
 
 # WASM dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]

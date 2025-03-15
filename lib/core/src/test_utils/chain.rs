@@ -108,7 +108,7 @@ impl LiquidChainService for MockLiquidChainService {
         Ok(self.get_history().into_iter().map(Into::into).collect())
     }
 
-    async fn get_scripts_history(&self, _scripts: &[&ElementsScript]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, _scripts: &[ElementsScript]) -> Result<Vec<Vec<History>>> {
         Ok(vec![])
     }
 

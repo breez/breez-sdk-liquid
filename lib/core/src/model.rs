@@ -10,7 +10,7 @@ use boltz_client::{
 };
 use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
-use lwk_wollet::elements::AssetId;
+use lwk_wollet::elements::{script, AssetId};
 use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
@@ -1218,6 +1218,14 @@ pub(crate) struct ReceiveSwap {
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
         utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
+    }
+
+    pub(crate) fn claim_script(&self) -> Result<script::Script> {
+        Ok(self
+            .get_swap_script()?
+            .funding_addrs
+            .ok_or(anyhow!("No funding address found"))?
+            .script_pubkey())
     }
 
     pub(crate) fn get_boltz_create_response(&self) -> Result<CreateReverseResponse, PaymentError> {
