@@ -13,6 +13,7 @@ const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
 pub(crate) const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
+const KEY_LAST_SCANNED_DERIVATION_INDEX: &str = "last_scanned_derivation_index";
 
 impl Persister {
     fn get_cached_item_inner(tx: &Transaction, key: &str) -> Result<Option<String>> {
@@ -185,6 +186,19 @@ impl Persister {
         tx.commit()?;
         self.trigger_sync();
         Ok(res)
+    }
+
+    pub fn set_last_scanned_derivation_index(&self, index: u32) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        Self::update_cached_item_inner(&tx, KEY_LAST_SCANNED_DERIVATION_INDEX, index.to_string())?;
+        tx.commit()?;
+        Ok(())
+    }
+
+    pub fn get_last_scanned_derivation_index(&self) -> Result<Option<u32>> {
+        self.get_cached_item(KEY_LAST_SCANNED_DERIVATION_INDEX)
+            .map(|maybe_str| maybe_str.and_then(|str| str.as_str().parse::<u32>().ok()))
     }
 }
 

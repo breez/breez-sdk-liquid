@@ -62,14 +62,11 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         onchain_wallet.clone(),
         liquid_chain_service.clone(),
         bitcoin_chain_service.clone(),
+        persister.clone(),
     )?);
 
-    let (_incoming_tx, _outgoing_records, sync_service) = new_sync_service(
-        persister.clone(),
-        recoverer.clone(),
-        signer.clone(),
-        onchain_wallet.clone(),
-    )?;
+    let (_incoming_tx, _outgoing_records, sync_service) =
+        new_sync_service(persister.clone(), recoverer.clone(), signer.clone())?;
     let sync_service = Arc::new(sync_service);
 
     LiquidSdkBuilder::new(config, STAGING_BREEZSERVER_URL.into(), signer)?

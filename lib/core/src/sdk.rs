@@ -257,6 +257,7 @@ impl LiquidSdkBuilder {
                 onchain_wallet.clone(),
                 liquid_chain_service.clone(),
                 bitcoin_chain_service.clone(),
+                persister.clone(),
             )?),
         };
 
@@ -280,7 +281,6 @@ impl LiquidSdkBuilder {
                         recoverer.clone(),
                         self.signer.clone(),
                         syncer_client,
-                        onchain_wallet.clone(),
                     )))
                 }
                 None => None,
