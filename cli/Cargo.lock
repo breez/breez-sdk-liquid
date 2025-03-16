@@ -4146,7 +4146,7 @@ dependencies = [
 [[package]]
 name = "secp256k1-zkp"
 version = "0.11.0"
-source = "git+https://github.com/dangeross/rust-secp256k1-zkp.git?rev=57d29b15269ca2ce3c3b118b6a72b66c1169e7b1#57d29b15269ca2ce3c3b118b6a72b66c1169e7b1"
+source = "git+https://github.com/danielgranhao/rust-secp256k1-zkp.git?rev=eac2e479255a6e32b5588bc25ee53c642fdd8395#eac2e479255a6e32b5588bc25ee53c642fdd8395"
 dependencies = [
  "bitcoin-private",
  "rand 0.8.5",
@@ -4157,8 +4157,8 @@ dependencies = [
 
 [[package]]
 name = "secp256k1-zkp-sys"
-version = "0.10.0"
-source = "git+https://github.com/dangeross/rust-secp256k1-zkp.git?rev=57d29b15269ca2ce3c3b118b6a72b66c1169e7b1#57d29b15269ca2ce3c3b118b6a72b66c1169e7b1"
+version = "0.10.1"
+source = "git+https://github.com/danielgranhao/rust-secp256k1-zkp.git?rev=eac2e479255a6e32b5588bc25ee53c642fdd8395#eac2e479255a6e32b5588bc25ee53c642fdd8395"
 dependencies = [
  "cc",
  "secp256k1-sys 0.10.1",
