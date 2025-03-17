@@ -217,8 +217,8 @@ jobs:
 
       - name: Run bindings tests
         run: |
-          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
-          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
+          curl -o jna-5.14.0.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.14.0/jna-5.14.0.jar
+          export CLASSPATH=$(pwd)/jna-5.14.0.jar;
           cd lib/bindings
           cargo test
 
