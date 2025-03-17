@@ -381,34 +381,36 @@ impl OnchainWallet for LiquidOnchainWallet {
             })?;
 
         // Use the cached derivation index with a buffer of 5 to perform the scan
-        let index = self
+        let last_derivation_index = self
             .persister
             .get_last_derivation_index()?
-            .map(|i| i + 5)
             .unwrap_or_default();
+        let index_with_buffer = last_derivation_index + 5;
         let mut wallet = self.wallet.lock().await;
 
-        let res =
-            match lwk_wollet::full_scan_to_index_with_electrum_client(&mut wallet, index, client) {
-                Ok(()) => Ok(()),
-                Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
-                    warn!(
-                        "Full scan failed with update height too old, wiping storage and retrying"
-                    );
-                    let mut new_wallet =
-                        Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
-                    lwk_wollet::full_scan_to_index_with_electrum_client(
-                        &mut new_wallet,
-                        index,
-                        client,
-                    )?;
-                    *wallet = new_wallet;
-                    Ok(())
-                }
-                Err(e) => Err(e.into()),
-            };
+        let res = match lwk_wollet::full_scan_to_index_with_electrum_client(
+            &mut wallet,
+            index_with_buffer,
+            client,
+        ) {
+            Ok(()) => Ok(()),
+            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
+                warn!("Full scan failed with update height too old, wiping storage and retrying");
+                let mut new_wallet =
+                    Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
+                lwk_wollet::full_scan_to_index_with_electrum_client(
+                    &mut new_wallet,
+                    index_with_buffer,
+                    client,
+                )?;
+                *wallet = new_wallet;
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        };
 
-        self.persister.set_last_scanned_derivation_index(index)?;
+        self.persister
+            .set_last_scanned_derivation_index(last_derivation_index)?;
 
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
         info!("lwk wallet full_scan duration: ({duration_ms} ms)");
