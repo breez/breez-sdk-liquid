@@ -30,6 +30,7 @@ pub(crate) fn new_send_swap_handler(persister: Arc<Persister>) -> Result<SendSwa
         onchain_wallet.clone(),
         liquid_chain_service.clone(),
         bitcoin_chain_service.clone(),
+        persister.clone(),
     )?);
 
     Ok(SendSwapHandler::new(

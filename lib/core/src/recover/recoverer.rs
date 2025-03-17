@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
 use electrum_client::GetBalanceRes;
-use log::{info, warn};
+use log::{debug, info, warn};
 use lwk_wollet::elements::Txid;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
@@ -14,6 +14,7 @@ use super::handlers::{
 use super::model::*;
 
 use crate::model::Direction;
+use crate::persist::Persister;
 use crate::prelude::Swap;
 use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;
@@ -32,6 +33,7 @@ pub(crate) struct Recoverer {
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
+    persister: Arc<Persister>,
 }
 
 impl Recoverer {
@@ -41,6 +43,7 @@ impl Recoverer {
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<dyn BitcoinChainService>,
+        persister: Arc<Persister>,
     ) -> Result<Self> {
         Ok(Self {
             master_blinding_key: MasterBlindingKey::from_hex(
@@ -50,6 +53,7 @@ impl Recoverer {
             onchain_wallet,
             liquid_chain_service,
             bitcoin_chain_service,
+            persister,
         })
     }
 
@@ -69,12 +73,7 @@ impl Recoverer {
         &self,
         swaps: &mut [Swap],
     ) -> Result<HashMap<Txid, WalletTx>> {
-        let wallet_tip = self.onchain_wallet.tip().await;
-        let liquid_tip = self.liquid_chain_service.tip().await?;
-        if wallet_tip.abs_diff(liquid_tip) > LIQUID_TIP_LEEWAY {
-            log::debug!("Wallet and liquid chain service tips are too far apart, starting manual wallet sync");
-            self.onchain_wallet.full_scan().await?;
-        }
+        self.sync_wallet_if_needed().await?;
 
         let recovery_started_at = utils::now();
 
@@ -146,6 +145,44 @@ impl Recoverer {
         }
 
         Ok(raw_tx_map)
+    }
+
+    async fn sync_wallet_if_needed(&self) -> Result<()> {
+        let wallet_tip = self.onchain_wallet.tip().await;
+        let liquid_tip = self.liquid_chain_service.tip().await?;
+        let tip_difference = wallet_tip.abs_diff(liquid_tip);
+        let tips_too_far_apart = tip_difference > LIQUID_TIP_LEEWAY;
+
+        let last_used_derivation_index = self
+            .persister
+            .get_last_derivation_index()?
+            .unwrap_or_default();
+        let last_scanned_derivation_index = self
+            .persister
+            .get_last_scanned_derivation_index()?
+            .unwrap_or_default();
+        let has_unscanned_derivation_indices =
+            last_used_derivation_index > last_scanned_derivation_index;
+
+        if tips_too_far_apart || has_unscanned_derivation_indices {
+            if tips_too_far_apart {
+                debug!(
+                    "Starting manual wallet sync due to tips difference {} exceeding leeway {} (wallet: {}, liquid: {})",
+                    tip_difference,
+                    LIQUID_TIP_LEEWAY,
+                    wallet_tip,
+                    liquid_tip
+                );
+            }
+            if has_unscanned_derivation_indices {
+                debug!(
+                    "Starting manual wallet sync due to unscanned derivation indices {} to {}",
+                    last_scanned_derivation_index, last_used_derivation_index
+                );
+            }
+            self.onchain_wallet.full_scan().await?;
+        }
+        Ok(())
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services

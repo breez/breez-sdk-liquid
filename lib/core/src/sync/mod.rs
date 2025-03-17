@@ -414,33 +414,44 @@ impl SyncService {
             }
         }
 
-        // Step 4: Split each record into two categories: swap and non-swap
-        let (decrypted_swap_info, decrypted_non_swap_info): (
-            Vec<DecryptionInfo>,
-            Vec<DecryptionInfo>,
-        ) = decrypted
+        // Step 4: Split each record into swap, last derivation index and others
+        let (decrypted_swap_info, decrypted_non_swap_info): (Vec<_>, Vec<_>) = decrypted
             .into_iter()
             .partition(|result| result.record.data.is_swap());
 
-        // Step 5: Recover the swap records' data from onchain, and commit it
+        let (decrypted_last_derivation_index_info, decrypted_others_info): (Vec<_>, Vec<_>) =
+            decrypted_non_swap_info
+                .into_iter()
+                .partition(|result| matches!(result.record.data, SyncData::LastDerivationIndex(_)));
+
+        // Step 5: Apply derivation index updates (step 6 requires having knowledge of the last derivation index)
+        for decryption_info in decrypted_last_derivation_index_info {
+            if let Err(e) = self.commit_record(&decryption_info, None) {
+                warn!("Could not commit last derivation index record: {e:?}");
+                continue;
+            }
+            succeded.push(decryption_info.record.id);
+        }
+
+        // Step 6: Recover the swap records' data from onchain, and commit it
         for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
             if let Err(e) = self.commit_record(&decryption_info, Some(swap)) {
-                log::warn!("Could not commit swap record: {e:?}");
+                warn!("Could not commit swap record: {e:?}");
                 continue;
             }
             succeded.push(decryption_info.record.id);
         }
 
-        // Step 6: Commit non-swap-related data
-        for decryption_info in decrypted_non_swap_info {
+        // Step 7: Commit non-swap-related data
+        for decryption_info in decrypted_others_info {
             if let Err(e) = self.commit_record(&decryption_info, None) {
-                log::warn!("Could not commit generic record: {e:?}");
+                warn!("Could not commit generic record: {e:?}");
                 continue;
             }
             succeded.push(decryption_info.record.id);
         }
 
-        // Step 7: Clear succeded records
+        // Step 8: Clear succeded records
         if !succeded.is_empty() {
             self.persister.remove_incoming_records(succeded.clone())?;
         }
@@ -569,6 +580,7 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
         let sync_data = vec![
@@ -669,6 +681,7 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
         let (_incoming_tx, outgoing_records, sync_service) =
@@ -789,6 +802,7 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
         let (incoming_tx, _outgoing_records, sync_service) =
@@ -856,6 +870,7 @@ mod tests {
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
+            persister.clone(),
         )?);
 
         let (incoming_tx, outgoing_records, sync_service) =
