@@ -34,7 +34,7 @@ pub(crate) struct AcceptedAssetsResponse {
     pub accepted_asset: Vec<AcceptedAsset>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct AcceptedAsset {
     pub asset_id: String,
 }
