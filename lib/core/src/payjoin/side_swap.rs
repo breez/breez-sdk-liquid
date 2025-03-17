@@ -114,8 +114,17 @@ impl PayjoinService for SideSwapPayjoinService {
     }
 
     async fn estimate_payjoin_tx_fee(&self, asset_id: &str, amount_sat: u64) -> PayjoinResult<f64> {
-        // Get and check the wallet asset balance
+        // Check the asset is accepted
         let fee_asset = AssetId::from_str(asset_id)?;
+        let accepted_assets = self.fetch_accepted_assets().await?;
+        ensure_sdk!(
+            accepted_assets
+                .iter()
+                .any(|asset| asset.asset_id == asset_id),
+            PayjoinError::generic("Asset not accepted by SideSwap")
+        );
+
+        // Get and check the wallet asset balance
         let wallet_asset_balance: u64 = self
             .onchain_wallet
             .asset_utxos(&fee_asset)
@@ -126,15 +135,6 @@ impl PayjoinService for SideSwapPayjoinService {
         ensure_sdk!(
             wallet_asset_balance > amount_sat,
             PayjoinError::InsufficientFunds
-        );
-
-        // Check the asset is accepted
-        let accepted_assets = self.fetch_accepted_assets().await?;
-        ensure_sdk!(
-            accepted_assets
-                .iter()
-                .any(|asset| asset.asset_id == asset_id),
-            PayjoinError::generic("Asset not accepted by SideSwap")
         );
 
         // Fetch the fiat rates
