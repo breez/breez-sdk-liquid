@@ -79,6 +79,9 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
       - name: Clippy
         working-directory: lib/wasm 
         run: cargo clippy --target=wasm32-unknown-unknown -- -D warnings
@@ -146,6 +149,9 @@ jobs:
         with:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
 
       - name: Cargo build
         working-directory: lib/wasm
@@ -298,6 +304,9 @@ jobs:
         with:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
 
       - name: Test WASM
         working-directory: lib/wasm
