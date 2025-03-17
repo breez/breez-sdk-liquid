@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[allow(clippy::large_enum_variant)]
-pub enum Request {
+pub(crate) enum Request {
     AcceptedAssets(AcceptedAssetsRequest),
     Start(StartRequest),
     Sign(SignRequest),
@@ -20,27 +20,40 @@ pub enum Request {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[allow(clippy::large_enum_variant)]
-pub enum Response {
+pub(crate) enum Response {
     AcceptedAssets(AcceptedAssetsResponse),
     Start(StartResponse),
     Sign(SignResponse),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AcceptedAssetsRequest {}
+pub(crate) struct AcceptedAssetsRequest {}
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AcceptedAssetsResponse {
+pub(crate) struct AcceptedAssetsResponse {
     pub accepted_asset: Vec<AcceptedAsset>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AcceptedAsset {
+pub(crate) struct AcceptedAsset {
     pub asset_id: String,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct Recipient {
+    pub address: Address,
+    pub asset_id: AssetId,
+    pub amount: u64,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub(crate) struct InOut {
+    pub asset_id: AssetId,
+    pub value: u64,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Utxo {
+pub(crate) struct Utxo {
     pub txid: Txid,
     pub vout: u32,
     pub script_pub_key: Script,
@@ -65,14 +78,14 @@ impl From<&WalletTxOut> for Utxo {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct StartRequest {
+pub(crate) struct StartRequest {
     pub asset_id: String,
     pub user_agent: String,
     pub api_key: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct StartResponse {
+pub(crate) struct StartResponse {
     pub order_id: String,
     pub expires_at: u64,
     pub price: f64,
@@ -83,12 +96,12 @@ pub struct StartResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SignRequest {
+pub(crate) struct SignRequest {
     pub order_id: String,
     pub pset: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SignResponse {
+pub(crate) struct SignResponse {
     pub pset: String,
 }

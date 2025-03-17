@@ -534,7 +534,7 @@ pub enum SendDestination {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
-    /// The optional estimated fee in satioshi. Is only not set
+    /// The optional estimated fee in satoshi. Is only not set
     /// when there is the option to pay fees using the asset being sent.
     pub fees_sat: Option<u64>,
     /// The optional estimated fee in the asset being sent

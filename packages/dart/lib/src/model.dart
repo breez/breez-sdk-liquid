@@ -1370,7 +1370,7 @@ class PrepareSendRequest {
 class PrepareSendResponse {
   final SendDestination destination;
 
-  /// The optional estimated fee in satioshi. Is only not set
+  /// The optional estimated fee in satoshi. Is only not set
   /// when there is the option to pay fees using the asset being sent.
   final BigInt? feesSat;
 

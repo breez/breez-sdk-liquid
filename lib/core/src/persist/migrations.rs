@@ -28,7 +28,7 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
     let update_asset_metadata_fiat_id = match network {
         LiquidNetwork::Mainnet => "UPDATE asset_metadata SET fiat_id = 'USD' WHERE asset_id = 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2';",
         LiquidNetwork::Testnet => "UPDATE asset_metadata SET fiat_id = 'USD' WHERE asset_id = 'b612eb46313a2cd6ebabd8b7a8eed5696e29898b87a43bff41c94f51acef9d73';",
-        LiquidNetwork::Regtest => "UPDATE asset_metadata SET fiat_id = 'USD' WHERE asset_id = 'b612eb46313a2cd6ebabd8b7a8eed5696e29898b87a43bff41c94f51acef9d73';",
+        LiquidNetwork::Regtest => ";",
     };
     vec![
         "CREATE TABLE IF NOT EXISTS receive_swaps (
