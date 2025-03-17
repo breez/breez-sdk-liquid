@@ -1300,7 +1300,14 @@ abstract class _$$PaymentDetails_LiquidImplCopyWith<$Res> implements $PaymentDet
   ) = __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String destination, String description, String assetId, AssetInfo? assetInfo});
+  $Res call({
+    String destination,
+    String description,
+    String assetId,
+    AssetInfo? assetInfo,
+    LnUrlInfo? lnurlInfo,
+    String? bip353Address,
+  });
 }
 
 /// @nodoc
@@ -1321,6 +1328,8 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
     Object? description = null,
     Object? assetId = null,
     Object? assetInfo = freezed,
+    Object? lnurlInfo = freezed,
+    Object? bip353Address = freezed,
   }) {
     return _then(
       _$PaymentDetails_LiquidImpl(
@@ -1344,6 +1353,16 @@ class __$$PaymentDetails_LiquidImplCopyWithImpl<$Res>
                 ? _value.assetInfo
                 : assetInfo // ignore: cast_nullable_to_non_nullable
                     as AssetInfo?,
+        lnurlInfo:
+            freezed == lnurlInfo
+                ? _value.lnurlInfo
+                : lnurlInfo // ignore: cast_nullable_to_non_nullable
+                    as LnUrlInfo?,
+        bip353Address:
+            freezed == bip353Address
+                ? _value.bip353Address
+                : bip353Address // ignore: cast_nullable_to_non_nullable
+                    as String?,
       ),
     );
   }
@@ -1357,6 +1376,8 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
     required this.description,
     required this.assetId,
     this.assetInfo,
+    this.lnurlInfo,
+    this.bip353Address,
   }) : super._();
 
   /// Represents either a Liquid BIP21 URI or pure address
@@ -1375,9 +1396,17 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
   @override
   final AssetInfo? assetInfo;
 
+  /// The payment LNURL info
+  @override
+  final LnUrlInfo? lnurlInfo;
+
+  /// The BIP353 address used to resolve this payment
+  @override
+  final String? bip353Address;
+
   @override
   String toString() {
-    return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo)';
+    return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address)';
   }
 
   @override
@@ -1388,11 +1417,14 @@ class _$PaymentDetails_LiquidImpl extends PaymentDetails_Liquid {
             (identical(other.destination, destination) || other.destination == destination) &&
             (identical(other.description, description) || other.description == description) &&
             (identical(other.assetId, assetId) || other.assetId == assetId) &&
-            (identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo));
+            (identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo) &&
+            (identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, destination, description, assetId, assetInfo);
+  int get hashCode =>
+      Object.hash(runtimeType, destination, description, assetId, assetInfo, lnurlInfo, bip353Address);
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -1409,6 +1441,8 @@ abstract class PaymentDetails_Liquid extends PaymentDetails {
     required final String description,
     required final String assetId,
     final AssetInfo? assetInfo,
+    final LnUrlInfo? lnurlInfo,
+    final String? bip353Address,
   }) = _$PaymentDetails_LiquidImpl;
   const PaymentDetails_Liquid._() : super._();
 
@@ -1424,6 +1458,12 @@ abstract class PaymentDetails_Liquid extends PaymentDetails {
 
   /// The asset info derived from the [AssetMetadata]
   AssetInfo? get assetInfo;
+
+  /// The payment LNURL info
+  LnUrlInfo? get lnurlInfo;
+
+  /// The BIP353 address used to resolve this payment
+  String? get bip353Address;
 
   /// Create a copy of PaymentDetails
   /// with the given fields replaced by the non-null parameter values.
@@ -2601,12 +2641,22 @@ abstract class SdkEvent_Synced extends SdkEvent {
 }
 
 /// @nodoc
-mixin _$SendDestination {}
+mixin _$SendDestination {
+  /// A BIP353 address, in case one was used to resolve this Liquid address
+  String? get bip353Address => throw _privateConstructorUsedError;
+
+  /// Create a copy of SendDestination
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $SendDestinationCopyWith<SendDestination> get copyWith => throw _privateConstructorUsedError;
+}
 
 /// @nodoc
 abstract class $SendDestinationCopyWith<$Res> {
   factory $SendDestinationCopyWith(SendDestination value, $Res Function(SendDestination) then) =
       _$SendDestinationCopyWithImpl<$Res, SendDestination>;
+  @useResult
+  $Res call({String? bip353Address});
 }
 
 /// @nodoc
@@ -2621,16 +2671,31 @@ class _$SendDestinationCopyWithImpl<$Res, $Val extends SendDestination>
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? bip353Address = freezed}) {
+    return _then(
+      _value.copyWith(
+            bip353Address:
+                freezed == bip353Address
+                    ? _value.bip353Address
+                    : bip353Address // ignore: cast_nullable_to_non_nullable
+                        as String?,
+          )
+          as $Val,
+    );
+  }
 }
 
 /// @nodoc
-abstract class _$$SendDestination_LiquidAddressImplCopyWith<$Res> {
+abstract class _$$SendDestination_LiquidAddressImplCopyWith<$Res> implements $SendDestinationCopyWith<$Res> {
   factory _$$SendDestination_LiquidAddressImplCopyWith(
     _$SendDestination_LiquidAddressImpl value,
     $Res Function(_$SendDestination_LiquidAddressImpl) then,
   ) = __$$SendDestination_LiquidAddressImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({LiquidAddressData addressData});
+  $Res call({LiquidAddressData addressData, String? bip353Address});
 }
 
 /// @nodoc
@@ -2646,7 +2711,7 @@ class __$$SendDestination_LiquidAddressImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? addressData = null}) {
+  $Res call({Object? addressData = null, Object? bip353Address = freezed}) {
     return _then(
       _$SendDestination_LiquidAddressImpl(
         addressData:
@@ -2654,6 +2719,11 @@ class __$$SendDestination_LiquidAddressImplCopyWithImpl<$Res>
                 ? _value.addressData
                 : addressData // ignore: cast_nullable_to_non_nullable
                     as LiquidAddressData,
+        bip353Address:
+            freezed == bip353Address
+                ? _value.bip353Address
+                : bip353Address // ignore: cast_nullable_to_non_nullable
+                    as String?,
       ),
     );
   }
@@ -2662,14 +2732,18 @@ class __$$SendDestination_LiquidAddressImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SendDestination_LiquidAddressImpl extends SendDestination_LiquidAddress {
-  const _$SendDestination_LiquidAddressImpl({required this.addressData}) : super._();
+  const _$SendDestination_LiquidAddressImpl({required this.addressData, this.bip353Address}) : super._();
 
   @override
   final LiquidAddressData addressData;
 
+  /// A BIP353 address, in case one was used to resolve this Liquid address
+  @override
+  final String? bip353Address;
+
   @override
   String toString() {
-    return 'SendDestination.liquidAddress(addressData: $addressData)';
+    return 'SendDestination.liquidAddress(addressData: $addressData, bip353Address: $bip353Address)';
   }
 
   @override
@@ -2677,11 +2751,12 @@ class _$SendDestination_LiquidAddressImpl extends SendDestination_LiquidAddress 
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SendDestination_LiquidAddressImpl &&
-            (identical(other.addressData, addressData) || other.addressData == addressData));
+            (identical(other.addressData, addressData) || other.addressData == addressData) &&
+            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, addressData);
+  int get hashCode => Object.hash(runtimeType, addressData, bip353Address);
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
@@ -2696,25 +2771,33 @@ class _$SendDestination_LiquidAddressImpl extends SendDestination_LiquidAddress 
 }
 
 abstract class SendDestination_LiquidAddress extends SendDestination {
-  const factory SendDestination_LiquidAddress({required final LiquidAddressData addressData}) =
-      _$SendDestination_LiquidAddressImpl;
+  const factory SendDestination_LiquidAddress({
+    required final LiquidAddressData addressData,
+    final String? bip353Address,
+  }) = _$SendDestination_LiquidAddressImpl;
   const SendDestination_LiquidAddress._() : super._();
 
   LiquidAddressData get addressData;
 
+  /// A BIP353 address, in case one was used to resolve this Liquid address
+  @override
+  String? get bip353Address;
+
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
+  @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SendDestination_LiquidAddressImplCopyWith<_$SendDestination_LiquidAddressImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$SendDestination_Bolt11ImplCopyWith<$Res> {
+abstract class _$$SendDestination_Bolt11ImplCopyWith<$Res> implements $SendDestinationCopyWith<$Res> {
   factory _$$SendDestination_Bolt11ImplCopyWith(
     _$SendDestination_Bolt11Impl value,
     $Res Function(_$SendDestination_Bolt11Impl) then,
   ) = __$$SendDestination_Bolt11ImplCopyWithImpl<$Res>;
+  @override
   @useResult
   $Res call({LNInvoice invoice, String? bip353Address});
 }
@@ -2796,21 +2879,24 @@ abstract class SendDestination_Bolt11 extends SendDestination {
   LNInvoice get invoice;
 
   /// A BIP353 address, in case one was used to resolve this BOLT11
+  @override
   String? get bip353Address;
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
+  @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SendDestination_Bolt11ImplCopyWith<_$SendDestination_Bolt11Impl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> {
+abstract class _$$SendDestination_Bolt12ImplCopyWith<$Res> implements $SendDestinationCopyWith<$Res> {
   factory _$$SendDestination_Bolt12ImplCopyWith(
     _$SendDestination_Bolt12Impl value,
     $Res Function(_$SendDestination_Bolt12Impl) then,
   ) = __$$SendDestination_Bolt12ImplCopyWithImpl<$Res>;
+  @override
   @useResult
   $Res call({LNOffer offer, BigInt receiverAmountSat, String? bip353Address});
 }
@@ -2909,10 +2995,12 @@ abstract class SendDestination_Bolt12 extends SendDestination {
   BigInt get receiverAmountSat;
 
   /// A BIP353 address, in case one was used to resolve this BOLT12
+  @override
   String? get bip353Address;
 
   /// Create a copy of SendDestination
   /// with the given fields replaced by the non-null parameter values.
+  @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SendDestination_Bolt12ImplCopyWith<_$SendDestination_Bolt12Impl> get copyWith =>
       throw _privateConstructorUsedError;

@@ -418,6 +418,7 @@ pub struct PrepareSendRequest {
 pub enum SendDestination {
     LiquidAddress {
         address_data: LiquidAddressData,
+        bip353_address: Option<String>,
     },
     Bolt11 {
         invoice: LNInvoice,

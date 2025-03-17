@@ -150,6 +150,7 @@ typedef struct wire_cst_liquid_address_data {
 
 typedef struct wire_cst_SendDestination_LiquidAddress {
   struct wire_cst_liquid_address_data *address_data;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_SendDestination_LiquidAddress;
 
 typedef struct wire_cst_route_hint_hop {
@@ -542,6 +543,8 @@ typedef struct wire_cst_PaymentDetails_Liquid {
   struct wire_cst_list_prim_u_8_strict *description;
   struct wire_cst_list_prim_u_8_strict *asset_id;
   struct wire_cst_asset_info *asset_info;
+  struct wire_cst_ln_url_info *lnurl_info;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_PaymentDetails_Liquid;
 
 typedef struct wire_cst_PaymentDetails_Bitcoin {

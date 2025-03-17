@@ -1240,6 +1240,7 @@ impl LiquidSdk {
                 liquid_address_data.asset_id = Some(asset_id.clone());
                 payment_destination = SendDestination::LiquidAddress {
                     address_data: liquid_address_data,
+                    bip353_address: None,
                 };
             }
             Ok(InputType::Bolt11 { invoice }) => {
@@ -1289,6 +1290,7 @@ impl LiquidSdk {
                                     label: None,
                                     message: None,
                                 },
+                                bip353_address: None,
                             };
                             (drain_amount_sat, drain_fees_sat, payment_destination)
                         }
@@ -1420,6 +1422,7 @@ impl LiquidSdk {
         match payment_destination {
             SendDestination::LiquidAddress {
                 address_data: liquid_address_data,
+                bip353_address,
             } => {
                 let Some(amount_sat) = liquid_address_data.amount_sat else {
                     return Err(PaymentError::AmountMissing {
@@ -1452,28 +1455,18 @@ impl LiquidSdk {
                         *fees_sat,
                         asset_id,
                     )?;
-                self.pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat, true)
-                    .await
+                let mut response = self
+                    .pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat, true)
+                    .await?;
+                self.insert_bip353_payment_details(bip353_address, &mut response)?;
+                Ok(response)
             }
             SendDestination::Bolt11 {
                 invoice,
                 bip353_address,
             } => {
-                let response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
-                if bip353_address.is_some() {
-                    if let (Some(tx_id), Some(destination)) =
-                        (&response.payment.tx_id, &response.payment.destination)
-                    {
-                        self.persister
-                            .insert_or_update_payment_details(PaymentTxDetails {
-                                tx_id: tx_id.clone(),
-                                destination: destination.clone(),
-                                description: None,
-                                lnurl_info: None,
-                                bip353_address: bip353_address.clone(),
-                            })?;
-                    }
-                }
+                let mut response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
+                self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
             SendDestination::Bolt12 {
@@ -1485,26 +1478,39 @@ impl LiquidSdk {
                     .swapper
                     .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
                     .await?;
-                let response = self
+                let mut response = self
                     .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
                     .await?;
-                if bip353_address.is_some() {
-                    if let (Some(tx_id), Some(destination)) =
-                        (&response.payment.tx_id, &response.payment.destination)
-                    {
-                        self.persister
-                            .insert_or_update_payment_details(PaymentTxDetails {
-                                tx_id: tx_id.clone(),
-                                destination: destination.clone(),
-                                description: None,
-                                lnurl_info: None,
-                                bip353_address: bip353_address.clone(),
-                            })?;
-                    }
-                }
+                self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
         }
+    }
+
+    fn insert_bip353_payment_details(
+        &self,
+        bip353_address: &Option<String>,
+        response: &mut SendPaymentResponse,
+    ) -> Result<()> {
+        if bip353_address.is_some() {
+            if let (Some(tx_id), Some(destination)) =
+                (&response.payment.tx_id, &response.payment.destination)
+            {
+                self.persister
+                    .insert_or_update_payment_details(PaymentTxDetails {
+                        tx_id: tx_id.clone(),
+                        destination: destination.clone(),
+                        description: None,
+                        lnurl_info: None,
+                        bip353_address: bip353_address.clone(),
+                    })?;
+                // Get the payment with the bip353_address details
+                if let Some(payment) = self.persister.get_payment(tx_id)? {
+                    response.payment = payment;
+                }
+            }
+        }
+        Ok(())
     }
 
     async fn pay_bolt11_invoice(
@@ -1674,6 +1680,8 @@ impl LiquidSdk {
             destination,
             description: description.unwrap_or("Liquid transfer".to_string()),
             asset_info,
+            lnurl_info: None,
+            bip353_address: None,
         };
 
         Ok(SendPaymentResponse {
@@ -3474,17 +3482,19 @@ impl LiquidSdk {
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
 
-                let destination =
-                    if let SendDestination::Bolt11 { invoice, .. } = prepare_response.destination {
-                        SendDestination::Bolt11 {
-                            invoice,
+                let destination = match prepare_response.destination {
+                    SendDestination::Bolt11 { invoice, .. } => SendDestination::Bolt11 {
+                        invoice,
+                        bip353_address: req.bip353_address,
+                    },
+                    SendDestination::LiquidAddress { address_data, .. } => {
+                        SendDestination::LiquidAddress {
+                            address_data,
                             bip353_address: req.bip353_address,
                         }
-                    } else {
-                        return Err(LnUrlPayError::Generic {
-                            err: "SendDestination for LNURL Pay is not BOLT11 invoice".to_string(),
-                        });
-                    };
+                    }
+                    destination => destination,
+                };
 
                 Ok(PrepareLnUrlPayResponse {
                     destination,
@@ -3514,7 +3524,7 @@ impl LiquidSdk {
         req: model::LnUrlPayRequest,
     ) -> Result<LnUrlPayResult, LnUrlPayError> {
         let prepare_response = req.prepare_response;
-        let payment = self
+        let mut payment = self
             .send_payment(&SendPaymentRequest {
                 prepare_response: PrepareSendResponse {
                     destination: prepare_response.destination.clone(),
@@ -3592,7 +3602,7 @@ impl LiquidSdk {
         {
             self.persister
                 .insert_or_update_payment_details(PaymentTxDetails {
-                    tx_id,
+                    tx_id: tx_id.clone(),
                     destination,
                     description,
                     lnurl_info: Some(LnUrlInfo {
@@ -3606,6 +3616,8 @@ impl LiquidSdk {
                     }),
                     bip353_address: None,
                 })?;
+            // Get the payment with the lnurl_info details
+            payment = self.persister.get_payment(&tx_id)?.unwrap_or(payment);
         }
 
         Ok(LnUrlPayResult::EndpointSuccess {

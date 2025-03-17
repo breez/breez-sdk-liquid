@@ -514,6 +514,8 @@ pub struct PrepareSendRequest {
 pub enum SendDestination {
     LiquidAddress {
         address_data: liquid::LiquidAddressData,
+        /// A BIP353 address, in case one was used to resolve this Liquid address
+        bip353_address: Option<String>,
     },
     Bolt11 {
         invoice: LNInvoice,
@@ -1662,6 +1664,12 @@ pub enum PaymentDetails {
 
         /// The asset info derived from the [AssetMetadata]
         asset_info: Option<AssetInfo>,
+
+        /// The payment LNURL info
+        lnurl_info: Option<LnUrlInfo>,
+
+        /// The BIP353 address used to resolve this payment
+        bip353_address: Option<String>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {

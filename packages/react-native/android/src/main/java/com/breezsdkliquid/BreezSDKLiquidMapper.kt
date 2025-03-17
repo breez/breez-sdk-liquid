@@ -3479,7 +3479,18 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
-        return PaymentDetails.Liquid(assetId, destination, description, assetInfo)
+        val lnurlInfo =
+            if (hasNonNullKey(
+                    paymentDetails,
+                    "lnurlInfo",
+                )
+            ) {
+                paymentDetails.getMap("lnurlInfo")?.let { asLnUrlInfo(it) }
+            } else {
+                null
+            }
+        val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
+        return PaymentDetails.Liquid(assetId, destination, description, assetInfo, lnurlInfo, bip353Address)
     }
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
@@ -3556,6 +3567,8 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "destination", paymentDetails.destination)
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "assetInfo", paymentDetails.assetInfo?.let { readableMapOf(it) })
+            pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
+            pushToMap(map, "bip353Address", paymentDetails.bip353Address)
         }
         is PaymentDetails.Bitcoin -> {
             pushToMap(map, "type", "bitcoin")
@@ -3763,7 +3776,8 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
 
     if (type == "liquidAddress") {
         val addressData = sendDestination.getMap("addressData")?.let { asLiquidAddressData(it) }!!
-        return SendDestination.LiquidAddress(addressData)
+        val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
+        return SendDestination.LiquidAddress(addressData, bip353Address)
     }
     if (type == "bolt11") {
         val invoice = sendDestination.getMap("invoice")?.let { asLnInvoice(it) }!!
@@ -3785,6 +3799,7 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
         is SendDestination.LiquidAddress -> {
             pushToMap(map, "type", "liquidAddress")
             pushToMap(map, "addressData", readableMapOf(sendDestination.addressData))
+            pushToMap(map, "bip353Address", sendDestination.bip353Address)
         }
         is SendDestination.Bolt11 -> {
             pushToMap(map, "type", "bolt11")

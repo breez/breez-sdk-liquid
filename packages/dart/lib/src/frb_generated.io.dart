@@ -3370,11 +3370,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_description = cst_encode_String(apiObj.description);
       var pre_asset_id = cst_encode_String(apiObj.assetId);
       var pre_asset_info = cst_encode_opt_box_autoadd_asset_info(apiObj.assetInfo);
+      var pre_lnurl_info = cst_encode_opt_box_autoadd_ln_url_info(apiObj.lnurlInfo);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 1;
       wireObj.kind.Liquid.destination = pre_destination;
       wireObj.kind.Liquid.description = pre_description;
       wireObj.kind.Liquid.asset_id = pre_asset_id;
       wireObj.kind.Liquid.asset_info = pre_asset_info;
+      wireObj.kind.Liquid.lnurl_info = pre_lnurl_info;
+      wireObj.kind.Liquid.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is PaymentDetails_Bitcoin) {
@@ -3811,8 +3815,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_send_destination(SendDestination apiObj, wire_cst_send_destination wireObj) {
     if (apiObj is SendDestination_LiquidAddress) {
       var pre_address_data = cst_encode_box_autoadd_liquid_address_data(apiObj.addressData);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 0;
       wireObj.kind.LiquidAddress.address_data = pre_address_data;
+      wireObj.kind.LiquidAddress.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is SendDestination_Bolt11) {
@@ -6353,6 +6359,8 @@ final class wire_cst_liquid_address_data extends ffi.Struct {
 
 final class wire_cst_SendDestination_LiquidAddress extends ffi.Struct {
   external ffi.Pointer<wire_cst_liquid_address_data> address_data;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_route_hint_hop extends ffi.Struct {
@@ -6911,6 +6919,10 @@ final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
 
   external ffi.Pointer<wire_cst_asset_info> asset_info;
+
+  external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
