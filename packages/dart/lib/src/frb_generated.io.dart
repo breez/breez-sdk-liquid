@@ -2227,6 +2227,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.name = cst_encode_String(apiObj.name);
     wireObj.ticker = cst_encode_String(apiObj.ticker);
     wireObj.amount = cst_encode_f_64(apiObj.amount);
+    wireObj.fees = cst_encode_opt_box_autoadd_f_64(apiObj.fees);
   }
 
   @protected
@@ -2235,6 +2236,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.name = cst_encode_String(apiObj.name);
     wireObj.ticker = cst_encode_String(apiObj.ticker);
     wireObj.precision = cst_encode_u_8(apiObj.precision);
+    wireObj.fiat_id = cst_encode_opt_String(apiObj.fiatId);
   }
 
   @protected
@@ -3636,7 +3638,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_prepare_send_response wireObj,
   ) {
     cst_api_fill_to_wire_send_destination(apiObj.destination, wireObj.destination);
-    wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
+    wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
+    wireObj.fees = cst_encode_opt_box_autoadd_f_64(apiObj.fees);
   }
 
   @protected
@@ -3847,6 +3850,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_send_payment_request wireObj,
   ) {
     cst_api_fill_to_wire_prepare_send_response(apiObj.prepareResponse, wireObj.prepare_response);
+    wireObj.asset_pays_fees = cst_encode_opt_box_autoadd_bool(apiObj.assetPaysFees);
   }
 
   @protected
@@ -6787,12 +6791,15 @@ final class wire_cst_restore_request extends ffi.Struct {
 final class wire_cst_prepare_send_response extends ffi.Struct {
   external wire_cst_send_destination destination;
 
-  @ffi.Uint64()
-  external int fees_sat;
+  external ffi.Pointer<ffi.Uint64> fees_sat;
+
+  external ffi.Pointer<ffi.Double> fees;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
+
+  external ffi.Pointer<ffi.Bool> asset_pays_fees;
 }
 
 final class wire_cst_sign_message_request extends ffi.Struct {
@@ -6909,6 +6916,8 @@ final class wire_cst_asset_info extends ffi.Struct {
 
   @ffi.Double()
   external double amount;
+
+  external ffi.Pointer<ffi.Double> fees;
 }
 
 final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
@@ -7067,6 +7076,8 @@ final class wire_cst_asset_metadata extends ffi.Struct {
 
   @ffi.Uint8()
   external int precision;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> fiat_id;
 }
 
 final class wire_cst_list_asset_metadata extends ffi.Struct {

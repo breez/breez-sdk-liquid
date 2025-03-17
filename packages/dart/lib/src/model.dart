@@ -65,10 +65,14 @@ class AssetInfo {
   /// decimal shifted to the left by the [precision](AssetMetadata::precision)
   final double amount;
 
-  const AssetInfo({required this.name, required this.ticker, required this.amount});
+  /// The optional fees when paid using the asset, having its
+  /// decimal shifted to the left by the [precision](AssetMetadata::precision)
+  final double? fees;
+
+  const AssetInfo({required this.name, required this.ticker, required this.amount, this.fees});
 
   @override
-  int get hashCode => name.hashCode ^ ticker.hashCode ^ amount.hashCode;
+  int get hashCode => name.hashCode ^ ticker.hashCode ^ amount.hashCode ^ fees.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -77,7 +81,8 @@ class AssetInfo {
           runtimeType == other.runtimeType &&
           name == other.name &&
           ticker == other.ticker &&
-          amount == other.amount;
+          amount == other.amount &&
+          fees == other.fees;
 }
 
 /// Configuration for asset metadata. Each asset metadata item represents an entry in the
@@ -97,15 +102,20 @@ class AssetMetadata {
   /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
   final int precision;
 
+  /// The optional ID of the fiat currency used to represent the asset
+  final String? fiatId;
+
   const AssetMetadata({
     required this.assetId,
     required this.name,
     required this.ticker,
     required this.precision,
+    this.fiatId,
   });
 
   @override
-  int get hashCode => assetId.hashCode ^ name.hashCode ^ ticker.hashCode ^ precision.hashCode;
+  int get hashCode =>
+      assetId.hashCode ^ name.hashCode ^ ticker.hashCode ^ precision.hashCode ^ fiatId.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -115,7 +125,8 @@ class AssetMetadata {
           assetId == other.assetId &&
           name == other.name &&
           ticker == other.ticker &&
-          precision == other.precision;
+          precision == other.precision &&
+          fiatId == other.fiatId;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
@@ -1358,12 +1369,18 @@ class PrepareSendRequest {
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
 class PrepareSendResponse {
   final SendDestination destination;
-  final BigInt feesSat;
 
-  const PrepareSendResponse({required this.destination, required this.feesSat});
+  /// The optional estimated fee in satioshi. Is only not set
+  /// when there is the option to pay fees using the asset being sent.
+  final BigInt? feesSat;
+
+  /// The optional estimated fee in the asset being sent
+  final double? fees;
+
+  const PrepareSendResponse({required this.destination, this.feesSat, this.fees});
 
   @override
-  int get hashCode => destination.hashCode ^ feesSat.hashCode;
+  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ fees.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1371,7 +1388,8 @@ class PrepareSendResponse {
       other is PrepareSendResponse &&
           runtimeType == other.runtimeType &&
           destination == other.destination &&
-          feesSat == other.feesSat;
+          feesSat == other.feesSat &&
+          fees == other.fees;
 }
 
 @freezed
@@ -1601,18 +1619,20 @@ sealed class SendDestination with _$SendDestination {
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].
 class SendPaymentRequest {
   final PrepareSendResponse prepareResponse;
+  final bool? assetPaysFees;
 
-  const SendPaymentRequest({required this.prepareResponse});
+  const SendPaymentRequest({required this.prepareResponse, this.assetPaysFees});
 
   @override
-  int get hashCode => prepareResponse.hashCode;
+  int get hashCode => prepareResponse.hashCode ^ assetPaysFees.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SendPaymentRequest &&
           runtimeType == other.runtimeType &&
-          prepareResponse == other.prepareResponse;
+          prepareResponse == other.prepareResponse &&
+          assetPaysFees == other.assetPaysFees;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

@@ -434,12 +434,14 @@ pub enum SendDestination {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareSendResponse)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
-    pub fees_sat: u64,
+    pub fees_sat: Option<u64>,
+    pub fees: Option<f64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentRequest)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
+    pub asset_pays_fees: Option<bool>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentResponse)]
@@ -645,6 +647,7 @@ pub struct AssetMetadata {
     pub name: String,
     pub ticker: String,
     pub precision: u8,
+    pub fiat_id: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::AssetInfo)]
