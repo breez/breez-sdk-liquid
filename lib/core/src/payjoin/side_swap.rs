@@ -5,6 +5,8 @@ use super::{
     model::{
         AcceptedAsset, AcceptedAssetsRequest, Request, Response, SignRequest, StartRequest, Utxo,
     },
+    pset::PsetInput,
+    utxo_select::utxo_select,
     PayjoinService,
 };
 use boltz_client::Secp256k1;
@@ -24,18 +26,18 @@ use sdk_common::{
     prelude::{parse_json, FiatAPI, RestClient},
 };
 use serde::{de::DeserializeOwned, Serialize};
-use sideswap_common::{
-    network_fee_discount,
-    pset_blind::remove_explicit_values,
-    recipient::Recipient,
-    send_tx::{
-        coin_select::{payjoin, InOut},
-        pset::{construct_pset, ConstructPsetArgs, PsetInput, PsetOutput},
-    },
-};
 
-use crate::model::{Config, LiquidNetwork};
+use crate::payjoin::{
+    model::{InOut, Recipient},
+    network_fee::TxFee,
+    pset::blind::remove_explicit_values,
+    utxo_select::UtxoSelectRequest,
+};
 use crate::persist::Persister;
+use crate::{
+    model::{Config, LiquidNetwork},
+    payjoin::pset::{construct_pset, ConstructPsetRequest, PsetOutput},
+};
 use crate::{utils, wallet::OnchainWallet};
 
 const PRODUCTION_SIDESWAP_URL: &str = "https://api.sideswap.io/payjoin";
@@ -169,12 +171,10 @@ impl PayjoinService for SideSwapPayjoinService {
         // - 1 output for the recipient (asset)
         // - 1 output for the server (asset fee)
         // - 1 output for the server (lbtc change)
-        let network_fee = network_fee_discount::TxFee {
-            vin_single_sig_native: 1,
-            vin_single_sig_nested: 1,
-            vin_multi_sig: 0,
-            vout_native: 0,
-            vout_nested: 4,
+        let network_fee = TxFee {
+            server_inputs: 1,
+            user_inputs: 1,
+            outputs: 4,
         }
         .fee();
         let fee_sat = (network_fee as f64 * asset_index_price) as u64 + fixed_fee;
@@ -241,13 +241,11 @@ impl PayjoinService for SideSwapPayjoinService {
         );
 
         let policy_asset = utils::lbtc_asset_id(self.config.network);
-        let coin_select_res = payjoin::try_coin_select(payjoin::Args {
-            multisig_wallet: false,
+        let utxo_select_res = utxo_select(UtxoSelectRequest {
             policy_asset,
             fee_asset,
             price: start_response.price,
             fixed_fee: start_response.fixed_fee,
-            use_all_utxos: false,
             wallet_utxos: wallet_utxos.iter().map(Into::into).collect(),
             server_utxos: start_response.utxos.iter().map(Into::into).collect(),
             user_outputs: recipients
@@ -257,10 +255,9 @@ impl PayjoinService for SideSwapPayjoinService {
                     value: recipient.amount,
                 })
                 .collect(),
-            deduct_fee: None,
         })?;
         ensure_sdk!(
-            coin_select_res.user_outputs.len() == recipients.len(),
+            utxo_select_res.user_outputs.len() == recipients.len(),
             PayjoinError::generic("Output/recipient lengths mismatch")
         );
 
@@ -270,22 +267,22 @@ impl PayjoinService for SideSwapPayjoinService {
         // Set the wallet and server inputs
         inputs.append(&mut select_utxos(
             wallet_utxos,
-            coin_select_res
+            utxo_select_res
                 .user_inputs
                 .into_iter()
-                .chain(coin_select_res.client_inputs.into_iter())
+                .chain(utxo_select_res.client_inputs.into_iter())
                 .collect(),
         )?);
         inputs.append(&mut select_utxos(
             start_response.utxos,
-            coin_select_res.server_inputs,
+            utxo_select_res.server_inputs,
         )?);
 
         // Set the outputs
-        let server_fee = coin_select_res.server_fee;
+        let server_fee = utxo_select_res.server_fee;
 
         // Recipient outputs
-        for (output, recipient) in coin_select_res
+        for (output, recipient) in utxo_select_res
             .user_outputs
             .iter()
             .zip(recipients.into_iter())
@@ -302,10 +299,10 @@ impl PayjoinService for SideSwapPayjoinService {
         }
 
         // Change outputs
-        for output in coin_select_res
+        for output in utxo_select_res
             .change_outputs
             .iter()
-            .chain(coin_select_res.fee_change.iter())
+            .chain(utxo_select_res.fee_change.iter())
         {
             let address = self.onchain_wallet.next_unused_change_address().await?;
             debug!("Payjoin change output: {address} value: {}", output.value);
@@ -328,7 +325,7 @@ impl PayjoinService for SideSwapPayjoinService {
         });
 
         // Server change output
-        if let Some(output) = coin_select_res.server_change {
+        if let Some(output) = utxo_select_res.server_change {
             debug!(
                 "Payjoin server change output: {} value: {}",
                 start_response.change_address, output.value
@@ -341,15 +338,14 @@ impl PayjoinService for SideSwapPayjoinService {
         }
 
         // Construct the PSET
-        let constructed_pset = construct_pset(ConstructPsetArgs {
+        let blinded_pset = construct_pset(ConstructPsetRequest {
             policy_asset,
-            offlines: Vec::new(),
             inputs,
             outputs,
-            network_fee: coin_select_res.network_fee.value,
+            network_fee: utxo_select_res.network_fee.value,
         })?;
 
-        let mut pset = constructed_pset.blinded_pset.clone();
+        let mut pset = blinded_pset.clone();
         remove_explicit_values(&mut pset);
         let server_pset = elements::encode::serialize(&pset);
 
@@ -367,8 +363,7 @@ impl PayjoinService for SideSwapPayjoinService {
         let server_signed_pset = elements::encode::deserialize::<PartiallySignedTransaction>(
             &base64::engine::general_purpose::STANDARD.decode(&sign_response.pset)?,
         )?;
-        let server_signed_blinded_pset =
-            copy_signatures(constructed_pset.blinded_pset, server_signed_pset)?;
+        let server_signed_blinded_pset = copy_signatures(blinded_pset, server_signed_pset)?;
 
         let tx = self
             .onchain_wallet

@@ -1,6 +1,9 @@
 pub(crate) mod error;
 pub(crate) mod model;
+mod network_fee;
+mod pset;
 pub(crate) mod side_swap;
+mod utxo_select;
 
 use error::PayjoinResult;
 use lwk_wollet::elements::Transaction;

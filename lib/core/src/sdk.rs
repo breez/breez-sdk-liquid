@@ -1783,7 +1783,7 @@ impl LiquidSdk {
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
             timestamp: Some(utils::now()),
-            amount: receiver_amount_sat,
+            amount: receiver_amount_sat + asset_fees,
             fees_sat,
             payment_type: PaymentType::Send,
             is_confirmed: false,
