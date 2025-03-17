@@ -3,7 +3,8 @@ use std::{collections::HashMap, str::FromStr, sync::Arc};
 use super::{
     error::{PayjoinError, PayjoinResult},
     model::{
-        AcceptedAsset, AcceptedAssetsRequest, Request, Response, SignRequest, StartRequest, Utxo,
+        AcceptedAsset, AcceptedAssetsRequest, AcceptedAssetsResponse, Request, Response,
+        SignRequest, StartRequest, Utxo,
     },
     pset::PsetInput,
     utxo_select::utxo_select,
@@ -26,6 +27,7 @@ use sdk_common::{
     prelude::{parse_json, FiatAPI, RestClient},
 };
 use serde::{de::DeserializeOwned, Serialize};
+use tokio::sync::OnceCell;
 
 use crate::payjoin::{
     model::{InOut, Recipient},
@@ -51,6 +53,7 @@ pub(crate) struct SideSwapPayjoinService {
     persister: Arc<Persister>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     rest_client: Arc<dyn RestClient>,
+    accepted_assets: OnceCell<AcceptedAssetsResponse>,
 }
 
 impl SideSwapPayjoinService {
@@ -67,6 +70,7 @@ impl SideSwapPayjoinService {
             persister,
             onchain_wallet,
             rest_client,
+            accepted_assets: OnceCell::new(),
         }
     }
 
@@ -102,15 +106,22 @@ impl SideSwapPayjoinService {
 #[sdk_macros::async_trait]
 impl PayjoinService for SideSwapPayjoinService {
     async fn fetch_accepted_assets(&self) -> PayjoinResult<Vec<AcceptedAsset>> {
-        let accepted_assets_request = Request::AcceptedAssets(AcceptedAssetsRequest {});
-        let response: Response = self.post_request(&accepted_assets_request).await?;
-        let Response::AcceptedAssets(accepted_assets) = response else {
-            return Err(PayjoinError::service_connectivity(
-                "Failed to request accepted assets from SideSwap",
-            ));
-        };
+        let accepted_assets = self
+            .accepted_assets
+            .get_or_try_init(|| async {
+                debug!("Initializing accepted_assets from SideSwap");
+                let accepted_assets_request = Request::AcceptedAssets(AcceptedAssetsRequest {});
+                let response: Response = self.post_request(&accepted_assets_request).await?;
+                match response {
+                    Response::AcceptedAssets(accepted_assets) => Ok(accepted_assets),
+                    _ => Err(PayjoinError::service_connectivity(
+                        "Failed to request accepted assets from SideSwap",
+                    )),
+                }
+            })
+            .await?;
 
-        Ok(accepted_assets.accepted_asset)
+        Ok(accepted_assets.accepted_asset.clone())
     }
 
     async fn estimate_payjoin_tx_fee(&self, asset_id: &str, amount_sat: u64) -> PayjoinResult<f64> {
@@ -219,7 +230,9 @@ impl PayjoinService for SideSwapPayjoinService {
         let start_request = Request::Start(StartRequest {
             asset_id: asset_id.to_string(),
             user_agent: "breezsdk".to_string(),
-            api_key: None,
+            api_key: Some(
+                "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2".to_string(),
+            ),
         });
         let response: Response = self.post_request(&start_request).await?;
         let Response::Start(start_response) = response else {
