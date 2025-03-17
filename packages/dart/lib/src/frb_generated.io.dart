@@ -3815,8 +3815,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void cst_api_fill_to_wire_send_destination(SendDestination apiObj, wire_cst_send_destination wireObj) {
     if (apiObj is SendDestination_LiquidAddress) {
       var pre_address_data = cst_encode_box_autoadd_liquid_address_data(apiObj.addressData);
+      var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
       wireObj.tag = 0;
       wireObj.kind.LiquidAddress.address_data = pre_address_data;
+      wireObj.kind.LiquidAddress.bip353_address = pre_bip353_address;
       return;
     }
     if (apiObj is SendDestination_Bolt11) {
@@ -6357,6 +6359,8 @@ final class wire_cst_liquid_address_data extends ffi.Struct {
 
 final class wire_cst_SendDestination_LiquidAddress extends ffi.Struct {
   external ffi.Pointer<wire_cst_liquid_address_data> address_data;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_route_hint_hop extends ffi.Struct {

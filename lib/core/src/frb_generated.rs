@@ -4560,8 +4560,10 @@ impl SseDecode for crate::model::SendDestination {
             0 => {
                 let mut var_addressData =
                     <crate::bindings::LiquidAddressData>::sse_decode(deserializer);
+                let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::LiquidAddress {
                     address_data: var_addressData,
+                    bip353_address: var_bip353Address,
                 };
             }
             1 => {
@@ -7013,9 +7015,15 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::SdkEvent> for crate::model:
 impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
-            crate::model::SendDestination::LiquidAddress { address_data } => {
-                [0.into_dart(), address_data.into_into_dart().into_dart()].into_dart()
-            }
+            crate::model::SendDestination::LiquidAddress {
+                address_data,
+                bip353_address,
+            } => [
+                0.into_dart(),
+                address_data.into_into_dart().into_dart(),
+                bip353_address.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::model::SendDestination::Bolt11 {
                 invoice,
                 bip353_address,
@@ -9060,9 +9068,13 @@ impl SseEncode for crate::model::SendDestination {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         match self {
-            crate::model::SendDestination::LiquidAddress { address_data } => {
+            crate::model::SendDestination::LiquidAddress {
+                address_data,
+                bip353_address,
+            } => {
                 <i32>::sse_encode(0, serializer);
                 <crate::bindings::LiquidAddressData>::sse_encode(address_data, serializer);
+                <Option<String>>::sse_encode(bip353_address, serializer);
             }
             crate::model::SendDestination::Bolt11 {
                 invoice,
@@ -11248,6 +11260,7 @@ mod io {
                     let ans = unsafe { self.kind.LiquidAddress };
                     crate::model::SendDestination::LiquidAddress {
                         address_data: ans.address_data.cst_decode(),
+                        bip353_address: ans.bip353_address.cst_decode(),
                     }
                 }
                 1 => {
@@ -14977,6 +14990,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SendDestination_LiquidAddress {
         address_data: *mut wire_cst_liquid_address_data,
+        bip353_address: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

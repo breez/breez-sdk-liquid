@@ -799,6 +799,7 @@ export enum SendDestinationVariant {
 export type SendDestination = {
     type: SendDestinationVariant.LIQUID_ADDRESS,
     addressData: LiquidAddressData
+    bip353Address?: string
 } | {
     type: SendDestinationVariant.BOLT11,
     invoice: LnInvoice

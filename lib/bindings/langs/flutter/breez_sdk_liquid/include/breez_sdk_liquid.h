@@ -150,6 +150,7 @@ typedef struct wire_cst_liquid_address_data {
 
 typedef struct wire_cst_SendDestination_LiquidAddress {
   struct wire_cst_liquid_address_data *address_data;
+  struct wire_cst_list_prim_u_8_strict *bip353_address;
 } wire_cst_SendDestination_LiquidAddress;
 
 typedef struct wire_cst_route_hint_hop {

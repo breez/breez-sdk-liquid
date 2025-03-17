@@ -4291,6 +4291,8 @@ final class wire_cst_liquid_address_data extends ffi.Struct {
 
 final class wire_cst_SendDestination_LiquidAddress extends ffi.Struct {
   external ffi.Pointer<wire_cst_liquid_address_data> address_data;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 }
 
 final class wire_cst_route_hint_hop extends ffi.Struct {

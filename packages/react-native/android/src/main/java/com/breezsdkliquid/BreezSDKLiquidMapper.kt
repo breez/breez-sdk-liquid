@@ -3776,7 +3776,8 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
 
     if (type == "liquidAddress") {
         val addressData = sendDestination.getMap("addressData")?.let { asLiquidAddressData(it) }!!
-        return SendDestination.LiquidAddress(addressData)
+        val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
+        return SendDestination.LiquidAddress(addressData, bip353Address)
     }
     if (type == "bolt11") {
         val invoice = sendDestination.getMap("invoice")?.let { asLnInvoice(it) }!!
@@ -3798,6 +3799,7 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
         is SendDestination.LiquidAddress -> {
             pushToMap(map, "type", "liquidAddress")
             pushToMap(map, "addressData", readableMapOf(sendDestination.addressData))
+            pushToMap(map, "bip353Address", sendDestination.bip353Address)
         }
         is SendDestination.Bolt11 -> {
             pushToMap(map, "type", "bolt11")

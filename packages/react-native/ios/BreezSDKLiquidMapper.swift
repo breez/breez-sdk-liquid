@@ -4725,7 +4725,9 @@ enum BreezSDKLiquidMapper {
             }
             let _addressData = try asLiquidAddressData(liquidAddressData: addressDataTmp)
 
-            return SendDestination.liquidAddress(addressData: _addressData)
+            let _bip353Address = sendDestination["bip353Address"] as? String
+
+            return SendDestination.liquidAddress(addressData: _addressData, bip353Address: _bip353Address)
         }
         if type == "bolt11" {
             guard let invoiceTmp = sendDestination["invoice"] as? [String: Any?] else {
@@ -4757,11 +4759,12 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(sendDestination: SendDestination) -> [String: Any?] {
         switch sendDestination {
         case let .liquidAddress(
-            addressData
+            addressData, bip353Address
         ):
             return [
                 "type": "liquidAddress",
                 "addressData": dictionaryOf(liquidAddressData: addressData),
+                "bip353Address": bip353Address == nil ? nil : bip353Address,
             ]
 
         case let .bolt11(

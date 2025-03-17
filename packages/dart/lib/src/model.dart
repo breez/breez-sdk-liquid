@@ -1577,8 +1577,12 @@ sealed class SdkEvent with _$SdkEvent {
 sealed class SendDestination with _$SendDestination {
   const SendDestination._();
 
-  const factory SendDestination.liquidAddress({required LiquidAddressData addressData}) =
-      SendDestination_LiquidAddress;
+  const factory SendDestination.liquidAddress({
+    required LiquidAddressData addressData,
+
+    /// A BIP353 address, in case one was used to resolve this Liquid address
+    String? bip353Address,
+  }) = SendDestination_LiquidAddress;
   const factory SendDestination.bolt11({
     required LNInvoice invoice,
 

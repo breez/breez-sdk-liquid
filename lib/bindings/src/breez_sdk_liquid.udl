@@ -431,7 +431,7 @@ dictionary PrepareSendRequest {
 
 [Enum]
 interface SendDestination {
-    LiquidAddress(LiquidAddressData address_data);
+    LiquidAddress(LiquidAddressData address_data, string? bip353_address);
     Bolt11(LNInvoice invoice, string? bip353_address);
     Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address);
 };
