@@ -445,11 +445,13 @@ typedef struct wire_cst_restore_request {
 
 typedef struct wire_cst_prepare_send_response {
   struct wire_cst_send_destination destination;
-  uint64_t fees_sat;
+  uint64_t *fees_sat;
+  double *fees;
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_send_payment_request {
   struct wire_cst_prepare_send_response prepare_response;
+  bool *asset_pays_fees;
 } wire_cst_send_payment_request;
 
 typedef struct wire_cst_sign_message_request {
@@ -536,6 +538,7 @@ typedef struct wire_cst_asset_info {
   struct wire_cst_list_prim_u_8_strict *name;
   struct wire_cst_list_prim_u_8_strict *ticker;
   double amount;
+  double *fees;
 } wire_cst_asset_info;
 
 typedef struct wire_cst_PaymentDetails_Liquid {
@@ -670,6 +673,7 @@ typedef struct wire_cst_asset_metadata {
   struct wire_cst_list_prim_u_8_strict *name;
   struct wire_cst_list_prim_u_8_strict *ticker;
   uint8_t precision;
+  struct wire_cst_list_prim_u_8_strict *fiat_id;
 } wire_cst_asset_metadata;
 
 typedef struct wire_cst_list_asset_metadata {

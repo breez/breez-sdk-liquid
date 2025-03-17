@@ -4722,12 +4722,15 @@ final class wire_cst_restore_request extends ffi.Struct {
 final class wire_cst_prepare_send_response extends ffi.Struct {
   external wire_cst_send_destination destination;
 
-  @ffi.Uint64()
-  external int fees_sat;
+  external ffi.Pointer<ffi.Uint64> fees_sat;
+
+  external ffi.Pointer<ffi.Double> fees;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
+
+  external ffi.Pointer<ffi.Bool> asset_pays_fees;
 }
 
 final class wire_cst_sign_message_request extends ffi.Struct {
@@ -4844,6 +4847,8 @@ final class wire_cst_asset_info extends ffi.Struct {
 
   @ffi.Double()
   external double amount;
+
+  external ffi.Pointer<ffi.Double> fees;
 }
 
 final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
@@ -5033,6 +5038,8 @@ final class wire_cst_asset_metadata extends ffi.Struct {
 
   @ffi.Uint8()
   external int precision;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> fiat_id;
 }
 
 final class wire_cst_list_asset_metadata extends ffi.Struct {

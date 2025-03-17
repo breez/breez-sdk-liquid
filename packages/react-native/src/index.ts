@@ -46,6 +46,7 @@ export interface AssetInfo {
     name: string
     ticker: string
     amount: number
+    fees?: number
 }
 
 export interface AssetMetadata {
@@ -53,6 +54,7 @@ export interface AssetMetadata {
     name: string
     ticker: string
     precision: number
+    fiatId?: string
 }
 
 export interface BackupRequest {
@@ -392,7 +394,8 @@ export interface PrepareSendRequest {
 
 export interface PrepareSendResponse {
     destination: SendDestination
-    feesSat: number
+    feesSat?: number
+    fees?: number
 }
 
 export interface Rate {
@@ -455,6 +458,7 @@ export interface RouteHintHop {
 
 export interface SendPaymentRequest {
     prepareResponse: PrepareSendResponse
+    assetPaysFees?: boolean
 }
 
 export interface SendPaymentResponse {
