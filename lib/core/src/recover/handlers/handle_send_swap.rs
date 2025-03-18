@@ -52,7 +52,7 @@ impl SendSwapHandler {
             .ok_or(anyhow::anyhow!("no funding address found"))?
             .script_pubkey();
 
-        let empty_history = Vec::<HistoryTxId>::new();
+        let empty_history = LBtcHistory::new();
         let history = context
             .lbtc_script_to_history_map
             .get(&lockup_script)
@@ -145,7 +145,7 @@ impl SendSwapHandler {
     fn recover_onchain_data(
         tx_map: &TxMap,
         swap_id: &str,
-        history: &[HistoryTxId],
+        history: &[History<elements::Txid>],
     ) -> Result<RecoveredOnchainDataSend> {
         // If a history tx is one of our outgoing txs, it's a lockup tx
         let lockup_tx_id = history
@@ -239,9 +239,9 @@ impl SendSwapHandler {
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
-    pub(crate) lockup_tx_id: Option<HistoryTxId>,
-    pub(crate) claim_tx_id: Option<HistoryTxId>,
-    pub(crate) refund_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<History<elements::Txid>>,
+    pub(crate) claim_tx_id: Option<History<elements::Txid>>,
+    pub(crate) refund_tx_id: Option<History<elements::Txid>>,
     pub(crate) preimage: Option<String>,
 }
 

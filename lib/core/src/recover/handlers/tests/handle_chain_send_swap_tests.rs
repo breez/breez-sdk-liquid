@@ -3,7 +3,8 @@ mod test {
     use crate::{
         model::PaymentState,
         recover::handlers::{
-            handle_chain_send_swap::RecoveredOnchainDataChainSend, tests::test::create_history_txid,
+            handle_chain_send_swap::RecoveredOnchainDataChainSend,
+            tests::{create_btc_history_txid, create_lbtc_history_txid},
         },
     };
 
@@ -13,10 +14,10 @@ mod test {
     #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lbtc_lockup_and_btc_claim() {
         let recovered_data = RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lbtc_user_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             lbtc_refund_tx_id: None,
-            btc_server_lockup_tx_id: Some(create_history_txid("2222", 101)),
-            btc_claim_tx_id: Some(create_history_txid("3333", 102)),
+            btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
+            btc_claim_tx_id: Some(create_btc_history_txid("3333", 102)),
         };
 
         // When there's a lockup and confirmed claim tx, it should be Complete
@@ -31,10 +32,10 @@ mod test {
 
         // Test with unconfirmed claim
         let recovered_data = RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lbtc_user_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             lbtc_refund_tx_id: None,
-            btc_server_lockup_tx_id: Some(create_history_txid("2222", 101)),
-            btc_claim_tx_id: Some(create_history_txid("3333", 0)), // Unconfirmed claim
+            btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
+            btc_claim_tx_id: Some(create_btc_history_txid("3333", 0)), // Unconfirmed claim
         };
 
         // When there's a lockup and unconfirmed claim tx, it should be Pending
@@ -52,9 +53,9 @@ mod test {
     fn test_derive_partial_state_with_lockup_and_refund() {
         // Test with confirmed refund
         let recovered_data = RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_id: Some(create_history_txid("1111", 100)),
-            lbtc_refund_tx_id: Some(create_history_txid("4444", 102)),
-            btc_server_lockup_tx_id: Some(create_history_txid("2222", 101)),
+            lbtc_user_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            lbtc_refund_tx_id: Some(create_lbtc_history_txid("4444", 102)),
+            btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: None,
         };
 
@@ -70,9 +71,9 @@ mod test {
 
         // Test with unconfirmed refund
         let recovered_data = RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_id: Some(create_history_txid("1111", 100)),
-            lbtc_refund_tx_id: Some(create_history_txid("4444", 0)), // Unconfirmed refund
-            btc_server_lockup_tx_id: Some(create_history_txid("2222", 101)),
+            lbtc_user_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            lbtc_refund_tx_id: Some(create_lbtc_history_txid("4444", 0)), // Unconfirmed refund
+            btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: None,
         };
 
@@ -90,7 +91,7 @@ mod test {
     #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_only() {
         let recovered_data = RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lbtc_user_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             lbtc_refund_tx_id: None,
             btc_server_lockup_tx_id: None,
             btc_claim_tx_id: None,
@@ -132,10 +133,10 @@ mod test {
     fn test_derive_partial_state_with_lockup_claim_refund() {
         // This is an edge case where both claim and refund txs exist
         let recovered_data = RecoveredOnchainDataChainSend {
-            lbtc_user_lockup_tx_id: Some(create_history_txid("1111", 100)),
-            lbtc_refund_tx_id: Some(create_history_txid("4444", 102)),
-            btc_server_lockup_tx_id: Some(create_history_txid("2222", 101)),
-            btc_claim_tx_id: Some(create_history_txid("3333", 103)),
+            lbtc_user_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            lbtc_refund_tx_id: Some(create_lbtc_history_txid("4444", 102)),
+            btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
+            btc_claim_tx_id: Some(create_btc_history_txid("3333", 103)),
         };
 
         // Complete state should take precedence over refund

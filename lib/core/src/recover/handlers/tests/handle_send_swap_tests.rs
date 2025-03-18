@@ -3,7 +3,7 @@ mod test {
     use crate::{
         model::PaymentState,
         recover::handlers::{
-            handle_send_swap::RecoveredOnchainDataSend, tests::test::create_history_txid,
+            handle_send_swap::RecoveredOnchainDataSend, tests::create_lbtc_history_txid,
         },
     };
 
@@ -13,8 +13,8 @@ mod test {
     #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_and_claim() {
         let recovered_data = RecoveredOnchainDataSend {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
-            claim_tx_id: Some(create_history_txid("2222", 101)),
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            claim_tx_id: Some(create_lbtc_history_txid("2222", 101)),
             refund_tx_id: None,
             preimage: None,
         };
@@ -34,9 +34,9 @@ mod test {
     fn test_derive_partial_state_with_lockup_and_refund() {
         // Test with confirmed refund
         let recovered_data = RecoveredOnchainDataSend {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             claim_tx_id: None,
-            refund_tx_id: Some(create_history_txid("3333", 102)),
+            refund_tx_id: Some(create_lbtc_history_txid("3333", 102)),
             preimage: None,
         };
 
@@ -52,9 +52,9 @@ mod test {
 
         // Test with unconfirmed refund
         let recovered_data = RecoveredOnchainDataSend {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             claim_tx_id: None,
-            refund_tx_id: Some(create_history_txid("3333", 0)), // Unconfirmed tx
+            refund_tx_id: Some(create_lbtc_history_txid("3333", 0)), // Unconfirmed tx
             preimage: None,
         };
 
@@ -72,7 +72,7 @@ mod test {
     #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_only() {
         let recovered_data = RecoveredOnchainDataSend {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             claim_tx_id: None,
             refund_tx_id: None,
             preimage: None,
@@ -114,9 +114,9 @@ mod test {
     fn test_derive_partial_state_with_lockup_claim_refund() {
         // This is an edge case where both claim and refund txs exist
         let recovered_data = RecoveredOnchainDataSend {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
-            claim_tx_id: Some(create_history_txid("2222", 101)),
-            refund_tx_id: Some(create_history_txid("3333", 102)),
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            claim_tx_id: Some(create_lbtc_history_txid("2222", 101)),
+            refund_tx_id: Some(create_lbtc_history_txid("3333", 102)),
             preimage: None,
         };
 
