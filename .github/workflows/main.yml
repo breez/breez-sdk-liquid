@@ -335,7 +335,7 @@ jobs:
       - name: Build Android bindings
         working-directory: lib/bindings       
         run: |
-          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
+          cargo run --no-default-features --features=uniffi-25 --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
 
       - name: Run Android build
         working-directory: lib/bindings/langs/android  

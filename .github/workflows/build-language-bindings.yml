@@ -60,7 +60,7 @@ on:
 jobs:
   build-language-bindings:
     runs-on: ubuntu-latest
-    if: ${{ inputs.kotlin || inputs.swift || inputs.python }}
+    if: ${{ inputs.swift || inputs.python }}
     steps:
       - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
@@ -82,19 +82,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: lib
-
-      - name: Build Kotlin binding
-        if: ${{ inputs.kotlin }}
-        working-directory: lib/bindings
-        run: |
-          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --language kotlin -o ffi/kotlin
-  
-      - name: Archive Kotlin binding
-        if: ${{ inputs.kotlin }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-kotlin
-          path: lib/bindings/ffi/kotlin/breez_sdk_liquid/breez_sdk_liquid.kt
       
       - name: Build Swift binding
         if: ${{ inputs.swift }}
@@ -154,6 +141,13 @@ jobs:
         working-directory: lib/bindings
         run: |
           cargo run --no-default-features --features=uniffi-25 --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --language kotlin -o ffi/kotlin
+  
+      - name: Archive Kotlin binding
+        if: ${{ inputs.kotlin }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-kotlin
+          path: lib/bindings/ffi/kotlin/breez_sdk_liquid/breez_sdk_liquid.kt
 
       - name: Archive Kotlin multiplatform binding
         if: ${{ inputs.kotlin }}
