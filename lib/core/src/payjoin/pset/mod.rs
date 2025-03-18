@@ -1,4 +1,5 @@
 pub(crate) mod blind;
+mod tests;
 
 use anyhow::{anyhow, ensure, Result};
 use bip39::rand;

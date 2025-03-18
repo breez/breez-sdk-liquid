@@ -464,3 +464,216 @@ fn select_utxos(mut utxos: Vec<Utxo>, in_outs: Vec<InOut>) -> PayjoinResult<Vec<
     }
     Ok(selected)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use anyhow::Result;
+    use lwk_wollet::{
+        elements::{OutPoint, Script, Txid},
+        Chain, WalletTxOut,
+    };
+    use sdk_common::prelude::{BreezServer, MockResponse, MockRestClient, STAGING_BREEZSERVER_URL};
+    use serde_json::json;
+
+    use crate::{
+        model::Signer,
+        test_utils::{
+            persist::create_persister,
+            wallet::{MockSigner, MockWallet},
+        },
+    };
+
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    fn create_sideswap_payjoin_service(
+        persister: Arc<Persister>,
+    ) -> Result<(Arc<MockWallet>, Arc<MockRestClient>, SideSwapPayjoinService)> {
+        let config = Config::testnet(None);
+        let breez_server = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.to_string(), None)?);
+        let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
+        let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
+        let rest_client = Arc::new(MockRestClient::new());
+
+        Ok((
+            onchain_wallet.clone(),
+            rest_client.clone(),
+            SideSwapPayjoinService::new(
+                config,
+                breez_server,
+                persister,
+                onchain_wallet,
+                rest_client,
+            ),
+        ))
+    }
+
+    fn create_utxos(asset: AssetId, values: Vec<u64>) -> Vec<WalletTxOut> {
+        let txid =
+            Txid::from_str("0000000000000000000000000000000000000000000000000000000000000001")
+                .unwrap();
+        let script_pubkey =
+            Script::from_str("76a914000000000000000000000000000000000000000088ac").unwrap();
+
+        values.into_iter().map(|value| {
+            WalletTxOut {
+                outpoint: OutPoint::new(txid, 0),
+                script_pubkey: script_pubkey.clone(),
+                height: Some(10),
+                unblinded: TxOutSecrets {
+                    asset,
+                    value,
+                    asset_bf: AssetBlindingFactor::zero(),
+                    value_bf: ValueBlindingFactor::zero(),
+                },
+                wildcard_index: 0,
+                ext_int: Chain::Internal,
+                is_spent: false,
+                address: Address::from_str("lq1pqw8ct25kd47dejyesyvk3g2kaf8s9uhq4se7r2kj9y9hhvu9ug5thxlpn9y63s78kc2mcp6nujavckvr42q7hwkhqq9hfz46nth22hfp3em0ulm4nsuf").unwrap(),
+            }
+        }).collect()
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_fetch_accepted_assets_error() -> Result<()> {
+        create_persister!(persister);
+        let (_, mock_rest_client, payjoin_service) =
+            create_sideswap_payjoin_service(persister).unwrap();
+
+        mock_rest_client.add_response(MockResponse::new(400, "".to_string()));
+
+        let res = payjoin_service.fetch_accepted_assets().await;
+        assert!(res.is_err());
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_fetch_accepted_assets() -> Result<()> {
+        create_persister!(persister);
+        let (_, mock_rest_client, payjoin_service) =
+            create_sideswap_payjoin_service(persister).unwrap();
+        let asset_id = AssetId::from_slice(&[2; 32]).unwrap().to_string();
+
+        let response_body =
+            json!({"accepted_assets": {"accepted_asset":[{"asset_id": asset_id}]}}).to_string();
+        mock_rest_client.add_response(MockResponse::new(200, response_body));
+
+        let res = payjoin_service.fetch_accepted_assets().await;
+        assert!(res.is_ok());
+        let accepted_assets = res.unwrap();
+        assert_eq!(accepted_assets.len(), 1);
+        assert_eq!(accepted_assets[0].asset_id, asset_id);
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_estimate_payjoin_tx_fee_error() -> Result<()> {
+        create_persister!(persister);
+        let (_, mock_rest_client, payjoin_service) =
+            create_sideswap_payjoin_service(persister).unwrap();
+        let asset_id = AssetId::from_slice(&[2; 32]).unwrap().to_string();
+
+        mock_rest_client.add_response(MockResponse::new(400, "".to_string()));
+
+        let amount_sat = 500_000;
+        let res = payjoin_service
+            .estimate_payjoin_tx_fee(&asset_id, amount_sat)
+            .await;
+        assert!(res.is_err());
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_estimate_payjoin_tx_fee_no_utxos() -> Result<()> {
+        create_persister!(persister);
+        let (_, mock_rest_client, payjoin_service) =
+            create_sideswap_payjoin_service(persister).unwrap();
+        let asset_id = AssetId::from_slice(&[2; 32]).unwrap().to_string();
+
+        let response_body =
+            json!({"accepted_assets": {"accepted_asset":[{"asset_id": asset_id}]}}).to_string();
+        mock_rest_client.add_response(MockResponse::new(200, response_body));
+
+        let amount_sat = 500_000;
+        let res = payjoin_service
+            .estimate_payjoin_tx_fee(&asset_id, amount_sat)
+            .await;
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err().to_string(), "Cannot pay: not enough funds");
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_estimate_payjoin_tx_fee_no_asset_metadata() -> Result<()> {
+        create_persister!(persister);
+        let (mock_wallet, mock_rest_client, payjoin_service) =
+            create_sideswap_payjoin_service(persister).unwrap();
+        let asset_id = AssetId::from_slice(&[2; 32]).unwrap();
+        let asset_id_str = asset_id.to_string();
+
+        // Mock the accepted assets response
+        let accepted_assets_response = json!({
+            "accepted_assets": {
+                "accepted_asset":[{"asset_id": asset_id_str}]
+            }
+        })
+        .to_string();
+        mock_rest_client.add_response(MockResponse::new(200, accepted_assets_response));
+
+        // Set up the mock wallet to return some UTXOs for the test asset
+        let utxos = create_utxos(asset_id, vec![1_000_000]);
+        mock_wallet.set_utxos(utxos);
+
+        let amount_sat = 500_000;
+        let res = payjoin_service
+            .estimate_payjoin_tx_fee(&asset_id_str, amount_sat)
+            .await;
+
+        assert_eq!(res.unwrap_err().to_string(), "No asset metadata available for 0202020202020202020202020202020202020202020202020202020202020202");
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    #[ignore = "Required a mockable FiatAPI"]
+
+    async fn test_estimate_payjoin_tx_fee() -> Result<()> {
+        create_persister!(persister);
+        let (mock_wallet, mock_rest_client, payjoin_service) =
+            create_sideswap_payjoin_service(persister).unwrap();
+        let asset_id =
+            AssetId::from_str("b612eb46313a2cd6ebabd8b7a8eed5696e29898b87a43bff41c94f51acef9d73")
+                .unwrap();
+        let asset_id_str = asset_id.to_string();
+
+        // Mock the accepted assets response
+        let accepted_assets_response = json!({
+            "accepted_assets": {
+                "accepted_asset":[{"asset_id": asset_id_str}]
+            }
+        })
+        .to_string();
+        mock_rest_client.add_response(MockResponse::new(200, accepted_assets_response));
+
+        // TODO: Mock the FiatAPI response as the staging BreezServer currently times out
+
+        // Set up the mock wallet to return some UTXOs for the test asset
+        let utxos = create_utxos(asset_id, vec![1_000_000]);
+        mock_wallet.set_utxos(utxos);
+
+        let amount_sat = 500_000;
+        let res = payjoin_service
+            .estimate_payjoin_tx_fee(&asset_id_str, amount_sat)
+            .await;
+
+        assert_eq!(res.unwrap_err().to_string(), "Cannot pay: not enough funds");
+
+        Ok(())
+    }
+}
