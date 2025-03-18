@@ -58,7 +58,7 @@ x86_64-linux-android-uniffi-25: $(SOURCES) ndk-home
 	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release
 	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86_64/
 
-bindings-android: android
+bindings-android: android-uniffi-25
 	cp -r ffi/kotlin/jniLibs langs/android/lib/src/main
 	cp -r ffi/kotlin/breez_sdk_liquid langs/android/lib/src/main/kotlin/
 	cd langs/android && ./gradlew assemble
