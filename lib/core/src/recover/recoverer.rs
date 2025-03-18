@@ -1,27 +1,29 @@
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::{anyhow, ensure, Result};
-use electrum_client::GetBalanceRes;
 use log::{debug, info, warn};
-use lwk_wollet::elements::Txid;
-use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
-use lwk_wollet::hashes::hex::{DisplayHex, FromHex};
-use lwk_wollet::WalletTx;
 
 use super::handlers::{
     ChainReceiveSwapHandler, ChainSendSwapHandler, ReceiveSwapHandler, SendSwapHandler,
 };
 use super::model::*;
+use crate::prelude::*;
 
-use crate::model::Direction;
-use crate::persist::Persister;
-use crate::prelude::Swap;
+use elements::Txid;
+use lwk_wollet::{
+    elements_miniscript::slip77::MasterBlindingKey,
+    hashes::hex::{DisplayHex, FromHex},
+    WalletTx,
+};
+
 use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;
 use crate::wallet::OnchainWallet;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
-    recover::model::{BtcScript, HistoryTxId, LBtcScript},
+    model::{BtcScript, Direction, LBtcScript},
+    persist::Persister,
+    prelude::Swap,
     utils,
 };
 
@@ -81,7 +83,7 @@ impl Recoverer {
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
 
         // Fetch chain tips for expiration checks
-        let bitcoin_tip = self.bitcoin_chain_service.tip()?;
+        let bitcoin_tip = self.bitcoin_chain_service.tip().await?;
         let liquid_tip = self.liquid_chain_service.tip().await?;
 
         // Convert swaps to SwapsList and fetch history data
@@ -91,7 +93,7 @@ impl Recoverer {
                 &swaps_list,
                 TxMap::from_raw_tx_map(raw_tx_map.clone()),
                 liquid_tip,
-                bitcoin_tip.height as u32,
+                bitcoin_tip,
                 self.master_blinding_key,
             )
             .await?;
@@ -221,11 +223,11 @@ impl Recoverer {
     async fn fetch_lbtc_history_map(
         &self,
         swap_lbtc_scripts: Vec<LBtcScript>,
-    ) -> Result<HashMap<LBtcScript, Vec<HistoryTxId>>> {
+    ) -> Result<HashMap<LBtcScript, LBtcHistory>> {
         let t0 = web_time::Instant::now();
         let lbtc_script_histories = self
             .liquid_chain_service
-            .get_scripts_history(&swap_lbtc_scripts.to_vec())
+            .get_scripts_history(&swap_lbtc_scripts)
             .await?;
         info!(
             "Recoverer executed liquid get_scripts_history for {} scripts in {} milliseconds",
@@ -236,13 +238,12 @@ impl Recoverer {
         let lbtc_swap_scripts_len = swap_lbtc_scripts.len();
         let lbtc_script_histories_len = lbtc_script_histories.len();
         ensure!(
-              lbtc_swap_scripts_len == lbtc_script_histories_len,
-              anyhow!("Got {lbtc_script_histories_len} L-BTC script histories, expected {lbtc_swap_scripts_len}")
-          );
-        let lbtc_script_to_history_map: HashMap<LBtcScript, Vec<HistoryTxId>> = swap_lbtc_scripts
+                lbtc_swap_scripts_len == lbtc_script_histories_len,
+                anyhow!("Got {lbtc_script_histories_len} L-BTC script histories, expected {lbtc_swap_scripts_len}")
+            );
+        let lbtc_script_to_history_map: HashMap<LBtcScript, LBtcHistory> = swap_lbtc_scripts
             .into_iter()
             .zip(lbtc_script_histories.into_iter())
-            .map(|(k, v)| (k, v.into_iter().map(HistoryTxId::from).collect()))
             .collect();
 
         Ok(lbtc_script_to_history_map)
@@ -252,9 +253,9 @@ impl Recoverer {
         &self,
         swap_btc_script_bufs: Vec<BtcScript>,
     ) -> Result<(
-        HashMap<BtcScript, Vec<HistoryTxId>>,
-        HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
-        HashMap<BtcScript, GetBalanceRes>,
+        HashMap<BtcScript, BtcHistory>,
+        HashMap<BtcScript, Vec<bitcoin::Transaction>>,
+        HashMap<BtcScript, BtcScriptBalance>,
     )> {
         let swap_btc_scripts = swap_btc_script_bufs
             .iter()
@@ -264,7 +265,8 @@ impl Recoverer {
         let t0 = web_time::Instant::now();
         let btc_script_histories = self
             .bitcoin_chain_service
-            .get_scripts_history(&swap_btc_scripts)?;
+            .get_scripts_history(&swap_btc_scripts)
+            .await?;
 
         info!(
             "Recoverer executed bitcoin get_scripts_history for {} scripts in {} milliseconds",
@@ -285,17 +287,17 @@ impl Recoverer {
             btc_swap_scripts_len == btc_script_histories_len,
             anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
         );
-        let btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>> = swap_btc_script_bufs
+        let btc_script_to_history_map: HashMap<BtcScript, BtcHistory> = swap_btc_script_bufs
             .clone()
             .into_iter()
-            .zip(btc_script_histories.iter())
-            .map(|(k, v)| (k, v.iter().map(HistoryTxId::from).collect()))
+            .zip(btc_script_histories.clone())
             .collect();
 
         let t0 = web_time::Instant::now();
         let btc_script_txs = self
             .bitcoin_chain_service
-            .get_transactions(&btx_script_tx_ids)?;
+            .get_transactions(&btx_script_tx_ids)
+            .await?;
         info!(
             "Recoverer executed bitcoin get_transactions for {} transactions in {} milliseconds",
             btx_script_tx_ids.len(),
@@ -305,7 +307,8 @@ impl Recoverer {
         let t0 = web_time::Instant::now();
         let btc_script_balances = self
             .bitcoin_chain_service
-            .scripts_get_balance(&swap_btc_scripts)?;
+            .scripts_get_balance(&swap_btc_scripts)
+            .await?;
         info!(
             "Recoverer executed bitcoin scripts_get_balance for {} scripts in {} milliseconds",
             swap_btc_scripts.len(),
@@ -318,8 +321,9 @@ impl Recoverer {
                 .into_iter()
                 .zip(btc_script_histories.iter())
                 .map(|(script, history)| {
-                    let relevant_tx_ids: Vec<Txid> = history.iter().map(|h| h.txid).collect();
-                    let relevant_txs: Vec<boltz_client::bitcoin::Transaction> = btc_script_txs
+                    let relevant_tx_ids: Vec<bitcoin::Txid> =
+                        history.iter().map(|h| h.txid).collect();
+                    let relevant_txs: Vec<bitcoin::Transaction> = btc_script_txs
                         .iter()
                         .filter(|&tx| {
                             relevant_tx_ids.contains(&tx.compute_txid().to_raw_hash().into())
@@ -331,7 +335,7 @@ impl Recoverer {
                 })
                 .collect();
 
-        let btc_script_to_balance_map: HashMap<BtcScript, GetBalanceRes> = swap_btc_script_bufs
+        let btc_script_to_balance_map: HashMap<BtcScript, BtcScriptBalance> = swap_btc_script_bufs
             .into_iter()
             .zip(btc_script_balances)
             .collect();

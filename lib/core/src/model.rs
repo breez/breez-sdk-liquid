@@ -1,31 +1,40 @@
 use anyhow::{anyhow, Result};
 use boltz_client::{
-    bitcoin::ScriptBuf,
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
-    ToHex,
+    BtcSwapScript, Keypair, LBtcSwapScript,
 };
-use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
-use lwk_wollet::elements::{script, AssetId};
-use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::cmp::PartialEq;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::{cmp::PartialEq, sync::Arc};
 use strum_macros::{Display, EnumString};
 
-use crate::error::{PaymentError, SdkError, SdkResult};
 use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
 use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
+use crate::{
+    bitcoin,
+    chain::{
+        bitcoin::{BitcoinChainService, HybridBitcoinChainService},
+        liquid::{HybridLiquidChainService, LiquidChainService},
+    },
+    elements,
+    error::{PaymentError, SdkError, SdkResult},
+};
+
+use bitcoin::{bip32, ScriptBuf};
+use elements::AssetId;
+use lwk_wollet::ElementsNetwork;
+use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
@@ -220,6 +229,30 @@ impl Config {
 
     pub fn sync_enabled(&self) -> bool {
         self.sync_service_url.is_some()
+    }
+
+    pub(crate) fn bitcoin_chain_service(&self) -> Result<Arc<dyn BitcoinChainService>> {
+        Ok(match self.bitcoin_explorer {
+            BlockchainExplorer::Esplora { .. } => Arc::new(HybridBitcoinChainService::<
+                esplora_client::AsyncClient,
+            >::new(self.clone())?),
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => Arc::new(HybridBitcoinChainService::<
+                electrum_client::Client,
+            >::new(self.clone())?),
+        })
+    }
+
+    pub(crate) fn liquid_chain_service(&self) -> Result<Arc<dyn LiquidChainService>> {
+        Ok(match self.liquid_explorer {
+            BlockchainExplorer::Esplora { .. } => Arc::new(HybridLiquidChainService::<
+                lwk_wollet::asyncr::EsploraClient,
+            >::new(self.clone())?),
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => Arc::new(HybridLiquidChainService::<
+                lwk_wollet::ElectrumClient,
+            >::new(self.clone())?),
+        })
     }
 }
 
@@ -1276,7 +1309,7 @@ impl ReceiveSwap {
         utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
     }
 
-    pub(crate) fn claim_script(&self) -> Result<script::Script> {
+    pub(crate) fn claim_script(&self) -> Result<elements::Script> {
         Ok(self
             .get_swap_script()?
             .funding_addrs
@@ -2203,6 +2236,66 @@ pub struct FetchPaymentProposedFeesResponse {
 #[derive(Debug, Clone)]
 pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
+}
+
+#[derive(Clone, Debug)]
+pub(crate) struct History<Txid> {
+    pub(crate) txid: Txid,
+    /// Confirmation height of txid
+    ///
+    /// -1 means unconfirmed with unconfirmed parents
+    ///  0 means unconfirmed with confirmed parents
+    pub(crate) height: i32,
+}
+impl<Txid> History<Txid> {
+    pub(crate) fn confirmed(&self) -> bool {
+        self.height > 0
+    }
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+impl From<electrum_client::GetHistoryRes> for History<lwk_wollet::bitcoin::Txid> {
+    fn from(value: electrum_client::GetHistoryRes) -> Self {
+        Self {
+            txid: value.tx_hash,
+            height: value.height,
+        }
+    }
+}
+impl From<lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
+    fn from(value: lwk_wollet::History) -> Self {
+        Self::from(&value)
+    }
+}
+impl From<&lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
+    fn from(value: &lwk_wollet::History) -> Self {
+        Self {
+            txid: value.txid,
+            height: value.height,
+        }
+    }
+}
+pub(crate) type LBtcHistory = Vec<History<elements::Txid>>;
+pub(crate) type BtcHistory = Vec<History<bitcoin::Txid>>;
+pub(crate) type BtcScript = bitcoin::ScriptBuf;
+pub(crate) type LBtcScript = elements::Script;
+
+#[derive(Clone, Debug)]
+pub(crate) struct BtcScriptBalance {
+    /// Confirmed balance in Satoshis for the address.
+    pub(crate) confirmed: u64,
+    /// Unconfirmed balance in Satoshis for the address.
+    ///
+    /// Some servers (e.g. `electrs`) return this as a negative value.
+    pub(crate) unconfirmed: i64,
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
+    fn from(val: electrum_client::GetBalanceRes) -> Self {
+        Self {
+            confirmed: val.confirmed,
+            unconfirmed: val.unconfirmed,
+        }
+    }
 }
 
 #[macro_export]

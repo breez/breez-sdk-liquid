@@ -6,16 +6,14 @@ use boltz_client::{
     swaps::boltz::{ChainSwapStates, CreateChainResponse, TransactionInfo},
     ElementsLockTime, Secp256k1, Serialize, ToHex,
 };
+use elements::{hex::FromHex, Script, Transaction};
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
-use lwk_wollet::{
-    elements::{hex::FromHex, Script, Transaction},
-    hashes::hex::DisplayHex,
-    History,
-};
+use lwk_wollet::hashes::hex::DisplayHex;
 use tokio::sync::broadcast;
 
-use crate::model::{BlockListener, ChainSwapUpdate, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
+use crate::model::{BlockListener, ChainSwapUpdate, History, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
+use crate::{bitcoin, elements};
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     ensure_sdk,
@@ -165,6 +163,24 @@ impl ChainSwapHandler {
         Ok(())
     }
 
+    async fn fetch_script_history(&self, swap_script: &SwapScriptV2) -> Result<Vec<(String, i32)>> {
+        let history = match swap_script {
+            SwapScriptV2::Liquid(_) => self
+                .fetch_liquid_script_history(swap_script)
+                .await?
+                .into_iter()
+                .map(|h| (h.txid.to_hex(), h.height))
+                .collect(),
+            SwapScriptV2::Bitcoin(_) => self
+                .fetch_bitcoin_script_history(swap_script)
+                .await?
+                .into_iter()
+                .map(|h| (h.txid.to_hex(), h.height))
+                .collect(),
+        };
+        Ok(history)
+    }
+
     async fn claim_confirmed_server_lockup(&self, swap: &ChainSwap) -> Result<()> {
         let Some(tx_id) = swap.server_lockup_tx_id.clone() else {
             // Skip the rescan if there is no server_lockup_tx_id yet
@@ -172,17 +188,15 @@ impl ChainSwapHandler {
         };
         let swap_id = &swap.id;
         let swap_script = swap.get_claim_swap_script()?;
-        let script_history = match swap.direction {
-            Direction::Incoming => self.fetch_liquid_script_history(&swap_script).await,
-            Direction::Outgoing => self.fetch_bitcoin_script_history(&swap_script).await,
-        }?;
-        let tx_history = script_history
-            .iter()
-            .find(|h| h.txid.to_hex().eq(&tx_id))
-            .ok_or(anyhow!(
-                "Server lockup tx for Chain Swap {swap_id} was not found, txid={tx_id}"
-            ))?;
-        if tx_history.height > 0 {
+        let script_history = self.fetch_script_history(&swap_script).await?;
+        let (_tx_history, tx_height) =
+            script_history
+                .iter()
+                .find(|h| h.0.eq(&tx_id))
+                .ok_or(anyhow!(
+                    "Server lockup tx for Chain Swap {swap_id} was not found, txid={tx_id}"
+                ))?;
+        if *tx_height > 0 {
             info!("Chain Swap {swap_id} server lockup tx is confirmed");
             self.claim(swap_id)
                 .await
@@ -869,6 +883,7 @@ impl ChainSwapHandler {
                     SdkTransaction::Bitcoin(tx) => self
                         .bitcoin_chain_service
                         .broadcast(&tx)
+                        .await
                         .map(|tx_id| tx_id.to_hex())
                         .map_err(|err| PaymentError::Generic {
                             err: err.to_string(),
@@ -996,7 +1011,10 @@ impl ChainSwapHandler {
             .to_address(self.config.network.as_bitcoin_chain())
             .map_err(|e| anyhow!("Could not retrieve address from swap script: {e:?}"))?
             .script_pubkey();
-        let utxos = self.bitcoin_chain_service.get_script_utxos(&script_pk)?;
+        let utxos = self
+            .bitcoin_chain_service
+            .get_script_utxos(&script_pk)
+            .await?;
 
         let SdkTransaction::Bitcoin(refund_tx) = self
             .swapper
@@ -1015,7 +1033,8 @@ impl ChainSwapHandler {
         };
         let refund_tx_id = self
             .bitcoin_chain_service
-            .broadcast(&refund_tx)?
+            .broadcast(&refund_tx)
+            .await?
             .to_string();
 
         info!("Successfully broadcast refund for incoming Chain Swap {id}, is_cooperative: {is_cooperative}");
@@ -1229,7 +1248,8 @@ impl ChainSwapHandler {
         // Get full transaction
         let txs = self
             .bitcoin_chain_service
-            .get_transactions(&[first_tx_id])?;
+            .get_transactions(&[first_tx_id])
+            .await?;
         let user_lockup_tx = txs.first().ok_or(anyhow!(
             "No transactions found for user lockup script for swap {}",
             chain_swap.id
@@ -1375,27 +1395,21 @@ impl ChainSwapHandler {
     }
 
     async fn user_lockup_tx_exists(&self, chain_swap: &ChainSwap) -> Result<bool> {
-        let swap_script = chain_swap.get_lockup_swap_script()?;
-        let script_history = match chain_swap.direction {
-            Direction::Incoming => self.fetch_bitcoin_script_history(&swap_script).await,
-            Direction::Outgoing => self.fetch_liquid_script_history(&swap_script).await,
-        }?;
+        let lockup_script = chain_swap.get_lockup_swap_script()?;
+        let script_history = self.fetch_script_history(&lockup_script).await?;
 
         match chain_swap.user_lockup_tx_id.clone() {
             Some(user_lockup_tx_id) => {
-                if !script_history
-                    .iter()
-                    .any(|h| h.txid.to_hex() == user_lockup_tx_id)
-                {
+                if !script_history.iter().any(|h| h.0 == user_lockup_tx_id) {
                     return Ok(false);
                 }
             }
             None => {
-                let txid = match script_history.first() {
+                let (txid, _tx_height) = match script_history.into_iter().nth(0) {
+                    Some(h) => h,
                     None => {
                         return Ok(false);
                     }
-                    Some(h) => h.txid.to_hex(),
                 };
                 self.update_swap_info(&ChainSwapUpdate {
                     swap_id: chain_swap.id.clone(),
@@ -1441,7 +1455,7 @@ impl ChainSwapHandler {
     async fn fetch_bitcoin_script_history(
         &self,
         swap_script: &SwapScriptV2,
-    ) -> Result<Vec<History>> {
+    ) -> Result<Vec<History<bitcoin::Txid>>> {
         let address = swap_script
             .as_bitcoin_script()?
             .to_address(self.config.network.as_bitcoin_chain())
@@ -1456,7 +1470,7 @@ impl ChainSwapHandler {
     async fn fetch_liquid_script_history(
         &self,
         swap_script: &SwapScriptV2,
-    ) -> Result<Vec<History>> {
+    ) -> Result<Vec<History<elements::Txid>>> {
         let address = swap_script
             .as_liquid_script()?
             .to_address(self.config.network.into())

@@ -61,6 +61,7 @@ tempfile = "3"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
+esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = ["async-https-rustls"] }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
@@ -68,7 +69,7 @@ electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
     "proxy",
 ] }
-lwk_wollet = { version = "0.9.0" }
+lwk_wollet = { git = "https://github.com/breez/lwk", rev = "0b18e777d496" }
 maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
@@ -77,7 +78,7 @@ uuid = { version = "1.8.0", features = ["v4"] }
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
-lwk_wollet = { version = "0.9.0", default-features = false, features = [
+lwk_wollet = { git = "https://github.com/breez/lwk", rev = "0b18e777d496", default-features = false, features = [
     "esplora",
 ] }
 maybe-sync = "0.1.1"

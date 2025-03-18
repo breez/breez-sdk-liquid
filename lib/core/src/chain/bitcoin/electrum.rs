@@ -1,111 +1,39 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex, OnceLock},
-    time::Duration,
-};
+#![cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 
-use anyhow::{anyhow, Result};
-use electrum_client::{
+use std::{collections::HashMap, time::Duration};
+
+use anyhow::{anyhow, bail, Result};
+
+use crate::{
     bitcoin::{
         consensus::{deserialize, serialize},
         hashes::{sha256, Hash},
-        Address, OutPoint, Script, Transaction, Txid,
+        Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
-    Client, ElectrumApi, GetBalanceRes, HeaderNotification,
+    model::{BlockchainExplorer, LiquidNetwork, RecommendedFees, Utxo},
 };
+
+use electrum_client::{Client, ElectrumApi, HeaderNotification};
 use log::info;
-use lwk_wollet::{bitcoin::ScriptBuf, ElectrumOptions, ElectrumUrl, Error, History};
-use sdk_common::{bitcoin::hashes::hex::ToHex, prelude::RestClient};
+use lwk_wollet::{ElectrumOptions, ElectrumUrl};
+use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
-use crate::{
-    model::{Config, LiquidNetwork, RecommendedFees},
-    prelude::Utxo,
-};
+use super::{BitcoinChainService, BtcScriptBalance, History, HybridBitcoinChainService};
 
-/// Trait implemented by types that can fetch data from a blockchain data source.
-#[allow(dead_code)]
-#[sdk_macros::async_trait]
-pub trait BitcoinChainService: Send + Sync {
-    /// Get the blockchain latest block
-    fn tip(&self) -> Result<HeaderNotification>;
-
-    /// Broadcast a transaction
-    fn broadcast(&self, tx: &Transaction) -> Result<Txid>;
-
-    /// Get a list of transactions
-    fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
-
-    /// Get the transactions involved for a script
-    fn get_script_history(&self, script: &Script) -> Result<Vec<History>>;
-
-    /// Get the transactions involved in a list of scripts.
-    fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
-
-    /// Get the transactions involved for a script
-    async fn get_script_history_with_retry(
-        &self,
-        script: &Script,
-        retries: u64,
-    ) -> Result<Vec<History>>;
-
-    /// Get the utxos associated with a script pubkey
-    fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;
-
-    /// Get the utxos associated with a list of scripts
-    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>>;
-
-    /// Return the confirmed and unconfirmed balances of a script hash
-    fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes>;
-
-    /// Return the confirmed and unconfirmed balances of a list of script hashes
-    fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>>;
-
-    /// Return the confirmed and unconfirmed balances of a script hash
-    async fn script_get_balance_with_retry(
-        &self,
-        script: &Script,
-        retries: u64,
-    ) -> Result<GetBalanceRes>;
-
-    /// Verify that a transaction appears in the address script history
-    async fn verify_tx(
-        &self,
-        address: &Address,
-        tx_id: &str,
-        tx_hex: &str,
-        verify_confirmation: bool,
-    ) -> Result<Transaction>;
-
-    /// Get the recommended fees, in sat/vbyte
-    async fn recommended_fees(&self) -> Result<RecommendedFees>;
-}
-
-pub(crate) struct HybridBitcoinChainService {
-    config: Config,
-    rest_client: Arc<dyn RestClient>,
-    client: OnceLock<Client>,
-    last_known_tip: Mutex<Option<HeaderNotification>>,
-}
-impl HybridBitcoinChainService {
-    pub fn new(config: Config, rest_client: Arc<dyn RestClient>) -> Result<Self, Error> {
-        Ok(Self {
-            config,
-            rest_client,
-            client: OnceLock::new(),
-            last_known_tip: Mutex::new(None),
-        })
-    }
-
+impl HybridBitcoinChainService<Client> {
     fn get_client(&self) -> Result<&Client> {
         if let Some(c) = self.client.get() {
             return Ok(c);
         }
+
         let (tls, validate_domain) = match self.config.network {
             LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
             LiquidNetwork::Regtest => (false, false),
         };
-        let electrum_url =
-            ElectrumUrl::new(self.config.bitcoin_explorer.url(), tls, validate_domain)?;
+        let electrum_url = match &self.config.bitcoin_explorer {
+            BlockchainExplorer::Electrum { url } => ElectrumUrl::new(url, tls, validate_domain)?,
+            _ => bail!("Cannot start Bitcoin Electrum chain service without an Electrum url"),
+        };
         let client = electrum_url.build_client(&ElectrumOptions { timeout: Some(3) })?;
 
         let client = self.client.get_or_init(|| client);
@@ -114,8 +42,8 @@ impl HybridBitcoinChainService {
 }
 
 #[sdk_macros::async_trait]
-impl BitcoinChainService for HybridBitcoinChainService {
-    fn tip(&self) -> Result<HeaderNotification> {
+impl BitcoinChainService for HybridBitcoinChainService<Client> {
+    async fn tip(&self) -> Result<u32> {
         let client = self.get_client()?;
         let mut maybe_popped_header = None;
         while let Some(header) = client.block_headers_pop_raw()? {
@@ -137,24 +65,25 @@ impl BitcoinChainService for HybridBitcoinChainService {
             }
         };
 
-        let mut last_tip = self.last_known_tip.lock().unwrap();
+        let mut last_tip = self.last_known_tip.lock().await;
         match new_tip {
             Some(header) => {
-                *last_tip = Some(header.clone());
-                Ok(header)
+                let height = header.height as u32;
+                *last_tip = Some(height);
+                Ok(height)
             }
-            None => last_tip.clone().ok_or_else(|| anyhow!("Failed to get tip")),
+            None => (*last_tip).ok_or_else(|| anyhow!("Failed to get tip")),
         }
     }
 
-    fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
+    async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
         let txid = self
             .get_client()?
             .transaction_broadcast_raw(&serialize(&tx))?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
-    fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
         let mut result = vec![];
         for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
             let tx: Transaction = deserialize(&tx)?;
@@ -163,7 +92,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(result)
     }
 
-    fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
+    async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
         Ok(self
             .get_client()?
             .script_get_history(script)?
@@ -172,7 +101,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
             .collect())
     }
 
-    fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
         Ok(self
             .get_client()?
             .batch_script_get_history(scripts)?
@@ -192,7 +121,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
 
         let mut retry = 0;
         while retry <= retries {
-            script_history = self.get_script_history(script)?;
+            script_history = self.get_script_history(script).await?;
             match script_history.is_empty() {
                 true => {
                     retry += 1;
@@ -208,22 +137,25 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(script_history)
     }
 
-    fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
+    async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
         Ok(self
-            .get_scripts_utxos(&[script])?
+            .get_scripts_utxos(&[script])
+            .await?
             .first()
             .cloned()
             .unwrap_or_default())
     }
 
-    fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
-        let scripts_history = self.get_scripts_history(scripts)?;
+    async fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
+        let scripts_history = self.get_scripts_history(scripts).await?;
         let tx_confirmed_map: HashMap<_, _> = scripts_history
             .iter()
             .flatten()
             .map(|h| (Txid::from_raw_hash(h.txid.to_raw_hash()), h.height > 0))
             .collect();
-        let txs = self.get_transactions(&tx_confirmed_map.keys().cloned().collect::<Vec<_>>())?;
+        let txs = self
+            .get_transactions(&tx_confirmed_map.keys().cloned().collect::<Vec<_>>())
+            .await?;
         let script_txs_map: HashMap<ScriptBuf, Vec<Transaction>> = scripts
             .iter()
             .map(|script| ScriptBuf::from_bytes(script.to_bytes().to_vec()))
@@ -284,31 +216,36 @@ impl BitcoinChainService for HybridBitcoinChainService {
         Ok(scripts_utxos)
     }
 
-    fn script_get_balance(&self, script: &Script) -> Result<GetBalanceRes> {
-        Ok(self.get_client()?.script_get_balance(script)?)
+    async fn script_get_balance(&self, script: &Script) -> Result<BtcScriptBalance> {
+        Ok(self.get_client()?.script_get_balance(script)?.into())
     }
 
-    fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<GetBalanceRes>> {
-        Ok(self.get_client()?.batch_script_get_balance(scripts)?)
+    async fn scripts_get_balance(&self, scripts: &[&Script]) -> Result<Vec<BtcScriptBalance>> {
+        Ok(self
+            .get_client()?
+            .batch_script_get_balance(scripts)?
+            .into_iter()
+            .map(Into::into)
+            .collect())
     }
 
     async fn script_get_balance_with_retry(
         &self,
         script: &Script,
         retries: u64,
-    ) -> Result<GetBalanceRes> {
+    ) -> Result<BtcScriptBalance> {
         let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         info!("Fetching script balance for {}", script_hash);
-        let mut script_balance = GetBalanceRes {
+        let mut script_balance = BtcScriptBalance {
             confirmed: 0,
             unconfirmed: 0,
         };
 
         let mut retry = 0;
         while retry <= retries {
-            script_balance = self.script_get_balance(script)?;
+            script_balance = self.script_get_balance(script).await?;
             match script_balance {
-                GetBalanceRes {
+                BtcScriptBalance {
                     confirmed: 0,
                     unconfirmed: 0,
                 } => {
@@ -369,7 +306,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
             .get_client()?
             .batch_estimate_fee([1, 3, 6, 25, 1008])?
             .into_iter()
-            .map(|v| v as u64)
+            .map(|v| v.ceil() as u64)
             .collect();
         Ok(RecommendedFees {
             fastest_fee: fees[0],

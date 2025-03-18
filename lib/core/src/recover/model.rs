@@ -2,59 +2,26 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use boltz_client::ElementsAddress;
-use electrum_client::GetBalanceRes;
-use lwk_wollet::elements::Txid;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
-use lwk_wollet::History;
 use lwk_wollet::WalletTx;
 
 use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
 use crate::swapper::Swapper;
 
-pub(crate) type BtcScript = lwk_wollet::bitcoin::ScriptBuf;
-pub(crate) type LBtcScript = lwk_wollet::elements::Script;
-
-#[derive(Clone, Debug)]
-pub(crate) struct HistoryTxId {
-    pub txid: Txid,
-    /// Confirmation height of txid
-    ///
-    /// -1 means unconfirmed with unconfirmed parents
-    ///  0 means unconfirmed with confirmed parents
-    pub height: i32,
-}
-impl HistoryTxId {
-    pub(crate) fn confirmed(&self) -> bool {
-        self.height > 0
-    }
-}
-impl From<History> for HistoryTxId {
-    fn from(value: History) -> Self {
-        Self::from(&value)
-    }
-}
-impl From<&History> for HistoryTxId {
-    fn from(value: &History) -> Self {
-        Self {
-            txid: value.txid,
-            height: value.height,
-        }
-    }
-}
-
 /// A map of all our known LWK onchain txs, indexed by tx ID. Essentially our own cache of the LWK txs.
 pub(crate) struct TxMap {
-    pub(crate) outgoing_tx_map: HashMap<Txid, WalletTx>,
-    pub(crate) incoming_tx_map: HashMap<Txid, WalletTx>,
+    pub(crate) outgoing_tx_map: HashMap<elements::Txid, WalletTx>,
+    pub(crate) incoming_tx_map: HashMap<elements::Txid, WalletTx>,
 }
 impl TxMap {
-    pub(crate) fn from_raw_tx_map(raw_tx_map: HashMap<Txid, WalletTx>) -> Self {
-        let (outgoing_tx_map, incoming_tx_map): (HashMap<Txid, WalletTx>, HashMap<Txid, WalletTx>) =
-            raw_tx_map
-                .into_iter()
-                .partition(|(_, tx)| tx.balance.values().sum::<i64>() < 0);
+    pub(crate) fn from_raw_tx_map(raw_tx_map: HashMap<elements::Txid, WalletTx>) -> Self {
+        let (outgoing_tx_map, incoming_tx_map): (
+            HashMap<elements::Txid, WalletTx>,
+            HashMap<elements::Txid, WalletTx>,
+        ) = raw_tx_map
+            .into_iter()
+            .partition(|(_, tx)| tx.balance.values().sum::<i64>() < 0);
 
         Self {
             outgoing_tx_map,
@@ -63,7 +30,7 @@ impl TxMap {
     }
 }
 
-/// Swap list containing all swap data indexed by swap ID
+/// Swap immutable data
 #[derive(Default)]
 pub(crate) struct SwapsList {
     // Single map for all swap types indexed by swap ID
@@ -107,7 +74,8 @@ impl SwapsList {
                     }
 
                     // Add MRH script if available
-                    if let Ok(mrh_address) = ElementsAddress::from_str(&receive_swap.mrh_address) {
+                    if let Ok(mrh_address) = elements::Address::from_str(&receive_swap.mrh_address)
+                    {
                         swap_scripts.push(mrh_address.script_pubkey());
                     }
                 }
@@ -174,10 +142,10 @@ impl SwapsList {
 }
 
 pub(crate) struct RecoveryContext {
-    pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, Vec<HistoryTxId>>,
-    pub(crate) btc_script_to_history_map: HashMap<BtcScript, Vec<HistoryTxId>>,
-    pub(crate) btc_script_to_txs_map: HashMap<BtcScript, Vec<boltz_client::bitcoin::Transaction>>,
-    pub(crate) btc_script_to_balance_map: HashMap<BtcScript, GetBalanceRes>,
+    pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, LBtcHistory>,
+    pub(crate) btc_script_to_history_map: HashMap<BtcScript, BtcHistory>,
+    pub(crate) btc_script_to_txs_map: HashMap<BtcScript, Vec<bitcoin::Transaction>>,
+    pub(crate) btc_script_to_balance_map: HashMap<BtcScript, BtcScriptBalance>,
     pub(crate) liquid_chain_service: Arc<dyn LiquidChainService>,
     pub(crate) swapper: Arc<dyn Swapper>,
     pub(crate) tx_map: TxMap,

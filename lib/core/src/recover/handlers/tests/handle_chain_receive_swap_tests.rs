@@ -4,7 +4,7 @@ mod test {
         model::PaymentState,
         recover::handlers::{
             handle_chain_receive_swap::RecoveredOnchainDataChainReceive,
-            tests::test::create_history_txid,
+            tests::{create_btc_history_txid, create_lbtc_history_txid},
         },
     };
     use boltz_client::boltz::PairLimits;
@@ -15,10 +15,10 @@ mod test {
     #[sdk_macros::test_all]
     fn test_derive_partial_state_with_btc_lockup_and_lbtc_claim() {
         let recovered_data = RecoveredOnchainDataChainReceive {
-            lbtc_server_lockup_tx_id: Some(create_history_txid("1111", 100)),
-            lbtc_claim_tx_id: Some(create_history_txid("2222", 101)),
+            lbtc_server_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            lbtc_claim_tx_id: Some(create_lbtc_history_txid("2222", 101)),
             lbtc_claim_address: Some("lq1qqvynd50t4tajashdguell7nu9gycuqqd869w8vqww9ys9dsz7szdfeu7pwe4yzzme28qsluyfyrtqmq9scl5ydw4lesx3c5qu".to_string()),
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
@@ -36,10 +36,10 @@ mod test {
 
         // Test with unconfirmed claim
         let recovered_data = RecoveredOnchainDataChainReceive {
-            lbtc_server_lockup_tx_id: Some(create_history_txid("1111", 100)),
-            lbtc_claim_tx_id: Some(create_history_txid("2222", 0)), // Unconfirmed claim
+            lbtc_server_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            lbtc_claim_tx_id: Some(create_lbtc_history_txid("2222", 0)), // Unconfirmed claim
             lbtc_claim_address: Some("lq1qqvynd50t4tajashdguell7nu9gycuqqd869w8vqww9ys9dsz7szdfeu7pwe4yzzme28qsluyfyrtqmq9scl5ydw4lesx3c5qu".to_string()),
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
@@ -60,13 +60,13 @@ mod test {
     fn test_derive_partial_state_with_btc_lockup_and_btc_refund() {
         // Test with confirmed refund
         let recovered_data = RecoveredOnchainDataChainReceive {
-            lbtc_server_lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lbtc_server_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
-            btc_refund_tx_id: Some(create_history_txid("4444", 103)), // Confirmed refund
+            btc_refund_tx_id: Some(create_btc_history_txid("4444", 103)), // Confirmed refund
         };
 
         // When there's a lockup and confirmed refund tx, it should be Failed
@@ -81,13 +81,13 @@ mod test {
 
         // Test with unconfirmed refund
         let recovered_data = RecoveredOnchainDataChainReceive {
-            lbtc_server_lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lbtc_server_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
-            btc_refund_tx_id: Some(create_history_txid("4444", 0)), // Unconfirmed refund
+            btc_refund_tx_id: Some(create_btc_history_txid("4444", 0)), // Unconfirmed refund
         };
 
         // When there's a lockup and unconfirmed refund tx, it should be RefundPending
@@ -108,7 +108,7 @@ mod test {
             lbtc_server_lockup_tx_id: None,
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
@@ -135,7 +135,7 @@ mod test {
             lbtc_server_lockup_tx_id: None,
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 100000, // Funds still in address
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
@@ -161,7 +161,7 @@ mod test {
             lbtc_server_lockup_tx_id: None,
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 5000,
             btc_user_lockup_amount_sat: 5000, // Below minimum
             btc_refund_tx_id: None,
@@ -178,7 +178,7 @@ mod test {
             lbtc_server_lockup_tx_id: None,
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 3000000,
             btc_user_lockup_amount_sat: 3000000, // Above maximum
             btc_refund_tx_id: None,
@@ -195,7 +195,7 @@ mod test {
             lbtc_server_lockup_tx_id: None,
             lbtc_claim_tx_id: None,
             lbtc_claim_address: None,
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 150000,
             btc_user_lockup_amount_sat: 150000, // Different from expected
             btc_refund_tx_id: None,
@@ -237,13 +237,13 @@ mod test {
     fn test_derive_partial_state_with_lockup_claim_refund() {
         // This is an edge case where both claim and refund txs exist
         let recovered_data = RecoveredOnchainDataChainReceive {
-            lbtc_server_lockup_tx_id: Some(create_history_txid("1111", 100)),
-            lbtc_claim_tx_id: Some(create_history_txid("2222", 101)),
+            lbtc_server_lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            lbtc_claim_tx_id: Some(create_lbtc_history_txid("2222", 101)),
             lbtc_claim_address: Some("lq1qqvynd50t4tajashdguell7nu9gycuqqd869w8vqww9ys9dsz7szdfeu7pwe4yzzme28qsluyfyrtqmq9scl5ydw4lesx3c5qu".to_string()),
-            btc_user_lockup_tx_id: Some(create_history_txid("3333", 102)),
+            btc_user_lockup_tx_id: Some(create_btc_history_txid("3333", 102)),
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
-            btc_refund_tx_id: Some(create_history_txid("4444", 103)),
+            btc_refund_tx_id: Some(create_btc_history_txid("4444", 103)),
         };
 
         // Complete state should take precedence over refund

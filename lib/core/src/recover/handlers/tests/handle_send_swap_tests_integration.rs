@@ -2,7 +2,7 @@
 mod test {
     use crate::chain::liquid::MockLiquidChainService;
     use crate::prelude::*;
-    use crate::recover::handlers::tests::test::{
+    use crate::recover::handlers::tests::{
         create_empty_lbtc_transaction, create_mock_lbtc_wallet_tx,
     };
     use crate::recover::handlers::SendSwapHandler;
@@ -345,7 +345,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = History::<elements::Txid> {
             txid: tx_id,
             height: height as i32,
         };
@@ -380,7 +380,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = History::<elements::Txid> {
             txid: tx_id,
             height: height as i32,
         };
@@ -410,7 +410,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = History::<elements::Txid> {
             txid: tx_id,
             height: height as i32,
         };
