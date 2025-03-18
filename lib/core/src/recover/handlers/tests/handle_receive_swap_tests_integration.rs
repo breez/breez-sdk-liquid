@@ -2,17 +2,16 @@
 mod test {
     use crate::{
         chain::liquid::MockLiquidChainService,
-        model::{PaymentState, ReceiveSwap, SwapMetadata},
+        elements,
+        model::{History, PaymentState, ReceiveSwap, SwapMetadata},
         recover::{
-            handlers::{tests::test::create_mock_lbtc_wallet_tx, ReceiveSwapHandler},
-            model::{HistoryTxId, RecoveryContext, TxMap},
+            handlers::{tests::create_mock_lbtc_wallet_tx, ReceiveSwapHandler},
+            model::{RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
     };
-    use boltz_client::ElementsAddress;
-    use lwk_wollet::elements::{Script, Txid};
-    use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
-    use lwk_wollet::WalletTx;
+    use elements::{Address as ElementsAddress, Script, Txid};
+    use lwk_wollet::{elements_miniscript::slip77::MasterBlindingKey, WalletTx};
     use std::{collections::HashMap, str::FromStr, sync::Arc};
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
@@ -324,7 +323,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = History::<elements::Txid> {
             txid: tx_id,
             height: height as i32,
         };
@@ -361,7 +360,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = History::<elements::Txid> {
             txid: tx_id,
             height: height as i32,
         };
@@ -391,7 +390,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = History::<elements::Txid> {
             txid: tx_id,
             height: height as i32,
         };

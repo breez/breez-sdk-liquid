@@ -3,7 +3,7 @@ mod test {
     use crate::{
         model::PaymentState,
         recover::handlers::{
-            handle_receive_swap::RecoveredOnchainDataReceive, tests::test::create_history_txid,
+            handle_receive_swap::RecoveredOnchainDataReceive, tests::create_lbtc_history_txid,
         },
     };
 
@@ -14,8 +14,8 @@ mod test {
     fn test_derive_partial_state_with_lockup_and_claim() {
         // Test with confirmed claim
         let recovered_data = RecoveredOnchainDataReceive {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
-            claim_tx_id: Some(create_history_txid("2222", 101)), // Confirmed claim
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            claim_tx_id: Some(create_lbtc_history_txid("2222", 101)), // Confirmed claim
             mrh_tx_id: None,
             mrh_amount_sat: None,
         };
@@ -32,8 +32,8 @@ mod test {
 
         // Test with unconfirmed claim
         let recovered_data = RecoveredOnchainDataReceive {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
-            claim_tx_id: Some(create_history_txid("2222", 0)), // Unconfirmed claim
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            claim_tx_id: Some(create_lbtc_history_txid("2222", 0)), // Unconfirmed claim
             mrh_tx_id: None,
             mrh_amount_sat: None,
         };
@@ -52,7 +52,7 @@ mod test {
     #[sdk_macros::test_all]
     fn test_derive_partial_state_with_lockup_only() {
         let recovered_data = RecoveredOnchainDataReceive {
-            lockup_tx_id: Some(create_history_txid("1111", 100)),
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             claim_tx_id: None,
             mrh_tx_id: None,
             mrh_amount_sat: None,
@@ -77,7 +77,7 @@ mod test {
         let recovered_data = RecoveredOnchainDataReceive {
             lockup_tx_id: None,
             claim_tx_id: None,
-            mrh_tx_id: Some(create_history_txid("3333", 103)),
+            mrh_tx_id: Some(create_lbtc_history_txid("3333", 103)),
             mrh_amount_sat: Some(100000),
         };
 
@@ -95,7 +95,7 @@ mod test {
         let recovered_data = RecoveredOnchainDataReceive {
             lockup_tx_id: None,
             claim_tx_id: None,
-            mrh_tx_id: Some(create_history_txid("3333", 0)), // Unconfirmed MRH tx
+            mrh_tx_id: Some(create_lbtc_history_txid("3333", 0)), // Unconfirmed MRH tx
             mrh_amount_sat: Some(100000),
         };
 
