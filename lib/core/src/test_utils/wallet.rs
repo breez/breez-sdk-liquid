@@ -1,6 +1,10 @@
 #![cfg(test)]
 
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use crate::{
     error::PaymentError,
@@ -26,6 +30,7 @@ use lwk_wollet::{
 
 pub(crate) struct MockWallet {
     signer: SdkLwkSigner,
+    utxos: Mutex<Vec<WalletTxOut>>,
 }
 
 lazy_static! {
@@ -37,7 +42,15 @@ lazy_static! {
 impl MockWallet {
     pub(crate) fn new(user_signer: Arc<Box<dyn Signer>>) -> Result<Self> {
         let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
-        Ok(Self { signer })
+        Ok(Self {
+            signer,
+            utxos: Mutex::new(vec![]),
+        })
+    }
+
+    pub(crate) fn set_utxos(&self, utxos: Vec<WalletTxOut>) -> &Self {
+        *self.utxos.lock().unwrap() = utxos;
+        self
     }
 }
 
@@ -52,7 +65,7 @@ impl OnchainWallet for MockWallet {
     }
 
     async fn asset_utxos(&self, _asset_id: &AssetId) -> Result<Vec<WalletTxOut>, PaymentError> {
-        Ok(vec![])
+        Ok(self.utxos.lock().unwrap().clone())
     }
 
     async fn build_tx(
