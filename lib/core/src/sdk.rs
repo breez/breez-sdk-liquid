@@ -3134,15 +3134,16 @@ impl LiquidSdk {
         })?;
 
         for payment in payments {
-            let total_sat = if payment.details.is_lbtc_asset_id(self.config.network) {
-                payment.amount_sat + payment.fees_sat
-            } else {
-                payment.fees_sat
-            };
+            let is_lbtc_asset_id = payment.details.is_lbtc_asset_id(self.config.network);
             match payment.payment_type {
                 PaymentType::Send => match payment.details.get_refund_tx_amount_sat() {
                     Some(refund_tx_amount_sat) => pending_receive_sat += refund_tx_amount_sat,
                     None => {
+                        let total_sat = if is_lbtc_asset_id {
+                            payment.amount_sat + payment.fees_sat
+                        } else {
+                            payment.fees_sat
+                        };
                         if let Some(tx_id) = payment.tx_id {
                             if !tx_ids.contains(&tx_id) {
                                 debug!("Deducting {total_sat} sats from balance");
@@ -3152,7 +3153,11 @@ impl LiquidSdk {
                         pending_send_sat += total_sat
                     }
                 },
-                PaymentType::Receive => pending_receive_sat += total_sat,
+                PaymentType::Receive => {
+                    if is_lbtc_asset_id {
+                        pending_receive_sat += payment.amount_sat;
+                    }
+                }
             }
         }
 
