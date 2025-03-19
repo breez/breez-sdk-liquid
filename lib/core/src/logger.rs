@@ -1,9 +1,7 @@
-use std::fs::OpenOptions;
-use std::io::Write;
-
 use anyhow::{anyhow, Result};
 use chrono::Local;
 use log::{LevelFilter, Metadata, Record};
+use std::io::Write;
 
 use crate::model::LogEntry;
 
@@ -34,40 +32,48 @@ impl log::Log for GlobalSdkLogger {
 }
 
 pub(super) fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
-    let target_log_file = Box::new(
-        OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(format!("{log_dir}/sdk.log"))
-            .map_err(|e| anyhow!("Can't create log file: {e}"))?,
+    let mut builder = env_logger::Builder::new();
+    builder.parse_filters(
+        r#"
+            debug,
+            breez_sdk_liquid=debug,
+            breez_sdk_liquid::swapper::boltz_status_stream=info,
+            electrum_client::raw_client=warn,
+            lwk_wollet=info,
+            rustls=warn,
+            rustyline=warn,
+            ureq=info,
+            tungstenite=warn
+        "#,
     );
-    let logger = env_logger::Builder::new()
-        .target(env_logger::Target::Pipe(target_log_file))
-        .parse_filters(
-            r#"
-                debug,
-                breez_sdk_liquid=debug,
-                breez_sdk_liquid::swapper::boltz_status_stream=info,
-                electrum_client::raw_client=warn,
-                lwk_wollet=info,
-                rustls=warn,
-                rustyline=warn,
-                ureq=info,
-                tungstenite=warn
-            "#,
+    builder.format(|buf, record| {
+        writeln!(
+            buf,
+            "[{} {} {}:{}] {}",
+            Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
+            record.level(),
+            record.module_path().unwrap_or("unknown"),
+            record.line().unwrap_or(0),
+            record.args()
         )
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "[{} {} {}:{}] {}",
-                Local::now().format("%Y-%m-%d %H:%M:%S%.3f"),
-                record.level(),
-                record.module_path().unwrap_or("unknown"),
-                record.line().unwrap_or(0),
-                record.args()
-            )
-        })
-        .build();
+    });
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    let logger = {
+        let target_log_file = Box::new(
+            std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(format!("{log_dir}/sdk.log"))
+                .map_err(|e| anyhow!("Can't create log file: {e}"))?,
+        );
+        builder
+            .target(env_logger::Target::Pipe(target_log_file))
+            .build()
+    };
+
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    let logger = builder.build();
 
     let global_logger = GlobalSdkLogger {
         logger,

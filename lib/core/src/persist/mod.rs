@@ -11,7 +11,7 @@ pub(crate) mod sync;
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Not;
-use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
@@ -62,8 +62,9 @@ fn where_clauses_to_string(where_clauses: Vec<String>) -> String {
 impl Persister {
     pub fn new(working_dir: &str, network: LiquidNetwork, sync_enabled: bool) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         if !main_db_dir.exists() {
-            create_dir_all(&main_db_dir)?;
+            std::fs::create_dir_all(&main_db_dir)?;
         }
         let mut sync_trigger = None;
         if sync_enabled {

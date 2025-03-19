@@ -123,12 +123,26 @@ pub(crate) fn new_receive_swap(
 
 macro_rules! create_persister {
     ($name:ident) => {
-        let temp_dir = tempdir::TempDir::new("liquid-sdk")?;
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let temp_dir_path = {
+            use rand::Rng;
+            let res: String = rand::thread_rng()
+                .sample_iter(&rand::distributions::Alphanumeric)
+                .take(16)
+                .map(char::from)
+                .collect();
+            res
+        };
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        let temp_dir_path = tempdir::TempDir::new("liquid-sdk")?
+            .path()
+            .to_str()
+            .ok_or(anyhow::anyhow!("Could not create temporary directory"))?
+            .to_string();
+
         let $name = std::sync::Arc::new(crate::persist::Persister::new(
-            temp_dir
-                .path()
-                .to_str()
-                .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
+            &temp_dir_path,
             crate::model::LiquidNetwork::Testnet,
             true,
         )?);
