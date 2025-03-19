@@ -4113,6 +4113,9 @@ class FlutterBreezLiquidBindings {
 
 final class DartCObject extends ffi.Opaque {}
 
+/// EXTRA BEGIN
+typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
+
 final class WireSyncRust2DartSse extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
 
@@ -4120,12 +4123,12 @@ final class WireSyncRust2DartSse extends ffi.Struct {
   external int len;
 }
 
-typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
+typedef DartPort = ffi.Int64;
+typedef DartDartPort = int;
 typedef DartPostCObjectFnTypeFunction = ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
 typedef DartDartPostCObjectFnTypeFunction = bool Function(
     DartDartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartPort = ffi.Int64;
-typedef DartDartPort = int;
+typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
 
 final class _Dart_Handle extends ffi.Opaque {}
 
@@ -5701,9 +5704,6 @@ final class wire_cst_sign_message_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
 }
 
-/// EXTRA BEGIN
-typedef WireSyncRust2DartDco = ffi.Pointer<DartCObject>;
-
 /// ⚠️ Attention: If you change this #else block (ending in `#endif // def UNIFFI_SHARED_H`) you *must* ⚠️
 /// ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
 final class RustBuffer extends ffi.Struct {
@@ -5731,16 +5731,23 @@ final class RustCallStatus extends ffi.Struct {
   external RustBuffer errorBuf;
 }
 
+typedef UniffiRustFutureContinuationCallbackFunction = ffi.Void Function(ffi.Uint64, ffi.Int8);
+typedef DartUniffiRustFutureContinuationCallbackFunction = void Function(int, int);
+typedef UniffiRustFutureContinuationCallback
+    = ffi.Pointer<ffi.NativeFunction<UniffiRustFutureContinuationCallbackFunction>>;
+typedef UniffiForeignFutureFreeFunction = ffi.Void Function(ffi.Uint64);
+typedef DartUniffiForeignFutureFreeFunction = void Function(int);
+typedef UniffiForeignFutureFree = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureFreeFunction>>;
+typedef UniffiCallbackInterfaceFreeFunction = ffi.Void Function(ffi.Uint64);
+typedef DartUniffiCallbackInterfaceFreeFunction = void Function(int);
+typedef UniffiCallbackInterfaceFree = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceFreeFunction>>;
+
 final class UniffiForeignFuture extends ffi.Struct {
   @ffi.Uint64()
   external int handle;
 
   external UniffiForeignFutureFree free;
 }
-
-typedef UniffiForeignFutureFree = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureFreeFunction>>;
-typedef UniffiForeignFutureFreeFunction = ffi.Void Function(ffi.Uint64);
-typedef DartUniffiForeignFutureFreeFunction = void Function(int);
 
 final class UniffiForeignFutureStructU8 extends ffi.Struct {
   @ffi.Uint8()
@@ -5749,12 +5756,22 @@ final class UniffiForeignFutureStructU8 extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteU8Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructU8);
+typedef DartUniffiForeignFutureCompleteU8Function = void Function(int, UniffiForeignFutureStructU8);
+typedef UniffiForeignFutureCompleteU8
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteU8Function>>;
+
 final class UniffiForeignFutureStructI8 extends ffi.Struct {
   @ffi.Int8()
   external int returnValue;
 
   external RustCallStatus callStatus;
 }
+
+typedef UniffiForeignFutureCompleteI8Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructI8);
+typedef DartUniffiForeignFutureCompleteI8Function = void Function(int, UniffiForeignFutureStructI8);
+typedef UniffiForeignFutureCompleteI8
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteI8Function>>;
 
 final class UniffiForeignFutureStructU16 extends ffi.Struct {
   @ffi.Uint16()
@@ -5763,12 +5780,22 @@ final class UniffiForeignFutureStructU16 extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteU16Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructU16);
+typedef DartUniffiForeignFutureCompleteU16Function = void Function(int, UniffiForeignFutureStructU16);
+typedef UniffiForeignFutureCompleteU16
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteU16Function>>;
+
 final class UniffiForeignFutureStructI16 extends ffi.Struct {
   @ffi.Int16()
   external int returnValue;
 
   external RustCallStatus callStatus;
 }
+
+typedef UniffiForeignFutureCompleteI16Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructI16);
+typedef DartUniffiForeignFutureCompleteI16Function = void Function(int, UniffiForeignFutureStructI16);
+typedef UniffiForeignFutureCompleteI16
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteI16Function>>;
 
 final class UniffiForeignFutureStructU32 extends ffi.Struct {
   @ffi.Uint32()
@@ -5777,12 +5804,22 @@ final class UniffiForeignFutureStructU32 extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteU32Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructU32);
+typedef DartUniffiForeignFutureCompleteU32Function = void Function(int, UniffiForeignFutureStructU32);
+typedef UniffiForeignFutureCompleteU32
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteU32Function>>;
+
 final class UniffiForeignFutureStructI32 extends ffi.Struct {
   @ffi.Int32()
   external int returnValue;
 
   external RustCallStatus callStatus;
 }
+
+typedef UniffiForeignFutureCompleteI32Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructI32);
+typedef DartUniffiForeignFutureCompleteI32Function = void Function(int, UniffiForeignFutureStructI32);
+typedef UniffiForeignFutureCompleteI32
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteI32Function>>;
 
 final class UniffiForeignFutureStructU64 extends ffi.Struct {
   @ffi.Uint64()
@@ -5791,12 +5828,22 @@ final class UniffiForeignFutureStructU64 extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteU64Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructU64);
+typedef DartUniffiForeignFutureCompleteU64Function = void Function(int, UniffiForeignFutureStructU64);
+typedef UniffiForeignFutureCompleteU64
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteU64Function>>;
+
 final class UniffiForeignFutureStructI64 extends ffi.Struct {
   @ffi.Int64()
   external int returnValue;
 
   external RustCallStatus callStatus;
 }
+
+typedef UniffiForeignFutureCompleteI64Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructI64);
+typedef DartUniffiForeignFutureCompleteI64Function = void Function(int, UniffiForeignFutureStructI64);
+typedef UniffiForeignFutureCompleteI64
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteI64Function>>;
 
 final class UniffiForeignFutureStructF32 extends ffi.Struct {
   @ffi.Float()
@@ -5805,6 +5852,11 @@ final class UniffiForeignFutureStructF32 extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteF32Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructF32);
+typedef DartUniffiForeignFutureCompleteF32Function = void Function(int, UniffiForeignFutureStructF32);
+typedef UniffiForeignFutureCompleteF32
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteF32Function>>;
+
 final class UniffiForeignFutureStructF64 extends ffi.Struct {
   @ffi.Double()
   external double returnValue;
@@ -5812,11 +5864,22 @@ final class UniffiForeignFutureStructF64 extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteF64Function = ffi.Void Function(ffi.Uint64, UniffiForeignFutureStructF64);
+typedef DartUniffiForeignFutureCompleteF64Function = void Function(int, UniffiForeignFutureStructF64);
+typedef UniffiForeignFutureCompleteF64
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteF64Function>>;
+
 final class UniffiForeignFutureStructPointer extends ffi.Struct {
   external ffi.Pointer<ffi.Void> returnValue;
 
   external RustCallStatus callStatus;
 }
+
+typedef UniffiForeignFutureCompletePointerFunction = ffi.Void Function(
+    ffi.Uint64, UniffiForeignFutureStructPointer);
+typedef DartUniffiForeignFutureCompletePointerFunction = void Function(int, UniffiForeignFutureStructPointer);
+typedef UniffiForeignFutureCompletePointer
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompletePointerFunction>>;
 
 final class UniffiForeignFutureStructRustBuffer extends ffi.Struct {
   external RustBuffer returnValue;
@@ -5824,9 +5887,82 @@ final class UniffiForeignFutureStructRustBuffer extends ffi.Struct {
   external RustCallStatus callStatus;
 }
 
+typedef UniffiForeignFutureCompleteRustBufferFunction = ffi.Void Function(
+    ffi.Uint64, UniffiForeignFutureStructRustBuffer);
+typedef DartUniffiForeignFutureCompleteRustBufferFunction = void Function(
+    int, UniffiForeignFutureStructRustBuffer);
+typedef UniffiForeignFutureCompleteRustBuffer
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteRustBufferFunction>>;
+
 final class UniffiForeignFutureStructVoid extends ffi.Struct {
   external RustCallStatus callStatus;
 }
+
+typedef UniffiForeignFutureCompleteVoidFunction = ffi.Void Function(
+    ffi.Uint64, UniffiForeignFutureStructVoid);
+typedef DartUniffiForeignFutureCompleteVoidFunction = void Function(int, UniffiForeignFutureStructVoid);
+typedef UniffiForeignFutureCompleteVoid
+    = ffi.Pointer<ffi.NativeFunction<UniffiForeignFutureCompleteVoidFunction>>;
+typedef UniffiCallbackInterfaceEventListenerMethod0Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceEventListenerMethod0Function = void Function(
+    int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceEventListenerMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceEventListenerMethod0Function>>;
+typedef UniffiCallbackInterfaceLoggerMethod0Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceLoggerMethod0Function = void Function(
+    int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceLoggerMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceLoggerMethod0Function>>;
+typedef UniffiCallbackInterfaceSignerMethod0Function = ffi.Void Function(
+    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod0Function = void Function(
+    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod0Function>>;
+typedef UniffiCallbackInterfaceSignerMethod1Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod1Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod1
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod1Function>>;
+typedef UniffiCallbackInterfaceSignerMethod2Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod2Function = void Function(
+    int, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod2
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod2Function>>;
+typedef UniffiCallbackInterfaceSignerMethod3Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod3Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod3
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod3Function>>;
+typedef UniffiCallbackInterfaceSignerMethod4Function = ffi.Void Function(
+    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod4Function = void Function(
+    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod4
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod4Function>>;
+typedef UniffiCallbackInterfaceSignerMethod5Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod5Function = void Function(
+    int, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod5
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod5Function>>;
+typedef UniffiCallbackInterfaceSignerMethod6Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod6Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod6
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod6Function>>;
+typedef UniffiCallbackInterfaceSignerMethod7Function = ffi.Void Function(
+    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfaceSignerMethod7Function = void Function(
+    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfaceSignerMethod7
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod7Function>>;
 
 final class UniffiVTableCallbackInterfaceEventListener extends ffi.Struct {
   external UniffiCallbackInterfaceEventListenerMethod0 onEvent;
@@ -5834,28 +5970,11 @@ final class UniffiVTableCallbackInterfaceEventListener extends ffi.Struct {
   external UniffiCallbackInterfaceFree uniffiFree;
 }
 
-typedef UniffiCallbackInterfaceEventListenerMethod0
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceEventListenerMethod0Function>>;
-typedef UniffiCallbackInterfaceEventListenerMethod0Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceEventListenerMethod0Function = void Function(
-    int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceFree = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceFreeFunction>>;
-typedef UniffiCallbackInterfaceFreeFunction = ffi.Void Function(ffi.Uint64);
-typedef DartUniffiCallbackInterfaceFreeFunction = void Function(int);
-
 final class UniffiVTableCallbackInterfaceLogger extends ffi.Struct {
   external UniffiCallbackInterfaceLoggerMethod0 log;
 
   external UniffiCallbackInterfaceFree uniffiFree;
 }
-
-typedef UniffiCallbackInterfaceLoggerMethod0
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceLoggerMethod0Function>>;
-typedef UniffiCallbackInterfaceLoggerMethod0Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceLoggerMethod0Function = void Function(
-    int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
 
 final class UniffiVTableCallbackInterfaceSigner extends ffi.Struct {
   external UniffiCallbackInterfaceSignerMethod0 xpub;
@@ -5876,59 +5995,6 @@ final class UniffiVTableCallbackInterfaceSigner extends ffi.Struct {
 
   external UniffiCallbackInterfaceFree uniffiFree;
 }
-
-typedef UniffiCallbackInterfaceSignerMethod0
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod0Function>>;
-typedef UniffiCallbackInterfaceSignerMethod0Function = ffi.Void Function(
-    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod0Function = void Function(
-    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod1
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod1Function>>;
-typedef UniffiCallbackInterfaceSignerMethod1Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod1Function = void Function(
-    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod2
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod2Function>>;
-typedef UniffiCallbackInterfaceSignerMethod2Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod2Function = void Function(
-    int, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod3
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod3Function>>;
-typedef UniffiCallbackInterfaceSignerMethod3Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod3Function = void Function(
-    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod4
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod4Function>>;
-typedef UniffiCallbackInterfaceSignerMethod4Function = ffi.Void Function(
-    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod4Function = void Function(
-    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod5
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod5Function>>;
-typedef UniffiCallbackInterfaceSignerMethod5Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod5Function = void Function(
-    int, RustBuffer, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod6
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod6Function>>;
-typedef UniffiCallbackInterfaceSignerMethod6Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod6Function = void Function(
-    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiCallbackInterfaceSignerMethod7
-    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceSignerMethod7Function>>;
-typedef UniffiCallbackInterfaceSignerMethod7Function = ffi.Void Function(
-    ffi.Uint64, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef DartUniffiCallbackInterfaceSignerMethod7Function = void Function(
-    int, RustBuffer, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
-typedef UniffiRustFutureContinuationCallback
-    = ffi.Pointer<ffi.NativeFunction<UniffiRustFutureContinuationCallbackFunction>>;
-typedef UniffiRustFutureContinuationCallbackFunction = ffi.Void Function(ffi.Uint64, ffi.Int8);
-typedef DartUniffiRustFutureContinuationCallbackFunction = void Function(int, int);
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 

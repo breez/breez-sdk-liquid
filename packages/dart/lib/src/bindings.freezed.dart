@@ -1,3 +1,4 @@
+// dart format width=80
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -9,1813 +10,1491 @@ part of 'bindings.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
 /// @nodoc
-mixin _$AesSuccessActionDataResult {}
+mixin _$AesSuccessActionDataResult {
 
-/// @nodoc
-abstract class $AesSuccessActionDataResultCopyWith<$Res> {
-  factory $AesSuccessActionDataResultCopyWith(
-    AesSuccessActionDataResult value,
-    $Res Function(AesSuccessActionDataResult) then,
-  ) = _$AesSuccessActionDataResultCopyWithImpl<$Res, AesSuccessActionDataResult>;
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AesSuccessActionDataResult);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AesSuccessActionDataResult()';
+}
+
+
 }
 
 /// @nodoc
-class _$AesSuccessActionDataResultCopyWithImpl<$Res, $Val extends AesSuccessActionDataResult>
-    implements $AesSuccessActionDataResultCopyWith<$Res> {
-  _$AesSuccessActionDataResultCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
+class $AesSuccessActionDataResultCopyWith<$Res>  {
+$AesSuccessActionDataResultCopyWith(AesSuccessActionDataResult _, $Res Function(AesSuccessActionDataResult) __);
 }
 
-/// @nodoc
-abstract class _$$AesSuccessActionDataResult_DecryptedImplCopyWith<$Res> {
-  factory _$$AesSuccessActionDataResult_DecryptedImplCopyWith(
-    _$AesSuccessActionDataResult_DecryptedImpl value,
-    $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) then,
-  ) = __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({AesSuccessActionDataDecrypted data});
-}
-
-/// @nodoc
-class __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<$Res>
-    extends _$AesSuccessActionDataResultCopyWithImpl<$Res, _$AesSuccessActionDataResult_DecryptedImpl>
-    implements _$$AesSuccessActionDataResult_DecryptedImplCopyWith<$Res> {
-  __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl(
-    _$AesSuccessActionDataResult_DecryptedImpl _value,
-    $Res Function(_$AesSuccessActionDataResult_DecryptedImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$AesSuccessActionDataResult_DecryptedImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as AesSuccessActionDataDecrypted,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$AesSuccessActionDataResult_DecryptedImpl extends AesSuccessActionDataResult_Decrypted {
-  const _$AesSuccessActionDataResult_DecryptedImpl({required this.data}) : super._();
 
-  @override
-  final AesSuccessActionDataDecrypted data;
+class AesSuccessActionDataResult_Decrypted extends AesSuccessActionDataResult {
+  const AesSuccessActionDataResult_Decrypted({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'AesSuccessActionDataResult.decrypted(data: $data)';
-  }
+ final  AesSuccessActionDataDecrypted data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AesSuccessActionDataResult_DecryptedImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of AesSuccessActionDataResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AesSuccessActionDataResult_DecryptedCopyWith<AesSuccessActionDataResult_Decrypted> get copyWith => _$AesSuccessActionDataResult_DecryptedCopyWithImpl<AesSuccessActionDataResult_Decrypted>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AesSuccessActionDataResult_DecryptedImplCopyWith<_$AesSuccessActionDataResult_DecryptedImpl>
-  get copyWith =>
-      __$$AesSuccessActionDataResult_DecryptedImplCopyWithImpl<_$AesSuccessActionDataResult_DecryptedImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AesSuccessActionDataResult_Decrypted&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class AesSuccessActionDataResult_Decrypted extends AesSuccessActionDataResult {
-  const factory AesSuccessActionDataResult_Decrypted({required final AesSuccessActionDataDecrypted data}) =
-      _$AesSuccessActionDataResult_DecryptedImpl;
-  const AesSuccessActionDataResult_Decrypted._() : super._();
 
-  AesSuccessActionDataDecrypted get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AesSuccessActionDataResult_DecryptedImplCopyWith<_$AesSuccessActionDataResult_DecryptedImpl>
-  get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'AesSuccessActionDataResult.decrypted(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<$Res> {
-  factory _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith(
-    _$AesSuccessActionDataResult_ErrorStatusImpl value,
-    $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) then,
-  ) = __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String reason});
+abstract mixin class $AesSuccessActionDataResult_DecryptedCopyWith<$Res> implements $AesSuccessActionDataResultCopyWith<$Res> {
+  factory $AesSuccessActionDataResult_DecryptedCopyWith(AesSuccessActionDataResult_Decrypted value, $Res Function(AesSuccessActionDataResult_Decrypted) _then) = _$AesSuccessActionDataResult_DecryptedCopyWithImpl;
+@useResult
+$Res call({
+ AesSuccessActionDataDecrypted data
+});
+
+
+
+
+}
+/// @nodoc
+class _$AesSuccessActionDataResult_DecryptedCopyWithImpl<$Res>
+    implements $AesSuccessActionDataResult_DecryptedCopyWith<$Res> {
+  _$AesSuccessActionDataResult_DecryptedCopyWithImpl(this._self, this._then);
+
+  final AesSuccessActionDataResult_Decrypted _self;
+  final $Res Function(AesSuccessActionDataResult_Decrypted) _then;
+
+/// Create a copy of AesSuccessActionDataResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(AesSuccessActionDataResult_Decrypted(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as AesSuccessActionDataDecrypted,
+  ));
 }
 
-/// @nodoc
-class __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<$Res>
-    extends _$AesSuccessActionDataResultCopyWithImpl<$Res, _$AesSuccessActionDataResult_ErrorStatusImpl>
-    implements _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<$Res> {
-  __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl(
-    _$AesSuccessActionDataResult_ErrorStatusImpl _value,
-    $Res Function(_$AesSuccessActionDataResult_ErrorStatusImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? reason = null}) {
-    return _then(
-      _$AesSuccessActionDataResult_ErrorStatusImpl(
-        reason:
-            null == reason
-                ? _value.reason
-                : reason // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$AesSuccessActionDataResult_ErrorStatusImpl extends AesSuccessActionDataResult_ErrorStatus {
-  const _$AesSuccessActionDataResult_ErrorStatusImpl({required this.reason}) : super._();
 
-  @override
-  final String reason;
+class AesSuccessActionDataResult_ErrorStatus extends AesSuccessActionDataResult {
+  const AesSuccessActionDataResult_ErrorStatus({required this.reason}): super._();
+  
 
-  @override
-  String toString() {
-    return 'AesSuccessActionDataResult.errorStatus(reason: $reason)';
-  }
+ final  String reason;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AesSuccessActionDataResult_ErrorStatusImpl &&
-            (identical(other.reason, reason) || other.reason == reason));
-  }
+/// Create a copy of AesSuccessActionDataResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AesSuccessActionDataResult_ErrorStatusCopyWith<AesSuccessActionDataResult_ErrorStatus> get copyWith => _$AesSuccessActionDataResult_ErrorStatusCopyWithImpl<AesSuccessActionDataResult_ErrorStatus>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, reason);
 
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<_$AesSuccessActionDataResult_ErrorStatusImpl>
-  get copyWith => __$$AesSuccessActionDataResult_ErrorStatusImplCopyWithImpl<
-    _$AesSuccessActionDataResult_ErrorStatusImpl
-  >(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AesSuccessActionDataResult_ErrorStatus&&(identical(other.reason, reason) || other.reason == reason));
 }
 
-abstract class AesSuccessActionDataResult_ErrorStatus extends AesSuccessActionDataResult {
-  const factory AesSuccessActionDataResult_ErrorStatus({required final String reason}) =
-      _$AesSuccessActionDataResult_ErrorStatusImpl;
-  const AesSuccessActionDataResult_ErrorStatus._() : super._();
 
-  String get reason;
+@override
+int get hashCode => Object.hash(runtimeType,reason);
 
-  /// Create a copy of AesSuccessActionDataResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AesSuccessActionDataResult_ErrorStatusImplCopyWith<_$AesSuccessActionDataResult_ErrorStatusImpl>
-  get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'AesSuccessActionDataResult.errorStatus(reason: $reason)';
+}
+
+
 }
 
 /// @nodoc
-mixin _$Amount {}
+abstract mixin class $AesSuccessActionDataResult_ErrorStatusCopyWith<$Res> implements $AesSuccessActionDataResultCopyWith<$Res> {
+  factory $AesSuccessActionDataResult_ErrorStatusCopyWith(AesSuccessActionDataResult_ErrorStatus value, $Res Function(AesSuccessActionDataResult_ErrorStatus) _then) = _$AesSuccessActionDataResult_ErrorStatusCopyWithImpl;
+@useResult
+$Res call({
+ String reason
+});
 
+
+
+
+}
 /// @nodoc
-abstract class $AmountCopyWith<$Res> {
-  factory $AmountCopyWith(Amount value, $Res Function(Amount) then) = _$AmountCopyWithImpl<$Res, Amount>;
+class _$AesSuccessActionDataResult_ErrorStatusCopyWithImpl<$Res>
+    implements $AesSuccessActionDataResult_ErrorStatusCopyWith<$Res> {
+  _$AesSuccessActionDataResult_ErrorStatusCopyWithImpl(this._self, this._then);
+
+  final AesSuccessActionDataResult_ErrorStatus _self;
+  final $Res Function(AesSuccessActionDataResult_ErrorStatus) _then;
+
+/// Create a copy of AesSuccessActionDataResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? reason = null,}) {
+  return _then(AesSuccessActionDataResult_ErrorStatus(
+reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 /// @nodoc
-class _$AmountCopyWithImpl<$Res, $Val extends Amount> implements $AmountCopyWith<$Res> {
-  _$AmountCopyWithImpl(this._value, this._then);
+mixin _$Amount {
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
 
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Amount);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'Amount()';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$Amount_BitcoinImplCopyWith<$Res> {
-  factory _$$Amount_BitcoinImplCopyWith(
-    _$Amount_BitcoinImpl value,
-    $Res Function(_$Amount_BitcoinImpl) then,
-  ) = __$$Amount_BitcoinImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({BigInt amountMsat});
+class $AmountCopyWith<$Res>  {
+$AmountCopyWith(Amount _, $Res Function(Amount) __);
 }
 
-/// @nodoc
-class __$$Amount_BitcoinImplCopyWithImpl<$Res> extends _$AmountCopyWithImpl<$Res, _$Amount_BitcoinImpl>
-    implements _$$Amount_BitcoinImplCopyWith<$Res> {
-  __$$Amount_BitcoinImplCopyWithImpl(_$Amount_BitcoinImpl _value, $Res Function(_$Amount_BitcoinImpl) _then)
-    : super(_value, _then);
-
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? amountMsat = null}) {
-    return _then(
-      _$Amount_BitcoinImpl(
-        amountMsat:
-            null == amountMsat
-                ? _value.amountMsat
-                : amountMsat // ignore: cast_nullable_to_non_nullable
-                    as BigInt,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$Amount_BitcoinImpl extends Amount_Bitcoin {
-  const _$Amount_BitcoinImpl({required this.amountMsat}) : super._();
 
-  @override
-  final BigInt amountMsat;
+class Amount_Bitcoin extends Amount {
+  const Amount_Bitcoin({required this.amountMsat}): super._();
+  
 
-  @override
-  String toString() {
-    return 'Amount.bitcoin(amountMsat: $amountMsat)';
-  }
+ final  BigInt amountMsat;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$Amount_BitcoinImpl &&
-            (identical(other.amountMsat, amountMsat) || other.amountMsat == amountMsat));
-  }
+/// Create a copy of Amount
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$Amount_BitcoinCopyWith<Amount_Bitcoin> get copyWith => _$Amount_BitcoinCopyWithImpl<Amount_Bitcoin>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, amountMsat);
 
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$Amount_BitcoinImplCopyWith<_$Amount_BitcoinImpl> get copyWith =>
-      __$$Amount_BitcoinImplCopyWithImpl<_$Amount_BitcoinImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Amount_Bitcoin&&(identical(other.amountMsat, amountMsat) || other.amountMsat == amountMsat));
 }
 
-abstract class Amount_Bitcoin extends Amount {
-  const factory Amount_Bitcoin({required final BigInt amountMsat}) = _$Amount_BitcoinImpl;
-  const Amount_Bitcoin._() : super._();
 
-  BigInt get amountMsat;
+@override
+int get hashCode => Object.hash(runtimeType,amountMsat);
 
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$Amount_BitcoinImplCopyWith<_$Amount_BitcoinImpl> get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'Amount.bitcoin(amountMsat: $amountMsat)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$Amount_CurrencyImplCopyWith<$Res> {
-  factory _$$Amount_CurrencyImplCopyWith(
-    _$Amount_CurrencyImpl value,
-    $Res Function(_$Amount_CurrencyImpl) then,
-  ) = __$$Amount_CurrencyImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String iso4217Code, BigInt fractionalAmount});
+abstract mixin class $Amount_BitcoinCopyWith<$Res> implements $AmountCopyWith<$Res> {
+  factory $Amount_BitcoinCopyWith(Amount_Bitcoin value, $Res Function(Amount_Bitcoin) _then) = _$Amount_BitcoinCopyWithImpl;
+@useResult
+$Res call({
+ BigInt amountMsat
+});
+
+
+
+
+}
+/// @nodoc
+class _$Amount_BitcoinCopyWithImpl<$Res>
+    implements $Amount_BitcoinCopyWith<$Res> {
+  _$Amount_BitcoinCopyWithImpl(this._self, this._then);
+
+  final Amount_Bitcoin _self;
+  final $Res Function(Amount_Bitcoin) _then;
+
+/// Create a copy of Amount
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? amountMsat = null,}) {
+  return _then(Amount_Bitcoin(
+amountMsat: null == amountMsat ? _self.amountMsat : amountMsat // ignore: cast_nullable_to_non_nullable
+as BigInt,
+  ));
 }
 
-/// @nodoc
-class __$$Amount_CurrencyImplCopyWithImpl<$Res> extends _$AmountCopyWithImpl<$Res, _$Amount_CurrencyImpl>
-    implements _$$Amount_CurrencyImplCopyWith<$Res> {
-  __$$Amount_CurrencyImplCopyWithImpl(
-    _$Amount_CurrencyImpl _value,
-    $Res Function(_$Amount_CurrencyImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? iso4217Code = null, Object? fractionalAmount = null}) {
-    return _then(
-      _$Amount_CurrencyImpl(
-        iso4217Code:
-            null == iso4217Code
-                ? _value.iso4217Code
-                : iso4217Code // ignore: cast_nullable_to_non_nullable
-                    as String,
-        fractionalAmount:
-            null == fractionalAmount
-                ? _value.fractionalAmount
-                : fractionalAmount // ignore: cast_nullable_to_non_nullable
-                    as BigInt,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$Amount_CurrencyImpl extends Amount_Currency {
-  const _$Amount_CurrencyImpl({required this.iso4217Code, required this.fractionalAmount}) : super._();
 
-  @override
-  final String iso4217Code;
-  @override
-  final BigInt fractionalAmount;
+class Amount_Currency extends Amount {
+  const Amount_Currency({required this.iso4217Code, required this.fractionalAmount}): super._();
+  
 
-  @override
-  String toString() {
-    return 'Amount.currency(iso4217Code: $iso4217Code, fractionalAmount: $fractionalAmount)';
-  }
+ final  String iso4217Code;
+ final  BigInt fractionalAmount;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$Amount_CurrencyImpl &&
-            (identical(other.iso4217Code, iso4217Code) || other.iso4217Code == iso4217Code) &&
-            (identical(other.fractionalAmount, fractionalAmount) ||
-                other.fractionalAmount == fractionalAmount));
-  }
+/// Create a copy of Amount
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$Amount_CurrencyCopyWith<Amount_Currency> get copyWith => _$Amount_CurrencyCopyWithImpl<Amount_Currency>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, iso4217Code, fractionalAmount);
 
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$Amount_CurrencyImplCopyWith<_$Amount_CurrencyImpl> get copyWith =>
-      __$$Amount_CurrencyImplCopyWithImpl<_$Amount_CurrencyImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Amount_Currency&&(identical(other.iso4217Code, iso4217Code) || other.iso4217Code == iso4217Code)&&(identical(other.fractionalAmount, fractionalAmount) || other.fractionalAmount == fractionalAmount));
 }
 
-abstract class Amount_Currency extends Amount {
-  const factory Amount_Currency({required final String iso4217Code, required final BigInt fractionalAmount}) =
-      _$Amount_CurrencyImpl;
-  const Amount_Currency._() : super._();
 
-  String get iso4217Code;
-  BigInt get fractionalAmount;
+@override
+int get hashCode => Object.hash(runtimeType,iso4217Code,fractionalAmount);
 
-  /// Create a copy of Amount
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$Amount_CurrencyImplCopyWith<_$Amount_CurrencyImpl> get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'Amount.currency(iso4217Code: $iso4217Code, fractionalAmount: $fractionalAmount)';
+}
+
+
 }
 
 /// @nodoc
-mixin _$InputType {}
+abstract mixin class $Amount_CurrencyCopyWith<$Res> implements $AmountCopyWith<$Res> {
+  factory $Amount_CurrencyCopyWith(Amount_Currency value, $Res Function(Amount_Currency) _then) = _$Amount_CurrencyCopyWithImpl;
+@useResult
+$Res call({
+ String iso4217Code, BigInt fractionalAmount
+});
 
+
+
+
+}
 /// @nodoc
-abstract class $InputTypeCopyWith<$Res> {
-  factory $InputTypeCopyWith(InputType value, $Res Function(InputType) then) =
-      _$InputTypeCopyWithImpl<$Res, InputType>;
+class _$Amount_CurrencyCopyWithImpl<$Res>
+    implements $Amount_CurrencyCopyWith<$Res> {
+  _$Amount_CurrencyCopyWithImpl(this._self, this._then);
+
+  final Amount_Currency _self;
+  final $Res Function(Amount_Currency) _then;
+
+/// Create a copy of Amount
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? iso4217Code = null,Object? fractionalAmount = null,}) {
+  return _then(Amount_Currency(
+iso4217Code: null == iso4217Code ? _self.iso4217Code : iso4217Code // ignore: cast_nullable_to_non_nullable
+as String,fractionalAmount: null == fractionalAmount ? _self.fractionalAmount : fractionalAmount // ignore: cast_nullable_to_non_nullable
+as BigInt,
+  ));
+}
+
+
 }
 
 /// @nodoc
-class _$InputTypeCopyWithImpl<$Res, $Val extends InputType> implements $InputTypeCopyWith<$Res> {
-  _$InputTypeCopyWithImpl(this._value, this._then);
+mixin _$InputType {
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'InputType()';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_BitcoinAddressImplCopyWith<$Res> {
-  factory _$$InputType_BitcoinAddressImplCopyWith(
-    _$InputType_BitcoinAddressImpl value,
-    $Res Function(_$InputType_BitcoinAddressImpl) then,
-  ) = __$$InputType_BitcoinAddressImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({BitcoinAddressData address});
+class $InputTypeCopyWith<$Res>  {
+$InputTypeCopyWith(InputType _, $Res Function(InputType) __);
 }
 
-/// @nodoc
-class __$$InputType_BitcoinAddressImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_BitcoinAddressImpl>
-    implements _$$InputType_BitcoinAddressImplCopyWith<$Res> {
-  __$$InputType_BitcoinAddressImplCopyWithImpl(
-    _$InputType_BitcoinAddressImpl _value,
-    $Res Function(_$InputType_BitcoinAddressImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? address = null}) {
-    return _then(
-      _$InputType_BitcoinAddressImpl(
-        address:
-            null == address
-                ? _value.address
-                : address // ignore: cast_nullable_to_non_nullable
-                    as BitcoinAddressData,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$InputType_BitcoinAddressImpl extends InputType_BitcoinAddress {
-  const _$InputType_BitcoinAddressImpl({required this.address}) : super._();
 
-  @override
-  final BitcoinAddressData address;
+class InputType_BitcoinAddress extends InputType {
+  const InputType_BitcoinAddress({required this.address}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.bitcoinAddress(address: $address)';
-  }
+ final  BitcoinAddressData address;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_BitcoinAddressImpl &&
-            (identical(other.address, address) || other.address == address));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_BitcoinAddressCopyWith<InputType_BitcoinAddress> get copyWith => _$InputType_BitcoinAddressCopyWithImpl<InputType_BitcoinAddress>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_BitcoinAddressImplCopyWith<_$InputType_BitcoinAddressImpl> get copyWith =>
-      __$$InputType_BitcoinAddressImplCopyWithImpl<_$InputType_BitcoinAddressImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_BitcoinAddress&&(identical(other.address, address) || other.address == address));
 }
 
-abstract class InputType_BitcoinAddress extends InputType {
-  const factory InputType_BitcoinAddress({required final BitcoinAddressData address}) =
-      _$InputType_BitcoinAddressImpl;
-  const InputType_BitcoinAddress._() : super._();
 
-  BitcoinAddressData get address;
+@override
+int get hashCode => Object.hash(runtimeType,address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_BitcoinAddressImplCopyWith<_$InputType_BitcoinAddressImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.bitcoinAddress(address: $address)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_LiquidAddressImplCopyWith<$Res> {
-  factory _$$InputType_LiquidAddressImplCopyWith(
-    _$InputType_LiquidAddressImpl value,
-    $Res Function(_$InputType_LiquidAddressImpl) then,
-  ) = __$$InputType_LiquidAddressImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LiquidAddressData address});
+abstract mixin class $InputType_BitcoinAddressCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_BitcoinAddressCopyWith(InputType_BitcoinAddress value, $Res Function(InputType_BitcoinAddress) _then) = _$InputType_BitcoinAddressCopyWithImpl;
+@useResult
+$Res call({
+ BitcoinAddressData address
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_BitcoinAddressCopyWithImpl<$Res>
+    implements $InputType_BitcoinAddressCopyWith<$Res> {
+  _$InputType_BitcoinAddressCopyWithImpl(this._self, this._then);
+
+  final InputType_BitcoinAddress _self;
+  final $Res Function(InputType_BitcoinAddress) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? address = null,}) {
+  return _then(InputType_BitcoinAddress(
+address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as BitcoinAddressData,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_LiquidAddressImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_LiquidAddressImpl>
-    implements _$$InputType_LiquidAddressImplCopyWith<$Res> {
-  __$$InputType_LiquidAddressImplCopyWithImpl(
-    _$InputType_LiquidAddressImpl _value,
-    $Res Function(_$InputType_LiquidAddressImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? address = null}) {
-    return _then(
-      _$InputType_LiquidAddressImpl(
-        address:
-            null == address
-                ? _value.address
-                : address // ignore: cast_nullable_to_non_nullable
-                    as LiquidAddressData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_LiquidAddressImpl extends InputType_LiquidAddress {
-  const _$InputType_LiquidAddressImpl({required this.address}) : super._();
 
-  @override
-  final LiquidAddressData address;
+class InputType_LiquidAddress extends InputType {
+  const InputType_LiquidAddress({required this.address}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.liquidAddress(address: $address)';
-  }
+ final  LiquidAddressData address;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_LiquidAddressImpl &&
-            (identical(other.address, address) || other.address == address));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_LiquidAddressCopyWith<InputType_LiquidAddress> get copyWith => _$InputType_LiquidAddressCopyWithImpl<InputType_LiquidAddress>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_LiquidAddressImplCopyWith<_$InputType_LiquidAddressImpl> get copyWith =>
-      __$$InputType_LiquidAddressImplCopyWithImpl<_$InputType_LiquidAddressImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_LiquidAddress&&(identical(other.address, address) || other.address == address));
 }
 
-abstract class InputType_LiquidAddress extends InputType {
-  const factory InputType_LiquidAddress({required final LiquidAddressData address}) =
-      _$InputType_LiquidAddressImpl;
-  const InputType_LiquidAddress._() : super._();
 
-  LiquidAddressData get address;
+@override
+int get hashCode => Object.hash(runtimeType,address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_LiquidAddressImplCopyWith<_$InputType_LiquidAddressImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.liquidAddress(address: $address)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_Bolt11ImplCopyWith<$Res> {
-  factory _$$InputType_Bolt11ImplCopyWith(
-    _$InputType_Bolt11Impl value,
-    $Res Function(_$InputType_Bolt11Impl) then,
-  ) = __$$InputType_Bolt11ImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LNInvoice invoice});
+abstract mixin class $InputType_LiquidAddressCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_LiquidAddressCopyWith(InputType_LiquidAddress value, $Res Function(InputType_LiquidAddress) _then) = _$InputType_LiquidAddressCopyWithImpl;
+@useResult
+$Res call({
+ LiquidAddressData address
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_LiquidAddressCopyWithImpl<$Res>
+    implements $InputType_LiquidAddressCopyWith<$Res> {
+  _$InputType_LiquidAddressCopyWithImpl(this._self, this._then);
+
+  final InputType_LiquidAddress _self;
+  final $Res Function(InputType_LiquidAddress) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? address = null,}) {
+  return _then(InputType_LiquidAddress(
+address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as LiquidAddressData,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_Bolt11ImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt11Impl>
-    implements _$$InputType_Bolt11ImplCopyWith<$Res> {
-  __$$InputType_Bolt11ImplCopyWithImpl(
-    _$InputType_Bolt11Impl _value,
-    $Res Function(_$InputType_Bolt11Impl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? invoice = null}) {
-    return _then(
-      _$InputType_Bolt11Impl(
-        invoice:
-            null == invoice
-                ? _value.invoice
-                : invoice // ignore: cast_nullable_to_non_nullable
-                    as LNInvoice,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_Bolt11Impl extends InputType_Bolt11 {
-  const _$InputType_Bolt11Impl({required this.invoice}) : super._();
 
-  @override
-  final LNInvoice invoice;
+class InputType_Bolt11 extends InputType {
+  const InputType_Bolt11({required this.invoice}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.bolt11(invoice: $invoice)';
-  }
+ final  LNInvoice invoice;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_Bolt11Impl &&
-            (identical(other.invoice, invoice) || other.invoice == invoice));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_Bolt11CopyWith<InputType_Bolt11> get copyWith => _$InputType_Bolt11CopyWithImpl<InputType_Bolt11>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, invoice);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_Bolt11ImplCopyWith<_$InputType_Bolt11Impl> get copyWith =>
-      __$$InputType_Bolt11ImplCopyWithImpl<_$InputType_Bolt11Impl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_Bolt11&&(identical(other.invoice, invoice) || other.invoice == invoice));
 }
 
-abstract class InputType_Bolt11 extends InputType {
-  const factory InputType_Bolt11({required final LNInvoice invoice}) = _$InputType_Bolt11Impl;
-  const InputType_Bolt11._() : super._();
 
-  LNInvoice get invoice;
+@override
+int get hashCode => Object.hash(runtimeType,invoice);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_Bolt11ImplCopyWith<_$InputType_Bolt11Impl> get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.bolt11(invoice: $invoice)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_Bolt12OfferImplCopyWith<$Res> {
-  factory _$$InputType_Bolt12OfferImplCopyWith(
-    _$InputType_Bolt12OfferImpl value,
-    $Res Function(_$InputType_Bolt12OfferImpl) then,
-  ) = __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LNOffer offer, String? bip353Address});
+abstract mixin class $InputType_Bolt11CopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_Bolt11CopyWith(InputType_Bolt11 value, $Res Function(InputType_Bolt11) _then) = _$InputType_Bolt11CopyWithImpl;
+@useResult
+$Res call({
+ LNInvoice invoice
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_Bolt11CopyWithImpl<$Res>
+    implements $InputType_Bolt11CopyWith<$Res> {
+  _$InputType_Bolt11CopyWithImpl(this._self, this._then);
+
+  final InputType_Bolt11 _self;
+  final $Res Function(InputType_Bolt11) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? invoice = null,}) {
+  return _then(InputType_Bolt11(
+invoice: null == invoice ? _self.invoice : invoice // ignore: cast_nullable_to_non_nullable
+as LNInvoice,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_Bolt12OfferImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_Bolt12OfferImpl>
-    implements _$$InputType_Bolt12OfferImplCopyWith<$Res> {
-  __$$InputType_Bolt12OfferImplCopyWithImpl(
-    _$InputType_Bolt12OfferImpl _value,
-    $Res Function(_$InputType_Bolt12OfferImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? offer = null, Object? bip353Address = freezed}) {
-    return _then(
-      _$InputType_Bolt12OfferImpl(
-        offer:
-            null == offer
-                ? _value.offer
-                : offer // ignore: cast_nullable_to_non_nullable
-                    as LNOffer,
-        bip353Address:
-            freezed == bip353Address
-                ? _value.bip353Address
-                : bip353Address // ignore: cast_nullable_to_non_nullable
-                    as String?,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_Bolt12OfferImpl extends InputType_Bolt12Offer {
-  const _$InputType_Bolt12OfferImpl({required this.offer, this.bip353Address}) : super._();
 
-  @override
-  final LNOffer offer;
-  @override
-  final String? bip353Address;
+class InputType_Bolt12Offer extends InputType {
+  const InputType_Bolt12Offer({required this.offer, this.bip353Address}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.bolt12Offer(offer: $offer, bip353Address: $bip353Address)';
-  }
+ final  LNOffer offer;
+ final  String? bip353Address;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_Bolt12OfferImpl &&
-            (identical(other.offer, offer) || other.offer == offer) &&
-            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_Bolt12OfferCopyWith<InputType_Bolt12Offer> get copyWith => _$InputType_Bolt12OfferCopyWithImpl<InputType_Bolt12Offer>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, offer, bip353Address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_Bolt12OfferImplCopyWith<_$InputType_Bolt12OfferImpl> get copyWith =>
-      __$$InputType_Bolt12OfferImplCopyWithImpl<_$InputType_Bolt12OfferImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_Bolt12Offer&&(identical(other.offer, offer) || other.offer == offer)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
 }
 
-abstract class InputType_Bolt12Offer extends InputType {
-  const factory InputType_Bolt12Offer({required final LNOffer offer, final String? bip353Address}) =
-      _$InputType_Bolt12OfferImpl;
-  const InputType_Bolt12Offer._() : super._();
 
-  LNOffer get offer;
-  String? get bip353Address;
+@override
+int get hashCode => Object.hash(runtimeType,offer,bip353Address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_Bolt12OfferImplCopyWith<_$InputType_Bolt12OfferImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.bolt12Offer(offer: $offer, bip353Address: $bip353Address)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_NodeIdImplCopyWith<$Res> {
-  factory _$$InputType_NodeIdImplCopyWith(
-    _$InputType_NodeIdImpl value,
-    $Res Function(_$InputType_NodeIdImpl) then,
-  ) = __$$InputType_NodeIdImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String nodeId});
+abstract mixin class $InputType_Bolt12OfferCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_Bolt12OfferCopyWith(InputType_Bolt12Offer value, $Res Function(InputType_Bolt12Offer) _then) = _$InputType_Bolt12OfferCopyWithImpl;
+@useResult
+$Res call({
+ LNOffer offer, String? bip353Address
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_Bolt12OfferCopyWithImpl<$Res>
+    implements $InputType_Bolt12OfferCopyWith<$Res> {
+  _$InputType_Bolt12OfferCopyWithImpl(this._self, this._then);
+
+  final InputType_Bolt12Offer _self;
+  final $Res Function(InputType_Bolt12Offer) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? offer = null,Object? bip353Address = freezed,}) {
+  return _then(InputType_Bolt12Offer(
+offer: null == offer ? _self.offer : offer // ignore: cast_nullable_to_non_nullable
+as LNOffer,bip353Address: freezed == bip353Address ? _self.bip353Address : bip353Address // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_NodeIdImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_NodeIdImpl>
-    implements _$$InputType_NodeIdImplCopyWith<$Res> {
-  __$$InputType_NodeIdImplCopyWithImpl(
-    _$InputType_NodeIdImpl _value,
-    $Res Function(_$InputType_NodeIdImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? nodeId = null}) {
-    return _then(
-      _$InputType_NodeIdImpl(
-        nodeId:
-            null == nodeId
-                ? _value.nodeId
-                : nodeId // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_NodeIdImpl extends InputType_NodeId {
-  const _$InputType_NodeIdImpl({required this.nodeId}) : super._();
 
-  @override
-  final String nodeId;
+class InputType_NodeId extends InputType {
+  const InputType_NodeId({required this.nodeId}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.nodeId(nodeId: $nodeId)';
-  }
+ final  String nodeId;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_NodeIdImpl &&
-            (identical(other.nodeId, nodeId) || other.nodeId == nodeId));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_NodeIdCopyWith<InputType_NodeId> get copyWith => _$InputType_NodeIdCopyWithImpl<InputType_NodeId>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, nodeId);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_NodeIdImplCopyWith<_$InputType_NodeIdImpl> get copyWith =>
-      __$$InputType_NodeIdImplCopyWithImpl<_$InputType_NodeIdImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_NodeId&&(identical(other.nodeId, nodeId) || other.nodeId == nodeId));
 }
 
-abstract class InputType_NodeId extends InputType {
-  const factory InputType_NodeId({required final String nodeId}) = _$InputType_NodeIdImpl;
-  const InputType_NodeId._() : super._();
 
-  String get nodeId;
+@override
+int get hashCode => Object.hash(runtimeType,nodeId);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_NodeIdImplCopyWith<_$InputType_NodeIdImpl> get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.nodeId(nodeId: $nodeId)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_UrlImplCopyWith<$Res> {
-  factory _$$InputType_UrlImplCopyWith(_$InputType_UrlImpl value, $Res Function(_$InputType_UrlImpl) then) =
-      __$$InputType_UrlImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String url});
+abstract mixin class $InputType_NodeIdCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_NodeIdCopyWith(InputType_NodeId value, $Res Function(InputType_NodeId) _then) = _$InputType_NodeIdCopyWithImpl;
+@useResult
+$Res call({
+ String nodeId
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_NodeIdCopyWithImpl<$Res>
+    implements $InputType_NodeIdCopyWith<$Res> {
+  _$InputType_NodeIdCopyWithImpl(this._self, this._then);
+
+  final InputType_NodeId _self;
+  final $Res Function(InputType_NodeId) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? nodeId = null,}) {
+  return _then(InputType_NodeId(
+nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_UrlImplCopyWithImpl<$Res> extends _$InputTypeCopyWithImpl<$Res, _$InputType_UrlImpl>
-    implements _$$InputType_UrlImplCopyWith<$Res> {
-  __$$InputType_UrlImplCopyWithImpl(_$InputType_UrlImpl _value, $Res Function(_$InputType_UrlImpl) _then)
-    : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? url = null}) {
-    return _then(
-      _$InputType_UrlImpl(
-        url:
-            null == url
-                ? _value.url
-                : url // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_UrlImpl extends InputType_Url {
-  const _$InputType_UrlImpl({required this.url}) : super._();
 
-  @override
-  final String url;
+class InputType_Url extends InputType {
+  const InputType_Url({required this.url}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.url(url: $url)';
-  }
+ final  String url;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_UrlImpl &&
-            (identical(other.url, url) || other.url == url));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_UrlCopyWith<InputType_Url> get copyWith => _$InputType_UrlCopyWithImpl<InputType_Url>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, url);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_UrlImplCopyWith<_$InputType_UrlImpl> get copyWith =>
-      __$$InputType_UrlImplCopyWithImpl<_$InputType_UrlImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_Url&&(identical(other.url, url) || other.url == url));
 }
 
-abstract class InputType_Url extends InputType {
-  const factory InputType_Url({required final String url}) = _$InputType_UrlImpl;
-  const InputType_Url._() : super._();
 
-  String get url;
+@override
+int get hashCode => Object.hash(runtimeType,url);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_UrlImplCopyWith<_$InputType_UrlImpl> get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.url(url: $url)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_LnUrlPayImplCopyWith<$Res> {
-  factory _$$InputType_LnUrlPayImplCopyWith(
-    _$InputType_LnUrlPayImpl value,
-    $Res Function(_$InputType_LnUrlPayImpl) then,
-  ) = __$$InputType_LnUrlPayImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlPayRequestData data, String? bip353Address});
+abstract mixin class $InputType_UrlCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_UrlCopyWith(InputType_Url value, $Res Function(InputType_Url) _then) = _$InputType_UrlCopyWithImpl;
+@useResult
+$Res call({
+ String url
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_UrlCopyWithImpl<$Res>
+    implements $InputType_UrlCopyWith<$Res> {
+  _$InputType_UrlCopyWithImpl(this._self, this._then);
+
+  final InputType_Url _self;
+  final $Res Function(InputType_Url) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? url = null,}) {
+  return _then(InputType_Url(
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_LnUrlPayImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlPayImpl>
-    implements _$$InputType_LnUrlPayImplCopyWith<$Res> {
-  __$$InputType_LnUrlPayImplCopyWithImpl(
-    _$InputType_LnUrlPayImpl _value,
-    $Res Function(_$InputType_LnUrlPayImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null, Object? bip353Address = freezed}) {
-    return _then(
-      _$InputType_LnUrlPayImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlPayRequestData,
-        bip353Address:
-            freezed == bip353Address
-                ? _value.bip353Address
-                : bip353Address // ignore: cast_nullable_to_non_nullable
-                    as String?,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_LnUrlPayImpl extends InputType_LnUrlPay {
-  const _$InputType_LnUrlPayImpl({required this.data, this.bip353Address}) : super._();
 
-  @override
-  final LnUrlPayRequestData data;
-  @override
-  final String? bip353Address;
+class InputType_LnUrlPay extends InputType {
+  const InputType_LnUrlPay({required this.data, this.bip353Address}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.lnUrlPay(data: $data, bip353Address: $bip353Address)';
-  }
+ final  LnUrlPayRequestData data;
+ final  String? bip353Address;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_LnUrlPayImpl &&
-            (identical(other.data, data) || other.data == data) &&
-            (identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_LnUrlPayCopyWith<InputType_LnUrlPay> get copyWith => _$InputType_LnUrlPayCopyWithImpl<InputType_LnUrlPay>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data, bip353Address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_LnUrlPayImplCopyWith<_$InputType_LnUrlPayImpl> get copyWith =>
-      __$$InputType_LnUrlPayImplCopyWithImpl<_$InputType_LnUrlPayImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_LnUrlPay&&(identical(other.data, data) || other.data == data)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
 }
 
-abstract class InputType_LnUrlPay extends InputType {
-  const factory InputType_LnUrlPay({required final LnUrlPayRequestData data, final String? bip353Address}) =
-      _$InputType_LnUrlPayImpl;
-  const InputType_LnUrlPay._() : super._();
 
-  LnUrlPayRequestData get data;
-  String? get bip353Address;
+@override
+int get hashCode => Object.hash(runtimeType,data,bip353Address);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_LnUrlPayImplCopyWith<_$InputType_LnUrlPayImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.lnUrlPay(data: $data, bip353Address: $bip353Address)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_LnUrlWithdrawImplCopyWith<$Res> {
-  factory _$$InputType_LnUrlWithdrawImplCopyWith(
-    _$InputType_LnUrlWithdrawImpl value,
-    $Res Function(_$InputType_LnUrlWithdrawImpl) then,
-  ) = __$$InputType_LnUrlWithdrawImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlWithdrawRequestData data});
+abstract mixin class $InputType_LnUrlPayCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_LnUrlPayCopyWith(InputType_LnUrlPay value, $Res Function(InputType_LnUrlPay) _then) = _$InputType_LnUrlPayCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlPayRequestData data, String? bip353Address
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_LnUrlPayCopyWithImpl<$Res>
+    implements $InputType_LnUrlPayCopyWith<$Res> {
+  _$InputType_LnUrlPayCopyWithImpl(this._self, this._then);
+
+  final InputType_LnUrlPay _self;
+  final $Res Function(InputType_LnUrlPay) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,Object? bip353Address = freezed,}) {
+  return _then(InputType_LnUrlPay(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlPayRequestData,bip353Address: freezed == bip353Address ? _self.bip353Address : bip353Address // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_LnUrlWithdrawImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlWithdrawImpl>
-    implements _$$InputType_LnUrlWithdrawImplCopyWith<$Res> {
-  __$$InputType_LnUrlWithdrawImplCopyWithImpl(
-    _$InputType_LnUrlWithdrawImpl _value,
-    $Res Function(_$InputType_LnUrlWithdrawImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$InputType_LnUrlWithdrawImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlWithdrawRequestData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_LnUrlWithdrawImpl extends InputType_LnUrlWithdraw {
-  const _$InputType_LnUrlWithdrawImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlWithdrawRequestData data;
+class InputType_LnUrlWithdraw extends InputType {
+  const InputType_LnUrlWithdraw({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.lnUrlWithdraw(data: $data)';
-  }
+ final  LnUrlWithdrawRequestData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_LnUrlWithdrawImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_LnUrlWithdrawCopyWith<InputType_LnUrlWithdraw> get copyWith => _$InputType_LnUrlWithdrawCopyWithImpl<InputType_LnUrlWithdraw>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_LnUrlWithdrawImplCopyWith<_$InputType_LnUrlWithdrawImpl> get copyWith =>
-      __$$InputType_LnUrlWithdrawImplCopyWithImpl<_$InputType_LnUrlWithdrawImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_LnUrlWithdraw&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class InputType_LnUrlWithdraw extends InputType {
-  const factory InputType_LnUrlWithdraw({required final LnUrlWithdrawRequestData data}) =
-      _$InputType_LnUrlWithdrawImpl;
-  const InputType_LnUrlWithdraw._() : super._();
 
-  LnUrlWithdrawRequestData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_LnUrlWithdrawImplCopyWith<_$InputType_LnUrlWithdrawImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.lnUrlWithdraw(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_LnUrlAuthImplCopyWith<$Res> {
-  factory _$$InputType_LnUrlAuthImplCopyWith(
-    _$InputType_LnUrlAuthImpl value,
-    $Res Function(_$InputType_LnUrlAuthImpl) then,
-  ) = __$$InputType_LnUrlAuthImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlAuthRequestData data});
+abstract mixin class $InputType_LnUrlWithdrawCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_LnUrlWithdrawCopyWith(InputType_LnUrlWithdraw value, $Res Function(InputType_LnUrlWithdraw) _then) = _$InputType_LnUrlWithdrawCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlWithdrawRequestData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_LnUrlWithdrawCopyWithImpl<$Res>
+    implements $InputType_LnUrlWithdrawCopyWith<$Res> {
+  _$InputType_LnUrlWithdrawCopyWithImpl(this._self, this._then);
+
+  final InputType_LnUrlWithdraw _self;
+  final $Res Function(InputType_LnUrlWithdraw) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(InputType_LnUrlWithdraw(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlWithdrawRequestData,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_LnUrlAuthImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlAuthImpl>
-    implements _$$InputType_LnUrlAuthImplCopyWith<$Res> {
-  __$$InputType_LnUrlAuthImplCopyWithImpl(
-    _$InputType_LnUrlAuthImpl _value,
-    $Res Function(_$InputType_LnUrlAuthImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$InputType_LnUrlAuthImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlAuthRequestData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_LnUrlAuthImpl extends InputType_LnUrlAuth {
-  const _$InputType_LnUrlAuthImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlAuthRequestData data;
+class InputType_LnUrlAuth extends InputType {
+  const InputType_LnUrlAuth({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.lnUrlAuth(data: $data)';
-  }
+ final  LnUrlAuthRequestData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_LnUrlAuthImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_LnUrlAuthCopyWith<InputType_LnUrlAuth> get copyWith => _$InputType_LnUrlAuthCopyWithImpl<InputType_LnUrlAuth>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_LnUrlAuthImplCopyWith<_$InputType_LnUrlAuthImpl> get copyWith =>
-      __$$InputType_LnUrlAuthImplCopyWithImpl<_$InputType_LnUrlAuthImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_LnUrlAuth&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class InputType_LnUrlAuth extends InputType {
-  const factory InputType_LnUrlAuth({required final LnUrlAuthRequestData data}) = _$InputType_LnUrlAuthImpl;
-  const InputType_LnUrlAuth._() : super._();
 
-  LnUrlAuthRequestData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_LnUrlAuthImplCopyWith<_$InputType_LnUrlAuthImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.lnUrlAuth(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$InputType_LnUrlErrorImplCopyWith<$Res> {
-  factory _$$InputType_LnUrlErrorImplCopyWith(
-    _$InputType_LnUrlErrorImpl value,
-    $Res Function(_$InputType_LnUrlErrorImpl) then,
-  ) = __$$InputType_LnUrlErrorImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlErrorData data});
+abstract mixin class $InputType_LnUrlAuthCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_LnUrlAuthCopyWith(InputType_LnUrlAuth value, $Res Function(InputType_LnUrlAuth) _then) = _$InputType_LnUrlAuthCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlAuthRequestData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_LnUrlAuthCopyWithImpl<$Res>
+    implements $InputType_LnUrlAuthCopyWith<$Res> {
+  _$InputType_LnUrlAuthCopyWithImpl(this._self, this._then);
+
+  final InputType_LnUrlAuth _self;
+  final $Res Function(InputType_LnUrlAuth) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(InputType_LnUrlAuth(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlAuthRequestData,
+  ));
 }
 
-/// @nodoc
-class __$$InputType_LnUrlErrorImplCopyWithImpl<$Res>
-    extends _$InputTypeCopyWithImpl<$Res, _$InputType_LnUrlErrorImpl>
-    implements _$$InputType_LnUrlErrorImplCopyWith<$Res> {
-  __$$InputType_LnUrlErrorImplCopyWithImpl(
-    _$InputType_LnUrlErrorImpl _value,
-    $Res Function(_$InputType_LnUrlErrorImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$InputType_LnUrlErrorImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlErrorData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$InputType_LnUrlErrorImpl extends InputType_LnUrlError {
-  const _$InputType_LnUrlErrorImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlErrorData data;
+class InputType_LnUrlError extends InputType {
+  const InputType_LnUrlError({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'InputType.lnUrlError(data: $data)';
-  }
+ final  LnUrlErrorData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$InputType_LnUrlErrorImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputType_LnUrlErrorCopyWith<InputType_LnUrlError> get copyWith => _$InputType_LnUrlErrorCopyWithImpl<InputType_LnUrlError>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$InputType_LnUrlErrorImplCopyWith<_$InputType_LnUrlErrorImpl> get copyWith =>
-      __$$InputType_LnUrlErrorImplCopyWithImpl<_$InputType_LnUrlErrorImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InputType_LnUrlError&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class InputType_LnUrlError extends InputType {
-  const factory InputType_LnUrlError({required final LnUrlErrorData data}) = _$InputType_LnUrlErrorImpl;
-  const InputType_LnUrlError._() : super._();
 
-  LnUrlErrorData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of InputType
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$InputType_LnUrlErrorImplCopyWith<_$InputType_LnUrlErrorImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'InputType.lnUrlError(data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $InputType_LnUrlErrorCopyWith<$Res> implements $InputTypeCopyWith<$Res> {
+  factory $InputType_LnUrlErrorCopyWith(InputType_LnUrlError value, $Res Function(InputType_LnUrlError) _then) = _$InputType_LnUrlErrorCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlErrorData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputType_LnUrlErrorCopyWithImpl<$Res>
+    implements $InputType_LnUrlErrorCopyWith<$Res> {
+  _$InputType_LnUrlErrorCopyWithImpl(this._self, this._then);
+
+  final InputType_LnUrlError _self;
+  final $Res Function(InputType_LnUrlError) _then;
+
+/// Create a copy of InputType
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(InputType_LnUrlError(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlErrorData,
+  ));
+}
+
+
 }
 
 /// @nodoc
 mixin _$SuccessAction {
-  Object get data => throw _privateConstructorUsedError;
+
+ Object get data;
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessAction&&const DeepCollectionEquality().equals(other.data, data));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(data));
+
+@override
+String toString() {
+  return 'SuccessAction(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $SuccessActionCopyWith<$Res> {
-  factory $SuccessActionCopyWith(SuccessAction value, $Res Function(SuccessAction) then) =
-      _$SuccessActionCopyWithImpl<$Res, SuccessAction>;
+class $SuccessActionCopyWith<$Res>  {
+$SuccessActionCopyWith(SuccessAction _, $Res Function(SuccessAction) __);
 }
 
-/// @nodoc
-class _$SuccessActionCopyWithImpl<$Res, $Val extends SuccessAction> implements $SuccessActionCopyWith<$Res> {
-  _$SuccessActionCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-}
-
-/// @nodoc
-abstract class _$$SuccessAction_AesImplCopyWith<$Res> {
-  factory _$$SuccessAction_AesImplCopyWith(
-    _$SuccessAction_AesImpl value,
-    $Res Function(_$SuccessAction_AesImpl) then,
-  ) = __$$SuccessAction_AesImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({AesSuccessActionData data});
-}
-
-/// @nodoc
-class __$$SuccessAction_AesImplCopyWithImpl<$Res>
-    extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_AesImpl>
-    implements _$$SuccessAction_AesImplCopyWith<$Res> {
-  __$$SuccessAction_AesImplCopyWithImpl(
-    _$SuccessAction_AesImpl _value,
-    $Res Function(_$SuccessAction_AesImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$SuccessAction_AesImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as AesSuccessActionData,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$SuccessAction_AesImpl extends SuccessAction_Aes {
-  const _$SuccessAction_AesImpl({required this.data}) : super._();
 
-  @override
-  final AesSuccessActionData data;
+class SuccessAction_Aes extends SuccessAction {
+  const SuccessAction_Aes({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'SuccessAction.aes(data: $data)';
-  }
+@override final  AesSuccessActionData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuccessAction_AesImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of SuccessAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuccessAction_AesCopyWith<SuccessAction_Aes> get copyWith => _$SuccessAction_AesCopyWithImpl<SuccessAction_Aes>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuccessAction_AesImplCopyWith<_$SuccessAction_AesImpl> get copyWith =>
-      __$$SuccessAction_AesImplCopyWithImpl<_$SuccessAction_AesImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessAction_Aes&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class SuccessAction_Aes extends SuccessAction {
-  const factory SuccessAction_Aes({required final AesSuccessActionData data}) = _$SuccessAction_AesImpl;
-  const SuccessAction_Aes._() : super._();
 
-  @override
-  AesSuccessActionData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuccessAction_AesImplCopyWith<_$SuccessAction_AesImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'SuccessAction.aes(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$SuccessAction_MessageImplCopyWith<$Res> {
-  factory _$$SuccessAction_MessageImplCopyWith(
-    _$SuccessAction_MessageImpl value,
-    $Res Function(_$SuccessAction_MessageImpl) then,
-  ) = __$$SuccessAction_MessageImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({MessageSuccessActionData data});
+abstract mixin class $SuccessAction_AesCopyWith<$Res> implements $SuccessActionCopyWith<$Res> {
+  factory $SuccessAction_AesCopyWith(SuccessAction_Aes value, $Res Function(SuccessAction_Aes) _then) = _$SuccessAction_AesCopyWithImpl;
+@useResult
+$Res call({
+ AesSuccessActionData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$SuccessAction_AesCopyWithImpl<$Res>
+    implements $SuccessAction_AesCopyWith<$Res> {
+  _$SuccessAction_AesCopyWithImpl(this._self, this._then);
+
+  final SuccessAction_Aes _self;
+  final $Res Function(SuccessAction_Aes) _then;
+
+/// Create a copy of SuccessAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(SuccessAction_Aes(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as AesSuccessActionData,
+  ));
 }
 
-/// @nodoc
-class __$$SuccessAction_MessageImplCopyWithImpl<$Res>
-    extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_MessageImpl>
-    implements _$$SuccessAction_MessageImplCopyWith<$Res> {
-  __$$SuccessAction_MessageImplCopyWithImpl(
-    _$SuccessAction_MessageImpl _value,
-    $Res Function(_$SuccessAction_MessageImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$SuccessAction_MessageImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as MessageSuccessActionData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$SuccessAction_MessageImpl extends SuccessAction_Message {
-  const _$SuccessAction_MessageImpl({required this.data}) : super._();
 
-  @override
-  final MessageSuccessActionData data;
+class SuccessAction_Message extends SuccessAction {
+  const SuccessAction_Message({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'SuccessAction.message(data: $data)';
-  }
+@override final  MessageSuccessActionData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuccessAction_MessageImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of SuccessAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuccessAction_MessageCopyWith<SuccessAction_Message> get copyWith => _$SuccessAction_MessageCopyWithImpl<SuccessAction_Message>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuccessAction_MessageImplCopyWith<_$SuccessAction_MessageImpl> get copyWith =>
-      __$$SuccessAction_MessageImplCopyWithImpl<_$SuccessAction_MessageImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessAction_Message&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class SuccessAction_Message extends SuccessAction {
-  const factory SuccessAction_Message({required final MessageSuccessActionData data}) =
-      _$SuccessAction_MessageImpl;
-  const SuccessAction_Message._() : super._();
 
-  @override
-  MessageSuccessActionData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuccessAction_MessageImplCopyWith<_$SuccessAction_MessageImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'SuccessAction.message(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$SuccessAction_UrlImplCopyWith<$Res> {
-  factory _$$SuccessAction_UrlImplCopyWith(
-    _$SuccessAction_UrlImpl value,
-    $Res Function(_$SuccessAction_UrlImpl) then,
-  ) = __$$SuccessAction_UrlImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({UrlSuccessActionData data});
+abstract mixin class $SuccessAction_MessageCopyWith<$Res> implements $SuccessActionCopyWith<$Res> {
+  factory $SuccessAction_MessageCopyWith(SuccessAction_Message value, $Res Function(SuccessAction_Message) _then) = _$SuccessAction_MessageCopyWithImpl;
+@useResult
+$Res call({
+ MessageSuccessActionData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$SuccessAction_MessageCopyWithImpl<$Res>
+    implements $SuccessAction_MessageCopyWith<$Res> {
+  _$SuccessAction_MessageCopyWithImpl(this._self, this._then);
+
+  final SuccessAction_Message _self;
+  final $Res Function(SuccessAction_Message) _then;
+
+/// Create a copy of SuccessAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(SuccessAction_Message(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as MessageSuccessActionData,
+  ));
 }
 
-/// @nodoc
-class __$$SuccessAction_UrlImplCopyWithImpl<$Res>
-    extends _$SuccessActionCopyWithImpl<$Res, _$SuccessAction_UrlImpl>
-    implements _$$SuccessAction_UrlImplCopyWith<$Res> {
-  __$$SuccessAction_UrlImplCopyWithImpl(
-    _$SuccessAction_UrlImpl _value,
-    $Res Function(_$SuccessAction_UrlImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$SuccessAction_UrlImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as UrlSuccessActionData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$SuccessAction_UrlImpl extends SuccessAction_Url {
-  const _$SuccessAction_UrlImpl({required this.data}) : super._();
 
-  @override
-  final UrlSuccessActionData data;
+class SuccessAction_Url extends SuccessAction {
+  const SuccessAction_Url({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'SuccessAction.url(data: $data)';
-  }
+@override final  UrlSuccessActionData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuccessAction_UrlImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of SuccessAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuccessAction_UrlCopyWith<SuccessAction_Url> get copyWith => _$SuccessAction_UrlCopyWithImpl<SuccessAction_Url>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuccessAction_UrlImplCopyWith<_$SuccessAction_UrlImpl> get copyWith =>
-      __$$SuccessAction_UrlImplCopyWithImpl<_$SuccessAction_UrlImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessAction_Url&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class SuccessAction_Url extends SuccessAction {
-  const factory SuccessAction_Url({required final UrlSuccessActionData data}) = _$SuccessAction_UrlImpl;
-  const SuccessAction_Url._() : super._();
 
-  @override
-  UrlSuccessActionData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of SuccessAction
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuccessAction_UrlImplCopyWith<_$SuccessAction_UrlImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'SuccessAction.url(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-mixin _$SuccessActionProcessed {}
+abstract mixin class $SuccessAction_UrlCopyWith<$Res> implements $SuccessActionCopyWith<$Res> {
+  factory $SuccessAction_UrlCopyWith(SuccessAction_Url value, $Res Function(SuccessAction_Url) _then) = _$SuccessAction_UrlCopyWithImpl;
+@useResult
+$Res call({
+ UrlSuccessActionData data
+});
 
+
+
+
+}
 /// @nodoc
-abstract class $SuccessActionProcessedCopyWith<$Res> {
-  factory $SuccessActionProcessedCopyWith(
-    SuccessActionProcessed value,
-    $Res Function(SuccessActionProcessed) then,
-  ) = _$SuccessActionProcessedCopyWithImpl<$Res, SuccessActionProcessed>;
+class _$SuccessAction_UrlCopyWithImpl<$Res>
+    implements $SuccessAction_UrlCopyWith<$Res> {
+  _$SuccessAction_UrlCopyWithImpl(this._self, this._then);
+
+  final SuccessAction_Url _self;
+  final $Res Function(SuccessAction_Url) _then;
+
+/// Create a copy of SuccessAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(SuccessAction_Url(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as UrlSuccessActionData,
+  ));
+}
+
+
 }
 
 /// @nodoc
-class _$SuccessActionProcessedCopyWithImpl<$Res, $Val extends SuccessActionProcessed>
-    implements $SuccessActionProcessedCopyWith<$Res> {
-  _$SuccessActionProcessedCopyWithImpl(this._value, this._then);
+mixin _$SuccessActionProcessed {
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessActionProcessed);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'SuccessActionProcessed()';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$SuccessActionProcessed_AesImplCopyWith<$Res> {
-  factory _$$SuccessActionProcessed_AesImplCopyWith(
-    _$SuccessActionProcessed_AesImpl value,
-    $Res Function(_$SuccessActionProcessed_AesImpl) then,
-  ) = __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({AesSuccessActionDataResult result});
-
-  $AesSuccessActionDataResultCopyWith<$Res> get result;
+class $SuccessActionProcessedCopyWith<$Res>  {
+$SuccessActionProcessedCopyWith(SuccessActionProcessed _, $Res Function(SuccessActionProcessed) __);
 }
 
-/// @nodoc
-class __$$SuccessActionProcessed_AesImplCopyWithImpl<$Res>
-    extends _$SuccessActionProcessedCopyWithImpl<$Res, _$SuccessActionProcessed_AesImpl>
-    implements _$$SuccessActionProcessed_AesImplCopyWith<$Res> {
-  __$$SuccessActionProcessed_AesImplCopyWithImpl(
-    _$SuccessActionProcessed_AesImpl _value,
-    $Res Function(_$SuccessActionProcessed_AesImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? result = null}) {
-    return _then(
-      _$SuccessActionProcessed_AesImpl(
-        result:
-            null == result
-                ? _value.result
-                : result // ignore: cast_nullable_to_non_nullable
-                    as AesSuccessActionDataResult,
-      ),
-    );
-  }
-
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @pragma('vm:prefer-inline')
-  $AesSuccessActionDataResultCopyWith<$Res> get result {
-    return $AesSuccessActionDataResultCopyWith<$Res>(_value.result, (value) {
-      return _then(_value.copyWith(result: value));
-    });
-  }
-}
 
 /// @nodoc
 
-class _$SuccessActionProcessed_AesImpl extends SuccessActionProcessed_Aes {
-  const _$SuccessActionProcessed_AesImpl({required this.result}) : super._();
 
-  @override
-  final AesSuccessActionDataResult result;
+class SuccessActionProcessed_Aes extends SuccessActionProcessed {
+  const SuccessActionProcessed_Aes({required this.result}): super._();
+  
 
-  @override
-  String toString() {
-    return 'SuccessActionProcessed.aes(result: $result)';
-  }
+ final  AesSuccessActionDataResult result;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuccessActionProcessed_AesImpl &&
-            (identical(other.result, result) || other.result == result));
-  }
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuccessActionProcessed_AesCopyWith<SuccessActionProcessed_Aes> get copyWith => _$SuccessActionProcessed_AesCopyWithImpl<SuccessActionProcessed_Aes>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, result);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuccessActionProcessed_AesImplCopyWith<_$SuccessActionProcessed_AesImpl> get copyWith =>
-      __$$SuccessActionProcessed_AesImplCopyWithImpl<_$SuccessActionProcessed_AesImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessActionProcessed_Aes&&(identical(other.result, result) || other.result == result));
 }
 
-abstract class SuccessActionProcessed_Aes extends SuccessActionProcessed {
-  const factory SuccessActionProcessed_Aes({required final AesSuccessActionDataResult result}) =
-      _$SuccessActionProcessed_AesImpl;
-  const SuccessActionProcessed_Aes._() : super._();
 
-  AesSuccessActionDataResult get result;
+@override
+int get hashCode => Object.hash(runtimeType,result);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuccessActionProcessed_AesImplCopyWith<_$SuccessActionProcessed_AesImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'SuccessActionProcessed.aes(result: $result)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$SuccessActionProcessed_MessageImplCopyWith<$Res> {
-  factory _$$SuccessActionProcessed_MessageImplCopyWith(
-    _$SuccessActionProcessed_MessageImpl value,
-    $Res Function(_$SuccessActionProcessed_MessageImpl) then,
-  ) = __$$SuccessActionProcessed_MessageImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({MessageSuccessActionData data});
+abstract mixin class $SuccessActionProcessed_AesCopyWith<$Res> implements $SuccessActionProcessedCopyWith<$Res> {
+  factory $SuccessActionProcessed_AesCopyWith(SuccessActionProcessed_Aes value, $Res Function(SuccessActionProcessed_Aes) _then) = _$SuccessActionProcessed_AesCopyWithImpl;
+@useResult
+$Res call({
+ AesSuccessActionDataResult result
+});
+
+
+$AesSuccessActionDataResultCopyWith<$Res> get result;
+
+}
+/// @nodoc
+class _$SuccessActionProcessed_AesCopyWithImpl<$Res>
+    implements $SuccessActionProcessed_AesCopyWith<$Res> {
+  _$SuccessActionProcessed_AesCopyWithImpl(this._self, this._then);
+
+  final SuccessActionProcessed_Aes _self;
+  final $Res Function(SuccessActionProcessed_Aes) _then;
+
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? result = null,}) {
+  return _then(SuccessActionProcessed_Aes(
+result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
+as AesSuccessActionDataResult,
+  ));
 }
 
-/// @nodoc
-class __$$SuccessActionProcessed_MessageImplCopyWithImpl<$Res>
-    extends _$SuccessActionProcessedCopyWithImpl<$Res, _$SuccessActionProcessed_MessageImpl>
-    implements _$$SuccessActionProcessed_MessageImplCopyWith<$Res> {
-  __$$SuccessActionProcessed_MessageImplCopyWithImpl(
-    _$SuccessActionProcessed_MessageImpl _value,
-    $Res Function(_$SuccessActionProcessed_MessageImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$SuccessActionProcessed_MessageImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as MessageSuccessActionData,
-      ),
-    );
-  }
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AesSuccessActionDataResultCopyWith<$Res> get result {
+  
+  return $AesSuccessActionDataResultCopyWith<$Res>(_self.result, (value) {
+    return _then(_self.copyWith(result: value));
+  });
+}
 }
 
 /// @nodoc
 
-class _$SuccessActionProcessed_MessageImpl extends SuccessActionProcessed_Message {
-  const _$SuccessActionProcessed_MessageImpl({required this.data}) : super._();
 
-  @override
-  final MessageSuccessActionData data;
+class SuccessActionProcessed_Message extends SuccessActionProcessed {
+  const SuccessActionProcessed_Message({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'SuccessActionProcessed.message(data: $data)';
-  }
+ final  MessageSuccessActionData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuccessActionProcessed_MessageImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuccessActionProcessed_MessageCopyWith<SuccessActionProcessed_Message> get copyWith => _$SuccessActionProcessed_MessageCopyWithImpl<SuccessActionProcessed_Message>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuccessActionProcessed_MessageImplCopyWith<_$SuccessActionProcessed_MessageImpl> get copyWith =>
-      __$$SuccessActionProcessed_MessageImplCopyWithImpl<_$SuccessActionProcessed_MessageImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessActionProcessed_Message&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class SuccessActionProcessed_Message extends SuccessActionProcessed {
-  const factory SuccessActionProcessed_Message({required final MessageSuccessActionData data}) =
-      _$SuccessActionProcessed_MessageImpl;
-  const SuccessActionProcessed_Message._() : super._();
 
-  MessageSuccessActionData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuccessActionProcessed_MessageImplCopyWith<_$SuccessActionProcessed_MessageImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'SuccessActionProcessed.message(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$SuccessActionProcessed_UrlImplCopyWith<$Res> {
-  factory _$$SuccessActionProcessed_UrlImplCopyWith(
-    _$SuccessActionProcessed_UrlImpl value,
-    $Res Function(_$SuccessActionProcessed_UrlImpl) then,
-  ) = __$$SuccessActionProcessed_UrlImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({UrlSuccessActionData data});
+abstract mixin class $SuccessActionProcessed_MessageCopyWith<$Res> implements $SuccessActionProcessedCopyWith<$Res> {
+  factory $SuccessActionProcessed_MessageCopyWith(SuccessActionProcessed_Message value, $Res Function(SuccessActionProcessed_Message) _then) = _$SuccessActionProcessed_MessageCopyWithImpl;
+@useResult
+$Res call({
+ MessageSuccessActionData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$SuccessActionProcessed_MessageCopyWithImpl<$Res>
+    implements $SuccessActionProcessed_MessageCopyWith<$Res> {
+  _$SuccessActionProcessed_MessageCopyWithImpl(this._self, this._then);
+
+  final SuccessActionProcessed_Message _self;
+  final $Res Function(SuccessActionProcessed_Message) _then;
+
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(SuccessActionProcessed_Message(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as MessageSuccessActionData,
+  ));
 }
 
-/// @nodoc
-class __$$SuccessActionProcessed_UrlImplCopyWithImpl<$Res>
-    extends _$SuccessActionProcessedCopyWithImpl<$Res, _$SuccessActionProcessed_UrlImpl>
-    implements _$$SuccessActionProcessed_UrlImplCopyWith<$Res> {
-  __$$SuccessActionProcessed_UrlImplCopyWithImpl(
-    _$SuccessActionProcessed_UrlImpl _value,
-    $Res Function(_$SuccessActionProcessed_UrlImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$SuccessActionProcessed_UrlImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as UrlSuccessActionData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$SuccessActionProcessed_UrlImpl extends SuccessActionProcessed_Url {
-  const _$SuccessActionProcessed_UrlImpl({required this.data}) : super._();
 
-  @override
-  final UrlSuccessActionData data;
+class SuccessActionProcessed_Url extends SuccessActionProcessed {
+  const SuccessActionProcessed_Url({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'SuccessActionProcessed.url(data: $data)';
-  }
+ final  UrlSuccessActionData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$SuccessActionProcessed_UrlImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SuccessActionProcessed_UrlCopyWith<SuccessActionProcessed_Url> get copyWith => _$SuccessActionProcessed_UrlCopyWithImpl<SuccessActionProcessed_Url>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$SuccessActionProcessed_UrlImplCopyWith<_$SuccessActionProcessed_UrlImpl> get copyWith =>
-      __$$SuccessActionProcessed_UrlImplCopyWithImpl<_$SuccessActionProcessed_UrlImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SuccessActionProcessed_Url&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class SuccessActionProcessed_Url extends SuccessActionProcessed {
-  const factory SuccessActionProcessed_Url({required final UrlSuccessActionData data}) =
-      _$SuccessActionProcessed_UrlImpl;
-  const SuccessActionProcessed_Url._() : super._();
 
-  UrlSuccessActionData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of SuccessActionProcessed
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SuccessActionProcessed_UrlImplCopyWith<_$SuccessActionProcessed_UrlImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'SuccessActionProcessed.url(data: $data)';
 }
+
+
+}
+
+/// @nodoc
+abstract mixin class $SuccessActionProcessed_UrlCopyWith<$Res> implements $SuccessActionProcessedCopyWith<$Res> {
+  factory $SuccessActionProcessed_UrlCopyWith(SuccessActionProcessed_Url value, $Res Function(SuccessActionProcessed_Url) _then) = _$SuccessActionProcessed_UrlCopyWithImpl;
+@useResult
+$Res call({
+ UrlSuccessActionData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$SuccessActionProcessed_UrlCopyWithImpl<$Res>
+    implements $SuccessActionProcessed_UrlCopyWith<$Res> {
+  _$SuccessActionProcessed_UrlCopyWithImpl(this._self, this._then);
+
+  final SuccessActionProcessed_Url _self;
+  final $Res Function(SuccessActionProcessed_Url) _then;
+
+/// Create a copy of SuccessActionProcessed
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(SuccessActionProcessed_Url(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as UrlSuccessActionData,
+  ));
+}
+
+
+}
+
+// dart format on
