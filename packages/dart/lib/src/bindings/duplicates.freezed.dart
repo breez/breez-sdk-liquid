@@ -1,3 +1,4 @@
+// dart format width=80
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -9,2310 +10,1866 @@ part of 'duplicates.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
 /// @nodoc
 mixin _$LnUrlAuthError {
-  String get err => throw _privateConstructorUsedError;
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $LnUrlAuthErrorCopyWith<LnUrlAuthError> get copyWith => throw _privateConstructorUsedError;
+ String get err;
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlAuthErrorCopyWith<LnUrlAuthError> get copyWith => _$LnUrlAuthErrorCopyWithImpl<LnUrlAuthError>(this as LnUrlAuthError, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlAuthError&&(identical(other.err, err) || other.err == err));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,err);
+
+@override
+String toString() {
+  return 'LnUrlAuthError(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $LnUrlAuthErrorCopyWith<$Res> {
-  factory $LnUrlAuthErrorCopyWith(LnUrlAuthError value, $Res Function(LnUrlAuthError) then) =
-      _$LnUrlAuthErrorCopyWithImpl<$Res, LnUrlAuthError>;
-  @useResult
-  $Res call({String err});
-}
+abstract mixin class $LnUrlAuthErrorCopyWith<$Res>  {
+  factory $LnUrlAuthErrorCopyWith(LnUrlAuthError value, $Res Function(LnUrlAuthError) _then) = _$LnUrlAuthErrorCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
 
+
+
+
+}
 /// @nodoc
-class _$LnUrlAuthErrorCopyWithImpl<$Res, $Val extends LnUrlAuthError>
+class _$LnUrlAuthErrorCopyWithImpl<$Res>
     implements $LnUrlAuthErrorCopyWith<$Res> {
-  _$LnUrlAuthErrorCopyWithImpl(this._value, this._then);
+  _$LnUrlAuthErrorCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final LnUrlAuthError _self;
+  final $Res Function(LnUrlAuthError) _then;
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _value.copyWith(
-            err:
-                null == err
-                    ? _value.err
-                    : err // ignore: cast_nullable_to_non_nullable
-                        as String,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? err = null,}) {
+  return _then(_self.copyWith(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-abstract class _$$LnUrlAuthError_GenericImplCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
-  factory _$$LnUrlAuthError_GenericImplCopyWith(
-    _$LnUrlAuthError_GenericImpl value,
-    $Res Function(_$LnUrlAuthError_GenericImpl) then,
-  ) = __$$LnUrlAuthError_GenericImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
 }
 
-/// @nodoc
-class __$$LnUrlAuthError_GenericImplCopyWithImpl<$Res>
-    extends _$LnUrlAuthErrorCopyWithImpl<$Res, _$LnUrlAuthError_GenericImpl>
-    implements _$$LnUrlAuthError_GenericImplCopyWith<$Res> {
-  __$$LnUrlAuthError_GenericImplCopyWithImpl(
-    _$LnUrlAuthError_GenericImpl _value,
-    $Res Function(_$LnUrlAuthError_GenericImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlAuthError_GenericImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$LnUrlAuthError_GenericImpl extends LnUrlAuthError_Generic {
-  const _$LnUrlAuthError_GenericImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlAuthError_Generic extends LnUrlAuthError {
+  const LnUrlAuthError_Generic({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlAuthError.generic(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlAuthError_GenericImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlAuthError_GenericCopyWith<LnUrlAuthError_Generic> get copyWith => _$LnUrlAuthError_GenericCopyWithImpl<LnUrlAuthError_Generic>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlAuthError_GenericImplCopyWith<_$LnUrlAuthError_GenericImpl> get copyWith =>
-      __$$LnUrlAuthError_GenericImplCopyWithImpl<_$LnUrlAuthError_GenericImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlAuthError_Generic&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlAuthError_Generic extends LnUrlAuthError {
-  const factory LnUrlAuthError_Generic({required final String err}) = _$LnUrlAuthError_GenericImpl;
-  const LnUrlAuthError_Generic._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlAuthError_GenericImplCopyWith<_$LnUrlAuthError_GenericImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlAuthError.generic(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlAuthError_InvalidUriImplCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
-  factory _$$LnUrlAuthError_InvalidUriImplCopyWith(
-    _$LnUrlAuthError_InvalidUriImpl value,
-    $Res Function(_$LnUrlAuthError_InvalidUriImpl) then,
-  ) = __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlAuthError_GenericCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
+  factory $LnUrlAuthError_GenericCopyWith(LnUrlAuthError_Generic value, $Res Function(LnUrlAuthError_Generic) _then) = _$LnUrlAuthError_GenericCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlAuthError_GenericCopyWithImpl<$Res>
+    implements $LnUrlAuthError_GenericCopyWith<$Res> {
+  _$LnUrlAuthError_GenericCopyWithImpl(this._self, this._then);
+
+  final LnUrlAuthError_Generic _self;
+  final $Res Function(LnUrlAuthError_Generic) _then;
+
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlAuthError_Generic(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<$Res>
-    extends _$LnUrlAuthErrorCopyWithImpl<$Res, _$LnUrlAuthError_InvalidUriImpl>
-    implements _$$LnUrlAuthError_InvalidUriImplCopyWith<$Res> {
-  __$$LnUrlAuthError_InvalidUriImplCopyWithImpl(
-    _$LnUrlAuthError_InvalidUriImpl _value,
-    $Res Function(_$LnUrlAuthError_InvalidUriImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlAuthError_InvalidUriImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlAuthError_InvalidUriImpl extends LnUrlAuthError_InvalidUri {
-  const _$LnUrlAuthError_InvalidUriImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlAuthError_InvalidUri extends LnUrlAuthError {
+  const LnUrlAuthError_InvalidUri({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlAuthError.invalidUri(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlAuthError_InvalidUriImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlAuthError_InvalidUriCopyWith<LnUrlAuthError_InvalidUri> get copyWith => _$LnUrlAuthError_InvalidUriCopyWithImpl<LnUrlAuthError_InvalidUri>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlAuthError_InvalidUriImplCopyWith<_$LnUrlAuthError_InvalidUriImpl> get copyWith =>
-      __$$LnUrlAuthError_InvalidUriImplCopyWithImpl<_$LnUrlAuthError_InvalidUriImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlAuthError_InvalidUri&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlAuthError_InvalidUri extends LnUrlAuthError {
-  const factory LnUrlAuthError_InvalidUri({required final String err}) = _$LnUrlAuthError_InvalidUriImpl;
-  const LnUrlAuthError_InvalidUri._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlAuthError_InvalidUriImplCopyWith<_$LnUrlAuthError_InvalidUriImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlAuthError.invalidUri(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<$Res>
-    implements $LnUrlAuthErrorCopyWith<$Res> {
-  factory _$$LnUrlAuthError_ServiceConnectivityImplCopyWith(
-    _$LnUrlAuthError_ServiceConnectivityImpl value,
-    $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) then,
-  ) = __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlAuthError_InvalidUriCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
+  factory $LnUrlAuthError_InvalidUriCopyWith(LnUrlAuthError_InvalidUri value, $Res Function(LnUrlAuthError_InvalidUri) _then) = _$LnUrlAuthError_InvalidUriCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlAuthError_InvalidUriCopyWithImpl<$Res>
+    implements $LnUrlAuthError_InvalidUriCopyWith<$Res> {
+  _$LnUrlAuthError_InvalidUriCopyWithImpl(this._self, this._then);
+
+  final LnUrlAuthError_InvalidUri _self;
+  final $Res Function(LnUrlAuthError_InvalidUri) _then;
+
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlAuthError_InvalidUri(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<$Res>
-    extends _$LnUrlAuthErrorCopyWithImpl<$Res, _$LnUrlAuthError_ServiceConnectivityImpl>
-    implements _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<$Res> {
-  __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl(
-    _$LnUrlAuthError_ServiceConnectivityImpl _value,
-    $Res Function(_$LnUrlAuthError_ServiceConnectivityImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlAuthError_ServiceConnectivityImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlAuthError_ServiceConnectivityImpl extends LnUrlAuthError_ServiceConnectivity {
-  const _$LnUrlAuthError_ServiceConnectivityImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlAuthError_ServiceConnectivity extends LnUrlAuthError {
+  const LnUrlAuthError_ServiceConnectivity({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlAuthError.serviceConnectivity(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlAuthError_ServiceConnectivityImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlAuthError_ServiceConnectivityCopyWith<LnUrlAuthError_ServiceConnectivity> get copyWith => _$LnUrlAuthError_ServiceConnectivityCopyWithImpl<LnUrlAuthError_ServiceConnectivity>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<_$LnUrlAuthError_ServiceConnectivityImpl> get copyWith =>
-      __$$LnUrlAuthError_ServiceConnectivityImplCopyWithImpl<_$LnUrlAuthError_ServiceConnectivityImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlAuthError_ServiceConnectivity&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlAuthError_ServiceConnectivity extends LnUrlAuthError {
-  const factory LnUrlAuthError_ServiceConnectivity({required final String err}) =
-      _$LnUrlAuthError_ServiceConnectivityImpl;
-  const LnUrlAuthError_ServiceConnectivity._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlAuthError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlAuthError_ServiceConnectivityImplCopyWith<_$LnUrlAuthError_ServiceConnectivityImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlAuthError.serviceConnectivity(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-mixin _$LnUrlCallbackStatus {}
+abstract mixin class $LnUrlAuthError_ServiceConnectivityCopyWith<$Res> implements $LnUrlAuthErrorCopyWith<$Res> {
+  factory $LnUrlAuthError_ServiceConnectivityCopyWith(LnUrlAuthError_ServiceConnectivity value, $Res Function(LnUrlAuthError_ServiceConnectivity) _then) = _$LnUrlAuthError_ServiceConnectivityCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
 
+
+
+
+}
 /// @nodoc
-abstract class $LnUrlCallbackStatusCopyWith<$Res> {
-  factory $LnUrlCallbackStatusCopyWith(LnUrlCallbackStatus value, $Res Function(LnUrlCallbackStatus) then) =
-      _$LnUrlCallbackStatusCopyWithImpl<$Res, LnUrlCallbackStatus>;
+class _$LnUrlAuthError_ServiceConnectivityCopyWithImpl<$Res>
+    implements $LnUrlAuthError_ServiceConnectivityCopyWith<$Res> {
+  _$LnUrlAuthError_ServiceConnectivityCopyWithImpl(this._self, this._then);
+
+  final LnUrlAuthError_ServiceConnectivity _self;
+  final $Res Function(LnUrlAuthError_ServiceConnectivity) _then;
+
+/// Create a copy of LnUrlAuthError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlAuthError_ServiceConnectivity(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class _$LnUrlCallbackStatusCopyWithImpl<$Res, $Val extends LnUrlCallbackStatus>
-    implements $LnUrlCallbackStatusCopyWith<$Res> {
-  _$LnUrlCallbackStatusCopyWithImpl(this._value, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of LnUrlCallbackStatus
-  /// with the given fields replaced by the non-null parameter values.
-}
-
-/// @nodoc
-abstract class _$$LnUrlCallbackStatus_OkImplCopyWith<$Res> {
-  factory _$$LnUrlCallbackStatus_OkImplCopyWith(
-    _$LnUrlCallbackStatus_OkImpl value,
-    $Res Function(_$LnUrlCallbackStatus_OkImpl) then,
-  ) = __$$LnUrlCallbackStatus_OkImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$LnUrlCallbackStatus_OkImplCopyWithImpl<$Res>
-    extends _$LnUrlCallbackStatusCopyWithImpl<$Res, _$LnUrlCallbackStatus_OkImpl>
-    implements _$$LnUrlCallbackStatus_OkImplCopyWith<$Res> {
-  __$$LnUrlCallbackStatus_OkImplCopyWithImpl(
-    _$LnUrlCallbackStatus_OkImpl _value,
-    $Res Function(_$LnUrlCallbackStatus_OkImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlCallbackStatus
-  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
+mixin _$LnUrlCallbackStatus {
 
-class _$LnUrlCallbackStatus_OkImpl extends LnUrlCallbackStatus_Ok {
-  const _$LnUrlCallbackStatus_OkImpl() : super._();
 
-  @override
-  String toString() {
-    return 'LnUrlCallbackStatus.ok()';
-  }
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$LnUrlCallbackStatus_OkImpl);
-  }
 
-  @override
-  int get hashCode => runtimeType.hashCode;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlCallbackStatus);
 }
 
-abstract class LnUrlCallbackStatus_Ok extends LnUrlCallbackStatus {
-  const factory LnUrlCallbackStatus_Ok() = _$LnUrlCallbackStatus_OkImpl;
-  const LnUrlCallbackStatus_Ok._() : super._();
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'LnUrlCallbackStatus()';
 }
 
-/// @nodoc
-abstract class _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<$Res> {
-  factory _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith(
-    _$LnUrlCallbackStatus_ErrorStatusImpl value,
-    $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) then,
-  ) = __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlErrorData data});
+
 }
 
 /// @nodoc
-class __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<$Res>
-    extends _$LnUrlCallbackStatusCopyWithImpl<$Res, _$LnUrlCallbackStatus_ErrorStatusImpl>
-    implements _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<$Res> {
-  __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl(
-    _$LnUrlCallbackStatus_ErrorStatusImpl _value,
-    $Res Function(_$LnUrlCallbackStatus_ErrorStatusImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlCallbackStatus
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$LnUrlCallbackStatus_ErrorStatusImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlErrorData,
-      ),
-    );
-  }
+class $LnUrlCallbackStatusCopyWith<$Res>  {
+$LnUrlCallbackStatusCopyWith(LnUrlCallbackStatus _, $Res Function(LnUrlCallbackStatus) __);
 }
+
 
 /// @nodoc
 
-class _$LnUrlCallbackStatus_ErrorStatusImpl extends LnUrlCallbackStatus_ErrorStatus {
-  const _$LnUrlCallbackStatus_ErrorStatusImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlErrorData data;
+class LnUrlCallbackStatus_Ok extends LnUrlCallbackStatus {
+  const LnUrlCallbackStatus_Ok(): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlCallbackStatus.errorStatus(data: $data)';
-  }
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlCallbackStatus_ErrorStatusImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of LnUrlCallbackStatus
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<_$LnUrlCallbackStatus_ErrorStatusImpl> get copyWith =>
-      __$$LnUrlCallbackStatus_ErrorStatusImplCopyWithImpl<_$LnUrlCallbackStatus_ErrorStatusImpl>(
-        this,
-        _$identity,
-      );
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlCallbackStatus_Ok);
 }
 
-abstract class LnUrlCallbackStatus_ErrorStatus extends LnUrlCallbackStatus {
-  const factory LnUrlCallbackStatus_ErrorStatus({required final LnUrlErrorData data}) =
-      _$LnUrlCallbackStatus_ErrorStatusImpl;
-  const LnUrlCallbackStatus_ErrorStatus._() : super._();
 
-  LnUrlErrorData get data;
+@override
+int get hashCode => runtimeType.hashCode;
 
-  /// Create a copy of LnUrlCallbackStatus
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlCallbackStatus_ErrorStatusImplCopyWith<_$LnUrlCallbackStatus_ErrorStatusImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlCallbackStatus.ok()';
 }
 
-/// @nodoc
-mixin _$LnUrlPayError {}
 
-/// @nodoc
-abstract class $LnUrlPayErrorCopyWith<$Res> {
-  factory $LnUrlPayErrorCopyWith(LnUrlPayError value, $Res Function(LnUrlPayError) then) =
-      _$LnUrlPayErrorCopyWithImpl<$Res, LnUrlPayError>;
 }
 
-/// @nodoc
-class _$LnUrlPayErrorCopyWithImpl<$Res, $Val extends LnUrlPayError> implements $LnUrlPayErrorCopyWith<$Res> {
-  _$LnUrlPayErrorCopyWithImpl(this._value, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-}
-
-/// @nodoc
-abstract class _$$LnUrlPayError_AlreadyPaidImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_AlreadyPaidImplCopyWith(
-    _$LnUrlPayError_AlreadyPaidImpl value,
-    $Res Function(_$LnUrlPayError_AlreadyPaidImpl) then,
-  ) = __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl<$Res>;
-}
-
-/// @nodoc
-class __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_AlreadyPaidImpl>
-    implements _$$LnUrlPayError_AlreadyPaidImplCopyWith<$Res> {
-  __$$LnUrlPayError_AlreadyPaidImplCopyWithImpl(
-    _$LnUrlPayError_AlreadyPaidImpl _value,
-    $Res Function(_$LnUrlPayError_AlreadyPaidImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-}
 
 /// @nodoc
 
-class _$LnUrlPayError_AlreadyPaidImpl extends LnUrlPayError_AlreadyPaid {
-  const _$LnUrlPayError_AlreadyPaidImpl() : super._();
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.alreadyPaid()';
-  }
+class LnUrlCallbackStatus_ErrorStatus extends LnUrlCallbackStatus {
+  const LnUrlCallbackStatus_ErrorStatus({required this.data}): super._();
+  
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$LnUrlPayError_AlreadyPaidImpl);
-  }
+ final  LnUrlErrorData data;
 
-  @override
-  int get hashCode => runtimeType.hashCode;
+/// Create a copy of LnUrlCallbackStatus
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlCallbackStatus_ErrorStatusCopyWith<LnUrlCallbackStatus_ErrorStatus> get copyWith => _$LnUrlCallbackStatus_ErrorStatusCopyWithImpl<LnUrlCallbackStatus_ErrorStatus>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlCallbackStatus_ErrorStatus&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class LnUrlPayError_AlreadyPaid extends LnUrlPayError {
-  const factory LnUrlPayError_AlreadyPaid() = _$LnUrlPayError_AlreadyPaidImpl;
-  const LnUrlPayError_AlreadyPaid._() : super._();
+
+@override
+int get hashCode => Object.hash(runtimeType,data);
+
+@override
+String toString() {
+  return 'LnUrlCallbackStatus.errorStatus(data: $data)';
 }
 
-/// @nodoc
-abstract class _$$LnUrlPayError_GenericImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_GenericImplCopyWith(
-    _$LnUrlPayError_GenericImpl value,
-    $Res Function(_$LnUrlPayError_GenericImpl) then,
-  ) = __$$LnUrlPayError_GenericImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
-}
 
-/// @nodoc
-class __$$LnUrlPayError_GenericImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_GenericImpl>
-    implements _$$LnUrlPayError_GenericImplCopyWith<$Res> {
-  __$$LnUrlPayError_GenericImplCopyWithImpl(
-    _$LnUrlPayError_GenericImpl _value,
-    $Res Function(_$LnUrlPayError_GenericImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_GenericImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
+abstract mixin class $LnUrlCallbackStatus_ErrorStatusCopyWith<$Res> implements $LnUrlCallbackStatusCopyWith<$Res> {
+  factory $LnUrlCallbackStatus_ErrorStatusCopyWith(LnUrlCallbackStatus_ErrorStatus value, $Res Function(LnUrlCallbackStatus_ErrorStatus) _then) = _$LnUrlCallbackStatus_ErrorStatusCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlErrorData data
+});
 
-class _$LnUrlPayError_GenericImpl extends LnUrlPayError_Generic {
-  const _$LnUrlPayError_GenericImpl({required this.err}) : super._();
 
-  @override
-  final String err;
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.generic(err: $err)';
-  }
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_GenericImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+}
+/// @nodoc
+class _$LnUrlCallbackStatus_ErrorStatusCopyWithImpl<$Res>
+    implements $LnUrlCallbackStatus_ErrorStatusCopyWith<$Res> {
+  _$LnUrlCallbackStatus_ErrorStatusCopyWithImpl(this._self, this._then);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
+  final LnUrlCallbackStatus_ErrorStatus _self;
+  final $Res Function(LnUrlCallbackStatus_ErrorStatus) _then;
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_GenericImplCopyWith<_$LnUrlPayError_GenericImpl> get copyWith =>
-      __$$LnUrlPayError_GenericImplCopyWithImpl<_$LnUrlPayError_GenericImpl>(this, _$identity);
+/// Create a copy of LnUrlCallbackStatus
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(LnUrlCallbackStatus_ErrorStatus(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlErrorData,
+  ));
 }
 
-abstract class LnUrlPayError_Generic extends LnUrlPayError {
-  const factory LnUrlPayError_Generic({required final String err}) = _$LnUrlPayError_GenericImpl;
-  const LnUrlPayError_Generic._() : super._();
 
-  String get err;
-
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_GenericImplCopyWith<_$LnUrlPayError_GenericImpl> get copyWith =>
-      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_InvalidAmountImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_InvalidAmountImplCopyWith(
-    _$LnUrlPayError_InvalidAmountImpl value,
-    $Res Function(_$LnUrlPayError_InvalidAmountImpl) then,
-  ) = __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+mixin _$LnUrlPayError {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'LnUrlPayError()';
+}
+
+
 }
 
 /// @nodoc
-class __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidAmountImpl>
-    implements _$$LnUrlPayError_InvalidAmountImplCopyWith<$Res> {
-  __$$LnUrlPayError_InvalidAmountImplCopyWithImpl(
-    _$LnUrlPayError_InvalidAmountImpl _value,
-    $Res Function(_$LnUrlPayError_InvalidAmountImpl) _then,
-  ) : super(_value, _then);
+class $LnUrlPayErrorCopyWith<$Res>  {
+$LnUrlPayErrorCopyWith(LnUrlPayError _, $Res Function(LnUrlPayError) __);
+}
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_InvalidAmountImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
+
+/// @nodoc
+
+
+class LnUrlPayError_AlreadyPaid extends LnUrlPayError {
+  const LnUrlPayError_AlreadyPaid(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_AlreadyPaid);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'LnUrlPayError.alreadyPaid()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class LnUrlPayError_Generic extends LnUrlPayError {
+  const LnUrlPayError_Generic({required this.err}): super._();
+  
+
+ final  String err;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_GenericCopyWith<LnUrlPayError_Generic> get copyWith => _$LnUrlPayError_GenericCopyWithImpl<LnUrlPayError_Generic>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_Generic&&(identical(other.err, err) || other.err == err));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,err);
+
+@override
+String toString() {
+  return 'LnUrlPayError.generic(err: $err)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LnUrlPayError_GenericCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_GenericCopyWith(LnUrlPayError_Generic value, $Res Function(LnUrlPayError_Generic) _then) = _$LnUrlPayError_GenericCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_GenericCopyWithImpl<$Res>
+    implements $LnUrlPayError_GenericCopyWith<$Res> {
+  _$LnUrlPayError_GenericCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_Generic _self;
+  final $Res Function(LnUrlPayError_Generic) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_Generic(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_InvalidAmountImpl extends LnUrlPayError_InvalidAmount {
-  const _$LnUrlPayError_InvalidAmountImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_InvalidAmount extends LnUrlPayError {
+  const LnUrlPayError_InvalidAmount({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.invalidAmount(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_InvalidAmountImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_InvalidAmountCopyWith<LnUrlPayError_InvalidAmount> get copyWith => _$LnUrlPayError_InvalidAmountCopyWithImpl<LnUrlPayError_InvalidAmount>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_InvalidAmountImplCopyWith<_$LnUrlPayError_InvalidAmountImpl> get copyWith =>
-      __$$LnUrlPayError_InvalidAmountImplCopyWithImpl<_$LnUrlPayError_InvalidAmountImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_InvalidAmount&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_InvalidAmount extends LnUrlPayError {
-  const factory LnUrlPayError_InvalidAmount({required final String err}) = _$LnUrlPayError_InvalidAmountImpl;
-  const LnUrlPayError_InvalidAmount._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_InvalidAmountImplCopyWith<_$LnUrlPayError_InvalidAmountImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.invalidAmount(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_InvalidInvoiceImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_InvalidInvoiceImplCopyWith(
-    _$LnUrlPayError_InvalidInvoiceImpl value,
-    $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) then,
-  ) = __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_InvalidAmountCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_InvalidAmountCopyWith(LnUrlPayError_InvalidAmount value, $Res Function(LnUrlPayError_InvalidAmount) _then) = _$LnUrlPayError_InvalidAmountCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_InvalidAmountCopyWithImpl<$Res>
+    implements $LnUrlPayError_InvalidAmountCopyWith<$Res> {
+  _$LnUrlPayError_InvalidAmountCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_InvalidAmount _self;
+  final $Res Function(LnUrlPayError_InvalidAmount) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_InvalidAmount(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidInvoiceImpl>
-    implements _$$LnUrlPayError_InvalidInvoiceImplCopyWith<$Res> {
-  __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl(
-    _$LnUrlPayError_InvalidInvoiceImpl _value,
-    $Res Function(_$LnUrlPayError_InvalidInvoiceImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_InvalidInvoiceImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_InvalidInvoiceImpl extends LnUrlPayError_InvalidInvoice {
-  const _$LnUrlPayError_InvalidInvoiceImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_InvalidInvoice extends LnUrlPayError {
+  const LnUrlPayError_InvalidInvoice({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.invalidInvoice(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_InvalidInvoiceImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_InvalidInvoiceCopyWith<LnUrlPayError_InvalidInvoice> get copyWith => _$LnUrlPayError_InvalidInvoiceCopyWithImpl<LnUrlPayError_InvalidInvoice>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_InvalidInvoiceImplCopyWith<_$LnUrlPayError_InvalidInvoiceImpl> get copyWith =>
-      __$$LnUrlPayError_InvalidInvoiceImplCopyWithImpl<_$LnUrlPayError_InvalidInvoiceImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_InvalidInvoice&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_InvalidInvoice extends LnUrlPayError {
-  const factory LnUrlPayError_InvalidInvoice({required final String err}) =
-      _$LnUrlPayError_InvalidInvoiceImpl;
-  const LnUrlPayError_InvalidInvoice._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_InvalidInvoiceImplCopyWith<_$LnUrlPayError_InvalidInvoiceImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.invalidInvoice(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_InvalidNetworkImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_InvalidNetworkImplCopyWith(
-    _$LnUrlPayError_InvalidNetworkImpl value,
-    $Res Function(_$LnUrlPayError_InvalidNetworkImpl) then,
-  ) = __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_InvalidInvoiceCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_InvalidInvoiceCopyWith(LnUrlPayError_InvalidInvoice value, $Res Function(LnUrlPayError_InvalidInvoice) _then) = _$LnUrlPayError_InvalidInvoiceCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_InvalidInvoiceCopyWithImpl<$Res>
+    implements $LnUrlPayError_InvalidInvoiceCopyWith<$Res> {
+  _$LnUrlPayError_InvalidInvoiceCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_InvalidInvoice _self;
+  final $Res Function(LnUrlPayError_InvalidInvoice) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_InvalidInvoice(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidNetworkImpl>
-    implements _$$LnUrlPayError_InvalidNetworkImplCopyWith<$Res> {
-  __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl(
-    _$LnUrlPayError_InvalidNetworkImpl _value,
-    $Res Function(_$LnUrlPayError_InvalidNetworkImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_InvalidNetworkImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_InvalidNetworkImpl extends LnUrlPayError_InvalidNetwork {
-  const _$LnUrlPayError_InvalidNetworkImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_InvalidNetwork extends LnUrlPayError {
+  const LnUrlPayError_InvalidNetwork({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.invalidNetwork(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_InvalidNetworkImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_InvalidNetworkCopyWith<LnUrlPayError_InvalidNetwork> get copyWith => _$LnUrlPayError_InvalidNetworkCopyWithImpl<LnUrlPayError_InvalidNetwork>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_InvalidNetworkImplCopyWith<_$LnUrlPayError_InvalidNetworkImpl> get copyWith =>
-      __$$LnUrlPayError_InvalidNetworkImplCopyWithImpl<_$LnUrlPayError_InvalidNetworkImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_InvalidNetwork&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_InvalidNetwork extends LnUrlPayError {
-  const factory LnUrlPayError_InvalidNetwork({required final String err}) =
-      _$LnUrlPayError_InvalidNetworkImpl;
-  const LnUrlPayError_InvalidNetwork._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_InvalidNetworkImplCopyWith<_$LnUrlPayError_InvalidNetworkImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.invalidNetwork(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_InvalidUriImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_InvalidUriImplCopyWith(
-    _$LnUrlPayError_InvalidUriImpl value,
-    $Res Function(_$LnUrlPayError_InvalidUriImpl) then,
-  ) = __$$LnUrlPayError_InvalidUriImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_InvalidNetworkCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_InvalidNetworkCopyWith(LnUrlPayError_InvalidNetwork value, $Res Function(LnUrlPayError_InvalidNetwork) _then) = _$LnUrlPayError_InvalidNetworkCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_InvalidNetworkCopyWithImpl<$Res>
+    implements $LnUrlPayError_InvalidNetworkCopyWith<$Res> {
+  _$LnUrlPayError_InvalidNetworkCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_InvalidNetwork _self;
+  final $Res Function(LnUrlPayError_InvalidNetwork) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_InvalidNetwork(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_InvalidUriImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvalidUriImpl>
-    implements _$$LnUrlPayError_InvalidUriImplCopyWith<$Res> {
-  __$$LnUrlPayError_InvalidUriImplCopyWithImpl(
-    _$LnUrlPayError_InvalidUriImpl _value,
-    $Res Function(_$LnUrlPayError_InvalidUriImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_InvalidUriImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_InvalidUriImpl extends LnUrlPayError_InvalidUri {
-  const _$LnUrlPayError_InvalidUriImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_InvalidUri extends LnUrlPayError {
+  const LnUrlPayError_InvalidUri({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.invalidUri(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_InvalidUriImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_InvalidUriCopyWith<LnUrlPayError_InvalidUri> get copyWith => _$LnUrlPayError_InvalidUriCopyWithImpl<LnUrlPayError_InvalidUri>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_InvalidUriImplCopyWith<_$LnUrlPayError_InvalidUriImpl> get copyWith =>
-      __$$LnUrlPayError_InvalidUriImplCopyWithImpl<_$LnUrlPayError_InvalidUriImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_InvalidUri&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_InvalidUri extends LnUrlPayError {
-  const factory LnUrlPayError_InvalidUri({required final String err}) = _$LnUrlPayError_InvalidUriImpl;
-  const LnUrlPayError_InvalidUri._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_InvalidUriImplCopyWith<_$LnUrlPayError_InvalidUriImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.invalidUri(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_InvoiceExpiredImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_InvoiceExpiredImplCopyWith(
-    _$LnUrlPayError_InvoiceExpiredImpl value,
-    $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) then,
-  ) = __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_InvalidUriCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_InvalidUriCopyWith(LnUrlPayError_InvalidUri value, $Res Function(LnUrlPayError_InvalidUri) _then) = _$LnUrlPayError_InvalidUriCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_InvalidUriCopyWithImpl<$Res>
+    implements $LnUrlPayError_InvalidUriCopyWith<$Res> {
+  _$LnUrlPayError_InvalidUriCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_InvalidUri _self;
+  final $Res Function(LnUrlPayError_InvalidUri) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_InvalidUri(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_InvoiceExpiredImpl>
-    implements _$$LnUrlPayError_InvoiceExpiredImplCopyWith<$Res> {
-  __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl(
-    _$LnUrlPayError_InvoiceExpiredImpl _value,
-    $Res Function(_$LnUrlPayError_InvoiceExpiredImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_InvoiceExpiredImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_InvoiceExpiredImpl extends LnUrlPayError_InvoiceExpired {
-  const _$LnUrlPayError_InvoiceExpiredImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_InvoiceExpired extends LnUrlPayError {
+  const LnUrlPayError_InvoiceExpired({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.invoiceExpired(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_InvoiceExpiredImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_InvoiceExpiredCopyWith<LnUrlPayError_InvoiceExpired> get copyWith => _$LnUrlPayError_InvoiceExpiredCopyWithImpl<LnUrlPayError_InvoiceExpired>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_InvoiceExpiredImplCopyWith<_$LnUrlPayError_InvoiceExpiredImpl> get copyWith =>
-      __$$LnUrlPayError_InvoiceExpiredImplCopyWithImpl<_$LnUrlPayError_InvoiceExpiredImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_InvoiceExpired&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_InvoiceExpired extends LnUrlPayError {
-  const factory LnUrlPayError_InvoiceExpired({required final String err}) =
-      _$LnUrlPayError_InvoiceExpiredImpl;
-  const LnUrlPayError_InvoiceExpired._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_InvoiceExpiredImplCopyWith<_$LnUrlPayError_InvoiceExpiredImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.invoiceExpired(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_PaymentFailedImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_PaymentFailedImplCopyWith(
-    _$LnUrlPayError_PaymentFailedImpl value,
-    $Res Function(_$LnUrlPayError_PaymentFailedImpl) then,
-  ) = __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_InvoiceExpiredCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_InvoiceExpiredCopyWith(LnUrlPayError_InvoiceExpired value, $Res Function(LnUrlPayError_InvoiceExpired) _then) = _$LnUrlPayError_InvoiceExpiredCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_InvoiceExpiredCopyWithImpl<$Res>
+    implements $LnUrlPayError_InvoiceExpiredCopyWith<$Res> {
+  _$LnUrlPayError_InvoiceExpiredCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_InvoiceExpired _self;
+  final $Res Function(LnUrlPayError_InvoiceExpired) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_InvoiceExpired(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_PaymentFailedImpl>
-    implements _$$LnUrlPayError_PaymentFailedImplCopyWith<$Res> {
-  __$$LnUrlPayError_PaymentFailedImplCopyWithImpl(
-    _$LnUrlPayError_PaymentFailedImpl _value,
-    $Res Function(_$LnUrlPayError_PaymentFailedImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_PaymentFailedImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_PaymentFailedImpl extends LnUrlPayError_PaymentFailed {
-  const _$LnUrlPayError_PaymentFailedImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_PaymentFailed extends LnUrlPayError {
+  const LnUrlPayError_PaymentFailed({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.paymentFailed(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_PaymentFailedImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_PaymentFailedCopyWith<LnUrlPayError_PaymentFailed> get copyWith => _$LnUrlPayError_PaymentFailedCopyWithImpl<LnUrlPayError_PaymentFailed>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_PaymentFailedImplCopyWith<_$LnUrlPayError_PaymentFailedImpl> get copyWith =>
-      __$$LnUrlPayError_PaymentFailedImplCopyWithImpl<_$LnUrlPayError_PaymentFailedImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_PaymentFailed&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_PaymentFailed extends LnUrlPayError {
-  const factory LnUrlPayError_PaymentFailed({required final String err}) = _$LnUrlPayError_PaymentFailedImpl;
-  const LnUrlPayError_PaymentFailed._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_PaymentFailedImplCopyWith<_$LnUrlPayError_PaymentFailedImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.paymentFailed(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_PaymentTimeoutImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_PaymentTimeoutImplCopyWith(
-    _$LnUrlPayError_PaymentTimeoutImpl value,
-    $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) then,
-  ) = __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_PaymentFailedCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_PaymentFailedCopyWith(LnUrlPayError_PaymentFailed value, $Res Function(LnUrlPayError_PaymentFailed) _then) = _$LnUrlPayError_PaymentFailedCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_PaymentFailedCopyWithImpl<$Res>
+    implements $LnUrlPayError_PaymentFailedCopyWith<$Res> {
+  _$LnUrlPayError_PaymentFailedCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_PaymentFailed _self;
+  final $Res Function(LnUrlPayError_PaymentFailed) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_PaymentFailed(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_PaymentTimeoutImpl>
-    implements _$$LnUrlPayError_PaymentTimeoutImplCopyWith<$Res> {
-  __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl(
-    _$LnUrlPayError_PaymentTimeoutImpl _value,
-    $Res Function(_$LnUrlPayError_PaymentTimeoutImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_PaymentTimeoutImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_PaymentTimeoutImpl extends LnUrlPayError_PaymentTimeout {
-  const _$LnUrlPayError_PaymentTimeoutImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_PaymentTimeout extends LnUrlPayError {
+  const LnUrlPayError_PaymentTimeout({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.paymentTimeout(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_PaymentTimeoutImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_PaymentTimeoutCopyWith<LnUrlPayError_PaymentTimeout> get copyWith => _$LnUrlPayError_PaymentTimeoutCopyWithImpl<LnUrlPayError_PaymentTimeout>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_PaymentTimeoutImplCopyWith<_$LnUrlPayError_PaymentTimeoutImpl> get copyWith =>
-      __$$LnUrlPayError_PaymentTimeoutImplCopyWithImpl<_$LnUrlPayError_PaymentTimeoutImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_PaymentTimeout&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_PaymentTimeout extends LnUrlPayError {
-  const factory LnUrlPayError_PaymentTimeout({required final String err}) =
-      _$LnUrlPayError_PaymentTimeoutImpl;
-  const LnUrlPayError_PaymentTimeout._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_PaymentTimeoutImplCopyWith<_$LnUrlPayError_PaymentTimeoutImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.paymentTimeout(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_RouteNotFoundImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_RouteNotFoundImplCopyWith(
-    _$LnUrlPayError_RouteNotFoundImpl value,
-    $Res Function(_$LnUrlPayError_RouteNotFoundImpl) then,
-  ) = __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_PaymentTimeoutCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_PaymentTimeoutCopyWith(LnUrlPayError_PaymentTimeout value, $Res Function(LnUrlPayError_PaymentTimeout) _then) = _$LnUrlPayError_PaymentTimeoutCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_PaymentTimeoutCopyWithImpl<$Res>
+    implements $LnUrlPayError_PaymentTimeoutCopyWith<$Res> {
+  _$LnUrlPayError_PaymentTimeoutCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_PaymentTimeout _self;
+  final $Res Function(LnUrlPayError_PaymentTimeout) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_PaymentTimeout(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_RouteNotFoundImpl>
-    implements _$$LnUrlPayError_RouteNotFoundImplCopyWith<$Res> {
-  __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl(
-    _$LnUrlPayError_RouteNotFoundImpl _value,
-    $Res Function(_$LnUrlPayError_RouteNotFoundImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_RouteNotFoundImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_RouteNotFoundImpl extends LnUrlPayError_RouteNotFound {
-  const _$LnUrlPayError_RouteNotFoundImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_RouteNotFound extends LnUrlPayError {
+  const LnUrlPayError_RouteNotFound({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.routeNotFound(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_RouteNotFoundImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_RouteNotFoundCopyWith<LnUrlPayError_RouteNotFound> get copyWith => _$LnUrlPayError_RouteNotFoundCopyWithImpl<LnUrlPayError_RouteNotFound>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_RouteNotFoundImplCopyWith<_$LnUrlPayError_RouteNotFoundImpl> get copyWith =>
-      __$$LnUrlPayError_RouteNotFoundImplCopyWithImpl<_$LnUrlPayError_RouteNotFoundImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_RouteNotFound&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_RouteNotFound extends LnUrlPayError {
-  const factory LnUrlPayError_RouteNotFound({required final String err}) = _$LnUrlPayError_RouteNotFoundImpl;
-  const LnUrlPayError_RouteNotFound._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_RouteNotFoundImplCopyWith<_$LnUrlPayError_RouteNotFoundImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.routeNotFound(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_RouteTooExpensiveImplCopyWith(
-    _$LnUrlPayError_RouteTooExpensiveImpl value,
-    $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) then,
-  ) = __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_RouteNotFoundCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_RouteNotFoundCopyWith(LnUrlPayError_RouteNotFound value, $Res Function(LnUrlPayError_RouteNotFound) _then) = _$LnUrlPayError_RouteNotFoundCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_RouteNotFoundCopyWithImpl<$Res>
+    implements $LnUrlPayError_RouteNotFoundCopyWith<$Res> {
+  _$LnUrlPayError_RouteNotFoundCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_RouteNotFound _self;
+  final $Res Function(LnUrlPayError_RouteNotFound) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_RouteNotFound(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_RouteTooExpensiveImpl>
-    implements _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<$Res> {
-  __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl(
-    _$LnUrlPayError_RouteTooExpensiveImpl _value,
-    $Res Function(_$LnUrlPayError_RouteTooExpensiveImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_RouteTooExpensiveImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_RouteTooExpensiveImpl extends LnUrlPayError_RouteTooExpensive {
-  const _$LnUrlPayError_RouteTooExpensiveImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_RouteTooExpensive extends LnUrlPayError {
+  const LnUrlPayError_RouteTooExpensive({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.routeTooExpensive(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_RouteTooExpensiveImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_RouteTooExpensiveCopyWith<LnUrlPayError_RouteTooExpensive> get copyWith => _$LnUrlPayError_RouteTooExpensiveCopyWithImpl<LnUrlPayError_RouteTooExpensive>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<_$LnUrlPayError_RouteTooExpensiveImpl> get copyWith =>
-      __$$LnUrlPayError_RouteTooExpensiveImplCopyWithImpl<_$LnUrlPayError_RouteTooExpensiveImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_RouteTooExpensive&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_RouteTooExpensive extends LnUrlPayError {
-  const factory LnUrlPayError_RouteTooExpensive({required final String err}) =
-      _$LnUrlPayError_RouteTooExpensiveImpl;
-  const LnUrlPayError_RouteTooExpensive._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_RouteTooExpensiveImplCopyWith<_$LnUrlPayError_RouteTooExpensiveImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.routeTooExpensive(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlPayError_ServiceConnectivityImplCopyWith<$Res> {
-  factory _$$LnUrlPayError_ServiceConnectivityImplCopyWith(
-    _$LnUrlPayError_ServiceConnectivityImpl value,
-    $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) then,
-  ) = __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlPayError_RouteTooExpensiveCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_RouteTooExpensiveCopyWith(LnUrlPayError_RouteTooExpensive value, $Res Function(LnUrlPayError_RouteTooExpensive) _then) = _$LnUrlPayError_RouteTooExpensiveCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_RouteTooExpensiveCopyWithImpl<$Res>
+    implements $LnUrlPayError_RouteTooExpensiveCopyWith<$Res> {
+  _$LnUrlPayError_RouteTooExpensiveCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_RouteTooExpensive _self;
+  final $Res Function(LnUrlPayError_RouteTooExpensive) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_RouteTooExpensive(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<$Res>
-    extends _$LnUrlPayErrorCopyWithImpl<$Res, _$LnUrlPayError_ServiceConnectivityImpl>
-    implements _$$LnUrlPayError_ServiceConnectivityImplCopyWith<$Res> {
-  __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl(
-    _$LnUrlPayError_ServiceConnectivityImpl _value,
-    $Res Function(_$LnUrlPayError_ServiceConnectivityImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlPayError_ServiceConnectivityImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlPayError_ServiceConnectivityImpl extends LnUrlPayError_ServiceConnectivity {
-  const _$LnUrlPayError_ServiceConnectivityImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
+  const LnUrlPayError_ServiceConnectivity({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlPayError.serviceConnectivity(err: $err)';
-  }
+ final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlPayError_ServiceConnectivityImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_ServiceConnectivityCopyWith<LnUrlPayError_ServiceConnectivity> get copyWith => _$LnUrlPayError_ServiceConnectivityCopyWithImpl<LnUrlPayError_ServiceConnectivity>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlPayError_ServiceConnectivityImplCopyWith<_$LnUrlPayError_ServiceConnectivityImpl> get copyWith =>
-      __$$LnUrlPayError_ServiceConnectivityImplCopyWithImpl<_$LnUrlPayError_ServiceConnectivityImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_ServiceConnectivity&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlPayError_ServiceConnectivity extends LnUrlPayError {
-  const factory LnUrlPayError_ServiceConnectivity({required final String err}) =
-      _$LnUrlPayError_ServiceConnectivityImpl;
-  const LnUrlPayError_ServiceConnectivity._() : super._();
 
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlPayError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlPayError_ServiceConnectivityImplCopyWith<_$LnUrlPayError_ServiceConnectivityImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlPayError.serviceConnectivity(err: $err)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LnUrlPayError_ServiceConnectivityCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_ServiceConnectivityCopyWith(LnUrlPayError_ServiceConnectivity value, $Res Function(LnUrlPayError_ServiceConnectivity) _then) = _$LnUrlPayError_ServiceConnectivityCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_ServiceConnectivityCopyWithImpl<$Res>
+    implements $LnUrlPayError_ServiceConnectivityCopyWith<$Res> {
+  _$LnUrlPayError_ServiceConnectivityCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_ServiceConnectivity _self;
+  final $Res Function(LnUrlPayError_ServiceConnectivity) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_ServiceConnectivity(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 /// @nodoc
 mixin _$LnUrlWithdrawError {
-  String get err => throw _privateConstructorUsedError;
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $LnUrlWithdrawErrorCopyWith<LnUrlWithdrawError> get copyWith => throw _privateConstructorUsedError;
+ String get err;
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawErrorCopyWith<LnUrlWithdrawError> get copyWith => _$LnUrlWithdrawErrorCopyWithImpl<LnUrlWithdrawError>(this as LnUrlWithdrawError, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError&&(identical(other.err, err) || other.err == err));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,err);
+
+@override
+String toString() {
+  return 'LnUrlWithdrawError(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory $LnUrlWithdrawErrorCopyWith(LnUrlWithdrawError value, $Res Function(LnUrlWithdrawError) then) =
-      _$LnUrlWithdrawErrorCopyWithImpl<$Res, LnUrlWithdrawError>;
-  @useResult
-  $Res call({String err});
-}
+abstract mixin class $LnUrlWithdrawErrorCopyWith<$Res>  {
+  factory $LnUrlWithdrawErrorCopyWith(LnUrlWithdrawError value, $Res Function(LnUrlWithdrawError) _then) = _$LnUrlWithdrawErrorCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
 
+
+
+
+}
 /// @nodoc
-class _$LnUrlWithdrawErrorCopyWithImpl<$Res, $Val extends LnUrlWithdrawError>
+class _$LnUrlWithdrawErrorCopyWithImpl<$Res>
     implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  _$LnUrlWithdrawErrorCopyWithImpl(this._value, this._then);
+  _$LnUrlWithdrawErrorCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final LnUrlWithdrawError _self;
+  final $Res Function(LnUrlWithdrawError) _then;
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _value.copyWith(
-            err:
-                null == err
-                    ? _value.err
-                    : err // ignore: cast_nullable_to_non_nullable
-                        as String,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? err = null,}) {
+  return _then(_self.copyWith(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-abstract class _$$LnUrlWithdrawError_GenericImplCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_GenericImplCopyWith(
-    _$LnUrlWithdrawError_GenericImpl value,
-    $Res Function(_$LnUrlWithdrawError_GenericImpl) then,
-  ) = __$$LnUrlWithdrawError_GenericImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawError_GenericImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_GenericImpl>
-    implements _$$LnUrlWithdrawError_GenericImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_GenericImplCopyWithImpl(
-    _$LnUrlWithdrawError_GenericImpl _value,
-    $Res Function(_$LnUrlWithdrawError_GenericImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlWithdrawError_GenericImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$LnUrlWithdrawError_GenericImpl extends LnUrlWithdrawError_Generic {
-  const _$LnUrlWithdrawError_GenericImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlWithdrawError_Generic extends LnUrlWithdrawError {
+  const LnUrlWithdrawError_Generic({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawError.generic(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawError_GenericImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawError_GenericCopyWith<LnUrlWithdrawError_Generic> get copyWith => _$LnUrlWithdrawError_GenericCopyWithImpl<LnUrlWithdrawError_Generic>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawError_GenericImplCopyWith<_$LnUrlWithdrawError_GenericImpl> get copyWith =>
-      __$$LnUrlWithdrawError_GenericImplCopyWithImpl<_$LnUrlWithdrawError_GenericImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError_Generic&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlWithdrawError_Generic extends LnUrlWithdrawError {
-  const factory LnUrlWithdrawError_Generic({required final String err}) = _$LnUrlWithdrawError_GenericImpl;
-  const LnUrlWithdrawError_Generic._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawError_GenericImplCopyWith<_$LnUrlWithdrawError_GenericImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawError.generic(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<$Res>
-    implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvalidAmountImplCopyWith(
-    _$LnUrlWithdrawError_InvalidAmountImpl value,
-    $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) then,
-  ) = __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlWithdrawError_GenericCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
+  factory $LnUrlWithdrawError_GenericCopyWith(LnUrlWithdrawError_Generic value, $Res Function(LnUrlWithdrawError_Generic) _then) = _$LnUrlWithdrawError_GenericCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawError_GenericCopyWithImpl<$Res>
+    implements $LnUrlWithdrawError_GenericCopyWith<$Res> {
+  _$LnUrlWithdrawError_GenericCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawError_Generic _self;
+  final $Res Function(LnUrlWithdrawError_Generic) _then;
+
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlWithdrawError_Generic(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvalidAmountImpl>
-    implements _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl(
-    _$LnUrlWithdrawError_InvalidAmountImpl _value,
-    $Res Function(_$LnUrlWithdrawError_InvalidAmountImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlWithdrawError_InvalidAmountImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawError_InvalidAmountImpl extends LnUrlWithdrawError_InvalidAmount {
-  const _$LnUrlWithdrawError_InvalidAmountImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlWithdrawError_InvalidAmount extends LnUrlWithdrawError {
+  const LnUrlWithdrawError_InvalidAmount({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawError.invalidAmount(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawError_InvalidAmountImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawError_InvalidAmountCopyWith<LnUrlWithdrawError_InvalidAmount> get copyWith => _$LnUrlWithdrawError_InvalidAmountCopyWithImpl<LnUrlWithdrawError_InvalidAmount>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<_$LnUrlWithdrawError_InvalidAmountImpl> get copyWith =>
-      __$$LnUrlWithdrawError_InvalidAmountImplCopyWithImpl<_$LnUrlWithdrawError_InvalidAmountImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError_InvalidAmount&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlWithdrawError_InvalidAmount extends LnUrlWithdrawError {
-  const factory LnUrlWithdrawError_InvalidAmount({required final String err}) =
-      _$LnUrlWithdrawError_InvalidAmountImpl;
-  const LnUrlWithdrawError_InvalidAmount._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawError_InvalidAmountImplCopyWith<_$LnUrlWithdrawError_InvalidAmountImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawError.invalidAmount(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<$Res>
-    implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith(
-    _$LnUrlWithdrawError_InvalidInvoiceImpl value,
-    $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) then,
-  ) = __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlWithdrawError_InvalidAmountCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
+  factory $LnUrlWithdrawError_InvalidAmountCopyWith(LnUrlWithdrawError_InvalidAmount value, $Res Function(LnUrlWithdrawError_InvalidAmount) _then) = _$LnUrlWithdrawError_InvalidAmountCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawError_InvalidAmountCopyWithImpl<$Res>
+    implements $LnUrlWithdrawError_InvalidAmountCopyWith<$Res> {
+  _$LnUrlWithdrawError_InvalidAmountCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawError_InvalidAmount _self;
+  final $Res Function(LnUrlWithdrawError_InvalidAmount) _then;
+
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlWithdrawError_InvalidAmount(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvalidInvoiceImpl>
-    implements _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl(
-    _$LnUrlWithdrawError_InvalidInvoiceImpl _value,
-    $Res Function(_$LnUrlWithdrawError_InvalidInvoiceImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlWithdrawError_InvalidInvoiceImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawError_InvalidInvoiceImpl extends LnUrlWithdrawError_InvalidInvoice {
-  const _$LnUrlWithdrawError_InvalidInvoiceImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlWithdrawError_InvalidInvoice extends LnUrlWithdrawError {
+  const LnUrlWithdrawError_InvalidInvoice({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawError.invalidInvoice(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawError_InvalidInvoiceImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawError_InvalidInvoiceCopyWith<LnUrlWithdrawError_InvalidInvoice> get copyWith => _$LnUrlWithdrawError_InvalidInvoiceCopyWithImpl<LnUrlWithdrawError_InvalidInvoice>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<_$LnUrlWithdrawError_InvalidInvoiceImpl> get copyWith =>
-      __$$LnUrlWithdrawError_InvalidInvoiceImplCopyWithImpl<_$LnUrlWithdrawError_InvalidInvoiceImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError_InvalidInvoice&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlWithdrawError_InvalidInvoice extends LnUrlWithdrawError {
-  const factory LnUrlWithdrawError_InvalidInvoice({required final String err}) =
-      _$LnUrlWithdrawError_InvalidInvoiceImpl;
-  const LnUrlWithdrawError_InvalidInvoice._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawError_InvalidInvoiceImplCopyWith<_$LnUrlWithdrawError_InvalidInvoiceImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawError.invalidInvoice(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawError_InvalidUriImplCopyWith<$Res>
-    implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvalidUriImplCopyWith(
-    _$LnUrlWithdrawError_InvalidUriImpl value,
-    $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) then,
-  ) = __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlWithdrawError_InvalidInvoiceCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
+  factory $LnUrlWithdrawError_InvalidInvoiceCopyWith(LnUrlWithdrawError_InvalidInvoice value, $Res Function(LnUrlWithdrawError_InvalidInvoice) _then) = _$LnUrlWithdrawError_InvalidInvoiceCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawError_InvalidInvoiceCopyWithImpl<$Res>
+    implements $LnUrlWithdrawError_InvalidInvoiceCopyWith<$Res> {
+  _$LnUrlWithdrawError_InvalidInvoiceCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawError_InvalidInvoice _self;
+  final $Res Function(LnUrlWithdrawError_InvalidInvoice) _then;
+
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlWithdrawError_InvalidInvoice(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvalidUriImpl>
-    implements _$$LnUrlWithdrawError_InvalidUriImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl(
-    _$LnUrlWithdrawError_InvalidUriImpl _value,
-    $Res Function(_$LnUrlWithdrawError_InvalidUriImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlWithdrawError_InvalidUriImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawError_InvalidUriImpl extends LnUrlWithdrawError_InvalidUri {
-  const _$LnUrlWithdrawError_InvalidUriImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlWithdrawError_InvalidUri extends LnUrlWithdrawError {
+  const LnUrlWithdrawError_InvalidUri({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawError.invalidUri(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawError_InvalidUriImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawError_InvalidUriCopyWith<LnUrlWithdrawError_InvalidUri> get copyWith => _$LnUrlWithdrawError_InvalidUriCopyWithImpl<LnUrlWithdrawError_InvalidUri>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawError_InvalidUriImplCopyWith<_$LnUrlWithdrawError_InvalidUriImpl> get copyWith =>
-      __$$LnUrlWithdrawError_InvalidUriImplCopyWithImpl<_$LnUrlWithdrawError_InvalidUriImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError_InvalidUri&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlWithdrawError_InvalidUri extends LnUrlWithdrawError {
-  const factory LnUrlWithdrawError_InvalidUri({required final String err}) =
-      _$LnUrlWithdrawError_InvalidUriImpl;
-  const LnUrlWithdrawError_InvalidUri._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawError_InvalidUriImplCopyWith<_$LnUrlWithdrawError_InvalidUriImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawError.invalidUri(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<$Res>
-    implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith(
-    _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl value,
-    $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) then,
-  ) = __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlWithdrawError_InvalidUriCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
+  factory $LnUrlWithdrawError_InvalidUriCopyWith(LnUrlWithdrawError_InvalidUri value, $Res Function(LnUrlWithdrawError_InvalidUri) _then) = _$LnUrlWithdrawError_InvalidUriCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawError_InvalidUriCopyWithImpl<$Res>
+    implements $LnUrlWithdrawError_InvalidUriCopyWith<$Res> {
+  _$LnUrlWithdrawError_InvalidUriCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawError_InvalidUri _self;
+  final $Res Function(LnUrlWithdrawError_InvalidUri) _then;
+
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlWithdrawError_InvalidUri(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
-    implements _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl(
-    _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl _value,
-    $Res Function(_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl extends LnUrlWithdrawError_InvoiceNoRoutingHints {
-  const _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlWithdrawError_InvoiceNoRoutingHints extends LnUrlWithdrawError {
+  const LnUrlWithdrawError_InvoiceNoRoutingHints({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawError.invoiceNoRoutingHints(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWith<LnUrlWithdrawError_InvoiceNoRoutingHints> get copyWith => _$LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWithImpl<LnUrlWithdrawError_InvoiceNoRoutingHints>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
-  get copyWith => __$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWithImpl<
-    _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl
-  >(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError_InvoiceNoRoutingHints&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlWithdrawError_InvoiceNoRoutingHints extends LnUrlWithdrawError {
-  const factory LnUrlWithdrawError_InvoiceNoRoutingHints({required final String err}) =
-      _$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl;
-  const LnUrlWithdrawError_InvoiceNoRoutingHints._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawError_InvoiceNoRoutingHintsImplCopyWith<_$LnUrlWithdrawError_InvoiceNoRoutingHintsImpl>
-  get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawError.invoiceNoRoutingHints(err: $err)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<$Res>
-    implements $LnUrlWithdrawErrorCopyWith<$Res> {
-  factory _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith(
-    _$LnUrlWithdrawError_ServiceConnectivityImpl value,
-    $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) then,
-  ) = __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String err});
+abstract mixin class $LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
+  factory $LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWith(LnUrlWithdrawError_InvoiceNoRoutingHints value, $Res Function(LnUrlWithdrawError_InvoiceNoRoutingHints) _then) = _$LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWithImpl<$Res>
+    implements $LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWith<$Res> {
+  _$LnUrlWithdrawError_InvoiceNoRoutingHintsCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawError_InvoiceNoRoutingHints _self;
+  final $Res Function(LnUrlWithdrawError_InvoiceNoRoutingHints) _then;
+
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlWithdrawError_InvoiceNoRoutingHints(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawErrorCopyWithImpl<$Res, _$LnUrlWithdrawError_ServiceConnectivityImpl>
-    implements _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<$Res> {
-  __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl(
-    _$LnUrlWithdrawError_ServiceConnectivityImpl _value,
-    $Res Function(_$LnUrlWithdrawError_ServiceConnectivityImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? err = null}) {
-    return _then(
-      _$LnUrlWithdrawError_ServiceConnectivityImpl(
-        err:
-            null == err
-                ? _value.err
-                : err // ignore: cast_nullable_to_non_nullable
-                    as String,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawError_ServiceConnectivityImpl extends LnUrlWithdrawError_ServiceConnectivity {
-  const _$LnUrlWithdrawError_ServiceConnectivityImpl({required this.err}) : super._();
 
-  @override
-  final String err;
+class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError {
+  const LnUrlWithdrawError_ServiceConnectivity({required this.err}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawError.serviceConnectivity(err: $err)';
-  }
+@override final  String err;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawError_ServiceConnectivityImpl &&
-            (identical(other.err, err) || other.err == err));
-  }
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawError_ServiceConnectivityCopyWith<LnUrlWithdrawError_ServiceConnectivity> get copyWith => _$LnUrlWithdrawError_ServiceConnectivityCopyWithImpl<LnUrlWithdrawError_ServiceConnectivity>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
-  get copyWith => __$$LnUrlWithdrawError_ServiceConnectivityImplCopyWithImpl<
-    _$LnUrlWithdrawError_ServiceConnectivityImpl
-  >(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawError_ServiceConnectivity&&(identical(other.err, err) || other.err == err));
 }
 
-abstract class LnUrlWithdrawError_ServiceConnectivity extends LnUrlWithdrawError {
-  const factory LnUrlWithdrawError_ServiceConnectivity({required final String err}) =
-      _$LnUrlWithdrawError_ServiceConnectivityImpl;
-  const LnUrlWithdrawError_ServiceConnectivity._() : super._();
 
-  @override
-  String get err;
+@override
+int get hashCode => Object.hash(runtimeType,err);
 
-  /// Create a copy of LnUrlWithdrawError
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawError_ServiceConnectivityImplCopyWith<_$LnUrlWithdrawError_ServiceConnectivityImpl>
-  get copyWith => throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawError.serviceConnectivity(err: $err)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LnUrlWithdrawError_ServiceConnectivityCopyWith<$Res> implements $LnUrlWithdrawErrorCopyWith<$Res> {
+  factory $LnUrlWithdrawError_ServiceConnectivityCopyWith(LnUrlWithdrawError_ServiceConnectivity value, $Res Function(LnUrlWithdrawError_ServiceConnectivity) _then) = _$LnUrlWithdrawError_ServiceConnectivityCopyWithImpl;
+@override @useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawError_ServiceConnectivityCopyWithImpl<$Res>
+    implements $LnUrlWithdrawError_ServiceConnectivityCopyWith<$Res> {
+  _$LnUrlWithdrawError_ServiceConnectivityCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawError_ServiceConnectivity _self;
+  final $Res Function(LnUrlWithdrawError_ServiceConnectivity) _then;
+
+/// Create a copy of LnUrlWithdrawError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlWithdrawError_ServiceConnectivity(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
 }
 
 /// @nodoc
 mixin _$LnUrlWithdrawResult {
-  Object get data => throw _privateConstructorUsedError;
+
+ Object get data;
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawResult&&const DeepCollectionEquality().equals(other.data, data));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(data));
+
+@override
+String toString() {
+  return 'LnUrlWithdrawResult(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $LnUrlWithdrawResultCopyWith<$Res> {
-  factory $LnUrlWithdrawResultCopyWith(LnUrlWithdrawResult value, $Res Function(LnUrlWithdrawResult) then) =
-      _$LnUrlWithdrawResultCopyWithImpl<$Res, LnUrlWithdrawResult>;
+class $LnUrlWithdrawResultCopyWith<$Res>  {
+$LnUrlWithdrawResultCopyWith(LnUrlWithdrawResult _, $Res Function(LnUrlWithdrawResult) __);
 }
 
-/// @nodoc
-class _$LnUrlWithdrawResultCopyWithImpl<$Res, $Val extends LnUrlWithdrawResult>
-    implements $LnUrlWithdrawResultCopyWith<$Res> {
-  _$LnUrlWithdrawResultCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-}
-
-/// @nodoc
-abstract class _$$LnUrlWithdrawResult_OkImplCopyWith<$Res> {
-  factory _$$LnUrlWithdrawResult_OkImplCopyWith(
-    _$LnUrlWithdrawResult_OkImpl value,
-    $Res Function(_$LnUrlWithdrawResult_OkImpl) then,
-  ) = __$$LnUrlWithdrawResult_OkImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlWithdrawSuccessData data});
-}
-
-/// @nodoc
-class __$$LnUrlWithdrawResult_OkImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_OkImpl>
-    implements _$$LnUrlWithdrawResult_OkImplCopyWith<$Res> {
-  __$$LnUrlWithdrawResult_OkImplCopyWithImpl(
-    _$LnUrlWithdrawResult_OkImpl _value,
-    $Res Function(_$LnUrlWithdrawResult_OkImpl) _then,
-  ) : super(_value, _then);
-
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$LnUrlWithdrawResult_OkImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlWithdrawSuccessData,
-      ),
-    );
-  }
-}
 
 /// @nodoc
 
-class _$LnUrlWithdrawResult_OkImpl extends LnUrlWithdrawResult_Ok {
-  const _$LnUrlWithdrawResult_OkImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlWithdrawSuccessData data;
+class LnUrlWithdrawResult_Ok extends LnUrlWithdrawResult {
+  const LnUrlWithdrawResult_Ok({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawResult.ok(data: $data)';
-  }
+@override final  LnUrlWithdrawSuccessData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawResult_OkImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of LnUrlWithdrawResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawResult_OkCopyWith<LnUrlWithdrawResult_Ok> get copyWith => _$LnUrlWithdrawResult_OkCopyWithImpl<LnUrlWithdrawResult_Ok>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawResult_OkImplCopyWith<_$LnUrlWithdrawResult_OkImpl> get copyWith =>
-      __$$LnUrlWithdrawResult_OkImplCopyWithImpl<_$LnUrlWithdrawResult_OkImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawResult_Ok&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class LnUrlWithdrawResult_Ok extends LnUrlWithdrawResult {
-  const factory LnUrlWithdrawResult_Ok({required final LnUrlWithdrawSuccessData data}) =
-      _$LnUrlWithdrawResult_OkImpl;
-  const LnUrlWithdrawResult_Ok._() : super._();
 
-  @override
-  LnUrlWithdrawSuccessData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawResult_OkImplCopyWith<_$LnUrlWithdrawResult_OkImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawResult.ok(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawResult_TimeoutImplCopyWith<$Res> {
-  factory _$$LnUrlWithdrawResult_TimeoutImplCopyWith(
-    _$LnUrlWithdrawResult_TimeoutImpl value,
-    $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) then,
-  ) = __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlWithdrawSuccessData data});
+abstract mixin class $LnUrlWithdrawResult_OkCopyWith<$Res> implements $LnUrlWithdrawResultCopyWith<$Res> {
+  factory $LnUrlWithdrawResult_OkCopyWith(LnUrlWithdrawResult_Ok value, $Res Function(LnUrlWithdrawResult_Ok) _then) = _$LnUrlWithdrawResult_OkCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlWithdrawSuccessData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawResult_OkCopyWithImpl<$Res>
+    implements $LnUrlWithdrawResult_OkCopyWith<$Res> {
+  _$LnUrlWithdrawResult_OkCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawResult_Ok _self;
+  final $Res Function(LnUrlWithdrawResult_Ok) _then;
+
+/// Create a copy of LnUrlWithdrawResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(LnUrlWithdrawResult_Ok(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlWithdrawSuccessData,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_TimeoutImpl>
-    implements _$$LnUrlWithdrawResult_TimeoutImplCopyWith<$Res> {
-  __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl(
-    _$LnUrlWithdrawResult_TimeoutImpl _value,
-    $Res Function(_$LnUrlWithdrawResult_TimeoutImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$LnUrlWithdrawResult_TimeoutImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlWithdrawSuccessData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawResult_TimeoutImpl extends LnUrlWithdrawResult_Timeout {
-  const _$LnUrlWithdrawResult_TimeoutImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlWithdrawSuccessData data;
+class LnUrlWithdrawResult_Timeout extends LnUrlWithdrawResult {
+  const LnUrlWithdrawResult_Timeout({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawResult.timeout(data: $data)';
-  }
+@override final  LnUrlWithdrawSuccessData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawResult_TimeoutImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of LnUrlWithdrawResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawResult_TimeoutCopyWith<LnUrlWithdrawResult_Timeout> get copyWith => _$LnUrlWithdrawResult_TimeoutCopyWithImpl<LnUrlWithdrawResult_Timeout>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawResult_TimeoutImplCopyWith<_$LnUrlWithdrawResult_TimeoutImpl> get copyWith =>
-      __$$LnUrlWithdrawResult_TimeoutImplCopyWithImpl<_$LnUrlWithdrawResult_TimeoutImpl>(this, _$identity);
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawResult_Timeout&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class LnUrlWithdrawResult_Timeout extends LnUrlWithdrawResult {
-  const factory LnUrlWithdrawResult_Timeout({required final LnUrlWithdrawSuccessData data}) =
-      _$LnUrlWithdrawResult_TimeoutImpl;
-  const LnUrlWithdrawResult_Timeout._() : super._();
 
-  @override
-  LnUrlWithdrawSuccessData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawResult_TimeoutImplCopyWith<_$LnUrlWithdrawResult_TimeoutImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawResult.timeout(data: $data)';
+}
+
+
 }
 
 /// @nodoc
-abstract class _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<$Res> {
-  factory _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith(
-    _$LnUrlWithdrawResult_ErrorStatusImpl value,
-    $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) then,
-  ) = __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<$Res>;
-  @useResult
-  $Res call({LnUrlErrorData data});
+abstract mixin class $LnUrlWithdrawResult_TimeoutCopyWith<$Res> implements $LnUrlWithdrawResultCopyWith<$Res> {
+  factory $LnUrlWithdrawResult_TimeoutCopyWith(LnUrlWithdrawResult_Timeout value, $Res Function(LnUrlWithdrawResult_Timeout) _then) = _$LnUrlWithdrawResult_TimeoutCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlWithdrawSuccessData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawResult_TimeoutCopyWithImpl<$Res>
+    implements $LnUrlWithdrawResult_TimeoutCopyWith<$Res> {
+  _$LnUrlWithdrawResult_TimeoutCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawResult_Timeout _self;
+  final $Res Function(LnUrlWithdrawResult_Timeout) _then;
+
+/// Create a copy of LnUrlWithdrawResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(LnUrlWithdrawResult_Timeout(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlWithdrawSuccessData,
+  ));
 }
 
-/// @nodoc
-class __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<$Res>
-    extends _$LnUrlWithdrawResultCopyWithImpl<$Res, _$LnUrlWithdrawResult_ErrorStatusImpl>
-    implements _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<$Res> {
-  __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl(
-    _$LnUrlWithdrawResult_ErrorStatusImpl _value,
-    $Res Function(_$LnUrlWithdrawResult_ErrorStatusImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? data = null}) {
-    return _then(
-      _$LnUrlWithdrawResult_ErrorStatusImpl(
-        data:
-            null == data
-                ? _value.data
-                : data // ignore: cast_nullable_to_non_nullable
-                    as LnUrlErrorData,
-      ),
-    );
-  }
 }
 
 /// @nodoc
 
-class _$LnUrlWithdrawResult_ErrorStatusImpl extends LnUrlWithdrawResult_ErrorStatus {
-  const _$LnUrlWithdrawResult_ErrorStatusImpl({required this.data}) : super._();
 
-  @override
-  final LnUrlErrorData data;
+class LnUrlWithdrawResult_ErrorStatus extends LnUrlWithdrawResult {
+  const LnUrlWithdrawResult_ErrorStatus({required this.data}): super._();
+  
 
-  @override
-  String toString() {
-    return 'LnUrlWithdrawResult.errorStatus(data: $data)';
-  }
+@override final  LnUrlErrorData data;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$LnUrlWithdrawResult_ErrorStatusImpl &&
-            (identical(other.data, data) || other.data == data));
-  }
+/// Create a copy of LnUrlWithdrawResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlWithdrawResult_ErrorStatusCopyWith<LnUrlWithdrawResult_ErrorStatus> get copyWith => _$LnUrlWithdrawResult_ErrorStatusCopyWithImpl<LnUrlWithdrawResult_ErrorStatus>(this, _$identity);
 
-  @override
-  int get hashCode => Object.hash(runtimeType, data);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<_$LnUrlWithdrawResult_ErrorStatusImpl> get copyWith =>
-      __$$LnUrlWithdrawResult_ErrorStatusImplCopyWithImpl<_$LnUrlWithdrawResult_ErrorStatusImpl>(
-        this,
-        _$identity,
-      );
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlWithdrawResult_ErrorStatus&&(identical(other.data, data) || other.data == data));
 }
 
-abstract class LnUrlWithdrawResult_ErrorStatus extends LnUrlWithdrawResult {
-  const factory LnUrlWithdrawResult_ErrorStatus({required final LnUrlErrorData data}) =
-      _$LnUrlWithdrawResult_ErrorStatusImpl;
-  const LnUrlWithdrawResult_ErrorStatus._() : super._();
 
-  @override
-  LnUrlErrorData get data;
+@override
+int get hashCode => Object.hash(runtimeType,data);
 
-  /// Create a copy of LnUrlWithdrawResult
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LnUrlWithdrawResult_ErrorStatusImplCopyWith<_$LnUrlWithdrawResult_ErrorStatusImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+String toString() {
+  return 'LnUrlWithdrawResult.errorStatus(data: $data)';
 }
+
+
+}
+
+/// @nodoc
+abstract mixin class $LnUrlWithdrawResult_ErrorStatusCopyWith<$Res> implements $LnUrlWithdrawResultCopyWith<$Res> {
+  factory $LnUrlWithdrawResult_ErrorStatusCopyWith(LnUrlWithdrawResult_ErrorStatus value, $Res Function(LnUrlWithdrawResult_ErrorStatus) _then) = _$LnUrlWithdrawResult_ErrorStatusCopyWithImpl;
+@useResult
+$Res call({
+ LnUrlErrorData data
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlWithdrawResult_ErrorStatusCopyWithImpl<$Res>
+    implements $LnUrlWithdrawResult_ErrorStatusCopyWith<$Res> {
+  _$LnUrlWithdrawResult_ErrorStatusCopyWithImpl(this._self, this._then);
+
+  final LnUrlWithdrawResult_ErrorStatus _self;
+  final $Res Function(LnUrlWithdrawResult_ErrorStatus) _then;
+
+/// Create a copy of LnUrlWithdrawResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+  return _then(LnUrlWithdrawResult_ErrorStatus(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as LnUrlErrorData,
+  ));
+}
+
+
+}
+
+// dart format on
