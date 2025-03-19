@@ -18,11 +18,11 @@
 
 ## Requirements
 
-- Flutter >=3.10.0
-- Dart >=3.4.0 <4.0.0
-- iOS >=12.0
-- MacOS >=10.11
-- Android `compileSDK` 31
+- Flutter >=3.27.0
+- Dart >=3.6.0 <4.0.0
+- iOS >=13.0
+- MacOS >=15.0
+- Android `compileSDK` 35
 - Java 1.8
 - Android Gradle Plugin >=7.1.2
 - Gradle wrapper >=7.4

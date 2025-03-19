@@ -217,8 +217,8 @@ jobs:
 
       - name: Run bindings tests
         run: |
-          curl -o jna-5.12.1.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar
-          export CLASSPATH=$(pwd)/jna-5.12.1.jar;
+          curl -o jna-5.14.0.jar https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.14.0/jna-5.14.0.jar
+          export CLASSPATH=$(pwd)/jna-5.14.0.jar;
           cd lib/bindings
           cargo test
 
@@ -335,7 +335,7 @@ jobs:
       - name: Build Android bindings
         working-directory: lib/bindings       
         run: |
-          cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
+          cargo run --no-default-features --features=uniffi-25 --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o langs/android/lib/src/main/kotlin
 
       - name: Run Android build
         working-directory: lib/bindings/langs/android  
