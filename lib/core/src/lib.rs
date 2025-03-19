@@ -163,6 +163,7 @@
 //! Join this [telegram group](https://t.me/breezsdk).
 
 #[cfg(feature = "frb")]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub(crate) mod bindings;
 pub(crate) mod buy;
 pub(crate) mod chain;
@@ -170,6 +171,7 @@ pub(crate) mod chain_swap;
 pub mod error;
 pub(crate) mod event;
 #[cfg(feature = "frb")]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub(crate) mod frb_generated;
 pub(crate) mod lnurl;
 pub mod logger;
