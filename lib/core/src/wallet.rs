@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::fs::{self, create_dir_all};
 use std::io::Write;
-use std::path::PathBuf;
 use std::{path::Path, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -10,10 +8,10 @@ use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::elements::{AssetId, Txid};
-use lwk_wollet::ElectrumOptions;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
-    ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, WalletTx, Wollet, WolletDescriptor,
+    ElectrumClient, ElectrumOptions, ElectrumUrl, ElementsNetwork, WalletTx, Wollet,
+    WolletDescriptor,
 };
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -118,9 +116,12 @@ impl LiquidOnchainWallet {
         let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
         let wollet = Self::create_wallet(&config, working_dir, &signer)?;
 
-        let working_dir_buf = PathBuf::from_str(working_dir)?;
-        if !working_dir_buf.exists() {
-            create_dir_all(&working_dir_buf)?;
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        {
+            let working_dir_buf = std::path::PathBuf::from_str(working_dir)?;
+            if !working_dir_buf.exists() {
+                std::fs::create_dir_all(&working_dir_buf)?;
+            }
         }
 
         Ok(Self {
@@ -135,16 +136,20 @@ impl LiquidOnchainWallet {
 
     fn create_wallet<P: AsRef<Path>>(
         config: &Config,
-        working_dir: P,
+        #[allow(unused_variables)] working_dir: P,
         signer: &SdkLwkSigner,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
         let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         let mut lwk_persister =
-            FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
+            lwk_wollet::FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let lwk_persister = lwk_wollet::NoPersist::new();
         let wollet_res = Wollet::new(elements_network, lwk_persister, descriptor.clone());
         match wollet_res {
             Ok(wollet) => Ok(wollet),
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             Err(
                 lwk_wollet::Error::PersistError(_)
                 | lwk_wollet::Error::UpdateHeightTooOld { .. }
@@ -153,9 +158,10 @@ impl LiquidOnchainWallet {
                 warn!("Update error initialising wollet, wipping storage and retrying: {wollet_res:?}");
                 let mut path = working_dir.as_ref().to_path_buf();
                 path.push(elements_network.as_str());
-                fs::remove_dir_all(&path)?;
+                std::fs::remove_dir_all(&path)?;
                 warn!("Wiping wallet in path: {:?}", path);
-                lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
+                lwk_persister =
+                    lwk_wollet::FsPersister::new(working_dir, elements_network, &descriptor)?;
                 Ok(Wollet::new(
                     elements_network,
                     lwk_persister,
@@ -443,7 +449,6 @@ mod tests {
     use crate::test_utils::persist::create_persister;
     use crate::wallet::LiquidOnchainWallet;
     use anyhow::Result;
-    use tempdir::TempDir;
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -457,8 +462,15 @@ mod tests {
         let config = Config::testnet(None);
 
         // Create a temporary directory for working_dir
-        let temp_dir = TempDir::new("").unwrap();
-        let working_dir = temp_dir.path().to_str().unwrap().to_string();
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let working_dir = "test_sign_and_check_message".to_string();
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        let working_dir = tempdir::TempDir::new("")
+            .unwrap()
+            .path()
+            .to_str()
+            .unwrap()
+            .to_string();
 
         create_persister!(storage);
 

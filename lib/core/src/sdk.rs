@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+use std::{path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
@@ -167,7 +167,8 @@ impl LiquidSdkBuilder {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
 
-        fs::create_dir_all(&self.config.working_dir)?;
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&self.config.working_dir)?;
         let fingerprint_hex: String =
             Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
         let working_dir = self
@@ -3305,13 +3306,14 @@ impl LiquidSdk {
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
         path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
         path.push("enc_cache");
 
-        fs::remove_dir_all(&path)?;
-        fs::create_dir_all(path)?;
+        std::fs::remove_dir_all(&path)?;
+        std::fs::create_dir_all(path)?;
 
         Ok(())
     }
