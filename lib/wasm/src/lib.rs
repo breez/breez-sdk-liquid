@@ -6,14 +6,15 @@ mod signer;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use crate::event::{EventListener, WasmEventListener};
+use crate::model::*;
 use anyhow::anyhow;
-use breez_sdk_liquid::sdk::LiquidSdk;
+use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
+use breez_sdk_liquid::wallet::LiquidOnchainWallet;
+use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::Level;
 use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
-
-use crate::event::{EventListener, WasmEventListener};
-use crate::model::*;
 
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
@@ -22,8 +23,8 @@ pub struct BindingLiquidSdk {
 
 #[wasm_bindgen(js_name = "connect")]
 pub async fn connect(req: ConnectRequest) -> WasmResult<BindingLiquidSdk> {
-    let sdk = LiquidSdk::connect(req.into()).await?;
-    Ok(BindingLiquidSdk { sdk })
+    let signer = Box::new(LiquidSdk::default_signer(&req.clone().into())?);
+    connect_inner(req.config, signer).await
 }
 
 #[wasm_bindgen(js_name = "connectWithSigner")]
@@ -31,8 +32,35 @@ pub async fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Signer,
 ) -> WasmResult<BindingLiquidSdk> {
-    let wasm_signer = Box::new(WasmSigner { signer });
-    let sdk = LiquidSdk::connect_with_signer(req.into(), wasm_signer).await?;
+    let signer: Box<dyn breez_sdk_liquid::model::Signer> = Box::new(WasmSigner { signer });
+    connect_inner(req.config, signer).await
+}
+
+async fn connect_inner(
+    config: Config,
+    signer: Box<dyn breez_sdk_liquid::model::Signer>,
+) -> WasmResult<BindingLiquidSdk> {
+    let config: breez_sdk_liquid::model::Config = config.into();
+    let signer = Arc::new(signer);
+
+    let mut sdk_builder = LiquidSdkBuilder::new(
+        config.clone(),
+        PRODUCTION_BREEZSERVER_URL.to_string(),
+        Arc::clone(&signer),
+    )?;
+
+    let persister = sdk_builder.default_persister(config.sync_enabled())?;
+    let onchain_wallet = Arc::new(LiquidOnchainWallet::new_in_memory(
+        config,
+        Arc::clone(&persister),
+        signer,
+    )?);
+
+    sdk_builder.persister(persister);
+    sdk_builder.onchain_wallet(onchain_wallet);
+
+    let sdk = sdk_builder.connect().await?;
+
     Ok(BindingLiquidSdk { sdk })
 }
 

@@ -32,7 +32,7 @@ use tokio::sync::broadcast::{self, Sender};
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
 
-pub(crate) struct Persister {
+pub struct Persister {
     main_db_dir: PathBuf,
     network: LiquidNetwork,
     pub(crate) sync_trigger: Option<Sender<()>>,

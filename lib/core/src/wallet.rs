@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::Write;
-use std::{path::Path, str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use boltz_client::ElementsAddress;
@@ -97,7 +97,7 @@ pub trait OnchainWallet: Send + Sync {
     async fn full_scan(&self) -> Result<(), PaymentError>;
 }
 
-pub(crate) struct LiquidOnchainWallet {
+pub struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
@@ -107,23 +107,19 @@ pub(crate) struct LiquidOnchainWallet {
 }
 
 impl LiquidOnchainWallet {
-    /// Create a new LiquidOnchainWallet instance
-    ///
-    /// If no `working_dir` is provided, the wallet will not cache any data.
+    /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
     pub(crate) fn new(
         config: Config,
-        working_dir: Option<String>,
+        working_dir: String,
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
-        let wollet = Self::create_wallet(&config, working_dir.clone(), &signer)?;
+        let wollet = Self::create_wallet(&config, Some(&working_dir), &signer)?;
 
-        if let Some(working_dir) = &working_dir {
-            let working_dir_buf = std::path::PathBuf::from_str(working_dir)?;
-            if !working_dir_buf.exists() {
-                std::fs::create_dir_all(&working_dir_buf)?;
-            }
+        let working_dir_buf = std::path::PathBuf::from_str(&working_dir)?;
+        if !working_dir_buf.exists() {
+            std::fs::create_dir_all(&working_dir_buf)?;
         }
 
         Ok(Self {
@@ -131,14 +127,33 @@ impl LiquidOnchainWallet {
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
             electrum_client: Mutex::new(None),
-            working_dir: working_dir.clone(),
+            working_dir: Some(working_dir),
             signer,
         })
     }
 
-    fn create_wallet<P: AsRef<Path>>(
+    /// Creates a new LiquidOnchainWallet that caches data in memory
+    pub fn new_in_memory(
+        config: Config,
+        persister: Arc<Persister>,
+        user_signer: Arc<Box<dyn Signer>>,
+    ) -> Result<Self> {
+        let signer = SdkLwkSigner::new(user_signer.clone())?;
+        let wollet = Self::create_wallet(&config, None, &signer)?;
+
+        Ok(Self {
+            config,
+            persister,
+            wallet: Arc::new(Mutex::new(wollet)),
+            electrum_client: Mutex::new(None),
+            working_dir: None,
+            signer,
+        })
+    }
+
+    fn create_wallet(
         config: &Config,
-        working_dir: Option<P>,
+        working_dir: Option<&str>,
         signer: &SdkLwkSigner,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
@@ -162,7 +177,7 @@ impl LiquidOnchainWallet {
                     warn!(
                         "Update error initialising wollet, wipping storage and retrying: {res:?}"
                     );
-                    let mut path = working_dir.as_ref().to_path_buf();
+                    let mut path = std::path::PathBuf::from(working_dir);
                     path.push(elements_network.as_str());
                     std::fs::remove_dir_all(&path)?;
                     warn!("Wiping wallet in path: {:?}", path);
@@ -411,7 +426,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
                 warn!("Full scan failed with update height too old, wiping storage and retrying");
                 let mut new_wallet =
-                    Self::create_wallet(&self.config, self.working_dir.clone(), &self.signer)?;
+                    Self::create_wallet(&self.config, self.working_dir.as_deref(), &self.signer)?;
                 lwk_wollet::full_scan_to_index_with_electrum_client(
                     &mut new_wallet,
                     index_with_buffer,
@@ -469,24 +484,27 @@ mod tests {
 
         let config = Config::testnet(None);
 
-        // Create a temporary directory for working_dir
-        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-        let working_dir = None;
-        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-        let working_dir = Some(
-            tempdir::TempDir::new("")
-                .unwrap()
-                .path()
-                .to_str()
-                .unwrap()
-                .to_string(),
-        );
-
         create_persister!(storage);
 
-        let wallet: Arc<dyn OnchainWallet> = Arc::new(
-            LiquidOnchainWallet::new(config, working_dir, storage, sdk_signer.clone()).unwrap(),
-        );
+        let wallet: Arc<dyn OnchainWallet> =
+            if cfg!(not(all(target_family = "wasm", target_os = "unknown"))) {
+                // Create a temporary directory for working_dir
+                let working_dir = tempdir::TempDir::new("")
+                    .unwrap()
+                    .path()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                Arc::new(
+                    LiquidOnchainWallet::new(config, working_dir, storage, sdk_signer.clone())
+                        .unwrap(),
+                )
+            } else {
+                Arc::new(
+                    LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone())
+                        .unwrap(),
+                )
+            };
 
         // Test message
         let message = "Hello, Liquid!";

@@ -189,6 +189,10 @@ impl Config {
             LiquidNetwork::Regtest => BOLTZ_REGTEST,
         }
     }
+
+    pub fn sync_enabled(&self) -> bool {
+        self.sync_service_url.is_some()
+    }
 }
 
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
@@ -821,7 +825,7 @@ pub(crate) trait BlockListener: Send + Sync {
 
 // A swap enum variant
 #[derive(Clone, Debug)]
-pub(crate) enum Swap {
+pub enum Swap {
     Chain(ChainSwap),
     Send(SendSwap),
     Receive(ReceiveSwap),
@@ -946,7 +950,7 @@ pub(crate) struct SwapMetadata {
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq)]
-pub(crate) struct ChainSwap {
+pub struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
     /// The Bitcoin claim address is only set for Outgoing Chain Swaps
@@ -1113,7 +1117,7 @@ pub(crate) struct ChainSwapUpdate {
 /// A submarine swap, used for Send
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq)]
-pub(crate) struct SendSwap {
+pub struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
     pub(crate) invoice: String,
@@ -1206,7 +1210,7 @@ impl SendSwap {
 /// A reverse swap, used for Receive
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq)]
-pub(crate) struct ReceiveSwap {
+pub struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
     /// JSON representation of [crate::persist::receive::InternalCreateReverseResponse]

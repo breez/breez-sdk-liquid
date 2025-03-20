@@ -187,7 +187,7 @@ pub(crate) mod swapper;
 pub(crate) mod sync;
 pub(crate) mod test_utils;
 pub(crate) mod utils;
-pub(crate) mod wallet;
+pub mod wallet;
 
 pub use sdk_common::prelude::*;
 
