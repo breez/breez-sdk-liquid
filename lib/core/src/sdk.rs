@@ -72,7 +72,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(30);
 
-pub(crate) struct LiquidSdkBuilder {
+pub struct LiquidSdkBuilder {
     config: Config,
     signer: Arc<Box<dyn Signer>>,
     breez_server: Arc<BreezServer>,
@@ -142,6 +142,18 @@ impl LiquidSdkBuilder {
         self
     }
 
+    pub fn default_persister(&self, sync_enabled: bool) -> Result<Arc<Persister>> {
+        let working_dir = self.get_working_dir()?;
+        let persister = Arc::new(Persister::new(
+            &working_dir,
+            self.config.network,
+            sync_enabled,
+        )?);
+        persister.init()?;
+        persister.replace_asset_metadata(self.config.asset_metadata.clone())?;
+        Ok(persister)
+    }
+
     pub fn rest_client(&mut self, rest_client: Arc<dyn RestClient>) -> &mut Self {
         self.rest_client = Some(rest_client.clone());
         self
@@ -162,7 +174,14 @@ impl LiquidSdkBuilder {
         self
     }
 
-    pub fn build(&self) -> Result<Arc<LiquidSdk>> {
+    fn get_working_dir(&self) -> Result<String> {
+        let fingerprint_hex: String =
+            Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
+        self.config
+            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)
+    }
+
+    pub(crate) fn build(&self) -> Result<Arc<LiquidSdk>> {
         if let Some(breez_api_key) = &self.config.breez_api_key {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
@@ -171,9 +190,6 @@ impl LiquidSdkBuilder {
         std::fs::create_dir_all(&self.config.working_dir)?;
         let fingerprint_hex: String =
             Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
-        let working_dir = self
-            .config
-            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)?;
         let cache_dir = self.config.get_wallet_dir(
             self.config
                 .cache_dir
@@ -182,25 +198,9 @@ impl LiquidSdkBuilder {
             &fingerprint_hex,
         )?;
 
-        let sync_enabled = self
-            .config
-            .sync_service_url
-            .clone()
-            .map(|_| true)
-            .unwrap_or(false);
-
         let persister = match self.persister.clone() {
             Some(persister) => persister,
-            None => {
-                let persister = Arc::new(Persister::new(
-                    &working_dir,
-                    self.config.network,
-                    sync_enabled,
-                )?);
-                persister.init()?;
-                persister.replace_asset_metadata(self.config.asset_metadata.clone())?;
-                persister
-            }
+            None => self.default_persister(self.config.sync_enabled())?,
         };
 
         let rest_client: Arc<dyn RestClient> = match self.rest_client.clone() {
@@ -225,23 +225,12 @@ impl LiquidSdkBuilder {
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
             Some(onchain_wallet) => onchain_wallet,
-            None => {
-                if cfg!(not(all(target_family = "wasm", target_os = "unknown"))) {
-                    Arc::new(LiquidOnchainWallet::new(
-                        self.config.clone(),
-                        Some(cache_dir),
-                        persister.clone(),
-                        self.signer.clone(),
-                    )?)
-                } else {
-                    Arc::new(LiquidOnchainWallet::new(
-                        self.config.clone(),
-                        None,
-                        persister.clone(),
-                        self.signer.clone(),
-                    )?)
-                }
-            }
+            None => Arc::new(LiquidOnchainWallet::new(
+                self.config.clone(),
+                cache_dir,
+                persister.clone(),
+                self.signer.clone(),
+            )?),
         };
 
         let event_manager = Arc::new(EventManager::new());
@@ -357,6 +346,12 @@ impl LiquidSdkBuilder {
         });
         Ok(sdk)
     }
+
+    pub async fn connect(&self) -> Result<Arc<LiquidSdk>> {
+        let sdk = self.build()?;
+        sdk.start().await?;
+        Ok(sdk)
+    }
 }
 
 pub struct LiquidSdk {
@@ -396,22 +391,15 @@ impl LiquidSdk {
     ///     * `seed` - the optional Liquid wallet seed
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
-        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
 
-        let signer = match (req.mnemonic, req.seed) {
-            (None, Some(seed)) => Box::new(SdkSigner::new_with_seed(seed, is_mainnet)?),
-            (Some(mnemonic), None) => Box::new(SdkSigner::new(
-                &mnemonic,
-                req.passphrase.unwrap_or("".to_string()).as_ref(),
-                is_mainnet,
-            )?),
-            _ => return Err(anyhow!("Either `mnemonic` or `seed` must be set")),
-        };
+        let signer = Self::default_signer(&req)?;
 
-        let sdk =
-            Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)
-                .inspect_err(|e| error!("Failed to connect: {:?}", e))
-                .await;
+        let sdk = Self::connect_with_signer(
+            ConnectWithSignerRequest { config: req.config },
+            Box::new(signer),
+        )
+        .inspect_err(|e| error!("Failed to connect: {:?}", e))
+        .await;
 
         let init_time = Instant::now().duration_since(start_ts);
         utils::log_print_header(init_time);
@@ -419,20 +407,30 @@ impl LiquidSdk {
         sdk
     }
 
+    pub fn default_signer(req: &ConnectRequest) -> Result<SdkSigner> {
+        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
+        match (&req.mnemonic, &req.seed) {
+            (None, Some(seed)) => Ok(SdkSigner::new_with_seed(seed.clone(), is_mainnet)?),
+            (Some(mnemonic), None) => Ok(SdkSigner::new(
+                mnemonic,
+                req.passphrase.as_ref().unwrap_or(&"".to_string()).as_ref(),
+                is_mainnet,
+            )?),
+            _ => Err(anyhow!("Either `mnemonic` or `seed` must be set")),
+        }
+    }
+
     pub async fn connect_with_signer(
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
     ) -> Result<Arc<LiquidSdk>> {
-        let sdk = LiquidSdkBuilder::new(
+        LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
         )?
-        .build()?;
-        sdk.start()
-            .inspect_err(|e| error!("Failed to start an SDK instance: {:?}", e))
-            .await?;
-        Ok(sdk)
+        .connect()
+        .await
     }
 
     fn validate_breez_api_key(api_key: &str) -> Result<()> {

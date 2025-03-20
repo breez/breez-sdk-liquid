@@ -27,7 +27,7 @@ use crate::{
 
 const LIQUID_TIP_LEEWAY: u32 = 3;
 
-pub(crate) struct Recoverer {
+pub struct Recoverer {
     master_blinding_key: MasterBlindingKey,
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,

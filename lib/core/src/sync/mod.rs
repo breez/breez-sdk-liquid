@@ -39,7 +39,7 @@ pub(crate) struct SyncCompletedData {
     pub(crate) pushed_records_count: u32,
 }
 
-pub(crate) struct SyncService {
+pub struct SyncService {
     remote_url: String,
     client_id: String,
     persister: Arc<Persister>,
