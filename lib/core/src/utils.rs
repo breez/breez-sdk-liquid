@@ -171,6 +171,24 @@ pub(crate) fn log_print_header(init_time_ms: Duration) {
     );
 }
 
+// This WASM sleep implementation is copied from https://github.com/Blockstream/lwk/blob/8d20554fd7b2774518f7467ed380ee95c0364091/lwk_wollet/src/clients/asyncr/esplora.rs#L668
+// There are issues with using the `setTimeout()` API. See https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout#timeouts_in_inactive_tabs
+#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+pub async fn async_sleep(millis: i32) {
+    let mut cb = |resolve: js_sys::Function, _reject: js_sys::Function| {
+        web_sys::window()
+            .unwrap()
+            .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, millis)
+            .unwrap();
+    };
+    let p = js_sys::Promise::new(&mut cb);
+    wasm_bindgen_futures::JsFuture::from(p).await.unwrap();
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+pub async fn async_sleep(millis: i32) {
+    tokio::time::sleep(Duration::from_millis(millis as u64)).await;
+}
+
 #[cfg(test)]
 mod tests {
     use crate::error::PaymentError;

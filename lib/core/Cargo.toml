@@ -80,6 +80,9 @@ lwk_wollet = { version = "0.9.0", default-features = false, features = [
 ] }
 maybe-sync = "0.1.1"
 uuid = { version = "1.8.0", features = ["v4", "js"] }
+wasm-bindgen-futures = "0.4.50"
+js-sys = "0.3.77"
+web-sys = "0.3.77"
 
 [dev-dependencies]
 sdk-common = { workspace = true, features = ["test-utils"] }

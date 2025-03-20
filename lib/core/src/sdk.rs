@@ -45,6 +45,7 @@ use crate::swapper::SubscriptionHandler;
 use crate::swapper::{
     boltz::BoltzSwapper, Swapper, SwapperStatusStream, SwapperSubscriptionHandler,
 };
+use crate::utils::async_sleep;
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -2114,7 +2115,7 @@ impl LiquidSdk {
         swap: Swap,
         accept_zero_conf: bool,
     ) -> Result<Payment, PaymentError> {
-        let timeout_fut = tokio::time::sleep(Duration::from_secs(self.config.payment_timeout_sec));
+        let timeout_fut = async_sleep(self.config.payment_timeout_sec as i32 * 1_000);
         tokio::pin!(timeout_fut);
 
         let expected_swap_id = swap.id();

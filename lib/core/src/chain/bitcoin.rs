@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex, OnceLock},
-    time::Duration,
 };
 
 use anyhow::{anyhow, Result};
@@ -20,6 +19,7 @@ use sdk_common::{
     prelude::{get_and_check_success, parse_json, RestClient},
 };
 
+use crate::utils::async_sleep;
 use crate::{
     model::{Config, LiquidNetwork, RecommendedFees},
     prelude::Utxo,
@@ -203,7 +203,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                         "Script history for {} got zero transactions, retrying in {} seconds...",
                         script_hash, retry
                     );
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
+                    async_sleep(retry as i32 * 1_000).await;
                 }
                 false => break,
             }
@@ -320,7 +320,7 @@ impl BitcoinChainService for HybridBitcoinChainService {
                         "Got zero balance for script {}, retrying in {} seconds...",
                         script_hash, retry
                     );
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
+                    async_sleep(retry as i32 * 1_000).await;
                 }
                 _ => break,
             }

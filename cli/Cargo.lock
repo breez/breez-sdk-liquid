@@ -736,6 +736,7 @@ dependencies = [
  "futures-util",
  "glob",
  "hex",
+ "js-sys",
  "lazy_static",
  "log",
  "lwk_common",
@@ -764,6 +765,8 @@ dependencies = [
  "tonic-build 0.12.3",
  "url",
  "uuid",
+ "wasm-bindgen-futures",
+ "web-sys",
  "x509-parser",
  "zbase32",
 ]

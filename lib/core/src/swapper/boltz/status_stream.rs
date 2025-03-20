@@ -5,6 +5,7 @@ use std::time::Duration;
 use crate::swapper::{
     boltz::BoltzSwapper, ProxyUrlFetcher, SubscriptionHandler, SwapperStatusStream,
 };
+use crate::utils::async_sleep;
 use anyhow::Result;
 use boltz_client::boltz::{
     self,
@@ -42,7 +43,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         mut shutdown: watch::Receiver<()>,
     ) {
         let keep_alive_ping_interval = Duration::from_secs(15);
-        let reconnect_delay = Duration::from_secs(2);
+        let reconnect_delay_ms = 2_000;
 
         let swapper = Arc::clone(&self);
         tokio::spawn(async move {
@@ -52,7 +53,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                     Ok(client) => client,
                     Err(e) => {
                         warn!("Failed to get swapper client: {e:?}");
-                        tokio::time::sleep(reconnect_delay).await;
+                        async_sleep(reconnect_delay_ms).await;
                         continue;
                     }
                 };
@@ -102,7 +103,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                                     Some(msg) => match msg {
                                         Ok(Message::Close(_)) => {
                                             warn!("Received close msg, exiting socket loop");
-                                            tokio::time::sleep(reconnect_delay).await;
+                                            async_sleep(reconnect_delay_ms).await;
                                             break;
                                         },
                                         Ok(Message::Text(payload)) => {
@@ -136,7 +137,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                                     None => {
                                         warn!("Received nothing from the stream");
                                         let _ = sender.close().await;
-                                        tokio::time::sleep(reconnect_delay).await;
+                                        async_sleep(reconnect_delay_ms).await;
                                         break;
                                     },
                                 }
@@ -145,7 +146,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                     }
                     Err(e) => {
                         warn!("Error connecting to stream: {e:?}");
-                        tokio::time::sleep(reconnect_delay).await;
+                        async_sleep(reconnect_delay_ms).await;
                     }
                 }
             }

@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use log::{info, trace, warn};
 use tokio::sync::{broadcast, watch};
-use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
 use tonic::Streaming;
 
@@ -20,6 +18,7 @@ use crate::sync::model::data::{
 use crate::sync::model::DecryptionInfo;
 use crate::sync::model::{Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
+use crate::utils::async_sleep;
 use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
     prelude::Signer,
@@ -140,7 +139,7 @@ impl SyncService {
                             "realtime-sync: new_listener returned error: {:?} waiting 3 seconds",
                             e
                         );
-                        sleep(Duration::from_secs(3)).await;
+                        async_sleep(3_000).await;
                         continue;
                     }
                 };

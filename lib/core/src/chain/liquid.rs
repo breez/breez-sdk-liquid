@@ -1,5 +1,4 @@
 use std::sync::{Mutex, OnceLock};
-use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use boltz_client::ToHex;
@@ -17,6 +16,7 @@ use mockall::automock;
 
 use crate::model::LiquidNetwork;
 use crate::prelude::Utxo;
+use crate::utils::async_sleep;
 use crate::{model::Config, utils};
 
 #[automock]
@@ -204,7 +204,7 @@ impl LiquidChainService for HybridLiquidChainService {
                     retry += 1;
                     info!("Script history for {script_hash} is empty, retrying in 1 second... ({retry} of {retries})");
                     // Waiting 1s between retries, so we detect the new tx as soon as possible
-                    tokio::time::sleep(Duration::from_secs(1)).await;
+                    async_sleep(1_000).await;
                 }
                 false => break,
             }
