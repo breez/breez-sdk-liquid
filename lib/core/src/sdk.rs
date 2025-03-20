@@ -225,12 +225,23 @@ impl LiquidSdkBuilder {
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
             Some(onchain_wallet) => onchain_wallet,
-            None => Arc::new(LiquidOnchainWallet::new(
-                self.config.clone(),
-                &cache_dir,
-                persister.clone(),
-                self.signer.clone(),
-            )?),
+            None => {
+                if cfg!(not(all(target_family = "wasm", target_os = "unknown"))) {
+                    Arc::new(LiquidOnchainWallet::new(
+                        self.config.clone(),
+                        Some(cache_dir),
+                        persister.clone(),
+                        self.signer.clone(),
+                    )?)
+                } else {
+                    Arc::new(LiquidOnchainWallet::new(
+                        self.config.clone(),
+                        None,
+                        persister.clone(),
+                        self.signer.clone(),
+                    )?)
+                }
+            }
         };
 
         let event_manager = Arc::new(EventManager::new());
