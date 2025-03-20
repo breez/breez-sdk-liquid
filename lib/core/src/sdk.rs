@@ -3829,6 +3829,7 @@ impl LiquidSdk {
     /// An error is thrown if the log file cannot be created in the working directory.
     ///
     /// An error is thrown if a global logger is already configured.
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
     }
