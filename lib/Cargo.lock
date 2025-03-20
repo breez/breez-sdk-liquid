@@ -862,6 +862,7 @@ dependencies = [
  "url",
  "uuid",
  "wasm-bindgen-test",
+ "web-time",
  "x509-parser",
  "zbase32",
 ]

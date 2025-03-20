@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fs::{self, create_dir_all};
 use std::io::Write;
 use std::path::PathBuf;
-use std::time::Instant;
 use std::{path::Path, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
@@ -20,6 +19,7 @@ use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
+use web_time::Instant;
 
 use crate::model::Signer;
 use crate::persist::Persister;

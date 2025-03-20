@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use crate::ensure_sdk;
 use crate::error::{PaymentError, SdkResult};
@@ -20,6 +20,7 @@ use sdk_common::bitcoin::bech32;
 use sdk_common::bitcoin::bech32::FromBase32;
 use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
 use sdk_common::lightning_invoice::Bolt11Invoice;
+use web_time::{SystemTime, UNIX_EPOCH};
 
 lazy_static! {
     static ref LBTC_TESTNET_ASSET_ID: AssetId =
