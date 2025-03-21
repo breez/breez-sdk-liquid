@@ -9,6 +9,7 @@ use std::sync::Arc;
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
 use anyhow::anyhow;
+use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::wallet::LiquidOnchainWallet;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
@@ -49,7 +50,13 @@ async fn connect_inner(
         Arc::clone(&signer),
     )?;
 
-    let persister = sdk_builder.default_persister(config.sync_enabled())?;
+    let persister = Arc::new(Persister::new_in_memory(
+        &config.working_dir,
+        config.network,
+        config.sync_enabled(),
+        config.asset_metadata.clone(),
+    )?);
+
     let onchain_wallet = Arc::new(LiquidOnchainWallet::new_in_memory(
         config,
         Arc::clone(&persister),
