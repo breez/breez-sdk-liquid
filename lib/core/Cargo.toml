@@ -85,11 +85,16 @@ uuid = { version = "1.8.0", features = ["v4", "js"] }
 [dev-dependencies]
 sdk-common = { workspace = true, features = ["test-utils"] }
 paste = "1.0.15"
+
+# Non-WASM dev dependencies
+[target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dev-dependencies]
 tempdir = "0.3.7"
 
 # WASM dev dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dev-dependencies]
 wasm-bindgen-test = "0.3.33"
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
 
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }

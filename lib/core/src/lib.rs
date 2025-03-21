@@ -174,6 +174,7 @@ pub(crate) mod event;
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub(crate) mod frb_generated;
 pub(crate) mod lnurl;
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub mod logger;
 pub mod model;
 pub mod persist;
@@ -186,7 +187,7 @@ pub(crate) mod swapper;
 pub(crate) mod sync;
 pub(crate) mod test_utils;
 pub(crate) mod utils;
-pub(crate) mod wallet;
+pub mod wallet;
 
 pub use sdk_common::prelude::*;
 
