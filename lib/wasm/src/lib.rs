@@ -66,7 +66,8 @@ async fn connect_inner(
     sdk_builder.persister(persister);
     sdk_builder.onchain_wallet(onchain_wallet);
 
-    let sdk = sdk_builder.connect().await?;
+    let sdk = sdk_builder.build()?;
+    sdk.start().await?;
 
     Ok(BindingLiquidSdk { sdk })
 }
