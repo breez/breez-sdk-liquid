@@ -2441,6 +2441,9 @@ impl LiquidSdk {
             status: Some(vec![webhook_claim_status]),
         });
 
+        // Store a clone of the description before moving it
+        let original_description = description.clone();
+
         let v2_req = CreateReverseRequest {
             invoice_amount: payer_amount_sat,
             from: "BTC".to_string(),
@@ -2512,7 +2515,7 @@ impl LiquidSdk {
                 payment_hash: Some(preimage_hash),
                 destination_pubkey: Some(destination_pubkey),
                 timeout_block_height: create_response.timeout_block_height,
-                description: invoice_description,
+                description: original_description.or(invoice_description),
                 payer_amount_sat,
                 receiver_amount_sat,
                 pair_fees_json: serde_json::to_string(&reverse_pair).map_err(|e| {
