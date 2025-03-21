@@ -4545,6 +4545,12 @@ impl SseDecode for crate::model::SdkEvent {
             8 => {
                 return crate::model::SdkEvent::Synced;
             }
+            9 => {
+                let mut var_didPullNewRecords = <bool>::sse_decode(deserializer);
+                return crate::model::SdkEvent::DataSynced {
+                    did_pull_new_records: var_didPullNewRecords,
+                };
+            }
             _ => {
                 unimplemented!("");
             }
@@ -6999,6 +7005,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::SdkEvent {
                 [7.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
             crate::model::SdkEvent::Synced => [8.into_dart()].into_dart(),
+            crate::model::SdkEvent::DataSynced {
+                did_pull_new_records,
+            } => [
+                9.into_dart(),
+                did_pull_new_records.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -9056,6 +9069,12 @@ impl SseEncode for crate::model::SdkEvent {
             }
             crate::model::SdkEvent::Synced => {
                 <i32>::sse_encode(8, serializer);
+            }
+            crate::model::SdkEvent::DataSynced {
+                did_pull_new_records,
+            } => {
+                <i32>::sse_encode(9, serializer);
+                <bool>::sse_encode(did_pull_new_records, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -11248,6 +11267,12 @@ mod io {
                     }
                 }
                 8 => crate::model::SdkEvent::Synced,
+                9 => {
+                    let ans = unsafe { self.kind.DataSynced };
+                    crate::model::SdkEvent::DataSynced {
+                        did_pull_new_records: ans.did_pull_new_records.cst_decode(),
+                    }
+                }
                 _ => unreachable!(),
             }
         }
@@ -14930,6 +14955,7 @@ mod io {
         PaymentSucceeded: wire_cst_SdkEvent_PaymentSucceeded,
         PaymentWaitingConfirmation: wire_cst_SdkEvent_PaymentWaitingConfirmation,
         PaymentWaitingFeeAcceptance: wire_cst_SdkEvent_PaymentWaitingFeeAcceptance,
+        DataSynced: wire_cst_SdkEvent_DataSynced,
         nil__: (),
     }
     #[repr(C)]
@@ -14971,6 +14997,11 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
         details: *mut wire_cst_payment,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SdkEvent_DataSynced {
+        did_pull_new_records: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

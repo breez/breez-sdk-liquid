@@ -1570,7 +1570,15 @@ sealed class SdkEvent with _$SdkEvent {
       SdkEvent_PaymentWaitingConfirmation;
   const factory SdkEvent.paymentWaitingFeeAcceptance({required Payment details}) =
       SdkEvent_PaymentWaitingFeeAcceptance;
+
+  /// Synced with mempool and onchain data
   const factory SdkEvent.synced() = SdkEvent_Synced;
+
+  /// Synced with real-time data sync
+  const factory SdkEvent.dataSynced({
+    /// Indicates new data was pulled from other instances.
+    required bool didPullNewRecords,
+  }) = SdkEvent_DataSynced;
 }
 
 @freezed

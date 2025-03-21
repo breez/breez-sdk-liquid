@@ -690,6 +690,7 @@ interface SdkEvent {
     PaymentWaitingConfirmation(Payment details);
     PaymentWaitingFeeAcceptance(Payment details);
     Synced();
+    DataSynced(boolean did_pull_new_records);
 };
 
 callback interface EventListener {    

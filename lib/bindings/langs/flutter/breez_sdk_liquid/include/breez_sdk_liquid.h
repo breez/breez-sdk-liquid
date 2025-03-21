@@ -614,6 +614,10 @@ typedef struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
   struct wire_cst_payment *details;
 } wire_cst_SdkEvent_PaymentWaitingFeeAcceptance;
 
+typedef struct wire_cst_SdkEvent_DataSynced {
+  bool did_pull_new_records;
+} wire_cst_SdkEvent_DataSynced;
+
 typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentFailed PaymentFailed;
   struct wire_cst_SdkEvent_PaymentPending PaymentPending;
@@ -623,6 +627,7 @@ typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
   struct wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
   struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
+  struct wire_cst_SdkEvent_DataSynced DataSynced;
 } SdkEventKind;
 
 typedef struct wire_cst_sdk_event {

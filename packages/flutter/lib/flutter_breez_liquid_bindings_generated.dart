@@ -4953,6 +4953,11 @@ final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_DataSynced extends ffi.Struct {
+  @ffi.Bool()
+  external bool did_pull_new_records;
+}
+
 final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
@@ -4969,6 +4974,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
 
   external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
+
+  external wire_cst_SdkEvent_DataSynced DataSynced;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
