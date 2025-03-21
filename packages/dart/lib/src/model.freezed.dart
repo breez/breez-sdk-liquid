@@ -1828,8 +1828,8 @@ as Payment,
 /// @nodoc
 
 
-class SdkEvent_Synced extends SdkEvent {
-  const SdkEvent_Synced(): super._();
+class SdkEvent_ChainSynced extends SdkEvent {
+  const SdkEvent_ChainSynced(): super._();
   
 
 
@@ -1839,7 +1839,7 @@ class SdkEvent_Synced extends SdkEvent {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SdkEvent_Synced);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SdkEvent_ChainSynced);
 }
 
 
@@ -1848,7 +1848,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SdkEvent.synced()';
+  return 'SdkEvent.chainSynced()';
 }
 
 
@@ -1856,6 +1856,73 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class SdkEvent_RtDataSynced extends SdkEvent {
+  const SdkEvent_RtDataSynced({required this.didPullNewRecords}): super._();
+  
+
+/// Indicates new data was pulled from other instances.
+ final  bool didPullNewRecords;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SdkEvent_RtDataSyncedCopyWith<SdkEvent_RtDataSynced> get copyWith => _$SdkEvent_RtDataSyncedCopyWithImpl<SdkEvent_RtDataSynced>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SdkEvent_RtDataSynced&&(identical(other.didPullNewRecords, didPullNewRecords) || other.didPullNewRecords == didPullNewRecords));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,didPullNewRecords);
+
+@override
+String toString() {
+  return 'SdkEvent.rtDataSynced(didPullNewRecords: $didPullNewRecords)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SdkEvent_RtDataSyncedCopyWith<$Res> implements $SdkEventCopyWith<$Res> {
+  factory $SdkEvent_RtDataSyncedCopyWith(SdkEvent_RtDataSynced value, $Res Function(SdkEvent_RtDataSynced) _then) = _$SdkEvent_RtDataSyncedCopyWithImpl;
+@useResult
+$Res call({
+ bool didPullNewRecords
+});
+
+
+
+
+}
+/// @nodoc
+class _$SdkEvent_RtDataSyncedCopyWithImpl<$Res>
+    implements $SdkEvent_RtDataSyncedCopyWith<$Res> {
+  _$SdkEvent_RtDataSyncedCopyWithImpl(this._self, this._then);
+
+  final SdkEvent_RtDataSynced _self;
+  final $Res Function(SdkEvent_RtDataSynced) _then;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? didPullNewRecords = null,}) {
+  return _then(SdkEvent_RtDataSynced(
+didPullNewRecords: null == didPullNewRecords ? _self.didPullNewRecords : didPullNewRecords // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
 
 /// @nodoc
 mixin _$SendDestination {

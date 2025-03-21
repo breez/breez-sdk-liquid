@@ -3712,8 +3712,12 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
         val details = sdkEvent.getMap("details")?.let { asPayment(it) }!!
         return SdkEvent.PaymentWaitingFeeAcceptance(details)
     }
-    if (type == "synced") {
-        return SdkEvent.Synced
+    if (type == "chainSynced") {
+        return SdkEvent.ChainSynced
+    }
+    if (type == "rtDataSynced") {
+        val didPullNewRecords = sdkEvent.getBoolean("didPullNewRecords")
+        return SdkEvent.RtDataSynced(didPullNewRecords)
     }
     return null
 }
@@ -3753,8 +3757,12 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
             pushToMap(map, "type", "paymentWaitingFeeAcceptance")
             pushToMap(map, "details", readableMapOf(sdkEvent.details))
         }
-        is SdkEvent.Synced -> {
-            pushToMap(map, "type", "synced")
+        is SdkEvent.ChainSynced -> {
+            pushToMap(map, "type", "chainSynced")
+        }
+        is SdkEvent.RtDataSynced -> {
+            pushToMap(map, "type", "rtDataSynced")
+            pushToMap(map, "didPullNewRecords", sdkEvent.didPullNewRecords)
         }
     }
     return map

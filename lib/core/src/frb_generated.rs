@@ -4543,7 +4543,13 @@ impl SseDecode for crate::model::SdkEvent {
                 };
             }
             8 => {
-                return crate::model::SdkEvent::Synced;
+                return crate::model::SdkEvent::ChainSynced;
+            }
+            9 => {
+                let mut var_didPullNewRecords = <bool>::sse_decode(deserializer);
+                return crate::model::SdkEvent::RtDataSynced {
+                    did_pull_new_records: var_didPullNewRecords,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -6998,7 +7004,14 @@ impl flutter_rust_bridge::IntoDart for crate::model::SdkEvent {
             crate::model::SdkEvent::PaymentWaitingFeeAcceptance { details } => {
                 [7.into_dart(), details.into_into_dart().into_dart()].into_dart()
             }
-            crate::model::SdkEvent::Synced => [8.into_dart()].into_dart(),
+            crate::model::SdkEvent::ChainSynced => [8.into_dart()].into_dart(),
+            crate::model::SdkEvent::RtDataSynced {
+                did_pull_new_records,
+            } => [
+                9.into_dart(),
+                did_pull_new_records.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -9054,8 +9067,14 @@ impl SseEncode for crate::model::SdkEvent {
                 <i32>::sse_encode(7, serializer);
                 <crate::model::Payment>::sse_encode(details, serializer);
             }
-            crate::model::SdkEvent::Synced => {
+            crate::model::SdkEvent::ChainSynced => {
                 <i32>::sse_encode(8, serializer);
+            }
+            crate::model::SdkEvent::RtDataSynced {
+                did_pull_new_records,
+            } => {
+                <i32>::sse_encode(9, serializer);
+                <bool>::sse_encode(did_pull_new_records, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -11247,7 +11266,13 @@ mod io {
                         details: ans.details.cst_decode(),
                     }
                 }
-                8 => crate::model::SdkEvent::Synced,
+                8 => crate::model::SdkEvent::ChainSynced,
+                9 => {
+                    let ans = unsafe { self.kind.RtDataSynced };
+                    crate::model::SdkEvent::RtDataSynced {
+                        did_pull_new_records: ans.did_pull_new_records.cst_decode(),
+                    }
+                }
                 _ => unreachable!(),
             }
         }
@@ -14930,6 +14955,7 @@ mod io {
         PaymentSucceeded: wire_cst_SdkEvent_PaymentSucceeded,
         PaymentWaitingConfirmation: wire_cst_SdkEvent_PaymentWaitingConfirmation,
         PaymentWaitingFeeAcceptance: wire_cst_SdkEvent_PaymentWaitingFeeAcceptance,
+        RtDataSynced: wire_cst_SdkEvent_RtDataSynced,
         nil__: (),
     }
     #[repr(C)]
@@ -14971,6 +14997,11 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
         details: *mut wire_cst_payment,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SdkEvent_RtDataSynced {
+        did_pull_new_records: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
