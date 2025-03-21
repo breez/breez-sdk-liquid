@@ -1,10 +1,11 @@
 #!/bin/bash
-
-STATE=$(docker container ls --filter name=boltz-scripts --format '{{.State}}')
-
-if [ "$STATE" != "running" ] ;
-then
 set -xe
-docker compose down --volumes
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+cd "$SCRIPT_DIR/boltz"
+./start.sh
+
+cd "$SCRIPT_DIR"
+docker compose down
 docker compose up --remove-orphans -d
-fi
