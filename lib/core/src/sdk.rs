@@ -142,18 +142,6 @@ impl LiquidSdkBuilder {
         self
     }
 
-    pub fn default_persister(&self, sync_enabled: bool) -> Result<Arc<Persister>> {
-        let working_dir = self.get_working_dir()?;
-        let persister = Arc::new(Persister::new(
-            &working_dir,
-            self.config.network,
-            sync_enabled,
-        )?);
-        persister.init()?;
-        persister.replace_asset_metadata(self.config.asset_metadata.clone())?;
-        Ok(persister)
-    }
-
     pub fn rest_client(&mut self, rest_client: Arc<dyn RestClient>) -> &mut Self {
         self.rest_client = Some(rest_client.clone());
         self
@@ -198,7 +186,12 @@ impl LiquidSdkBuilder {
 
         let persister = match self.persister.clone() {
             Some(persister) => persister,
-            None => self.default_persister(self.config.sync_enabled())?,
+            None => Arc::new(Persister::new_using_fs(
+                &self.get_working_dir()?,
+                self.config.network,
+                self.config.sync_enabled(),
+                self.config.asset_metadata.clone(),
+            )?),
         };
 
         let rest_client: Arc<dyn RestClient> = match self.rest_client.clone() {
