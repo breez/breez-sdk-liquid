@@ -330,12 +330,6 @@ impl BindingLiquidSdk {
         Ok(self.sdk.recommended_fees().await?.into())
     }
 
-    #[wasm_bindgen(js_name = "emptyWalletCache")]
-    pub fn empty_wallet_cache(&self) -> WasmResult<()> {
-        self.sdk.empty_wallet_cache()?;
-        Ok(())
-    }
-
     #[wasm_bindgen(js_name = "backup")]
     pub fn backup(&self, req: BackupRequest) -> WasmResult<()> {
         self.sdk.backup(req.into())?;
