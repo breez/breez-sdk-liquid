@@ -3168,7 +3168,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 7:
         return SdkEvent_PaymentWaitingFeeAcceptance(details: dco_decode_box_autoadd_payment(raw[1]));
       case 8:
-        return SdkEvent_Synced();
+        return SdkEvent_ChainSynced();
+      case 9:
+        return SdkEvent_RtDataSynced(didPullNewRecords: dco_decode_bool(raw[1]));
       default:
         throw Exception("unreachable");
     }
@@ -5539,7 +5541,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_details = sse_decode_box_autoadd_payment(deserializer);
         return SdkEvent_PaymentWaitingFeeAcceptance(details: var_details);
       case 8:
-        return SdkEvent_Synced();
+        return SdkEvent_ChainSynced();
+      case 9:
+        var var_didPullNewRecords = sse_decode_bool(deserializer);
+        return SdkEvent_RtDataSynced(didPullNewRecords: var_didPullNewRecords);
       default:
         throw UnimplementedError('');
     }
@@ -7674,8 +7679,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SdkEvent_PaymentWaitingFeeAcceptance(details: final details):
         sse_encode_i_32(7, serializer);
         sse_encode_box_autoadd_payment(details, serializer);
-      case SdkEvent_Synced():
+      case SdkEvent_ChainSynced():
         sse_encode_i_32(8, serializer);
+      case SdkEvent_RtDataSynced(didPullNewRecords: final didPullNewRecords):
+        sse_encode_i_32(9, serializer);
+        sse_encode_bool(didPullNewRecords, serializer);
     }
   }
 

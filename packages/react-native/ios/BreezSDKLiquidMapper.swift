@@ -4620,8 +4620,14 @@ enum BreezSDKLiquidMapper {
 
             return SdkEvent.paymentWaitingFeeAcceptance(details: _details)
         }
-        if type == "synced" {
-            return SdkEvent.synced
+        if type == "chainSynced" {
+            return SdkEvent.chainSynced
+        }
+        if type == "rtDataSynced" {
+            guard let _didPullNewRecords = sdkEvent["didPullNewRecords"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "didPullNewRecords", typeName: "SdkEvent"))
+            }
+            return SdkEvent.rtDataSynced(didPullNewRecords: _didPullNewRecords)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SdkEvent")
@@ -4693,9 +4699,17 @@ enum BreezSDKLiquidMapper {
                 "details": dictionaryOf(payment: details),
             ]
 
-        case .synced:
+        case .chainSynced:
             return [
-                "type": "synced",
+                "type": "chainSynced",
+            ]
+
+        case let .rtDataSynced(
+            didPullNewRecords
+        ):
+            return [
+                "type": "rtDataSynced",
+                "didPullNewRecords": didPullNewRecords,
             ]
         }
     }

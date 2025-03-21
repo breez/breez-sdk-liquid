@@ -1,5 +1,6 @@
 .swiftpm/
 .build/
+.index-build/
 *.xcodeproj
 *.podspec
 Sources/BreezSDKLiquid/BreezSDKLiquid.swift
