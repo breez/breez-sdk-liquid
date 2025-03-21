@@ -5,6 +5,7 @@ use boltz_client::boltz;
 use std::sync::Arc;
 
 use tokio::sync::{broadcast, watch};
+use tokio_with_wasm::alias as tokio;
 
 use crate::swapper::{SubscriptionHandler, SwapperStatusStream};
 

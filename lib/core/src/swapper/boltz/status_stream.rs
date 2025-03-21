@@ -15,6 +15,7 @@ use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
 use tokio::sync::{broadcast, watch};
 use tokio::time::MissedTickBehavior;
+use tokio_with_wasm::alias as tokio;
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     async fn send_subscription(
