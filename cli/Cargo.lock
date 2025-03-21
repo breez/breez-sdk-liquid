@@ -764,6 +764,7 @@ dependencies = [
  "tonic-build 0.12.3",
  "url",
  "uuid",
+ "web-time",
  "x509-parser",
  "zbase32",
 ]

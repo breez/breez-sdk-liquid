@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
-use std::time::Instant;
 use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
@@ -30,6 +29,7 @@ use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
+use web_time::Instant;
 use x509_parser::parse_x509_certificate;
 
 use crate::chain::bitcoin::BitcoinChainService;

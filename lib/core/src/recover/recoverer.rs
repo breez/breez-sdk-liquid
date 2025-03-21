@@ -222,7 +222,7 @@ impl Recoverer {
         &self,
         swap_lbtc_scripts: Vec<LBtcScript>,
     ) -> Result<HashMap<LBtcScript, Vec<HistoryTxId>>> {
-        let t0 = std::time::Instant::now();
+        let t0 = web_time::Instant::now();
         let lbtc_script_histories = self
             .liquid_chain_service
             .get_scripts_history(&swap_lbtc_scripts.to_vec())
@@ -261,7 +261,7 @@ impl Recoverer {
             .map(|x| x.as_script())
             .collect::<Vec<&lwk_wollet::bitcoin::Script>>();
 
-        let t0 = std::time::Instant::now();
+        let t0 = web_time::Instant::now();
         let btc_script_histories = self
             .bitcoin_chain_service
             .get_scripts_history(&swap_btc_scripts)?;
@@ -292,7 +292,7 @@ impl Recoverer {
             .map(|(k, v)| (k, v.iter().map(HistoryTxId::from).collect()))
             .collect();
 
-        let t0 = std::time::Instant::now();
+        let t0 = web_time::Instant::now();
         let btc_script_txs = self
             .bitcoin_chain_service
             .get_transactions(&btx_script_tx_ids)?;
@@ -302,7 +302,7 @@ impl Recoverer {
             t0.elapsed().as_millis()
         );
 
-        let t0 = std::time::Instant::now();
+        let t0 = web_time::Instant::now();
         let btc_script_balances = self
             .bitcoin_chain_service
             .scripts_get_balance(&swap_btc_scripts)?;
