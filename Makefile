@@ -14,6 +14,7 @@ cargo-clippy:
 	cd cli && cargo clippy -- -D warnings
 
 wasm-clippy:
+	make -C ./lib/core wasm-clippy
 	make -C ./lib/wasm clippy
 
 test: cargo-test wasm-test
@@ -23,6 +24,7 @@ cargo-test:
 	cd lib/core && cargo test
 
 wasm-test:
+	make -C ./lib/core wasm-test
 	make -C ./lib/wasm test
 
 codegen: flutter-codegen react-native-codegen

@@ -80,17 +80,13 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clippy
-        working-directory: lib/wasm 
-        run: cargo clippy --target=wasm32-unknown-unknown -- -D warnings
+        run: make wasm-clippy
 
   build:
     name: Cargo Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -300,8 +296,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test WASM
-        working-directory: lib/wasm
-        run: wasm-pack test --headless --firefox
+        run: make wasm-test
 
   notification-plugin:
     name: Check notification plugin
