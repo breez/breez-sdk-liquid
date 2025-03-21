@@ -7,6 +7,7 @@ use log::{info, trace, warn};
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
+use tokio_with_wasm::alias as tokio;
 use tonic::Streaming;
 
 use self::client::SyncerClient;

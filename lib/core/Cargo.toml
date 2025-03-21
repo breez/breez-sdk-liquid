@@ -36,6 +36,7 @@ rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7e
     "bundled",
 ] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+tokio_with_wasm = { version = "0.8.2", features = ["rt", "macros"] }
 sdk-common = { workspace = true }
 sdk-macros = { workspace = true }
 rusqlite_migration = { git = "https://github.com/hydra-yse/rusqlite_migration", branch = "rusqlite-v0.33.0" }

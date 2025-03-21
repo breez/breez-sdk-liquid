@@ -29,6 +29,7 @@ use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
 use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
+use tokio_with_wasm::alias as tokio;
 use web_time::Instant;
 use x509_parser::parse_x509_certificate;
 
