@@ -186,8 +186,6 @@ impl LiquidSdkBuilder {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
 
-        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-        std::fs::create_dir_all(&self.config.working_dir)?;
         let fingerprint_hex: String =
             Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
         let cache_dir = self.config.get_wallet_dir(
@@ -390,21 +388,14 @@ impl LiquidSdk {
     ///     * `passphrase` - the optional passphrase for the mnemonic
     ///     * `seed` - the optional Liquid wallet seed
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let start_ts = Instant::now();
-
         let signer = Self::default_signer(&req)?;
 
-        let sdk = Self::connect_with_signer(
+        Self::connect_with_signer(
             ConnectWithSignerRequest { config: req.config },
             Box::new(signer),
         )
         .inspect_err(|e| error!("Failed to connect: {:?}", e))
-        .await;
-
-        let init_time = Instant::now().duration_since(start_ts);
-        utils::log_print_header(init_time);
-
-        sdk
+        .await
     }
 
     pub fn default_signer(req: &ConnectRequest) -> Result<SdkSigner> {
@@ -424,13 +415,23 @@ impl LiquidSdk {
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
     ) -> Result<Arc<LiquidSdk>> {
-        LiquidSdkBuilder::new(
+        let start_ts = Instant::now();
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&req.config.working_dir)?;
+
+        let sdk = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
         )?
         .connect()
-        .await
+        .await?;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
+        Ok(sdk)
     }
 
     fn validate_breez_api_key(api_key: &str) -> Result<()> {
