@@ -304,15 +304,17 @@ impl Persister {
                     destination,
                     description,
                     lnurl_info_json,
-                    bip353_address
+                    bip353_address,
+                    asset_fees
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT (tx_id)
                 DO UPDATE SET
                     {destination_update}
                     description = COALESCE(excluded.description, description),
                     lnurl_info_json = COALESCE(excluded.lnurl_info_json, lnurl_info_json),
-                    bip353_address = COALESCE(excluded.bip353_address, bip353_address)
+                    bip353_address = COALESCE(excluded.bip353_address, bip353_address),
+                    asset_fees = COALESCE(excluded.asset_fees, asset_fees)
             "
             ),
             (
@@ -324,6 +326,7 @@ impl Persister {
                     .as_ref()
                     .map(|info| serde_json::to_string(&info).ok()),
                 &payment_tx_details.bip353_address,
+                &payment_tx_details.asset_fees,
             ),
         )?;
         Ok(())
@@ -352,7 +355,7 @@ impl Persister {
     pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
         let con = self.get_connection()?;
         let mut stmt = con.prepare(
-            "SELECT destination, description, lnurl_info_json, bip353_address
+            "SELECT destination, description, lnurl_info_json, bip353_address, asset_fees
             FROM payment_details
             WHERE tx_id = ?",
         )?;
@@ -361,6 +364,7 @@ impl Persister {
             let description = row.get(1)?;
             let maybe_lnurl_info_json: Option<String> = row.get(2)?;
             let maybe_bip353_address = row.get(3)?;
+            let maybe_asset_fees = row.get(4)?;
             Ok(PaymentTxDetails {
                 tx_id: tx_id.to_string(),
                 destination,
@@ -368,6 +372,7 @@ impl Persister {
                 lnurl_info: maybe_lnurl_info_json
                     .and_then(|info| serde_json::from_str::<LnUrlInfo>(&info).ok()),
                 bip353_address: maybe_bip353_address,
+                asset_fees: maybe_asset_fees,
             })
         });
         Ok(res.ok())
@@ -463,6 +468,7 @@ impl Persister {
                 pd.description,
                 pd.lnurl_info_json,
                 pd.bip353_address,
+                pd.asset_fees,
                 am.name,
                 am.ticker,
                 am.precision
@@ -585,10 +591,11 @@ impl Persister {
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
         let maybe_payment_details_bip353_address: Option<String> = row.get(55)?;
+        let maybe_payment_details_asset_fees: Option<u64> = row.get(56)?;
 
-        let maybe_asset_metadata_name: Option<String> = row.get(56)?;
-        let maybe_asset_metadata_ticker: Option<String> = row.get(57)?;
-        let maybe_asset_metadata_precision: Option<u8> = row.get(58)?;
+        let maybe_asset_metadata_name: Option<String> = row.get(57)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(58)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(59)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => {
@@ -807,12 +814,21 @@ impl Persister {
                             name: name.clone(),
                             ticker: ticker.clone(),
                             precision,
+                            fiat_id: None,
                         };
+                        let (amount, fees) =
+                            maybe_payment_details_asset_fees.map_or((amount, None), |fees| {
+                                (
+                                    amount.saturating_sub(fees),
+                                    Some(asset_metadata.amount_from_sat(fees)),
+                                )
+                            });
 
                         Some(AssetInfo {
                             name,
                             ticker,
                             amount: asset_metadata.amount_from_sat(amount),
+                            fees,
                         })
                     }
                     _ => None,

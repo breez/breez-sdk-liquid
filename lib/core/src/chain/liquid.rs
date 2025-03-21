@@ -5,7 +5,7 @@ use anyhow::{anyhow, Result};
 use boltz_client::ToHex;
 use electrum_client::{Client, ElectrumApi};
 use elements::encode::serialize as elements_serialize;
-use log::info;
+use log::{debug, info};
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::{bitcoin, elements, ElectrumOptions};
 use lwk_wollet::{
@@ -130,9 +130,9 @@ impl LiquidChainService for HybridLiquidChainService {
     }
 
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid> {
-        let txid = self
-            .get_client()?
-            .transaction_broadcast_raw(&elements_serialize(tx))?;
+        let tx_bytes = elements_serialize(tx);
+        debug!("Broadcasting transaction: {}", tx_bytes.to_hex());
+        let txid = self.get_client()?.transaction_broadcast_raw(&tx_bytes)?;
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 

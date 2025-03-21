@@ -176,6 +176,7 @@ pub(crate) mod frb_generated;
 pub(crate) mod lnurl;
 pub mod logger;
 pub mod model;
+pub(crate) mod payjoin;
 pub mod persist;
 pub mod receive_swap;
 pub(crate) mod recover;

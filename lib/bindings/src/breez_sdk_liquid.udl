@@ -438,11 +438,13 @@ interface SendDestination {
 
 dictionary PrepareSendResponse {
     SendDestination destination;
-    u64 fees_sat;
+    u64? fees_sat;
+    f64? fees;
 };
 
 dictionary SendPaymentRequest {
     PrepareSendResponse prepare_response;
+    boolean? asset_pays_fees = null;
 };
 
 dictionary SendPaymentResponse {
@@ -604,6 +606,7 @@ dictionary AssetInfo {
     string name;
     string ticker;
     f64 amount;
+    f64? fees;
 };
 
 [Enum]
@@ -716,6 +719,7 @@ dictionary AssetMetadata {
     string name;
     string ticker;
     u8 precision;
+    string? fiat_id = null;
 };
 
 namespace breez_sdk_liquid {
