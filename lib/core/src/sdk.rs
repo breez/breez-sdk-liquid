@@ -169,7 +169,7 @@ impl LiquidSdkBuilder {
             .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)
     }
 
-    pub(crate) fn build(&self) -> Result<Arc<LiquidSdk>> {
+    pub fn build(&self) -> Result<Arc<LiquidSdk>> {
         if let Some(breez_api_key) = &self.config.breez_api_key {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
@@ -337,12 +337,6 @@ impl LiquidSdkBuilder {
         });
         Ok(sdk)
     }
-
-    pub async fn connect(&self) -> Result<Arc<LiquidSdk>> {
-        let sdk = self.build()?;
-        sdk.start().await?;
-        Ok(sdk)
-    }
 }
 
 pub struct LiquidSdk {
@@ -418,8 +412,8 @@ impl LiquidSdk {
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
         )?
-        .connect()
-        .await?;
+        .build()?;
+        sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);
         utils::log_print_header(init_time);
@@ -454,9 +448,8 @@ impl LiquidSdk {
 
     /// Starts an SDK instance.
     ///
-    /// Internal method. Should only be called once per instance.
-    /// Should only be called as part of [LiquidSdk::connect].
-    async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+    /// Should only be called once per instance.
+    pub async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
         let mut is_started = self.is_started.write().await;
         self.persister
             .update_send_swaps_by_state(Created, TimedOut, Some(true))
