@@ -18,17 +18,20 @@ use std::str::FromStr;
 use std::{cmp::PartialEq, sync::Arc};
 use strum_macros::{Display, EnumString};
 
-use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
 use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
 use crate::{
     bitcoin,
-    chain::{
-        bitcoin::{BitcoinChainService, HybridBitcoinChainService},
-        liquid::{HybridLiquidChainService, LiquidChainService},
-    },
+    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     elements,
     error::{PaymentError, SdkError, SdkResult},
+};
+use crate::{
+    chain::{
+        bitcoin::{electrum::ElectrumBitcoinChainService, esplora::EsploraBitcoinChainService},
+        liquid::{electrum::ElectrumLiquidChainService, esplora::EsploraLiquidChainService},
+    },
+    prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
 };
 
 use bitcoin::{bip32, ScriptBuf};
@@ -231,28 +234,28 @@ impl Config {
         self.sync_service_url.is_some()
     }
 
-    pub(crate) fn bitcoin_chain_service(&self) -> Result<Arc<dyn BitcoinChainService>> {
-        Ok(match self.bitcoin_explorer {
-            BlockchainExplorer::Esplora { .. } => Arc::new(HybridBitcoinChainService::<
-                esplora_client::AsyncClient,
-            >::new(self.clone())?),
+    pub(crate) fn bitcoin_chain_service(&self) -> Arc<dyn BitcoinChainService> {
+        match self.bitcoin_explorer {
+            BlockchainExplorer::Esplora { .. } => {
+                Arc::new(EsploraBitcoinChainService::new(self.clone()))
+            }
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-            BlockchainExplorer::Electrum { .. } => Arc::new(HybridBitcoinChainService::<
-                electrum_client::Client,
-            >::new(self.clone())?),
-        })
+            BlockchainExplorer::Electrum { .. } => {
+                Arc::new(ElectrumBitcoinChainService::new(self.clone()))
+            }
+        }
     }
 
-    pub(crate) fn liquid_chain_service(&self) -> Result<Arc<dyn LiquidChainService>> {
-        Ok(match self.liquid_explorer {
-            BlockchainExplorer::Esplora { .. } => Arc::new(HybridLiquidChainService::<
-                lwk_wollet::asyncr::EsploraClient,
-            >::new(self.clone())?),
+    pub(crate) fn liquid_chain_service(&self) -> Arc<dyn LiquidChainService> {
+        match self.liquid_explorer {
+            BlockchainExplorer::Esplora { .. } => {
+                Arc::new(EsploraLiquidChainService::new(self.clone()))
+            }
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-            BlockchainExplorer::Electrum { .. } => Arc::new(HybridLiquidChainService::<
-                lwk_wollet::ElectrumClient,
-            >::new(self.clone())?),
-        })
+            BlockchainExplorer::Electrum { .. } => {
+                Arc::new(ElectrumLiquidChainService::new(self.clone()))
+            }
+        }
     }
 }
 

@@ -1,7 +1,8 @@
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, sync::OnceLock, time::Duration};
 
 use boltz_client::Amount;
 use esplora_client::{AsyncClient, Builder};
+use tokio::sync::Mutex;
 
 use crate::{
     bitcoin::{
@@ -9,7 +10,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, TxOut, Txid,
     },
-    model::BlockchainExplorer,
+    model::{BlockchainExplorer, Config},
 };
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -18,9 +19,23 @@ use crate::model::{RecommendedFees, Utxo};
 use log::info;
 use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
-use super::{BitcoinChainService, BtcScriptBalance, History, HybridBitcoinChainService};
+use super::{BitcoinChainService, BtcScriptBalance, History};
 
-impl HybridBitcoinChainService<AsyncClient> {
+pub(crate) struct EsploraBitcoinChainService {
+    config: Config,
+    client: OnceLock<AsyncClient>,
+    last_known_tip: Mutex<Option<u32>>,
+}
+
+impl EsploraBitcoinChainService {
+    pub(crate) fn new(config: Config) -> Self {
+        Self {
+            config,
+            client: OnceLock::new(),
+            last_known_tip: Mutex::new(None),
+        }
+    }
+
     fn get_client(&self) -> Result<&AsyncClient> {
         if let Some(c) = self.client.get() {
             return Ok(c);
@@ -41,7 +56,7 @@ impl HybridBitcoinChainService<AsyncClient> {
 }
 
 #[sdk_macros::async_trait]
-impl BitcoinChainService for HybridBitcoinChainService<AsyncClient> {
+impl BitcoinChainService for EsploraBitcoinChainService {
     async fn tip(&self) -> Result<u32> {
         let client = self.get_client()?;
         let new_tip = client.get_height().await.ok();

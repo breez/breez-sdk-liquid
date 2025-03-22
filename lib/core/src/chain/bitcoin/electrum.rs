@@ -1,8 +1,9 @@
 #![cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, sync::OnceLock, time::Duration};
 
 use anyhow::{anyhow, bail, Result};
+use tokio::sync::Mutex;
 
 use crate::{
     bitcoin::{
@@ -10,7 +11,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
-    model::{BlockchainExplorer, LiquidNetwork, RecommendedFees, Utxo},
+    model::{BlockchainExplorer, Config, LiquidNetwork, RecommendedFees, Utxo},
 };
 
 use electrum_client::{Client, ElectrumApi, HeaderNotification};
@@ -18,9 +19,23 @@ use log::info;
 use lwk_wollet::{ElectrumOptions, ElectrumUrl};
 use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
-use super::{BitcoinChainService, BtcScriptBalance, History, HybridBitcoinChainService};
+use super::{BitcoinChainService, BtcScriptBalance, History};
 
-impl HybridBitcoinChainService<Client> {
+pub(crate) struct ElectrumBitcoinChainService {
+    config: Config,
+    client: OnceLock<Client>,
+    last_known_tip: Mutex<Option<u32>>,
+}
+
+impl ElectrumBitcoinChainService {
+    pub(crate) fn new(config: Config) -> Self {
+        Self {
+            config,
+            client: OnceLock::new(),
+            last_known_tip: Mutex::new(None),
+        }
+    }
+
     fn get_client(&self) -> Result<&Client> {
         if let Some(c) = self.client.get() {
             return Ok(c);
@@ -42,7 +57,7 @@ impl HybridBitcoinChainService<Client> {
 }
 
 #[sdk_macros::async_trait]
-impl BitcoinChainService for HybridBitcoinChainService<Client> {
+impl BitcoinChainService for ElectrumBitcoinChainService {
     async fn tip(&self) -> Result<u32> {
         let client = self.get_client()?;
         let mut maybe_popped_header = None;

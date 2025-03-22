@@ -1,15 +1,11 @@
 pub(crate) mod electrum;
 pub(crate) mod esplora;
 
-use std::sync::OnceLock;
-
-use tokio::sync::Mutex;
-
 use anyhow::Result;
 
 use crate::{
     bitcoin,
-    model::{BtcScriptBalance, Config, RecommendedFees},
+    model::{BtcScriptBalance, RecommendedFees},
     prelude::Utxo,
 };
 use bitcoin::{Address, Script, Transaction, Txid};
@@ -72,20 +68,4 @@ pub trait BitcoinChainService: Send + Sync {
 
     /// Get the recommended fees, in sat/vbyte
     async fn recommended_fees(&self) -> Result<RecommendedFees>;
-}
-
-pub(crate) struct HybridBitcoinChainService<C> {
-    config: Config,
-    client: OnceLock<C>,
-    last_known_tip: Mutex<Option<u32>>,
-}
-
-impl<C> HybridBitcoinChainService<C> {
-    pub fn new(config: Config) -> Result<Self> {
-        Ok(Self {
-            config,
-            client: OnceLock::new(),
-            last_known_tip: Mutex::new(None),
-        })
-    }
 }

@@ -1,11 +1,11 @@
-use std::time::Duration;
+use std::{sync::OnceLock, time::Duration};
 
 use anyhow::{anyhow, bail, Context as _, Result};
 use tokio::sync::RwLock;
 
 use crate::{
     elements::{Address, OutPoint, Script, Transaction, Txid},
-    model::{BlockchainExplorer, Utxo},
+    model::{BlockchainExplorer, Config, Utxo},
     utils,
 };
 
@@ -15,9 +15,21 @@ use lwk_wollet::{
 };
 use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
-use super::{History, HybridLiquidChainService, LiquidChainService};
+use super::{History, LiquidChainService};
 
-impl HybridLiquidChainService<EsploraClient> {
+pub(crate) struct EsploraLiquidChainService {
+    config: Config,
+    client: OnceLock<RwLock<EsploraClient>>,
+}
+
+impl EsploraLiquidChainService {
+    pub(crate) fn new(config: Config) -> Self {
+        Self {
+            config,
+            client: OnceLock::new(),
+        }
+    }
+
     fn get_client(&self) -> Result<&RwLock<EsploraClient>> {
         if let Some(c) = self.client.get() {
             return Ok(c);
@@ -40,7 +52,7 @@ impl HybridLiquidChainService<EsploraClient> {
 }
 
 #[sdk_macros::async_trait]
-impl LiquidChainService for HybridLiquidChainService<EsploraClient> {
+impl LiquidChainService for EsploraLiquidChainService {
     async fn tip(&self) -> Result<u32> {
         Ok(self
             .get_client()?

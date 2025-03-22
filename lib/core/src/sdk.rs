@@ -206,13 +206,13 @@ impl LiquidSdkBuilder {
         let bitcoin_chain_service: Arc<dyn BitcoinChainService> =
             match self.bitcoin_chain_service.clone() {
                 Some(bitcoin_chain_service) => bitcoin_chain_service,
-                None => self.config.bitcoin_chain_service()?,
+                None => self.config.bitcoin_chain_service(),
             };
 
         let liquid_chain_service: Arc<dyn LiquidChainService> =
             match self.liquid_chain_service.clone() {
                 Some(liquid_chain_service) => liquid_chain_service,
-                None => self.config.liquid_chain_service()?,
+                None => self.config.liquid_chain_service(),
             };
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
