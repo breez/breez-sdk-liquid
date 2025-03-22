@@ -1,14 +1,10 @@
 pub(crate) mod electrum;
 pub(crate) mod esplora;
 
-use std::sync::OnceLock;
-
-use tokio::sync::RwLock;
-
 use anyhow::Result;
 use mockall::automock;
 
-use crate::{elements, model::Config, prelude::Utxo};
+use crate::{elements, prelude::Utxo};
 use elements::{Address, Script, Transaction, Txid};
 
 pub(crate) type History = crate::model::History<elements::Txid>;
@@ -54,18 +50,4 @@ pub trait LiquidChainService: Send + Sync {
         tx_hex: &str,
         verify_confirmation: bool,
     ) -> Result<Transaction>;
-}
-
-pub(crate) struct HybridLiquidChainService<C> {
-    config: Config,
-    client: OnceLock<RwLock<C>>,
-}
-
-impl<C> HybridLiquidChainService<C> {
-    pub(crate) fn new(config: Config) -> Result<Self> {
-        Ok(Self {
-            config,
-            client: OnceLock::new(),
-        })
-    }
 }

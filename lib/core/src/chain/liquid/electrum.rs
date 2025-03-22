@@ -1,13 +1,13 @@
 #![cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 
-use std::time::Duration;
+use std::{sync::OnceLock, time::Duration};
 
 use anyhow::{anyhow, bail, Context as _, Result};
 use tokio::sync::RwLock;
 
 use crate::{
     elements::{Address, OutPoint, Script, Transaction, Txid},
-    model::{BlockchainExplorer, LiquidNetwork, Utxo},
+    model::{BlockchainExplorer, Config, LiquidNetwork, Utxo},
     utils,
 };
 
@@ -18,9 +18,21 @@ use lwk_wollet::{
 };
 use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
-use super::{History, HybridLiquidChainService, LiquidChainService};
+use super::{History, LiquidChainService};
 
-impl HybridLiquidChainService<ElectrumClient> {
+pub(crate) struct ElectrumLiquidChainService {
+    config: Config,
+    client: OnceLock<RwLock<ElectrumClient>>,
+}
+
+impl ElectrumLiquidChainService {
+    pub(crate) fn new(config: Config) -> Self {
+        Self {
+            config,
+            client: OnceLock::new(),
+        }
+    }
+
     fn get_client(&self) -> Result<&RwLock<ElectrumClient>> {
         if let Some(c) = self.client.get() {
             return Ok(c);
@@ -43,7 +55,7 @@ impl HybridLiquidChainService<ElectrumClient> {
 }
 
 #[sdk_macros::async_trait]
-impl LiquidChainService for HybridLiquidChainService<ElectrumClient> {
+impl LiquidChainService for ElectrumLiquidChainService {
     async fn tip(&self) -> Result<u32> {
         Ok(self
             .get_client()?
