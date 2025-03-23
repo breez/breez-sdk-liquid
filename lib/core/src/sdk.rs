@@ -186,12 +186,19 @@ impl LiquidSdkBuilder {
 
         let persister = match self.persister.clone() {
             Some(persister) => persister,
-            None => Arc::new(Persister::new_using_fs(
-                &self.get_working_dir()?,
-                self.config.network,
-                self.config.sync_enabled(),
-                self.config.asset_metadata.clone(),
-            )?),
+            None => {
+                #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+                return Err(anyhow!(
+                    "Must provide a WASM-compatible persister on WASM builds"
+                ));
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                Arc::new(Persister::new_using_fs(
+                    &self.get_working_dir()?,
+                    self.config.network,
+                    self.config.sync_enabled(),
+                    self.config.asset_metadata.clone(),
+                )?)
+            }
         };
 
         let rest_client: Arc<dyn RestClient> = match self.rest_client.clone() {
