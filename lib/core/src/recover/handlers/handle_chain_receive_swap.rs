@@ -239,7 +239,7 @@ impl ChainReceiveSwapHandler {
             .to_sat();
 
         // Collect outgoing tx IDs
-        let btc_outgoing_tx_ids: BtcHistory = btc_lockup_outgoing_txs
+        let btc_outgoing_tx_ids: Vec<BtcHistory> = btc_lockup_outgoing_txs
             .iter()
             .filter_map(|tx| {
                 history
@@ -281,19 +281,19 @@ impl ChainReceiveSwapHandler {
 
 pub(crate) struct RecoveredOnchainDataChainReceive {
     /// LBTC tx locking up funds by the swapper
-    pub(crate) lbtc_server_lockup_tx_id: Option<History<elements::Txid>>,
+    pub(crate) lbtc_server_lockup_tx_id: Option<LBtcHistory>,
     /// LBTC tx that claims to our wallet. The final step in a successful swap.
-    pub(crate) lbtc_claim_tx_id: Option<History<elements::Txid>>,
+    pub(crate) lbtc_claim_tx_id: Option<LBtcHistory>,
     /// LBTC tx out address for the claim tx.
     pub(crate) lbtc_claim_address: Option<String>,
     /// BTC tx initiated by the payer (the "user" as per Boltz), sending funds to the swap funding address.
-    pub(crate) btc_user_lockup_tx_id: Option<History<bitcoin::Txid>>,
+    pub(crate) btc_user_lockup_tx_id: Option<BtcHistory>,
     /// BTC total funds currently available at the swap funding address.
     pub(crate) btc_user_lockup_address_balance_sat: u64,
     /// BTC sent to lockup address as part of lockup tx.
     pub(crate) btc_user_lockup_amount_sat: u64,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
-    pub(crate) btc_refund_tx_id: Option<History<bitcoin::Txid>>,
+    pub(crate) btc_refund_tx_id: Option<BtcHistory>,
 }
 
 impl RecoveredOnchainDataChainReceive {
@@ -362,8 +362,8 @@ impl RecoveredOnchainDataChainReceive {
 
 #[derive(Clone)]
 pub(crate) struct ReceiveChainSwapHistory {
-    pub(crate) lbtc_claim_script_history: Vec<History<elements::Txid>>,
-    pub(crate) btc_lockup_script_history: Vec<History<bitcoin::Txid>>,
+    pub(crate) lbtc_claim_script_history: Vec<LBtcHistory>,
+    pub(crate) btc_lockup_script_history: Vec<BtcHistory>,
     pub(crate) btc_lockup_script_txs: Vec<bitcoin::Transaction>,
     pub(crate) btc_lockup_script_balance: Option<BtcScriptBalance>,
 }

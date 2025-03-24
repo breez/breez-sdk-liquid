@@ -204,13 +204,13 @@ impl ChainSendSwapHandler {
 
 pub(crate) struct RecoveredOnchainDataChainSend {
     /// LBTC tx initiated by the SDK (the "user" as per Boltz), sending funds to the swap funding address.
-    pub(crate) lbtc_user_lockup_tx_id: Option<History<elements::Txid>>,
+    pub(crate) lbtc_user_lockup_tx_id: Option<LBtcHistory>,
     /// LBTC tx initiated by the SDK to itself, in case the initial funds have to be refunded.
-    pub(crate) lbtc_refund_tx_id: Option<History<elements::Txid>>,
+    pub(crate) lbtc_refund_tx_id: Option<LBtcHistory>,
     /// BTC tx locking up funds by the swapper
-    pub(crate) btc_server_lockup_tx_id: Option<History<bitcoin::Txid>>,
+    pub(crate) btc_server_lockup_tx_id: Option<BtcHistory>,
     /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
-    pub(crate) btc_claim_tx_id: Option<History<bitcoin::Txid>>,
+    pub(crate) btc_claim_tx_id: Option<BtcHistory>,
 }
 
 // TODO: We have to be careful around overwriting the RefundPending state, as this swap monitored
@@ -254,7 +254,7 @@ impl RecoveredOnchainDataChainSend {
 
 #[derive(Clone)]
 pub(crate) struct SendChainSwapHistory {
-    pub(crate) lbtc_lockup_script_history: Vec<History<elements::Txid>>,
-    pub(crate) btc_claim_script_history: Vec<History<bitcoin::Txid>>,
+    pub(crate) lbtc_lockup_script_history: Vec<LBtcHistory>,
+    pub(crate) btc_claim_script_history: Vec<BtcHistory>,
     pub(crate) btc_claim_script_txs: Vec<bitcoin::Transaction>,
 }

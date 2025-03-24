@@ -142,8 +142,8 @@ impl SwapsList {
 }
 
 pub(crate) struct RecoveryContext {
-    pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, LBtcHistory>,
-    pub(crate) btc_script_to_history_map: HashMap<BtcScript, BtcHistory>,
+    pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, Vec<LBtcHistory>>,
+    pub(crate) btc_script_to_history_map: HashMap<BtcScript, Vec<BtcHistory>>,
     pub(crate) btc_script_to_txs_map: HashMap<BtcScript, Vec<bitcoin::Transaction>>,
     pub(crate) btc_script_to_balance_map: HashMap<BtcScript, BtcScriptBalance>,
     pub(crate) liquid_chain_service: Arc<dyn LiquidChainService>,

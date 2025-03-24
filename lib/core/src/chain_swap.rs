@@ -12,16 +12,15 @@ use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
 use tokio::sync::broadcast;
 
-use crate::model::{BlockListener, ChainSwapUpdate, History, LIQUID_FEE_RATE_MSAT_PER_VBYTE};
-use crate::{bitcoin, elements};
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
-    ensure_sdk,
+    elements, ensure_sdk,
     error::{PaymentError, SdkError, SdkResult},
     model::{
-        ChainSwap, Config, Direction,
+        BlockListener, BtcHistory, ChainSwap, ChainSwapUpdate, Config, Direction, LBtcHistory,
         PaymentState::{self, *},
         PaymentTxData, PaymentType, Swap, SwapScriptV2, Transaction as SdkTransaction,
+        LIQUID_FEE_RATE_MSAT_PER_VBYTE,
     },
     persist::Persister,
     swapper::Swapper,
@@ -1455,7 +1454,7 @@ impl ChainSwapHandler {
     async fn fetch_bitcoin_script_history(
         &self,
         swap_script: &SwapScriptV2,
-    ) -> Result<Vec<History<bitcoin::Txid>>> {
+    ) -> Result<Vec<BtcHistory>> {
         let address = swap_script
             .as_bitcoin_script()?
             .to_address(self.config.network.as_bitcoin_chain())
@@ -1470,7 +1469,7 @@ impl ChainSwapHandler {
     async fn fetch_liquid_script_history(
         &self,
         swap_script: &SwapScriptV2,
-    ) -> Result<Vec<History<elements::Txid>>> {
+    ) -> Result<Vec<LBtcHistory>> {
         let address = swap_script
             .as_liquid_script()?
             .to_address(self.config.network.into())

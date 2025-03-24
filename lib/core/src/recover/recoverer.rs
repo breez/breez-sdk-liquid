@@ -223,7 +223,7 @@ impl Recoverer {
     async fn fetch_lbtc_history_map(
         &self,
         swap_lbtc_scripts: Vec<LBtcScript>,
-    ) -> Result<HashMap<LBtcScript, LBtcHistory>> {
+    ) -> Result<HashMap<LBtcScript, Vec<LBtcHistory>>> {
         let t0 = web_time::Instant::now();
         let lbtc_script_histories = self
             .liquid_chain_service
@@ -241,7 +241,7 @@ impl Recoverer {
                 lbtc_swap_scripts_len == lbtc_script_histories_len,
                 anyhow!("Got {lbtc_script_histories_len} L-BTC script histories, expected {lbtc_swap_scripts_len}")
             );
-        let lbtc_script_to_history_map: HashMap<LBtcScript, LBtcHistory> = swap_lbtc_scripts
+        let lbtc_script_to_history_map: HashMap<LBtcScript, Vec<LBtcHistory>> = swap_lbtc_scripts
             .into_iter()
             .zip(lbtc_script_histories.into_iter())
             .collect();
@@ -253,7 +253,7 @@ impl Recoverer {
         &self,
         swap_btc_script_bufs: Vec<BtcScript>,
     ) -> Result<(
-        HashMap<BtcScript, BtcHistory>,
+        HashMap<BtcScript, Vec<BtcHistory>>,
         HashMap<BtcScript, Vec<bitcoin::Transaction>>,
         HashMap<BtcScript, BtcScriptBalance>,
     )> {
@@ -287,7 +287,7 @@ impl Recoverer {
             btc_swap_scripts_len == btc_script_histories_len,
             anyhow!("Got {btc_script_histories_len} BTC script histories, expected {btc_swap_scripts_len}")
         );
-        let btc_script_to_history_map: HashMap<BtcScript, BtcHistory> = swap_btc_script_bufs
+        let btc_script_to_history_map: HashMap<BtcScript, Vec<BtcHistory>> = swap_btc_script_bufs
             .clone()
             .into_iter()
             .zip(btc_script_histories.clone())

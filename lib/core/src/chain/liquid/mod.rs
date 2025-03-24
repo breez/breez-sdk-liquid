@@ -4,10 +4,13 @@ pub(crate) mod esplora;
 use anyhow::Result;
 use mockall::automock;
 
-use crate::{elements, prelude::Utxo};
+use crate::{
+    elements,
+    model::{LBtcHistory, Utxo},
+};
 use elements::{Address, Script, Transaction, Txid};
 
-pub(crate) type History = crate::model::History<elements::Txid>;
+pub(crate) type History = LBtcHistory;
 
 #[automock]
 #[sdk_macros::async_trait]

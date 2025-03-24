@@ -345,7 +345,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = History::<elements::Txid> {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -380,7 +380,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = History::<elements::Txid> {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -410,7 +410,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = History::<elements::Txid> {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
