@@ -252,6 +252,13 @@ impl Config {
         }
     }
 
+    pub(crate) fn tls_settings(&self) -> (/*tls*/ bool, /*validate_domain*/ bool) {
+        match self.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        }
+    }
+
     pub fn sync_enabled(&self) -> bool {
         self.sync_service_url.is_some()
     }
