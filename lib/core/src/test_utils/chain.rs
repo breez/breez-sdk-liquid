@@ -21,7 +21,7 @@ use crate::{
 
 #[derive(Default)]
 pub(crate) struct MockLiquidChainService {
-    history: Mutex<LBtcHistory>,
+    history: Mutex<Vec<LBtcHistory>>,
 }
 
 impl MockLiquidChainService {
@@ -29,12 +29,12 @@ impl MockLiquidChainService {
         MockLiquidChainService::default()
     }
 
-    pub(crate) fn set_history(&self, history: LBtcHistory) -> &Self {
+    pub(crate) fn set_history(&self, history: Vec<LBtcHistory>) -> &Self {
         *self.history.lock().unwrap() = history;
         self
     }
 
-    pub(crate) fn get_history(&self) -> LBtcHistory {
+    pub(crate) fn get_history(&self) -> Vec<LBtcHistory> {
         self.history.lock().unwrap().clone()
     }
 }
@@ -67,15 +67,18 @@ impl LiquidChainService for MockLiquidChainService {
         &self,
         _script: &ElementsScript,
         _retries: u64,
-    ) -> Result<LBtcHistory> {
+    ) -> Result<Vec<LBtcHistory>> {
         Ok(self.get_history().into_iter().map(Into::into).collect())
     }
 
-    async fn get_script_history(&self, _script: &ElementsScript) -> Result<LBtcHistory> {
+    async fn get_script_history(&self, _script: &ElementsScript) -> Result<Vec<LBtcHistory>> {
         Ok(vec![])
     }
 
-    async fn get_scripts_history(&self, _scripts: &[ElementsScript]) -> Result<Vec<LBtcHistory>> {
+    async fn get_scripts_history(
+        &self,
+        _scripts: &[ElementsScript],
+    ) -> Result<Vec<Vec<LBtcHistory>>> {
         Ok(vec![])
     }
 
@@ -98,7 +101,7 @@ impl LiquidChainService for MockLiquidChainService {
 }
 
 pub(crate) struct MockBitcoinChainService {
-    history: Mutex<BtcHistory>,
+    history: Mutex<Vec<BtcHistory>>,
     txs: Mutex<Vec<bitcoin::Transaction>>,
     script_balance_sat: Mutex<u64>,
 }
@@ -112,7 +115,7 @@ impl MockBitcoinChainService {
         }
     }
 
-    pub(crate) fn set_history(&self, history: BtcHistory) -> &Self {
+    pub(crate) fn set_history(&self, history: Vec<BtcHistory>) -> &Self {
         *self.history.lock().unwrap() = history;
         self
     }
@@ -152,7 +155,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         &self,
         _script: &Script,
         _retries: u64,
-    ) -> Result<BtcHistory> {
+    ) -> Result<Vec<BtcHistory>> {
         Ok(self
             .history
             .lock()
@@ -163,11 +166,11 @@ impl BitcoinChainService for MockBitcoinChainService {
             .collect())
     }
 
-    async fn get_script_history(&self, _scripts: &Script) -> Result<BtcHistory> {
+    async fn get_script_history(&self, _scripts: &Script) -> Result<Vec<BtcHistory>> {
         Ok(vec![])
     }
 
-    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<BtcHistory>> {
+    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<BtcHistory>>> {
         Ok(vec![])
     }
 

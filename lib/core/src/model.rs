@@ -2250,13 +2250,16 @@ pub(crate) struct History<Txid> {
     ///  0 means unconfirmed with confirmed parents
     pub(crate) height: i32,
 }
+pub(crate) type LBtcHistory = History<elements::Txid>;
+pub(crate) type BtcHistory = History<bitcoin::Txid>;
+
 impl<Txid> History<Txid> {
     pub(crate) fn confirmed(&self) -> bool {
         self.height > 0
     }
 }
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-impl From<electrum_client::GetHistoryRes> for History<lwk_wollet::bitcoin::Txid> {
+impl From<electrum_client::GetHistoryRes> for BtcHistory {
     fn from(value: electrum_client::GetHistoryRes) -> Self {
         Self {
             txid: value.tx_hash,
@@ -2264,12 +2267,12 @@ impl From<electrum_client::GetHistoryRes> for History<lwk_wollet::bitcoin::Txid>
         }
     }
 }
-impl From<lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
+impl From<lwk_wollet::History> for LBtcHistory {
     fn from(value: lwk_wollet::History) -> Self {
         Self::from(&value)
     }
 }
-impl From<&lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
+impl From<&lwk_wollet::History> for LBtcHistory {
     fn from(value: &lwk_wollet::History) -> Self {
         Self {
             txid: value.txid,
@@ -2277,8 +2280,6 @@ impl From<&lwk_wollet::History> for History<lwk_wollet::elements::Txid> {
         }
     }
 }
-pub(crate) type LBtcHistory = Vec<History<elements::Txid>>;
-pub(crate) type BtcHistory = Vec<History<bitcoin::Txid>>;
 pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
 

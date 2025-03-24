@@ -5,12 +5,11 @@ use anyhow::Result;
 
 use crate::{
     bitcoin,
-    model::{BtcScriptBalance, RecommendedFees},
-    prelude::Utxo,
+    model::{BtcHistory, BtcScriptBalance, RecommendedFees, Utxo},
 };
 use bitcoin::{Address, Script, Transaction, Txid};
 
-pub(crate) type History = crate::model::History<bitcoin::Txid>;
+pub(crate) type History = BtcHistory;
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[allow(dead_code)]

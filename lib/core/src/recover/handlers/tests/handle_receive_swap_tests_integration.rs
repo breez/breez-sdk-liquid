@@ -3,7 +3,7 @@ mod test {
     use crate::{
         chain::liquid::MockLiquidChainService,
         elements,
-        model::{History, PaymentState, ReceiveSwap, SwapMetadata},
+        model::{LBtcHistory, PaymentState, ReceiveSwap, SwapMetadata},
         recover::{
             handlers::{tests::create_mock_lbtc_wallet_tx, ReceiveSwapHandler},
             model::{RecoveryContext, TxMap},
@@ -323,7 +323,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = History::<elements::Txid> {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -360,7 +360,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = History::<elements::Txid> {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -390,7 +390,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = History::<elements::Txid> {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };

@@ -2,7 +2,7 @@
 mod test {
     use crate::{
         bitcoin, elements,
-        model::{BtcScriptBalance, ChainSwap, History, PaymentState, SwapMetadata},
+        model::{BtcHistory, BtcScriptBalance, ChainSwap, LBtcHistory, PaymentState, SwapMetadata},
         recover::{
             handlers::{tests::create_mock_lbtc_wallet_tx, ChainReceiveSwapHandler},
             model::{RecoveryContext, TxMap},
@@ -411,7 +411,7 @@ mod test {
         let computed_txid_str = computed_txid.to_string();
 
         // Create history tx with the computed txid
-        let history_tx = History::<bitcoin::Txid> {
+        let history_tx = BtcHistory {
             txid: computed_txid.to_string().parse().unwrap(),
             height: height as i32,
         };
@@ -483,7 +483,7 @@ mod test {
         };
 
         // Create history tx for refund
-        let refund_history_tx = History::<bitcoin::Txid> {
+        let refund_history_tx = BtcHistory {
             txid: refund_tx.compute_txid(),
             height: refund_height as i32,
         };
@@ -525,7 +525,7 @@ mod test {
         let mut history = Vec::new();
         for (tx_id_hex, height) in tx_ids {
             let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
-            history.push(History::<elements::Txid> {
+            history.push(LBtcHistory {
                 txid: tx_id,
                 height: *height as i32,
             });

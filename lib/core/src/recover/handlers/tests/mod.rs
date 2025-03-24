@@ -12,28 +12,28 @@ pub mod handle_send_swap_tests_integration;
 // Helper function to create a History txid for testing
 use std::{collections::BTreeMap, str::FromStr};
 
-use crate::model::History;
+use crate::model::{BtcHistory, LBtcHistory};
 use crate::{bitcoin, elements};
 use elements::{AssetId, Transaction, TxIn, TxInWitness, Txid};
 use lwk_wollet::{hashes::Hash, WalletTx};
 
-pub(crate) fn create_lbtc_history_txid(hex_id: &str, height: i32) -> History<elements::Txid> {
+pub(crate) fn create_lbtc_history_txid(hex_id: &str, height: i32) -> LBtcHistory {
     let txid_bytes = hex::decode(format!("{:0>64}", hex_id)).unwrap();
     let mut txid_array = [0u8; 32];
     txid_array.copy_from_slice(&txid_bytes);
 
-    History::<elements::Txid> {
+    LBtcHistory {
         txid: elements::Txid::from_slice(&txid_array).unwrap(),
         height,
     }
 }
 
-pub(crate) fn create_btc_history_txid(hex_id: &str, height: i32) -> History<bitcoin::Txid> {
+pub(crate) fn create_btc_history_txid(hex_id: &str, height: i32) -> BtcHistory {
     let txid_bytes = hex::decode(format!("{:0>64}", hex_id)).unwrap();
     let mut txid_array = [0u8; 32];
     txid_array.copy_from_slice(&txid_bytes);
 
-    History::<bitcoin::Txid> {
+    BtcHistory {
         txid: bitcoin::Txid::from_slice(&txid_array).unwrap(),
         height,
     }
