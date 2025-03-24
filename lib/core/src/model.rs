@@ -255,6 +255,13 @@ impl Config {
             }
         }
     }
+
+    pub(crate) fn tls_settings(&self) -> (/*tls*/ bool, /*validate_domain*/ bool) {
+        match self.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        }
+    }
 }
 
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
