@@ -235,7 +235,6 @@ impl Config {
             BlockchainExplorer::Esplora { .. } => {
                 Arc::new(EsploraBitcoinChainService::new(self.clone()))
             }
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { .. } => {
                 Arc::new(ElectrumBitcoinChainService::new(self.clone()))
             }
@@ -247,7 +246,6 @@ impl Config {
             BlockchainExplorer::Esplora { .. } => {
                 Arc::new(EsploraLiquidChainService::new(self.clone()))
             }
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { .. } => {
                 Arc::new(ElectrumLiquidChainService::new(self.clone()))
             }
