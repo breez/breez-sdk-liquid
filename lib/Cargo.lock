@@ -756,7 +756,7 @@ dependencies = [
  "electrum-client",
  "elements",
  "env_logger 0.7.1",
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
  "hex",
  "js-sys",
  "lightning-invoice 0.32.0",
@@ -789,7 +789,7 @@ dependencies = [
  "esplora-client",
  "flutter_rust_bridge",
  "futures-util",
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
  "glob",
  "hex",
  "lazy_static",
@@ -1365,12 +1365,12 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "ecies"
-version = "0.2.7"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0206e602d2645ec8b24ed8307fadbc6c3110e2b11ab2f806fc02fee49327079"
+checksum = "0d0c6305d1e7b09171a7ae94bd241dbaa121a979c5c17835b304bc0c9bfa4e4b"
 dependencies = [
  "aes-gcm",
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
  "hkdf",
  "libsecp256k1",
  "once_cell",
@@ -1696,9 +1696,9 @@ dependencies = [
 
 [[package]]
 name = "fragile"
-version = "2.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c2141d6d6c8512188a7891b4b01590a45f6dac67afb4f255c4124dbb86d4eaa"
+checksum = "28dd6caf6059519a65843af8fe2a3ae298b14b80179855aeb4adc2c1934ee619"
 
 [[package]]
 name = "fs-err"
@@ -1825,9 +1825,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.14"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94b22e06ecb0110981051723910cbf0b5f5e09a2062dd7663334ee79a9d1286c"
+checksum = "c4567c8db10ae91089c99af84c68c38da3ec2f087c3f82960bcdbf3656b6f4d7"
 dependencies = [
  "cfg-if 1.0.0",
  "js-sys",
@@ -2949,7 +2949,7 @@ dependencies = [
  "base64 0.21.7",
  "elements",
  "elements-miniscript",
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
  "qr_code",
  "rand 0.8.5",
  "thiserror 1.0.69",
@@ -3524,7 +3524,7 @@ name = "possiblyrandom"
 version = "0.2.0"
 source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
 dependencies = [
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
 ]
 
 [[package]]
@@ -3812,9 +3812,9 @@ dependencies = [
 
 [[package]]
 name = "quinn-udp"
-version = "0.5.10"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e46f3055866785f6b92bc6164b76be02ca8f2eb4b002c0354b28cf4c119e5944"
+checksum = "541d0f57c6ec747a90738a52741d3221f7960e8ac2f0ff4b1a63680e033b4ab5"
 dependencies = [
  "cfg_aliases",
  "libc",
@@ -3915,7 +3915,7 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
 ]
 
 [[package]]
@@ -4165,7 +4165,7 @@ checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
 dependencies = [
  "cc",
  "cfg-if 1.0.0",
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
  "libc",
  "untrusted 0.9.0",
  "windows-sys 0.52.0",
@@ -4509,7 +4509,7 @@ dependencies = [
  "cbc",
  "dns-parser",
  "elements",
- "getrandom 0.2.14",
+ "getrandom 0.2.15",
  "hex",
  "hickory-resolver",
  "lazy_static",
@@ -5178,32 +5178,6 @@ checksum = "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
 dependencies = [
  "rustls 0.21.12",
  "tokio",
-[[package]]
-name = "hyper-timeout"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b90d566bffbce6a75bd8b09a05aa8c2cb1fabb6cb348f8840c9e4c90a0d83b0"
-dependencies = [
- "hyper 1.4.1",
- "hyper-util",
- "pin-project-lite",
- "tokio",
- "tower-service",
-]
-
-[[package]]
-name = "hyper-tls"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6183ddfa99b85da61a140bea0efc93fdf56ceaa041b37d553518030827f9905"
-dependencies = [
- "bytes",
- "hyper 0.14.32",
- "native-tls",
- "tokio",
- "tokio-native-tls",
-]
-
 ]
 
 [[package]]
