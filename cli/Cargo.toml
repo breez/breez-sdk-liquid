@@ -19,4 +19,4 @@ tokio = { version = "1", features = ["macros"] }
 
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits and rebased on secp256k1-zkp 0.11.0
-secp256k1-zkp = { git = "https://github.com/dangeross/rust-secp256k1-zkp.git", rev = "57d29b15269ca2ce3c3b118b6a72b66c1169e7b1" }
+secp256k1-zkp = { git = "https://github.com/breez/rust-secp256k1-zkp.git", rev = "eac2e479255a6e32b5588bc25ee53c642fdd8395" }
