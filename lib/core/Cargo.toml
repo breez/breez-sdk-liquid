@@ -8,8 +8,8 @@ name = "breez_sdk_liquid"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [features]
-default = ["frb"]
-frb = ["dep:flutter_rust_bridge"]
+default = []  # Removed "frb" from default features
+frb = ["dep:flutter_rust_bridge"]  # Kept as an optional feature
 # Uniffi features required to build using cargo-lipo
 uniffi-25 = []
 uniffi-28 = []
