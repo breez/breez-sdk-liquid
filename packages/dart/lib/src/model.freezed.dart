@@ -1858,6 +1858,73 @@ String toString() {
 
 
 /// @nodoc
+
+
+class SdkEvent_DataSynced extends SdkEvent {
+  const SdkEvent_DataSynced({required this.didPullNewRecords}): super._();
+  
+
+/// Indicates new data was pulled from other instances.
+ final  bool didPullNewRecords;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SdkEvent_DataSyncedCopyWith<SdkEvent_DataSynced> get copyWith => _$SdkEvent_DataSyncedCopyWithImpl<SdkEvent_DataSynced>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SdkEvent_DataSynced&&(identical(other.didPullNewRecords, didPullNewRecords) || other.didPullNewRecords == didPullNewRecords));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,didPullNewRecords);
+
+@override
+String toString() {
+  return 'SdkEvent.dataSynced(didPullNewRecords: $didPullNewRecords)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SdkEvent_DataSyncedCopyWith<$Res> implements $SdkEventCopyWith<$Res> {
+  factory $SdkEvent_DataSyncedCopyWith(SdkEvent_DataSynced value, $Res Function(SdkEvent_DataSynced) _then) = _$SdkEvent_DataSyncedCopyWithImpl;
+@useResult
+$Res call({
+ bool didPullNewRecords
+});
+
+
+
+
+}
+/// @nodoc
+class _$SdkEvent_DataSyncedCopyWithImpl<$Res>
+    implements $SdkEvent_DataSyncedCopyWith<$Res> {
+  _$SdkEvent_DataSyncedCopyWithImpl(this._self, this._then);
+
+  final SdkEvent_DataSynced _self;
+  final $Res Function(SdkEvent_DataSynced) _then;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? didPullNewRecords = null,}) {
+  return _then(SdkEvent_DataSynced(
+didPullNewRecords: null == didPullNewRecords ? _self.didPullNewRecords : didPullNewRecords // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$SendDestination {
 
 /// A BIP353 address, in case one was used to resolve this Liquid address

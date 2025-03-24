@@ -3809,6 +3809,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.tag = 8;
       return;
     }
+    if (apiObj is SdkEvent_DataSynced) {
+      var pre_did_pull_new_records = cst_encode_bool(apiObj.didPullNewRecords);
+      wireObj.tag = 9;
+      wireObj.kind.DataSynced.did_pull_new_records = pre_did_pull_new_records;
+      return;
+    }
   }
 
   @protected
@@ -7018,6 +7024,11 @@ final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
   external ffi.Pointer<wire_cst_payment> details;
 }
 
+final class wire_cst_SdkEvent_DataSynced extends ffi.Struct {
+  @ffi.Bool()
+  external bool did_pull_new_records;
+}
+
 final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
 
@@ -7034,6 +7045,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
 
   external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
+
+  external wire_cst_SdkEvent_DataSynced DataSynced;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {

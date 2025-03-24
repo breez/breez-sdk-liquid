@@ -295,15 +295,37 @@ pub trait EventListener: MaybeSend + MaybeSync {
 /// to listen for emitted events.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SdkEvent {
-    PaymentFailed { details: Payment },
-    PaymentPending { details: Payment },
-    PaymentRefundable { details: Payment },
-    PaymentRefunded { details: Payment },
-    PaymentRefundPending { details: Payment },
-    PaymentSucceeded { details: Payment },
-    PaymentWaitingConfirmation { details: Payment },
-    PaymentWaitingFeeAcceptance { details: Payment },
+    PaymentFailed {
+        details: Payment,
+    },
+    PaymentPending {
+        details: Payment,
+    },
+    PaymentRefundable {
+        details: Payment,
+    },
+    PaymentRefunded {
+        details: Payment,
+    },
+    PaymentRefundPending {
+        details: Payment,
+    },
+    PaymentSucceeded {
+        details: Payment,
+    },
+    PaymentWaitingConfirmation {
+        details: Payment,
+    },
+    PaymentWaitingFeeAcceptance {
+        details: Payment,
+    },
+    /// Synced with mempool and onchain data
     Synced,
+    /// Synced with real-time data sync
+    DataSynced {
+        /// Indicates new data was pulled from other instances.
+        did_pull_new_records: bool,
+    },
 }
 
 #[derive(thiserror::Error, Debug)]

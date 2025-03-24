@@ -759,7 +759,8 @@ export enum SdkEventVariant {
     PAYMENT_SUCCEEDED = "paymentSucceeded",
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
     PAYMENT_WAITING_FEE_ACCEPTANCE = "paymentWaitingFeeAcceptance",
-    SYNCED = "synced"
+    SYNCED = "synced",
+    DATA_SYNCED = "dataSynced"
 }
 
 export type SdkEvent = {
@@ -788,6 +789,9 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.SYNCED
+} | {
+    type: SdkEventVariant.DATA_SYNCED,
+    didPullNewRecords: boolean
 }
 
 export enum SendDestinationVariant {

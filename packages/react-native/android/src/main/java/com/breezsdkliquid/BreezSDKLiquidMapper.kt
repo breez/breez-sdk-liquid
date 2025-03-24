@@ -3715,6 +3715,10 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
     if (type == "synced") {
         return SdkEvent.Synced
     }
+    if (type == "dataSynced") {
+        val didPullNewRecords = sdkEvent.getBoolean("didPullNewRecords")
+        return SdkEvent.DataSynced(didPullNewRecords)
+    }
     return null
 }
 
@@ -3755,6 +3759,10 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
         }
         is SdkEvent.Synced -> {
             pushToMap(map, "type", "synced")
+        }
+        is SdkEvent.DataSynced -> {
+            pushToMap(map, "type", "dataSynced")
+            pushToMap(map, "didPullNewRecords", sdkEvent.didPullNewRecords)
         }
     }
     return map

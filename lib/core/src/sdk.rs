@@ -519,19 +519,21 @@ impl LiquidSdk {
             loop {
                 tokio::select! {
                     event = sync_events_receiver.recv() => {
-                      if let Ok(e) = event {
-                        match e {
-                          sync::Event::SyncedCompleted{data} => {
-                            info!(
-                              "Received sync event: pulled {} records, pushed {} records",
-                              data.pulled_records_count, data.pushed_records_count
-                            );
-                            if data.pulled_records_count > 0 {
-                              subscription_handler.subscribe_swaps().await;
+                        if let Ok(e) = event {
+                            match e {
+                                sync::Event::SyncedCompleted{data} => {
+                                    info!(
+                                      "Received sync event: pulled {} records, pushed {} records",
+                                      data.pulled_records_count, data.pushed_records_count
+                                    );
+                                    let did_pull_new_records = data.pulled_records_count > 0;
+                                    if did_pull_new_records {
+                                        subscription_handler.subscribe_swaps().await;
+                                    }
+                                    cloned.notify_event_listeners(SdkEvent::DataSynced {did_pull_new_records}).await
+                                }
                             }
-                          }
                         }
-                      }
                     }
                     _ = shutdown_receiver.changed() => {
                         info!("Received shutdown signal, exiting real-time sync loop");
@@ -682,9 +684,8 @@ impl LiquidSdk {
         });
     }
 
-    async fn notify_event_listeners(&self, e: SdkEvent) -> Result<()> {
+    async fn notify_event_listeners(&self, e: SdkEvent) {
         self.event_manager.notify(e).await;
-        Ok(())
     }
 
     /// Adds an event listener to the [LiquidSdk] instance, where all [SdkEvent]'s will be emitted to.
@@ -717,7 +718,7 @@ impl LiquidSdk {
                             self.notify_event_listeners(SdkEvent::PaymentSucceeded {
                                 details: payment,
                             })
-                            .await?
+                            .await
                         }
                         Pending => {
                             match &payment.details.get_swap_id() {
@@ -730,13 +731,13 @@ impl LiquidSdk {
                                                     details: payment,
                                                 },
                                             )
-                                            .await?
+                                            .await
                                         } else {
                                             // The lockup tx is in the mempool/confirmed
                                             self.notify_event_listeners(SdkEvent::PaymentPending {
                                                 details: payment,
                                             })
-                                            .await?
+                                            .await
                                         }
                                     }
                                     Swap::Receive(ReceiveSwap {
@@ -751,13 +752,13 @@ impl LiquidSdk {
                                                     details: payment,
                                                 },
                                             )
-                                            .await?
+                                            .await
                                         } else {
                                             // The lockup tx is in the mempool/confirmed
                                             self.notify_event_listeners(SdkEvent::PaymentPending {
                                                 details: payment,
                                             })
-                                            .await?
+                                            .await
                                         }
                                     }
                                     Swap::Send(_) => {
@@ -765,7 +766,7 @@ impl LiquidSdk {
                                         self.notify_event_listeners(SdkEvent::PaymentPending {
                                             details: payment,
                                         })
-                                        .await?
+                                        .await
                                     }
                                 },
                                 // Here we probably have a liquid address payment so we emit PaymentWaitingConfirmation
@@ -773,7 +774,7 @@ impl LiquidSdk {
                                     self.notify_event_listeners(
                                         SdkEvent::PaymentWaitingConfirmation { details: payment },
                                     )
-                                    .await?
+                                    .await
                                 }
                             };
                         }
@@ -794,34 +795,34 @@ impl LiquidSdk {
                             self.notify_event_listeners(SdkEvent::PaymentWaitingFeeAcceptance {
                                 details: payment,
                             })
-                            .await?;
+                            .await;
                         }
                         Refundable => {
                             self.notify_event_listeners(SdkEvent::PaymentRefundable {
                                 details: payment,
                             })
-                            .await?
+                            .await
                         }
                         RefundPending => {
                             // The swap state has changed to RefundPending
                             self.notify_event_listeners(SdkEvent::PaymentRefundPending {
                                 details: payment,
                             })
-                            .await?
+                            .await
                         }
                         Failed => match payment.payment_type {
                             PaymentType::Receive => {
                                 self.notify_event_listeners(SdkEvent::PaymentFailed {
                                     details: payment,
                                 })
-                                .await?
+                                .await
                             }
                             PaymentType::Send => {
                                 // The refund tx is confirmed
                                 self.notify_event_listeners(SdkEvent::PaymentRefunded {
                                     details: payment,
                                 })
-                                .await?
+                                .await
                             }
                         },
                         _ => (),
@@ -3343,7 +3344,7 @@ impl LiquidSdk {
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Synchronized (partial: {partial_sync}) with mempool and onchain data ({duration_ms} ms)");
 
-        self.notify_event_listeners(SdkEvent::Synced).await?;
+        self.notify_event_listeners(SdkEvent::Synced).await;
         Ok(())
     }
 

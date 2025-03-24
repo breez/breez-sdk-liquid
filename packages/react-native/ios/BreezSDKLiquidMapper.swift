@@ -4623,6 +4623,12 @@ enum BreezSDKLiquidMapper {
         if type == "synced" {
             return SdkEvent.synced
         }
+        if type == "dataSynced" {
+            guard let _didPullNewRecords = sdkEvent["didPullNewRecords"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "didPullNewRecords", typeName: "SdkEvent"))
+            }
+            return SdkEvent.dataSynced(didPullNewRecords: _didPullNewRecords)
+        }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SdkEvent")
     }
@@ -4696,6 +4702,14 @@ enum BreezSDKLiquidMapper {
         case .synced:
             return [
                 "type": "synced",
+            ]
+
+        case let .dataSynced(
+            didPullNewRecords
+        ):
+            return [
+                "type": "dataSynced",
+                "didPullNewRecords": didPullNewRecords,
             ]
         }
     }
