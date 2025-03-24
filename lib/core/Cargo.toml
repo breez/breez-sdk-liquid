@@ -56,7 +56,7 @@ reqwest = { version = "0.12", features = ["json"] }
 zbase32 = "0.1.2"
 x509-parser = { version = "0.16.0" }
 tempfile = "3"
-prost = "0.13.3"
+prost = "^0.11"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
@@ -70,7 +70,7 @@ electrum-client = { version = "0.21.0", default-features = false, features = [
 lwk_wollet = { version = "0.9.0" }
 maybe-sync = { version = "0.1.1", features = ["sync"] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
-tonic = { version = "0.12.3", features = ["tls", "tls-webpki-roots"] }
+tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 
 # WASM dependencies
@@ -81,6 +81,10 @@ lwk_wollet = { version = "0.9.0", default-features = false, features = [
 ] }
 maybe-sync = "0.1.1"
 uuid = { version = "1.8.0", features = ["v4", "js"] }
+tonic = { version = "0.12", default-features = false, features = [
+    "codegen",
+    "prost",
+] }
 
 [dev-dependencies]
 sdk-common = { workspace = true, features = ["test-utils"] }
@@ -99,7 +103,7 @@ getrandom = { version = "0.2", features = ["js"] }
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }
 glob = "0.3.1"
-tonic-build = "0.12.3"
+tonic-build = "^0.8"
 
 # Pin these versions to fix iOS build issues
 [target.'cfg(target_os = "ios")'.build-dependencies]

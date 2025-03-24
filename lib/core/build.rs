@@ -1,7 +1,8 @@
 use anyhow::*;
 use glob::glob;
-use std::env;
+use std::path::Path;
 use std::result::Result::Ok;
+use std::{env, io};
 
 /// Adds a temporary workaround for an issue with the Rust compiler and Android
 /// in x86_64 devices: https://github.com/rust-lang/rust/issues/109717.
@@ -32,8 +33,26 @@ fn setup_x86_64_android_workaround() {
     }
 }
 
+pub fn compile_protos(proto: impl AsRef<Path>) -> io::Result<()> {
+    let proto_path: &Path = proto.as_ref();
+    let proto_dir = proto_path
+        .parent()
+        .expect("proto file should reside in a directory");
+    let target_family =
+        env::var("CARGO_CFG_TARGET_FAMILY").expect("CARGO_CFG_TARGET_FAMILY not set");
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").expect("CARGO_CFG_TARGET_OS not set");
+    let is_wasm = target_family == "wasm" && target_os == "unknown";
+
+    tonic_build::configure()
+        .build_server(false)
+        .build_client(true)
+        .build_transport(!is_wasm)
+        .compile(&[proto_path], &[proto_dir])?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     setup_x86_64_android_workaround();
-    tonic_build::compile_protos("src/sync/proto/sync.proto")?;
+    compile_protos("src/sync/proto/sync.proto")?;
     Ok(())
 }
