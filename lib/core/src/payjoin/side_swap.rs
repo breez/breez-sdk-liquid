@@ -230,9 +230,7 @@ impl PayjoinService for SideSwapPayjoinService {
         let start_request = Request::Start(StartRequest {
             asset_id: asset_id.to_string(),
             user_agent: "breezsdk".to_string(),
-            api_key: Some(
-                "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2".to_string(),
-            ),
+            api_key: self.config.sideswap_api_key.clone(),
         });
         let response: Response = self.post_request(&start_request).await?;
         let Response::Start(start_response) = response else {

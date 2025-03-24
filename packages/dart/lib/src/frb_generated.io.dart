@@ -2726,6 +2726,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       apiObj.onchainFeeRateLeewaySatPerVbyte,
     );
     wireObj.asset_metadata = cst_encode_opt_list_asset_metadata(apiObj.assetMetadata);
+    wireObj.sideswap_api_key = cst_encode_opt_String(apiObj.sideswapApiKey);
   }
 
   @protected
@@ -3327,9 +3328,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is PayAmount_Asset) {
       var pre_asset_id = cst_encode_String(apiObj.assetId);
       var pre_receiver_amount = cst_encode_f_64(apiObj.receiverAmount);
+      var pre_estimate_asset_fees = cst_encode_opt_box_autoadd_bool(apiObj.estimateAssetFees);
       wireObj.tag = 1;
       wireObj.kind.Asset.asset_id = pre_asset_id;
       wireObj.kind.Asset.receiver_amount = pre_receiver_amount;
+      wireObj.kind.Asset.estimate_asset_fees = pre_estimate_asset_fees;
       return;
     }
     if (apiObj is PayAmount_Drain) {
@@ -3665,7 +3668,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     cst_api_fill_to_wire_send_destination(apiObj.destination, wireObj.destination);
     wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
-    wireObj.fees = cst_encode_opt_box_autoadd_f_64(apiObj.fees);
+    wireObj.asset_fees = cst_encode_opt_box_autoadd_f_64(apiObj.assetFees);
   }
 
   @protected
@@ -3882,7 +3885,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_send_payment_request wireObj,
   ) {
     cst_api_fill_to_wire_prepare_send_response(apiObj.prepareResponse, wireObj.prepare_response);
-    wireObj.asset_pays_fees = cst_encode_opt_box_autoadd_bool(apiObj.assetPaysFees);
+    wireObj.use_asset_fees = cst_encode_opt_box_autoadd_bool(apiObj.useAssetFees);
   }
 
   @protected
@@ -6707,6 +6710,8 @@ final class wire_cst_PayAmount_Asset extends ffi.Struct {
 
   @ffi.Double()
   external double receiver_amount;
+
+  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
 }
 
 final class PayAmountKind extends ffi.Union {
@@ -6828,13 +6833,13 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
-  external ffi.Pointer<ffi.Double> fees;
+  external ffi.Pointer<ffi.Double> asset_fees;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
 
-  external ffi.Pointer<ffi.Bool> asset_pays_fees;
+  external ffi.Pointer<ffi.Bool> use_asset_fees;
 }
 
 final class wire_cst_sign_message_request extends ffi.Struct {
@@ -7182,6 +7187,8 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
 
   external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> sideswap_api_key;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -7851,6 +7858,16 @@ const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 const double LIQUID_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LIQUID_FEE_RATE_MSAT_PER_VBYTE = 100.0;
+
+const double MIN_FEE_RATE = 0.1;
+
+const int WEIGHT_FIXED = 222;
+
+const int WEIGHT_VIN_SINGLE_SIG_NATIVE = 275;
+
+const int WEIGHT_VIN_SINGLE_SIG_NESTED = 367;
+
+const int WEIGHT_VOUT_NESTED = 270;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 1000000;
 

@@ -345,6 +345,7 @@ dictionary Config {
     sequence<ExternalInputParser>? external_input_parsers = null;
     u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
     sequence<AssetMetadata>? asset_metadata = null;
+    string? sideswap_api_key = null;
 };
 
 enum LiquidNetwork {
@@ -444,12 +445,12 @@ interface SendDestination {
 dictionary PrepareSendResponse {
     SendDestination destination;
     u64? fees_sat;
-    f64? fees;
+    f64? asset_fees;
 };
 
 dictionary SendPaymentRequest {
     PrepareSendResponse prepare_response;
-    boolean? asset_pays_fees = null;
+    boolean? use_asset_fees = null;
 };
 
 dictionary SendPaymentResponse {
@@ -511,7 +512,7 @@ dictionary OnchainPaymentLimitsResponse {
 [Enum]
 interface PayAmount {
     Bitcoin(u64 receiver_amount_sat);
-    Asset(string asset_id, f64 receiver_amount);
+    Asset(string asset_id, f64 receiver_amount, boolean? estimate_asset_fees);
     Drain();
 };
 

@@ -480,6 +480,7 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
+    val sideswapApiKey = if (hasNonNullKey(config, "sideswapApiKey")) config.getString("sideswapApiKey") else null
     return Config(
         liquidExplorer,
         bitcoinExplorer,
@@ -494,6 +495,7 @@ fun asConfig(config: ReadableMap): Config? {
         externalInputParsers,
         onchainFeeRateLeewaySatPerVbyte,
         assetMetadata,
+        sideswapApiKey,
     )
 }
 
@@ -512,6 +514,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },
         "onchainFeeRateLeewaySatPerVbyte" to config.onchainFeeRateLeewaySatPerVbyte,
         "assetMetadata" to config.assetMetadata?.let { readableArrayOf(it) },
+        "sideswapApiKey" to config.sideswapApiKey,
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {
@@ -2292,15 +2295,15 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
     }
     val destination = prepareSendResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = if (hasNonNullKey(prepareSendResponse, "feesSat")) prepareSendResponse.getDouble("feesSat").toULong() else null
-    val fees = if (hasNonNullKey(prepareSendResponse, "fees")) prepareSendResponse.getDouble("fees") else null
-    return PrepareSendResponse(destination, feesSat, fees)
+    val assetFees = if (hasNonNullKey(prepareSendResponse, "assetFees")) prepareSendResponse.getDouble("assetFees") else null
+    return PrepareSendResponse(destination, feesSat, assetFees)
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
     readableMapOf(
         "destination" to readableMapOf(prepareSendResponse.destination),
         "feesSat" to prepareSendResponse.feesSat,
-        "fees" to prepareSendResponse.fees,
+        "assetFees" to prepareSendResponse.assetFees,
     )
 
 fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
@@ -2689,14 +2692,14 @@ fun asSendPaymentRequest(sendPaymentRequest: ReadableMap): SendPaymentRequest? {
         return null
     }
     val prepareResponse = sendPaymentRequest.getMap("prepareResponse")?.let { asPrepareSendResponse(it) }!!
-    val assetPaysFees = if (hasNonNullKey(sendPaymentRequest, "assetPaysFees")) sendPaymentRequest.getBoolean("assetPaysFees") else null
-    return SendPaymentRequest(prepareResponse, assetPaysFees)
+    val useAssetFees = if (hasNonNullKey(sendPaymentRequest, "useAssetFees")) sendPaymentRequest.getBoolean("useAssetFees") else null
+    return SendPaymentRequest(prepareResponse, useAssetFees)
 }
 
 fun readableMapOf(sendPaymentRequest: SendPaymentRequest): ReadableMap =
     readableMapOf(
         "prepareResponse" to readableMapOf(sendPaymentRequest.prepareResponse),
-        "assetPaysFees" to sendPaymentRequest.assetPaysFees,
+        "useAssetFees" to sendPaymentRequest.useAssetFees,
     )
 
 fun asSendPaymentRequestList(arr: ReadableArray): List<SendPaymentRequest> {
@@ -3412,7 +3415,8 @@ fun asPayAmount(payAmount: ReadableMap): PayAmount? {
     if (type == "asset") {
         val assetId = payAmount.getString("assetId")!!
         val receiverAmount = payAmount.getDouble("receiverAmount")
-        return PayAmount.Asset(assetId, receiverAmount)
+        val estimateAssetFees = if (hasNonNullKey(payAmount, "estimateAssetFees")) payAmount.getBoolean("estimateAssetFees") else null
+        return PayAmount.Asset(assetId, receiverAmount, estimateAssetFees)
     }
     if (type == "drain") {
         return PayAmount.Drain
@@ -3431,6 +3435,7 @@ fun readableMapOf(payAmount: PayAmount): ReadableMap? {
             pushToMap(map, "type", "asset")
             pushToMap(map, "assetId", payAmount.assetId)
             pushToMap(map, "receiverAmount", payAmount.receiverAmount)
+            pushToMap(map, "estimateAssetFees", payAmount.estimateAssetFees)
         }
         is PayAmount.Drain -> {
             pushToMap(map, "type", "drain")

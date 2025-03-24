@@ -103,6 +103,7 @@ export interface Config {
     externalInputParsers?: ExternalInputParser[]
     onchainFeeRateLeewaySatPerVbyte?: number
     assetMetadata?: AssetMetadata[]
+    sideswapApiKey?: string
 }
 
 export interface ConnectRequest {
@@ -395,7 +396,7 @@ export interface PrepareSendRequest {
 export interface PrepareSendResponse {
     destination: SendDestination
     feesSat?: number
-    fees?: number
+    assetFees?: number
 }
 
 export interface Rate {
@@ -458,7 +459,7 @@ export interface RouteHintHop {
 
 export interface SendPaymentRequest {
     prepareResponse: PrepareSendResponse
-    assetPaysFees?: boolean
+    useAssetFees?: boolean
 }
 
 export interface SendPaymentResponse {
@@ -686,6 +687,7 @@ export type PayAmount = {
     type: PayAmountVariant.ASSET,
     assetId: string
     receiverAmount: number
+    estimateAssetFees?: boolean
 } | {
     type: PayAmountVariant.DRAIN
 }

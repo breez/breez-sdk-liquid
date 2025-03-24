@@ -4603,6 +4603,8 @@ final class wire_cst_PayAmount_Asset extends ffi.Struct {
 
   @ffi.Double()
   external double receiver_amount;
+
+  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
 }
 
 final class PayAmountKind extends ffi.Union {
@@ -4724,13 +4726,13 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
-  external ffi.Pointer<ffi.Double> fees;
+  external ffi.Pointer<ffi.Double> asset_fees;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
 
-  external ffi.Pointer<ffi.Bool> asset_pays_fees;
+  external ffi.Pointer<ffi.Bool> use_asset_fees;
 }
 
 final class wire_cst_sign_message_request extends ffi.Struct {
@@ -5078,6 +5080,8 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
 
   external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> sideswap_api_key;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -6039,6 +6043,16 @@ const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
 const double LIQUID_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LIQUID_FEE_RATE_MSAT_PER_VBYTE = 100.0;
+
+const double MIN_FEE_RATE = 0.1;
+
+const int WEIGHT_FIXED = 222;
+
+const int WEIGHT_VIN_SINGLE_SIG_NATIVE = 275;
+
+const int WEIGHT_VIN_SINGLE_SIG_NESTED = 367;
+
+const int WEIGHT_VOUT_NESTED = 270;
 
 const int DEFAULT_ZERO_CONF_MAX_SAT = 1000000;
 

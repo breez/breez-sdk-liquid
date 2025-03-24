@@ -40,6 +40,8 @@ pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
+const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
+
 #[derive(Clone, Debug, Serialize)]
 pub enum BlockchainExplorer {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -103,6 +105,8 @@ pub struct Config {
     /// See [AssetMetadata] for more details on how define asset metadata.
     /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
     pub asset_metadata: Option<Vec<AssetMetadata>>,
+    /// The SideSwap API key used for making requests to the SideSwap payjoin service
+    pub sideswap_api_key: Option<String>,
 }
 
 impl Config {
@@ -126,6 +130,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -173,6 +178,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -244,6 +250,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: None,
         }
     }
 
@@ -706,14 +713,14 @@ pub struct PrepareSendResponse {
     /// when there is the option to pay fees using the asset being sent.
     pub fees_sat: Option<u64>,
     /// The optional estimated fee in the asset being sent
-    pub fees: Option<f64>,
+    pub asset_fees: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].
 #[derive(Debug, Serialize)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
-    pub asset_pays_fees: Option<bool>,
+    pub use_asset_fees: Option<bool>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].
@@ -732,6 +739,7 @@ pub enum PayAmount {
     Asset {
         asset_id: String,
         receiver_amount: f64,
+        estimate_asset_fees: Option<bool>,
     },
 
     /// Indicates that all available Bitcoin funds should be sent

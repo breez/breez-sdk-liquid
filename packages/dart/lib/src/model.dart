@@ -302,6 +302,9 @@ class Config {
   /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
   final List<AssetMetadata>? assetMetadata;
 
+  /// The SideSwap API key used for making requests to the SideSwap payjoin service
+  final String? sideswapApiKey;
+
   const Config({
     required this.liquidExplorer,
     required this.bitcoinExplorer,
@@ -316,6 +319,7 @@ class Config {
     required this.useDefaultExternalInputParsers,
     this.onchainFeeRateLeewaySatPerVbyte,
     this.assetMetadata,
+    this.sideswapApiKey,
   });
 
   @override
@@ -332,7 +336,8 @@ class Config {
       externalInputParsers.hashCode ^
       useDefaultExternalInputParsers.hashCode ^
       onchainFeeRateLeewaySatPerVbyte.hashCode ^
-      assetMetadata.hashCode;
+      assetMetadata.hashCode ^
+      sideswapApiKey.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -351,7 +356,8 @@ class Config {
           externalInputParsers == other.externalInputParsers &&
           useDefaultExternalInputParsers == other.useDefaultExternalInputParsers &&
           onchainFeeRateLeewaySatPerVbyte == other.onchainFeeRateLeewaySatPerVbyte &&
-          assetMetadata == other.assetMetadata;
+          assetMetadata == other.assetMetadata &&
+          sideswapApiKey == other.sideswapApiKey;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -730,7 +736,11 @@ sealed class PayAmount with _$PayAmount {
   const factory PayAmount.bitcoin({required BigInt receiverAmountSat}) = PayAmount_Bitcoin;
 
   /// The amount of an asset that will be received
-  const factory PayAmount.asset({required String assetId, required double receiverAmount}) = PayAmount_Asset;
+  const factory PayAmount.asset({
+    required String assetId,
+    required double receiverAmount,
+    bool? estimateAssetFees,
+  }) = PayAmount_Asset;
 
   /// Indicates that all available Bitcoin funds should be sent
   const factory PayAmount.drain() = PayAmount_Drain;
@@ -1382,12 +1392,12 @@ class PrepareSendResponse {
   final BigInt? feesSat;
 
   /// The optional estimated fee in the asset being sent
-  final double? fees;
+  final double? assetFees;
 
-  const PrepareSendResponse({required this.destination, this.feesSat, this.fees});
+  const PrepareSendResponse({required this.destination, this.feesSat, this.assetFees});
 
   @override
-  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ fees.hashCode;
+  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ assetFees.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1396,7 +1406,7 @@ class PrepareSendResponse {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           feesSat == other.feesSat &&
-          fees == other.fees;
+          assetFees == other.assetFees;
 }
 
 @freezed
@@ -1634,12 +1644,12 @@ sealed class SendDestination with _$SendDestination {
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].
 class SendPaymentRequest {
   final PrepareSendResponse prepareResponse;
-  final bool? assetPaysFees;
+  final bool? useAssetFees;
 
-  const SendPaymentRequest({required this.prepareResponse, this.assetPaysFees});
+  const SendPaymentRequest({required this.prepareResponse, this.useAssetFees});
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ assetPaysFees.hashCode;
+  int get hashCode => prepareResponse.hashCode ^ useAssetFees.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1647,7 +1657,7 @@ class SendPaymentRequest {
       other is SendPaymentRequest &&
           runtimeType == other.runtimeType &&
           prepareResponse == other.prepareResponse &&
-          assetPaysFees == other.assetPaysFees;
+          useAssetFees == other.useAssetFees;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

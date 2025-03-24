@@ -577,7 +577,15 @@ enum BreezSDKLiquidMapper {
             assetMetadata = try asAssetMetadataList(arr: assetMetadataTmp)
         }
 
-        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
+        var sideswapApiKey: String?
+        if hasNonNilKey(data: config, key: "sideswapApiKey") {
+            guard let sideswapApiKeyTmp = config["sideswapApiKey"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "sideswapApiKey"))
+            }
+            sideswapApiKey = sideswapApiKeyTmp
+        }
+
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -595,6 +603,7 @@ enum BreezSDKLiquidMapper {
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
             "onchainFeeRateLeewaySatPerVbyte": config.onchainFeeRateLeewaySatPerVbyte == nil ? nil : config.onchainFeeRateLeewaySatPerVbyte,
             "assetMetadata": config.assetMetadata == nil ? nil : arrayOf(assetMetadataList: config.assetMetadata!),
+            "sideswapApiKey": config.sideswapApiKey == nil ? nil : config.sideswapApiKey,
         ]
     }
 
@@ -2675,22 +2684,22 @@ enum BreezSDKLiquidMapper {
             }
             feesSat = feesSatTmp
         }
-        var fees: Double?
-        if hasNonNilKey(data: prepareSendResponse, key: "fees") {
-            guard let feesTmp = prepareSendResponse["fees"] as? Double else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "fees"))
+        var assetFees: Double?
+        if hasNonNilKey(data: prepareSendResponse, key: "assetFees") {
+            guard let assetFeesTmp = prepareSendResponse["assetFees"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "assetFees"))
             }
-            fees = feesTmp
+            assetFees = assetFeesTmp
         }
 
-        return PrepareSendResponse(destination: destination, feesSat: feesSat, fees: fees)
+        return PrepareSendResponse(destination: destination, feesSat: feesSat, assetFees: assetFees)
     }
 
     static func dictionaryOf(prepareSendResponse: PrepareSendResponse) -> [String: Any?] {
         return [
             "destination": dictionaryOf(sendDestination: prepareSendResponse.destination),
             "feesSat": prepareSendResponse.feesSat == nil ? nil : prepareSendResponse.feesSat,
-            "fees": prepareSendResponse.fees == nil ? nil : prepareSendResponse.fees,
+            "assetFees": prepareSendResponse.assetFees == nil ? nil : prepareSendResponse.assetFees,
         ]
     }
 
@@ -3126,21 +3135,21 @@ enum BreezSDKLiquidMapper {
         }
         let prepareResponse = try asPrepareSendResponse(prepareSendResponse: prepareResponseTmp)
 
-        var assetPaysFees: Bool?
-        if hasNonNilKey(data: sendPaymentRequest, key: "assetPaysFees") {
-            guard let assetPaysFeesTmp = sendPaymentRequest["assetPaysFees"] as? Bool else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "assetPaysFees"))
+        var useAssetFees: Bool?
+        if hasNonNilKey(data: sendPaymentRequest, key: "useAssetFees") {
+            guard let useAssetFeesTmp = sendPaymentRequest["useAssetFees"] as? Bool else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "useAssetFees"))
             }
-            assetPaysFees = assetPaysFeesTmp
+            useAssetFees = useAssetFeesTmp
         }
 
-        return SendPaymentRequest(prepareResponse: prepareResponse, assetPaysFees: assetPaysFees)
+        return SendPaymentRequest(prepareResponse: prepareResponse, useAssetFees: useAssetFees)
     }
 
     static func dictionaryOf(sendPaymentRequest: SendPaymentRequest) -> [String: Any?] {
         return [
             "prepareResponse": dictionaryOf(prepareSendResponse: sendPaymentRequest.prepareResponse),
-            "assetPaysFees": sendPaymentRequest.assetPaysFees == nil ? nil : sendPaymentRequest.assetPaysFees,
+            "useAssetFees": sendPaymentRequest.useAssetFees == nil ? nil : sendPaymentRequest.useAssetFees,
         ]
     }
 
@@ -4225,7 +4234,9 @@ enum BreezSDKLiquidMapper {
             guard let _receiverAmount = payAmount["receiverAmount"] as? Double else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmount", typeName: "PayAmount"))
             }
-            return PayAmount.asset(assetId: _assetId, receiverAmount: _receiverAmount)
+            let _estimateAssetFees = payAmount["estimateAssetFees"] as? Bool
+
+            return PayAmount.asset(assetId: _assetId, receiverAmount: _receiverAmount, estimateAssetFees: _estimateAssetFees)
         }
         if type == "drain" {
             return PayAmount.drain
@@ -4245,12 +4256,13 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .asset(
-            assetId, receiverAmount
+            assetId, receiverAmount, estimateAssetFees
         ):
             return [
                 "type": "asset",
                 "assetId": assetId,
                 "receiverAmount": receiverAmount,
+                "estimateAssetFees": estimateAssetFees == nil ? nil : estimateAssetFees,
             ]
 
         case .drain:

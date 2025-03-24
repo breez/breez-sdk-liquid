@@ -1155,7 +1155,7 @@ impl LiquidSdk {
 
         let get_info_res = self.get_info().await?;
         let fees_sat;
-        let fees;
+        let asset_fees;
         let receiver_amount_sat;
         let asset_id;
         let payment_destination;
@@ -1179,6 +1179,7 @@ impl LiquidSdk {
                             PayAmount::Asset {
                                 asset_id,
                                 receiver_amount: amount,
+                                estimate_asset_fees: None,
                             }
                         }
                     }
@@ -1204,7 +1205,7 @@ impl LiquidSdk {
                     }
                 );
 
-                (asset_id, receiver_amount_sat, fees_sat, fees) = match amount {
+                (asset_id, receiver_amount_sat, fees_sat, asset_fees) = match amount {
                     PayAmount::Drain => {
                         ensure_sdk!(
                             get_info_res.wallet_info.pending_receive_sat == 0
@@ -1242,7 +1243,9 @@ impl LiquidSdk {
                     PayAmount::Asset {
                         asset_id,
                         receiver_amount,
+                        estimate_asset_fees,
                     } => {
+                        let estimate_asset_fees = estimate_asset_fees.unwrap_or(false);
                         let asset_metadata = self.persister.get_asset_metadata(&asset_id)?.ok_or(
                             PaymentError::AssetError {
                                 err: format!("Asset {asset_id} is not supported"),
@@ -1256,27 +1259,26 @@ impl LiquidSdk {
                                 &asset_id,
                             )
                             .await;
-                        let fees_res = self
-                            .payjoin_service
-                            .estimate_payjoin_tx_fee(&asset_id, receiver_amount_sat)
-                            .await;
-                        let (fees_sat, fees) = match (fees_sat_res, fees_res) {
-                            (Ok(fees_sat), Ok(fees)) => (Some(fees_sat), Some(fees)),
-                            (Ok(fees_sat), Err(e)) => {
-                                debug!(
-                                    "Error estimating payjoin tx, but returning onchain fees: {e}"
-                                );
-                                (Some(fees_sat), None)
-                            }
-                            (Err(e), Ok(fees)) => {
+                        let asset_fees = if estimate_asset_fees {
+                            self.payjoin_service
+                                .estimate_payjoin_tx_fee(&asset_id, receiver_amount_sat)
+                                .await
+                                .inspect_err(|e| debug!("Error estimating payjoin tx: {e}"))
+                                .ok()
+                        } else {
+                            None
+                        };
+                        let (fees_sat, asset_fees) = match (fees_sat_res, asset_fees) {
+                            (Ok(fees_sat), _) => (Some(fees_sat), asset_fees),
+                            (Err(e), Some(asset_fees)) => {
                                 debug!(
                                     "Error estimating onchain tx, but returning payjoin fees: {e}"
                                 );
-                                (None, Some(fees))
+                                (None, Some(asset_fees))
                             }
-                            (Err(e), Err(_)) => return Err(e),
+                            (Err(e), None) => return Err(e),
                         };
-                        (asset_id, receiver_amount_sat, fees_sat, fees)
+                        (asset_id, receiver_amount_sat, fees_sat, asset_fees)
                     }
                 };
 
@@ -1314,7 +1316,7 @@ impl LiquidSdk {
                     .await?
                     .map(|(address, _)| address);
                 asset_id = self.config.lbtc_asset_id();
-                fees = None;
+                asset_fees = None;
                 (receiver_amount_sat, fees_sat, payment_destination) =
                     match (mrh_address.clone(), req.amount.clone()) {
                         (Some(lbtc_address), Some(PayAmount::Drain)) => {
@@ -1406,7 +1408,7 @@ impl LiquidSdk {
                     .await?;
                 asset_id = self.config.lbtc_asset_id();
                 fees_sat = Some(boltz_fees_total + lockup_fees_sat);
-                fees = None;
+                asset_fees = None;
 
                 payment_destination = SendDestination::Bolt12 {
                     offer,
@@ -1429,7 +1431,7 @@ impl LiquidSdk {
         Ok(PrepareSendResponse {
             destination: payment_destination,
             fees_sat,
-            fees,
+            asset_fees,
         })
     }
 
@@ -1472,7 +1474,7 @@ impl LiquidSdk {
                 address_data: liquid_address_data,
                 bip353_address,
             } => {
-                let asset_pay_fees = req.asset_pays_fees.unwrap_or_default();
+                let asset_pay_fees = req.use_asset_fees.unwrap_or_default();
                 let Some(amount_sat) = liquid_address_data.amount_sat else {
                     return Err(PaymentError::AmountMissing {
                         err: "Amount must be set when paying to a Liquid address".to_string(),
@@ -3679,9 +3681,9 @@ impl LiquidSdk {
                 prepare_response: PrepareSendResponse {
                     destination: prepare_response.destination.clone(),
                     fees_sat: Some(prepare_response.fees_sat),
-                    fees: None,
+                    asset_fees: None,
                 },
-                asset_pays_fees: None,
+                use_asset_fees: None,
             })
             .await
             .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?

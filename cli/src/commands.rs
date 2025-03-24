@@ -45,7 +45,7 @@ pub(crate) enum Command {
 
         /// Whether or not the tx should be paid using the asset
         #[clap(long, action = ArgAction::SetTrue)]
-        asset_pays_fees: Option<bool>,
+        use_asset_fees: Option<bool>,
 
         /// The amount to pay, in case of a Liquid payment. The amount is optional if it is already
         /// provided in the BIP21 URI.
@@ -388,7 +388,7 @@ pub(crate) async fn handle_command(
             amount,
             amount_sat,
             asset_id,
-            asset_pays_fees,
+            use_asset_fees,
             drain,
             delay,
         } => {
@@ -414,6 +414,7 @@ pub(crate) async fn handle_command(
                 (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
                     asset_id,
                     receiver_amount,
+                    estimate_asset_fees: use_asset_fees,
                 }),
                 (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
                     receiver_amount_sat,
@@ -430,12 +431,12 @@ pub(crate) async fn handle_command(
                 .await?;
 
             let confirmation_msg = match (
-                asset_pays_fees.unwrap_or(false),
+                use_asset_fees.unwrap_or(false),
                 prepare_response.fees_sat,
-                prepare_response.fees,
+                prepare_response.asset_fees,
             ) {
-                (true, _, Some(fees)) => {
-                    format!("Fees: approx {fees}. Are the fees acceptable? (y/N) ")
+                (true, _, Some(asset_fees)) => {
+                    format!("Fees: approx {asset_fees}. Are the fees acceptable? (y/N) ")
                 }
                 (false, Some(fees_sat), _) => {
                     format!("Fees: {fees_sat} sat. Are the fees acceptable? (y/N) ")
@@ -447,7 +448,7 @@ pub(crate) async fn handle_command(
 
             let send_payment_req = SendPaymentRequest {
                 prepare_response: prepare_response.clone(),
-                asset_pays_fees,
+                use_asset_fees,
             };
 
             if let Some(delay) = delay {

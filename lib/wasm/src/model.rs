@@ -315,6 +315,7 @@ pub struct Config {
     pub use_default_external_input_parsers: bool,
     pub onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
     pub asset_metadata: Option<Vec<AssetMetadata>>,
+    pub sideswap_api_key: Option<String>,
 }
 
 #[derive(Clone)]
@@ -445,13 +446,13 @@ pub enum SendDestination {
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
     pub fees_sat: Option<u64>,
-    pub fees: Option<f64>,
+    pub asset_fees: Option<f64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentRequest)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
-    pub asset_pays_fees: Option<bool>,
+    pub use_asset_fees: Option<bool>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentResponse)]
@@ -467,6 +468,7 @@ pub enum PayAmount {
     Asset {
         asset_id: String,
         receiver_amount: f64,
+        estimate_asset_fees: Option<bool>,
     },
     Drain,
 }
@@ -666,6 +668,7 @@ pub struct AssetInfo {
     pub name: String,
     pub ticker: String,
     pub amount: f64,
+    pub fees: Option<f64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PaymentDetails)]
