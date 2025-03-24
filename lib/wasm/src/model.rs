@@ -677,6 +677,8 @@ pub enum PaymentDetails {
         description: String,
         asset_id: String,
         asset_info: Option<AssetInfo>,
+        lnurl_info: Option<LnUrlInfo>,
+        bip353_address: Option<String>,
     },
     Bitcoin {
         swap_id: String,
