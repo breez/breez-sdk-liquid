@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+use std::{path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
@@ -72,7 +72,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(30);
 
-pub(crate) struct LiquidSdkBuilder {
+pub struct LiquidSdkBuilder {
     config: Config,
     signer: Arc<Box<dyn Signer>>,
     breez_server: Arc<BreezServer>,
@@ -162,17 +162,20 @@ impl LiquidSdkBuilder {
         self
     }
 
+    fn get_working_dir(&self) -> Result<String> {
+        let fingerprint_hex: String =
+            Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
+        self.config
+            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)
+    }
+
     pub fn build(&self) -> Result<Arc<LiquidSdk>> {
         if let Some(breez_api_key) = &self.config.breez_api_key {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
 
-        fs::create_dir_all(&self.config.working_dir)?;
         let fingerprint_hex: String =
             Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
-        let working_dir = self
-            .config
-            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)?;
         let cache_dir = self.config.get_wallet_dir(
             self.config
                 .cache_dir
@@ -181,24 +184,20 @@ impl LiquidSdkBuilder {
             &fingerprint_hex,
         )?;
 
-        let sync_enabled = self
-            .config
-            .sync_service_url
-            .clone()
-            .map(|_| true)
-            .unwrap_or(false);
-
         let persister = match self.persister.clone() {
             Some(persister) => persister,
             None => {
-                let persister = Arc::new(Persister::new(
-                    &working_dir,
+                #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+                return Err(anyhow!(
+                    "Must provide a WASM-compatible persister on WASM builds"
+                ));
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                Arc::new(Persister::new_using_fs(
+                    &self.get_working_dir()?,
                     self.config.network,
-                    sync_enabled,
-                )?);
-                persister.init()?;
-                persister.replace_asset_metadata(self.config.asset_metadata.clone())?;
-                persister
+                    self.config.sync_enabled(),
+                    self.config.asset_metadata.clone(),
+                )?)
             }
         };
 
@@ -226,7 +225,7 @@ impl LiquidSdkBuilder {
             Some(onchain_wallet) => onchain_wallet,
             None => Arc::new(LiquidOnchainWallet::new(
                 self.config.clone(),
-                &cache_dir,
+                cache_dir,
                 persister.clone(),
                 self.signer.clone(),
             )?),
@@ -383,43 +382,49 @@ impl LiquidSdk {
     ///     * `passphrase` - the optional passphrase for the mnemonic
     ///     * `seed` - the optional Liquid wallet seed
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let start_ts = Instant::now();
-        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
+        let signer = Self::default_signer(&req)?;
 
-        let signer = match (req.mnemonic, req.seed) {
-            (None, Some(seed)) => Box::new(SdkSigner::new_with_seed(seed, is_mainnet)?),
-            (Some(mnemonic), None) => Box::new(SdkSigner::new(
-                &mnemonic,
-                req.passphrase.unwrap_or("".to_string()).as_ref(),
+        Self::connect_with_signer(
+            ConnectWithSignerRequest { config: req.config },
+            Box::new(signer),
+        )
+        .inspect_err(|e| error!("Failed to connect: {:?}", e))
+        .await
+    }
+
+    pub fn default_signer(req: &ConnectRequest) -> Result<SdkSigner> {
+        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
+        match (&req.mnemonic, &req.seed) {
+            (None, Some(seed)) => Ok(SdkSigner::new_with_seed(seed.clone(), is_mainnet)?),
+            (Some(mnemonic), None) => Ok(SdkSigner::new(
+                mnemonic,
+                req.passphrase.as_ref().unwrap_or(&"".to_string()).as_ref(),
                 is_mainnet,
             )?),
-            _ => return Err(anyhow!("Either `mnemonic` or `seed` must be set")),
-        };
-
-        let sdk =
-            Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)
-                .inspect_err(|e| error!("Failed to connect: {:?}", e))
-                .await;
-
-        let init_time = Instant::now().duration_since(start_ts);
-        utils::log_print_header(init_time);
-
-        sdk
+            _ => Err(anyhow!("Either `mnemonic` or `seed` must be set")),
+        }
     }
 
     pub async fn connect_with_signer(
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
     ) -> Result<Arc<LiquidSdk>> {
+        let start_ts = Instant::now();
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&req.config.working_dir)?;
+
         let sdk = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
         )?
         .build()?;
-        sdk.start()
-            .inspect_err(|e| error!("Failed to start an SDK instance: {:?}", e))
-            .await?;
+        sdk.start().await?;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
         Ok(sdk)
     }
 
@@ -450,9 +455,8 @@ impl LiquidSdk {
 
     /// Starts an SDK instance.
     ///
-    /// Internal method. Should only be called once per instance.
-    /// Should only be called as part of [LiquidSdk::connect].
-    async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+    /// Should only be called once per instance.
+    pub async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
         let mut is_started = self.is_started.write().await;
         self.persister
             .update_send_swaps_by_state(Created, TimedOut, Some(true))
@@ -3305,13 +3309,14 @@ impl LiquidSdk {
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
         path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
         path.push("enc_cache");
 
-        fs::remove_dir_all(&path)?;
-        fs::create_dir_all(path)?;
+        std::fs::remove_dir_all(&path)?;
+        std::fs::create_dir_all(path)?;
 
         Ok(())
     }
@@ -3827,6 +3832,7 @@ impl LiquidSdk {
     /// An error is thrown if the log file cannot be created in the working directory.
     ///
     /// An error is thrown if a global logger is already configured.
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
     }

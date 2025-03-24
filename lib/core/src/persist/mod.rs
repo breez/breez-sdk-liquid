@@ -11,7 +11,7 @@ pub(crate) mod sync;
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Not;
-use std::{fs::create_dir_all, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
@@ -32,7 +32,7 @@ use tokio::sync::broadcast::{self, Sender};
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
 
-pub(crate) struct Persister {
+pub struct Persister {
     main_db_dir: PathBuf,
     network: LiquidNetwork,
     pub(crate) sync_trigger: Option<Sender<()>>,
@@ -60,21 +60,58 @@ fn where_clauses_to_string(where_clauses: Vec<String>) -> String {
 }
 
 impl Persister {
-    pub fn new(working_dir: &str, network: LiquidNetwork, sync_enabled: bool) -> Result<Self> {
+    /// Creates a new Persister that stores data on the provided `working_dir`.
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    pub fn new_using_fs(
+        working_dir: &str,
+        network: LiquidNetwork,
+        sync_enabled: bool,
+        asset_metadata: Option<Vec<AssetMetadata>>,
+    ) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(working_dir)?;
         if !main_db_dir.exists() {
-            create_dir_all(&main_db_dir)?;
+            std::fs::create_dir_all(&main_db_dir)?;
         }
+        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata)
+    }
+
+    /// Creates a new Persister that only keeps data in memory.
+    ///
+    /// Multiple persisters accessing the same in-memory data can be created by providing the
+    /// same `database_id`.
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    pub fn new_in_memory(
+        database_id: &str,
+        network: LiquidNetwork,
+        sync_enabled: bool,
+        asset_metadata: Option<Vec<AssetMetadata>>,
+    ) -> Result<Self> {
+        let main_db_dir = PathBuf::from_str(database_id)?;
+        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata)
+    }
+
+    fn new_inner(
+        main_db_dir: PathBuf,
+        network: LiquidNetwork,
+        sync_enabled: bool,
+        asset_metadata: Option<Vec<AssetMetadata>>,
+    ) -> Result<Self> {
         let mut sync_trigger = None;
         if sync_enabled {
             let (events_notifier, _) = broadcast::channel::<()>(1);
             sync_trigger = Some(events_notifier);
         }
-        Ok(Persister {
+
+        let persister = Persister {
             main_db_dir,
             network,
             sync_trigger,
-        })
+        };
+
+        persister.init()?;
+        persister.replace_asset_metadata(asset_metadata)?;
+
+        Ok(persister)
     }
 
     pub(crate) fn get_connection(&self) -> Result<Connection> {
