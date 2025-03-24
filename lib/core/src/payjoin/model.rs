@@ -35,7 +35,7 @@ pub(crate) struct AcceptedAssetsResponse {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub(crate) struct AcceptedAsset {
+pub struct AcceptedAsset {
     pub asset_id: String,
 }
 

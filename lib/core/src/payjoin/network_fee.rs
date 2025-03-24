@@ -38,7 +38,7 @@ impl TxFee {
     }
 
     pub fn fee(&self) -> u64 {
-        vsize_to_fee(weight_to_vsize(self.tx_weight()), MIN_FEE_RATE)
+        weight_to_fee(self.tx_weight(), MIN_FEE_RATE)
     }
 }
 

@@ -639,7 +639,7 @@ mod tests {
     }
 
     #[sdk_macros::async_test_all]
-    #[ignore = "Required a mockable FiatAPI"]
+    #[ignore = "Requires a mockable FiatAPI"]
 
     async fn test_estimate_payjoin_tx_fee() -> Result<()> {
         create_persister!(persister);

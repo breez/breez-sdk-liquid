@@ -10,7 +10,7 @@ use lwk_wollet::elements::Transaction;
 use model::AcceptedAsset;
 
 #[sdk_macros::async_trait]
-pub(crate) trait PayjoinService: Send + Sync {
+pub trait PayjoinService: Send + Sync {
     /// Get a list of accepted assets
     async fn fetch_accepted_assets(&self) -> PayjoinResult<Vec<AcceptedAsset>>;
 
