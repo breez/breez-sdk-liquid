@@ -30,7 +30,7 @@ impl TxMap {
     }
 }
 
-/// Swap immutable data
+/// Swap list containing all swap data indexed by swap ID
 #[derive(Default)]
 pub(crate) struct SwapsList {
     // Single map for all swap types indexed by swap ID
