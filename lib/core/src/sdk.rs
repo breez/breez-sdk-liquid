@@ -54,7 +54,7 @@ use crate::{
     persist::Persister,
     utils, *,
 };
-use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
+use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
 
 use self::sync::client::BreezSyncerClient;
 use self::sync::SyncService;

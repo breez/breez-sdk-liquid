@@ -43,6 +43,16 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
+          name: bindings-i686-linux-android-uniffi-25
+          path: breez_sdk_liquid/lib/android-386
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bindings-armv7-linux-androideabi-uniffi-25
+          path: breez_sdk_liquid/lib/android-aarch
+
+      - uses: actions/download-artifact@v4
+        with:
           name: bindings-x86_64-linux-android-uniffi-25
           path: breez_sdk_liquid/lib/android-amd64
 
