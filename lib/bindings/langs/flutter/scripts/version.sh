@@ -4,15 +4,8 @@ ROOT="$SCRIPT_DIR/../../../../.."
 TAG_NAME=`awk '/^version: /{print $2}' $ROOT/packages/flutter/pubspec.yaml`
 
 # Update Flutter plugin to use the same Dart plugin version
-# Ensure the ref exists in the breez-sdk-liquid-dart repository before updating
-if git ls-remote --exit-code --tags https://github.com/breez/breez-sdk-liquid-dart "v$TAG_NAME"; then
-    # Update only breez_liquid's ref in pubspec.yaml
-    sed -i.bak -E "/breez_liquid:/,/ref:/s|(ref: ).*|\1$TAG_NAME|" "$ROOT/packages/flutter/pubspec.yaml"
-    rm "$ROOT/packages/flutter/pubspec.yaml.bak"
-else
-    echo "Error: Git ref $TAG_NAME does not exist in breez-sdk-liquid-dart!"
-    exit 1
-fi
+sed -i.bak -E "/breez_liquid:/,/ref:/s|(ref: ).*|\1$TAG_NAME|" "$ROOT/packages/flutter/pubspec.yaml"
+rm "$ROOT/packages/flutter/pubspec.yaml.bak"
 
 # iOS & macOS
 APPLE_HEADER="version = '$TAG_NAME' # generated; do not edit"
