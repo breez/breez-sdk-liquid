@@ -2240,13 +2240,13 @@ pub struct AcceptPaymentProposedFeesRequest {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct History<Txid> {
-    pub(crate) txid: Txid,
+pub struct History<Txid> {
+    pub txid: Txid,
     /// Confirmation height of txid
     ///
     /// -1 means unconfirmed with unconfirmed parents
     ///  0 means unconfirmed with confirmed parents
-    pub(crate) height: i32,
+    pub height: i32,
 }
 pub(crate) type LBtcHistory = History<elements::Txid>;
 pub(crate) type BtcHistory = History<bitcoin::Txid>;
@@ -2282,13 +2282,13 @@ pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
 
 #[derive(Clone, Debug)]
-pub(crate) struct BtcScriptBalance {
+pub struct BtcScriptBalance {
     /// Confirmed balance in Satoshis for the address.
-    pub(crate) confirmed: u64,
+    pub confirmed: u64,
     /// Unconfirmed balance in Satoshis for the address.
     ///
     /// Some servers (e.g. `electrs`) return this as a negative value.
-    pub(crate) unconfirmed: i64,
+    pub unconfirmed: i64,
 }
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
