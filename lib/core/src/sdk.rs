@@ -189,7 +189,7 @@ impl LiquidSdkBuilder {
             None => {
                 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
                 return Err(anyhow!(
-                    "Must provide a WASM-compatible persister on WASM builds"
+                    "Must provide a Wasm-compatible persister on Wasm builds"
                 ));
                 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
                 Arc::new(Persister::new_using_fs(

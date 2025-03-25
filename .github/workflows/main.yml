@@ -59,12 +59,12 @@ jobs:
         run: cargo clippy -- -D warnings
 
   clippy-wasm:
-    name: Cargo Clippy WASM
+    name: Cargo Clippy Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
+      - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
@@ -126,12 +126,12 @@ jobs:
           fi
 
   build-wasm:
-    name: Cargo Build WASM
+    name: Cargo Build Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
+      - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
@@ -278,12 +278,12 @@ jobs:
         run: cargo test --no-default-features --features uniffi-25
 
   test-wasm:
-    name: Test WASM
+    name: Test Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
+      - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
 
       - name: Install wasm-pack
@@ -304,7 +304,7 @@ jobs:
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
 
-      - name: Test WASM
+      - name: Test Wasm
         run: make wasm-test
 
   notification-plugin:

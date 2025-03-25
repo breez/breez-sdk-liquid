@@ -1,4 +1,4 @@
-# Setting up a development environment
+# Development guide - React Native package
 
 The Breez Liquid SDK React Native plugin consumes the underlying Breez Liquid SDK from the following sources:
 
@@ -12,8 +12,8 @@ All the following commands can be run in the `packages/react-native` directory.
 
 ## Prerequisites
 
-Set the ANDROID_NDK_HOME env variable to your SDK home directory:
-```
+Set the ANDROID_NDK_HOME env variable to your Android NDK directory:
+```bash
 export ANDROID_NDK_HOME=<your android ndk directory>
 ```
 

@@ -1,5 +1,10 @@
 all: fmt codegen clippy
 
+init:
+	make -C ./lib/bindings init
+	make -C ./lib/core init
+	make -C ./lib/wasm init
+
 fmt:
 	cd lib && cargo fmt
 	cd cli && cargo fmt

@@ -61,7 +61,7 @@ ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
 
-# Non-WASM dependencies
+# Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
 electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
@@ -74,7 +74,7 @@ tokio-stream = { version = "0.1.14", features = ["sync"] }
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 
-# WASM dependencies
+# Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
 lwk_wollet = { version = "0.9.0", default-features = false, features = [
@@ -92,11 +92,11 @@ tonic = { version = "0.12", default-features = false, features = [
 sdk-common = { workspace = true, features = ["test-utils"] }
 paste = "1.0.15"
 
-# Non-WASM dev dependencies
+# Non-Wasm dev dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dev-dependencies]
 tempdir = "0.3.7"
 
-# WASM dev dependencies
+# Wasm dev dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dev-dependencies]
 wasm-bindgen-test = "0.3.33"
 rand = "0.8"
