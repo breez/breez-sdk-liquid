@@ -5,7 +5,6 @@ use crate::{
 use boltz_client::{
     error::Error,
     network::{
-        electrum::{ElectrumBitcoinClient, ElectrumLiquidClient},
         esplora::{EsploraBitcoinClient, EsploraLiquidClient},
         BitcoinChain, BitcoinClient as BoltzBitcoinClient, LiquidChain,
         LiquidClient as BoltzLiquidClient,
@@ -16,7 +15,8 @@ use sdk_macros::async_trait;
 const BOLTZ_CONNECTION_TIMEOUT: u8 = 100;
 
 pub(crate) enum LiquidClient {
-    Electrum(Box<ElectrumLiquidClient>),
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum(Box<boltz_client::network::electrum::ElectrumLiquidClient>),
     Esplora(Box<EsploraLiquidClient>),
 }
 
@@ -24,15 +24,16 @@ impl LiquidClient {
     pub(crate) fn new(config: &Config) -> Result<Self, Error> {
         let (tls, validate_domain) = config.tls_settings();
         Ok(match &config.liquid_explorer {
-            BlockchainExplorer::Electrum { url } => {
-                Self::Electrum(Box::new(ElectrumLiquidClient::new(
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { url } => Self::Electrum(Box::new(
+                boltz_client::network::electrum::ElectrumLiquidClient::new(
                     config.network.into(),
                     url,
                     tls,
                     validate_domain,
                     BOLTZ_CONNECTION_TIMEOUT,
-                )?))
-            }
+                )?,
+            )),
             BlockchainExplorer::Esplora { url, .. } => {
                 Self::Esplora(Box::new(EsploraLiquidClient::new(
                     config.network.into(),
@@ -79,22 +80,26 @@ impl BoltzLiquidClient for LiquidClient {
 }
 
 pub(crate) enum BitcoinClient {
-    Electrum(Box<ElectrumBitcoinClient>),
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum(Box<boltz_client::network::electrum::ElectrumBitcoinClient>),
     Esplora(Box<EsploraBitcoinClient>),
 }
 
 impl BitcoinClient {
     pub(crate) fn new(config: &Config) -> Result<Self, Error> {
-        let (tls, validate_domain) = config.tls_settings();
         Ok(match &config.bitcoin_explorer {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => {
-                Self::Electrum(Box::new(ElectrumBitcoinClient::new(
-                    config.network.as_bitcoin_chain(),
-                    url,
-                    tls,
-                    validate_domain,
-                    BOLTZ_CONNECTION_TIMEOUT,
-                )?))
+                let (tls, validate_domain) = config.tls_settings();
+                Self::Electrum(Box::new(
+                    boltz_client::network::electrum::ElectrumBitcoinClient::new(
+                        config.network.as_bitcoin_chain(),
+                        url,
+                        tls,
+                        validate_domain,
+                        BOLTZ_CONNECTION_TIMEOUT,
+                    )?,
+                ))
             }
             BlockchainExplorer::Esplora { url, .. } => {
                 Self::Esplora(Box::new(EsploraBitcoinClient::new(

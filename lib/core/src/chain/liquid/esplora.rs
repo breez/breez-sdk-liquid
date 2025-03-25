@@ -35,6 +35,7 @@ impl EsploraLiquidChainService {
             return Ok(c);
         }
 
+        #[allow(unreachable_patterns)]
         let client = match &self.config.liquid_explorer {
             BlockchainExplorer::Esplora {
                 url,
@@ -43,7 +44,7 @@ impl EsploraLiquidChainService {
                 .timeout(3)
                 .waterfalls(*use_waterfalls)
                 .build(),
-            _ => bail!("Cannot start Liquid Esplroa chain service without an Esplora url"),
+            _ => bail!("Cannot start Liquid Esplora chain service without an Esplora url"),
         };
 
         let client = self.client.get_or_init(|| RwLock::new(client));
