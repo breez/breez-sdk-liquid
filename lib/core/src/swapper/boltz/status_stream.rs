@@ -14,8 +14,6 @@ use boltz_client::boltz::{
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
 use tokio::sync::{broadcast, watch};
-#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-use tokio::time::MissedTickBehavior;
 use tokio_with_wasm::alias as tokio;
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
@@ -69,7 +67,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
 
                         let mut interval = tokio::time::interval(keep_alive_ping_interval);
                         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-                        interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+                        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
                         loop {
                             tokio::select! {
