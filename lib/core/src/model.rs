@@ -818,7 +818,7 @@ pub enum GetPaymentRequest {
 
 /// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
 #[sdk_macros::async_trait]
-pub(crate) trait BlockListener: Send + Sync {
+pub(crate) trait BlockListener: MaybeSend + MaybeSync {
     async fn on_bitcoin_block(&self, height: u32);
     async fn on_liquid_block(&self, height: u32);
 }

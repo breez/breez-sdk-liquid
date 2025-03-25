@@ -28,11 +28,12 @@ use crate::{
     model::{Config, LiquidNetwork},
 };
 use lwk_wollet::secp256k1::Message;
+use maybe_sync::{MaybeSend, MaybeSync};
 
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
 #[sdk_macros::async_trait]
-pub trait OnchainWallet: Send + Sync {
+pub trait OnchainWallet: MaybeSend + MaybeSync {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
 
