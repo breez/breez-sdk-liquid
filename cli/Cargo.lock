@@ -1147,6 +1147,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dnssec-prover"
+version = "0.6.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96487aad690d45a83f2b9876828ba856c5430bbb143cb5730d8a5d04a4805179"
+
+[[package]]
 name = "downcast"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1696,6 +1702,12 @@ name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
+
+[[package]]
+name = "hashbrown"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 
 [[package]]
 name = "hashbrown"
@@ -2436,6 +2448,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c19937216e9d3aa9956d9bb8dfc0b0c8beb6058fc4f7a4dc4d850edf86a237d6"
 
 [[package]]
+name = "libm"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8355be11b20d696c8f18f6cc018c4e372165b1fa8126cef092399c9951984ffa"
+
+[[package]]
 name = "libsecp256k1"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2501,14 +2519,18 @@ dependencies = [
 
 [[package]]
 name = "lightning"
-version = "0.0.125"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "767f388e50251da71f95a3737d6db32c9729f9de6427a54fa92bb994d04d793f"
+version = "0.1.1"
+source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
 dependencies = [
- "bech32 0.9.1",
+ "bech32 0.11.0",
  "bitcoin 0.32.5",
- "lightning-invoice 0.32.0",
- "lightning-types",
+ "dnssec-prover",
+ "hashbrown 0.13.2",
+ "libm",
+ "lightning-invoice 0.33.1",
+ "lightning-types 0.2.0",
+ "musig2",
+ "possiblyrandom",
 ]
 
 [[package]]
@@ -2533,7 +2555,17 @@ checksum = "90ab9f6ea77e20e3129235e62a2e6bd64ed932363df104e864ee65ccffb54a8f"
 dependencies = [
  "bech32 0.9.1",
  "bitcoin 0.32.5",
- "lightning-types",
+ "lightning-types 0.1.0",
+]
+
+[[package]]
+name = "lightning-invoice"
+version = "0.33.1"
+source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+dependencies = [
+ "bech32 0.11.0",
+ "bitcoin 0.32.5",
+ "lightning-types 0.2.0",
 ]
 
 [[package]]
@@ -2545,6 +2577,14 @@ dependencies = [
  "bech32 0.9.1",
  "bitcoin 0.32.5",
  "hex-conservative 0.2.1",
+]
+
+[[package]]
+name = "lightning-types"
+version = "0.2.0"
+source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+dependencies = [
+ "bitcoin 0.32.5",
 ]
 
 [[package]]
@@ -2802,6 +2842,14 @@ name = "multimap"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
+
+[[package]]
+name = "musig2"
+version = "0.1.0"
+source = "git+https://github.com/arik-so/rust-musig2?rev=6f95a05718cbb44d8fe3fa6021aea8117aa38d50#6f95a05718cbb44d8fe3fa6021aea8117aa38d50"
+dependencies = [
+ "bitcoin 0.32.5",
+]
 
 [[package]]
 name = "native-tls"
@@ -3156,6 +3204,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8a2f0d8d040d7848a709caf78912debcc3f33ee4b3cac47d73d1e1069e83507"
 dependencies = [
  "portable-atomic",
+]
+
+[[package]]
+name = "possiblyrandom"
+version = "0.2.0"
+source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+dependencies = [
+ "getrandom 0.2.14",
 ]
 
 [[package]]
@@ -3995,7 +4051,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=3a46e2acdf935884c7d1a3f6296b20973c9e4cce#3a46e2acdf935884c7d1a3f6296b20973c9e4cce"
+source = "git+https://github.com/breez/breez-sdk?rev=34b589583e040ccf773d5b368326856994d005f0#34b589583e040ccf773d5b368326856994d005f0"
 dependencies = [
  "aes",
  "anyhow",
@@ -4011,7 +4067,7 @@ dependencies = [
  "hickory-resolver",
  "lazy_static",
  "lightning 0.0.118",
- "lightning 0.0.125",
+ "lightning 0.1.1",
  "lightning-invoice 0.26.0",
  "log",
  "percent-encoding",
@@ -4039,7 +4095,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=3a46e2acdf935884c7d1a3f6296b20973c9e4cce#3a46e2acdf935884c7d1a3f6296b20973c9e4cce"
+source = "git+https://github.com/breez/breez-sdk?rev=34b589583e040ccf773d5b368326856994d005f0#34b589583e040ccf773d5b368326856994d005f0"
 dependencies = [
  "proc-macro2",
  "quote",

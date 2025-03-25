@@ -18,8 +18,8 @@ use lwk_wollet::elements::{
 };
 use sdk_common::bitcoin::bech32;
 use sdk_common::bitcoin::bech32::FromBase32;
-use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
 use sdk_common::lightning_invoice::Bolt11Invoice;
+use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
 use web_time::{SystemTime, UNIX_EPOCH};
 
 lazy_static! {
@@ -80,7 +80,7 @@ pub(crate) fn parse_bolt12_invoice(invoice: &str) -> Result<Bolt12Invoice> {
 
     let data = Vec::<u8>::from_base32(&data)?;
 
-    sdk_common::lightning_125::offers::invoice::Bolt12Invoice::try_from(data)
+    sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice::try_from(data)
         .map_err(|e| anyhow!("Failed to parse BOLT12: {e:?}"))
 }
 
