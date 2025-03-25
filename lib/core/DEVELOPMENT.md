@@ -4,6 +4,7 @@
 To compile the Core crate you will first need to install:
 - [Protobuf](https://protobuf.dev/installation/)
 - [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) for compiling to Wasm
+- [Firefox](https://mozilla.org/firefox/download/) for testing Wasm
 
 ```bash
 brew install protobuf emscripten

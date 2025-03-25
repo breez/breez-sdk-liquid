@@ -5,6 +5,7 @@ This crate is responsible for building Wasm specific bindings.
 To build some dependencies you need to first install
 - [Protobuf](https://protobuf.dev/installation/)
 - [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) for compiling to Wasm
+- [Firefox](https://mozilla.org/firefox/download/) for testing Wasm
 
 ```bash
 brew install protobuf emscripten
