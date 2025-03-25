@@ -27,7 +27,6 @@ use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawErr
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
-use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_with_wasm::alias as tokio;
 use web_time::Instant;
@@ -556,7 +555,8 @@ impl LiquidSdk {
             let mut current_bitcoin_block: u32 = 0;
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
             let mut interval = tokio::time::interval(Duration::from_secs(10));
-            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
