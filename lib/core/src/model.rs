@@ -28,8 +28,7 @@ use crate::{
 };
 use crate::{
     chain::{
-        bitcoin::{electrum::ElectrumBitcoinChainService, esplora::EsploraBitcoinChainService},
-        liquid::{electrum::ElectrumLiquidChainService, esplora::EsploraLiquidChainService},
+        bitcoin::esplora::EsploraBitcoinChainService, liquid::esplora::EsploraLiquidChainService,
     },
     prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
 };
@@ -46,9 +45,8 @@ pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
 #[derive(Clone, Debug, Serialize)]
 pub enum BlockchainExplorer {
-    Electrum {
-        url: String,
-    },
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum { url: String },
     Esplora {
         url: String,
         /// Whether or not to use the "waterfalls" extension
@@ -59,6 +57,7 @@ pub enum BlockchainExplorer {
 impl BlockchainExplorer {
     pub(crate) fn url(&self) -> &String {
         match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => url,
             BlockchainExplorer::Esplora { url, .. } => url,
         }
@@ -112,11 +111,13 @@ pub struct Config {
 impl Config {
     pub fn mainnet(breez_api_key: Option<String>) -> Self {
         Config {
-            liquid_explorer: BlockchainExplorer::Electrum {
+            liquid_explorer: BlockchainExplorer::Esplora {
                 url: "elements-mainnet.breez.technology:50002".to_string(),
+                use_waterfalls: false,
             },
-            bitcoin_explorer: BlockchainExplorer::Electrum {
+            bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
+                use_waterfalls: false,
             },
             working_dir: ".".to_string(),
             cache_dir: None,
@@ -134,11 +135,13 @@ impl Config {
 
     pub fn testnet(breez_api_key: Option<String>) -> Self {
         Config {
-            liquid_explorer: BlockchainExplorer::Electrum {
+            liquid_explorer: BlockchainExplorer::Esplora {
                 url: "elements-testnet.blockstream.info:50002".to_string(),
+                use_waterfalls: false,
             },
-            bitcoin_explorer: BlockchainExplorer::Electrum {
+            bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "bitcoin-testnet.blockstream.info:50002".to_string(),
+                use_waterfalls: false,
             },
             working_dir: ".".to_string(),
             cache_dir: None,
@@ -156,11 +159,13 @@ impl Config {
 
     pub fn regtest() -> Self {
         Config {
-            bitcoin_explorer: BlockchainExplorer::Electrum {
+            bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "localhost:19001".to_string(),
+                use_waterfalls: false,
             },
-            liquid_explorer: BlockchainExplorer::Electrum {
+            liquid_explorer: BlockchainExplorer::Esplora {
                 url: "localhost:19002".to_string(),
+                use_waterfalls: false,
             },
             working_dir: ".".to_string(),
             cache_dir: None,
@@ -235,9 +240,10 @@ impl Config {
             BlockchainExplorer::Esplora { .. } => {
                 Arc::new(EsploraBitcoinChainService::new(self.clone()))
             }
-            BlockchainExplorer::Electrum { .. } => {
-                Arc::new(ElectrumBitcoinChainService::new(self.clone()))
-            }
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => Arc::new(
+                crate::chain::bitcoin::electrum::ElectrumBitcoinChainService::new(self.clone()),
+            ),
         }
     }
 
@@ -246,9 +252,10 @@ impl Config {
             BlockchainExplorer::Esplora { .. } => {
                 Arc::new(EsploraLiquidChainService::new(self.clone()))
             }
-            BlockchainExplorer::Electrum { .. } => {
-                Arc::new(ElectrumLiquidChainService::new(self.clone()))
-            }
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => Arc::new(
+                crate::chain::liquid::electrum::ElectrumLiquidChainService::new(self.clone()),
+            ),
         }
     }
 
@@ -2247,13 +2254,13 @@ pub struct AcceptPaymentProposedFeesRequest {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct History<Txid> {
-    pub(crate) txid: Txid,
+pub struct History<Txid> {
+    pub txid: Txid,
     /// Confirmation height of txid
     ///
     /// -1 means unconfirmed with unconfirmed parents
     ///  0 means unconfirmed with confirmed parents
-    pub(crate) height: i32,
+    pub height: i32,
 }
 pub(crate) type LBtcHistory = History<elements::Txid>;
 pub(crate) type BtcHistory = History<bitcoin::Txid>;
@@ -2289,7 +2296,7 @@ pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
 
 #[derive(Clone, Debug)]
-pub(crate) struct BtcScriptBalance {
+pub struct BtcScriptBalance {
     /// Confirmed balance in Satoshis for the address.
     pub(crate) confirmed: u64,
     /// Unconfirmed balance in Satoshis for the address.
