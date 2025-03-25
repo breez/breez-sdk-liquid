@@ -24,6 +24,33 @@ Go through the credentials setup for each profile your managed workflow offers. 
 
 Like any Expo Managed Workflow, you can build your app locally or within EAS Cloud service as long as you have all entitlements and provisioning profiles correctly set up.
 
+### Cloud build
+
+```bash
+eas build
+```
+
+### Local build
+
+```bash
+eas build --local
+```
+
+### Unmanaged build
+
+This project also includes a script to "pre-build" the app locally for un-managed deployment. This can be useful for adding additional native features to the Breez Notification Extension.
+
+```bash
+yarn prebuild:ios
+```
+
+```bash
+yarn prebuild:android
+```
+
+## Roadmap
+
+- [ ] Add logging capabilities to Notification Extension.
 
 ## Development
 
