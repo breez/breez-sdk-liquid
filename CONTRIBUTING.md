@@ -36,9 +36,9 @@ __*[lib/core](lib/core)*__
 
 __*[lib/wasm](lib/wasm)*__
 * [model.rs](lib/wasm/src/model.rs) - Update the structs/enums exported.
-* [lib.rs](lib/wasm/src/lib.rs) - Update the Rust interface for the WASM bindings.
+* [lib.rs](lib/wasm/src/lib.rs) - Update the Rust interface for the Wasm bindings.
 
-After making these changes the [Dart](packages/dart), [Flutter](packages/flutter) and [React Native](packages/react-native) bindings code also need to be regenerated and included in your pull request. You can regenerate these from the project root using `make codegen`. Please see the prerequisites for [Flutter](lib/bindings/langs/flutter/README.md), [React Native](packages/react-native/DEVELOPING.md) and [WASM](lib/wasm/DEVELOPING.md) if this is your first time generating code.
+After making these changes the [Dart](packages/dart), [Flutter](packages/flutter) and [React Native](packages/react-native) bindings code also need to be regenerated and included in your pull request. You can regenerate these from the project root using `make codegen`. Please see the prerequisites for [Flutter](lib/bindings/langs/flutter/README.md), [React Native](packages/react-native/DEVELOPMENT.md) and [Wasm](lib/wasm/DEVELOPMENT.md) if this is your first time generating code.
 
 #### Testing
 Please adequately test your code using the existing tests and write additional tests for new features. You can run the tests from the project root using `make test`. You can also make use of the [CLI](cli) to test changes while developing your feature.

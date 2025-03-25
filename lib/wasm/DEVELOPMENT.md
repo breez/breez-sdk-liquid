@@ -1,10 +1,13 @@
-# Building WASM
+# Development guide - Wasm crate
+This crate is responsible for building Wasm specific bindings.
 
 ## Prerequisites
+To build some dependencies you need to first install
+- [Protobuf](https://protobuf.dev/installation/)
+- [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) for compiling to Wasm
 
-To build some dependencies you need to first install [emscripten](https://emscripten.org/docs/getting_started/downloads.html):
 ```bash
-brew install emscripten
+brew install protobuf emscripten
 ```
 
 On first usage you will need to run:
@@ -13,7 +16,6 @@ make init
 ```
 
 ## Building
-
 ```bash
 make pack
 ```
@@ -27,7 +29,6 @@ This will generate the following artifacts:
 - `pkg/breez_sdk_liquid_wasm.js`
 
 ## Testing
-
 ```bash
 make test
 ```

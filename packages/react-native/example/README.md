@@ -44,4 +44,4 @@ yarn ios
 
 ## Development
 
-To develop the Breez Liquid SDK alongside the React Native module and example app, please read [DEVELOPING.md](../DEVELOPING.md) for details on how to setup your development environment.
+To develop the Breez Liquid SDK alongside the React Native module and example app, please read [DEVELOPMENT.md](../DEVELOPMENT.md) for details on how to setup your development environment.

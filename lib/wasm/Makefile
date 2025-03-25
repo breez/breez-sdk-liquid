@@ -6,6 +6,7 @@ endif
 
 init:
 	cargo install wasm-pack
+	rustup target add wasm32-unknown-unknown
 
 clippy:
 	$(CLANG_PREFIX) cargo clippy --target=wasm32-unknown-unknown -- -D warnings
