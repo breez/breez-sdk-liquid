@@ -18,7 +18,11 @@ Run the EAS CLI Credentials tool after adding the required configurations as sho
 eas credentials
 ```
 
-Go through the credentials setup for each profile your managed workflow offers. EAS is able to create the entitlements and attach them to the corresponding provisioning profiles for you.
+1. Select iOS (Android does not require extra entitlements).
+2. Select desired profile.
+3. Login with your Apple account.
+4. Selected "Build Credentials". This will updated the provisioning profile with all required entitlements.
+5. HODL.
 
 ## Build
 
