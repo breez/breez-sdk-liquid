@@ -10,6 +10,10 @@ services:
     volumes:
       - rt-sync-data:/app/db
 
+  ssl-proxy:
+    network_mode: "host"
+    build: ./proxy
+
 volumes:
   bitcoin-data:
     name: boltz-bitcoind-data
