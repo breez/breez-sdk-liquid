@@ -17,7 +17,6 @@ use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::Message;
-use lwk_wollet::ElementsNetwork;
 use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
@@ -3313,7 +3312,7 @@ impl LiquidSdk {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
-        path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
+        path.push(Into::<lwk_wollet::ElementsNetwork>::into(self.config.network).as_str());
         path.push("enc_cache");
 
         std::fs::remove_dir_all(&path)?;
