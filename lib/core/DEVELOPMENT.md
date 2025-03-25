@@ -19,7 +19,7 @@ To test all targets run:
 ```bash
 make test
 ```
-This comprises of the following make tasks:
+This comprises the following make tasks:
 ```bash
 make cargo-test wasm-test
 ```
