@@ -194,6 +194,7 @@ impl From<lwk_wollet::Error> for PaymentError {
     }
 }
 
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 impl From<lwk_wollet::UrlError> for PaymentError {
     fn from(err: lwk_wollet::UrlError) -> Self {
         PaymentError::Generic {
