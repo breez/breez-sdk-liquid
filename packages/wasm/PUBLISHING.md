@@ -19,7 +19,7 @@ make build
  >* bundle/breez_sdk_liquid_wasm_bg.js
  >* bundle/breez_sdk_liquid_wasm_bg.wasm
  >* bundle/breez_sdk_liquid_wasm_bg.wasm.d.ts
-* Node - CommonJS module for use with nodejs
+* Node - CommonJS module for use with Node.js
  >* node/package.json
  >* node/breez_sdk_liquid_wasm.d.ts
  >* node/breez_sdk_liquid_wasm.js

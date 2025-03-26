@@ -18,16 +18,31 @@ make init
 
 ## Building
 ```bash
-make pack
+make build
 ```
 
 This will generate the following artifacts:
+* Bundle - suitable for use with bundlers like Webpack
+ - `bundle/package.json`
+ - `bundle/breez_sdk_liquid_wasm.d.ts`
+ - `bundle/breez_sdk_liquid_wasm.js`
+ - `bundle/breez_sdk_liquid_wasm_bg.js`
+ - `bundle/breez_sdk_liquid_wasm_bg.wasm`
+ - `bundle/breez_sdk_liquid_wasm_bg.wasm.d.ts`
+* Node - CommonJS module for use with Node.js
+ - `node/package.json`
+ - `node/breez_sdk_liquid_wasm.d.ts`
+ - `node/breez_sdk_liquid_wasm.js`
+ - `node/breez_sdk_liquid_wasm_bg.wasm`
+ - `node/breez_sdk_liquid_wasm_bg.wasm.d.ts`
+* Web - ES module for use in browsers
+ - `web/package.json`
+ - `web/breez_sdk_liquid_wasm.d.ts`
+ - `web/breez_sdk_liquid_wasm.js`
+ - `web/breez_sdk_liquid_wasm_bg.wasm`
+ - `web/breez_sdk_liquid_wasm_bg.wasm.d.ts`
 
-- `pkg/package.json`
-- `pkg/breez_sdk_liquid_wasm_bg.wasm`
-- `pkg/breez_sdk_liquid_wasm_bg.d.wasm`
-- `pkg/breez_sdk_liquid_wasm.d.ts`
-- `pkg/breez_sdk_liquid_wasm.js`
+ Each can be build separately with `make build-bundle`, `make build-node` or `make build-web`.
 
 ## Testing
 ```bash
