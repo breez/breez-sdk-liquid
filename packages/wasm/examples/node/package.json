@@ -1,0 +1,18 @@
+{
+    "name": "example",
+    "private": true,
+    "version": "0.0.0",
+    "main": "main.js",
+    "dependencies": {
+        "@breeztech/breez-sdk-liquid": "file:../../"
+    },
+    "devDependencies": {},
+    "prettier": {
+        "endOfLine": "lf",
+        "printWidth": 150,
+        "semi": false,
+        "singleQuote": true,
+        "tabWidth": 4,
+        "trailingComma": "none"
+    }
+}

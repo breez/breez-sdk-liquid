@@ -6,6 +6,6 @@ yarn-debug.log
 yarn-error.log
 
 # bindings (used for local development only)
-module
-node
-web
+./module
+./node
+./web
