@@ -1,0 +1,86 @@
+name: Build bindings for Wasm
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      repository:
+        description: 'sdk repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
+      use-dummy-binaries:
+        description: 'If true, creates dummy binaries rather than real binaries'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    if: ${{ !inputs.use-dummy-binaries }}
+    runs-on: ubuntu-latest
+    name: build wasm
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with: 
+        ref: ${{ inputs.ref }}
+        repository: ${{ inputs.repository || github.repository }}
+
+    - name: Install Wasm target
+      run: rustup target add wasm32-unknown-unknown
+
+    - name: Install wasm-pack
+      run: cargo install wasm-pack
+
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v3
+      with:
+        version: "27.2"
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup emsdk
+      uses: mymindstorm/setup-emsdk@v14
+        
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: lib
+
+    - name: Build Wasm packages
+      working-directory: lib/wasm
+      run: make build
+
+    - name: Remove gitignore files
+      working-directory: lib/wasm/pkg
+      run: rm -f **/.gitignore
+
+    - name: Archive release
+      uses: actions/upload-artifact@v4
+      with:
+        name: bindings-wasm
+        path: lib/wasm/pkg
+
+  build-dummies:
+    if: ${{ inputs.use-dummy-binaries }}
+    runs-on: ubuntu-latest
+    name: build wasm dummies
+    steps:
+    - name: Build dummy Wasm
+      run: |
+        mkdir -p pkg/bundle pkg/node pkg/web
+        touch pkg/bundle/breez_sdk_liquid_wasm.wasm
+        touch pkg/node/breez_sdk_liquid_wasm.wasm
+        touch pkg/web/breez_sdk_liquid_wasm.wasm
+
+    - name: Upload dummy windows artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bindings-wasm
+        path: pkg
