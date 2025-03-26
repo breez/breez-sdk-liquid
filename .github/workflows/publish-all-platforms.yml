@@ -47,7 +47,7 @@ on:
         description: 'array of packages to publish (remove what you do not want)'
         required: true
         type: string
-        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "flutter", "react-native", "python", "swift"]'
+        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "flutter", "react-native", "python", "swift", "wasm"]'
       csharp-ref:
         description: 'optional commit/tag/branch reference for the C# project. Defaults to ref.'
         required: false
@@ -79,6 +79,7 @@ jobs:
       react-native-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'react-native') && inputs.package-version) || '' }}
       python-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'python') && inputs.package-version) || '' }}
       swift-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'swift') && inputs.package-version) || '' }}
+      wasm-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'wasm') && inputs.package-version) || '' }}
       use-dummy-binaries: ${{ inputs.use-dummy-binaries }}
       publish: ${{ inputs.publish }}
     steps:
@@ -100,6 +101,7 @@ jobs:
       bindings-linux: ${{ !!needs.pre-setup.outputs.csharp-package-version || !!needs.pre-setup.outputs.golang-package-version || !!needs.pre-setup.outputs.python-package-version }}
       bindings-android: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.golang-package-version }}
       bindings-ios: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.swift-package-version }}
+      bindings-wasm: ${{ !!needs.pre-setup.outputs.wasm-package-version }}
       kotlin: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version }}
       swift: ${{ !!needs.pre-setup.outputs.swift-package-version || !!needs.pre-setup.outputs.flutter-package-version }}
       python: ${{ !!needs.pre-setup.outputs.python-package-version }}
@@ -109,6 +111,7 @@ jobs:
       kotlin-multiplatform: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version }}
       flutter: ${{ !!needs.pre-setup.outputs.flutter-package-version }}
       react-native: ${{ !!needs.pre-setup.outputs.react-native-package-version }}
+      wasm: ${{ !!needs.pre-setup.outputs.wasm-package-version }}
       ref: ${{ needs.pre-setup.outputs.ref }}
       csharp-package-version: ${{ needs.pre-setup.outputs.csharp-package-version || '0.0.2' }}
       csharp-ref: ${{ needs.pre-setup.outputs.csharp-ref }}
@@ -119,6 +122,7 @@ jobs:
       react-native-package-version: ${{ needs.pre-setup.outputs.react-native-package-version || '0.0.2' }}
       python-package-version: ${{ needs.pre-setup.outputs.python-package-version || '0.0.2' }}
       swift-package-version: ${{ needs.pre-setup.outputs.swift-package-version || '0.0.2' }}
+      wasm-package-version: ${{ needs.pre-setup.outputs.wasm-package-version || '0.0.2' }}
       publish: ${{ needs.pre-setup.outputs.publish }}
       use-dummy-binaries: ${{ needs.pre-setup.outputs.use-dummy-binaries }}
       uniffi-25: ${{ !!needs.pre-setup.outputs.csharp-package-version || !!needs.pre-setup.outputs.golang-package-version || !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version }}
@@ -174,6 +178,15 @@ jobs:
       ref: ${{ needs.setup.outputs.ref }}
       use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
       uniffi-25: ${{ needs.setup.outputs.uniffi-25 == 'true' }}
+
+  build-bindings-wasm:
+    needs: setup
+    if: ${{ needs.setup.outputs.bindings-wasm == 'true' }}
+    uses: ./.github/workflows/build-bindings-wasm.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
 
   build-language-bindings:
     needs: setup
@@ -334,3 +347,17 @@ jobs:
       REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
       SWIFT_RELEASE_TOKEN: ${{ secrets.SWIFT_RELEASE_TOKEN }}
       COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+
+  publish-wasm:
+    needs:
+      - setup
+      - build-bindings-wasm
+    if: ${{ needs.setup.outputs.wasm == 'true' }}
+    uses: ./.github/workflows/publish-wasm.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      package-version: ${{ needs.setup.outputs.wasm-package-version }}
+      publish: ${{ needs.setup.outputs.publish == 'true' }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
