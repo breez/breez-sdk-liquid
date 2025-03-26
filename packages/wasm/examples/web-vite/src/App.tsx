@@ -56,11 +56,11 @@ function App() {
             setLogger('trace')
 
             // Get the mnemonic
-            const breez_api_key = import.meta.env.VITE_BREEZ_API_KEY
+            const breezApiKey = import.meta.env.VITE_BREEZ_API_KEY
             const mnemonic = import.meta.env.VITE_MNEMONIC
 
             // Connect using the config
-            const config = await defaultConfig(LiquidNetwork.MAINNET, breez_api_key)
+            const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
             addLine('defaultConfig', JSON.stringify(config))
 
             const sdk = await connect({ config, mnemonic })

@@ -1,0 +1,108 @@
+# Breez SDK - Nodeless *(Liquid Implementation)*
+
+The Breez SDK provides developers with a end-to-end solution for integrating self-custodial Lightning payments into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of peer-to-peer payments.
+
+## **What Is the Breez SDK - Nodeless *(Liquid Implementation)*?**
+
+It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll able to:
+
+- **Send payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Pay, Lightning address, BTC address
+- **Receive payments** via various protocols such as: Bolt11, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
+  
+**Key Features**
+
+- [x] Send and receive Lightning payments 
+- [x] On-chain interoperability
+- [x] Complete LNURL functionality
+- [x] Multi-app support
+- [x] Multi-device support
+- [x] Real-time state backup
+- [x] Keys are only held by users
+- [x] USDT and multi-asset support on Liquid
+- [x] Built-in fiat on-ramp
+- [x] Free open-source solution
+
+## Getting Started 
+```bash
+npm install @breeztech/breez-sdk-liquid
+```
+or
+
+```bash
+yarn add @breeztech/breez-sdk-liquid
+```
+
+## Usage
+Head over to the [Breez SDK - Nodeless *(Liquid Implementation)* documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
+
+You'll need an API key to use the Breez SDK - Nodeless *(Liquid Implementation)*. To request an API key is free — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
+
+### Web
+When developing a browser application you should import the web submodule `@breeztech/breez-sdk-liquid/web`. It's important to first initialise the WebAssembly module by using `await init()` before making any other calls to the module.
+
+```ts
+import init, {
+    connect,
+    defaultConfig,
+    LiquidNetwork,
+    PaymentMethod,
+    SdkEvent
+} from '@breeztech/breez-sdk-liquid/web'
+
+class JsEventListener {
+    onEvent = (event: SdkEvent) => {
+        console.log(`EVENT RECEIVED: ${JSON.stringify(event)}`)
+    }
+}
+
+const eventListener = new JsEventListener()
+
+const main = async () => {
+    const breezApiKey = '<your-Breez-API-key>'
+    const mnemonic = '<mnemonic words>'
+
+    // Initialise the WebAssembly module
+    await init()
+
+    // Construct the sdk default config
+    const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
+
+    // Connect to the Breez SDK make it ready to use
+    const sdk = await connect({ config, mnemonic })
+
+    // Add event handler
+    await sdk.addEventListener(eventHandler)
+}
+
+main()
+```
+
+### Node.js
+When developing a node.js application you should require the node submodule `@breeztech/breez-sdk-liquid/node`.
+```js
+const { connect, defaultConfig, LiquidNetwork } = require('@breeztech/breez-sdk-liquid/node')
+
+class JsEventListener {
+    onEvent = (event) => {
+        console.log(`EVENT RECEIVED: ${JSON.stringify(event)}`)
+    }
+}
+
+const eventListener = new JsEventListener()
+
+const main = async () => {
+    const breezApiKey = process.env.BREEZ_API_KEY
+    const mnemonic = process.env.MNEMONIC
+
+    // Construct the sdk default config
+    const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
+
+    // Connect to the Breez SDK make it ready to use
+    const sdk = await connect({ config, mnemonic })
+
+    // Add event handler
+    await sdk.addEventListener(eventHandler)
+}
+
+main()
+```

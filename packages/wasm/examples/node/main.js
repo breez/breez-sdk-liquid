@@ -17,11 +17,11 @@ const main = async () => {
         setLogger('trace')
 
         // Get the mnemonic
-        const breez_api_key = process.env.BREEZ_API_KEY
-        const mnemonic = process.meta.env.MNEMONIC
+        const breezApiKey = process.env.BREEZ_API_KEY
+        const mnemonic = process.env.MNEMONIC
 
         // Connect using the config
-        const config = await defaultConfig(LiquidNetwork.MAINNET, breez_api_key)
+        const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
         addLine('defaultConfig', JSON.stringify(config))
 
         const sdk = await connect({ config, mnemonic })

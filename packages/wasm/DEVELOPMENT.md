@@ -52,5 +52,5 @@ This will generate the following artifacts:
 
 To test locally built bindings in the examples, the npm dependencies need to be updated to use the local package.
 ```json
-    "@breeztech/breez-sdk-liquid": "file:../",
+    "@breeztech/breez-sdk-liquid": "file:../../",
 ```
