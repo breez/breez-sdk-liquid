@@ -15,6 +15,15 @@
     "web",
     "!examples"
   ],
+  "exports": {
+    "./module": "./module/breez_sdk_liquid_wasm.js",
+    "./node": "./node/breez_sdk_liquid_wasm.js",
+    "./web": "./web/breez_sdk_liquid_wasm.js",
+    ".": {
+      "node": "./node/breez_sdk_liquid_wasm.js",
+      "default": "./web/breez_sdk_liquid_wasm.js"
+    }
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   }

@@ -38,7 +38,9 @@ Head over to the [Breez SDK - Nodeless *(Liquid Implementation)* documentation](
 You'll need an API key to use the Breez SDK - Nodeless *(Liquid Implementation)*. To request an API key is free — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
 
 ### Web
-When developing a browser application you should import the web submodule `@breeztech/breez-sdk-liquid/web`. It's important to first initialise the WebAssembly module by using `await init()` before making any other calls to the module.
+When developing a browser application you should import `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/web` submodule). 
+
+It's important to first initialise the WebAssembly module by using `await init()` before making any other calls to the module.
 
 ```ts
 import init, {
@@ -78,7 +80,7 @@ main()
 ```
 
 ### Node.js
-When developing a node.js application you should require the node submodule `@breeztech/breez-sdk-liquid/node`.
+When developing a node.js application you should require `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/node` submodule).
 ```js
 const { connect, defaultConfig, LiquidNetwork } = require('@breeztech/breez-sdk-liquid/node')
 
