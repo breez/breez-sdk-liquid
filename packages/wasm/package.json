@@ -1,0 +1,21 @@
+{
+  "name": "@breeztech/breez-sdk-liquid",
+  "version": "0.7.2-dev1",
+  "description": "Breez Liquid SDK",
+  "repository": "https://github.com/breez/breez-sdk-liquid",
+  "author": "Breez <contact@breez.technology> (https://github.com/breez)",
+  "homepage": "https://breez.technology",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/breez/breez-sdk-liquid/issues"
+  },
+  "files": [
+    "bundle/*",
+    "node/*",
+    "web/*",
+    "!examples"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  }
+}

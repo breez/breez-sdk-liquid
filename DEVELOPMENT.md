@@ -8,6 +8,7 @@ Please see the development guides for each crate/package:
 
 ### Packages
 * [React Native](packages/react-native/DEVELOPMENT.md)
+* [Wasm](packages/wasm/DEVELOPMENT.md)
 
 ## Automatic format & syntax checking
 To configure automatic code formatting and syntax checking for this repository, you can run the following command once:
