@@ -10,9 +10,9 @@
     "url": "https://github.com/breez/breez-sdk-liquid/issues"
   },
   "files": [
-    "bundle/*",
-    "node/*",
-    "web/*",
+    "bundle",
+    "node",
+    "web",
     "!examples"
   ],
   "publishConfig": {
