@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-pip install breez_sdk_liquid
+pip install breez-sdk-liquid
 ```
 
 ``` python
@@ -24,6 +24,7 @@ It will create wheels for the following Python versions and Platforms and upload
 | **Python 3.10** | ✅               | ✅                 | ✅            | ✅             | ✅              | ✅         |
 | **Python 3.11** | ✅               | ✅                 | ✅            | ✅             | ✅              | ✅         |
 | **Python 3.12** | ✅               | ✅                 | ✅            | ✅             | ✅              | ✅         |
+| **Python 3.13** | ✅               | ✅                 | ✅            | ✅             | ✅              | ✅         |
 
 ## Building Manually
 
