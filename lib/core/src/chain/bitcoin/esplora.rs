@@ -1,6 +1,5 @@
 use std::{collections::HashMap, sync::OnceLock, time::Duration};
 
-use boltz_client::Amount;
 use esplora_client::{AsyncClient, Builder};
 use tokio::sync::Mutex;
 
@@ -8,7 +7,7 @@ use crate::{
     bitcoin::{
         consensus::deserialize,
         hashes::{sha256, Hash},
-        Address, OutPoint, Script, ScriptBuf, Transaction, TxOut, Txid,
+        Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
     model::{BlockchainExplorer, Config},
 };
@@ -142,25 +141,12 @@ impl BitcoinChainService for EsploraBitcoinChainService {
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
-        let client = self.get_client()?;
-        let utxos = client
-            .scripthash_utxos(script)
+        Ok(self
+            .get_scripts_utxos(&[script])
             .await?
-            .into_iter()
-            .map(|out| {
-                Utxo::Bitcoin((
-                    OutPoint {
-                        txid: out.txid,
-                        vout: out.vout as u32,
-                    },
-                    TxOut {
-                        value: Amount::from_sat(out.value),
-                        script_pubkey: script.into(),
-                    },
-                ))
-            })
-            .collect();
-        Ok(utxos)
+            .first()
+            .cloned()
+            .unwrap_or_default())
     }
 
     async fn get_scripts_utxos(&self, scripts: &[&Script]) -> Result<Vec<Vec<Utxo>>> {
