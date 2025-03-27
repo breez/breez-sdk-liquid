@@ -1,6 +1,6 @@
 use std::{sync::OnceLock, time::Duration};
 
-use anyhow::{anyhow, bail, Context as _, Result};
+use anyhow::{anyhow, Context as _, Result};
 use tokio::sync::RwLock;
 
 use crate::{
@@ -35,7 +35,6 @@ impl EsploraLiquidChainService {
             return Ok(c);
         }
 
-        #[allow(unreachable_patterns)]
         let client = match &self.config.liquid_explorer {
             BlockchainExplorer::Esplora {
                 url,
@@ -44,7 +43,10 @@ impl EsploraLiquidChainService {
                 .timeout(3)
                 .waterfalls(*use_waterfalls)
                 .build(),
-            _ => bail!("Cannot start Liquid Esplora chain service without an Esplora url"),
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => {
+                anyhow::bail!("Cannot start Liquid Esplora chain service without an Esplora url")
+            }
         };
 
         let client = self.client.get_or_init(|| RwLock::new(client));

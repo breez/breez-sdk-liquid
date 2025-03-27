@@ -43,7 +43,6 @@ impl ElectrumLiquidChainService {
             LiquidNetwork::Regtest => (false, false),
         };
         let electrum_url = match &self.config.liquid_explorer {
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => ElectrumUrl::new(url, tls, validate_domain)?,
             _ => bail!("Cannot start Liquid Electrum chain service without an Electrum url"),
         };

@@ -12,7 +12,7 @@ use crate::{
     model::{BlockchainExplorer, Config},
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 use crate::model::{RecommendedFees, Utxo};
 use log::info;
@@ -40,10 +40,12 @@ impl EsploraBitcoinChainService {
             return Ok(c);
         }
 
-        #[allow(unreachable_patterns)]
         let esplora_url = match &self.config.bitcoin_explorer {
             BlockchainExplorer::Esplora { url, .. } => url,
-            _ => bail!("Cannot start Bitcoin Esplora chain service without an Esplora url"),
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => {
+                anyhow::bail!("Cannot start Bitcoin Esplora chain service without an Esplora url")
+            }
         };
         let client = Builder::new(esplora_url)
             .timeout(3)
