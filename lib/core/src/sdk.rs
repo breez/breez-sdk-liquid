@@ -3758,6 +3758,7 @@ impl LiquidSdk {
         Ok(self.bitcoin_chain_service.recommended_fees().await?)
     }
 
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     /// Get the full default [Config] for specific [LiquidNetwork].
     pub fn default_config(
         network: LiquidNetwork,
@@ -3768,6 +3769,7 @@ impl LiquidSdk {
             LiquidNetwork::Testnet => Config::testnet(breez_api_key),
             LiquidNetwork::Regtest => Config::regtest(),
         };
+
         Ok(config)
     }
 

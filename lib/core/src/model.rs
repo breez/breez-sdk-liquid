@@ -107,28 +107,15 @@ pub struct Config {
 }
 
 impl Config {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn mainnet(breez_api_key: Option<String>) -> Self {
         Config {
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             liquid_explorer: BlockchainExplorer::Electrum {
                 url: "elements-mainnet.breez.technology:50002".to_string(),
             },
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            liquid_explorer: BlockchainExplorer::Esplora {
-                url: "https://waterfalls.liquidwebwallet.org/liquid/api".to_string(),
-                use_waterfalls: true,
-            },
-
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             bitcoin_explorer: BlockchainExplorer::Electrum {
                 url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             },
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            bitcoin_explorer: BlockchainExplorer::Esplora {
-                url: "https://blockstream.info/api/".to_string(),
-                use_waterfalls: false,
-            },
-
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
@@ -143,28 +130,39 @@ impl Config {
         }
     }
 
+    pub fn mainnet_esplora(breez_api_key: Option<String>) -> Self {
+        Config {
+            liquid_explorer: BlockchainExplorer::Esplora {
+                url: "https://waterfalls.liquidwebwallet.org/liquid/api".to_string(),
+                use_waterfalls: true,
+            },
+            bitcoin_explorer: BlockchainExplorer::Esplora {
+                url: "https://blockstream.info/api/".to_string(),
+                use_waterfalls: false,
+            },
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Mainnet,
+            payment_timeout_sec: 15,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn testnet(breez_api_key: Option<String>) -> Self {
         Config {
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             liquid_explorer: BlockchainExplorer::Electrum {
                 url: "elements-testnet.blockstream.info:50002".to_string(),
             },
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            liquid_explorer: BlockchainExplorer::Esplora {
-                url: "https://blockstream.info/liquidtestnet/api".to_string(),
-                use_waterfalls: false,
-            },
-
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             bitcoin_explorer: BlockchainExplorer::Electrum {
                 url: "bitcoin-testnet.blockstream.info:50002".to_string(),
             },
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            bitcoin_explorer: BlockchainExplorer::Esplora {
-                url: "https://blockstream.info/testnet/api/".to_string(),
-                use_waterfalls: false,
-            },
-
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Testnet,
@@ -179,22 +177,63 @@ impl Config {
         }
     }
 
+    pub fn testnet_esplora(breez_api_key: Option<String>) -> Self {
+        Config {
+            liquid_explorer: BlockchainExplorer::Esplora {
+                url: "https://blockstream.info/liquidtestnet/api".to_string(),
+                use_waterfalls: false,
+            },
+            bitcoin_explorer: BlockchainExplorer::Esplora {
+                url: "https://blockstream.info/testnet/api/".to_string(),
+                use_waterfalls: false,
+            },
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Testnet,
+            payment_timeout_sec: 15,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn regtest() -> Self {
         Config {
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             liquid_explorer: BlockchainExplorer::Electrum {
                 url: "localhost:19002".to_string(),
             },
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            liquid_explorer: unimplemented!(),
-
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             bitcoin_explorer: BlockchainExplorer::Electrum {
                 url: "localhost:19001".to_string(),
             },
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            bitcoin_explorer: unimplemented!(),
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Regtest,
+            payment_timeout_sec: 15,
+            sync_service_url: Some("http://localhost:8088".to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key: None,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
 
+    pub fn regtest_esplora() -> Self {
+        Config {
+            liquid_explorer: BlockchainExplorer::Esplora {
+                url: "localhost:4002/api".to_string(),
+                use_waterfalls: false,
+            },
+            bitcoin_explorer: BlockchainExplorer::Esplora {
+                url: "localhost:4002/api".to_string(),
+                use_waterfalls: false,
+            },
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Regtest,
