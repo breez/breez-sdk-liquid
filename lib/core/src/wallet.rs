@@ -483,7 +483,7 @@ mod tests {
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
 
-        let config = Config::testnet(None);
+        let config = Config::testnet_esplora(None);
 
         create_persister!(storage);
 
