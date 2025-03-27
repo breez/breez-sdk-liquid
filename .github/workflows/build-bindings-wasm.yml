@@ -76,6 +76,7 @@ jobs:
       run: |
         mkdir -p pkg/bundle pkg/node pkg/web
         touch pkg/bundle/breez_sdk_liquid_wasm.wasm
+        touch pkg/deno/breez_sdk_liquid_wasm.wasm
         touch pkg/node/breez_sdk_liquid_wasm.wasm
         touch pkg/web/breez_sdk_liquid_wasm.wasm
 
