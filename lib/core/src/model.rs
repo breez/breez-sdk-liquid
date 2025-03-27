@@ -2240,8 +2240,8 @@ pub struct AcceptPaymentProposedFeesRequest {
 }
 
 #[derive(Clone, Debug)]
-pub struct History<Txid> {
-    pub txid: Txid,
+pub struct History<T> {
+    pub txid: T,
     /// Confirmation height of txid
     ///
     /// -1 means unconfirmed with unconfirmed parents
