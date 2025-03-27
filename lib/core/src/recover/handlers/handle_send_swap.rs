@@ -191,7 +191,7 @@ impl SendSwapHandler {
     ) -> Result<Option<String>> {
         // Try cooperative first
         if let Ok(preimage) = swapper.get_submarine_preimage(swap_id).await {
-            println!("Found Send Swap {swap_id} preimage cooperatively: {preimage}");
+            log::debug!("Found Send Swap {swap_id} preimage cooperatively: {preimage}");
             return Ok(Some(preimage));
         }
         warn!("Could not recover Send swap {swap_id} preimage cooperatively");
