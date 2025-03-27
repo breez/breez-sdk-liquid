@@ -227,11 +227,11 @@ impl Config {
     pub fn regtest_esplora() -> Self {
         Config {
             liquid_explorer: BlockchainExplorer::Esplora {
-                url: "localhost:4002/api".to_string(),
+                url: "http://localhost:4003/api".to_string(),
                 use_waterfalls: false,
             },
             bitcoin_explorer: BlockchainExplorer::Esplora {
-                url: "localhost:4002/api".to_string(),
+                url: "http://localhost:4002/api".to_string(),
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
