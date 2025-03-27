@@ -108,3 +108,33 @@ const main = async () => {
 
 main()
 ```
+
+### Deno
+When developing a Deno application you should require `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/deno` submodule).
+```js
+import { connect, defaultConfig, LiquidNetwork } from '@breeztech/breez-sdk-liquid/deno'
+
+class JsEventListener {
+    onEvent = (event) => {
+        console.log(`EVENT RECEIVED: ${JSON.stringify(event)}`)
+    }
+}
+
+const eventListener = new JsEventListener()
+
+const main = async () => {
+    const breezApiKey = process.env.BREEZ_API_KEY
+    const mnemonic = process.env.MNEMONIC
+
+    // Construct the sdk default config
+    const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
+
+    // Connect to the Breez SDK make it ready to use
+    const sdk = await connect({ config, mnemonic })
+
+    // Add event handler
+    await sdk.addEventListener(eventHandler)
+}
+
+main()
+```

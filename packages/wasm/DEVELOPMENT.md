@@ -35,6 +35,12 @@ This will generate the following artifacts:
  - `bundle/breez_sdk_liquid_wasm_bg.js`
  - `bundle/breez_sdk_liquid_wasm_bg.wasm`
  - `bundle/breez_sdk_liquid_wasm_bg.wasm.d.ts`
+* Deno - ES module for use with Deno
+ - `deno/package.json`
+ - `deno/breez_sdk_liquid_wasm.d.ts`
+ - `deno/breez_sdk_liquid_wasm.js`
+ - `deno/breez_sdk_liquid_wasm_bg.wasm`
+ - `deno/breez_sdk_liquid_wasm_bg.wasm.d.ts`
 * Node - CommonJS module for use with Node.js
  - `node/package.json`
  - `node/breez_sdk_liquid_wasm.d.ts`

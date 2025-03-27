@@ -11,16 +11,19 @@
   },
   "files": [
     "bundle",
+    "deno",
     "node",
     "web",
     "!examples"
   ],
   "exports": {
-    "./module": "./module/breez_sdk_liquid_wasm.js",
+    "./bundle": "./bundle/breez_sdk_liquid_wasm.js",
+    "./deno": "./deno/breez_sdk_liquid_wasm.js",
     "./node": "./node/breez_sdk_liquid_wasm.js",
     "./web": "./web/breez_sdk_liquid_wasm.js",
     ".": {
       "node": "./node/breez_sdk_liquid_wasm.js",
+      "deno": "./deno/breez_sdk_liquid_wasm.js",
       "default": "./web/breez_sdk_liquid_wasm.js"
     }
   },

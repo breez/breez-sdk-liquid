@@ -11,10 +11,13 @@ init:
 clippy:
 	$(CLANG_PREFIX) cargo clippy --target=wasm32-unknown-unknown -- -D warnings
 
-build: build-bundle build-node build-web
+build: build-bundle build-deno build-node build-web
 
 build-bundle:
 	$(CLANG_PREFIX) wasm-pack build --target bundler --release --out-dir pkg/bundle
+
+build-deno:
+	$(CLANG_PREFIX) wasm-pack build --target deno --release --out-dir pkg/deno
 
 build-node:
 	$(CLANG_PREFIX) wasm-pack build --target nodejs --release --out-dir pkg/node
