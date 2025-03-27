@@ -293,12 +293,17 @@ pub struct Symbol {
     pub position: Option<u32>,
 }
 
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::BlockchainExplorer)]
+pub enum BlockchainExplorer {
+    Electrum { url: String },
+    Esplora { url: String, use_waterfalls: bool },
+}
+
 #[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::Config)]
 pub struct Config {
-    pub liquid_electrum_url: String,
-    pub bitcoin_electrum_url: String,
-    pub mempoolspace_url: String,
+    pub liquid_explorer: BlockchainExplorer,
+    pub bitcoin_explorer: BlockchainExplorer,
     pub working_dir: String,
     pub cache_dir: Option<String>,
     pub network: LiquidNetwork,

@@ -1,8 +1,4 @@
 .DS_Store
 .idea/
-data/mempool/*
-!data/mempool/.gitkeep
-data/mempool-db/*
-!data/mempool-db/.gitkeep
 data/rt-sync/*
 !data/rt-sync/.gitkeep

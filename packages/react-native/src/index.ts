@@ -88,9 +88,8 @@ export interface CheckMessageResponse {
 }
 
 export interface Config {
-    liquidElectrumUrl: string
-    bitcoinElectrumUrl: string
-    mempoolspaceUrl: string
+    liquidExplorer: BlockchainExplorer
+    bitcoinExplorer: BlockchainExplorer
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
@@ -517,6 +516,20 @@ export type Amount = {
     type: AmountVariant.CURRENCY,
     iso4217Code: string
     fractionalAmount: number
+}
+
+export enum BlockchainExplorerVariant {
+    ELECTRUM = "electrum",
+    ESPLORA = "esplora"
+}
+
+export type BlockchainExplorer = {
+    type: BlockchainExplorerVariant.ELECTRUM,
+    url: string
+} | {
+    type: BlockchainExplorerVariant.ESPLORA,
+    url: string
+    useWaterfalls: boolean
 }
 
 export enum BuyBitcoinProvider {

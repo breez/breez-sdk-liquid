@@ -5,8 +5,7 @@ use std::{path::PathBuf, str::FromStr, sync::Arc, time::Duration};
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
-use chain::bitcoin::HybridBitcoinChainService;
-use chain::liquid::{HybridLiquidChainService, LiquidChainService};
+use chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::{StreamExt, TryFutureExt};
@@ -31,7 +30,6 @@ use tokio_with_wasm::alias as tokio;
 use web_time::Instant;
 use x509_parser::parse_x509_certificate;
 
-use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
 use crate::ensure_sdk;
 use crate::error::SdkError;
@@ -208,16 +206,13 @@ impl LiquidSdkBuilder {
         let bitcoin_chain_service: Arc<dyn BitcoinChainService> =
             match self.bitcoin_chain_service.clone() {
                 Some(bitcoin_chain_service) => bitcoin_chain_service,
-                None => Arc::new(HybridBitcoinChainService::new(
-                    self.config.clone(),
-                    rest_client.clone(),
-                )?),
+                None => self.config.bitcoin_chain_service(),
             };
 
         let liquid_chain_service: Arc<dyn LiquidChainService> =
             match self.liquid_chain_service.clone() {
                 Some(liquid_chain_service) => liquid_chain_service,
-                None => Arc::new(HybridLiquidChainService::new(self.config.clone())?),
+                None => self.config.liquid_chain_service(),
             };
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
@@ -580,7 +575,7 @@ impl LiquidSdk {
                         };
                         // Get the Bitcoin tip and process a new block
                         let t0 = Instant::now();
-                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip().map(|tip| tip.height as u32);
+                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip().await;
                         let duration_ms = Instant::now().duration_since(t0).as_millis();
                         info!("Fetched bitcoin tip at ({duration_ms} ms)");
                         let is_new_bitcoin_block = match &bitcoin_tip_res {
@@ -2684,7 +2679,8 @@ impl LiquidSdk {
             .collect();
         let scripts_utxos = self
             .bitcoin_chain_service
-            .get_scripts_utxos(&lockup_scripts)?;
+            .get_scripts_utxos(&lockup_scripts)
+            .await?;
 
         let mut refundables = vec![];
         for (chain_swap, script_utxos) in chain_swaps.into_iter().zip(scripts_utxos) {
@@ -2900,7 +2896,7 @@ impl LiquidSdk {
             .collect();
         match partial_sync {
             false => {
-                let bitcoin_height = self.bitcoin_chain_service.tip()?.height as u32;
+                let bitcoin_height = self.bitcoin_chain_service.tip().await?;
                 let liquid_height = self.liquid_chain_service.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
@@ -3859,7 +3855,7 @@ mod tests {
         boltz::{self, TransactionInfo},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
-    use lwk_wollet::{elements::Txid, hashes::hex::DisplayHex};
+    use lwk_wollet::hashes::hex::DisplayHex as _;
 
     use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
     use crate::test_utils::chain_swap::{
@@ -3869,10 +3865,11 @@ mod tests {
     use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
     use crate::test_utils::wallet::TEST_LIQUID_RECEIVE_LOCKUP_TX;
     use crate::{
-        model::{Direction, PaymentState, Swap},
+        bitcoin, elements,
+        model::{BtcHistory, Direction, LBtcHistory, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
-            chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
+            chain::{MockBitcoinChainService, MockLiquidChainService},
             chain_swap::{new_chain_swap, TEST_BITCOIN_INCOMING_USER_LOCKUP_TX},
             persist::{create_persister, new_receive_swap, new_send_swap},
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
@@ -4059,11 +4056,9 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service.set_history(vec![MockHistory {
+                liquid_chain_service.set_history(vec![LBtcHistory {
                     txid: mock_tx_id,
                     height,
-                    block_hash: None,
-                    block_timestamp: None,
                 }]);
 
                 let persisted_swap = trigger_swap_update!(
@@ -4095,11 +4090,9 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service.set_history(vec![MockHistory {
+                liquid_chain_service.set_history(vec![LBtcHistory {
                     txid: mock_tx_id,
                     height,
-                    block_hash: None,
-                    block_timestamp: None,
                 }]);
 
                 let persisted_swap = trigger_swap_update!(
@@ -4266,19 +4259,15 @@ mod tests {
                     if let Some(user_lockup_tx_id) = user_lockup_tx_id {
                         match direction {
                             Direction::Incoming => {
-                                bitcoin_chain_service.set_history(vec![MockHistory {
-                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                bitcoin_chain_service.set_history(vec![BtcHistory {
+                                    txid: bitcoin::Txid::from_str(user_lockup_tx_id).unwrap(),
                                     height: 0,
-                                    block_hash: None,
-                                    block_timestamp: None,
                                 }]);
                             }
                             Direction::Outgoing => {
-                                liquid_chain_service.set_history(vec![MockHistory {
-                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                liquid_chain_service.set_history(vec![LBtcHistory {
+                                    txid: elements::Txid::from_str(user_lockup_tx_id).unwrap(),
                                     height: 0,
-                                    block_hash: None,
-                                    block_timestamp: None,
                                 }]);
                             }
                         }
@@ -4313,11 +4302,9 @@ mod tests {
                     ChainSwapStates::TransactionConfirmed,
                 ] {
                     if direction == Direction::Incoming {
-                        bitcoin_chain_service.set_history(vec![MockHistory {
-                            txid: Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
+                        bitcoin_chain_service.set_history(vec![BtcHistory {
+                            txid: bitcoin::Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
                             height: 0,
-                            block_hash: None,
-                            block_timestamp: None,
                         }]);
                         bitcoin_chain_service.set_transactions(&[&mock_user_lockup_tx_hex]);
                     }
