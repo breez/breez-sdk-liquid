@@ -20,7 +20,6 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 bip39 = "2.0.0"
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f78e159fe72e1c357e7830bc08d2b9e42a65362c", features = ["electrum"] }
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
@@ -74,6 +73,7 @@ maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f78e159fe72e1c357e7830bc08d2b9e42a65362c", features = ["electrum"] }
 
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
@@ -88,6 +88,7 @@ tonic = { version = "0.12", default-features = false, features = [
     "codegen",
     "prost",
 ] }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f78e159fe72e1c357e7830bc08d2b9e42a65362c" }
 
 [dev-dependencies]
 sdk-common = { workspace = true, features = ["test-utils"] }

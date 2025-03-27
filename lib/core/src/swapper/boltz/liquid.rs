@@ -37,7 +37,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
-            &self.liquid_electrum_client,
+            &self.liquid_client,
             self.get_url().await?,
             swap.id.clone(),
         )
@@ -67,7 +67,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
-            &self.liquid_electrum_client,
+            &self.liquid_client,
             self.get_url().await?,
             swap.id.clone(),
         )
@@ -111,7 +111,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     LBtcSwapTx::new_refund(
                         swap_script.as_liquid_script()?,
                         refund_address,
-                        &self.liquid_electrum_client,
+                        &self.liquid_client,
                         self.get_url().await?,
                         swap.id.clone(),
                     )
@@ -123,7 +123,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                 LBtcSwapTx::new_refund(
                     swap_script,
                     refund_address,
-                    &self.liquid_electrum_client,
+                    &self.liquid_client,
                     self.get_url().await?,
                     swap.id.clone(),
                 )
@@ -170,7 +170,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let address = Address::from_str(refund_address)
             .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
 
-        let genesis_hash = self.liquid_electrum_client.get_genesis_hash().await?;
+        let genesis_hash = self.liquid_client.get_genesis_hash().await?;
 
         let (funding_outpoint, funding_tx_out) =
             *utxos

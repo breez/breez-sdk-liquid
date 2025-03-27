@@ -13,9 +13,10 @@ use boltz_client::{
         CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
-    network::{electrum::ElectrumBitcoinClient, electrum::ElectrumLiquidClient, Chain},
+    network::Chain,
     Amount,
 };
+use client::{BitcoinClient, LiquidClient};
 use log::info;
 use proxy::split_proxy_url;
 use tokio::sync::broadcast;
@@ -23,6 +24,7 @@ use tokio::sync::broadcast;
 use super::{ProxyUrlFetcher, Swapper};
 
 pub(crate) mod bitcoin;
+mod client;
 pub(crate) mod liquid;
 pub(crate) mod proxy;
 pub mod status_stream;
@@ -36,8 +38,8 @@ pub(crate) struct BoltzClient {
 pub struct BoltzSwapper<P: ProxyUrlFetcher> {
     config: Config,
     client: OnceLock<BoltzClient>,
-    liquid_electrum_client: ElectrumLiquidClient,
-    bitcoin_electrum_client: ElectrumBitcoinClient,
+    liquid_client: LiquidClient,
+    bitcoin_client: BitcoinClient,
     proxy_url: Arc<P>,
     subscription_notifier: broadcast::Sender<String>,
     update_notifier: broadcast::Sender<boltz::SwapStatus>,
@@ -45,11 +47,6 @@ pub struct BoltzSwapper<P: ProxyUrlFetcher> {
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub fn new(config: Config, proxy_url: Arc<P>) -> Result<Self, SdkError> {
-        let (tls, validate_domain) = match config.network {
-            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
-            LiquidNetwork::Regtest => (false, false),
-        };
-
         let (subscription_notifier, _) = broadcast::channel::<String>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::SwapStatus>(30);
 
@@ -57,20 +54,8 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             proxy_url,
             client: OnceLock::new(),
             config: config.clone(),
-            liquid_electrum_client: ElectrumLiquidClient::new(
-                config.network.into(),
-                config.liquid_explorer.url(),
-                tls,
-                validate_domain,
-                100,
-            )?,
-            bitcoin_electrum_client: ElectrumBitcoinClient::new(
-                config.network.as_bitcoin_chain(),
-                config.bitcoin_explorer.url(),
-                tls,
-                validate_domain,
-                100,
-            )?,
+            liquid_client: LiquidClient::new(&config)?,
+            bitcoin_client: BitcoinClient::new(&config)?,
             subscription_notifier,
             update_notifier,
         })

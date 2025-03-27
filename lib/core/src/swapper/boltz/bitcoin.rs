@@ -29,7 +29,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     BtcSwapTx::new_refund(
                         swap_script.as_bitcoin_script()?,
                         refund_address,
-                        &self.bitcoin_electrum_client,
+                        &self.bitcoin_client,
                         self.get_url().await?,
                         swap.id.clone(),
                     )
@@ -118,7 +118,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let claim_tx_wrapper = BtcSwapTx::new_claim(
             claim_swap_script,
             claim_address,
-            &self.bitcoin_electrum_client,
+            &self.bitcoin_client,
             self.get_url().await?,
             swap.id.clone(),
         )
