@@ -7,14 +7,13 @@ use tokio::sync::RwLock;
 
 use crate::{
     elements::{Address, OutPoint, Script, Transaction, Txid},
-    model::{BlockchainExplorer, Config, LiquidNetwork, Utxo},
+    model::{BlockchainExplorer, Config, Utxo},
     utils,
 };
 
 use log::info;
 use lwk_wollet::{
     clients::blocking::BlockchainBackend as _, elements::hex::FromHex as _, ElectrumClient,
-    ElectrumOptions, ElectrumUrl,
 };
 use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
@@ -38,17 +37,10 @@ impl ElectrumLiquidChainService {
             return Ok(c);
         }
 
-        let (tls, validate_domain) = match self.config.network {
-            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
-            LiquidNetwork::Regtest => (false, false),
-        };
-        let electrum_url = match &self.config.liquid_explorer {
-            BlockchainExplorer::Electrum { url } => ElectrumUrl::new(url, tls, validate_domain)?,
+        let client = match &self.config.liquid_explorer {
+            BlockchainExplorer::Electrum { url } => self.config.electrum_client(url)?,
             _ => bail!("Cannot start Liquid Electrum chain service without an Electrum url"),
         };
-        let client =
-            ElectrumClient::with_options(&electrum_url, ElectrumOptions { timeout: Some(3) })?;
-
         let client = self.client.get_or_init(|| RwLock::new(client));
         Ok(client)
     }
