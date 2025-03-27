@@ -12,7 +12,8 @@ mod test {
     };
     use elements::{Address as ElementsAddress, Script, Txid};
     use lwk_wollet::{elements_miniscript::slip77::MasterBlindingKey, WalletTx};
-    use std::{collections::HashMap, str::FromStr, sync::Arc};
+    use sdk_common::utils::Arc;
+    use std::{collections::HashMap, str::FromStr};
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

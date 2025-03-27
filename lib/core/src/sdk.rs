@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
-use std::{path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
@@ -22,6 +22,7 @@ use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
+use sdk_common::utils::Arc;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
@@ -3850,7 +3851,7 @@ fn extract_description_from_metadata(request_data: &LnUrlPayRequestData) -> Opti
 
 #[cfg(test)]
 mod tests {
-    use std::{str::FromStr, sync::Arc};
+    use std::str::FromStr;
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
@@ -3858,6 +3859,8 @@ mod tests {
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
     use lwk_wollet::hashes::hex::DisplayHex as _;
+    use sdk_common::utils::Arc;
+    use tokio_with_wasm::alias as tokio;
 
     use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
     use crate::test_utils::chain_swap::{

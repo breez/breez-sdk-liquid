@@ -1,7 +1,8 @@
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
 
 use anyhow::Result;
 use sdk_common::prelude::BreezServer;
+use sdk_common::utils::Arc;
 use url::Url;
 
 use crate::{persist::Persister, swapper::ProxyUrlFetcher};

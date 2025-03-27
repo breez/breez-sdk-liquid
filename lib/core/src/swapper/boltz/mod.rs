@@ -1,4 +1,4 @@
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
 
 use crate::{
     error::{PaymentError, SdkError},
@@ -19,6 +19,7 @@ use boltz_client::{
 use client::{BitcoinClient, LiquidClient};
 use log::info;
 use proxy::split_proxy_url;
+use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
 
 use super::{ProxyUrlFetcher, Swapper};

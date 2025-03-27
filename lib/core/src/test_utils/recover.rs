@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use anyhow::Result;
+use sdk_common::utils::Arc;
 
 use super::chain::{MockBitcoinChainService, MockLiquidChainService};
 use crate::persist::Persister;

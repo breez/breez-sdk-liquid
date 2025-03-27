@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::anyhow;
 use bip39::Mnemonic;
 use boltz_client::PublicKey;
@@ -23,6 +21,7 @@ use lwk_wollet::elements_miniscript::{
 use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
 use lwk_wollet::secp256k1::Message;
+use sdk_common::utils::Arc;
 
 use crate::model::{Signer, SignerError};
 

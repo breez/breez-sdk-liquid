@@ -3,8 +3,8 @@ mod event;
 pub mod model;
 mod signer;
 
+use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
@@ -19,7 +19,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
-    sdk: Arc<LiquidSdk>,
+    sdk: Rc<LiquidSdk>,
 }
 
 #[wasm_bindgen(js_name = "connect")]
@@ -42,24 +42,24 @@ async fn connect_inner(
     signer: Box<dyn breez_sdk_liquid::model::Signer>,
 ) -> WasmResult<BindingLiquidSdk> {
     let config: breez_sdk_liquid::model::Config = config.into();
-    let signer = Arc::new(signer);
+    let signer = Rc::new(signer);
 
     let mut sdk_builder = LiquidSdkBuilder::new(
         config.clone(),
         PRODUCTION_BREEZSERVER_URL.to_string(),
-        Arc::clone(&signer),
+        Rc::clone(&signer),
     )?;
 
-    let persister = Arc::new(Persister::new_in_memory(
+    let persister = Rc::new(Persister::new_in_memory(
         &config.working_dir,
         config.network,
         config.sync_enabled(),
         config.asset_metadata.clone(),
     )?);
 
-    let onchain_wallet = Arc::new(LiquidOnchainWallet::new_in_memory(
+    let onchain_wallet = Rc::new(LiquidOnchainWallet::new_in_memory(
         config,
-        Arc::clone(&persister),
+        Rc::clone(&persister),
         signer,
     )?);
 

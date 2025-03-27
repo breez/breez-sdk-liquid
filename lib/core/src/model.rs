@@ -16,10 +16,11 @@ use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRe
 use rusqlite::ToSql;
 use sdk_common::bitcoin::hashes::hex::ToHex as _;
 use sdk_common::prelude::*;
+use sdk_common::utils::Arc;
 use serde::{Deserialize, Serialize};
+use std::cmp::PartialEq;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::{cmp::PartialEq, sync::Arc};
 use strum_macros::{Display, EnumString};
 
 use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;

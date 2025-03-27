@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::Write;
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use boltz_client::ElementsAddress;
@@ -29,6 +29,7 @@ use crate::{
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
+use sdk_common::utils::Arc;
 
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 use lwk_wollet::blocking::BlockchainBackend;
@@ -527,8 +528,9 @@ mod tests {
 
         create_persister!(storage);
 
-        let wallet: Arc<dyn OnchainWallet> =
-            if cfg!(not(all(target_family = "wasm", target_os = "unknown"))) {
+        let wallet: Arc<dyn OnchainWallet> = {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            {
                 // Create a temporary directory for working_dir
                 let working_dir = tempdir::TempDir::new("")
                     .unwrap()
@@ -540,12 +542,12 @@ mod tests {
                     LiquidOnchainWallet::new(config, working_dir, storage, sdk_signer.clone())
                         .unwrap(),
                 )
-            } else {
-                Arc::new(
-                    LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone())
-                        .unwrap(),
-                )
-            };
+            }
+            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+            Arc::new(
+                LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone()).unwrap(),
+            )
+        };
 
         // Test message
         let message = "Hello, Liquid!";

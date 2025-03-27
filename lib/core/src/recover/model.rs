@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::WalletTx;
+use sdk_common::utils::Arc;
 
 use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;

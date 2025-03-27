@@ -2,7 +2,7 @@
 
 use anyhow::{anyhow, Result};
 use sdk_common::prelude::{MockRestClient, RestClient, STAGING_BREEZSERVER_URL};
-use std::sync::Arc;
+use sdk_common::utils::Arc;
 
 use crate::{
     model::{Config, Signer},

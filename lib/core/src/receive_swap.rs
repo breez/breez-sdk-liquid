@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use anyhow::{anyhow, bail, Result};
 use boltz_client::swaps::boltz::RevSwapStates;
@@ -8,6 +8,7 @@ use lwk_wollet::elements::secp256k1_zkp::Secp256k1;
 use lwk_wollet::elements::{Transaction, Txid};
 use lwk_wollet::hashes::hex::DisplayHex;
 use lwk_wollet::secp256k1::SecretKey;
+use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
 
 use crate::chain::liquid::LiquidChainService;

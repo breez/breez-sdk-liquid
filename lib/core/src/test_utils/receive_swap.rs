@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use anyhow::Result;
-use std::sync::Arc;
+use sdk_common::utils::Arc;
 
 use crate::{
     model::{Config, Signer},

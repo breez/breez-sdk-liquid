@@ -13,7 +13,8 @@ mod test {
     use bitcoin::{transaction::Version, Sequence};
     use boltz_client::{Amount, LockTime};
     use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
-    use std::{collections::HashMap, str::FromStr, sync::Arc};
+    use sdk_common::utils::Arc;
+    use std::{collections::HashMap, str::FromStr};
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
