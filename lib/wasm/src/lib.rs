@@ -74,7 +74,12 @@ async fn connect_inner(
 
 #[wasm_bindgen(js_name = "defaultConfig")]
 pub fn default_config(network: LiquidNetwork, breez_api_key: Option<String>) -> WasmResult<Config> {
-    Ok(LiquidSdk::default_config(network.into(), breez_api_key)?.into())
+    let config = match network {
+        LiquidNetwork::Mainnet => breez_sdk_liquid::model::Config::mainnet_esplora(breez_api_key),
+        LiquidNetwork::Testnet => breez_sdk_liquid::model::Config::testnet_esplora(breez_api_key),
+        LiquidNetwork::Regtest => breez_sdk_liquid::model::Config::regtest_esplora(),
+    };
+    Ok(config.into())
 }
 
 #[wasm_bindgen(js_name = "parseInvoice")]

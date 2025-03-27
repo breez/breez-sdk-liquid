@@ -293,9 +293,9 @@ pub struct Symbol {
     pub position: Option<u32>,
 }
 
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::BlockchainExplorer)]
 pub enum BlockchainExplorer {
-    Electrum { url: String },
     Esplora { url: String, use_waterfalls: bool },
 }
 
@@ -336,6 +336,7 @@ pub enum SdkEvent {
     PaymentWaitingConfirmation { details: Payment },
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
+    DataSynced { did_pull_new_records: bool },
 }
 
 #[derive(Clone)]
