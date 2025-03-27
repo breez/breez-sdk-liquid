@@ -1,6 +1,10 @@
 #![cfg(test)]
 
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use crate::{
     error::PaymentError,
@@ -18,14 +22,15 @@ use lwk_wollet::{
         self,
         bip32::{DerivationPath, Xpriv, Xpub},
     },
-    elements::{hex::ToHex, Address, Transaction, Txid},
+    elements::{hex::ToHex, pset::PartiallySignedTransaction, Address, AssetId, Transaction, Txid},
     elements_miniscript::{slip77::MasterBlindingKey, ToPublicKey as _},
     secp256k1::{All, Message},
-    WalletTx,
+    WalletTx, WalletTxOut,
 };
 
 pub(crate) struct MockWallet {
     signer: SdkLwkSigner,
+    utxos: Mutex<Vec<WalletTxOut>>,
 }
 
 lazy_static! {
@@ -37,7 +42,15 @@ lazy_static! {
 impl MockWallet {
     pub(crate) fn new(user_signer: Arc<Box<dyn Signer>>) -> Result<Self> {
         let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
-        Ok(Self { signer })
+        Ok(Self {
+            signer,
+            utxos: Mutex::new(vec![]),
+        })
+    }
+
+    pub(crate) fn set_utxos(&self, utxos: Vec<WalletTxOut>) -> &Self {
+        *self.utxos.lock().unwrap() = utxos;
+        self
     }
 }
 
@@ -49,6 +62,10 @@ impl OnchainWallet for MockWallet {
 
     async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError> {
         Ok(Default::default())
+    }
+
+    async fn asset_utxos(&self, _asset_id: &AssetId) -> Result<Vec<WalletTxOut>, PaymentError> {
+        Ok(self.utxos.lock().unwrap().clone())
     }
 
     async fn build_tx(
@@ -80,7 +97,18 @@ impl OnchainWallet for MockWallet {
         Ok(TEST_LIQUID_TX.clone())
     }
 
+    async fn sign_pset(
+        &self,
+        _pset: PartiallySignedTransaction,
+    ) -> Result<Transaction, PaymentError> {
+        Ok(TEST_LIQUID_TX.clone())
+    }
+
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
+        Ok(TEST_P2TR_ADDR.clone())
+    }
+
+    async fn next_unused_change_address(&self) -> Result<Address, PaymentError> {
         Ok(TEST_P2TR_ADDR.clone())
     }
 

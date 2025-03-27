@@ -22,6 +22,16 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define LIQUID_FEE_RATE_MSAT_PER_VBYTE (float)(LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0)
 
+#define MIN_FEE_RATE 0.1
+
+#define WEIGHT_FIXED 222
+
+#define WEIGHT_VIN_SINGLE_SIG_NATIVE 275
+
+#define WEIGHT_VIN_SINGLE_SIG_NESTED 367
+
+#define WEIGHT_VOUT_NESTED 270
+
 /**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
  */
@@ -358,6 +368,7 @@ typedef struct wire_cst_PayAmount_Bitcoin {
 typedef struct wire_cst_PayAmount_Asset {
   struct wire_cst_list_prim_u_8_strict *asset_id;
   double receiver_amount;
+  bool *estimate_asset_fees;
 } wire_cst_PayAmount_Asset;
 
 typedef union PayAmountKind {
@@ -445,11 +456,13 @@ typedef struct wire_cst_restore_request {
 
 typedef struct wire_cst_prepare_send_response {
   struct wire_cst_send_destination destination;
-  uint64_t fees_sat;
+  uint64_t *fees_sat;
+  double *estimated_asset_fees;
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_send_payment_request {
   struct wire_cst_prepare_send_response prepare_response;
+  bool *use_asset_fees;
 } wire_cst_send_payment_request;
 
 typedef struct wire_cst_sign_message_request {
@@ -536,6 +549,7 @@ typedef struct wire_cst_asset_info {
   struct wire_cst_list_prim_u_8_strict *name;
   struct wire_cst_list_prim_u_8_strict *ticker;
   double amount;
+  double *fees;
 } wire_cst_asset_info;
 
 typedef struct wire_cst_PaymentDetails_Liquid {
@@ -670,6 +684,7 @@ typedef struct wire_cst_asset_metadata {
   struct wire_cst_list_prim_u_8_strict *name;
   struct wire_cst_list_prim_u_8_strict *ticker;
   uint8_t precision;
+  struct wire_cst_list_prim_u_8_strict *fiat_id;
 } wire_cst_asset_metadata;
 
 typedef struct wire_cst_list_asset_metadata {
@@ -691,6 +706,7 @@ typedef struct wire_cst_config {
   bool use_default_external_input_parsers;
   uint32_t *onchain_fee_rate_leeway_sat_per_vbyte;
   struct wire_cst_list_asset_metadata *asset_metadata;
+  struct wire_cst_list_prim_u_8_strict *sideswap_api_key;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {

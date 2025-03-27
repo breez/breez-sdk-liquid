@@ -13,8 +13,8 @@ impl Persister {
         if let Some(asset_metadata) = asset_metadata {
             for am in asset_metadata {
                 con.execute(
-                    "INSERT INTO asset_metadata (asset_id, name, ticker, precision) VALUES (?, ?, ?, ?)",
-                    (am.asset_id, am.name, am.ticker, am.precision),
+                    "INSERT INTO asset_metadata (asset_id, name, ticker, precision, fiat_id) VALUES (?, ?, ?, ?, ?)",
+                    (am.asset_id, am.name, am.ticker, am.precision, am.fiat_id),
                 )?;
             }
         }
@@ -28,7 +28,8 @@ impl Persister {
             "SELECT asset_id, 
             name, 
             ticker, 
-            precision
+            precision, 
+            fiat_id
         FROM asset_metadata",
         )?;
         let asset_metadata: Vec<AssetMetadata> = stmt
@@ -44,7 +45,8 @@ impl Persister {
             "SELECT asset_id, 
             name, 
             ticker, 
-            precision 
+            precision, 
+            fiat_id 
         FROM asset_metadata
         WHERE asset_id = ?",
         )?;
@@ -59,6 +61,7 @@ impl Persister {
             name: row.get(1)?,
             ticker: row.get(2)?,
             precision: row.get(3)?,
+            fiat_id: row.get(4)?,
         })
     }
 }

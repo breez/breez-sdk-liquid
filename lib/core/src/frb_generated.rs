@@ -2413,10 +2413,12 @@ impl SseDecode for crate::model::AssetInfo {
         let mut var_name = <String>::sse_decode(deserializer);
         let mut var_ticker = <String>::sse_decode(deserializer);
         let mut var_amount = <f64>::sse_decode(deserializer);
+        let mut var_fees = <Option<f64>>::sse_decode(deserializer);
         return crate::model::AssetInfo {
             name: var_name,
             ticker: var_ticker,
             amount: var_amount,
+            fees: var_fees,
         };
     }
 }
@@ -2428,11 +2430,13 @@ impl SseDecode for crate::model::AssetMetadata {
         let mut var_name = <String>::sse_decode(deserializer);
         let mut var_ticker = <String>::sse_decode(deserializer);
         let mut var_precision = <u8>::sse_decode(deserializer);
+        let mut var_fiatId = <Option<String>>::sse_decode(deserializer);
         return crate::model::AssetMetadata {
             asset_id: var_assetId,
             name: var_name,
             ticker: var_ticker,
             precision: var_precision,
+            fiat_id: var_fiatId,
         };
     }
 }
@@ -2585,6 +2589,7 @@ impl SseDecode for crate::model::Config {
         let mut var_onchainFeeRateLeewaySatPerVbyte = <Option<u32>>::sse_decode(deserializer);
         let mut var_assetMetadata =
             <Option<Vec<crate::model::AssetMetadata>>>::sse_decode(deserializer);
+        let mut var_sideswapApiKey = <Option<String>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_explorer: var_liquidExplorer,
             bitcoin_explorer: var_bitcoinExplorer,
@@ -2599,6 +2604,7 @@ impl SseDecode for crate::model::Config {
             use_default_external_input_parsers: var_useDefaultExternalInputParsers,
             onchain_fee_rate_leeway_sat_per_vbyte: var_onchainFeeRateLeewaySatPerVbyte,
             asset_metadata: var_assetMetadata,
+            sideswap_api_key: var_sideswapApiKey,
         };
     }
 }
@@ -3885,9 +3891,11 @@ impl SseDecode for crate::model::PayAmount {
             1 => {
                 let mut var_assetId = <String>::sse_decode(deserializer);
                 let mut var_receiverAmount = <f64>::sse_decode(deserializer);
+                let mut var_estimateAssetFees = <Option<bool>>::sse_decode(deserializer);
                 return crate::model::PayAmount::Asset {
                     asset_id: var_assetId,
                     receiver_amount: var_receiverAmount,
+                    estimate_asset_fees: var_estimateAssetFees,
                 };
             }
             2 => {
@@ -4316,10 +4324,12 @@ impl SseDecode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
-        let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
+        let mut var_estimatedAssetFees = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
+            estimated_asset_fees: var_estimatedAssetFees,
         };
     }
 }
@@ -4623,8 +4633,10 @@ impl SseDecode for crate::model::SendPaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_prepareResponse = <crate::model::PrepareSendResponse>::sse_decode(deserializer);
+        let mut var_useAssetFees = <Option<bool>>::sse_decode(deserializer);
         return crate::model::SendPaymentRequest {
             prepare_response: var_prepareResponse,
+            use_asset_fees: var_useAssetFees,
         };
     }
 }
@@ -4991,6 +5003,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::AssetInfo {
             self.name.into_into_dart().into_dart(),
             self.ticker.into_into_dart().into_dart(),
             self.amount.into_into_dart().into_dart(),
+            self.fees.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5009,6 +5022,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::AssetMetadata {
             self.name.into_into_dart().into_dart(),
             self.ticker.into_into_dart().into_dart(),
             self.precision.into_into_dart().into_dart(),
+            self.fiat_id.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5228,6 +5242,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
                 .into_into_dart()
                 .into_dart(),
             self.asset_metadata.into_into_dart().into_dart(),
+            self.sideswap_api_key.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6246,10 +6261,12 @@ impl flutter_rust_bridge::IntoDart for crate::model::PayAmount {
             crate::model::PayAmount::Asset {
                 asset_id,
                 receiver_amount,
+                estimate_asset_fees,
             } => [
                 1.into_dart(),
                 asset_id.into_into_dart().into_dart(),
                 receiver_amount.into_into_dart().into_dart(),
+                estimate_asset_fees.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::model::PayAmount::Drain => [2.into_dart()].into_dart(),
@@ -6767,6 +6784,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
         [
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.estimated_asset_fees.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7128,7 +7146,11 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::SendDestination>
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.prepare_response.into_into_dart().into_dart()].into_dart()
+        [
+            self.prepare_response.into_into_dart().into_dart(),
+            self.use_asset_fees.into_into_dart().into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -7452,6 +7474,7 @@ impl SseEncode for crate::model::AssetInfo {
         <String>::sse_encode(self.name, serializer);
         <String>::sse_encode(self.ticker, serializer);
         <f64>::sse_encode(self.amount, serializer);
+        <Option<f64>>::sse_encode(self.fees, serializer);
     }
 }
 
@@ -7462,6 +7485,7 @@ impl SseEncode for crate::model::AssetMetadata {
         <String>::sse_encode(self.name, serializer);
         <String>::sse_encode(self.ticker, serializer);
         <u8>::sse_encode(self.precision, serializer);
+        <Option<String>>::sse_encode(self.fiat_id, serializer);
     }
 }
 
@@ -7586,6 +7610,7 @@ impl SseEncode for crate::model::Config {
         <bool>::sse_encode(self.use_default_external_input_parsers, serializer);
         <Option<u32>>::sse_encode(self.onchain_fee_rate_leeway_sat_per_vbyte, serializer);
         <Option<Vec<crate::model::AssetMetadata>>>::sse_encode(self.asset_metadata, serializer);
+        <Option<String>>::sse_encode(self.sideswap_api_key, serializer);
     }
 }
 
@@ -8605,10 +8630,12 @@ impl SseEncode for crate::model::PayAmount {
             crate::model::PayAmount::Asset {
                 asset_id,
                 receiver_amount,
+                estimate_asset_fees,
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(asset_id, serializer);
                 <f64>::sse_encode(receiver_amount, serializer);
+                <Option<bool>>::sse_encode(estimate_asset_fees, serializer);
             }
             crate::model::PayAmount::Drain => {
                 <i32>::sse_encode(2, serializer);
@@ -8967,7 +8994,8 @@ impl SseEncode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
-        <u64>::sse_encode(self.fees_sat, serializer);
+        <Option<u64>>::sse_encode(self.fees_sat, serializer);
+        <Option<f64>>::sse_encode(self.estimated_asset_fees, serializer);
     }
 }
 
@@ -9200,6 +9228,7 @@ impl SseEncode for crate::model::SendPaymentRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::PrepareSendResponse>::sse_encode(self.prepare_response, serializer);
+        <Option<bool>>::sse_encode(self.use_asset_fees, serializer);
     }
 }
 
@@ -9525,6 +9554,7 @@ mod io {
                 name: self.name.cst_decode(),
                 ticker: self.ticker.cst_decode(),
                 amount: self.amount.cst_decode(),
+                fees: self.fees.cst_decode(),
             }
         }
     }
@@ -9536,6 +9566,7 @@ mod io {
                 name: self.name.cst_decode(),
                 ticker: self.ticker.cst_decode(),
                 precision: self.precision.cst_decode(),
+                fiat_id: self.fiat_id.cst_decode(),
             }
         }
     }
@@ -10044,6 +10075,7 @@ mod io {
                     .onchain_fee_rate_leeway_sat_per_vbyte
                     .cst_decode(),
                 asset_metadata: self.asset_metadata.cst_decode(),
+                sideswap_api_key: self.sideswap_api_key.cst_decode(),
             }
         }
     }
@@ -10878,6 +10910,7 @@ mod io {
                     crate::model::PayAmount::Asset {
                         asset_id: ans.asset_id.cst_decode(),
                         receiver_amount: ans.receiver_amount.cst_decode(),
+                        estimate_asset_fees: ans.estimate_asset_fees.cst_decode(),
                     }
                 }
                 2 => crate::model::PayAmount::Drain,
@@ -11166,6 +11199,7 @@ mod io {
             crate::model::PrepareSendResponse {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
+                estimated_asset_fees: self.estimated_asset_fees.cst_decode(),
             }
         }
     }
@@ -11408,6 +11442,7 @@ mod io {
         fn cst_decode(self) -> crate::model::SendPaymentRequest {
             crate::model::SendPaymentRequest {
                 prepare_response: self.prepare_response.cst_decode(),
+                use_asset_fees: self.use_asset_fees.cst_decode(),
             }
         }
     }
@@ -11608,6 +11643,7 @@ mod io {
                 name: core::ptr::null_mut(),
                 ticker: core::ptr::null_mut(),
                 amount: Default::default(),
+                fees: core::ptr::null_mut(),
             }
         }
     }
@@ -11623,6 +11659,7 @@ mod io {
                 name: core::ptr::null_mut(),
                 ticker: core::ptr::null_mut(),
                 precision: Default::default(),
+                fiat_id: core::ptr::null_mut(),
             }
         }
     }
@@ -11752,6 +11789,7 @@ mod io {
                 use_default_external_input_parsers: Default::default(),
                 onchain_fee_rate_leeway_sat_per_vbyte: core::ptr::null_mut(),
                 asset_metadata: core::ptr::null_mut(),
+                sideswap_api_key: core::ptr::null_mut(),
             }
         }
     }
@@ -12539,7 +12577,8 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 destination: Default::default(),
-                fees_sat: Default::default(),
+                fees_sat: core::ptr::null_mut(),
+                estimated_asset_fees: core::ptr::null_mut(),
             }
         }
     }
@@ -12742,6 +12781,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 prepare_response: Default::default(),
+                use_asset_fees: core::ptr::null_mut(),
             }
         }
     }
@@ -13937,6 +13977,7 @@ mod io {
         name: *mut wire_cst_list_prim_u_8_strict,
         ticker: *mut wire_cst_list_prim_u_8_strict,
         amount: f64,
+        fees: *mut f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -13945,6 +13986,7 @@ mod io {
         name: *mut wire_cst_list_prim_u_8_strict,
         ticker: *mut wire_cst_list_prim_u_8_strict,
         precision: u8,
+        fiat_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14029,6 +14071,7 @@ mod io {
         use_default_external_input_parsers: bool,
         onchain_fee_rate_leeway_sat_per_vbyte: *mut u32,
         asset_metadata: *mut wire_cst_list_asset_metadata,
+        sideswap_api_key: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14722,6 +14765,7 @@ mod io {
     pub struct wire_cst_PayAmount_Asset {
         asset_id: *mut wire_cst_list_prim_u_8_strict,
         receiver_amount: f64,
+        estimate_asset_fees: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14952,7 +14996,8 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_send_response {
         destination: wire_cst_send_destination,
-        fees_sat: u64,
+        fees_sat: *mut u64,
+        estimated_asset_fees: *mut f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15171,6 +15216,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_send_payment_request {
         prepare_response: wire_cst_prepare_send_response,
+        use_asset_fees: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

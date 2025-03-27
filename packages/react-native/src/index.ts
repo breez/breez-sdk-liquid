@@ -46,6 +46,7 @@ export interface AssetInfo {
     name: string
     ticker: string
     amount: number
+    fees?: number
 }
 
 export interface AssetMetadata {
@@ -53,6 +54,7 @@ export interface AssetMetadata {
     name: string
     ticker: string
     precision: number
+    fiatId?: string
 }
 
 export interface BackupRequest {
@@ -101,6 +103,7 @@ export interface Config {
     externalInputParsers?: ExternalInputParser[]
     onchainFeeRateLeewaySatPerVbyte?: number
     assetMetadata?: AssetMetadata[]
+    sideswapApiKey?: string
 }
 
 export interface ConnectRequest {
@@ -392,7 +395,8 @@ export interface PrepareSendRequest {
 
 export interface PrepareSendResponse {
     destination: SendDestination
-    feesSat: number
+    feesSat?: number
+    estimatedAssetFees?: number
 }
 
 export interface Rate {
@@ -455,6 +459,7 @@ export interface RouteHintHop {
 
 export interface SendPaymentRequest {
     prepareResponse: PrepareSendResponse
+    useAssetFees?: boolean
 }
 
 export interface SendPaymentResponse {
@@ -682,6 +687,7 @@ export type PayAmount = {
     type: PayAmountVariant.ASSET,
     assetId: string
     receiverAmount: number
+    estimateAssetFees?: boolean
 } | {
     type: PayAmountVariant.DRAIN
 }
