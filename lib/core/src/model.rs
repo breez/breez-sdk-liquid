@@ -2251,7 +2251,7 @@ pub struct History<T> {
 pub(crate) type LBtcHistory = History<elements::Txid>;
 pub(crate) type BtcHistory = History<bitcoin::Txid>;
 
-impl<Txid> History<Txid> {
+impl<T> History<T> {
     pub(crate) fn confirmed(&self) -> bool {
         self.height > 0
     }
