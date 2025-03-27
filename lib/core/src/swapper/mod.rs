@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use boltz_client::{
     boltz::{
@@ -12,6 +10,7 @@ use boltz_client::{
 };
 use maybe_sync::{MaybeSend, MaybeSync};
 use mockall::automock;
+use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 
 use crate::{

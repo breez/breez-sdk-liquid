@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use log::{info, trace, warn};
+use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
@@ -548,7 +548,8 @@ impl SyncService {
 #[cfg(test)]
 mod tests {
     use anyhow::{anyhow, Result};
-    use std::{collections::HashMap, sync::Arc};
+    use sdk_common::utils::Arc;
+    use std::collections::HashMap;
 
     use crate::{
         persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},

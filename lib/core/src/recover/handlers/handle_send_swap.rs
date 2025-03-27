@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
+use sdk_common::utils::Arc;
 
 use crate::prelude::*;
 use crate::recover::model::*;

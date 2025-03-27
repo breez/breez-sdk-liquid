@@ -1,7 +1,5 @@
 #![cfg(test)]
 
-use std::sync::Arc;
-
 use crate::{
     model::{Config, Signer},
     persist::Persister,
@@ -9,6 +7,7 @@ use crate::{
     send_swap::SendSwapHandler,
 };
 use anyhow::Result;
+use sdk_common::utils::Arc;
 
 use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},

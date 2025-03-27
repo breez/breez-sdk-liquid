@@ -10,6 +10,7 @@ use sdk_common::{
     lightning_invoice::{Currency, InvoiceBuilder},
     prelude::invoice_pubkey,
 };
+use std::time::SystemTime;
 
 use crate::{
     model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
@@ -35,7 +36,7 @@ pub(crate) fn new_send_swap(
         .description("Test invoice".into())
         .payment_hash(payment_hash)
         .payment_secret(PaymentSecret([42u8; 32]))
-        .current_timestamp()
+        .timestamp(SystemTime::UNIX_EPOCH)
         .min_final_cltv_expiry_delta(144)
         .build_signed(|hash| Secp256k1::new().sign_ecdsa_recoverable(hash, &private_key))
         .expect("Expected valid invoice");
@@ -134,7 +135,7 @@ macro_rules! create_persister {
                     .collect();
                 res
             };
-            std::sync::Arc::new(crate::persist::Persister::new_in_memory(
+            sdk_common::utils::Arc::new(crate::persist::Persister::new_in_memory(
                 &db_id,
                 crate::model::LiquidNetwork::Testnet,
                 true,
@@ -148,7 +149,7 @@ macro_rules! create_persister {
                 .to_str()
                 .ok_or(anyhow::anyhow!("Could not create temporary directory"))?
                 .to_string();
-            std::sync::Arc::new(crate::persist::Persister::new_using_fs(
+            sdk_common::utils::Arc::new(crate::persist::Persister::new_using_fs(
                 &temp_dir_path,
                 crate::model::LiquidNetwork::Testnet,
                 true,

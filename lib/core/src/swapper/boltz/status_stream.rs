@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::sync::Arc;
 use std::time::Duration;
 
 use crate::swapper::{
@@ -13,6 +12,7 @@ use boltz_client::boltz::{
 };
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
+use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 use tokio_with_wasm::alias as tokio;
 

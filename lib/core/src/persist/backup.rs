@@ -36,6 +36,7 @@ impl Persister {
 }
 
 #[cfg(test)]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 mod tests {
     use anyhow::Result;
 

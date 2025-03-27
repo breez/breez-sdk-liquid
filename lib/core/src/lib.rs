@@ -186,6 +186,7 @@ pub(crate) mod signer;
 pub(crate) mod swapper;
 pub(crate) mod sync;
 pub(crate) mod test_utils;
+#[allow(hidden_glob_reexports)]
 pub(crate) mod utils;
 pub mod wallet;
 

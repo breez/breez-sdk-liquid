@@ -1,4 +1,4 @@
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use anyhow::{anyhow, bail, Context, Result};
 use boltz_client::{
@@ -10,6 +10,7 @@ use elements::{hex::FromHex, Script, Transaction};
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
+use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
 
 use crate::{

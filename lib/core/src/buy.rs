@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use anyhow::{anyhow, Result};
 use maybe_sync::{MaybeSend, MaybeSync};
-use sdk_common::prelude::{BreezServer, BuyBitcoinProviderApi, MoonpayProvider};
+use sdk_common::prelude::{utils::Arc, BreezServer, BuyBitcoinProviderApi, MoonpayProvider};
 
 use crate::{
     model::{BuyBitcoinProvider, ChainSwap, Config},
