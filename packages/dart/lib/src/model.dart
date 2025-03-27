@@ -1387,11 +1387,13 @@ class PrepareSendRequest {
 class PrepareSendResponse {
   final SendDestination destination;
 
-  /// The optional estimated fee in satoshi. Is only not set
-  /// when there is the option to pay fees using the asset being sent.
+  /// The optional estimated fee in satoshi. Is set when there is Bitcoin available
+  /// to pay fees. When not set, there are asset fees available to pay fees.
   final BigInt? feesSat;
 
-  /// The optional estimated fee in the asset being sent
+  /// The optional estimated fee in the asset. Is set when [PayAmount::Asset::estimate_asset_fees]
+  /// is set to `true`, the Payjoin service accepts this asset to pay fees and there
+  /// are funds available in this asset to pay fees.
   final double? assetFees;
 
   const PrepareSendResponse({required this.destination, this.feesSat, this.assetFees});

@@ -441,7 +441,12 @@ pub(crate) async fn handle_command(
                 (false, Some(fees_sat), _) => {
                     format!("Fees: {fees_sat} sat. Are the fees acceptable? (y/N) ")
                 }
-                _ => bail!("Could not determine fees"),
+                (true, _, None) => {
+                    bail!("Not able to pay asset fees")
+                }
+                (false, None, _) => {
+                    bail!("Not able to pay satoshi fees")
+                }
             };
 
             wait_confirmation!(confirmation_msg, "Payment send halted");

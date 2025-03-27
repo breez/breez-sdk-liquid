@@ -1146,7 +1146,11 @@ impl LiquidSdk {
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
     ///     * `destination` - the parsed destination, of type [SendDestination]
-    ///     * `fees_sat` - the additional fees which will be paid by the sender
+    ///     * `fees_sat` - the optional estimated fee in satoshi. Is set when there is Bitcoin
+    ///        available to pay fees. When not set, there are asset fees available to pay fees.
+    ///     * `asset_fees` - the optional estimated fee in the asset. Is set when
+    ///        [PayAmount::Asset::estimate_asset_fees] is set to `true`, the Payjoin service accepts
+    ///        this asset to pay fees and there are funds available in this asset to pay fees.
     pub async fn prepare_send_payment(
         &self,
         req: &PrepareSendRequest,
