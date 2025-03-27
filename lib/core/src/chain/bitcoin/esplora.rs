@@ -144,7 +144,7 @@ impl BitcoinChainService for EsploraBitcoinChainService {
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
         let client = self.get_client()?;
         let utxos = client
-            .scripthash_outputs(script)
+            .scripthash_utxos(script)
             .await?
             .into_iter()
             .map(|out| {
@@ -235,7 +235,7 @@ impl BitcoinChainService for EsploraBitcoinChainService {
 
     async fn script_get_balance(&self, script: &Script) -> Result<BtcScriptBalance> {
         let client = self.get_client()?;
-        let utxos = client.scripthash_outputs(script).await?;
+        let utxos = client.scripthash_utxos(script).await?;
         let mut balance = BtcScriptBalance {
             confirmed: 0,
             unconfirmed: 0,

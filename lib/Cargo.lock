@@ -1515,7 +1515,7 @@ dependencies = [
 [[package]]
 name = "esplora-client"
 version = "0.11.0"
-source = "git+https://github.com/hydra-yse/rust-esplora-client?branch=scripthash-utxo#0c99761f352f495dff5fe5bc0b664cbf8b273db0"
+source = "git+https://github.com/hydra-yse/rust-esplora-client?branch=scripthash-utxo#513fb83a872425a69252e12db2f84d96973d08a2"
 dependencies = [
  "bitcoin 0.32.5",
  "hex-conservative 0.2.1",
