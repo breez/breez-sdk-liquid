@@ -11,7 +11,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
-    model::{BlockchainExplorer, Config, LiquidNetwork, RecommendedFees, Utxo},
+    model::{BlockchainExplorer, Config, RecommendedFees, Utxo},
 };
 
 use electrum_client::{Client, ElectrumApi, HeaderNotification};
@@ -41,10 +41,7 @@ impl ElectrumBitcoinChainService {
             return Ok(c);
         }
 
-        let (tls, validate_domain) = match self.config.network {
-            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
-            LiquidNetwork::Regtest => (false, false),
-        };
+        let (tls, validate_domain) = self.config.electrum_tls_options();
         let electrum_url = match &self.config.bitcoin_explorer {
             BlockchainExplorer::Electrum { url } => ElectrumUrl::new(url, tls, validate_domain)?,
             _ => bail!("Cannot start Bitcoin Electrum chain service without an Electrum url"),

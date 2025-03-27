@@ -25,7 +25,7 @@ impl LiquidClient {
         Ok(match &config.liquid_explorer {
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => {
-                let (tls, validate_domain) = config.tls_settings();
+                let (tls, validate_domain) = config.electrum_tls_options();
                 Self::Electrum(Box::new(
                     boltz_client::network::electrum::ElectrumLiquidClient::new(
                         config.network.into(),
@@ -96,7 +96,7 @@ impl BitcoinClient {
         Ok(match &config.bitcoin_explorer {
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { url } => {
-                let (tls, validate_domain) = config.tls_settings();
+                let (tls, validate_domain) = config.electrum_tls_options();
                 Self::Electrum(Box::new(
                     boltz_client::network::electrum::ElectrumBitcoinClient::new(
                         config.network.as_bitcoin_chain(),

@@ -52,16 +52,6 @@ pub enum BlockchainExplorer {
     },
 }
 
-impl BlockchainExplorer {
-    pub(crate) fn url(&self) -> &String {
-        match self {
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-            BlockchainExplorer::Electrum { url } => url,
-            BlockchainExplorer::Esplora { url, .. } => url,
-        }
-    }
-}
-
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
@@ -330,11 +320,25 @@ impl Config {
         }
     }
 
-    pub(crate) fn tls_settings(&self) -> (/*tls*/ bool, /*validate_domain*/ bool) {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    pub(crate) fn electrum_tls_options(&self) -> (/*tls*/ bool, /*validate_domain*/ bool) {
         match self.network {
             LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
             LiquidNetwork::Regtest => (false, false),
         }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    pub(crate) fn electrum_client(
+        &self,
+        url: &str,
+    ) -> Result<lwk_wollet::ElectrumClient, lwk_wollet::Error> {
+        let (tls, validate_domain) = self.electrum_tls_options();
+        let electrum_url = lwk_wollet::ElectrumUrl::new(url, tls, validate_domain)?;
+        lwk_wollet::ElectrumClient::with_options(
+            &electrum_url,
+            lwk_wollet::ElectrumOptions { timeout: Some(3) },
+        )
     }
 }
 
