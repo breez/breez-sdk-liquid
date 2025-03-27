@@ -142,7 +142,7 @@ impl BindingLiquidSdk {
         Ok(self.sdk.send_payment(&req.into()).await?.into())
     }
 
-    #[wasm_bindgen(js_name = "preparePeceivePayment")]
+    #[wasm_bindgen(js_name = "prepareReceivePayment")]
     pub async fn prepare_receive_payment(
         &self,
         req: PrepareReceiveRequest,
