@@ -7,10 +7,11 @@ mod utxo_select;
 
 use error::PayjoinResult;
 use lwk_wollet::elements::Transaction;
+use maybe_sync::{MaybeSend, MaybeSync};
 use model::AcceptedAsset;
 
 #[sdk_macros::async_trait]
-pub trait PayjoinService: Send + Sync {
+pub trait PayjoinService: MaybeSend + MaybeSync {
     /// Get a list of accepted assets
     async fn fetch_accepted_assets(&self) -> PayjoinResult<Vec<AcceptedAsset>>;
 

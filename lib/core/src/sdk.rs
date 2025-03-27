@@ -1148,7 +1148,7 @@ impl LiquidSdk {
     ///     * `destination` - the parsed destination, of type [SendDestination]
     ///     * `fees_sat` - the optional estimated fee in satoshi. Is set when there is Bitcoin
     ///        available to pay fees. When not set, there are asset fees available to pay fees.
-    ///     * `asset_fees` - the optional estimated fee in the asset. Is set when
+    ///     * `estimated_asset_fees` - the optional estimated fee in the asset. Is set when
     ///        [PayAmount::Asset::estimate_asset_fees] is set to `true`, the Payjoin service accepts
     ///        this asset to pay fees and there are funds available in this asset to pay fees.
     pub async fn prepare_send_payment(
@@ -1159,7 +1159,7 @@ impl LiquidSdk {
 
         let get_info_res = self.get_info().await?;
         let fees_sat;
-        let asset_fees;
+        let estimated_asset_fees;
         let receiver_amount_sat;
         let asset_id;
         let payment_destination;
@@ -1209,7 +1209,12 @@ impl LiquidSdk {
                     }
                 );
 
-                (asset_id, receiver_amount_sat, fees_sat, asset_fees) = match amount {
+                (
+                    asset_id,
+                    receiver_amount_sat,
+                    fees_sat,
+                    estimated_asset_fees,
+                ) = match amount {
                     PayAmount::Drain => {
                         ensure_sdk!(
                             get_info_res.wallet_info.pending_receive_sat == 0
@@ -1320,7 +1325,7 @@ impl LiquidSdk {
                     .await?
                     .map(|(address, _)| address);
                 asset_id = self.config.lbtc_asset_id();
-                asset_fees = None;
+                estimated_asset_fees = None;
                 (receiver_amount_sat, fees_sat, payment_destination) =
                     match (mrh_address.clone(), req.amount.clone()) {
                         (Some(lbtc_address), Some(PayAmount::Drain)) => {
@@ -1412,7 +1417,7 @@ impl LiquidSdk {
                     .await?;
                 asset_id = self.config.lbtc_asset_id();
                 fees_sat = Some(boltz_fees_total + lockup_fees_sat);
-                asset_fees = None;
+                estimated_asset_fees = None;
 
                 payment_destination = SendDestination::Bolt12 {
                     offer,
@@ -1435,7 +1440,7 @@ impl LiquidSdk {
         Ok(PrepareSendResponse {
             destination: payment_destination,
             fees_sat,
-            asset_fees,
+            estimated_asset_fees,
         })
     }
 
@@ -3685,7 +3690,7 @@ impl LiquidSdk {
                 prepare_response: PrepareSendResponse {
                     destination: prepare_response.destination.clone(),
                     fees_sat: Some(prepare_response.fees_sat),
-                    asset_fees: None,
+                    estimated_asset_fees: None,
                 },
                 use_asset_fees: None,
             })

@@ -446,7 +446,7 @@ pub enum SendDestination {
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
     pub fees_sat: Option<u64>,
-    pub asset_fees: Option<f64>,
+    pub estimated_asset_fees: Option<f64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentRequest)]

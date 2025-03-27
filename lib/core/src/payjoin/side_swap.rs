@@ -194,7 +194,10 @@ impl PayjoinService for SideSwapPayjoinService {
             PayjoinError::InsufficientFunds
         );
 
-        let fee = asset_metadata.amount_from_sat(fee_sat);
+        // The estimation accuracy gives a fee to two decimal places
+        let mut fee = asset_metadata.amount_from_sat(fee_sat);
+        fee = (fee * 100.0).ceil() / 100.0;
+
         debug!("Estimated payjoin server fee: {fee} ({fee_sat} satoshi units)");
 
         Ok(fee)

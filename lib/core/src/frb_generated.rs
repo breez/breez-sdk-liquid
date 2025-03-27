@@ -4325,11 +4325,11 @@ impl SseDecode for crate::model::PrepareSendResponse {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
         let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
-        let mut var_assetFees = <Option<f64>>::sse_decode(deserializer);
+        let mut var_estimatedAssetFees = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
-            asset_fees: var_assetFees,
+            estimated_asset_fees: var_estimatedAssetFees,
         };
     }
 }
@@ -6784,7 +6784,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
         [
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
-            self.asset_fees.into_into_dart().into_dart(),
+            self.estimated_asset_fees.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -8995,7 +8995,7 @@ impl SseEncode for crate::model::PrepareSendResponse {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
         <Option<u64>>::sse_encode(self.fees_sat, serializer);
-        <Option<f64>>::sse_encode(self.asset_fees, serializer);
+        <Option<f64>>::sse_encode(self.estimated_asset_fees, serializer);
     }
 }
 
@@ -11199,7 +11199,7 @@ mod io {
             crate::model::PrepareSendResponse {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
-                asset_fees: self.asset_fees.cst_decode(),
+                estimated_asset_fees: self.estimated_asset_fees.cst_decode(),
             }
         }
     }
@@ -12578,7 +12578,7 @@ mod io {
             Self {
                 destination: Default::default(),
                 fees_sat: core::ptr::null_mut(),
-                asset_fees: core::ptr::null_mut(),
+                estimated_asset_fees: core::ptr::null_mut(),
             }
         }
     }
@@ -14997,7 +14997,7 @@ mod io {
     pub struct wire_cst_prepare_send_response {
         destination: wire_cst_send_destination,
         fees_sat: *mut u64,
-        asset_fees: *mut f64,
+        estimated_asset_fees: *mut f64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

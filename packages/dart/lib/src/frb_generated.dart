@@ -3026,7 +3026,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return PrepareSendResponse(
       destination: dco_decode_send_destination(arr[0]),
       feesSat: dco_decode_opt_box_autoadd_u_64(arr[1]),
-      assetFees: dco_decode_opt_box_autoadd_f_64(arr[2]),
+      estimatedAssetFees: dco_decode_opt_box_autoadd_f_64(arr[2]),
     );
   }
 
@@ -5410,8 +5410,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_destination = sse_decode_send_destination(deserializer);
     var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
-    var var_assetFees = sse_decode_opt_box_autoadd_f_64(deserializer);
-    return PrepareSendResponse(destination: var_destination, feesSat: var_feesSat, assetFees: var_assetFees);
+    var var_estimatedAssetFees = sse_decode_opt_box_autoadd_f_64(deserializer);
+    return PrepareSendResponse(
+      destination: var_destination,
+      feesSat: var_feesSat,
+      estimatedAssetFees: var_estimatedAssetFees,
+    );
   }
 
   @protected
@@ -7620,7 +7624,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_send_destination(self.destination, serializer);
     sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
-    sse_encode_opt_box_autoadd_f_64(self.assetFees, serializer);
+    sse_encode_opt_box_autoadd_f_64(self.estimatedAssetFees, serializer);
   }
 
   @protected

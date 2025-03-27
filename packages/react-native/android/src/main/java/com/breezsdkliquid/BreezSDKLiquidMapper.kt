@@ -2295,15 +2295,24 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
     }
     val destination = prepareSendResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = if (hasNonNullKey(prepareSendResponse, "feesSat")) prepareSendResponse.getDouble("feesSat").toULong() else null
-    val assetFees = if (hasNonNullKey(prepareSendResponse, "assetFees")) prepareSendResponse.getDouble("assetFees") else null
-    return PrepareSendResponse(destination, feesSat, assetFees)
+    val estimatedAssetFees =
+        if (hasNonNullKey(
+                prepareSendResponse,
+                "estimatedAssetFees",
+            )
+        ) {
+            prepareSendResponse.getDouble("estimatedAssetFees")
+        } else {
+            null
+        }
+    return PrepareSendResponse(destination, feesSat, estimatedAssetFees)
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
     readableMapOf(
         "destination" to readableMapOf(prepareSendResponse.destination),
         "feesSat" to prepareSendResponse.feesSat,
-        "assetFees" to prepareSendResponse.assetFees,
+        "estimatedAssetFees" to prepareSendResponse.estimatedAssetFees,
     )
 
 fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {

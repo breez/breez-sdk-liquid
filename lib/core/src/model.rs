@@ -155,6 +155,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -203,6 +204,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -226,6 +228,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: None,
         }
     }
 
@@ -715,7 +718,7 @@ pub struct PrepareSendResponse {
     /// The optional estimated fee in the asset. Is set when [PayAmount::Asset::estimate_asset_fees]
     /// is set to `true`, the Payjoin service accepts this asset to pay fees and there
     /// are funds available in this asset to pay fees.
-    pub asset_fees: Option<f64>,
+    pub estimated_asset_fees: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

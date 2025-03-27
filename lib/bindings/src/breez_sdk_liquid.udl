@@ -445,7 +445,7 @@ interface SendDestination {
 dictionary PrepareSendResponse {
     SendDestination destination;
     u64? fees_sat;
-    f64? asset_fees;
+    f64? estimated_asset_fees;
 };
 
 dictionary SendPaymentRequest {

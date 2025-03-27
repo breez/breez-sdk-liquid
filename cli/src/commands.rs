@@ -433,7 +433,7 @@ pub(crate) async fn handle_command(
             let confirmation_msg = match (
                 use_asset_fees.unwrap_or(false),
                 prepare_response.fees_sat,
-                prepare_response.asset_fees,
+                prepare_response.estimated_asset_fees,
             ) {
                 (true, _, Some(asset_fees)) => {
                     format!("Fees: approx {asset_fees}. Are the fees acceptable? (y/N) ")

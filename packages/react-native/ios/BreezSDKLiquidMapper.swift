@@ -2684,22 +2684,22 @@ enum BreezSDKLiquidMapper {
             }
             feesSat = feesSatTmp
         }
-        var assetFees: Double?
-        if hasNonNilKey(data: prepareSendResponse, key: "assetFees") {
-            guard let assetFeesTmp = prepareSendResponse["assetFees"] as? Double else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "assetFees"))
+        var estimatedAssetFees: Double?
+        if hasNonNilKey(data: prepareSendResponse, key: "estimatedAssetFees") {
+            guard let estimatedAssetFeesTmp = prepareSendResponse["estimatedAssetFees"] as? Double else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "estimatedAssetFees"))
             }
-            assetFees = assetFeesTmp
+            estimatedAssetFees = estimatedAssetFeesTmp
         }
 
-        return PrepareSendResponse(destination: destination, feesSat: feesSat, assetFees: assetFees)
+        return PrepareSendResponse(destination: destination, feesSat: feesSat, estimatedAssetFees: estimatedAssetFees)
     }
 
     static func dictionaryOf(prepareSendResponse: PrepareSendResponse) -> [String: Any?] {
         return [
             "destination": dictionaryOf(sendDestination: prepareSendResponse.destination),
             "feesSat": prepareSendResponse.feesSat == nil ? nil : prepareSendResponse.feesSat,
-            "assetFees": prepareSendResponse.assetFees == nil ? nil : prepareSendResponse.assetFees,
+            "estimatedAssetFees": prepareSendResponse.estimatedAssetFees == nil ? nil : prepareSendResponse.estimatedAssetFees,
         ]
     }
 

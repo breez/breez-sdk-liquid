@@ -4726,7 +4726,7 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
-  external ffi.Pointer<ffi.Double> asset_fees;
+  external ffi.Pointer<ffi.Double> estimated_asset_fees;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {

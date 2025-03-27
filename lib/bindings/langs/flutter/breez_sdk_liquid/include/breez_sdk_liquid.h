@@ -457,7 +457,7 @@ typedef struct wire_cst_restore_request {
 typedef struct wire_cst_prepare_send_response {
   struct wire_cst_send_destination destination;
   uint64_t *fees_sat;
-  double *asset_fees;
+  double *estimated_asset_fees;
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_send_payment_request {

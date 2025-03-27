@@ -396,7 +396,7 @@ export interface PrepareSendRequest {
 export interface PrepareSendResponse {
     destination: SendDestination
     feesSat?: number
-    assetFees?: number
+    estimatedAssetFees?: number
 }
 
 export interface Rate {

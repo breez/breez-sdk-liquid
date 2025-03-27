@@ -1394,12 +1394,12 @@ class PrepareSendResponse {
   /// The optional estimated fee in the asset. Is set when [PayAmount::Asset::estimate_asset_fees]
   /// is set to `true`, the Payjoin service accepts this asset to pay fees and there
   /// are funds available in this asset to pay fees.
-  final double? assetFees;
+  final double? estimatedAssetFees;
 
-  const PrepareSendResponse({required this.destination, this.feesSat, this.assetFees});
+  const PrepareSendResponse({required this.destination, this.feesSat, this.estimatedAssetFees});
 
   @override
-  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ assetFees.hashCode;
+  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ estimatedAssetFees.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1408,7 +1408,7 @@ class PrepareSendResponse {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           feesSat == other.feesSat &&
-          assetFees == other.assetFees;
+          estimatedAssetFees == other.estimatedAssetFees;
 }
 
 @freezed
