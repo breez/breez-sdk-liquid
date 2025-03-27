@@ -8,11 +8,13 @@ use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::elements::{AssetId, Txid};
+use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
     ElectrumClient, ElectrumOptions, ElectrumUrl, ElementsNetwork, FsPersister, NoPersist,
     WalletTx, Wollet, WolletDescriptor,
 };
+use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
@@ -27,8 +29,6 @@ use crate::{
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
-use lwk_wollet::secp256k1::Message;
-use maybe_sync::{MaybeSend, MaybeSync};
 
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 

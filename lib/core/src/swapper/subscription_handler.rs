@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
 use log::{error, info};
+use maybe_sync::{MaybeSend, MaybeSync};
 
 use crate::persist::Persister;
 
 use super::SwapperStatusStream;
 
 #[sdk_macros::async_trait]
-pub trait SubscriptionHandler: Send + Sync {
+pub trait SubscriptionHandler: MaybeSend + MaybeSync {
     async fn subscribe_swaps(&self);
 }
 

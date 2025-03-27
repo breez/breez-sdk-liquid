@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
@@ -8,9 +9,12 @@ use boltz_client::{
     BtcSwapScript, Keypair, LBtcSwapScript,
 };
 use derivative::Derivative;
+use elements::AssetId;
+use lwk_wollet::ElementsNetwork;
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
+use sdk_common::bitcoin::hashes::hex::ToHex as _;
 use sdk_common::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -30,11 +34,6 @@ use crate::{
     chain::bitcoin::esplora::EsploraBitcoinChainService,
     chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
 };
-
-use bitcoin::{bip32, ScriptBuf};
-use elements::AssetId;
-use lwk_wollet::ElementsNetwork;
-use sdk_common::bitcoin::hashes::hex::ToHex as _;
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;

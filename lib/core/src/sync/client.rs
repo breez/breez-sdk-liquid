@@ -1,6 +1,8 @@
 use anyhow::{anyhow, Error, Result};
 
 use log::debug;
+use maybe_sync::{MaybeSend, MaybeSync};
+use sdk_common::grpc::transport::{GrpcClient, Transport};
 use tokio::sync::Mutex;
 use tonic::{
     metadata::{errors::InvalidMetadataValue, Ascii, MetadataValue},
@@ -12,10 +14,9 @@ use super::model::{
     syncer_client::SyncerClient as ProtoSyncerClient, ListChangesReply, ListChangesRequest,
     ListenChangesRequest, Notification, SetRecordReply, SetRecordRequest,
 };
-use sdk_common::grpc::transport::{GrpcClient, Transport};
 
 #[sdk_macros::async_trait]
-pub(crate) trait SyncerClient: Send + Sync {
+pub(crate) trait SyncerClient: MaybeSend + MaybeSync {
     async fn connect(&self, connect_url: String) -> Result<()>;
     async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply>;
     async fn pull(&self, req: ListChangesRequest) -> Result<ListChangesReply>;

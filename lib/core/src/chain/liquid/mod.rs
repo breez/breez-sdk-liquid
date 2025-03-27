@@ -2,19 +2,20 @@ pub(crate) mod electrum;
 pub(crate) mod esplora;
 
 use anyhow::Result;
+use elements::{Address, Script, Transaction, Txid};
+use maybe_sync::{MaybeSend, MaybeSync};
 use mockall::automock;
 
 use crate::{
     elements,
     model::{LBtcHistory, Utxo},
 };
-use elements::{Address, Script, Transaction, Txid};
 
 pub(crate) type History = LBtcHistory;
 
 #[automock]
 #[sdk_macros::async_trait]
-pub trait LiquidChainService: Send + Sync {
+pub trait LiquidChainService: MaybeSend + MaybeSync {
     /// Get the blockchain latest block
     async fn tip(&self) -> Result<u32>;
 

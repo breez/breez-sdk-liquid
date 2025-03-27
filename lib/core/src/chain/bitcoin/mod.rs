@@ -2,18 +2,19 @@ pub(crate) mod electrum;
 pub(crate) mod esplora;
 
 use anyhow::Result;
+use bitcoin::{Address, Script, Transaction, Txid};
+use maybe_sync::{MaybeSend, MaybeSync};
 
 use crate::{
     bitcoin,
     model::{BtcHistory, BtcScriptBalance, RecommendedFees, Utxo},
 };
-use bitcoin::{Address, Script, Transaction, Txid};
 
 pub(crate) type History = BtcHistory;
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[sdk_macros::async_trait]
-pub trait BitcoinChainService: Send + Sync {
+pub trait BitcoinChainService: MaybeSend + MaybeSync {
     /// Get the blockchain latest block
     async fn tip(&self) -> Result<u32>;
 
