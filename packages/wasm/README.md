@@ -46,43 +46,19 @@ It's important to first initialise the WebAssembly module by using `await init()
 import init, {
     connect,
     defaultConfig,
-    LiquidNetwork,
-    PaymentMethod,
     SdkEvent
 } from '@breeztech/breez-sdk-liquid/web'
 
-class JsEventListener {
-    onEvent = (event: SdkEvent) => {
-        console.log(`EVENT RECEIVED: ${JSON.stringify(event)}`)
-    }
-}
-
-const eventListener = new JsEventListener()
-
-const main = async () => {
-    const breezApiKey = '<your-Breez-API-key>'
-    const mnemonic = '<mnemonic words>'
-
-    // Initialise the WebAssembly module
-    await init()
-
-    // Construct the sdk default config
-    const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
-
-    // Connect to the Breez SDK make it ready to use
-    const sdk = await connect({ config, mnemonic })
-
-    // Add event handler
-    await sdk.addEventListener(eventHandler)
-}
-
-main()
+// Initialise the WebAssembly module
+await init()
 ```
 
 ### Node.js
 When developing a node.js application you should require `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/node` submodule).
 ```js
-const { connect, defaultConfig, LiquidNetwork } = require('@breeztech/breez-sdk-liquid/node')
+const { connect, defaultConfig, initLogger } = require('@breeztech/breez-sdk-liquid/node')
+const { Command } = require('commander')
+require('dotenv').config()
 
 class JsEventListener {
     onEvent = (event) => {
@@ -90,54 +66,42 @@ class JsEventListener {
     }
 }
 
+const program = new Command()
 const eventListener = new JsEventListener()
 
-const main = async () => {
+const initSdk = async () => {
+    // Set the logger to trace
+    initLogger('trace')
+
+    // Get the mnemonic
     const breezApiKey = process.env.BREEZ_API_KEY
     const mnemonic = process.env.MNEMONIC
 
-    // Construct the sdk default config
-    const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
+    // Connect using the config
+    const config = await defaultConfig('mainnet', breezApiKey)
+    console.log(`defaultConfig: ${JSON.stringify(config)}`)
 
-    // Connect to the Breez SDK make it ready to use
     const sdk = await connect({ config, mnemonic })
+    console.log(`connect`)
 
-    // Add event handler
-    await sdk.addEventListener(eventHandler)
+    const listenerId = await sdk.addEventListener(eventListener)
+    console.log(`addEventListener: ${listenerId}`)
+    return sdk
 }
 
-main()
+program.name('nodeless-wasm-cli').description('CLI for Breez SDK - Nodeless Wasm')
+
+program.command('get-info').action(async () => {
+    let sdk = await initSdk()
+    let getInfoRes = await sdk.getInfo()
+    console.log(`getInfo: ${JSON.stringify(getInfoRes)}`)
+})
+
+program.parse()
 ```
 
 ### Deno
 When developing a Deno application you should require `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/deno` submodule).
-```js
-import { connect, defaultConfig, LiquidNetwork } from '@breeztech/breez-sdk-liquid/deno'
-
-class JsEventListener {
-    onEvent = (event) => {
-        console.log(`EVENT RECEIVED: ${JSON.stringify(event)}`)
-    }
-}
-
-const eventListener = new JsEventListener()
-
-const main = async () => {
-    const breezApiKey = process.env.BREEZ_API_KEY
-    const mnemonic = process.env.MNEMONIC
-
-    // Construct the sdk default config
-    const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
-
-    // Connect to the Breez SDK make it ready to use
-    const sdk = await connect({ config, mnemonic })
-
-    // Add event handler
-    await sdk.addEventListener(eventHandler)
-}
-
-main()
-```
 
 ## Troubleshooting
 
