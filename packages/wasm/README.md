@@ -138,3 +138,7 @@ const main = async () => {
 
 main()
 ```
+
+## Troubleshooting
+
+- Node.js version 19 is the first version to add `global.crypto`. When using less than version 19 this has to be polyfilled.
