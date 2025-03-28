@@ -210,7 +210,6 @@ pub struct LnUrlWithdrawRequestData {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LnUrlCallbackStatus)]
 pub enum LnUrlCallbackStatus {
     Ok,
-    #[serde(rename = "ERROR")]
     ErrorStatus {
         #[serde(flatten)]
         data: LnUrlErrorData,
