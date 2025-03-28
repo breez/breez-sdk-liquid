@@ -194,6 +194,7 @@ async fn bolt11() {
     assert_eq!(bob_payment.fees_sat, 0);
     assert_eq!(bob_payment.payment_type, PaymentType::Receive);
     assert_eq!(bob_payment.status, PaymentState::Complete);
+    // TODO: figure out why occasionally this fails (details = Liquid)
     assert!(matches!(
         bob_payment.details,
         PaymentDetails::Lightning { .. }
