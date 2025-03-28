@@ -1,11 +1,4 @@
-import init, {
-    connect,
-    defaultConfig,
-    LiquidNetwork,
-    PaymentMethod,
-    SdkEvent,
-    setLogger
-} from '@breeztech/breez-sdk-liquid/web'
+import init, { connect, defaultConfig, initLogger, SdkEvent } from '@breeztech/breez-sdk-liquid/web'
 import { useState, useEffect } from 'react'
 
 const DebugLine = ({ title, text }: { title: string; text?: string }) => {
@@ -37,7 +30,7 @@ function App() {
     const [lines, setLines] = useState<Line[]>([])
 
     const addLine = (title: string, text?: string) => {
-        setLines((lines: Line[]) => [{ at: new Date().getTime(), title, text }, ...lines])
+        setLines((lines: Line[]) => [{ at: lines.length, title, text }, ...lines])
         console.log(`${title}${text && text.length > 0 ? ': ' + text : ''}`)
     }
 
@@ -53,14 +46,14 @@ function App() {
             await init()
 
             // Set the logger to trace
-            setLogger('trace')
+            initLogger('trace')
 
             // Get the mnemonic
             const breezApiKey = import.meta.env.VITE_BREEZ_API_KEY
             const mnemonic = import.meta.env.VITE_MNEMONIC
 
             // Connect using the config
-            const config = await defaultConfig(LiquidNetwork.MAINNET, breezApiKey)
+            const config = await defaultConfig('mainnet', breezApiKey)
             addLine('defaultConfig', JSON.stringify(config))
 
             const sdk = await connect({ config, mnemonic })
@@ -78,10 +71,9 @@ function App() {
             addLine('addEventListener', listenerId)
 
             /* Receive lightning payment */
-            let amount = { BITCOIN: { payerAmountSat: 1000 } }
             let prepareReceiveRes = await sdk.prepareReceivePayment({
-                amount,
-                paymentMethod: PaymentMethod.LIGHTNING
+                amount: { type: 'bitcoin', payerAmountSat: 1000 },
+                paymentMethod: 'lightning'
             })
             addLine('prepareReceivePayment', JSON.stringify(prepareReceiveRes))
             // Get the fees required for this payment
