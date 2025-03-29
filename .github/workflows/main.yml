@@ -189,6 +189,42 @@ jobs:
         working-directory: lib/core
         run: cargo test
 
+  regtest-tests:
+    name: Regtest sdk-core tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Start regtest environment
+        working-directory: regtest
+        run: sh start.sh
+
+      - name: Run regtest tests
+        working-directory: lib/core
+        run: make cargo-regtest-test
+
   build-bindings:
     name: Test bindings
     runs-on: ubuntu-latest
@@ -306,6 +342,51 @@ jobs:
 
       - name: Test Wasm
         run: make wasm-test
+  
+  regtest-tests-wasm:
+    name: Regtest sdk-core Wasm tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+            submodules: true
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Install Wasm target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            lib -> target
+            cli -> target
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+      
+      - name: Start regtest environment
+        working-directory: regtest
+        run: sh start.sh
+
+      - name: Run Wasm regtest tests
+        working-directory: lib/core
+        run: make wasm-regtest-test
 
   notification-plugin:
     name: Check notification plugin

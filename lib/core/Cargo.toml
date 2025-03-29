@@ -13,6 +13,7 @@ frb = ["dep:flutter_rust_bridge"]
 # Uniffi features required to build using cargo-lipo
 uniffi-25 = []
 uniffi-28 = []
+regtest = []   # Enable regtest tests
 
 [lints]
 workspace = true
@@ -35,7 +36,12 @@ rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7e
     "bundled",
 ] }
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
-tokio_with_wasm = { version = "0.8.2", features = ["macros", "rt", "sync", "time"] }
+tokio_with_wasm = { version = "0.8.2", features = [
+    "macros",
+    "rt",
+    "sync",
+    "time",
+] }
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 sdk-common = { workspace = true }
 sdk-macros = { workspace = true }
@@ -93,6 +99,8 @@ boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f78
 [dev-dependencies]
 sdk-common = { workspace = true, features = ["test-utils"] }
 paste = "1.0.15"
+base64 = "0.22.1"
+serial_test = "3.2.0"
 
 # Non-Wasm dev dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dev-dependencies]
@@ -103,6 +111,9 @@ tempdir = "0.3.7"
 wasm-bindgen-test = "0.3.33"
 rand = "0.8"
 getrandom = { version = "0.2", features = ["js"] }
+wasm-bindgen-futures = "0.4.50"
+gloo-timers = { version = "0.3.0", features = ["futures"] }
+futures = "0.3.31"
 
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }

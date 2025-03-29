@@ -595,7 +595,7 @@ pub struct PrepareReceiveRequest {
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
     pub amount: Option<ReceiveAmount>,
