@@ -105,7 +105,7 @@ pub trait OnchainWallet: MaybeSend + MaybeSync {
 pub enum WalletClient {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     Electrum(Box<lwk_wollet::ElectrumClient>),
-    Esplora(Box<EsploraClient>),
+    Esplora(Box<EsploraClient>, /* waterfalls */ bool),
 }
 
 impl WalletClient {
@@ -120,13 +120,14 @@ impl WalletClient {
                 url,
                 use_waterfalls,
             } => {
+                let waterfalls = *use_waterfalls;
                 let client = Box::new(
                     EsploraClientBuilder::new(url, config.network.into())
                         .timeout(3)
-                        .waterfalls(*use_waterfalls)
+                        .waterfalls(waterfalls)
                         .build(),
                 );
-                Ok(Self::Esplora(client))
+                Ok(Self::Esplora(client, waterfalls))
             }
         }
     }
@@ -141,8 +142,13 @@ impl WalletClient {
             WalletClient::Electrum(electrum_client) => {
                 electrum_client.full_scan_to_index(&wallet.state(), index)?
             }
-            WalletClient::Esplora(esplora_client) => {
-                esplora_client.full_scan_to_index(wallet, index).await?
+            WalletClient::Esplora(esplora_client, waterfalls) => {
+                if *waterfalls {
+                    // Avoid a `UsingWaterfallsWithNonZeroIndex` error by not passing the index
+                    esplora_client.full_scan(wallet).await?
+                } else {
+                    esplora_client.full_scan_to_index(wallet, index).await?
+                }
             }
         };
 
