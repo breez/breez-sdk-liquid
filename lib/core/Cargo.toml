@@ -77,7 +77,6 @@ boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f78
 
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
-console_log = "1"
 lwk_wollet = { git = "https://github.com/breez/lwk", rev = "0b18e777d496", default-features = false, features = [
     "esplora",
 ] }

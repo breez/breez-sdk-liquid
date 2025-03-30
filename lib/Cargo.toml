@@ -44,3 +44,6 @@ thiserror = "1.0"
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits and rebased on secp256k1-zkp 0.11.0
 secp256k1-zkp = { git = "https://github.com/breez/rust-secp256k1-zkp.git", rev = "eac2e479255a6e32b5588bc25ee53c642fdd8395" }
+# Patches log to allow non Send + Sync in Wasm and applies the patch to dependencies
+log = { git = "https://github.com/breez/log", rev = "d34efde73c8dfdf3ef938b8ad4dcc83e9801aab0", features = ["std"] }
+

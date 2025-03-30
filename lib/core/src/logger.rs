@@ -4,6 +4,7 @@ use std::io::Write;
 use anyhow::{anyhow, Result};
 use chrono::Local;
 use log::{LevelFilter, Metadata, Record};
+use maybe_sync::{MaybeSend, MaybeSync};
 
 use crate::model::LogEntry;
 
@@ -81,6 +82,6 @@ pub(super) fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>)
     Ok(())
 }
 
-pub trait Logger: Send + Sync {
+pub trait Logger: MaybeSend + MaybeSync {
     fn log(&self, l: LogEntry);
 }

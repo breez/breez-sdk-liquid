@@ -1,10 +1,10 @@
 mod error;
 mod event;
+mod logger;
 pub mod model;
 mod signer;
 
 use std::rc::Rc;
-use std::str::FromStr;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
@@ -13,7 +13,8 @@ use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::wallet::LiquidOnchainWallet;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
-use log::Level;
+use log::LevelFilter;
+use logger::{Logger, WasmLogger};
 use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
 
@@ -87,9 +88,11 @@ pub fn parse_invoice(input: String) -> WasmResult<LNInvoice> {
     Ok(LiquidSdk::parse_invoice(&input)?.into())
 }
 
-#[wasm_bindgen(js_name = "initLogger")]
-pub fn init_logger(level: String) -> WasmResult<()> {
-    Ok(console_log::init_with_level(Level::from_str(&level)?)
+#[wasm_bindgen(js_name = "setLogger")]
+pub fn set_logger(logger: Logger) -> WasmResult<()> {
+    let wasm_logger = WasmLogger { logger };
+    Ok(log::set_boxed_logger(Box::new(wasm_logger))
+        .map(|_| log::set_max_level(LevelFilter::Trace))
         .map_err(|_| anyhow!("Logger already created"))?)
 }
 
