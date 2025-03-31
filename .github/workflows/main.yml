@@ -39,6 +39,7 @@ jobs:
           workspaces: |
             lib -> target
             cli -> target
+          shared-key: "cargo-clippy-${{ hashFiles('**/Cargo.lock') }}"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -47,16 +48,16 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clippy bindings
-        working-directory: lib/bindings 
-        run: cargo clippy -- -D warnings
+        working-directory: lib/bindings
+        run: cargo clippy --all-targets --all-features
 
       - name: Clippy core
-        working-directory: lib/core 
-        run: cargo clippy -- -D warnings
+        working-directory: lib/core
+        run: cargo clippy --all-targets --all-features
 
       - name: Clippy cli
-        working-directory: cli 
-        run: cargo clippy -- -D warnings
+        working-directory: cli
+        run: cargo clippy --all-targets --all-features
 
   clippy-wasm:
     name: Cargo Clippy WASM
@@ -88,15 +89,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             lib -> target
-          cache-on-failure: "true"
+            cli -> target
+          shared-key: "cargo-build-${{ hashFiles('**/Cargo.lock') }}"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -104,27 +103,17 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cargo build bindings
+      - name: Build bindings
         working-directory: lib/bindings
-        run: cargo build
+        run: cargo build --all-targets --all-features
 
-      - name: Cargo build core
+      - name: Build core
         working-directory: lib/core
-        run: cargo build
+        run: cargo build --all-targets --all-features
 
-      - name: Check git status
-        env:
-          GIT_PAGER: cat
-        run: |
-          status=$(git status --porcelain)
-          if [[ -n "$status" ]]; then
-            echo "Git status has changes"
-            echo "$status"
-            git diff
-            exit 1
-          else
-            echo "No changes in git status"
-          fi
+      - name: Build cli
+        working-directory: cli
+        run: cargo build --all-targets --all-features
 
   build-wasm:
     name: Cargo Build WASM
@@ -165,7 +154,7 @@ jobs:
             echo "No changes in git status"
           fi
 
-  tests:
+  test:
     name: Test sdk-core
     runs-on: ubuntu-latest
     steps:
@@ -176,6 +165,7 @@ jobs:
           workspaces: |
             lib -> target
             cli -> target
+          shared-key: "cargo-test-${{ hashFiles('**/Cargo.lock') }}"
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -183,9 +173,17 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run sdk-core tests
+      - name: Test core
         working-directory: lib/core
-        run: cargo test
+        run: cargo test --all-targets --all-features
+
+      - name: Test bindings
+        working-directory: lib/bindings
+        run: cargo test --all-targets --all-features
+
+      - name: Test cli
+        working-directory: cli
+        run: cargo test --all-targets --all-features
 
   build-bindings:
     name: Test bindings

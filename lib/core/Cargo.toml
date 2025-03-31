@@ -11,8 +11,8 @@ crate-type = ["lib", "cdylib", "staticlib"]
 default = ["frb"]
 frb = ["dep:flutter_rust_bridge"]
 # Uniffi features required to build using cargo-lipo
-uniffi-25 = []
-uniffi-28 = []
+uniffi-25 = ["dep:uniffi-25"]
+uniffi-28 = ["dep:uniffi-28"]
 
 [lints]
 workspace = true
