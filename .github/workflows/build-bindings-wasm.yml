@@ -24,7 +24,6 @@ on:
 
 jobs:
   build:
-    if: ${{ !inputs.use-dummy-binaries }}
     runs-on: ubuntu-latest
     name: build wasm
     steps:
@@ -66,22 +65,3 @@ jobs:
       with:
         name: bindings-wasm
         path: lib/wasm/pkg
-
-  build-dummies:
-    if: ${{ inputs.use-dummy-binaries }}
-    runs-on: ubuntu-latest
-    name: build wasm dummies
-    steps:
-    - name: Build dummy Wasm
-      run: |
-        mkdir -p pkg/bundle pkg/deno pkg/node pkg/web
-        touch pkg/bundle/breez_sdk_liquid_wasm.wasm
-        touch pkg/deno/breez_sdk_liquid_wasm.wasm
-        touch pkg/node/breez_sdk_liquid_wasm.wasm
-        touch pkg/web/breez_sdk_liquid_wasm.wasm
-
-    - name: Upload dummy windows artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: bindings-wasm
-        path: pkg
