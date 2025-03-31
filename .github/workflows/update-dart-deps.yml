@@ -1,0 +1,63 @@
+name: Update Dart Dependencies
+
+on:
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dart Dependencies
+    runs-on: macOS-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.29.0
+
+      - name: Set up just
+        uses: extractions/setup-just@v2
+      
+      - name: Set up Melos
+        uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: false
+
+      - name: Initialize workspace and update dependencies
+        working-directory: lib/bindings/langs/flutter/
+        run: |
+          just clean
+          just init
+          melos pub-upgrade
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.git-check.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: update Dart dependencies"
+          title: "chore: update Dart dependencies"
+          body: |
+            This PR updates Dart dependencies using `melos pub-upgrade`.
+            
+            Changes were made automatically by the Update Dart Dependencies workflow.
+            Please review the changes and merge if everything looks good.
+          branch: "chore/update-dart-deps"
+          base: "main"
+          labels: "dependencies,automated pr"
+          delete-branch: true 

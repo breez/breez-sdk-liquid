@@ -711,9 +711,11 @@ impl LiquidSdk {
         if let Some(id) = payment_id {
             match self.persister.get_payment(&id)? {
                 Some(payment) => {
-                    self.update_wallet_info().await?;
                     match payment.status {
                         Complete => {
+                            // Ensure balance is fully synced before emitting PaymentSucceeded
+                            self.sync_payments_with_chain_data(false).await?;
+                            self.update_wallet_info().await?;
                             self.notify_event_listeners(SdkEvent::PaymentSucceeded {
                                 details: payment,
                             })
