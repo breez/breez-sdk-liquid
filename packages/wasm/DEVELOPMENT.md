@@ -1,5 +1,9 @@
-# Development guide - Wasm crate
-This crate is responsible for building Wasm specific bindings.
+# Development guide - Wasm package
+
+When developing, it can be useful to work with a locally built version of the Breez Liquid SDK instead of relying on what is published already.
+To do this, you first need to build the Breez Liquid SDK bindings locally and then point the examples to make use of the locally built Breez Liquid SDK Wasm package.
+
+All the following commands can be run in the `packages/wasm` directory.
 
 ## Prerequisites
 To build some dependencies you need to first install
@@ -16,12 +20,14 @@ On first usage you will need to run:
 make init
 ```
 
-## Building
+## Build
+To build the Wasm code run:
 ```bash
 make build
 ```
 
 This will generate the following artifacts:
+
 * Bundle - suitable for use with bundlers like Webpack
  - `bundle/package.json`
  - `bundle/breez_sdk_liquid_wasm.d.ts`
@@ -47,9 +53,9 @@ This will generate the following artifacts:
  - `web/breez_sdk_liquid_wasm_bg.wasm`
  - `web/breez_sdk_liquid_wasm_bg.wasm.d.ts`
 
- Each can be build separately with `make build-bundle`, `make build-deno`, `make build-node` or `make build-web`.
+## Testing with the examples
 
-## Testing
-```bash
-make test
+To test locally built bindings in the examples, the npm dependencies need to be updated to use the local package.
+```json
+    "@breeztech/breez-sdk-liquid": "file:../../",
 ```

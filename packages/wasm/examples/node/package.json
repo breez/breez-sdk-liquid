@@ -1,0 +1,19 @@
+{
+    "name": "example",
+    "private": true,
+    "version": "0.0.0",
+    "main": "cli.js",
+    "dependencies": {
+        "@breeztech/breez-sdk-liquid": "file:../../",
+        "commander": "^13.1.0",
+        "dotenv": "^16.4.7"
+    },
+    "prettier": {
+        "endOfLine": "lf",
+        "printWidth": 150,
+        "semi": false,
+        "singleQuote": true,
+        "tabWidth": 4,
+        "trailingComma": "none"
+    }
+}
