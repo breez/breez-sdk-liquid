@@ -493,7 +493,7 @@ mod tests {
     fn create_sideswap_payjoin_service(
         persister: Arc<Persister>,
     ) -> Result<(Arc<MockWallet>, Arc<MockRestClient>, SideSwapPayjoinService)> {
-        let config = Config::testnet(None);
+        let config = Config::testnet_esplora(None);
         let breez_server = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.to_string(), None)?);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
         let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
