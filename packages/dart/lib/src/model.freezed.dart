@@ -865,11 +865,12 @@ as BigInt,
 
 
 class PayAmount_Asset extends PayAmount {
-  const PayAmount_Asset({required this.assetId, required this.receiverAmount}): super._();
+  const PayAmount_Asset({required this.assetId, required this.receiverAmount, this.estimateAssetFees}): super._();
   
 
  final  String assetId;
  final  double receiverAmount;
+ final  bool? estimateAssetFees;
 
 /// Create a copy of PayAmount
 /// with the given fields replaced by the non-null parameter values.
@@ -881,16 +882,16 @@ $PayAmount_AssetCopyWith<PayAmount_Asset> get copyWith => _$PayAmount_AssetCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PayAmount_Asset&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.receiverAmount, receiverAmount) || other.receiverAmount == receiverAmount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PayAmount_Asset&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.receiverAmount, receiverAmount) || other.receiverAmount == receiverAmount)&&(identical(other.estimateAssetFees, estimateAssetFees) || other.estimateAssetFees == estimateAssetFees));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,assetId,receiverAmount);
+int get hashCode => Object.hash(runtimeType,assetId,receiverAmount,estimateAssetFees);
 
 @override
 String toString() {
-  return 'PayAmount.asset(assetId: $assetId, receiverAmount: $receiverAmount)';
+  return 'PayAmount.asset(assetId: $assetId, receiverAmount: $receiverAmount, estimateAssetFees: $estimateAssetFees)';
 }
 
 
@@ -901,7 +902,7 @@ abstract mixin class $PayAmount_AssetCopyWith<$Res> implements $PayAmountCopyWit
   factory $PayAmount_AssetCopyWith(PayAmount_Asset value, $Res Function(PayAmount_Asset) _then) = _$PayAmount_AssetCopyWithImpl;
 @useResult
 $Res call({
- String assetId, double receiverAmount
+ String assetId, double receiverAmount, bool? estimateAssetFees
 });
 
 
@@ -918,11 +919,12 @@ class _$PayAmount_AssetCopyWithImpl<$Res>
 
 /// Create a copy of PayAmount
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? assetId = null,Object? receiverAmount = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? assetId = null,Object? receiverAmount = null,Object? estimateAssetFees = freezed,}) {
   return _then(PayAmount_Asset(
 assetId: null == assetId ? _self.assetId : assetId // ignore: cast_nullable_to_non_nullable
 as String,receiverAmount: null == receiverAmount ? _self.receiverAmount : receiverAmount // ignore: cast_nullable_to_non_nullable
-as double,
+as double,estimateAssetFees: freezed == estimateAssetFees ? _self.estimateAssetFees : estimateAssetFees // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

@@ -43,6 +43,10 @@ pub(crate) enum Command {
         #[clap(long = "asset")]
         asset_id: Option<String>,
 
+        /// Whether or not the tx should be paid using the asset
+        #[clap(long, action = ArgAction::SetTrue)]
+        use_asset_fees: Option<bool>,
+
         /// The amount to pay, in case of a Liquid payment. The amount is optional if it is already
         /// provided in the BIP21 URI.
         /// The asset id must also be provided.
@@ -384,6 +388,7 @@ pub(crate) async fn handle_command(
             amount,
             amount_sat,
             asset_id,
+            use_asset_fees,
             drain,
             delay,
         } => {
@@ -409,6 +414,7 @@ pub(crate) async fn handle_command(
                 (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
                     asset_id,
                     receiver_amount,
+                    estimate_asset_fees: use_asset_fees,
                 }),
                 (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
                     receiver_amount_sat,
@@ -424,16 +430,30 @@ pub(crate) async fn handle_command(
                 })
                 .await?;
 
-            wait_confirmation!(
-                format!(
-                    "Fees: {} sat. Are the fees acceptable? (y/N) ",
-                    prepare_response.fees_sat
-                ),
-                "Payment send halted"
-            );
+            let confirmation_msg = match (
+                use_asset_fees.unwrap_or(false),
+                prepare_response.fees_sat,
+                prepare_response.estimated_asset_fees,
+            ) {
+                (true, _, Some(asset_fees)) => {
+                    format!("Fees: approx {asset_fees}. Are the fees acceptable? (y/N) ")
+                }
+                (false, Some(fees_sat), _) => {
+                    format!("Fees: {fees_sat} sat. Are the fees acceptable? (y/N) ")
+                }
+                (true, _, None) => {
+                    bail!("Not able to pay asset fees")
+                }
+                (false, None, _) => {
+                    bail!("Not able to pay satoshi fees")
+                }
+            };
+
+            wait_confirmation!(confirmation_msg, "Payment send halted");
 
             let send_payment_req = SendPaymentRequest {
                 prepare_response: prepare_response.clone(),
+                use_asset_fees,
             };
 
             if let Some(delay) = delay {

@@ -8,11 +8,12 @@ use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
-use lwk_wollet::elements::{AssetId, Txid};
+use lwk_wollet::elements::hex::ToHex;
+use lwk_wollet::elements::pset::PartiallySignedTransaction;
+use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
 use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{
-    elements::{hex::ToHex, Address, Transaction},
-    ElementsNetwork, FsPersister, NoPersist, WalletTx, Wollet, WolletDescriptor,
+    ElementsNetwork, FsPersister, NoPersist, WalletTx, WalletTxOut, Wollet, WolletDescriptor,
 };
 use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::bitcoin::hashes::{sha256, Hash};
@@ -43,6 +44,9 @@ pub trait OnchainWallet: MaybeSend + MaybeSync {
 
     /// List all transactions in the wallet mapped by tx id
     async fn transactions_by_tx_id(&self) -> Result<HashMap<Txid, WalletTx>, PaymentError>;
+
+    /// List all utxos in the wallet for a given asset
+    async fn asset_utxos(&self, asset: &AssetId) -> Result<Vec<WalletTxOut>, PaymentError>;
 
     /// Build a transaction to send funds to a recipient
     async fn build_tx(
@@ -78,8 +82,17 @@ pub trait OnchainWallet: MaybeSend + MaybeSync {
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
 
+    /// Sign a partially signed transaction
+    async fn sign_pset(
+        &self,
+        pset: PartiallySignedTransaction,
+    ) -> Result<Transaction, PaymentError>;
+
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError>;
+
+    /// Get the next unused change address in the wallet
+    async fn next_unused_change_address(&self) -> Result<Address, PaymentError>;
 
     /// Get the current tip of the blockchain the wallet is aware of
     async fn tip(&self) -> u32;
@@ -272,6 +285,18 @@ impl LiquidOnchainWallet {
         .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
         Ok(descriptor_str.parse()?)
     }
+
+    async fn get_txout(&self, wallet: &Wollet, outpoint: &OutPoint) -> Result<TxOut> {
+        let wallet_tx = wallet
+            .transaction(&outpoint.txid)?
+            .ok_or(anyhow!("Transaction not found"))?;
+        let tx_out = wallet_tx
+            .tx
+            .output
+            .get(outpoint.vout as usize)
+            .ok_or(anyhow!("Output not found"))?;
+        Ok(tx_out.clone())
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -293,6 +318,17 @@ impl OnchainWallet for LiquidOnchainWallet {
             .map(|tx| (tx.txid, tx.clone()))
             .collect();
         Ok(tx_map)
+    }
+
+    async fn asset_utxos(&self, asset: &AssetId) -> Result<Vec<WalletTxOut>, PaymentError> {
+        Ok(self
+            .wallet
+            .lock()
+            .await
+            .utxos()?
+            .into_iter()
+            .filter(|utxo| &utxo.unblinded.asset == asset)
+            .collect())
     }
 
     /// Build a transaction to send funds to a recipient
@@ -401,6 +437,50 @@ impl OnchainWallet for LiquidOnchainWallet {
         }
     }
 
+    async fn sign_pset(
+        &self,
+        mut pset: PartiallySignedTransaction,
+    ) -> Result<Transaction, PaymentError> {
+        let lwk_wollet = self.wallet.lock().await;
+
+        // Get the tx_out for each input and add the rangeproof/witness utxo
+        for input in pset.inputs_mut().iter_mut() {
+            let tx_out_res = self
+                .get_txout(
+                    &lwk_wollet,
+                    &OutPoint {
+                        txid: input.previous_txid,
+                        vout: input.previous_output_index,
+                    },
+                )
+                .await;
+            if let Ok(mut tx_out) = tx_out_res {
+                input.in_utxo_rangeproof = tx_out.witness.rangeproof.take();
+                input.witness_utxo = Some(tx_out);
+            }
+        }
+
+        lwk_wollet.add_details(&mut pset)?;
+
+        self.signer
+            .sign(&mut pset)
+            .map_err(|e| PaymentError::Generic {
+                err: format!("Failed to sign transaction: {e:?}"),
+            })?;
+
+        // Set the final script witness for each input adding the signature and any missing public key
+        for input in pset.inputs_mut() {
+            if let Some((public_key, input_sign)) = input.partial_sigs.iter().next() {
+                input.final_script_witness = Some(vec![input_sign.clone(), public_key.to_bytes()]);
+            }
+        }
+
+        let tx = pset.extract_tx().map_err(|e| PaymentError::Generic {
+            err: format!("Failed to extract transaction: {e:?}"),
+        })?;
+        Ok(tx)
+    }
+
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
         let tip = self.tip().await;
@@ -428,6 +508,13 @@ impl OnchainWallet for LiquidOnchainWallet {
                 address
             }
         };
+
+        Ok(address)
+    }
+
+    /// Get the next unused change address in the wallet
+    async fn next_unused_change_address(&self) -> Result<Address, PaymentError> {
+        let address = self.wallet.lock().await.change(None)?.address().clone();
 
         Ok(address)
     }

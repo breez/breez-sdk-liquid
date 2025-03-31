@@ -37,6 +37,7 @@ use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::model::Signer;
+use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::SubscriptionHandler;
@@ -77,6 +78,7 @@ pub struct LiquidSdkBuilder {
     bitcoin_chain_service: Option<Arc<dyn BitcoinChainService>>,
     liquid_chain_service: Option<Arc<dyn LiquidChainService>>,
     onchain_wallet: Option<Arc<dyn OnchainWallet>>,
+    payjoin_service: Option<Arc<dyn PayjoinService>>,
     persister: Option<Arc<Persister>>,
     recoverer: Option<Arc<Recoverer>>,
     rest_client: Option<Arc<dyn RestClient>>,
@@ -100,6 +102,7 @@ impl LiquidSdkBuilder {
             bitcoin_chain_service: None,
             liquid_chain_service: None,
             onchain_wallet: None,
+            payjoin_service: None,
             persister: None,
             recoverer: None,
             rest_client: None,
@@ -132,6 +135,11 @@ impl LiquidSdkBuilder {
 
     pub fn onchain_wallet(&mut self, onchain_wallet: Arc<dyn OnchainWallet>) -> &mut Self {
         self.onchain_wallet = Some(onchain_wallet.clone());
+        self
+    }
+
+    pub fn payjoin_service(&mut self, payjoin_service: Arc<dyn PayjoinService>) -> &mut Self {
+        self.payjoin_service = Some(payjoin_service.clone());
         self
     }
 
@@ -307,6 +315,17 @@ impl LiquidSdkBuilder {
             bitcoin_chain_service.clone(),
         )?);
 
+        let payjoin_service = match self.payjoin_service.clone() {
+            Some(payjoin_service) => payjoin_service,
+            None => Arc::new(SideSwapPayjoinService::new(
+                self.config.clone(),
+                self.breez_server.clone(),
+                persister.clone(),
+                onchain_wallet.clone(),
+                rest_client.clone(),
+            )),
+        };
+
         let buy_bitcoin_service = Arc::new(BuyBitcoinService::new(
             self.config.clone(),
             self.breez_server.clone(),
@@ -334,6 +353,7 @@ impl LiquidSdkBuilder {
             receive_swap_handler,
             sync_service,
             chain_swap_handler,
+            payjoin_service,
             buy_bitcoin_service,
             external_input_parsers,
         });
@@ -361,6 +381,7 @@ pub struct LiquidSdk {
     pub(crate) sync_service: Option<Arc<SyncService>>,
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
+    pub(crate) payjoin_service: Arc<dyn PayjoinService>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
 }
@@ -1126,7 +1147,11 @@ impl LiquidSdk {
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
     ///     * `destination` - the parsed destination, of type [SendDestination]
-    ///     * `fees_sat` - the additional fees which will be paid by the sender
+    ///     * `fees_sat` - the optional estimated fee in satoshi. Is set when there is Bitcoin
+    ///        available to pay fees. When not set, there are asset fees available to pay fees.
+    ///     * `estimated_asset_fees` - the optional estimated fee in the asset. Is set when
+    ///        [PayAmount::Asset::estimate_asset_fees] is set to `true`, the Payjoin service accepts
+    ///        this asset to pay fees and there are funds available in this asset to pay fees.
     pub async fn prepare_send_payment(
         &self,
         req: &PrepareSendRequest,
@@ -1135,6 +1160,7 @@ impl LiquidSdk {
 
         let get_info_res = self.get_info().await?;
         let fees_sat;
+        let estimated_asset_fees;
         let receiver_amount_sat;
         let asset_id;
         let payment_destination;
@@ -1158,6 +1184,7 @@ impl LiquidSdk {
                             PayAmount::Asset {
                                 asset_id,
                                 receiver_amount: amount,
+                                estimate_asset_fees: None,
                             }
                         }
                     }
@@ -1183,7 +1210,12 @@ impl LiquidSdk {
                     }
                 );
 
-                (asset_id, receiver_amount_sat, fees_sat) = match amount {
+                (
+                    asset_id,
+                    receiver_amount_sat,
+                    fees_sat,
+                    estimated_asset_fees,
+                ) = match amount {
                     PayAmount::Drain => {
                         ensure_sdk!(
                             get_info_res.wallet_info.pending_receive_sat == 0
@@ -1201,7 +1233,8 @@ impl LiquidSdk {
                         (
                             self.config.lbtc_asset_id(),
                             drain_amount_sat,
-                            drain_fees_sat,
+                            Some(drain_fees_sat),
+                            None,
                         )
                     }
                     PayAmount::Bitcoin {
@@ -1215,26 +1248,47 @@ impl LiquidSdk {
                                 &asset_id,
                             )
                             .await?;
-                        (asset_id, receiver_amount_sat, fees_sat)
+                        (asset_id, receiver_amount_sat, Some(fees_sat), None)
                     }
                     PayAmount::Asset {
                         asset_id,
                         receiver_amount,
+                        estimate_asset_fees,
                     } => {
+                        let estimate_asset_fees = estimate_asset_fees.unwrap_or(false);
                         let asset_metadata = self.persister.get_asset_metadata(&asset_id)?.ok_or(
                             PaymentError::AssetError {
                                 err: format!("Asset {asset_id} is not supported"),
                             },
                         )?;
                         let receiver_amount_sat = asset_metadata.amount_to_sat(receiver_amount);
-                        let fees_sat = self
+                        let fees_sat_res = self
                             .estimate_onchain_tx_or_drain_tx_fee(
                                 receiver_amount_sat,
                                 &liquid_address_data.address,
                                 &asset_id,
                             )
-                            .await?;
-                        (asset_id, receiver_amount_sat, fees_sat)
+                            .await;
+                        let asset_fees = if estimate_asset_fees {
+                            self.payjoin_service
+                                .estimate_payjoin_tx_fee(&asset_id, receiver_amount_sat)
+                                .await
+                                .inspect_err(|e| debug!("Error estimating payjoin tx: {e}"))
+                                .ok()
+                        } else {
+                            None
+                        };
+                        let (fees_sat, asset_fees) = match (fees_sat_res, asset_fees) {
+                            (Ok(fees_sat), _) => (Some(fees_sat), asset_fees),
+                            (Err(e), Some(asset_fees)) => {
+                                debug!(
+                                    "Error estimating onchain tx, but returning payjoin fees: {e}"
+                                );
+                                (None, Some(asset_fees))
+                            }
+                            (Err(e), None) => return Err(e),
+                        };
+                        (asset_id, receiver_amount_sat, fees_sat, asset_fees)
                     }
                 };
 
@@ -1272,6 +1326,7 @@ impl LiquidSdk {
                     .await?
                     .map(|(address, _)| address);
                 asset_id = self.config.lbtc_asset_id();
+                estimated_asset_fees = None;
                 (receiver_amount_sat, fees_sat, payment_destination) =
                     match (mrh_address.clone(), req.amount.clone()) {
                         (Some(lbtc_address), Some(PayAmount::Drain)) => {
@@ -1294,7 +1349,7 @@ impl LiquidSdk {
                                 },
                                 bip353_address: None,
                             };
-                            (drain_amount_sat, drain_fees_sat, payment_destination)
+                            (drain_amount_sat, Some(drain_fees_sat), payment_destination)
                         }
                         (Some(lbtc_address), _) => {
                             // The BOLT11 invoice has an MRH but no drain is requested,
@@ -1308,7 +1363,7 @@ impl LiquidSdk {
                                 .await?;
                             (
                                 invoice_amount_sat,
-                                fees_sat,
+                                Some(fees_sat),
                                 SendDestination::Bolt11 {
                                     invoice,
                                     bip353_address: None,
@@ -1325,7 +1380,7 @@ impl LiquidSdk {
                             let fees_sat = boltz_fees_total + lockup_fees_sat;
                             (
                                 invoice_amount_sat,
-                                fees_sat,
+                                Some(fees_sat),
                                 SendDestination::Bolt11 {
                                     invoice,
                                     bip353_address: None,
@@ -1362,7 +1417,8 @@ impl LiquidSdk {
                     .estimate_lockup_tx_or_drain_tx_fee(receiver_amount_sat + boltz_fees_total)
                     .await?;
                 asset_id = self.config.lbtc_asset_id();
-                fees_sat = boltz_fees_total + lockup_fees_sat;
+                fees_sat = Some(boltz_fees_total + lockup_fees_sat);
+                estimated_asset_fees = None;
 
                 payment_destination = SendDestination::Bolt12 {
                     offer,
@@ -1385,6 +1441,7 @@ impl LiquidSdk {
         Ok(PrepareSendResponse {
             destination: payment_destination,
             fees_sat,
+            estimated_asset_fees,
         })
     }
 
@@ -1419,6 +1476,7 @@ impl LiquidSdk {
         let PrepareSendResponse {
             fees_sat,
             destination: payment_destination,
+            ..
         } = &req.prepare_response;
 
         match payment_destination {
@@ -1426,6 +1484,7 @@ impl LiquidSdk {
                 address_data: liquid_address_data,
                 bip353_address,
             } => {
+                let asset_pay_fees = req.use_asset_fees.unwrap_or_default();
                 let Some(amount_sat) = liquid_address_data.amount_sat else {
                     return Err(PaymentError::AmountMissing {
                         err: "Amount must be set when paying to a Liquid address".to_string(),
@@ -1457,9 +1516,16 @@ impl LiquidSdk {
                         *fees_sat,
                         asset_id,
                     )?;
-                let mut response = self
-                    .pay_liquid(liquid_address_data.clone(), amount_sat, *fees_sat, true)
-                    .await?;
+
+                let mut response = if asset_pay_fees {
+                    self.pay_liquid_payjoin(liquid_address_data.clone(), amount_sat)
+                        .await?
+                } else {
+                    let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                    self.pay_liquid(liquid_address_data.clone(), amount_sat, fees_sat, true)
+                        .await?
+                };
+
                 self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
@@ -1467,7 +1533,8 @@ impl LiquidSdk {
                 invoice,
                 bip353_address,
             } => {
-                let mut response = self.pay_bolt11_invoice(&invoice.bolt11, *fees_sat).await?;
+                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                let mut response = self.pay_bolt11_invoice(&invoice.bolt11, fees_sat).await?;
                 self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
@@ -1476,12 +1543,13 @@ impl LiquidSdk {
                 receiver_amount_sat,
                 bip353_address,
             } => {
+                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let bolt12_invoice = self
                     .swapper
                     .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
                     .await?;
                 let mut response = self
-                    .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, *fees_sat)
+                    .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, fees_sat)
                     .await?;
                 self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
@@ -1505,6 +1573,7 @@ impl LiquidSdk {
                         description: None,
                         lnurl_info: None,
                         bip353_address: bip353_address.clone(),
+                        asset_fees: None,
                     })?;
                 // Get the payment with the bip353_address details
                 if let Some(payment) = self.persister.get_payment(tx_id)? {
@@ -1599,7 +1668,7 @@ impl LiquidSdk {
         .await
     }
 
-    /// Performs a Send Payment by doing an onchain tx to a L-BTC address
+    /// Performs a Send Payment by doing an onchain tx to a Liquid address
     async fn pay_liquid(
         &self,
         address_data: LiquidAddressData,
@@ -1637,7 +1706,7 @@ impl LiquidSdk {
         ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
 
         info!(
-            "Built onchain L-BTC tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
+            "Built onchain Liquid tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
         );
 
         let tx_id = self.liquid_chain_service.broadcast(&tx).await?.to_string();
@@ -1676,6 +1745,87 @@ impl LiquidSdk {
                 name: am.name.clone(),
                 ticker: am.ticker.clone(),
                 amount: am.amount_from_sat(receiver_amount_sat),
+                fees: None,
+            });
+        let payment_details = PaymentDetails::Liquid {
+            asset_id,
+            destination,
+            description: description.unwrap_or("Liquid transfer".to_string()),
+            asset_info,
+            lnurl_info: None,
+            bip353_address: None,
+        };
+
+        Ok(SendPaymentResponse {
+            payment: Payment::from_tx_data(tx_data, None, payment_details),
+        })
+    }
+
+    /// Performs a Send Payment by doing a payjoin tx to a Liquid address
+    async fn pay_liquid_payjoin(
+        &self,
+        address_data: LiquidAddressData,
+        receiver_amount_sat: u64,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        let destination = address_data
+            .to_uri()
+            .unwrap_or(address_data.address.clone());
+        let Some(asset_id) = address_data.asset_id else {
+            return Err(PaymentError::asset_error(
+                "Asset must be set when paying to a Liquid address",
+            ));
+        };
+
+        let (tx, asset_fees) = self
+            .payjoin_service
+            .build_payjoin_tx(&address_data.address, &asset_id, receiver_amount_sat)
+            .await
+            .inspect_err(|e| error!("Error building payjoin tx: {e}"))?;
+        let tx_id = tx.txid().to_string();
+        let fees_sat = tx.all_fees().values().sum::<u64>();
+
+        info!(
+            "Built payjoin Liquid tx with receiver_amount_sat = {receiver_amount_sat}, asset_fees = {asset_fees}, fees_sat = {fees_sat} and txid = {tx_id}"
+        );
+
+        let tx_id = self.liquid_chain_service.broadcast(&tx).await?.to_string();
+
+        // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        let tx_data = PaymentTxData {
+            tx_id: tx_id.clone(),
+            timestamp: Some(utils::now()),
+            amount: receiver_amount_sat + asset_fees,
+            fees_sat,
+            payment_type: PaymentType::Send,
+            is_confirmed: false,
+            unblinding_data: None,
+            asset_id: asset_id.clone(),
+        };
+
+        let description = address_data.message;
+
+        self.persister.insert_or_update_payment(
+            tx_data.clone(),
+            Some(PaymentTxDetails {
+                tx_id: tx_id.clone(),
+                destination: destination.clone(),
+                description: description.clone(),
+                asset_fees: Some(asset_fees),
+                ..Default::default()
+            }),
+            false,
+        )?;
+        self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+
+        let asset_info = self
+            .persister
+            .get_asset_metadata(&asset_id)?
+            .map(|ref am| AssetInfo {
+                name: am.name.clone(),
+                ticker: am.ticker.clone(),
+                amount: am.amount_from_sat(receiver_amount_sat),
+                fees: Some(am.amount_from_sat(asset_fees)),
             });
         let payment_details = PaymentDetails::Liquid {
             asset_id,
@@ -3504,10 +3654,13 @@ impl LiquidSdk {
                     }
                     destination => destination,
                 };
+                let fees_sat = prepare_response
+                    .fees_sat
+                    .ok_or(PaymentError::InsufficientFunds)?;
 
                 Ok(PrepareLnUrlPayResponse {
                     destination,
-                    fees_sat: prepare_response.fees_sat,
+                    fees_sat,
                     data: req.data,
                     comment: req.comment,
                     success_action: data.success_action,
@@ -3537,8 +3690,10 @@ impl LiquidSdk {
             .send_payment(&SendPaymentRequest {
                 prepare_response: PrepareSendResponse {
                     destination: prepare_response.destination.clone(),
-                    fees_sat: prepare_response.fees_sat,
+                    fees_sat: Some(prepare_response.fees_sat),
+                    estimated_asset_fees: None,
                 },
+                use_asset_fees: None,
             })
             .await
             .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?
@@ -3624,6 +3779,7 @@ impl LiquidSdk {
                         lnurl_withdraw_endpoint: None,
                     }),
                     bip353_address: None,
+                    asset_fees: None,
                 })?;
             // Get the payment with the lnurl_info details
             payment = self.persister.get_payment(&tx_id)?.unwrap_or(payment);
@@ -3692,6 +3848,7 @@ impl LiquidSdk {
                             ..Default::default()
                         }),
                         bip353_address: None,
+                        asset_fees: None,
                     })?;
             }
         }

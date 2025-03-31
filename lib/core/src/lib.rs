@@ -177,6 +177,7 @@ pub(crate) mod lnurl;
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub mod logger;
 pub mod model;
+pub(crate) mod payjoin;
 pub mod persist;
 pub mod receive_swap;
 pub(crate) mod recover;
