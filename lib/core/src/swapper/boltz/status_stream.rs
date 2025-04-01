@@ -48,7 +48,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
-                let client = match swapper.get_client().await {
+                let client = match swapper.get_boltz_client().await {
                     Ok(client) => client,
                     Err(e) => {
                         warn!("Failed to get swapper client: {e:?}");

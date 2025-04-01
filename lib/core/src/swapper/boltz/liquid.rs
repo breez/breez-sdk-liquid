@@ -32,12 +32,13 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         swap: &ReceiveSwap,
         claim_address: String,
     ) -> Result<Transaction, PaymentError> {
+        let liquid_client = self.get_liquid_client()?;
         let swap_script = swap.get_swap_script()?;
 
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
-            &self.liquid_client,
+            liquid_client,
             self.get_url().await?,
             swap.id.clone(),
         )
@@ -62,12 +63,13 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         swap: &ChainSwap,
         claim_address: String,
     ) -> Result<Transaction, PaymentError> {
+        let liquid_client = self.get_liquid_client()?;
         let claim_keypair = swap.get_claim_keypair()?;
         let swap_script = swap.get_claim_swap_script()?.as_liquid_script()?;
         let claim_tx_wrapper = LBtcSwapTx::new_claim(
             swap_script,
             claim_address,
-            &self.liquid_client,
+            liquid_client,
             self.get_url().await?,
             swap.id.clone(),
         )
@@ -98,6 +100,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         swap: &Swap,
         refund_address: &str,
     ) -> Result<LBtcSwapTx, SdkError> {
+        let liquid_client = self.get_liquid_client()?;
         let refund_wrapper = match swap {
             Swap::Chain(swap) => match swap.direction {
                 Direction::Incoming => {
@@ -111,7 +114,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     LBtcSwapTx::new_refund(
                         swap_script.as_liquid_script()?,
                         refund_address,
-                        &self.liquid_client,
+                        liquid_client,
                         self.get_url().await?,
                         swap.id.clone(),
                     )
@@ -123,7 +126,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                 LBtcSwapTx::new_refund(
                     swap_script,
                     refund_address,
-                    &self.liquid_client,
+                    liquid_client,
                     self.get_url().await?,
                     swap.id.clone(),
                 )
@@ -146,6 +149,8 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         utxos: Vec<Utxo>,
         is_cooperative: bool,
     ) -> Result<Transaction, SdkError> {
+        let liquid_client = self.get_liquid_client()?;
+
         let (swap_script, refund_keypair) = match swap {
             Swap::Chain(swap) => {
                 ensure_sdk!(
@@ -170,7 +175,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let address = Address::from_str(refund_address)
             .map_err(|err| SdkError::generic(format!("Could not parse address: {err:?}")))?;
 
-        let genesis_hash = self.liquid_client.get_genesis_hash().await?;
+        let genesis_hash = liquid_client.get_genesis_hash().await?;
 
         let (funding_outpoint, funding_tx_out) =
             *utxos
