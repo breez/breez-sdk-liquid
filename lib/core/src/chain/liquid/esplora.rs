@@ -2,6 +2,7 @@ use std::{sync::OnceLock, time::Duration};
 
 use anyhow::{anyhow, Context as _, Result};
 use tokio::sync::RwLock;
+use tokio_with_wasm::alias as tokio;
 
 use crate::{
     elements::{Address, OutPoint, Script, Transaction, Txid},

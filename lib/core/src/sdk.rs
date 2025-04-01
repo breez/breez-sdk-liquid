@@ -901,8 +901,17 @@ impl LiquidSdk {
             }
         }
 
+        // Verify invoice isn't expired
+        let invoice_ts_web_time = web_time::SystemTime::UNIX_EPOCH
+            + invoice
+                .timestamp()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .map_err(|_| PaymentError::invalid_invoice("Invalid invoice timestamp"))?;
+        let elapsed_web_time = web_time::SystemTime::now()
+            .duration_since(invoice_ts_web_time)
+            .map_err(|_| PaymentError::invalid_invoice("Invoice timestamp is in the future"))?;
         ensure_sdk!(
-            !invoice.is_expired(),
+            elapsed_web_time <= invoice.expiry_time(),
             PaymentError::invalid_invoice("Invoice has expired")
         );
 
