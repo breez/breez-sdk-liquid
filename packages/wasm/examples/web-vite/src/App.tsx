@@ -1,4 +1,4 @@
-import init, { connect, defaultConfig, initLogger, SdkEvent } from '@breeztech/breez-sdk-liquid/web'
+import init, { connect, defaultConfig, LogEntry, SdkEvent, setLogger } from '@breeztech/breez-sdk-liquid/web'
 import { useState, useEffect } from 'react'
 
 const DebugLine = ({ title, text }: { title: string; text?: string }) => {
@@ -26,6 +26,12 @@ class JsEventListener {
     }
 }
 
+class JsLogger {
+    log = (l: LogEntry) => {
+        console.log(`[${l.level}]: ${l.line}`)
+    }
+}
+
 function App() {
     const [lines, setLines] = useState<Line[]>([])
 
@@ -35,6 +41,7 @@ function App() {
     }
 
     const eventListener = new JsEventListener(addLine)
+    const logger = new JsLogger()
 
     const asyncFn = async () => {
         let listenerId = null
@@ -46,14 +53,14 @@ function App() {
             await init()
 
             // Set the logger to trace
-            initLogger('trace')
+            setLogger(logger)
 
             // Get the mnemonic
             const breezApiKey = import.meta.env.VITE_BREEZ_API_KEY
             const mnemonic = import.meta.env.VITE_MNEMONIC
 
             // Connect using the config
-            const config = await defaultConfig('mainnet', breezApiKey)
+            const config = defaultConfig('mainnet', breezApiKey)
             addLine('defaultConfig', JSON.stringify(config))
 
             const sdk = await connect({ config, mnemonic })
