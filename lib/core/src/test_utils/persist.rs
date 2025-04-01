@@ -10,6 +10,7 @@ use sdk_common::{
     lightning_invoice::{Currency, InvoiceBuilder},
     prelude::invoice_pubkey,
 };
+use std::time::SystemTime;
 
 use crate::{
     model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
@@ -35,7 +36,7 @@ pub(crate) fn new_send_swap(
         .description("Test invoice".into())
         .payment_hash(payment_hash)
         .payment_secret(PaymentSecret([42u8; 32]))
-        .current_timestamp()
+        .timestamp(SystemTime::UNIX_EPOCH)
         .min_final_cltv_expiry_delta(144)
         .build_signed(|hash| Secp256k1::new().sign_ecdsa_recoverable(hash, &private_key))
         .expect("Expected valid invoice");
@@ -123,16 +124,38 @@ pub(crate) fn new_receive_swap(
 
 macro_rules! create_persister {
     ($name:ident) => {
-        let temp_dir = tempdir::TempDir::new("liquid-sdk")?;
-        let $name = std::sync::Arc::new(crate::persist::Persister::new(
-            temp_dir
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let $name = {
+            let db_id = {
+                use rand::Rng;
+                let res: String = rand::thread_rng()
+                    .sample_iter(&rand::distributions::Alphanumeric)
+                    .take(16)
+                    .map(char::from)
+                    .collect();
+                res
+            };
+            sdk_common::utils::Arc::new(crate::persist::Persister::new_in_memory(
+                &db_id,
+                crate::model::LiquidNetwork::Testnet,
+                true,
+                None,
+            )?)
+        };
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        let $name = {
+            let temp_dir_path = tempdir::TempDir::new("liquid-sdk")?
                 .path()
                 .to_str()
-                .ok_or(anyhow::anyhow!("Could not create temporary directory"))?,
-            crate::model::LiquidNetwork::Testnet,
-            true,
-        )?);
-        $name.init()?;
+                .ok_or(anyhow::anyhow!("Could not create temporary directory"))?
+                .to_string();
+            sdk_common::utils::Arc::new(crate::persist::Persister::new_using_fs(
+                &temp_dir_path,
+                crate::model::LiquidNetwork::Testnet,
+                true,
+                None,
+            )?)
+        };
     };
 }
 pub(crate) use create_persister;

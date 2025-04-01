@@ -492,15 +492,16 @@ enum BreezSDKLiquidMapper {
     }
 
     static func asConfig(config: [String: Any?]) throws -> Config {
-        guard let liquidElectrumUrl = config["liquidElectrumUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidElectrumUrl", typeName: "Config"))
+        guard let liquidExplorerTmp = config["liquidExplorer"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidExplorer", typeName: "Config"))
         }
-        guard let bitcoinElectrumUrl = config["bitcoinElectrumUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinElectrumUrl", typeName: "Config"))
+        let liquidExplorer = try asBlockchainExplorer(blockchainExplorer: liquidExplorerTmp)
+
+        guard let bitcoinExplorerTmp = config["bitcoinExplorer"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinExplorer", typeName: "Config"))
         }
-        guard let mempoolspaceUrl = config["mempoolspaceUrl"] as? String else {
-            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "mempoolspaceUrl", typeName: "Config"))
-        }
+        let bitcoinExplorer = try asBlockchainExplorer(blockchainExplorer: bitcoinExplorerTmp)
+
         guard let workingDir = config["workingDir"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "workingDir", typeName: "Config"))
         }
@@ -560,14 +561,13 @@ enum BreezSDKLiquidMapper {
             assetMetadata = try asAssetMetadataList(arr: assetMetadataTmp)
         }
 
-        return Config(liquidElectrumUrl: liquidElectrumUrl, bitcoinElectrumUrl: bitcoinElectrumUrl, mempoolspaceUrl: mempoolspaceUrl, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
         return [
-            "liquidElectrumUrl": config.liquidElectrumUrl,
-            "bitcoinElectrumUrl": config.bitcoinElectrumUrl,
-            "mempoolspaceUrl": config.mempoolspaceUrl,
+            "liquidExplorer": dictionaryOf(blockchainExplorer: config.liquidExplorer),
+            "bitcoinExplorer": dictionaryOf(blockchainExplorer: config.bitcoinExplorer),
             "workingDir": config.workingDir,
             "network": valueOf(liquidNetwork: config.network),
             "paymentTimeoutSec": config.paymentTimeoutSec,
@@ -3484,6 +3484,65 @@ enum BreezSDKLiquidMapper {
         return list
     }
 
+    static func asBlockchainExplorer(blockchainExplorer: [String: Any?]) throws -> BlockchainExplorer {
+        let type = blockchainExplorer["type"] as! String
+        if type == "electrum" {
+            guard let _url = blockchainExplorer["url"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "BlockchainExplorer"))
+            }
+            return BlockchainExplorer.electrum(url: _url)
+        }
+        if type == "esplora" {
+            guard let _url = blockchainExplorer["url"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "url", typeName: "BlockchainExplorer"))
+            }
+            guard let _useWaterfalls = blockchainExplorer["useWaterfalls"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "useWaterfalls", typeName: "BlockchainExplorer"))
+            }
+            return BlockchainExplorer.esplora(url: _url, useWaterfalls: _useWaterfalls)
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum BlockchainExplorer")
+    }
+
+    static func dictionaryOf(blockchainExplorer: BlockchainExplorer) -> [String: Any?] {
+        switch blockchainExplorer {
+        case let .electrum(
+            url
+        ):
+            return [
+                "type": "electrum",
+                "url": url,
+            ]
+
+        case let .esplora(
+            url, useWaterfalls
+        ):
+            return [
+                "type": "esplora",
+                "url": url,
+                "useWaterfalls": useWaterfalls,
+            ]
+        }
+    }
+
+    static func arrayOf(blockchainExplorerList: [BlockchainExplorer]) -> [Any] {
+        return blockchainExplorerList.map { v -> [String: Any?] in return dictionaryOf(blockchainExplorer: v) }
+    }
+
+    static func asBlockchainExplorerList(arr: [Any]) throws -> [BlockchainExplorer] {
+        var list = [BlockchainExplorer]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var blockchainExplorer = try asBlockchainExplorer(blockchainExplorer: val)
+                list.append(blockchainExplorer)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "BlockchainExplorer"))
+            }
+        }
+        return list
+    }
+
     static func asBuyBitcoinProvider(buyBitcoinProvider: String) throws -> BuyBitcoinProvider {
         switch buyBitcoinProvider {
         case "moonpay":
@@ -4623,6 +4682,12 @@ enum BreezSDKLiquidMapper {
         if type == "synced" {
             return SdkEvent.synced
         }
+        if type == "dataSynced" {
+            guard let _didPullNewRecords = sdkEvent["didPullNewRecords"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "didPullNewRecords", typeName: "SdkEvent"))
+            }
+            return SdkEvent.dataSynced(didPullNewRecords: _didPullNewRecords)
+        }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SdkEvent")
     }
@@ -4696,6 +4761,14 @@ enum BreezSDKLiquidMapper {
         case .synced:
             return [
                 "type": "synced",
+            ]
+
+        case let .dataSynced(
+            didPullNewRecords
+        ):
+            return [
+                "type": "dataSynced",
+                "didPullNewRecords": didPullNewRecords,
             ]
         }
     }

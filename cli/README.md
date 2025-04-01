@@ -2,9 +2,23 @@
 
 A simple cli tool that sends commands to the sdk. It is intended to demonstrate the usage and investigate issues that are hard to debug on mobile platforms.
 
-## Run
+## Prerequisites
 
-Start the CLI with
+Before running the CLI, you need to set your Breez API key. You can request an API key [here](https://breez.technology/request-api-key/#contact-us-form-sdk).
+
+Set the API key in your environment:
+
+#### **Linux/macOS**
+```bash
+export BREEZ_API_KEY="your-api-key-here"
+```
+#### **Windows (PowerShell)**
+```bash
+$env:BREEZ_API_KEY="your-api-key-here"
+```
+
+## Run
+Then start the CLI with
 
 ```bash
 cargo run

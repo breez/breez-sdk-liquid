@@ -11,13 +11,14 @@ pub(crate) use self::handle_chain_send_swap::ChainSendSwapHandler;
 pub(crate) use self::handle_receive_swap::ReceiveSwapHandler;
 pub(crate) use self::handle_send_swap::SendSwapHandler;
 
-use super::model::{HistoryTxId, TxMap};
+use super::model::TxMap;
+use crate::model::LBtcHistory;
 
 /// Helper function for determining lockup and claim transactions in incoming swaps
 pub(crate) fn determine_incoming_lockup_and_claim_txs(
-    history: &[HistoryTxId],
+    history: &[LBtcHistory],
     tx_map: &TxMap,
-) -> (Option<HistoryTxId>, Option<HistoryTxId>) {
+) -> (Option<LBtcHistory>, Option<LBtcHistory>) {
     match history.len() {
         // Only lockup tx available
         1 => (Some(history[0].clone()), None),

@@ -1,12 +1,13 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use log::{info, trace, warn};
+use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
+use tokio_with_wasm::alias as tokio;
 use tonic::Streaming;
 
 use self::client::SyncerClient;
@@ -39,7 +40,7 @@ pub(crate) struct SyncCompletedData {
     pub(crate) pushed_records_count: u32,
 }
 
-pub(crate) struct SyncService {
+pub struct SyncService {
     remote_url: String,
     client_id: String,
     persister: Arc<Persister>,
@@ -547,7 +548,8 @@ impl SyncService {
 #[cfg(test)]
 mod tests {
     use anyhow::{anyhow, Result};
-    use std::{collections::HashMap, sync::Arc};
+    use sdk_common::utils::Arc;
+    use std::collections::HashMap;
 
     use crate::{
         persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},

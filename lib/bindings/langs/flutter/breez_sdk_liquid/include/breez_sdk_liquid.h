@@ -614,6 +614,10 @@ typedef struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance {
   struct wire_cst_payment *details;
 } wire_cst_SdkEvent_PaymentWaitingFeeAcceptance;
 
+typedef struct wire_cst_SdkEvent_DataSynced {
+  bool did_pull_new_records;
+} wire_cst_SdkEvent_DataSynced;
+
 typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentFailed PaymentFailed;
   struct wire_cst_SdkEvent_PaymentPending PaymentPending;
@@ -623,12 +627,32 @@ typedef union SdkEventKind {
   struct wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
   struct wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
   struct wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
+  struct wire_cst_SdkEvent_DataSynced DataSynced;
 } SdkEventKind;
 
 typedef struct wire_cst_sdk_event {
   int32_t tag;
   union SdkEventKind kind;
 } wire_cst_sdk_event;
+
+typedef struct wire_cst_BlockchainExplorer_Electrum {
+  struct wire_cst_list_prim_u_8_strict *url;
+} wire_cst_BlockchainExplorer_Electrum;
+
+typedef struct wire_cst_BlockchainExplorer_Esplora {
+  struct wire_cst_list_prim_u_8_strict *url;
+  bool use_waterfalls;
+} wire_cst_BlockchainExplorer_Esplora;
+
+typedef union BlockchainExplorerKind {
+  struct wire_cst_BlockchainExplorer_Electrum Electrum;
+  struct wire_cst_BlockchainExplorer_Esplora Esplora;
+} BlockchainExplorerKind;
+
+typedef struct wire_cst_blockchain_explorer {
+  int32_t tag;
+  union BlockchainExplorerKind kind;
+} wire_cst_blockchain_explorer;
 
 typedef struct wire_cst_external_input_parser {
   struct wire_cst_list_prim_u_8_strict *provider_id;
@@ -654,9 +678,8 @@ typedef struct wire_cst_list_asset_metadata {
 } wire_cst_list_asset_metadata;
 
 typedef struct wire_cst_config {
-  struct wire_cst_list_prim_u_8_strict *liquid_electrum_url;
-  struct wire_cst_list_prim_u_8_strict *bitcoin_electrum_url;
-  struct wire_cst_list_prim_u_8_strict *mempoolspace_url;
+  struct wire_cst_blockchain_explorer liquid_explorer;
+  struct wire_cst_blockchain_explorer bitcoin_explorer;
   struct wire_cst_list_prim_u_8_strict *working_dir;
   struct wire_cst_list_prim_u_8_strict *cache_dir;
   int32_t network;

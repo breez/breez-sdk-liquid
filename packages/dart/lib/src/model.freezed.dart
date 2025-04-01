@@ -13,6 +13,202 @@ part of 'model.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$BlockchainExplorer {
+
+ String get url;
+/// Create a copy of BlockchainExplorer
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlockchainExplorerCopyWith<BlockchainExplorer> get copyWith => _$BlockchainExplorerCopyWithImpl<BlockchainExplorer>(this as BlockchainExplorer, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlockchainExplorer&&(identical(other.url, url) || other.url == url));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,url);
+
+@override
+String toString() {
+  return 'BlockchainExplorer(url: $url)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BlockchainExplorerCopyWith<$Res>  {
+  factory $BlockchainExplorerCopyWith(BlockchainExplorer value, $Res Function(BlockchainExplorer) _then) = _$BlockchainExplorerCopyWithImpl;
+@useResult
+$Res call({
+ String url
+});
+
+
+
+
+}
+/// @nodoc
+class _$BlockchainExplorerCopyWithImpl<$Res>
+    implements $BlockchainExplorerCopyWith<$Res> {
+  _$BlockchainExplorerCopyWithImpl(this._self, this._then);
+
+  final BlockchainExplorer _self;
+  final $Res Function(BlockchainExplorer) _then;
+
+/// Create a copy of BlockchainExplorer
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? url = null,}) {
+  return _then(_self.copyWith(
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// @nodoc
+
+
+class BlockchainExplorer_Electrum extends BlockchainExplorer {
+  const BlockchainExplorer_Electrum({required this.url}): super._();
+  
+
+@override final  String url;
+
+/// Create a copy of BlockchainExplorer
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlockchainExplorer_ElectrumCopyWith<BlockchainExplorer_Electrum> get copyWith => _$BlockchainExplorer_ElectrumCopyWithImpl<BlockchainExplorer_Electrum>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlockchainExplorer_Electrum&&(identical(other.url, url) || other.url == url));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,url);
+
+@override
+String toString() {
+  return 'BlockchainExplorer.electrum(url: $url)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BlockchainExplorer_ElectrumCopyWith<$Res> implements $BlockchainExplorerCopyWith<$Res> {
+  factory $BlockchainExplorer_ElectrumCopyWith(BlockchainExplorer_Electrum value, $Res Function(BlockchainExplorer_Electrum) _then) = _$BlockchainExplorer_ElectrumCopyWithImpl;
+@override @useResult
+$Res call({
+ String url
+});
+
+
+
+
+}
+/// @nodoc
+class _$BlockchainExplorer_ElectrumCopyWithImpl<$Res>
+    implements $BlockchainExplorer_ElectrumCopyWith<$Res> {
+  _$BlockchainExplorer_ElectrumCopyWithImpl(this._self, this._then);
+
+  final BlockchainExplorer_Electrum _self;
+  final $Res Function(BlockchainExplorer_Electrum) _then;
+
+/// Create a copy of BlockchainExplorer
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? url = null,}) {
+  return _then(BlockchainExplorer_Electrum(
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class BlockchainExplorer_Esplora extends BlockchainExplorer {
+  const BlockchainExplorer_Esplora({required this.url, required this.useWaterfalls}): super._();
+  
+
+@override final  String url;
+/// Whether or not to use the "waterfalls" extension
+ final  bool useWaterfalls;
+
+/// Create a copy of BlockchainExplorer
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlockchainExplorer_EsploraCopyWith<BlockchainExplorer_Esplora> get copyWith => _$BlockchainExplorer_EsploraCopyWithImpl<BlockchainExplorer_Esplora>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlockchainExplorer_Esplora&&(identical(other.url, url) || other.url == url)&&(identical(other.useWaterfalls, useWaterfalls) || other.useWaterfalls == useWaterfalls));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,url,useWaterfalls);
+
+@override
+String toString() {
+  return 'BlockchainExplorer.esplora(url: $url, useWaterfalls: $useWaterfalls)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BlockchainExplorer_EsploraCopyWith<$Res> implements $BlockchainExplorerCopyWith<$Res> {
+  factory $BlockchainExplorer_EsploraCopyWith(BlockchainExplorer_Esplora value, $Res Function(BlockchainExplorer_Esplora) _then) = _$BlockchainExplorer_EsploraCopyWithImpl;
+@override @useResult
+$Res call({
+ String url, bool useWaterfalls
+});
+
+
+
+
+}
+/// @nodoc
+class _$BlockchainExplorer_EsploraCopyWithImpl<$Res>
+    implements $BlockchainExplorer_EsploraCopyWith<$Res> {
+  _$BlockchainExplorer_EsploraCopyWithImpl(this._self, this._then);
+
+  final BlockchainExplorer_Esplora _self;
+  final $Res Function(BlockchainExplorer_Esplora) _then;
+
+/// Create a copy of BlockchainExplorer
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? url = null,Object? useWaterfalls = null,}) {
+  return _then(BlockchainExplorer_Esplora(
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,useWaterfalls: null == useWaterfalls ? _self.useWaterfalls : useWaterfalls // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$GetPaymentRequest {
 
 
@@ -1856,6 +2052,73 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class SdkEvent_DataSynced extends SdkEvent {
+  const SdkEvent_DataSynced({required this.didPullNewRecords}): super._();
+  
+
+/// Indicates new data was pulled from other instances.
+ final  bool didPullNewRecords;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SdkEvent_DataSyncedCopyWith<SdkEvent_DataSynced> get copyWith => _$SdkEvent_DataSyncedCopyWithImpl<SdkEvent_DataSynced>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SdkEvent_DataSynced&&(identical(other.didPullNewRecords, didPullNewRecords) || other.didPullNewRecords == didPullNewRecords));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,didPullNewRecords);
+
+@override
+String toString() {
+  return 'SdkEvent.dataSynced(didPullNewRecords: $didPullNewRecords)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SdkEvent_DataSyncedCopyWith<$Res> implements $SdkEventCopyWith<$Res> {
+  factory $SdkEvent_DataSyncedCopyWith(SdkEvent_DataSynced value, $Res Function(SdkEvent_DataSynced) _then) = _$SdkEvent_DataSyncedCopyWithImpl;
+@useResult
+$Res call({
+ bool didPullNewRecords
+});
+
+
+
+
+}
+/// @nodoc
+class _$SdkEvent_DataSyncedCopyWithImpl<$Res>
+    implements $SdkEvent_DataSyncedCopyWith<$Res> {
+  _$SdkEvent_DataSyncedCopyWithImpl(this._self, this._then);
+
+  final SdkEvent_DataSynced _self;
+  final $Res Function(SdkEvent_DataSynced) _then;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? didPullNewRecords = null,}) {
+  return _then(SdkEvent_DataSynced(
+didPullNewRecords: null == didPullNewRecords ? _self.didPullNewRecords : didPullNewRecords // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
 
 /// @nodoc
 mixin _$SendDestination {

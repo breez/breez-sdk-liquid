@@ -6,12 +6,24 @@ endif
 
 init:
 	cargo install wasm-pack
+	rustup target add wasm32-unknown-unknown
 
 clippy:
 	$(CLANG_PREFIX) cargo clippy --target=wasm32-unknown-unknown -- -D warnings
 
-pack:
-	$(CLANG_PREFIX) wasm-pack build --weak-refs --target web --scope @breeztech
+build: build-bundle build-deno build-node build-web
+
+build-bundle:
+	$(CLANG_PREFIX) wasm-pack build --target bundler --release --out-dir pkg/bundle
+
+build-deno:
+	$(CLANG_PREFIX) wasm-pack build --target deno --release --out-dir pkg/deno
+
+build-node:
+	$(CLANG_PREFIX) wasm-pack build --target nodejs --release --out-dir pkg/node
+
+build-web:
+	$(CLANG_PREFIX) wasm-pack build --target web --release --out-dir pkg/web
 
 test:
 	$(CLANG_PREFIX) wasm-pack test --headless --firefox

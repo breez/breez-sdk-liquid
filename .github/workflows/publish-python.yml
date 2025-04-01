@@ -29,7 +29,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64, aarch64]
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
@@ -131,7 +131,7 @@ jobs:
     strategy:
       matrix:
         arch: [win_amd64, win32]
-        python: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
@@ -148,6 +148,12 @@ jobs:
         if: matrix.arch == 'win_amd64'
         with:
           name: bindings-x86_64-pc-windows-msvc
+          path: lib/bindings/langs/python/src/breez_sdk_liquid
+
+      - uses: actions/download-artifact@v4
+        if: matrix.arch == 'win32'
+        with:
+          name: bindings-i686-pc-windows-msvc
           path: lib/bindings/langs/python/src/breez_sdk_liquid
 
       - uses: actions/download-artifact@v4

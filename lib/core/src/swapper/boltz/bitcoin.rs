@@ -22,6 +22,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         swap: &Swap,
         refund_address: &str,
     ) -> Result<BtcSwapTx, SdkError> {
+        let bitcoin_client = self.get_bitcoin_client()?;
         let refund_wrapper = match swap {
             Swap::Chain(swap) => match swap.direction {
                 Direction::Incoming => {
@@ -29,7 +30,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     BtcSwapTx::new_refund(
                         swap_script.as_bitcoin_script()?,
                         refund_address,
-                        &self.bitcoin_electrum_client,
+                        bitcoin_client,
                         self.get_url().await?,
                         swap.id.clone(),
                     )
@@ -113,12 +114,13 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         swap: &ChainSwap,
         claim_address: String,
     ) -> Result<Transaction, PaymentError> {
+        let bitcoin_client = self.get_bitcoin_client()?;
         let claim_keypair = swap.get_claim_keypair()?;
         let claim_swap_script = swap.get_claim_swap_script()?.as_bitcoin_script()?;
         let claim_tx_wrapper = BtcSwapTx::new_claim(
             claim_swap_script,
             claim_address,
-            &self.bitcoin_electrum_client,
+            bitcoin_client,
             self.get_url().await?,
             swap.id.clone(),
         )

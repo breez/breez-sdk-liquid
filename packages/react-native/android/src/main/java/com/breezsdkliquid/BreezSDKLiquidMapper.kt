@@ -418,9 +418,8 @@ fun asConfig(config: ReadableMap): Config? {
     if (!validateMandatoryFields(
             config,
             arrayOf(
-                "liquidElectrumUrl",
-                "bitcoinElectrumUrl",
-                "mempoolspaceUrl",
+                "liquidExplorer",
+                "bitcoinExplorer",
                 "workingDir",
                 "network",
                 "paymentTimeoutSec",
@@ -430,9 +429,8 @@ fun asConfig(config: ReadableMap): Config? {
     ) {
         return null
     }
-    val liquidElectrumUrl = config.getString("liquidElectrumUrl")!!
-    val bitcoinElectrumUrl = config.getString("bitcoinElectrumUrl")!!
-    val mempoolspaceUrl = config.getString("mempoolspaceUrl")!!
+    val liquidExplorer = config.getMap("liquidExplorer")?.let { asBlockchainExplorer(it) }!!
+    val bitcoinExplorer = config.getMap("bitcoinExplorer")?.let { asBlockchainExplorer(it) }!!
     val workingDir = config.getString("workingDir")!!
     val network = config.getString("network")?.let { asLiquidNetwork(it) }!!
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
@@ -479,9 +477,8 @@ fun asConfig(config: ReadableMap): Config? {
             null
         }
     return Config(
-        liquidElectrumUrl,
-        bitcoinElectrumUrl,
-        mempoolspaceUrl,
+        liquidExplorer,
+        bitcoinExplorer,
         workingDir,
         network,
         paymentTimeoutSec,
@@ -498,9 +495,8 @@ fun asConfig(config: ReadableMap): Config? {
 
 fun readableMapOf(config: Config): ReadableMap =
     readableMapOf(
-        "liquidElectrumUrl" to config.liquidElectrumUrl,
-        "bitcoinElectrumUrl" to config.bitcoinElectrumUrl,
-        "mempoolspaceUrl" to config.mempoolspaceUrl,
+        "liquidExplorer" to readableMapOf(config.liquidExplorer),
+        "bitcoinExplorer" to readableMapOf(config.bitcoinExplorer),
         "workingDir" to config.workingDir,
         "network" to config.network.name.lowercase(),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
@@ -2994,6 +2990,48 @@ fun asAmountList(arr: ReadableArray): List<Amount> {
     return list
 }
 
+fun asBlockchainExplorer(blockchainExplorer: ReadableMap): BlockchainExplorer? {
+    val type = blockchainExplorer.getString("type")
+
+    if (type == "electrum") {
+        val url = blockchainExplorer.getString("url")!!
+        return BlockchainExplorer.Electrum(url)
+    }
+    if (type == "esplora") {
+        val url = blockchainExplorer.getString("url")!!
+        val useWaterfalls = blockchainExplorer.getBoolean("useWaterfalls")
+        return BlockchainExplorer.Esplora(url, useWaterfalls)
+    }
+    return null
+}
+
+fun readableMapOf(blockchainExplorer: BlockchainExplorer): ReadableMap? {
+    val map = Arguments.createMap()
+    when (blockchainExplorer) {
+        is BlockchainExplorer.Electrum -> {
+            pushToMap(map, "type", "electrum")
+            pushToMap(map, "url", blockchainExplorer.url)
+        }
+        is BlockchainExplorer.Esplora -> {
+            pushToMap(map, "type", "esplora")
+            pushToMap(map, "url", blockchainExplorer.url)
+            pushToMap(map, "useWaterfalls", blockchainExplorer.useWaterfalls)
+        }
+    }
+    return map
+}
+
+fun asBlockchainExplorerList(arr: ReadableArray): List<BlockchainExplorer> {
+    val list = ArrayList<BlockchainExplorer>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asBlockchainExplorer(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBuyBitcoinProvider(type: String): BuyBitcoinProvider = BuyBitcoinProvider.valueOf(camelToUpperSnakeCase(type))
 
 fun asBuyBitcoinProviderList(arr: ReadableArray): List<BuyBitcoinProvider> {
@@ -3715,6 +3753,10 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
     if (type == "synced") {
         return SdkEvent.Synced
     }
+    if (type == "dataSynced") {
+        val didPullNewRecords = sdkEvent.getBoolean("didPullNewRecords")
+        return SdkEvent.DataSynced(didPullNewRecords)
+    }
     return null
 }
 
@@ -3755,6 +3797,10 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
         }
         is SdkEvent.Synced -> {
             pushToMap(map, "type", "synced")
+        }
+        is SdkEvent.DataSynced -> {
+            pushToMap(map, "type", "dataSynced")
+            pushToMap(map, "didPullNewRecords", sdkEvent.didPullNewRecords)
         }
     }
     return map

@@ -2,7 +2,7 @@
 mod test {
     use crate::chain::liquid::MockLiquidChainService;
     use crate::prelude::*;
-    use crate::recover::handlers::tests::test::{
+    use crate::recover::handlers::tests::{
         create_empty_lbtc_transaction, create_mock_lbtc_wallet_tx,
     };
     use crate::recover::handlers::SendSwapHandler;
@@ -13,9 +13,9 @@ mod test {
     use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
     use lwk_wollet::WalletTx;
     use mockall::predicate::*;
+    use sdk_common::utils::Arc;
     use std::collections::HashMap;
     use std::str::FromStr;
-    use std::sync::Arc;
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -345,7 +345,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -380,7 +380,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -410,7 +410,7 @@ mod test {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };

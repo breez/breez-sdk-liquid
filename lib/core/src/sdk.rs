@@ -1,13 +1,11 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
-use std::time::Instant;
-use std::{fs, path::PathBuf, str::FromStr, sync::Arc, time::Duration};
+use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
-use chain::bitcoin::HybridBitcoinChainService;
-use chain::liquid::{HybridLiquidChainService, LiquidChainService};
+use chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService};
 use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::{StreamExt, TryFutureExt};
@@ -18,21 +16,21 @@ use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::Message;
-use lwk_wollet::ElementsNetwork;
 use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
+use sdk_common::utils::Arc;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
-use tokio::time::MissedTickBehavior;
 use tokio_stream::wrappers::BroadcastStream;
+use tokio_with_wasm::alias as tokio;
+use web_time::Instant;
 use x509_parser::parse_x509_certificate;
 
-use crate::chain::bitcoin::BitcoinChainService;
 use crate::chain_swap::ChainSwapHandler;
 use crate::ensure_sdk;
 use crate::error::SdkError;
@@ -53,7 +51,7 @@ use crate::{
     persist::Persister,
     utils, *,
 };
-use sdk_common::lightning_125::offers::invoice::Bolt12Invoice;
+use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
 
 use self::sync::client::BreezSyncerClient;
 use self::sync::SyncService;
@@ -72,7 +70,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(30);
 
-pub(crate) struct LiquidSdkBuilder {
+pub struct LiquidSdkBuilder {
     config: Config,
     signer: Arc<Box<dyn Signer>>,
     breez_server: Arc<BreezServer>,
@@ -162,17 +160,20 @@ impl LiquidSdkBuilder {
         self
     }
 
+    fn get_working_dir(&self) -> Result<String> {
+        let fingerprint_hex: String =
+            Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
+        self.config
+            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)
+    }
+
     pub fn build(&self) -> Result<Arc<LiquidSdk>> {
         if let Some(breez_api_key) = &self.config.breez_api_key {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
 
-        fs::create_dir_all(&self.config.working_dir)?;
         let fingerprint_hex: String =
             Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
-        let working_dir = self
-            .config
-            .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)?;
         let cache_dir = self.config.get_wallet_dir(
             self.config
                 .cache_dir
@@ -181,24 +182,20 @@ impl LiquidSdkBuilder {
             &fingerprint_hex,
         )?;
 
-        let sync_enabled = self
-            .config
-            .sync_service_url
-            .clone()
-            .map(|_| true)
-            .unwrap_or(false);
-
         let persister = match self.persister.clone() {
             Some(persister) => persister,
             None => {
-                let persister = Arc::new(Persister::new(
-                    &working_dir,
+                #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+                return Err(anyhow!(
+                    "Must provide a Wasm-compatible persister on Wasm builds"
+                ));
+                #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                Arc::new(Persister::new_using_fs(
+                    &self.get_working_dir()?,
                     self.config.network,
-                    sync_enabled,
-                )?);
-                persister.init()?;
-                persister.replace_asset_metadata(self.config.asset_metadata.clone())?;
-                persister
+                    self.config.sync_enabled(),
+                    self.config.asset_metadata.clone(),
+                )?)
             }
         };
 
@@ -210,23 +207,20 @@ impl LiquidSdkBuilder {
         let bitcoin_chain_service: Arc<dyn BitcoinChainService> =
             match self.bitcoin_chain_service.clone() {
                 Some(bitcoin_chain_service) => bitcoin_chain_service,
-                None => Arc::new(HybridBitcoinChainService::new(
-                    self.config.clone(),
-                    rest_client.clone(),
-                )?),
+                None => self.config.bitcoin_chain_service(),
             };
 
         let liquid_chain_service: Arc<dyn LiquidChainService> =
             match self.liquid_chain_service.clone() {
                 Some(liquid_chain_service) => liquid_chain_service,
-                None => Arc::new(HybridLiquidChainService::new(self.config.clone())?),
+                None => self.config.liquid_chain_service(),
             };
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
             Some(onchain_wallet) => onchain_wallet,
             None => Arc::new(LiquidOnchainWallet::new(
                 self.config.clone(),
-                &cache_dir,
+                cache_dir,
                 persister.clone(),
                 self.signer.clone(),
             )?),
@@ -383,43 +377,49 @@ impl LiquidSdk {
     ///     * `passphrase` - the optional passphrase for the mnemonic
     ///     * `seed` - the optional Liquid wallet seed
     pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
-        let start_ts = Instant::now();
-        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
+        let signer = Self::default_signer(&req)?;
 
-        let signer = match (req.mnemonic, req.seed) {
-            (None, Some(seed)) => Box::new(SdkSigner::new_with_seed(seed, is_mainnet)?),
-            (Some(mnemonic), None) => Box::new(SdkSigner::new(
-                &mnemonic,
-                req.passphrase.unwrap_or("".to_string()).as_ref(),
+        Self::connect_with_signer(
+            ConnectWithSignerRequest { config: req.config },
+            Box::new(signer),
+        )
+        .inspect_err(|e| error!("Failed to connect: {:?}", e))
+        .await
+    }
+
+    pub fn default_signer(req: &ConnectRequest) -> Result<SdkSigner> {
+        let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
+        match (&req.mnemonic, &req.seed) {
+            (None, Some(seed)) => Ok(SdkSigner::new_with_seed(seed.clone(), is_mainnet)?),
+            (Some(mnemonic), None) => Ok(SdkSigner::new(
+                mnemonic,
+                req.passphrase.as_ref().unwrap_or(&"".to_string()).as_ref(),
                 is_mainnet,
             )?),
-            _ => return Err(anyhow!("Either `mnemonic` or `seed` must be set")),
-        };
-
-        let sdk =
-            Self::connect_with_signer(ConnectWithSignerRequest { config: req.config }, signer)
-                .inspect_err(|e| error!("Failed to connect: {:?}", e))
-                .await;
-
-        let init_time = Instant::now().duration_since(start_ts);
-        utils::log_print_header(init_time);
-
-        sdk
+            _ => Err(anyhow!("Either `mnemonic` or `seed` must be set")),
+        }
     }
 
     pub async fn connect_with_signer(
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
     ) -> Result<Arc<LiquidSdk>> {
+        let start_ts = Instant::now();
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&req.config.working_dir)?;
+
         let sdk = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
         )?
         .build()?;
-        sdk.start()
-            .inspect_err(|e| error!("Failed to start an SDK instance: {:?}", e))
-            .await?;
+        sdk.start().await?;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
         Ok(sdk)
     }
 
@@ -450,9 +450,8 @@ impl LiquidSdk {
 
     /// Starts an SDK instance.
     ///
-    /// Internal method. Should only be called once per instance.
-    /// Should only be called as part of [LiquidSdk::connect].
-    async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+    /// Should only be called once per instance.
+    pub async fn start(self: &Arc<LiquidSdk>) -> SdkResult<()> {
         let mut is_started = self.is_started.write().await;
         self.persister
             .update_send_swaps_by_state(Created, TimedOut, Some(true))
@@ -519,19 +518,21 @@ impl LiquidSdk {
             loop {
                 tokio::select! {
                     event = sync_events_receiver.recv() => {
-                      if let Ok(e) = event {
-                        match e {
-                          sync::Event::SyncedCompleted{data} => {
-                            info!(
-                              "Received sync event: pulled {} records, pushed {} records",
-                              data.pulled_records_count, data.pushed_records_count
-                            );
-                            if data.pulled_records_count > 0 {
-                              subscription_handler.subscribe_swaps().await;
+                        if let Ok(e) = event {
+                            match e {
+                                sync::Event::SyncedCompleted{data} => {
+                                    info!(
+                                      "Received sync event: pulled {} records, pushed {} records",
+                                      data.pulled_records_count, data.pushed_records_count
+                                    );
+                                    let did_pull_new_records = data.pulled_records_count > 0;
+                                    if did_pull_new_records {
+                                        subscription_handler.subscribe_swaps().await;
+                                    }
+                                    cloned.notify_event_listeners(SdkEvent::DataSynced {did_pull_new_records}).await
+                                }
                             }
-                          }
                         }
-                      }
                     }
                     _ = shutdown_receiver.changed() => {
                         info!("Received shutdown signal, exiting real-time sync loop");
@@ -549,7 +550,8 @@ impl LiquidSdk {
             let mut current_bitcoin_block: u32 = 0;
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
             let mut interval = tokio::time::interval(Duration::from_secs(10));
-            interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! {
                     _ = interval.tick() => {
@@ -574,7 +576,7 @@ impl LiquidSdk {
                         };
                         // Get the Bitcoin tip and process a new block
                         let t0 = Instant::now();
-                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip().map(|tip| tip.height as u32);
+                        let bitcoin_tip_res = cloned.bitcoin_chain_service.tip().await;
                         let duration_ms = Instant::now().duration_since(t0).as_millis();
                         info!("Fetched bitcoin tip at ({duration_ms} ms)");
                         let is_new_bitcoin_block = match &bitcoin_tip_res {
@@ -682,9 +684,8 @@ impl LiquidSdk {
         });
     }
 
-    async fn notify_event_listeners(&self, e: SdkEvent) -> Result<()> {
+    async fn notify_event_listeners(&self, e: SdkEvent) {
         self.event_manager.notify(e).await;
-        Ok(())
     }
 
     /// Adds an event listener to the [LiquidSdk] instance, where all [SdkEvent]'s will be emitted to.
@@ -717,7 +718,7 @@ impl LiquidSdk {
                             self.notify_event_listeners(SdkEvent::PaymentSucceeded {
                                 details: payment,
                             })
-                            .await?
+                            .await
                         }
                         Pending => {
                             match &payment.details.get_swap_id() {
@@ -730,13 +731,13 @@ impl LiquidSdk {
                                                     details: payment,
                                                 },
                                             )
-                                            .await?
+                                            .await
                                         } else {
                                             // The lockup tx is in the mempool/confirmed
                                             self.notify_event_listeners(SdkEvent::PaymentPending {
                                                 details: payment,
                                             })
-                                            .await?
+                                            .await
                                         }
                                     }
                                     Swap::Receive(ReceiveSwap {
@@ -751,13 +752,13 @@ impl LiquidSdk {
                                                     details: payment,
                                                 },
                                             )
-                                            .await?
+                                            .await
                                         } else {
                                             // The lockup tx is in the mempool/confirmed
                                             self.notify_event_listeners(SdkEvent::PaymentPending {
                                                 details: payment,
                                             })
-                                            .await?
+                                            .await
                                         }
                                     }
                                     Swap::Send(_) => {
@@ -765,7 +766,7 @@ impl LiquidSdk {
                                         self.notify_event_listeners(SdkEvent::PaymentPending {
                                             details: payment,
                                         })
-                                        .await?
+                                        .await
                                     }
                                 },
                                 // Here we probably have a liquid address payment so we emit PaymentWaitingConfirmation
@@ -773,7 +774,7 @@ impl LiquidSdk {
                                     self.notify_event_listeners(
                                         SdkEvent::PaymentWaitingConfirmation { details: payment },
                                     )
-                                    .await?
+                                    .await
                                 }
                             };
                         }
@@ -794,34 +795,34 @@ impl LiquidSdk {
                             self.notify_event_listeners(SdkEvent::PaymentWaitingFeeAcceptance {
                                 details: payment,
                             })
-                            .await?;
+                            .await;
                         }
                         Refundable => {
                             self.notify_event_listeners(SdkEvent::PaymentRefundable {
                                 details: payment,
                             })
-                            .await?
+                            .await
                         }
                         RefundPending => {
                             // The swap state has changed to RefundPending
                             self.notify_event_listeners(SdkEvent::PaymentRefundPending {
                                 details: payment,
                             })
-                            .await?
+                            .await
                         }
                         Failed => match payment.payment_type {
                             PaymentType::Receive => {
                                 self.notify_event_listeners(SdkEvent::PaymentFailed {
                                     details: payment,
                                 })
-                                .await?
+                                .await
                             }
                             PaymentType::Send => {
                                 // The refund tx is confirmed
                                 self.notify_event_listeners(SdkEvent::PaymentRefunded {
                                     details: payment,
                                 })
-                                .await?
+                                .await
                             }
                         },
                         _ => (),
@@ -2682,7 +2683,8 @@ impl LiquidSdk {
             .collect();
         let scripts_utxos = self
             .bitcoin_chain_service
-            .get_scripts_utxos(&lockup_scripts)?;
+            .get_scripts_utxos(&lockup_scripts)
+            .await?;
 
         let mut refundables = vec![];
         for (chain_swap, script_utxos) in chain_swaps.into_iter().zip(scripts_utxos) {
@@ -2898,7 +2900,7 @@ impl LiquidSdk {
             .collect();
         match partial_sync {
             false => {
-                let bitcoin_height = self.bitcoin_chain_service.tip()?.height as u32;
+                let bitcoin_height = self.bitcoin_chain_service.tip().await?;
                 let liquid_height = self.liquid_chain_service.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
@@ -3137,15 +3139,16 @@ impl LiquidSdk {
         })?;
 
         for payment in payments {
-            let total_sat = if payment.details.is_lbtc_asset_id(self.config.network) {
-                payment.amount_sat + payment.fees_sat
-            } else {
-                payment.fees_sat
-            };
+            let is_lbtc_asset_id = payment.details.is_lbtc_asset_id(self.config.network);
             match payment.payment_type {
                 PaymentType::Send => match payment.details.get_refund_tx_amount_sat() {
                     Some(refund_tx_amount_sat) => pending_receive_sat += refund_tx_amount_sat,
                     None => {
+                        let total_sat = if is_lbtc_asset_id {
+                            payment.amount_sat + payment.fees_sat
+                        } else {
+                            payment.fees_sat
+                        };
                         if let Some(tx_id) = payment.tx_id {
                             if !tx_ids.contains(&tx_id) {
                                 debug!("Deducting {total_sat} sats from balance");
@@ -3155,7 +3158,11 @@ impl LiquidSdk {
                         pending_send_sat += total_sat
                     }
                 },
-                PaymentType::Receive => pending_receive_sat += total_sat,
+                PaymentType::Receive => {
+                    if is_lbtc_asset_id {
+                        pending_receive_sat += payment.amount_sat;
+                    }
+                }
             }
         }
 
@@ -3302,13 +3309,14 @@ impl LiquidSdk {
     }
 
     /// Empties the Liquid Wallet cache for the [Config::network].
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
-        path.push(Into::<ElementsNetwork>::into(self.config.network).as_str());
+        path.push(Into::<lwk_wollet::ElementsNetwork>::into(self.config.network).as_str());
         path.push("enc_cache");
 
-        fs::remove_dir_all(&path)?;
-        fs::create_dir_all(path)?;
+        std::fs::remove_dir_all(&path)?;
+        std::fs::create_dir_all(path)?;
 
         Ok(())
     }
@@ -3341,7 +3349,7 @@ impl LiquidSdk {
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Synchronized (partial: {partial_sync}) with mempool and onchain data ({duration_ms} ms)");
 
-        self.notify_event_listeners(SdkEvent::Synced).await?;
+        self.notify_event_listeners(SdkEvent::Synced).await;
         Ok(())
     }
 
@@ -3754,6 +3762,7 @@ impl LiquidSdk {
         Ok(self.bitcoin_chain_service.recommended_fees().await?)
     }
 
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     /// Get the full default [Config] for specific [LiquidNetwork].
     pub fn default_config(
         network: LiquidNetwork,
@@ -3764,6 +3773,7 @@ impl LiquidSdk {
             LiquidNetwork::Testnet => Config::testnet(breez_api_key),
             LiquidNetwork::Regtest => Config::regtest(),
         };
+
         Ok(config)
     }
 
@@ -3824,6 +3834,7 @@ impl LiquidSdk {
     /// An error is thrown if the log file cannot be created in the working directory.
     ///
     /// An error is thrown if a global logger is already configured.
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
     }
@@ -3843,14 +3854,16 @@ fn extract_description_from_metadata(request_data: &LnUrlPayRequestData) -> Opti
 
 #[cfg(test)]
 mod tests {
-    use std::{str::FromStr, sync::Arc};
+    use std::str::FromStr;
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
         boltz::{self, TransactionInfo},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
     };
-    use lwk_wollet::{elements::Txid, hashes::hex::DisplayHex};
+    use lwk_wollet::hashes::hex::DisplayHex as _;
+    use sdk_common::utils::Arc;
+    use tokio_with_wasm::alias as tokio;
 
     use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
     use crate::test_utils::chain_swap::{
@@ -3860,10 +3873,11 @@ mod tests {
     use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
     use crate::test_utils::wallet::TEST_LIQUID_RECEIVE_LOCKUP_TX;
     use crate::{
-        model::{Direction, PaymentState, Swap},
+        bitcoin, elements,
+        model::{BtcHistory, Direction, LBtcHistory, PaymentState, Swap},
         sdk::LiquidSdk,
         test_utils::{
-            chain::{MockBitcoinChainService, MockHistory, MockLiquidChainService},
+            chain::{MockBitcoinChainService, MockLiquidChainService},
             chain_swap::{new_chain_swap, TEST_BITCOIN_INCOMING_USER_LOCKUP_TX},
             persist::{create_persister, new_receive_swap, new_send_swap},
             sdk::{new_liquid_sdk, new_liquid_sdk_with_chain_services},
@@ -4050,11 +4064,9 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service.set_history(vec![MockHistory {
+                liquid_chain_service.set_history(vec![LBtcHistory {
                     txid: mock_tx_id,
                     height,
-                    block_hash: None,
-                    block_timestamp: None,
                 }]);
 
                 let persisted_swap = trigger_swap_update!(
@@ -4086,11 +4098,9 @@ mod tests {
                 let height = (serde_json::to_string(&status).unwrap()
                     == serde_json::to_string(&RevSwapStates::TransactionConfirmed).unwrap())
                     as i32;
-                liquid_chain_service.set_history(vec![MockHistory {
+                liquid_chain_service.set_history(vec![LBtcHistory {
                     txid: mock_tx_id,
                     height,
-                    block_hash: None,
-                    block_timestamp: None,
                 }]);
 
                 let persisted_swap = trigger_swap_update!(
@@ -4257,19 +4267,15 @@ mod tests {
                     if let Some(user_lockup_tx_id) = user_lockup_tx_id {
                         match direction {
                             Direction::Incoming => {
-                                bitcoin_chain_service.set_history(vec![MockHistory {
-                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                bitcoin_chain_service.set_history(vec![BtcHistory {
+                                    txid: bitcoin::Txid::from_str(user_lockup_tx_id).unwrap(),
                                     height: 0,
-                                    block_hash: None,
-                                    block_timestamp: None,
                                 }]);
                             }
                             Direction::Outgoing => {
-                                liquid_chain_service.set_history(vec![MockHistory {
-                                    txid: Txid::from_str(user_lockup_tx_id).unwrap(),
+                                liquid_chain_service.set_history(vec![LBtcHistory {
+                                    txid: elements::Txid::from_str(user_lockup_tx_id).unwrap(),
                                     height: 0,
-                                    block_hash: None,
-                                    block_timestamp: None,
                                 }]);
                             }
                         }
@@ -4304,11 +4310,9 @@ mod tests {
                     ChainSwapStates::TransactionConfirmed,
                 ] {
                     if direction == Direction::Incoming {
-                        bitcoin_chain_service.set_history(vec![MockHistory {
-                            txid: Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
+                        bitcoin_chain_service.set_history(vec![BtcHistory {
+                            txid: bitcoin::Txid::from_str(&mock_user_lockup_tx_id).unwrap(),
                             height: 0,
-                            block_hash: None,
-                            block_timestamp: None,
                         }]);
                         bitcoin_chain_service.set_transactions(&[&mock_user_lockup_tx_hex]);
                     }

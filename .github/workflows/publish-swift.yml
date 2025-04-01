@@ -85,6 +85,14 @@ jobs:
           cp ios-universal-sim/libbreez_sdk_liquid_bindings.a build/lib/bindings/langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
           cp darwin-universal/libbreez_sdk_liquid_bindings.a build/lib/bindings/langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
 
+      - name: Set plist versions
+        working-directory: build/lib/bindings/langs/swift/breez_sdk_liquidFFI.xcframework
+        run: |
+          SHORT_VERSION=$(echo "${{ inputs.package-version }}" | grep -Eo '^(\d.\d.\d)')
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT_VERSION" ios-arm64/breez_sdk_liquidFFI.framework/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT_VERSION" ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SHORT_VERSION" macos-arm64_x86_64/breez_sdk_liquidFFI.framework/Info.plist
+
       - name: Compress XCFramework
         working-directory: build/lib/bindings/langs/swift
         run: |

@@ -1,27 +1,27 @@
 use std::collections::HashMap;
-use std::fs::{self, create_dir_all};
 use std::io::Write;
-use std::path::PathBuf;
-use std::time::Instant;
-use std::{path::Path, str::FromStr, sync::Arc};
+use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use boltz_client::ElementsAddress;
 use log::{debug, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
+use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
 use lwk_wollet::elements::{AssetId, Txid};
-use lwk_wollet::ElectrumOptions;
+use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{
     elements::{hex::ToHex, Address, Transaction},
-    ElectrumClient, ElectrumUrl, ElementsNetwork, FsPersister, WalletTx, Wollet, WolletDescriptor,
+    ElementsNetwork, FsPersister, NoPersist, WalletTx, Wollet, WolletDescriptor,
 };
+use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
+use web_time::Instant;
 
-use crate::model::Signer;
+use crate::model::{BlockchainExplorer, Signer};
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{
@@ -29,12 +29,15 @@ use crate::{
     error::PaymentError,
     model::{Config, LiquidNetwork},
 };
-use lwk_wollet::secp256k1::Message;
+use sdk_common::utils::Arc;
+
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+use lwk_wollet::blocking::BlockchainBackend;
 
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
 #[sdk_macros::async_trait]
-pub trait OnchainWallet: Send + Sync {
+pub trait OnchainWallet: MaybeSend + MaybeSync {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
 
@@ -99,69 +102,158 @@ pub trait OnchainWallet: Send + Sync {
     async fn full_scan(&self) -> Result<(), PaymentError>;
 }
 
-pub(crate) struct LiquidOnchainWallet {
+pub enum WalletClient {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum(Box<lwk_wollet::ElectrumClient>),
+    Esplora(Box<EsploraClient>, /* waterfalls */ bool),
+}
+
+impl WalletClient {
+    pub(crate) fn from_config(config: &Config) -> Result<Self> {
+        match &config.liquid_explorer {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { url } => {
+                let client = Box::new(config.electrum_client(url)?);
+                Ok(Self::Electrum(client))
+            }
+            BlockchainExplorer::Esplora {
+                url,
+                use_waterfalls,
+            } => {
+                let waterfalls = *use_waterfalls;
+                let client = Box::new(
+                    EsploraClientBuilder::new(url, config.network.into())
+                        .timeout(3)
+                        .waterfalls(waterfalls)
+                        .build(),
+                );
+                Ok(Self::Esplora(client, waterfalls))
+            }
+        }
+    }
+
+    pub(crate) async fn full_scan_to_index(
+        &mut self,
+        wallet: &mut Wollet,
+        index: u32,
+    ) -> Result<(), lwk_wollet::Error> {
+        let maybe_update = match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            WalletClient::Electrum(electrum_client) => {
+                electrum_client.full_scan_to_index(&wallet.state(), index)?
+            }
+            WalletClient::Esplora(esplora_client, waterfalls) => {
+                if *waterfalls {
+                    // Avoid a `UsingWaterfallsWithNonZeroIndex` error by not passing the index
+                    esplora_client.full_scan(wallet).await?
+                } else {
+                    esplora_client.full_scan_to_index(wallet, index).await?
+                }
+            }
+        };
+
+        if let Some(update) = maybe_update {
+            wallet.apply_update(update)?;
+        }
+
+        Ok(())
+    }
+}
+
+pub struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
-    electrum_client: Mutex<Option<ElectrumClient>>,
-    working_dir: String,
+    client: Mutex<Option<WalletClient>>,
+    working_dir: Option<String>,
     pub(crate) signer: SdkLwkSigner,
 }
 
 impl LiquidOnchainWallet {
+    /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
     pub(crate) fn new(
         config: Config,
-        working_dir: &String,
+        working_dir: String,
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
-        let signer = crate::signer::SdkLwkSigner::new(user_signer.clone())?;
-        let wollet = Self::create_wallet(&config, working_dir, &signer)?;
+        let signer = SdkLwkSigner::new(user_signer.clone())?;
+        let wollet = Self::create_wallet(&config, Some(&working_dir), &signer)?;
 
-        let working_dir_buf = PathBuf::from_str(working_dir)?;
+        let working_dir_buf = std::path::PathBuf::from_str(&working_dir)?;
         if !working_dir_buf.exists() {
-            create_dir_all(&working_dir_buf)?;
+            std::fs::create_dir_all(&working_dir_buf)?;
         }
 
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
-            electrum_client: Mutex::new(None),
-            working_dir: working_dir.clone(),
+            client: Mutex::new(None),
+            working_dir: Some(working_dir),
             signer,
         })
     }
 
-    fn create_wallet<P: AsRef<Path>>(
+    /// Creates a new LiquidOnchainWallet that caches data in memory
+    pub fn new_in_memory(
+        config: Config,
+        persister: Arc<Persister>,
+        user_signer: Arc<Box<dyn Signer>>,
+    ) -> Result<Self> {
+        let signer = SdkLwkSigner::new(user_signer.clone())?;
+        let wollet = Self::create_wallet(&config, None, &signer)?;
+
+        Ok(Self {
+            config,
+            persister,
+            wallet: Arc::new(Mutex::new(wollet)),
+            client: Mutex::new(None),
+            working_dir: None,
+            signer,
+        })
+    }
+
+    fn create_wallet(
         config: &Config,
-        working_dir: P,
+        working_dir: Option<&str>,
         signer: &SdkLwkSigner,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
         let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
-        let mut lwk_persister =
-            FsPersister::new(working_dir.as_ref(), elements_network, &descriptor)?;
-        let wollet_res = Wollet::new(elements_network, lwk_persister, descriptor.clone());
+        let wollet_res = match &working_dir {
+            Some(working_dir) => Wollet::new(
+                elements_network,
+                FsPersister::new(working_dir, elements_network, &descriptor)?,
+                descriptor.clone(),
+            ),
+            None => Wollet::new(elements_network, NoPersist::new(), descriptor.clone()),
+        };
         match wollet_res {
             Ok(wollet) => Ok(wollet),
-            Err(
+            res @ Err(
                 lwk_wollet::Error::PersistError(_)
                 | lwk_wollet::Error::UpdateHeightTooOld { .. }
                 | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
-            ) => {
-                warn!("Update error initialising wollet, wipping storage and retrying: {wollet_res:?}");
-                let mut path = working_dir.as_ref().to_path_buf();
-                path.push(elements_network.as_str());
-                fs::remove_dir_all(&path)?;
-                warn!("Wiping wallet in path: {:?}", path);
-                lwk_persister = FsPersister::new(working_dir, elements_network, &descriptor)?;
-                Ok(Wollet::new(
-                    elements_network,
-                    lwk_persister,
-                    descriptor.clone(),
-                )?)
-            }
+            ) => match working_dir {
+                Some(working_dir) => {
+                    warn!(
+                        "Update error initialising wollet, wipping storage and retrying: {res:?}"
+                    );
+                    let mut path = std::path::PathBuf::from(working_dir);
+                    path.push(elements_network.as_str());
+                    std::fs::remove_dir_all(&path)?;
+                    warn!("Wiping wallet in path: {:?}", path);
+                    let lwk_persister =
+                        FsPersister::new(working_dir, elements_network, &descriptor)?;
+                    Ok(Wollet::new(
+                        elements_network,
+                        lwk_persister,
+                        descriptor.clone(),
+                    )?)
+                }
+                None => res.map_err(Into::into),
+            },
             Err(e) => Err(e.into()),
         }
     }
@@ -360,25 +452,13 @@ impl OnchainWallet for LiquidOnchainWallet {
         let full_scan_started = Instant::now();
 
         // create electrum client if doesn't already exist
-        let mut electrum_client = self.electrum_client.lock().await;
-        if electrum_client.is_none() {
-            let (tls, validate_domain) = match self.config.network {
-                LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
-                LiquidNetwork::Regtest => (false, false),
-            };
-
-            let electrum_url =
-                ElectrumUrl::new(&self.config.liquid_electrum_url, tls, validate_domain)?;
-            *electrum_client = Some(ElectrumClient::with_options(
-                &electrum_url,
-                ElectrumOptions { timeout: Some(3) },
-            )?);
+        let mut client = self.client.lock().await;
+        if client.is_none() {
+            *client = Some(WalletClient::from_config(&self.config)?);
         }
-        let client = electrum_client
-            .as_mut()
-            .ok_or_else(|| PaymentError::Generic {
-                err: "Electrum client not initialized".to_string(),
-            })?;
+        let client = client.as_mut().ok_or_else(|| PaymentError::Generic {
+            err: "Wallet client not initialized".to_string(),
+        })?;
 
         // Use the cached derivation index with a buffer of 5 to perform the scan
         let last_derivation_index = self
@@ -388,21 +468,18 @@ impl OnchainWallet for LiquidOnchainWallet {
         let index_with_buffer = last_derivation_index + 5;
         let mut wallet = self.wallet.lock().await;
 
-        let res = match lwk_wollet::full_scan_to_index_with_electrum_client(
-            &mut wallet,
-            index_with_buffer,
-            client,
-        ) {
+        let res = match client
+            .full_scan_to_index(&mut wallet, index_with_buffer)
+            .await
+        {
             Ok(()) => Ok(()),
             Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
                 warn!("Full scan failed with update height too old, wiping storage and retrying");
                 let mut new_wallet =
-                    Self::create_wallet(&self.config, &self.working_dir, &self.signer)?;
-                lwk_wollet::full_scan_to_index_with_electrum_client(
-                    &mut new_wallet,
-                    index_with_buffer,
-                    client,
-                )?;
+                    Self::create_wallet(&self.config, self.working_dir.as_deref(), &self.signer)?;
+                client
+                    .full_scan_to_index(&mut new_wallet, index_with_buffer)
+                    .await?;
                 *wallet = new_wallet;
                 Ok(())
             }
@@ -443,7 +520,6 @@ mod tests {
     use crate::test_utils::persist::create_persister;
     use crate::wallet::LiquidOnchainWallet;
     use anyhow::Result;
-    use tempdir::TempDir;
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -454,17 +530,30 @@ mod tests {
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
 
-        let config = Config::testnet(None);
-
-        // Create a temporary directory for working_dir
-        let temp_dir = TempDir::new("").unwrap();
-        let working_dir = temp_dir.path().to_str().unwrap().to_string();
+        let config = Config::testnet_esplora(None);
 
         create_persister!(storage);
 
-        let wallet: Arc<dyn OnchainWallet> = Arc::new(
-            LiquidOnchainWallet::new(config, &working_dir, storage, sdk_signer.clone()).unwrap(),
-        );
+        let wallet: Arc<dyn OnchainWallet> = {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            {
+                // Create a temporary directory for working_dir
+                let working_dir = tempdir::TempDir::new("")
+                    .unwrap()
+                    .path()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                Arc::new(
+                    LiquidOnchainWallet::new(config, working_dir, storage, sdk_signer.clone())
+                        .unwrap(),
+                )
+            }
+            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+            Arc::new(
+                LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone()).unwrap(),
+            )
+        };
 
         // Test message
         let message = "Hello, Liquid!";

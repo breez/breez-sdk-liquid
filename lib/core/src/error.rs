@@ -194,6 +194,7 @@ impl From<lwk_wollet::Error> for PaymentError {
     }
 }
 
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 impl From<lwk_wollet::UrlError> for PaymentError {
     fn from(err: lwk_wollet::UrlError) -> Self {
         PaymentError::Generic {
@@ -232,8 +233,8 @@ impl From<SdkError> for PaymentError {
     }
 }
 
-impl From<crate::bitcoin::util::bip32::Error> for PaymentError {
-    fn from(err: crate::bitcoin::util::bip32::Error) -> Self {
+impl From<sdk_common::bitcoin::util::bip32::Error> for PaymentError {
+    fn from(err: sdk_common::bitcoin::util::bip32::Error) -> Self {
         Self::SignerError {
             err: err.to_string(),
         }

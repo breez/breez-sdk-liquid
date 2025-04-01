@@ -1,9 +1,8 @@
-use std::sync::Arc;
-
 use anyhow::Result;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
+use sdk_common::utils::Arc;
 
 use crate::prelude::*;
 use crate::recover::model::*;
@@ -52,7 +51,7 @@ impl SendSwapHandler {
             .ok_or(anyhow::anyhow!("no funding address found"))?
             .script_pubkey();
 
-        let empty_history = Vec::<HistoryTxId>::new();
+        let empty_history = Vec::<LBtcHistory>::new();
         let history = context
             .lbtc_script_to_history_map
             .get(&lockup_script)
@@ -145,10 +144,10 @@ impl SendSwapHandler {
     fn recover_onchain_data(
         tx_map: &TxMap,
         swap_id: &str,
-        history: &[HistoryTxId],
+        wallet_history: &[LBtcHistory],
     ) -> Result<RecoveredOnchainDataSend> {
         // If a history tx is one of our outgoing txs, it's a lockup tx
-        let lockup_tx_id = history
+        let lockup_tx_id = wallet_history
             .iter()
             .find(|&tx| tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
             .cloned();
@@ -158,7 +157,7 @@ impl SendSwapHandler {
             //
             // Only find the claim_tx from the history if we find a lockup_tx. Not doing so will select
             // the first tx as the claim, whereas we should check that the claim is not the lockup.
-            history
+            wallet_history
                 .iter()
                 .filter(|&tx| !tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
                 .find(|&tx| !tx_map.outgoing_tx_map.contains_key::<Txid>(&tx.txid))
@@ -169,7 +168,7 @@ impl SendSwapHandler {
         };
 
         // If a history tx is one of our incoming txs, it's a refund tx
-        let refund_tx_id = history
+        let refund_tx_id = wallet_history
             .iter()
             .find(|&tx| tx_map.incoming_tx_map.contains_key::<Txid>(&tx.txid))
             .cloned();
@@ -191,7 +190,7 @@ impl SendSwapHandler {
     ) -> Result<Option<String>> {
         // Try cooperative first
         if let Ok(preimage) = swapper.get_submarine_preimage(swap_id).await {
-            println!("Found Send Swap {swap_id} preimage cooperatively: {preimage}");
+            log::debug!("Found Send Swap {swap_id} preimage cooperatively: {preimage}");
             return Ok(Some(preimage));
         }
         warn!("Could not recover Send swap {swap_id} preimage cooperatively");
@@ -239,9 +238,9 @@ impl SendSwapHandler {
 }
 
 pub(crate) struct RecoveredOnchainDataSend {
-    pub(crate) lockup_tx_id: Option<HistoryTxId>,
-    pub(crate) claim_tx_id: Option<HistoryTxId>,
-    pub(crate) refund_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<LBtcHistory>,
+    pub(crate) claim_tx_id: Option<LBtcHistory>,
+    pub(crate) refund_tx_id: Option<LBtcHistory>,
     pub(crate) preimage: Option<String>,
 }
 

@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use std::{collections::HashMap, str::FromStr, sync::Arc};
+use std::{collections::HashMap, str::FromStr};
 
 use crate::{
     error::PaymentError,
@@ -23,6 +23,7 @@ use lwk_wollet::{
     secp256k1::{All, Message},
     WalletTx,
 };
+use sdk_common::utils::Arc;
 
 pub(crate) struct MockWallet {
     signer: SdkLwkSigner,

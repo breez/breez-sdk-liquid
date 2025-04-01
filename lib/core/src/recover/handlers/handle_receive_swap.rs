@@ -180,9 +180,9 @@ impl ReceiveSwapHandler {
 }
 
 pub(crate) struct RecoveredOnchainDataReceive {
-    pub(crate) lockup_tx_id: Option<HistoryTxId>,
-    pub(crate) claim_tx_id: Option<HistoryTxId>,
-    pub(crate) mrh_tx_id: Option<HistoryTxId>,
+    pub(crate) lockup_tx_id: Option<LBtcHistory>,
+    pub(crate) claim_tx_id: Option<LBtcHistory>,
+    pub(crate) mrh_tx_id: Option<LBtcHistory>,
     pub(crate) mrh_amount_sat: Option<u64>,
 }
 
@@ -217,6 +217,6 @@ impl RecoveredOnchainDataReceive {
 
 #[derive(Clone)]
 pub(crate) struct ReceiveSwapHistory {
-    pub(crate) lbtc_claim_script_history: Vec<HistoryTxId>,
-    pub(crate) lbtc_mrh_script_history: Vec<HistoryTxId>,
+    pub(crate) lbtc_claim_script_history: Vec<LBtcHistory>,
+    pub(crate) lbtc_mrh_script_history: Vec<LBtcHistory>,
 }

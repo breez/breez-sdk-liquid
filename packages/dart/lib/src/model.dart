@@ -139,6 +139,19 @@ class BackupRequest {
       other is BackupRequest && runtimeType == other.runtimeType && backupPath == other.backupPath;
 }
 
+@freezed
+sealed class BlockchainExplorer with _$BlockchainExplorer {
+  const BlockchainExplorer._();
+
+  const factory BlockchainExplorer.electrum({required String url}) = BlockchainExplorer_Electrum;
+  const factory BlockchainExplorer.esplora({
+    required String url,
+
+    /// Whether or not to use the "waterfalls" extension
+    required bool useWaterfalls,
+  }) = BlockchainExplorer_Esplora;
+}
+
 class BlockchainInfo {
   final int liquidTip;
   final int bitcoinTip;
@@ -228,11 +241,8 @@ class CheckMessageResponse {
 
 /// Configuration for the Liquid SDK
 class Config {
-  final String liquidElectrumUrl;
-  final String bitcoinElectrumUrl;
-
-  /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
-  final String mempoolspaceUrl;
+  final BlockchainExplorer liquidExplorer;
+  final BlockchainExplorer bitcoinExplorer;
 
   /// Directory in which the DB and log files are stored.
   ///
@@ -282,9 +292,8 @@ class Config {
   final List<AssetMetadata>? assetMetadata;
 
   const Config({
-    required this.liquidElectrumUrl,
-    required this.bitcoinElectrumUrl,
-    required this.mempoolspaceUrl,
+    required this.liquidExplorer,
+    required this.bitcoinExplorer,
     required this.workingDir,
     this.cacheDir,
     required this.network,
@@ -300,9 +309,8 @@ class Config {
 
   @override
   int get hashCode =>
-      liquidElectrumUrl.hashCode ^
-      bitcoinElectrumUrl.hashCode ^
-      mempoolspaceUrl.hashCode ^
+      liquidExplorer.hashCode ^
+      bitcoinExplorer.hashCode ^
       workingDir.hashCode ^
       cacheDir.hashCode ^
       network.hashCode ^
@@ -320,9 +328,8 @@ class Config {
       identical(this, other) ||
       other is Config &&
           runtimeType == other.runtimeType &&
-          liquidElectrumUrl == other.liquidElectrumUrl &&
-          bitcoinElectrumUrl == other.bitcoinElectrumUrl &&
-          mempoolspaceUrl == other.mempoolspaceUrl &&
+          liquidExplorer == other.liquidExplorer &&
+          bitcoinExplorer == other.bitcoinExplorer &&
           workingDir == other.workingDir &&
           cacheDir == other.cacheDir &&
           network == other.network &&
@@ -1570,7 +1577,15 @@ sealed class SdkEvent with _$SdkEvent {
       SdkEvent_PaymentWaitingConfirmation;
   const factory SdkEvent.paymentWaitingFeeAcceptance({required Payment details}) =
       SdkEvent_PaymentWaitingFeeAcceptance;
+
+  /// Synced with mempool and onchain data
   const factory SdkEvent.synced() = SdkEvent_Synced;
+
+  /// Synced with real-time data sync
+  const factory SdkEvent.dataSynced({
+    /// Indicates new data was pulled from other instances.
+    required bool didPullNewRecords,
+  }) = SdkEvent_DataSynced;
 }
 
 @freezed

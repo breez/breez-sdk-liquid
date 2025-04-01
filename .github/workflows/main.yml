@@ -59,12 +59,12 @@ jobs:
         run: cargo clippy -- -D warnings
 
   clippy-wasm:
-    name: Cargo Clippy WASM
+    name: Cargo Clippy Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
+      - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
@@ -79,18 +79,17 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
       - name: Clippy
-        working-directory: lib/wasm 
-        run: cargo clippy --target=wasm32-unknown-unknown -- -D warnings
+        run: make wasm-clippy
 
   build:
     name: Cargo Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        
-      - name: Install WASM target
-        run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -127,12 +126,12 @@ jobs:
           fi
 
   build-wasm:
-    name: Cargo Build WASM
+    name: Cargo Build Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
+      - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
@@ -146,6 +145,9 @@ jobs:
         with:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
 
       - name: Cargo build
         working-directory: lib/wasm
@@ -276,12 +278,12 @@ jobs:
         run: cargo test --no-default-features --features uniffi-25
 
   test-wasm:
-    name: Test WASM
+    name: Test Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install WASM target
+      - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
 
       - name: Install wasm-pack
@@ -299,9 +301,11 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test WASM
-        working-directory: lib/wasm
-        run: wasm-pack test --headless --firefox
+      - name: Setup emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Test Wasm
+        run: make wasm-test
 
   notification-plugin:
     name: Check notification plugin

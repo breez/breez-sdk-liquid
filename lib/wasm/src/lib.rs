@@ -3,27 +3,29 @@ mod event;
 pub mod model;
 mod signer;
 
+use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::Arc;
 
+use crate::event::{EventListener, WasmEventListener};
+use crate::model::*;
 use anyhow::anyhow;
-use breez_sdk_liquid::sdk::LiquidSdk;
+use breez_sdk_liquid::persist::Persister;
+use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
+use breez_sdk_liquid::wallet::LiquidOnchainWallet;
+use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::Level;
 use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
 
-use crate::event::{EventListener, WasmEventListener};
-use crate::model::*;
-
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
-    sdk: Arc<LiquidSdk>,
+    sdk: Rc<LiquidSdk>,
 }
 
 #[wasm_bindgen(js_name = "connect")]
 pub async fn connect(req: ConnectRequest) -> WasmResult<BindingLiquidSdk> {
-    let sdk = LiquidSdk::connect(req.into()).await?;
-    Ok(BindingLiquidSdk { sdk })
+    let signer = Box::new(LiquidSdk::default_signer(&req.clone().into())?);
+    connect_inner(req.config, signer).await
 }
 
 #[wasm_bindgen(js_name = "connectWithSigner")]
@@ -31,14 +33,53 @@ pub async fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Signer,
 ) -> WasmResult<BindingLiquidSdk> {
-    let wasm_signer = Box::new(WasmSigner { signer });
-    let sdk = LiquidSdk::connect_with_signer(req.into(), wasm_signer).await?;
+    let signer: Box<dyn breez_sdk_liquid::model::Signer> = Box::new(WasmSigner { signer });
+    connect_inner(req.config, signer).await
+}
+
+async fn connect_inner(
+    config: Config,
+    signer: Box<dyn breez_sdk_liquid::model::Signer>,
+) -> WasmResult<BindingLiquidSdk> {
+    let config: breez_sdk_liquid::model::Config = config.into();
+    let signer = Rc::new(signer);
+
+    let mut sdk_builder = LiquidSdkBuilder::new(
+        config.clone(),
+        PRODUCTION_BREEZSERVER_URL.to_string(),
+        Rc::clone(&signer),
+    )?;
+
+    let persister = Rc::new(Persister::new_in_memory(
+        &config.working_dir,
+        config.network,
+        config.sync_enabled(),
+        config.asset_metadata.clone(),
+    )?);
+
+    let onchain_wallet = Rc::new(LiquidOnchainWallet::new_in_memory(
+        config,
+        Rc::clone(&persister),
+        signer,
+    )?);
+
+    sdk_builder.persister(persister);
+    sdk_builder.onchain_wallet(onchain_wallet);
+
+    let sdk = sdk_builder.build()?;
+    sdk.start().await?;
+
     Ok(BindingLiquidSdk { sdk })
 }
 
 #[wasm_bindgen(js_name = "defaultConfig")]
 pub fn default_config(network: LiquidNetwork, breez_api_key: Option<String>) -> WasmResult<Config> {
-    Ok(LiquidSdk::default_config(network.into(), breez_api_key)?.into())
+    let config = match network {
+        LiquidNetwork::Mainnet => breez_sdk_liquid::model::Config::mainnet_esplora(breez_api_key),
+        LiquidNetwork::Testnet => breez_sdk_liquid::model::Config::testnet_esplora(breez_api_key),
+        LiquidNetwork::Regtest => breez_sdk_liquid::model::Config::regtest_esplora(),
+    };
+    Ok(config.into())
 }
 
 #[wasm_bindgen(js_name = "parseInvoice")]
@@ -101,7 +142,7 @@ impl BindingLiquidSdk {
         Ok(self.sdk.send_payment(&req.into()).await?.into())
     }
 
-    #[wasm_bindgen(js_name = "preparePeceivePayment")]
+    #[wasm_bindgen(js_name = "prepareReceivePayment")]
     pub async fn prepare_receive_payment(
         &self,
         req: PrepareReceiveRequest,
@@ -292,12 +333,6 @@ impl BindingLiquidSdk {
     #[wasm_bindgen(js_name = "recommendedFees")]
     pub async fn recommended_fees(&self) -> WasmResult<RecommendedFees> {
         Ok(self.sdk.recommended_fees().await?.into())
-    }
-
-    #[wasm_bindgen(js_name = "emptyWalletCache")]
-    pub fn empty_wallet_cache(&self) -> WasmResult<()> {
-        self.sdk.empty_wallet_cache()?;
-        Ok(())
     }
 
     #[wasm_bindgen(js_name = "backup")]

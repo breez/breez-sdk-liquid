@@ -1,8 +1,17 @@
 # Regtest environment for Breez SDK - Nodeless (Liquid Implementation)
 
-Based on [Boltz Regtest](https://github.com/BoltzExchange/regtest)
+Based on [Boltz Regtest](https://github.com/BoltzExchange/regtest) (included as a submodule in `./boltz`)
+
+## Prerequisites
+
+* Git submodules 
+    * `git submodule update --init`
+* [Docker](https://docs.docker.com/engine/install/) or [Orbstack](https://orbstack.dev/) for Apple Silicon based Macs.
+When using OrbStack on macOS, set `export DOCKER_DEFAULT_PLATFORM=linux/amd64` before starting.
 
 ## Usage
+
+Starting and stopping the regtest setup. On start up, look out for unhealthy containers, which may happen occasionally.
 
 ```bash
 ./start.sh
@@ -12,35 +21,49 @@ Based on [Boltz Regtest](https://github.com/BoltzExchange/regtest)
 ./stop.sh
 ```
 
-```bash
-./restart.sh
-```
-
-- Web App: [http://localhost:8080](http://localhost:8080)
-
-Data dirs for the services are stored in `./data` folder.
-
-### Scripts container
+To control the regtest nodes, some useful aliases are provided.
 
 ```bash
-docker exec -it boltz-scripts bash
+source boltz/aliases.sh
 ```
 
-- bitcoin-cli-sim-client
-- bitcoin-cli-sim-server
-- elements-cli-sim-client
-- elements-cli-sim-server
-- boltzcli-sim ([boltz-client](https://github.com/BoltzExchange/boltz-client))
-- lightning-cli-sim
-- lncli-sim
+After setting up the aliases, you can access the following commands:
 
-Since there are two lnd and two cln instances, use `lncli-sim 1` or `lightning-cli-sim 1` to interact with the first instance and `lncli-sim 2` or `lightning-cli-sim 2` to interact with the second.
+```bash
+# Mine blocks on both Bitcoin and Elements chains
+mine-block
 
-Or alternatively, you can `source aliases.sh` to have these convenience scripts available on the host machine.
+# Interact with bitcoind
+bitcoin-cli-sim-client getblockchaininfo
 
-### Block explorers
+# Interact with elements
+elements-cli-sim-client getblockchaininfo
 
-[Esplora](https://github.com/Blockstream/esplora) is running for the Bitcoin Core and Elements regtest:
+# Interact with Lightning nodes
+lightning-cli-sim 1 getinfo
+lncli-sim 1 getinfo
+```
 
-- Bitcoin: [http://localhost:4002](http://localhost:4002)
-- Elements: [http://localhost:4003](http://localhost:4003)
+Useful commands for trying out the SDK:
+
+```bash
+# Get a bolt11 invoice
+lncli-sim 1 addinvoice <amount_sat>
+
+# Pay a bolt11 invoice
+lncli-sim 1 payinvoice --force <invoice>
+
+# Get a Bitcoin address
+bitcoin-cli-sim-client getnewaddress
+
+# Send bitcoin to a Bitcoin address
+bitcoin-cli-sim-client sendtoaddress <address> <amount_btc>
+
+# Get a Liquid address
+elements-cli-sim-client getnewaddress
+
+# Send L-BTC to a Liquid address
+elements-cli-sim-client sendtoaddress <address> <amount_lbtc>
+```
+
+See [Boltz Regtest README](https://github.com/BoltzExchange/regtest/blob/master/README.md) for more info.

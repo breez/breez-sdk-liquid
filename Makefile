@@ -1,5 +1,10 @@
 all: fmt codegen clippy
 
+init:
+	make -C ./lib/bindings init
+	make -C ./lib/core init
+	make -C ./lib/wasm init
+
 fmt:
 	cd lib && cargo fmt
 	cd cli && cargo fmt
@@ -14,6 +19,7 @@ cargo-clippy:
 	cd cli && cargo clippy -- -D warnings
 
 wasm-clippy:
+	make -C ./lib/core wasm-clippy
 	make -C ./lib/wasm clippy
 
 test: cargo-test wasm-test
@@ -23,6 +29,7 @@ cargo-test:
 	cd lib/core && cargo test
 
 wasm-test:
+	make -C ./lib/core wasm-test
 	make -C ./lib/wasm test
 
 codegen: flutter-codegen react-native-codegen

@@ -1,24 +1,20 @@
 #[cfg(test)]
 mod test {
     use crate::{
-        chain::liquid::MockLiquidChainService,
-        model::{ChainSwap, PaymentState, SwapMetadata},
+        bitcoin, elements,
+        model::{BtcHistory, BtcScriptBalance, ChainSwap, LBtcHistory, PaymentState, SwapMetadata},
         recover::{
-            handlers::{tests::test::create_mock_lbtc_wallet_tx, ChainReceiveSwapHandler},
-            model::{HistoryTxId, RecoveryContext, TxMap},
+            handlers::{tests::create_mock_lbtc_wallet_tx, ChainReceiveSwapHandler},
+            model::{RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
+        test_utils::chain::MockLiquidChainService,
     };
-    use boltz_client::{
-        bitcoin::{self, transaction::Version, Sequence},
-        Amount, LockTime,
-    };
-    use electrum_client::GetBalanceRes;
-    use lwk_wollet::{
-        elements::{self, Txid},
-        elements_miniscript::slip77::MasterBlindingKey,
-    };
-    use std::{collections::HashMap, str::FromStr, sync::Arc};
+    use bitcoin::{transaction::Version, Sequence};
+    use boltz_client::{Amount, LockTime};
+    use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+    use sdk_common::utils::Arc;
+    use std::{collections::HashMap, str::FromStr};
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -204,7 +200,7 @@ mod test {
         // Add balance to the lockup address to simulate funds still there
         recovery_context.btc_script_to_balance_map.insert(
             btc_lockup_script.clone(),
-            GetBalanceRes {
+            BtcScriptBalance {
                 confirmed: chain_swap.payer_amount_sat,
                 unconfirmed: 0,
             },
@@ -416,7 +412,7 @@ mod test {
         let computed_txid_str = computed_txid.to_string();
 
         // Create history tx with the computed txid
-        let history_tx = HistoryTxId {
+        let history_tx = BtcHistory {
             txid: computed_txid.to_string().parse().unwrap(),
             height: height as i32,
         };
@@ -446,7 +442,7 @@ mod test {
         // Set balance to 0 (funds have been used)
         context.btc_script_to_balance_map.insert(
             lockup_script.clone(),
-            GetBalanceRes {
+            BtcScriptBalance {
                 confirmed: 0,
                 unconfirmed: 0,
             },
@@ -488,14 +484,8 @@ mod test {
         };
 
         // Create history tx for refund
-        let refund_bitcoin_txid: Txid = refund_tx
-            .clone()
-            .compute_txid()
-            .to_string()
-            .parse()
-            .unwrap();
-        let refund_history_tx = HistoryTxId {
-            txid: refund_bitcoin_txid,
+        let refund_history_tx = BtcHistory {
+            txid: refund_tx.compute_txid(),
             height: refund_height as i32,
         };
         // Add refund tx to script history
@@ -536,7 +526,7 @@ mod test {
         let mut history = Vec::new();
         for (tx_id_hex, height) in tx_ids {
             let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
-            history.push(HistoryTxId {
+            history.push(LBtcHistory {
                 txid: tx_id,
                 height: *height as i32,
             });

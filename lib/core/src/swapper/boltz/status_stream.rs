@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::sync::Arc;
 use std::time::Duration;
 
 use crate::swapper::{
@@ -13,8 +12,9 @@ use boltz_client::boltz::{
 };
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
+use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
-use tokio::time::MissedTickBehavior;
+use tokio_with_wasm::alias as tokio;
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     async fn send_subscription(
@@ -48,7 +48,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
-                let client = match swapper.get_client().await {
+                let client = match swapper.get_boltz_client().await {
                     Ok(client) => client,
                     Err(e) => {
                         warn!("Failed to get swapper client: {e:?}");
@@ -66,7 +66,8 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                         callback.subscribe_swaps().await;
 
                         let mut interval = tokio::time::interval(keep_alive_ping_interval);
-                        interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
+                        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+                        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
                         loop {
                             tokio::select! {

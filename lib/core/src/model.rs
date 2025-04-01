@@ -1,44 +1,62 @@
 use anyhow::{anyhow, Result};
+use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
-    bitcoin::ScriptBuf,
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
     },
-    ToHex,
+    BtcSwapScript, Keypair, LBtcSwapScript,
 };
-use boltz_client::{BtcSwapScript, Keypair, LBtcSwapScript};
 use derivative::Derivative;
-use lwk_wollet::elements::{script, AssetId};
-use lwk_wollet::{bitcoin::bip32, ElementsNetwork};
+use elements::AssetId;
+use lwk_wollet::ElementsNetwork;
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
+use sdk_common::bitcoin::hashes::hex::ToHex as _;
 use sdk_common::prelude::*;
+use sdk_common::utils::Arc;
 use serde::{Deserialize, Serialize};
 use std::cmp::PartialEq;
 use std::path::PathBuf;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
-use crate::error::{PaymentError, SdkError, SdkResult};
-use crate::prelude::DEFAULT_EXTERNAL_INPUT_PARSERS;
 use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
+use crate::{
+    bitcoin,
+    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    elements,
+    error::{PaymentError, SdkError, SdkResult},
+};
+use crate::{
+    chain::bitcoin::esplora::EsploraBitcoinChainService,
+    chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
+};
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
+#[derive(Clone, Debug, Serialize)]
+pub enum BlockchainExplorer {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum { url: String },
+    Esplora {
+        url: String,
+        /// Whether or not to use the "waterfalls" extension
+        use_waterfalls: bool,
+    },
+}
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
-    pub liquid_electrum_url: String,
-    pub bitcoin_electrum_url: String,
-    /// The mempool.space API URL, has to be in the format: `https://mempool.space/api`
-    pub mempoolspace_url: String,
+    pub liquid_explorer: BlockchainExplorer,
+    pub bitcoin_explorer: BlockchainExplorer,
     /// Directory in which the DB and log files are stored.
     ///
     /// Prefix can be a relative or absolute path to this directory.
@@ -79,11 +97,15 @@ pub struct Config {
 }
 
 impl Config {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn mainnet(breez_api_key: Option<String>) -> Self {
         Config {
-            liquid_electrum_url: "elements-mainnet.breez.technology:50002".to_string(),
-            bitcoin_electrum_url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
-            mempoolspace_url: "https://mempool.space/api".to_string(),
+            liquid_explorer: BlockchainExplorer::Electrum {
+                url: "elements-mainnet.breez.technology:50002".to_string(),
+            },
+            bitcoin_explorer: BlockchainExplorer::Electrum {
+                url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
+            },
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Mainnet,
@@ -98,11 +120,39 @@ impl Config {
         }
     }
 
+    pub fn mainnet_esplora(breez_api_key: Option<String>) -> Self {
+        Config {
+            liquid_explorer: BlockchainExplorer::Esplora {
+                url: "https://waterfalls.liquidwebwallet.org/liquid/api".to_string(),
+                use_waterfalls: true,
+            },
+            bitcoin_explorer: BlockchainExplorer::Esplora {
+                url: "https://blockstream.info/api/".to_string(),
+                use_waterfalls: false,
+            },
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Mainnet,
+            payment_timeout_sec: 15,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn testnet(breez_api_key: Option<String>) -> Self {
         Config {
-            liquid_electrum_url: "elements-testnet.blockstream.info:50002".to_string(),
-            bitcoin_electrum_url: "bitcoin-testnet.blockstream.info:50002".to_string(),
-            mempoolspace_url: "https://mempool.space/testnet/api".to_string(),
+            liquid_explorer: BlockchainExplorer::Electrum {
+                url: "elements-testnet.blockstream.info:50002".to_string(),
+            },
+            bitcoin_explorer: BlockchainExplorer::Electrum {
+                url: "bitcoin-testnet.blockstream.info:50002".to_string(),
+            },
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Testnet,
@@ -117,11 +167,63 @@ impl Config {
         }
     }
 
+    pub fn testnet_esplora(breez_api_key: Option<String>) -> Self {
+        Config {
+            liquid_explorer: BlockchainExplorer::Esplora {
+                url: "https://blockstream.info/liquidtestnet/api".to_string(),
+                use_waterfalls: false,
+            },
+            bitcoin_explorer: BlockchainExplorer::Esplora {
+                url: "https://blockstream.info/testnet/api/".to_string(),
+                use_waterfalls: false,
+            },
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Testnet,
+            payment_timeout_sec: 15,
+            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn regtest() -> Self {
         Config {
-            liquid_electrum_url: "localhost:19002".to_string(),
-            bitcoin_electrum_url: "localhost:19001".to_string(),
-            mempoolspace_url: "http://localhost/api".to_string(),
+            liquid_explorer: BlockchainExplorer::Electrum {
+                url: "localhost:19002".to_string(),
+            },
+            bitcoin_explorer: BlockchainExplorer::Electrum {
+                url: "localhost:19001".to_string(),
+            },
+            working_dir: ".".to_string(),
+            cache_dir: None,
+            network: LiquidNetwork::Regtest,
+            payment_timeout_sec: 15,
+            sync_service_url: Some("http://localhost:8088".to_string()),
+            zero_conf_max_amount_sat: None,
+            breez_api_key: None,
+            external_input_parsers: None,
+            use_default_external_input_parsers: true,
+            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            asset_metadata: None,
+        }
+    }
+
+    pub fn regtest_esplora() -> Self {
+        Config {
+            liquid_explorer: BlockchainExplorer::Esplora {
+                url: "http://localhost:4003/api".to_string(),
+                use_waterfalls: false,
+            },
+            bitcoin_explorer: BlockchainExplorer::Esplora {
+                url: "http://localhost:4002/api".to_string(),
+                use_waterfalls: false,
+            },
             working_dir: ".".to_string(),
             cache_dir: None,
             network: LiquidNetwork::Regtest,
@@ -188,6 +290,55 @@ impl Config {
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
             LiquidNetwork::Regtest => BOLTZ_REGTEST,
         }
+    }
+
+    pub fn sync_enabled(&self) -> bool {
+        self.sync_service_url.is_some()
+    }
+
+    pub(crate) fn bitcoin_chain_service(&self) -> Arc<dyn BitcoinChainService> {
+        match self.bitcoin_explorer {
+            BlockchainExplorer::Esplora { .. } => {
+                Arc::new(EsploraBitcoinChainService::new(self.clone()))
+            }
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => Arc::new(
+                crate::chain::bitcoin::electrum::ElectrumBitcoinChainService::new(self.clone()),
+            ),
+        }
+    }
+
+    pub(crate) fn liquid_chain_service(&self) -> Arc<dyn LiquidChainService> {
+        match self.liquid_explorer {
+            BlockchainExplorer::Esplora { .. } => {
+                Arc::new(EsploraLiquidChainService::new(self.clone()))
+            }
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            BlockchainExplorer::Electrum { .. } => Arc::new(
+                crate::chain::liquid::electrum::ElectrumLiquidChainService::new(self.clone()),
+            ),
+        }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    pub(crate) fn electrum_tls_options(&self) -> (/*tls*/ bool, /*validate_domain*/ bool) {
+        match self.network {
+            LiquidNetwork::Mainnet | LiquidNetwork::Testnet => (true, true),
+            LiquidNetwork::Regtest => (false, false),
+        }
+    }
+
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    pub(crate) fn electrum_client(
+        &self,
+        url: &str,
+    ) -> Result<lwk_wollet::ElectrumClient, lwk_wollet::Error> {
+        let (tls, validate_domain) = self.electrum_tls_options();
+        let electrum_url = lwk_wollet::ElectrumUrl::new(url, tls, validate_domain)?;
+        lwk_wollet::ElectrumClient::with_options(
+            &electrum_url,
+            lwk_wollet::ElectrumOptions { timeout: Some(3) },
+        )
     }
 }
 
@@ -295,15 +446,37 @@ pub trait EventListener: MaybeSend + MaybeSync {
 /// to listen for emitted events.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SdkEvent {
-    PaymentFailed { details: Payment },
-    PaymentPending { details: Payment },
-    PaymentRefundable { details: Payment },
-    PaymentRefunded { details: Payment },
-    PaymentRefundPending { details: Payment },
-    PaymentSucceeded { details: Payment },
-    PaymentWaitingConfirmation { details: Payment },
-    PaymentWaitingFeeAcceptance { details: Payment },
+    PaymentFailed {
+        details: Payment,
+    },
+    PaymentPending {
+        details: Payment,
+    },
+    PaymentRefundable {
+        details: Payment,
+    },
+    PaymentRefunded {
+        details: Payment,
+    },
+    PaymentRefundPending {
+        details: Payment,
+    },
+    PaymentSucceeded {
+        details: Payment,
+    },
+    PaymentWaitingConfirmation {
+        details: Payment,
+    },
+    PaymentWaitingFeeAcceptance {
+        details: Payment,
+    },
+    /// Synced with mempool and onchain data
     Synced,
+    /// Synced with real-time data sync
+    DataSynced {
+        /// Indicates new data was pulled from other instances.
+        did_pull_new_records: bool,
+    },
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -792,14 +965,14 @@ pub enum GetPaymentRequest {
 
 /// Trait that can be used to react to new blocks from Bitcoin and Liquid chains
 #[sdk_macros::async_trait]
-pub(crate) trait BlockListener: Send + Sync {
+pub(crate) trait BlockListener: MaybeSend + MaybeSync {
     async fn on_bitcoin_block(&self, height: u32);
     async fn on_liquid_block(&self, height: u32);
 }
 
 // A swap enum variant
 #[derive(Clone, Debug)]
-pub(crate) enum Swap {
+pub enum Swap {
     Chain(ChainSwap),
     Send(SendSwap),
     Receive(ReceiveSwap),
@@ -924,7 +1097,7 @@ pub(crate) struct SwapMetadata {
 /// See <https://docs.boltz.exchange/v/api/lifecycle#chain-swaps>
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq)]
-pub(crate) struct ChainSwap {
+pub struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
     /// The Bitcoin claim address is only set for Outgoing Chain Swaps
@@ -1091,7 +1264,7 @@ pub(crate) struct ChainSwapUpdate {
 /// A submarine swap, used for Send
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq)]
-pub(crate) struct SendSwap {
+pub struct SendSwap {
     pub(crate) id: String,
     /// Bolt11 or Bolt12 invoice. This is determined by whether `bolt12_offer` is set or not.
     pub(crate) invoice: String,
@@ -1184,7 +1357,7 @@ impl SendSwap {
 /// A reverse swap, used for Receive
 #[derive(Clone, Debug, Derivative)]
 #[derivative(PartialEq)]
-pub(crate) struct ReceiveSwap {
+pub struct ReceiveSwap {
     pub(crate) id: String,
     pub(crate) preimage: String,
     /// JSON representation of [crate::persist::receive::InternalCreateReverseResponse]
@@ -1222,7 +1395,7 @@ impl ReceiveSwap {
         utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
     }
 
-    pub(crate) fn claim_script(&self) -> Result<script::Script> {
+    pub(crate) fn claim_script(&self) -> Result<elements::Script> {
         Ok(self
             .get_swap_script()?
             .funding_addrs
@@ -2149,6 +2322,67 @@ pub struct FetchPaymentProposedFeesResponse {
 #[derive(Debug, Clone)]
 pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
+}
+
+#[derive(Clone, Debug)]
+pub struct History<T> {
+    pub txid: T,
+    /// Confirmation height of txid
+    ///
+    /// -1 means unconfirmed with unconfirmed parents
+    ///  0 means unconfirmed with confirmed parents
+    pub height: i32,
+}
+pub(crate) type LBtcHistory = History<elements::Txid>;
+pub(crate) type BtcHistory = History<bitcoin::Txid>;
+
+impl<T> History<T> {
+    pub(crate) fn confirmed(&self) -> bool {
+        self.height > 0
+    }
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+impl From<electrum_client::GetHistoryRes> for BtcHistory {
+    fn from(value: electrum_client::GetHistoryRes) -> Self {
+        Self {
+            txid: value.tx_hash,
+            height: value.height,
+        }
+    }
+}
+impl From<lwk_wollet::History> for LBtcHistory {
+    fn from(value: lwk_wollet::History) -> Self {
+        Self::from(&value)
+    }
+}
+impl From<&lwk_wollet::History> for LBtcHistory {
+    fn from(value: &lwk_wollet::History) -> Self {
+        Self {
+            txid: value.txid,
+            height: value.height,
+        }
+    }
+}
+pub(crate) type BtcScript = bitcoin::ScriptBuf;
+pub(crate) type LBtcScript = elements::Script;
+
+#[derive(Clone, Debug)]
+pub struct BtcScriptBalance {
+    /// Confirmed balance in Satoshis for the address.
+    pub confirmed: u64,
+    /// Unconfirmed balance in Satoshis for the address.
+    ///
+    /// Some servers (e.g. `electrs`) return this as a negative value.
+    pub unconfirmed: i64,
+}
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
+    fn from(val: electrum_client::GetBalanceRes) -> Self {
+        Self {
+            confirmed: val.confirmed,
+            unconfirmed: val.unconfirmed,
+        }
+    }
 }
 
 #[macro_export]

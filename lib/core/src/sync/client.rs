@@ -1,13 +1,12 @@
-use std::time::Duration;
-
 use anyhow::{anyhow, Error, Result};
 
 use log::debug;
+use maybe_sync::{MaybeSend, MaybeSync};
+use sdk_common::grpc::transport::{GrpcClient, Transport};
 use tokio::sync::Mutex;
 use tonic::{
     metadata::{errors::InvalidMetadataValue, Ascii, MetadataValue},
     service::{interceptor::InterceptedService, Interceptor},
-    transport::{Channel, ClientTlsConfig, Endpoint},
     Request, Status, Streaming,
 };
 
@@ -17,7 +16,7 @@ use super::model::{
 };
 
 #[sdk_macros::async_trait]
-pub(crate) trait SyncerClient: Send + Sync {
+pub(crate) trait SyncerClient: MaybeSend + MaybeSync {
     async fn connect(&self, connect_url: String) -> Result<()>;
     async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply>;
     async fn pull(&self, req: ListChangesRequest) -> Result<ListChangesReply>;
@@ -26,7 +25,7 @@ pub(crate) trait SyncerClient: Send + Sync {
 }
 
 pub(crate) struct BreezSyncerClient {
-    grpc_channel: Mutex<Option<Channel>>,
+    grpc_channel: Mutex<Option<Transport>>,
     api_key: Option<String>,
 }
 
@@ -36,15 +35,6 @@ impl BreezSyncerClient {
             grpc_channel: Mutex::new(None),
             api_key,
         }
-    }
-
-    fn create_endpoint(server_url: &str) -> Result<Endpoint> {
-        Ok(Endpoint::from_shared(server_url.to_string())?
-            .http2_keep_alive_interval(Duration::new(10, 0))
-            .tcp_keepalive(Some(Duration::from_secs(10)))
-            .keep_alive_timeout(Duration::from_secs(5))
-            .keep_alive_while_idle(true)
-            .tls_config(ClientTlsConfig::new().with_enabled_roots())?)
     }
 
     fn api_key_metadata(&self) -> Result<Option<MetadataValue<Ascii>>, Error> {
@@ -65,7 +55,7 @@ impl BreezSyncerClient {
 impl BreezSyncerClient {
     async fn get_client(
         &self,
-    ) -> Result<ProtoSyncerClient<InterceptedService<Channel, ApiKeyInterceptor>>, Error> {
+    ) -> Result<ProtoSyncerClient<InterceptedService<Transport, ApiKeyInterceptor>>, Error> {
         let Some(channel) = self.grpc_channel.lock().await.clone() else {
             return Err(anyhow!("Cannot get sync client: not connected"));
         };
@@ -81,7 +71,7 @@ impl BreezSyncerClient {
 impl SyncerClient for BreezSyncerClient {
     async fn connect(&self, connect_url: String) -> Result<()> {
         let mut grpc_channel = self.grpc_channel.lock().await;
-        *grpc_channel = Some(Self::create_endpoint(&connect_url)?.connect_lazy());
+        *grpc_channel = Some(GrpcClient::new(connect_url.clone())?.into_inner());
         debug!("Successfully connected to {connect_url}");
         Ok(())
     }

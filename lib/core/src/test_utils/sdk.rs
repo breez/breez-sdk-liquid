@@ -2,7 +2,7 @@
 
 use anyhow::{anyhow, Result};
 use sdk_common::prelude::{MockRestClient, RestClient, STAGING_BREEZSERVER_URL};
-use std::sync::Arc;
+use sdk_common::utils::Arc;
 
 use crate::{
     model::{Config, Signer},
@@ -45,7 +45,7 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
     bitcoin_chain_service: Arc<MockBitcoinChainService>,
     onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
 ) -> Result<Arc<LiquidSdk>> {
-    let mut config = Config::testnet(None);
+    let mut config = Config::testnet_esplora(None);
     config.working_dir = persister
         .get_database_dir()
         .to_str()

@@ -163,6 +163,7 @@
 //! Join this [telegram group](https://t.me/breezsdk).
 
 #[cfg(feature = "frb")]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub(crate) mod bindings;
 pub(crate) mod buy;
 pub(crate) mod chain;
@@ -170,8 +171,10 @@ pub(crate) mod chain_swap;
 pub mod error;
 pub(crate) mod event;
 #[cfg(feature = "frb")]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub(crate) mod frb_generated;
 pub(crate) mod lnurl;
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub mod logger;
 pub mod model;
 pub mod persist;
@@ -183,9 +186,12 @@ pub(crate) mod signer;
 pub(crate) mod swapper;
 pub(crate) mod sync;
 pub(crate) mod test_utils;
+#[allow(hidden_glob_reexports)]
 pub(crate) mod utils;
-pub(crate) mod wallet;
+pub mod wallet;
 
+pub use lwk_wollet::bitcoin;
+pub use lwk_wollet::elements;
 pub use sdk_common::prelude::*;
 
 #[allow(ambiguous_glob_reexports)]

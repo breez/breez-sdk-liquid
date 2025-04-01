@@ -1,25 +1,23 @@
 #[cfg(test)]
 mod test {
     use crate::{
+        bitcoin,
         chain::liquid::MockLiquidChainService,
-        model::{ChainSwap, PaymentState, SwapMetadata},
+        elements,
+        model::{BtcHistory, ChainSwap, LBtcHistory, PaymentState, SwapMetadata},
         recover::{
-            handlers::{tests::test::create_mock_lbtc_wallet_tx, ChainSendSwapHandler},
-            model::{HistoryTxId, RecoveryContext, TxMap},
+            handlers::{tests::create_mock_lbtc_wallet_tx, ChainSendSwapHandler},
+            model::{RecoveryContext, TxMap},
         },
         swapper::MockSwapper,
     };
-    use boltz_client::{
-        bitcoin::{self, OutPoint},
-        Amount, LockTime,
-    };
-    use lwk_wollet::{
-        bitcoin::{transaction::Version, ScriptBuf, Sequence},
-        elements::{self},
-        elements_miniscript::slip77::MasterBlindingKey,
-    };
+    use bitcoin::OutPoint;
+    use bitcoin::{transaction::Version, ScriptBuf, Sequence};
+    use boltz_client::{Amount, LockTime};
+    use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+    use sdk_common::utils::Arc;
 
-    use std::{collections::HashMap, str::FromStr, sync::Arc};
+    use std::{collections::HashMap, str::FromStr};
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -364,7 +362,7 @@ mod test {
         let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -400,7 +398,7 @@ mod test {
         let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
-        let history_tx = HistoryTxId {
+        let history_tx = LBtcHistory {
             txid: tx_id,
             height: height as i32,
         };
@@ -436,7 +434,7 @@ mod test {
         let mut history = Vec::new();
         for (tx_id_hex, height) in tx_ids {
             let tx_id = bitcoin::Txid::from_str(tx_id_hex).unwrap();
-            history.push(HistoryTxId {
+            history.push(BtcHistory {
                 txid: tx_id.to_string().parse().unwrap(),
                 height: *height as i32,
             });

@@ -88,9 +88,8 @@ export interface CheckMessageResponse {
 }
 
 export interface Config {
-    liquidElectrumUrl: string
-    bitcoinElectrumUrl: string
-    mempoolspaceUrl: string
+    liquidExplorer: BlockchainExplorer
+    bitcoinExplorer: BlockchainExplorer
     workingDir: string
     network: LiquidNetwork
     paymentTimeoutSec: number
@@ -519,6 +518,20 @@ export type Amount = {
     fractionalAmount: number
 }
 
+export enum BlockchainExplorerVariant {
+    ELECTRUM = "electrum",
+    ESPLORA = "esplora"
+}
+
+export type BlockchainExplorer = {
+    type: BlockchainExplorerVariant.ELECTRUM,
+    url: string
+} | {
+    type: BlockchainExplorerVariant.ESPLORA,
+    url: string
+    useWaterfalls: boolean
+}
+
 export enum BuyBitcoinProvider {
     MOONPAY = "moonpay"
 }
@@ -759,7 +772,8 @@ export enum SdkEventVariant {
     PAYMENT_SUCCEEDED = "paymentSucceeded",
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
     PAYMENT_WAITING_FEE_ACCEPTANCE = "paymentWaitingFeeAcceptance",
-    SYNCED = "synced"
+    SYNCED = "synced",
+    DATA_SYNCED = "dataSynced"
 }
 
 export type SdkEvent = {
@@ -788,6 +802,9 @@ export type SdkEvent = {
     details: Payment
 } | {
     type: SdkEventVariant.SYNCED
+} | {
+    type: SdkEventVariant.DATA_SYNCED,
+    didPullNewRecords: boolean
 }
 
 export enum SendDestinationVariant {

@@ -10,6 +10,7 @@ pub enum Network {
     Regtest,
 }
 
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ExternalInputParser)]
 pub struct ExternalInputParser {
     pub provider_id: String,
@@ -209,7 +210,6 @@ pub struct LnUrlWithdrawRequestData {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LnUrlCallbackStatus)]
 pub enum LnUrlCallbackStatus {
     Ok,
-    #[serde(rename = "ERROR")]
     ErrorStatus {
         #[serde(flatten)]
         data: LnUrlErrorData,
@@ -292,11 +292,17 @@ pub struct Symbol {
     pub position: Option<u32>,
 }
 
+#[derive(Clone)]
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::BlockchainExplorer)]
+pub enum BlockchainExplorer {
+    Esplora { url: String, use_waterfalls: bool },
+}
+
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::Config)]
 pub struct Config {
-    pub liquid_electrum_url: String,
-    pub bitcoin_electrum_url: String,
-    pub mempoolspace_url: String,
+    pub liquid_explorer: BlockchainExplorer,
+    pub bitcoin_explorer: BlockchainExplorer,
     pub working_dir: String,
     pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
@@ -310,6 +316,7 @@ pub struct Config {
     pub asset_metadata: Option<Vec<AssetMetadata>>,
 }
 
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LiquidNetwork)]
 pub enum LiquidNetwork {
     Mainnet,
@@ -328,8 +335,10 @@ pub enum SdkEvent {
     PaymentWaitingConfirmation { details: Payment },
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
+    DataSynced { did_pull_new_records: bool },
 }
 
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ConnectRequest)]
 pub struct ConnectRequest {
     pub config: Config,
@@ -639,6 +648,7 @@ pub struct LnUrlInfo {
     pub lnurl_withdraw_endpoint: Option<String>,
 }
 
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::AssetMetadata)]
 pub struct AssetMetadata {
     pub asset_id: String,
@@ -677,6 +687,8 @@ pub enum PaymentDetails {
         description: String,
         asset_id: String,
         asset_info: Option<AssetInfo>,
+        lnurl_info: Option<LnUrlInfo>,
+        bip353_address: Option<String>,
     },
     Bitcoin {
         swap_id: String,
