@@ -7,6 +7,7 @@ services:
     restart: on-failure
     ports:
       - 8088:8080
+      - 8089:8081
     volumes:
       - rt-sync-data:/app/db
 

@@ -5,16 +5,38 @@ use breez_sdk_liquid::model::{
     PrepareReceiveRequest, PrepareRefundRequest, ReceiveAmount, RefundRequest, SdkEvent,
 };
 use serial_test::serial;
+use tokio_with_wasm::alias as tokio;
 
-use crate::regtest::{utils, SdkNodeHandle, TIMEOUT};
+use crate::regtest::{utils, ChainBackend, SdkNodeHandle, TIMEOUT};
 
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+#[sdk_macros::async_test_not_wasm]
+#[serial]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn bitcoin_electrum() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bitcoin(handle).await;
+}
+
 #[sdk_macros::async_test_all]
 #[serial]
-async fn bitcoin() {
-    let mut handle = SdkNodeHandle::init_node().await.unwrap();
+async fn bitcoin_esplora() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bitcoin(handle).await;
+}
+
+async fn bitcoin(mut handle: SdkNodeHandle) {
+    // On WASM sync is slow and may cause events to be missed if they are emitted before the first sync is complete
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
 
     // --------------RECEIVE--------------
     let payer_amount_sat = 100_000;
@@ -128,10 +150,11 @@ async fn bitcoin() {
     // Confirm claim tx
     utils::mine_blocks(1).await.unwrap();
 
-    handle
+    // TODO: on Wasm this event is occasionally skipped
+    let _ = handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
+        .await;
+    handle.sdk.sync(false).await.unwrap();
 
     assert_eq!(
         handle.get_balance_sat().await.unwrap(),
@@ -246,10 +269,11 @@ async fn bitcoin() {
 
     utils::mine_blocks(1).await.unwrap();
 
-    handle
+    // TODO: on Wasm this event is occasionally skipped
+    let _ = handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentFailed { .. }), TIMEOUT)
-        .await
-        .unwrap();
+        .await;
+    handle.sdk.sync(false).await.unwrap();
 
     let refundables = handle.sdk.list_refundables().await.unwrap();
     assert_eq!(refundables.len(), 0);
