@@ -61,10 +61,10 @@ test-safari:
 wasm-regtest-test: wasm-regtest-test-browser wasm-regtest-test-node
 
 wasm-regtest-test-node: check-regtest
-	$(CLANG_PREFIX) $(REGTEST_PREFIX) WASM_BINDGEN_TEST_TIMEOUT=500 wasm-pack test --node --features regtest -- $(REGTEST_TESTS)
+	$(CLANG_PREFIX) $(REGTEST_PREFIX) wasm-pack test --node --features regtest -- $(REGTEST_TESTS) --nocapture
 
 wasm-regtest-test-browser: check-regtest
-	$(CLANG_PREFIX) $(REGTEST_PREFIX) WASM_BINDGEN_TEST_TIMEOUT=500 wasm-pack test --headless --$(BROWSER) --features regtest,browser-tests -- $(REGTEST_TESTS)
+	$(CLANG_PREFIX) $(REGTEST_PREFIX) WASM_BINDGEN_TEST_TIMEOUT=500 wasm-pack test $(if $(NO_HEADLESS), ,--headless) --$(BROWSER) --features regtest,browser-tests -- $(REGTEST_TESTS)
 
 wasm-regtest-test-chrome:
 	BROWSER=chrome $(MAKE) wasm-regtest-test-browser

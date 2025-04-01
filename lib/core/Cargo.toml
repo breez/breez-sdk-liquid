@@ -123,6 +123,7 @@ getrandom = { version = "0.2", features = ["js"] }
 wasm-bindgen-futures = "0.4.50"
 gloo-timers = { version = "0.3.0", features = ["futures"] }
 futures = "0.3.31"
+console_log = "1.0.0"
 
 [build-dependencies]
 anyhow = { version = "1.0.79", features = ["backtrace"] }
