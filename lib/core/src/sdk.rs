@@ -221,7 +221,7 @@ impl LiquidSdkBuilder {
         let liquid_chain_service: Arc<dyn LiquidChainService> =
             match self.liquid_chain_service.clone() {
                 Some(liquid_chain_service) => liquid_chain_service,
-                None => self.config.liquid_chain_service(),
+                None => self.config.liquid_chain_service()?,
             };
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {

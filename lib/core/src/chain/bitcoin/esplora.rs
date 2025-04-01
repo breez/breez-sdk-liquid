@@ -52,7 +52,6 @@ impl EsploraBitcoinChainService {
             .timeout(3)
             .max_retries(10)
             .build_async()?;
-
         let client = self.client.get_or_init(|| client);
         Ok(client)
     }
