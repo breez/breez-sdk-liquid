@@ -322,10 +322,14 @@ impl ReceiveSwapHandler {
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         info!("Initiating claim for Receive Swap {swap_id}");
-        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let claim_address = match swap.claim_address {
+            Some(ref claim_address) => claim_address.clone(),
+            None => self.onchain_wallet.next_unused_address().await?.to_string(),
+        };
+
         let crate::prelude::Transaction::Liquid(claim_tx) = self
             .swapper
-            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address))
+            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address.clone()))
             .await?
         else {
             return Err(PaymentError::Generic {
@@ -336,7 +340,10 @@ impl ReceiveSwapHandler {
         // Set the swap claim_tx_id before broadcasting.
         // If another claim_tx_id has been set in the meantime, don't broadcast the claim tx
         let tx_id = claim_tx.txid().to_hex();
-        match self.persister.set_receive_swap_claim_tx_id(swap_id, &tx_id) {
+        match self
+            .persister
+            .set_receive_swap_claim(swap_id, &claim_address, &tx_id)
+        {
             Ok(_) => {
                 // We attempt broadcasting via chain service, then fallback to Boltz
                 let broadcast_res = match self.liquid_chain_service.broadcast(&claim_tx).await {

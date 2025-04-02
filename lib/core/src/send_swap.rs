@@ -364,7 +364,17 @@ impl SendSwapHandler {
             "Claim is pending for Send Swap {}. Initiating cooperative claim",
             &send_swap.id
         );
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_address = match send_swap.refund_address {
+            Some(ref refund_address) => refund_address.clone(),
+            None => {
+                // If no refund address is set, we get an unused one
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                self.persister
+                    .set_send_swap_refund_address(&send_swap.id, &address)?;
+                address
+            }
+        };
+
         let claim_tx_details = self.swapper.get_send_claim_tx_details(send_swap).await?;
         self.update_swap_info(
             &send_swap.id,
@@ -374,7 +384,7 @@ impl SendSwapHandler {
             None,
         )?;
         self.swapper
-            .claim_send_swap_cooperative(send_swap, claim_tx_details, &output_address)
+            .claim_send_swap_cooperative(send_swap, claim_tx_details, &refund_address)
             .await?;
         Ok(())
     }
@@ -390,7 +400,16 @@ impl SendSwapHandler {
         );
 
         let swap_script = swap.get_swap_script()?;
-        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_address = match swap.refund_address {
+            Some(ref refund_address) => refund_address.clone(),
+            None => {
+                // If no refund address is set, we get an unused one
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                self.persister
+                    .set_send_swap_refund_address(&swap.id, &address)?;
+                address
+            }
+        };
 
         let script_pk = swap_script
             .to_address(self.config.network.into())

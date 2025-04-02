@@ -68,6 +68,7 @@ impl Persister {
                 user_lockup_tx_id = :user_lockup_tx_id,
                 claim_address = :claim_address,
                 claim_tx_id = :claim_tx_id,
+                refund_address = :refund_address,
                 refund_tx_id = :refund_tx_id,
                 pair_fees_json = :pair_fees_json,
                 state = :state,
@@ -84,6 +85,7 @@ impl Persister {
                 ":user_lockup_tx_id": &chain_swap.user_lockup_tx_id,
                 ":claim_address": &chain_swap.claim_address,
                 ":claim_tx_id": &chain_swap.claim_tx_id,
+                ":refund_address": &chain_swap.refund_address,
                 ":refund_tx_id": &chain_swap.refund_tx_id,
                 ":pair_fees_json": &chain_swap.pair_fees_json,
                 ":state": &chain_swap.state,
@@ -137,6 +139,7 @@ impl Persister {
                 direction,
                 claim_address,
                 lockup_address,
+                refund_address,
                 timeout_block_height,
                 preimage,
                 description,
@@ -194,30 +197,31 @@ impl Persister {
             direction: row.get(1)?,
             claim_address: row.get(2)?,
             lockup_address: row.get(3)?,
-            timeout_block_height: row.get(4)?,
-            preimage: row.get(5)?,
-            description: row.get(6)?,
-            payer_amount_sat: row.get(7)?,
-            receiver_amount_sat: row.get(8)?,
-            accept_zero_conf: row.get(9)?,
-            create_response_json: row.get(10)?,
-            claim_private_key: row.get(11)?,
-            refund_private_key: row.get(12)?,
-            server_lockup_tx_id: row.get(13)?,
-            user_lockup_tx_id: row.get(14)?,
-            claim_fees_sat: row.get(15)?,
-            claim_tx_id: row.get(16)?,
-            refund_tx_id: row.get(17)?,
-            created_at: row.get(18)?,
-            state: row.get(19)?,
-            pair_fees_json: row.get(20)?,
-            actual_payer_amount_sat: row.get(21)?,
-            accepted_receiver_amount_sat: row.get(22)?,
-            auto_accepted_fees: row.get(23)?,
+            refund_address: row.get(4)?,
+            timeout_block_height: row.get(5)?,
+            preimage: row.get(6)?,
+            description: row.get(7)?,
+            payer_amount_sat: row.get(8)?,
+            receiver_amount_sat: row.get(9)?,
+            accept_zero_conf: row.get(10)?,
+            create_response_json: row.get(11)?,
+            claim_private_key: row.get(12)?,
+            refund_private_key: row.get(13)?,
+            server_lockup_tx_id: row.get(14)?,
+            user_lockup_tx_id: row.get(15)?,
+            claim_fees_sat: row.get(16)?,
+            claim_tx_id: row.get(17)?,
+            refund_tx_id: row.get(18)?,
+            created_at: row.get(19)?,
+            state: row.get(20)?,
+            pair_fees_json: row.get(21)?,
+            actual_payer_amount_sat: row.get(22)?,
+            accepted_receiver_amount_sat: row.get(23)?,
+            auto_accepted_fees: row.get(24)?,
             metadata: SwapMetadata {
-                version: row.get(24)?,
-                last_updated_at: row.get(25)?,
-                is_local: row.get::<usize, Option<bool>>(26)?.unwrap_or(true),
+                version: row.get(25)?,
+                last_updated_at: row.get(26)?,
+                is_local: row.get::<usize, Option<bool>>(27)?.unwrap_or(true),
             },
         })
     }
@@ -367,6 +371,24 @@ impl Persister {
         Ok(())
     }
 
+    pub(crate) fn set_chain_swap_refund_address(
+        &self,
+        swap_id: &str,
+        refund_address: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE chain_swaps
+            SET refund_address = :refund_address
+            WHERE id = :id",
+            named_params! {
+                        ":id": swap_id,
+                        ":refund_address": refund_address,
+            },
+        )?;
+        Ok(())
+    }
+
     pub(crate) fn set_chain_swap_auto_accepted_fees(
         &self,
         swap_id: &str,
@@ -396,7 +418,7 @@ impl Persister {
     }
 
     // Only set the Chain Swap claim_tx_id if not set, otherwise return an error
-    pub(crate) fn set_chain_swap_claim_tx_id(
+    pub(crate) fn set_chain_swap_claim(
         &self,
         swap_id: &str,
         claim_address: Option<String>,

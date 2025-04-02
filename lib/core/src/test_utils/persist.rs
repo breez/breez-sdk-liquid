@@ -86,6 +86,7 @@ pub(crate) fn new_send_swap(
             "blinding_key": "1eabe70f75a3c92e1ce1e4108a014a275a4b03415234c87d8670e29d70059326"
         }"#.to_string(),
         lockup_tx_id: None,
+        refund_address: None,
         refund_tx_id: None,
         created_at: utils::now(),
         state: payment_state.unwrap_or(PaymentState::Created),
@@ -112,6 +113,7 @@ pub(crate) fn new_receive_swap(
         receiver_amount_sat: receiver_amount_sat.unwrap_or(957),
         pair_fees_json: r#"{"hash":"b32246ad7d9c9b1ff499a36e226b5e2fb5b83d78cbc8a70b6d3429b80bfc5876","rate":1.0,"limits":{"maximal":25000000,"minimal":1000},"fees":{"percentage":0.25,"minerFees":{"lockup":26,"claim":14}}}"#.to_string(),
         claim_fees_sat: 14,
+        claim_address: None,
         claim_tx_id: None,
         lockup_tx_id: None,
         mrh_address: "lq1qqdgpjf28g2r27urtan4grfr9206adax5jm94uv68mvpe40lye6aa36x99kklezup4tcs5fvm8sgaz329stru560s8tz65fruz".to_string(),

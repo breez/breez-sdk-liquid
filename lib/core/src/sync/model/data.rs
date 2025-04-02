@@ -115,6 +115,7 @@ impl From<ChainSyncData> for ChainSwap {
             refund_private_key: val.refund_private_key,
             state: PaymentState::Created,
             claim_address: None,
+            refund_address: None,
             server_lockup_tx_id: None,
             user_lockup_tx_id: None,
             claim_tx_id: None,
@@ -208,6 +209,7 @@ impl From<SendSyncData> for SendSwap {
             bolt12_offer: val.bolt12_offer,
             state: PaymentState::Created,
             lockup_tx_id: None,
+            refund_address: None,
             refund_tx_id: None,
             metadata: Default::default(),
         }
@@ -290,6 +292,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             timeout_block_height: val.timeout_block_height,
             created_at: val.created_at,
             state: PaymentState::Created,
+            claim_address: None,
             claim_tx_id: None,
             lockup_tx_id: None,
             mrh_tx_id: None,

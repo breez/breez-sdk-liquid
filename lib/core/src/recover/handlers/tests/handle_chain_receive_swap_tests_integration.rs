@@ -350,6 +350,7 @@ mod test {
             user_lockup_tx_id: None,
             server_lockup_tx_id: None,
             claim_tx_id: None,
+            refund_address: None,
             refund_tx_id: None,
             claim_address: None,
             created_at: 1000,

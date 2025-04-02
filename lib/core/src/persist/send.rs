@@ -64,6 +64,7 @@ impl Persister {
                 description = :description,
                 preimage = :preimage,
                 lockup_tx_id = :lockup_tx_id,
+                refund_address = :refund_address,
                 refund_tx_id = :refund_tx_id,
                 state = :state
             WHERE
@@ -74,6 +75,7 @@ impl Persister {
                 ":description": &send_swap.description,
                 ":preimage": &send_swap.preimage,
                 ":lockup_tx_id": &send_swap.lockup_tx_id,
+                ":refund_address": &send_swap.refund_address,
                 ":refund_tx_id": &send_swap.refund_tx_id,
                 ":state": &send_swap.state,
                 ":version": &send_swap.metadata.version,
@@ -179,6 +181,7 @@ impl Persister {
                 create_response_json,
                 refund_private_key,
                 lockup_tx_id,
+                refund_address,
                 refund_tx_id,
                 created_at,
                 state,
@@ -226,14 +229,15 @@ impl Persister {
             create_response_json: row.get(10)?,
             refund_private_key: row.get(11)?,
             lockup_tx_id: row.get(12)?,
-            refund_tx_id: row.get(13)?,
-            created_at: row.get(14)?,
-            state: row.get(15)?,
-            pair_fees_json: row.get(16)?,
+            refund_address: row.get(13)?,
+            refund_tx_id: row.get(14)?,
+            created_at: row.get(15)?,
+            state: row.get(16)?,
+            pair_fees_json: row.get(17)?,
             metadata: SwapMetadata {
-                version: row.get(17)?,
-                last_updated_at: row.get(18)?,
-                is_local: row.get::<usize, Option<bool>>(19)?.unwrap_or(true),
+                version: row.get(18)?,
+                last_updated_at: row.get(19)?,
+                is_local: row.get::<usize, Option<bool>>(20)?.unwrap_or(true),
             },
         })
     }
@@ -313,6 +317,24 @@ impl Persister {
 
         self.trigger_sync();
 
+        Ok(())
+    }
+
+    pub(crate) fn set_send_swap_refund_address(
+        &self,
+        swap_id: &str,
+        refund_address: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE send_swaps
+            SET refund_address = :refund_address
+            WHERE id = :id",
+            named_params! {
+                        ":id": swap_id,
+                        ":refund_address": refund_address,
+            },
+        )?;
         Ok(())
     }
 
