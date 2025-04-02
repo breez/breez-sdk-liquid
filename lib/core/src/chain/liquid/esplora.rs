@@ -10,7 +10,7 @@ use crate::{
     utils,
 };
 
-use log::{info, warn};
+use log::{error, info};
 use lwk_wollet::{
     asyncr::EsploraClientBuilder, clients::asyncr::EsploraClient, elements::hex::FromHex as _,
 };
@@ -50,7 +50,7 @@ impl EsploraLiquidChainService {
                         }
                         None => {
                             let err = "Cannot start Breez Esplora client: Breez API key is not set";
-                            warn!("{err}");
+                            error!("{err}");
                             bail!(err)
                         }
                     };
