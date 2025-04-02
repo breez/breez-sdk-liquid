@@ -2,6 +2,7 @@ use std::{collections::HashMap, sync::OnceLock, time::Duration};
 
 use esplora_client::{AsyncClient, Builder};
 use tokio::sync::Mutex;
+use tokio_with_wasm::alias as tokio;
 
 use crate::{
     bitcoin::{

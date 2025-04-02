@@ -2,11 +2,16 @@
     "name": "example",
     "private": true,
     "version": "0.0.0",
-    "main": "cli.js",
+    "main": "src/cli.js",
+    "scripts": {
+        "cli": "node src/cli.js"
+    },
     "dependencies": {
         "@breeztech/breez-sdk-liquid": "file:../../",
         "commander": "^13.1.0",
-        "dotenv": "^16.4.7"
+        "dotenv": "^16.4.7",
+        "qrcode": "^1.5.4",
+        "shell-quote": "^1.8.2"
     },
     "prettier": {
         "endOfLine": "lf",

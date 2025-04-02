@@ -56,7 +56,7 @@ await init()
 ### Node.js
 When developing a node.js application you should require `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/node` submodule).
 ```js
-const { connect, defaultConfig, initLogger } = require('@breeztech/breez-sdk-liquid/node')
+const { connect, defaultConfig, setLogger } = require('@breeztech/breez-sdk-liquid/node')
 const { Command } = require('commander')
 require('dotenv').config()
 
@@ -66,12 +66,19 @@ class JsEventListener {
     }
 }
 
+class JsLogger {
+    log = (logEntry) => {
+        console.log(`[${logEntry.level}]: ${logEntry.line}`)
+    }
+}
+
 const program = new Command()
 const eventListener = new JsEventListener()
+const logger = new JsLogger()
 
 const initSdk = async () => {
     // Set the logger to trace
-    initLogger('trace')
+    setLogger(logger)
 
     // Get the mnemonic
     const breezApiKey = process.env.BREEZ_API_KEY

@@ -320,6 +320,7 @@ impl SendSwapHandler {
                             description,
                             lnurl_info: Some(lnurl_info),
                             bip353_address,
+                            asset_fees: None,
                         })?;
                     return Ok(true);
                 }

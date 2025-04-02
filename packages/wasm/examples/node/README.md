@@ -17,5 +17,5 @@ npm i
 
 ## Run
 ```bash
-node cli.js get-info
+npm run cli
 ```
