@@ -41,6 +41,8 @@ pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 
+const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
+
 #[derive(Clone, Debug, Serialize)]
 pub enum BlockchainExplorer {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -94,6 +96,8 @@ pub struct Config {
     /// See [AssetMetadata] for more details on how define asset metadata.
     /// By default the asset metadata for Liquid Bitcoin and Tether USD are included.
     pub asset_metadata: Option<Vec<AssetMetadata>>,
+    /// The SideSwap API key used for making requests to the SideSwap payjoin service
+    pub sideswap_api_key: Option<String>,
 }
 
 impl Config {
@@ -117,6 +121,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -141,6 +146,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -164,6 +170,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -188,6 +195,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
     }
 
@@ -211,6 +219,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: None,
         }
     }
 
@@ -235,6 +244,7 @@ impl Config {
             use_default_external_input_parsers: true,
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
+            sideswap_api_key: None,
         }
     }
 
@@ -344,7 +354,7 @@ impl Config {
 
 /// Network chosen for this Liquid SDK instance. Note that it represents both the Liquid and the
 /// Bitcoin network used.
-#[derive(Debug, Copy, Clone, PartialEq, Serialize)]
+#[derive(Debug, Display, Copy, Clone, PartialEq, Serialize)]
 pub enum LiquidNetwork {
     /// Mainnet Bitcoin and Liquid chains
     Mainnet,
@@ -707,13 +717,20 @@ pub enum SendDestination {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
-    pub fees_sat: u64,
+    /// The optional estimated fee in satoshi. Is set when there is Bitcoin available
+    /// to pay fees. When not set, there are asset fees available to pay fees.
+    pub fees_sat: Option<u64>,
+    /// The optional estimated fee in the asset. Is set when [PayAmount::Asset::estimate_asset_fees]
+    /// is set to `true`, the Payjoin service accepts this asset to pay fees and there
+    /// are funds available in this asset to pay fees.
+    pub estimated_asset_fees: Option<f64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].
 #[derive(Debug, Serialize)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
+    pub use_asset_fees: Option<bool>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].
@@ -732,6 +749,7 @@ pub enum PayAmount {
     Asset {
         asset_id: String,
         receiver_amount: f64,
+        estimate_asset_fees: Option<bool>,
     },
 
     /// Indicates that all available Bitcoin funds should be sent
@@ -837,9 +855,10 @@ impl WalletInfo {
         &self,
         network: LiquidNetwork,
         amount_sat: u64,
-        fees_sat: u64,
+        fees_sat: Option<u64>,
         asset_id: &str,
     ) -> Result<(), PaymentError> {
+        let fees_sat = fees_sat.unwrap_or(0);
         if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
             ensure_sdk!(
                 amount_sat + fees_sat <= self.balance_sat,
@@ -1754,6 +1773,8 @@ pub struct AssetMetadata {
     /// The precision used to display the asset amount.
     /// For example, precision of 2 shifts the decimal 2 places left from the satoshi amount.
     pub precision: u8,
+    /// The optional ID of the fiat currency used to represent the asset
+    pub fiat_id: Option<String>,
 }
 
 impl AssetMetadata {
@@ -1777,6 +1798,9 @@ pub struct AssetInfo {
     /// The amount calculated from the satoshi amount of the transaction, having its
     /// decimal shifted to the left by the [precision](AssetMetadata::precision)
     pub amount: f64,
+    /// The optional fees when paid using the asset, having its
+    /// decimal shifted to the left by the [precision](AssetMetadata::precision)
+    pub fees: Option<f64>,
 }
 
 /// The specific details of a payment, depending on its type
@@ -2020,10 +2044,21 @@ impl Payment {
                     s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
                 ),
             },
-            None => match tx.payment_type {
-                PaymentType::Receive => (tx.amount, 0),
-                PaymentType::Send => (tx.amount, tx.fees_sat),
-            },
+            None => {
+                let (amount_sat, fees_sat) = match tx.payment_type {
+                    PaymentType::Receive => (tx.amount, 0),
+                    PaymentType::Send => (tx.amount, tx.fees_sat),
+                };
+                // If the payment is a Liquid payment, we only show the amount if the asset
+                // is LBTC and only show the fees if the asset info has no set fees
+                match details {
+                    PaymentDetails::Liquid {
+                        asset_info: Some(ref asset_info),
+                        ..
+                    } if asset_info.ticker != "BTC" => (0, asset_info.fees.map_or(fees_sat, |_| 0)),
+                    _ => (amount_sat, fees_sat),
+                }
+            }
         };
         Payment {
             tx_id: Some(tx.tx_id),

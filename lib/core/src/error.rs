@@ -2,6 +2,8 @@ use anyhow::Error;
 use lwk_wollet::secp256k1;
 use sdk_common::prelude::{LnUrlAuthError, LnUrlPayError, LnUrlWithdrawError};
 
+use crate::payjoin::error::PayjoinError;
+
 pub type SdkResult<T, E = SdkError> = Result<T, E>;
 
 #[macro_export]
@@ -215,6 +217,17 @@ impl From<anyhow::Error> for PaymentError {
     fn from(err: anyhow::Error) -> Self {
         Self::Generic {
             err: err.to_string(),
+        }
+    }
+}
+
+impl From<PayjoinError> for PaymentError {
+    fn from(err: PayjoinError) -> Self {
+        match err {
+            PayjoinError::InsufficientFunds => PaymentError::InsufficientFunds,
+            _ => PaymentError::Generic {
+                err: format!("{err:?}"),
+            },
         }
     }
 }
