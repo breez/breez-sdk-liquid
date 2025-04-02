@@ -4,15 +4,36 @@ use breez_sdk_liquid::model::{
 };
 use serial_test::serial;
 
-use crate::regtest::{utils, SdkNodeHandle, TIMEOUT};
+use crate::regtest::{utils, ChainBackend, SdkNodeHandle, TIMEOUT};
 
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+#[sdk_macros::async_test_not_wasm]
+#[serial]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn liquid_electrum() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    liquid(handle).await;
+}
+
 #[sdk_macros::async_test_all]
 #[serial]
-async fn liquid() {
-    let mut handle = SdkNodeHandle::init_node().await.unwrap();
+async fn liquid_esplora() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    liquid(handle).await;
+}
+
+async fn liquid(mut handle: SdkNodeHandle) {
+    // On WASM sync is slow and may cause events to be missed if they are emitted before the first sync is complete
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
 
     // --------------RECEIVE--------------
 

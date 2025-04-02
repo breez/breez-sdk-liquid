@@ -228,7 +228,7 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
-            sync_service_url: Some("http://localhost:8088".to_string()),
+            sync_service_url: Some("http://localhost:8089".to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key: None,
             external_input_parsers: None,

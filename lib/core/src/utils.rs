@@ -22,6 +22,8 @@ use sdk_common::lightning_invoice::Bolt11Invoice;
 use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
 use web_time::{SystemTime, UNIX_EPOCH};
 
+pub use sdk_common::utils::Arc;
+
 lazy_static! {
     static ref LBTC_TESTNET_ASSET_ID: AssetId =
         AssetId::from_str("144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49")
