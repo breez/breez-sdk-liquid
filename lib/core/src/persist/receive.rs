@@ -260,22 +260,38 @@ impl Persister {
         self.list_receive_swaps_where(&con, where_clause)
     }
 
-    // Only set the Receive Swap claim_tx_id if not set, otherwise return an error
-    pub(crate) fn set_receive_swap_claim(
+    pub(crate) fn set_receive_swap_claim_address(
         &self,
         swap_id: &str,
         claim_address: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE receive_swaps
+            SET claim_address = :claim_address
+            WHERE id = :id",
+            named_params! {
+                        ":id": swap_id,
+                        ":claim_address": claim_address,
+            },
+        )?;
+        Ok(())
+    }
+
+    // Only set the Receive Swap claim_tx_id if not set, otherwise return an error
+    pub(crate) fn set_receive_swap_claim_tx_id(
+        &self,
+        swap_id: &str,
         claim_tx_id: &str,
     ) -> Result<(), PaymentError> {
         let con = self.get_connection()?;
         let row_count = con
             .execute(
                 "UPDATE receive_swaps 
-            SET claim_address = :claim_address, claim_tx_id = :claim_tx_id
+            SET claim_tx_id = :claim_tx_id
             WHERE id = :id AND claim_tx_id IS NULL",
                 named_params! {
                             ":id": swap_id,
-                            ":claim_address": claim_address,
                             ":claim_tx_id": claim_tx_id,
                 },
             )
@@ -495,7 +511,7 @@ mod tests {
         let mut receive_swap = storage.fetch_receive_swap_by_id(&receive_swap.id)?.unwrap();
         receive_swap.lockup_tx_id = Some("tx_id_2".to_string());
         // Concurrent update
-        storage.set_receive_swap_claim(&receive_swap.id, "claim_addr", "tx_id")?;
+        storage.set_receive_swap_claim_tx_id(&receive_swap.id, "tx_id")?;
         assert!(storage
             .insert_or_update_receive_swap(&receive_swap)
             .is_err());
