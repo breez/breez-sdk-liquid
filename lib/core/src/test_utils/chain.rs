@@ -68,7 +68,7 @@ impl LiquidChainService for MockLiquidChainService {
         _script: &ElementsScript,
         _retries: u64,
     ) -> Result<Vec<LBtcHistory>> {
-        Ok(self.get_history().into_iter().map(Into::into).collect())
+        Ok(self.get_history().into_iter().collect())
     }
 
     async fn get_script_history(&self, _script: &ElementsScript) -> Result<Vec<LBtcHistory>> {
@@ -156,14 +156,7 @@ impl BitcoinChainService for MockBitcoinChainService {
         _script: &Script,
         _retries: u64,
     ) -> Result<Vec<BtcHistory>> {
-        Ok(self
-            .history
-            .lock()
-            .unwrap()
-            .clone()
-            .into_iter()
-            .map(Into::into)
-            .collect())
+        Ok(self.history.lock().unwrap().clone().into_iter().collect())
     }
 
     async fn get_script_history(&self, _scripts: &Script) -> Result<Vec<BtcHistory>> {
