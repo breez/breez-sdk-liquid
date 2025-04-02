@@ -323,9 +323,15 @@ impl ReceiveSwapHandler {
 
         info!("Initiating claim for Receive Swap {swap_id}");
         let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
+
+        // Reserve this address for 60 blocks
+        let height = self.liquid_chain_service.tip().await?;
+        self.persister
+            .insert_or_update_reserved_address(&claim_address, height + 60)?;
+
         let crate::prelude::Transaction::Liquid(claim_tx) = self
             .swapper
-            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address))
+            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address.clone()))
             .await?
         else {
             return Err(PaymentError::Generic {
@@ -369,6 +375,9 @@ impl ReceiveSwapHandler {
                             None,
                             false,
                         )?;
+
+                        // Release the reserved address once the claim tx is broadcast
+                        self.persister.delete_reserved_address(&claim_address)?;
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Receive Swap {swap_id}");
                         // The claim_tx_id is already set by set_receive_swap_claim_tx_id. Manually trigger notifying

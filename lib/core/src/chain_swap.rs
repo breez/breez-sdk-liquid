@@ -716,16 +716,18 @@ impl ChainSwapHandler {
                         match swap.user_lockup_tx_id {
                             Some(_) => {
                                 warn!("Chain Swap {id} user lockup tx has been broadcast.");
-                                let refund_tx_id = match self.refund_outgoing_swap(swap, true).await
-                                {
-                                    Ok(refund_tx_id) => Some(refund_tx_id),
-                                    Err(e) => {
-                                        warn!(
+                                let height = self.liquid_chain_service.tip().await?;
+
+                                let refund_tx_id =
+                                    match self.refund_outgoing_swap(swap, height, true).await {
+                                        Ok(refund_tx_id) => Some(refund_tx_id),
+                                        Err(e) => {
+                                            warn!(
                                             "Could not refund Send swap {id} cooperatively: {e:?}"
                                         );
-                                        None
-                                    }
-                                };
+                                            None
+                                        }
+                                    };
                                 // Set the payment state to `RefundPending`. This ensures that the
                                 // background thread will pick it up and try to refund it
                                 // periodically
@@ -847,7 +849,13 @@ impl ChainSwapHandler {
         // or use the set Bitcoin address for an outgoing swap
         let claim_address = match (swap.direction, swap.claim_address.clone()) {
             (Direction::Incoming, None) => {
-                Some(self.onchain_wallet.next_unused_address().await?.to_string())
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+
+                // Reserve this address for 60 blocks
+                let height = self.liquid_chain_service.tip().await?;
+                self.persister
+                    .insert_or_update_reserved_address(&address, height + 60)?;
+                Some(address)
             }
             _ => swap.claim_address.clone(),
         };
@@ -861,7 +869,7 @@ impl ChainSwapHandler {
         let tx_id = claim_tx.txid();
         match self
             .persister
-            .set_chain_swap_claim_tx_id(swap_id, claim_address, &tx_id)
+            .set_chain_swap_claim_tx_id(swap_id, claim_address.clone(), &tx_id)
         {
             Ok(_) => {
                 let broadcast_res = match claim_tx {
@@ -874,9 +882,17 @@ impl ChainSwapHandler {
                                         "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
                                     );
                                 let claim_tx_hex = tx.serialize().to_lower_hex_string();
-                                self.swapper
+                                let res = self
+                                    .swapper
                                     .broadcast_tx(self.config.network.into(), &claim_tx_hex)
-                                    .await
+                                    .await?;
+
+                                // Release the reserved address once the claim tx is broadcast
+                                if let Some(claim_address) = claim_address {
+                                    self.persister.delete_reserved_address(&claim_address)?;
+                                }
+
+                                Ok(res)
                             }
                         }
                     }
@@ -1055,6 +1071,7 @@ impl ChainSwapHandler {
     pub(crate) async fn refund_outgoing_swap(
         &self,
         swap: &ChainSwap,
+        height: u32,
         is_cooperative: bool,
     ) -> Result<String, PaymentError> {
         ensure_sdk!(
@@ -1089,6 +1106,10 @@ impl ChainSwapHandler {
             .await?;
 
         let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        // Reserve this address for 60 blocks
+        self.persister
+            .insert_or_update_reserved_address(&refund_address, height + 60)?;
+
         let SdkTransaction::Liquid(refund_tx) = self
             .swapper
             .create_refund_tx(
@@ -1107,11 +1128,15 @@ impl ChainSwapHandler {
                 ),
             });
         };
+
         let refund_tx_id = self
             .liquid_chain_service
             .broadcast(&refund_tx)
             .await?
             .to_string();
+
+        // Release the reserved address once the refund tx is broadcast
+        self.persister.delete_reserved_address(&refund_address)?;
 
         info!(
             "Successfully broadcast refund for outgoing Chain Swap {}, is_cooperative: {is_cooperative}",
@@ -1138,17 +1163,17 @@ impl ChainSwapHandler {
                 utils::is_locktime_expired(locktime_from_height, swap_script.locktime);
             if has_swap_expired || swap.state == RefundPending {
                 let refund_tx_id_res = match swap.state {
-                    Pending => self.refund_outgoing_swap(&swap, false).await,
+                    Pending => self.refund_outgoing_swap(&swap, height, false).await,
                     RefundPending => match has_swap_expired {
                         true => {
-                            self.refund_outgoing_swap(&swap, true)
+                            self.refund_outgoing_swap(&swap, height, true)
                                 .or_else(|e| {
                                     warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
-                                    self.refund_outgoing_swap(&swap, false)
+                                    self.refund_outgoing_swap(&swap, height, false)
                                 })
                                 .await
                         }
-                        false => self.refund_outgoing_swap(&swap, true).await,
+                        false => self.refund_outgoing_swap(&swap, height, true).await,
                     },
                     _ => {
                         continue;

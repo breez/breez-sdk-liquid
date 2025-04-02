@@ -10,7 +10,7 @@ use lwk_wollet::elements::{LockTime, Transaction};
 use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
 use sdk_common::utils::Arc;
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, OnceCell};
 use web_time::{SystemTime, UNIX_EPOCH};
 
 use crate::chain::liquid::LiquidChainService;
@@ -146,7 +146,9 @@ impl SendSwapHandler {
                     ),
                         None => {
                             warn!("Send Swap {id} is in an unrecoverable state: {swap_state:?}, and lockup tx has been broadcast.");
-                            let refund_tx_id = match self.refund(&swap, true).await {
+                            let height = self.chain_service.tip().await?;
+
+                            let refund_tx_id = match self.refund(&swap, &height, true).await {
                                 Ok(refund_tx_id) => Some(refund_tx_id),
                                 Err(e) => {
                                     warn!("Could not refund Send swap {id} cooperatively: {e:?}");
@@ -363,7 +365,14 @@ impl SendSwapHandler {
             "Claim is pending for Send Swap {}. Initiating cooperative claim",
             &send_swap.id
         );
-        let output_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
+
+        // Reserve this address for 60 blocks. This address should stay reserved and be
+        // reused as it is only used to form the partial signature for the claim tx.
+        let height = self.chain_service.tip().await?;
+        self.persister
+            .insert_or_update_reserved_address(&refund_address, height + 60)?;
+
         let claim_tx_details = self.swapper.get_send_claim_tx_details(send_swap).await?;
         self.update_swap_info(
             &send_swap.id,
@@ -373,7 +382,7 @@ impl SendSwapHandler {
             None,
         )?;
         self.swapper
-            .claim_send_swap_cooperative(send_swap, claim_tx_details, &output_address)
+            .claim_send_swap_cooperative(send_swap, claim_tx_details, &refund_address)
             .await?;
         Ok(())
     }
@@ -381,6 +390,7 @@ impl SendSwapHandler {
     pub(crate) async fn refund(
         &self,
         swap: &SendSwap,
+        height: &u32,
         is_cooperative: bool,
     ) -> Result<String, PaymentError> {
         info!(
@@ -390,6 +400,10 @@ impl SendSwapHandler {
 
         let swap_script = swap.get_swap_script()?;
         let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
+
+        // Reserve this address for 60 blocks
+        self.persister
+            .insert_or_update_reserved_address(&refund_address, height + 60)?;
 
         let script_pk = swap_script
             .to_address(self.config.network.into())
@@ -416,6 +430,9 @@ impl SendSwapHandler {
             });
         };
         let refund_tx_id = self.chain_service.broadcast(&refund_tx).await?.to_string();
+
+        // Release the reserved address once the refund tx is broadcast
+        self.persister.delete_reserved_address(&refund_address)?;
 
         info!(
             "Successfully broadcast refund for Send Swap {}, is_cooperative: {is_cooperative}",
@@ -444,7 +461,9 @@ impl SendSwapHandler {
     }
 
     // Attempts both cooperative and non-cooperative refunds, and updates the swap info accordingly
-    pub(crate) async fn try_refund_all(&self, swaps: &[SendSwap]) {
+    pub(crate) async fn try_refund_all(&self, swaps: &[SendSwap]) -> Result<(), PaymentError> {
+        let lazy_height: OnceCell<u32> = OnceCell::new();
+
         for swap in swaps {
             if swap.refund_tx_id.is_some() {
                 continue;
@@ -456,18 +475,22 @@ impl SendSwapHandler {
                 continue;
             }
 
+            let height = lazy_height
+                .get_or_try_init(|| async { self.chain_service.tip().await })
+                .await?;
+
             let refund_tx_id_result = match swap.state {
-                Pending => self.refund(swap, false).await,
+                Pending => self.refund(swap, height, false).await,
                 RefundPending => match has_swap_expired {
                     true => {
-                        self.refund(swap, true)
+                        self.refund(swap, height, true)
                             .or_else(|e| {
                                 warn!("Failed to initiate cooperative refund, switching to non-cooperative: {e:?}");
-                                self.refund(swap, false)
+                                self.refund(swap, height, false)
                             })
                             .await
                     }
-                    false => self.refund(swap, true).await,
+                    false => self.refund(swap, height, true).await,
                 },
                 _ => {
                     continue;
@@ -485,14 +508,15 @@ impl SendSwapHandler {
                 };
             }
         }
+
+        Ok(())
     }
 
     // Attempts refunding all payments whose state is `RefundPending` and with no
     // refund_tx_id field present
     pub(crate) async fn check_refunds(&self) -> Result<(), PaymentError> {
         let pending_swaps = self.persister.list_pending_send_swaps()?;
-        self.try_refund_all(&pending_swaps).await;
-        Ok(())
+        self.try_refund_all(&pending_swaps).await
     }
 
     fn validate_state_transition(
