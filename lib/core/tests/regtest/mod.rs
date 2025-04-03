@@ -107,6 +107,7 @@ impl SdkNodeHandle {
             .sdk
             .send_payment(&SendPaymentRequest {
                 prepare_response: prepare_response.clone(),
+                use_asset_fees: None,
             })
             .await?;
         Ok((prepare_response, send_response))

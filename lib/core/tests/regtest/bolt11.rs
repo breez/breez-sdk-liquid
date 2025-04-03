@@ -91,7 +91,7 @@ async fn bolt11() {
         })
         .await
         .unwrap();
-    let payer_amount_sat = receiver_amount_sat + prepare_response.fees_sat;
+    let payer_amount_sat = receiver_amount_sat + prepare_response.fees_sat.unwrap();
 
     handle_alice
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentPending { .. }), TIMEOUT)
@@ -130,7 +130,7 @@ async fn bolt11() {
     assert_eq!(payments.len(), 2);
     let payment = &payments[0];
     assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, prepare_response.fees_sat);
+    assert_eq!(payment.fees_sat, prepare_response.fees_sat.unwrap());
     assert_eq!(payment.payment_type, PaymentType::Send);
     assert_eq!(payment.status, PaymentState::Complete);
     assert!(matches!(payment.details, PaymentDetails::Lightning { .. }));
@@ -182,7 +182,10 @@ async fn bolt11() {
     assert_eq!(alice_payments.len(), 3);
     let alice_payment = &alice_payments[0];
     assert_eq!(alice_payment.amount_sat, receiver_amount_sat);
-    assert_eq!(alice_payment.fees_sat, prepare_response_send.fees_sat);
+    assert_eq!(
+        alice_payment.fees_sat,
+        prepare_response_send.fees_sat.unwrap()
+    );
     assert_eq!(alice_payment.payment_type, PaymentType::Send);
     assert_eq!(alice_payment.status, PaymentState::Complete);
     assert!(matches!(

@@ -74,13 +74,13 @@ async fn liquid() {
         .send_payment(&PrepareSendRequest {
             destination: address,
             amount: Some(PayAmount::Bitcoin {
-                receiver_amount_sat: receiver_amount_sat,
+                receiver_amount_sat,
             }),
         })
         .await
         .unwrap();
 
-    let fees_sat = prepare_response.fees_sat;
+    let fees_sat = prepare_response.fees_sat.unwrap();
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
     utils::mine_blocks(1).await.unwrap();
