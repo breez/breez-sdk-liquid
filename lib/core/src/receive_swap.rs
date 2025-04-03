@@ -322,10 +322,20 @@ impl ReceiveSwapHandler {
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
         info!("Initiating claim for Receive Swap {swap_id}");
-        let claim_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let claim_address = match swap.claim_address {
+            Some(ref claim_address) => claim_address.clone(),
+            None => {
+                // If no claim address is set, we get an unused one
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                self.persister
+                    .set_receive_swap_claim_address(&swap.id, &address)?;
+                address
+            }
+        };
+
         let crate::prelude::Transaction::Liquid(claim_tx) = self
             .swapper
-            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address))
+            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address.clone()))
             .await?
         else {
             return Err(PaymentError::Generic {

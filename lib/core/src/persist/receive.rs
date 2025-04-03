@@ -64,6 +64,7 @@ impl Persister {
             "UPDATE receive_swaps
             SET
                 description = :description,
+                claim_address = :claim_address,
                 claim_tx_id = :claim_tx_id,
                 lockup_tx_id = :lockup_tx_id,
                 mrh_tx_id = :mrh_tx_id,
@@ -76,6 +77,7 @@ impl Persister {
             named_params! {
                 ":id": &receive_swap.id,
                 ":description": &receive_swap.description,
+                ":claim_address": &receive_swap.claim_address,
                 ":claim_tx_id": &receive_swap.claim_tx_id,
                 ":lockup_tx_id": &receive_swap.lockup_tx_id,
                 ":mrh_tx_id": &receive_swap.mrh_tx_id,
@@ -145,6 +147,7 @@ impl Persister {
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
                 rs.claim_fees_sat,
+                rs.claim_address,
                 rs.claim_tx_id,
                 rs.lockup_tx_id,
                 rs.mrh_address,
@@ -197,17 +200,18 @@ impl Persister {
             payer_amount_sat: row.get(9)?,
             receiver_amount_sat: row.get(10)?,
             claim_fees_sat: row.get(11)?,
-            claim_tx_id: row.get(12)?,
-            lockup_tx_id: row.get(13)?,
-            mrh_address: row.get(14)?,
-            mrh_tx_id: row.get(15)?,
-            created_at: row.get(16)?,
-            state: row.get(17)?,
-            pair_fees_json: row.get(18)?,
+            claim_address: row.get(12)?,
+            claim_tx_id: row.get(13)?,
+            lockup_tx_id: row.get(14)?,
+            mrh_address: row.get(15)?,
+            mrh_tx_id: row.get(16)?,
+            created_at: row.get(17)?,
+            state: row.get(18)?,
+            pair_fees_json: row.get(19)?,
             metadata: SwapMetadata {
-                version: row.get(19)?,
-                last_updated_at: row.get(20)?,
-                is_local: row.get::<usize, Option<bool>>(21)?.unwrap_or(true),
+                version: row.get(20)?,
+                last_updated_at: row.get(21)?,
+                is_local: row.get::<usize, Option<bool>>(22)?.unwrap_or(true),
             },
         })
     }
@@ -254,6 +258,24 @@ impl Persister {
         ])];
 
         self.list_receive_swaps_where(&con, where_clause)
+    }
+
+    pub(crate) fn set_receive_swap_claim_address(
+        &self,
+        swap_id: &str,
+        claim_address: &str,
+    ) -> Result<(), PaymentError> {
+        let con = self.get_connection()?;
+        con.execute(
+            "UPDATE receive_swaps
+            SET claim_address = :claim_address
+            WHERE id = :id",
+            named_params! {
+                        ":id": swap_id,
+                        ":claim_address": claim_address,
+            },
+        )?;
+        Ok(())
     }
 
     // Only set the Receive Swap claim_tx_id if not set, otherwise return an error

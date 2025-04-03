@@ -303,6 +303,7 @@ mod test {
             pair_fees_json: r#"{"id":"BTC/BTC","rate":0.997,"limits":{"maximal":2000000,"minimal":10000,"maximalZeroConf":50000},"fees":{"percentage":0.5,"miner":200}}"#.to_string(),
             create_response_json: r#"{"accept_zero_conf":true,"address":"lq1pqg8hsjkptr8u7l35ctx5yn4dpwufkjxt7d24zuj5ddahnn7jaduh8r6celry8kn9xrkgwchrrx2madlemf0u27pnmjar4d4k5wvtem8kfl7ru56w94sv","bip21":"liquidnetwork:lq1pqg8hsjkptr8u7l35ctx5yn4dpwufkjxt7d24zuj5ddahnn7jaduh8r6celry8kn9xrkgwchrrx2madlemf0u27pnmjar4d4k5wvtem8kfl7ru56w94sv?amount=0.00001015&label=Send%20to%20BTC%20lightning&assetid=6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d","claim_public_key":"0381b8583fe95488b961d12836102b1869b241972e571bd44a933d273b12a0d123","expected_amount":1015,"referral_id":"breez-sdk","swap_tree":{"claim_leaf":{"output":"a914cea2d1aa5af00fb688727b0054de58ecf45e948f882081b8583fe95488b961d12836102b1869b241972e571bd44a933d273b12a0d123ac","version":196},"refund_leaf":{"output":"20a668381222ff9076ca6d5f5b098b501331f07d5065f1dc0e0f217cc493359e69ad03b12432b1","version":196}},"timeout_block_height":3286193,"blinding_key":"73332603e5d438ddb3b12c16c7271c9f98658c77257cbb06639d05773aa1fec3"}"#.to_string(),
             lockup_tx_id: None,
+            refund_address: None,
             refund_tx_id: None,
             created_at: 1000,
             timeout_block_height: 1000,

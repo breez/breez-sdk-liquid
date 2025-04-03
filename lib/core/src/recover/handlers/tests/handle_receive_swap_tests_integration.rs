@@ -279,6 +279,7 @@ mod test {
             receiver_amount_sat: 95000,
             pair_fees_json: r#"{"id":"BTC/BTC","rate":0.997,"limits":{"maximal":2000000,"minimal":10000,"maximalZeroConf":50000},"fees":{"percentage":0.5,"miner":200}}"#.to_string(),
             claim_fees_sat: 500,
+            claim_address: None,
             claim_tx_id: None,
             lockup_tx_id: None,
             mrh_address: "lq1qqvynd50t4tajashdguell7nu9gycuqqd869w8vqww9ys9dsz7szdfeu7pwe4yzzme28qsluyfyrtqmq9scl5ydw4lesx3c5qu".to_string(),

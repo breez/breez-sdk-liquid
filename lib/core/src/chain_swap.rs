@@ -861,7 +861,7 @@ impl ChainSwapHandler {
         let tx_id = claim_tx.txid();
         match self
             .persister
-            .set_chain_swap_claim_tx_id(swap_id, claim_address, &tx_id)
+            .set_chain_swap_claim(swap_id, claim_address, &tx_id)
         {
             Ok(_) => {
                 let broadcast_res = match claim_tx {
@@ -916,7 +916,7 @@ impl ChainSwapHandler {
                         };
 
                         info!("Successfully broadcast claim tx {claim_tx_id} for Chain Swap {swap_id}");
-                        // The claim_tx_id is already set by set_chain_swap_claim_tx_id. Manually trigger notifying
+                        // The claim_tx_id is already set by set_chain_swap_claim. Manually trigger notifying
                         // subscribers as update_swap_info will not recognise a change to the swap
                         payment_id.and_then(|payment_id| {
                             self.subscription_notifier.send(payment_id).ok()
@@ -1088,7 +1088,17 @@ impl ChainSwapHandler {
             .get_script_utxos(&script_pk)
             .await?;
 
-        let refund_address = self.onchain_wallet.next_unused_address().await?.to_string();
+        let refund_address = match swap.refund_address {
+            Some(ref refund_address) => refund_address.clone(),
+            None => {
+                // If no refund address is set, we get an unused one
+                let address = self.onchain_wallet.next_unused_address().await?.to_string();
+                self.persister
+                    .set_chain_swap_refund_address(&swap.id, &address)?;
+                address
+            }
+        };
+
         let SdkTransaction::Liquid(refund_tx) = self
             .swapper
             .create_refund_tx(

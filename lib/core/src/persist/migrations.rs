@@ -323,5 +323,10 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         "ALTER TABLE asset_metadata ADD COLUMN fiat_id TEXT;",
         update_asset_metadata_fiat_id,
         "ALTER TABLE payment_details ADD COLUMN asset_fees INTEGER;",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN claim_address TEXT;
+        ALTER TABLE send_swaps ADD COLUMN refund_address TEXT;
+        ALTER TABLE chain_swaps ADD COLUMN refund_address TEXT;
+        ",
     ]
 }

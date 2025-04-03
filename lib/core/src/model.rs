@@ -1122,6 +1122,8 @@ pub struct ChainSwap {
     /// The Bitcoin claim address is only set for Outgoing Chain Swaps
     pub(crate) claim_address: Option<String>,
     pub(crate) lockup_address: String,
+    /// The Liquid refund address is only set for Outgoing Chain Swaps
+    pub(crate) refund_address: Option<String>,
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
@@ -1301,7 +1303,9 @@ pub struct SendSwap {
     pub(crate) create_response_json: String,
     /// Persisted only when the lockup tx is successfully broadcast
     pub(crate) lockup_tx_id: Option<String>,
-    /// Persisted as soon as a refund tx is broadcast
+    /// Persisted only when a refund tx is needed
+    pub(crate) refund_address: Option<String>,
+    /// Persisted after the refund tx is broadcast
     pub(crate) refund_tx_id: Option<String>,
     pub(crate) created_at: u32,
     pub(crate) timeout_block_height: u64,
@@ -1392,7 +1396,9 @@ pub struct ReceiveSwap {
     /// The [ReversePair] chosen on swap creation
     pub(crate) pair_fees_json: String,
     pub(crate) claim_fees_sat: u64,
-    /// Persisted as soon as a claim tx is broadcast
+    /// Persisted only when a claim tx is needed
+    pub(crate) claim_address: Option<String>,
+    /// Persisted after the claim tx is broadcast
     pub(crate) claim_tx_id: Option<String>,
     /// The transaction id of the swapper's tx broadcast
     pub(crate) lockup_tx_id: Option<String>,
