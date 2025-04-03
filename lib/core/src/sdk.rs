@@ -733,9 +733,21 @@ impl LiquidSdk {
         if let Some(id) = payment_id {
             match self.persister.get_payment(&id)? {
                 Some(payment) => {
-                    self.update_wallet_info().await?;
                     match payment.status {
                         Complete => {
+                            // First sync payment data with chain state
+                            self.sync_payments_with_chain_data(false).await?;
+                            
+                            // Update wallet info and ensure it's persisted
+                            self.update_wallet_info().await?;
+                            
+                            // Get the latest balance after update
+                            let info = self.get_info().await?;
+                            
+                            // Emit Synced event with the latest balance
+                            self.notify_event_listeners(SdkEvent::Synced).await?;
+                            
+                            // Now emit PaymentSucceeded with updated balance
                             self.notify_event_listeners(SdkEvent::PaymentSucceeded {
                                 details: payment,
                             })
