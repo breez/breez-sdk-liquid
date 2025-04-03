@@ -2727,7 +2727,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=0b18e777d496#0b18e777d496bd3ee0602b49b838d3d293e43e23"
+source = "git+https://github.com/breez/lwk?rev=76f2305b1e32c50ce1712e696548edca89d67a73#76f2305b1e32c50ce1712e696548edca89d67a73"
 dependencies = [
  "aes-gcm-siv",
  "age",
