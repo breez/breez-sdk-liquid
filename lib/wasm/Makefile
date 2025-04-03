@@ -9,7 +9,7 @@ init:
 	rustup target add wasm32-unknown-unknown
 
 clippy:
-	$(CLANG_PREFIX) cargo clippy --target=wasm32-unknown-unknown -- -D warnings
+	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown -- -D warnings
 
 build: build-bundle build-deno build-node build-web
 

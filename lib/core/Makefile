@@ -18,7 +18,7 @@ test: cargo-test wasm-test
 regtest-test: cargo-regtest-test wasm-regtest-test
 
 cargo-clippy:
-	cargo clippy -- -D warnings
+	cargo clippy --all-targets -- -D warnings
 
 cargo-test:
 	cargo test
@@ -40,7 +40,7 @@ cargo-regtest-test: check-regtest
 	$(REGTEST_PREFIX) cargo test $(REGTEST_TESTS) --features "regtest"
 
 wasm-clippy:
-	$(CLANG_PREFIX) cargo clippy --target=wasm32-unknown-unknown -- -D warnings
+	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown -- -D warnings
 
 BROWSER ?= firefox
 
