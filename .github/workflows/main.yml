@@ -48,11 +48,11 @@ jobs:
 
       - name: Clippy bindings
         working-directory: lib/bindings 
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Clippy core
         working-directory: lib/core 
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Clippy cli
         working-directory: cli 

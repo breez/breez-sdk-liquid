@@ -12,10 +12,8 @@ fmt:
 clippy: cargo-clippy wasm-clippy
 
 cargo-clippy:
-	cd lib/bindings && cargo clippy -- -D warnings
-	cd lib/bindings && cargo clippy --tests -- -D warnings
-	cd lib/core && cargo clippy -- -D warnings
-	cd lib/core && cargo clippy --tests -- -D warnings
+	cd lib/bindings && cargo clippy --all-targets -- -D warnings
+	cd lib/core && cargo clippy --all-targets -- -D warnings
 	cd cli && cargo clippy -- -D warnings
 
 wasm-clippy:

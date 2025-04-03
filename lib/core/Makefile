@@ -12,13 +12,13 @@ clippy: cargo-clippy wasm-clippy
 test: cargo-test wasm-test
 
 cargo-clippy:
-	cargo clippy -- -D warnings
+	cargo clippy --all-targets -- -D warnings
 
 cargo-test:
 	cargo test
 
 wasm-clippy:
-	$(CLANG_PREFIX) cargo clippy --target=wasm32-unknown-unknown -- -D warnings
+	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown -- -D warnings
 
 wasm-test:
 	$(CLANG_PREFIX) wasm-pack test --headless --firefox
