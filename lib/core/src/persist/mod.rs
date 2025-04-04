@@ -19,7 +19,7 @@ use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
-use log::warn;
+use log::{error, warn};
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use model::PaymentTxDetails;
@@ -97,7 +97,11 @@ impl Persister {
                 conn.deserialize_read_exact(rusqlite::DatabaseName::Main, cursor, size, false)?;
                 Ok::<Connection, anyhow::Error>(conn)
             })
-            .transpose()?;
+            .transpose()
+            .unwrap_or_else(|e| {
+                error!("Failed to deserialize backup data: {e} - proceeding without it");
+                None
+            });
         Self::new_inner(
             main_db_dir,
             network,
@@ -127,9 +131,14 @@ impl Persister {
         };
 
         if let Some(backup_con) = backup_con {
-            let mut dst_con = persister.get_connection()?;
-            let backup = Backup::new(&backup_con, &mut dst_con)?;
-            backup.step(-1)?;
+            if let Err(e) = (|| {
+                let mut dst_con = persister.get_connection()?;
+                let backup = Backup::new(&backup_con, &mut dst_con)?;
+                backup.step(-1)?;
+                Ok::<(), anyhow::Error>(())
+            })() {
+                error!("Failed to restore from backup: {e} - proceeding without it");
+            }
         }
 
         persister.init()?;
