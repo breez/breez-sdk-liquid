@@ -23,6 +23,7 @@ use log::warn;
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use model::PaymentTxDetails;
+use rusqlite::backup::Backup;
 use rusqlite::{
     params, params_from_iter, Connection, OptionalExtension, Row, ToSql, TransactionBehavior,
 };
@@ -72,7 +73,7 @@ impl Persister {
         if !main_db_dir.exists() {
             std::fs::create_dir_all(&main_db_dir)?;
         }
-        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata)
+        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata, None)
     }
 
     /// Creates a new Persister that only keeps data in memory.
@@ -85,9 +86,25 @@ impl Persister {
         network: LiquidNetwork,
         sync_enabled: bool,
         asset_metadata: Option<Vec<AssetMetadata>>,
+        backup_bytes: Option<Vec<u8>>,
     ) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(database_id)?;
-        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata)
+        let backup_con = backup_bytes
+            .map(|data| {
+                let size = data.len();
+                let cursor = std::io::Cursor::new(data);
+                let mut conn = Connection::open_in_memory()?;
+                conn.deserialize_read_exact(rusqlite::DatabaseName::Main, cursor, size, false)?;
+                Ok::<Connection, anyhow::Error>(conn)
+            })
+            .transpose()?;
+        Self::new_inner(
+            main_db_dir,
+            network,
+            sync_enabled,
+            asset_metadata,
+            backup_con,
+        )
     }
 
     fn new_inner(
@@ -95,6 +112,7 @@ impl Persister {
         network: LiquidNetwork,
         sync_enabled: bool,
         asset_metadata: Option<Vec<AssetMetadata>>,
+        backup_con: Option<Connection>,
     ) -> Result<Self> {
         let mut sync_trigger = None;
         if sync_enabled {
@@ -108,13 +126,19 @@ impl Persister {
             sync_trigger,
         };
 
+        if let Some(backup_con) = backup_con {
+            let mut dst_con = persister.get_connection()?;
+            let backup = Backup::new(&backup_con, &mut dst_con)?;
+            backup.step(-1)?;
+        }
+
         persister.init()?;
         persister.replace_asset_metadata(asset_metadata)?;
 
         Ok(persister)
     }
 
-    pub fn get_connection(&self) -> Result<Connection> {
+    pub(crate) fn get_connection(&self) -> Result<Connection> {
         Ok(Connection::open(
             self.main_db_dir.join(DEFAULT_DB_FILENAME),
         )?)
@@ -125,8 +149,15 @@ impl Persister {
         Ok(())
     }
 
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    pub fn serialize(&self) -> Result<Vec<u8>> {
+        let con = self.get_connection()?;
+        let db_bytes = con.serialize(rusqlite::DatabaseName::Main)?;
+        Ok(db_bytes.to_vec())
+    }
+
     #[cfg(any(test, feature = "test-utils"))]
-    pub fn get_database_dir(&self) -> &PathBuf {
+    pub(crate) fn get_database_dir(&self) -> &PathBuf {
         &self.main_db_dir
     }
 

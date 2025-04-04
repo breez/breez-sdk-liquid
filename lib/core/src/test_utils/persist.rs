@@ -141,6 +141,7 @@ macro_rules! create_persister {
                 $crate::model::LiquidNetwork::Testnet,
                 true,
                 None,
+                None,
             )?)
         };
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]

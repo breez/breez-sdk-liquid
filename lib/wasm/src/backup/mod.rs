@@ -6,8 +6,6 @@ use anyhow::Result;
 use breez_sdk_liquid::model::{EventListener, SdkEvent};
 use breez_sdk_liquid::persist::Persister;
 use indexed_db::{backup_to_indexed_db, is_indexed_db_supported, load_indexed_db_backup};
-use rusqlite::backup::Backup;
-use rusqlite::Connection;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -54,8 +52,7 @@ pub(crate) fn start_backup_task(
 async fn backup(persister: &Rc<Persister>, backup_dir_path: &Path) -> Result<()> {
     let start = web_time::Instant::now();
 
-    let con = persister.get_connection()?;
-    let db_bytes = con.serialize(rusqlite::DatabaseName::Main)?.to_vec();
+    let db_bytes = persister.serialize()?;
 
     if is_indexed_db_supported() {
         backup_to_indexed_db(db_bytes, backup_dir_path.to_str_safe()?).await?;
@@ -71,7 +68,7 @@ async fn backup(persister: &Rc<Persister>, backup_dir_path: &Path) -> Result<()>
     Ok(())
 }
 
-pub(crate) async fn restore(persister: &Rc<Persister>, backup_dir_path: &Path) -> Result<()> {
+pub(crate) async fn load_backup(backup_dir_path: &Path) -> Result<Option<Vec<u8>>> {
     let maybe_data = if is_indexed_db_supported() {
         load_indexed_db_backup(backup_dir_path.to_str_safe()?).await?
     } else {
@@ -80,33 +77,19 @@ pub(crate) async fn restore(persister: &Rc<Persister>, backup_dir_path: &Path) -
         #[cfg(feature = "node-js")]
         node_fs::load_file_system_backup(backup_dir_path)?
     };
-
-    if let Some(data) = maybe_data {
-        log::info!("Found backup data - recovering from it");
-
-        let size = data.len();
-        let cursor = std::io::Cursor::new(data);
-        let mut src_con = Connection::open_in_memory()?;
-        src_con.deserialize_read_exact(rusqlite::DatabaseName::Main, cursor, size, false)?;
-
-        let mut dst_con = persister.get_connection()?;
-
-        let backup = Backup::new(&src_con, &mut dst_con)?;
-
-        backup.step(-1)?;
-    }
-
-    Ok(())
+    Ok(maybe_data)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::backup::backup;
-    use crate::backup::restore;
+    use crate::backup::load_backup;
     use std::path::PathBuf;
     use std::str::FromStr;
 
     use breez_sdk_liquid::model::PaymentState;
+    use breez_sdk_liquid::persist::Persister;
+    use breez_sdk_liquid::prelude::LiquidNetwork;
     use breez_sdk_liquid::test_utils::persist::{
         create_persister, new_receive_swap, new_send_swap,
     };
@@ -128,9 +111,9 @@ mod tests {
         let backup_dir_path = PathBuf::from_str(&format!("/tmp/{}", uuid::Uuid::new_v4()))?;
         backup(&local, &backup_dir_path).await?;
 
-        create_persister!(remote);
-
-        restore(&remote, &backup_dir_path).await?;
+        let backup_bytes = load_backup(&backup_dir_path).await?;
+        let remote =
+            Persister::new_in_memory("remote", LiquidNetwork::Testnet, false, None, backup_bytes)?;
         assert_eq!(remote.test_list_ongoing_swaps()?.len(), 2);
 
         // Try again to verify that a new backup overwrites an old one
@@ -143,7 +126,9 @@ mod tests {
 
         backup(&local, &backup_dir_path).await?;
 
-        restore(&remote, &backup_dir_path).await?;
+        let backup_bytes = load_backup(&backup_dir_path).await?;
+        let remote =
+            Persister::new_in_memory("remote", LiquidNetwork::Testnet, false, None, backup_bytes)?;
         assert_eq!(remote.test_list_ongoing_swaps()?.len(), 4);
 
         Ok(())

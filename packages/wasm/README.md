@@ -85,7 +85,8 @@ const initSdk = async () => {
     const mnemonic = process.env.MNEMONIC
 
     // Connect using the config
-    const config = await defaultConfig('mainnet', breezApiKey)
+    let config = defaultConfig('mainnet', breezApiKey)
+    config.workingDir = "./.data"
     console.log(`defaultConfig: ${JSON.stringify(config)}`)
 
     const sdk = await connect({ config, mnemonic })

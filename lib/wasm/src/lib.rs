@@ -13,10 +13,11 @@ use std::str::FromStr;
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
 use anyhow::anyhow;
+use breez_sdk_liquid::bitcoin::bip32::{Fingerprint, Xpub};
+use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::wallet::LiquidOnchainWallet;
-use breez_sdk_liquid::wallet::OnchainWallet;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
@@ -56,11 +57,30 @@ async fn connect_inner(
         Rc::clone(&signer),
     )?;
 
+    let fingerprint: Fingerprint = Xpub::decode(
+        &signer
+            .xpub()
+            .map_err(|e| anyhow!("Failed to get xpub: {e}"))?,
+    )
+    .map_err(|e| anyhow!(e.to_string()))?
+    .identifier()[0..4]
+        .try_into()
+        .map_err(|e| anyhow!("Failed to get fingerprint: {e}"))?;
+    let fingerprint = fingerprint.to_hex();
+
+    let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
+        .map_err(|e| anyhow!(e.to_string()))?;
+    let maybe_backup_bytes = backup::load_backup(&wallet_dir).await.unwrap_or_else(|e| {
+        log::error!("Failed to load backup: {:?}", e);
+        None
+    });
+
     let persister = Rc::new(Persister::new_in_memory(
         &config.working_dir,
         config.network,
         config.sync_enabled(),
         config.asset_metadata.clone(),
+        maybe_backup_bytes,
     )?);
 
     let onchain_wallet = Rc::new(LiquidOnchainWallet::new_in_memory(
@@ -68,13 +88,6 @@ async fn connect_inner(
         Rc::clone(&persister),
         signer,
     )?);
-
-    let fingerprint = onchain_wallet.fingerprint()?;
-    let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
-        .map_err(|e| anyhow!(e.to_string()))?;
-    if let Err(e) = backup::restore(&persister, &wallet_dir).await {
-        log::error!("Failed to restore from backup: {:?}", e);
-    }
 
     sdk_builder.persister(persister.clone());
     sdk_builder.onchain_wallet(onchain_wallet);
