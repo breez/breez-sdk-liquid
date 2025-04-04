@@ -625,6 +625,9 @@ impl LiquidSdk {
                         let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
                         _ = cloned.sync(partial_sync).await;
 
+                        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+                        interval.reset();
+
                         // Update swap handlers
                         if is_new_liquid_block {
                             cloned.chain_swap_handler.on_liquid_block(current_liquid_block).await;
