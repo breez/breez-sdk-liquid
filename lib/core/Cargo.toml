@@ -14,6 +14,7 @@ frb = ["dep:flutter_rust_bridge"]
 uniffi-25 = []
 uniffi-28 = []
 regtest = []   # Enable regtest tests
+test-utils = ["sdk-common/test-utils"]
 
 [lints]
 workspace = true

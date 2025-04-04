@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use bip39::rand::{self, RngCore};
 use sdk_common::{
     bitcoin::{
@@ -25,7 +23,7 @@ fn new_secret_key() -> SecretKey {
     SecretKey::from_slice(&buf).expect("Expected valid secret key")
 }
 
-pub(crate) fn new_send_swap(
+pub fn new_send_swap(
     payment_state: Option<PaymentState>,
     receiver_amount_sat: Option<u64>,
 ) -> SendSwap {
@@ -95,7 +93,7 @@ pub(crate) fn new_send_swap(
     }
 }
 
-pub(crate) fn new_receive_swap(
+pub fn new_receive_swap(
     payment_state: Option<PaymentState>,
     receiver_amount_sat: Option<u64>,
 ) -> ReceiveSwap {
@@ -124,6 +122,7 @@ pub(crate) fn new_receive_swap(
     }
 }
 
+#[macro_export]
 macro_rules! create_persister {
     ($name:ident) => {
         #[cfg(all(target_family = "wasm", target_os = "unknown"))]
@@ -137,9 +136,9 @@ macro_rules! create_persister {
                     .collect();
                 res
             };
-            sdk_common::utils::Arc::new(crate::persist::Persister::new_in_memory(
+            sdk_common::utils::Arc::new($crate::persist::Persister::new_in_memory(
                 &db_id,
-                crate::model::LiquidNetwork::Testnet,
+                $crate::model::LiquidNetwork::Testnet,
                 true,
                 None,
             )?)
@@ -151,16 +150,16 @@ macro_rules! create_persister {
                 .to_str()
                 .ok_or(anyhow::anyhow!("Could not create temporary directory"))?
                 .to_string();
-            sdk_common::utils::Arc::new(crate::persist::Persister::new_using_fs(
+            sdk_common::utils::Arc::new($crate::persist::Persister::new_using_fs(
                 &temp_dir_path,
-                crate::model::LiquidNetwork::Testnet,
+                $crate::model::LiquidNetwork::Testnet,
                 true,
                 None,
             )?)
         };
     };
 }
-pub(crate) use create_persister;
+pub use create_persister;
 
 pub(crate) fn new_payment_tx_data(
     network: LiquidNetwork,

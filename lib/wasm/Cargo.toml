@@ -1,7 +1,7 @@
 [package]
 name = "breez-sdk-liquid-wasm"
 edition = "2021"
-version.workspace = true
+version = { workspace = true }
 
 [lib]
 name = "breez_sdk_liquid_wasm"
@@ -18,6 +18,26 @@ js-sys = "0.3.77"
 log = { workspace = true }
 sdk-macros = { workspace = true }
 serde = { workspace = true }
+tokio = { version = "1", default-features = false }
 tsify-next = "0.5.5"
 wasm-bindgen = "0.2.100"
 wasm-bindgen-futures = "0.4.50"
+web-time = "1.1.0"
+rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
+    "backup",
+    "bundled",
+    "serialize",
+] }
+indexed_db_futures = "0.6.1"
+
+[dev-dependencies]
+breez-sdk-liquid = { path = "../core", features = ["test-utils"] }
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
+sdk-common = { workspace = true, features = ["test-utils"] }
+wasm-bindgen-test = "0.3.33"
+uuid = "1.16.0"
+
+[features]
+node-js = []
+browser-tests = []

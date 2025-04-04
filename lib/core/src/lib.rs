@@ -186,6 +186,10 @@ pub(crate) mod send_swap;
 pub(crate) mod signer;
 pub(crate) mod swapper;
 pub(crate) mod sync;
+#[cfg(feature = "test-utils")]
+pub mod test_utils;
+#[cfg(test)]
+#[cfg(not(feature = "test-utils"))]
 pub(crate) mod test_utils;
 #[allow(hidden_glob_reexports)]
 pub(crate) mod utils;

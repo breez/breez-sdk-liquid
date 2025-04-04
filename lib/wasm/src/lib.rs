@@ -1,10 +1,14 @@
+mod backup;
 mod error;
 mod event;
 mod logger;
 pub mod model;
 mod signer;
+mod utils;
 
+use std::path::PathBuf;
 use std::rc::Rc;
+use std::str::FromStr;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
@@ -12,6 +16,7 @@ use anyhow::anyhow;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::wallet::LiquidOnchainWallet;
+use breez_sdk_liquid::wallet::OnchainWallet;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
@@ -59,16 +64,29 @@ async fn connect_inner(
     )?);
 
     let onchain_wallet = Rc::new(LiquidOnchainWallet::new_in_memory(
-        config,
+        config.clone(),
         Rc::clone(&persister),
         signer,
     )?);
 
-    sdk_builder.persister(persister);
+    let fingerprint = onchain_wallet.fingerprint()?;
+    let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
+        .map_err(|e| anyhow!(e.to_string()))?;
+    if let Err(e) = backup::restore(&persister, &wallet_dir).await {
+        log::error!("Failed to restore from backup: {:?}", e);
+    }
+
+    sdk_builder.persister(persister.clone());
     sdk_builder.onchain_wallet(onchain_wallet);
 
     let sdk = sdk_builder.build()?;
     sdk.start().await?;
+
+    let (sender, receiver) = tokio::sync::mpsc::channel(20);
+    let listener = backup::ForwardingEventListener::new(sender);
+    sdk.add_event_listener(Box::new(listener)).await?;
+
+    backup::start_backup_task(persister, receiver, wallet_dir);
 
     Ok(BindingLiquidSdk { sdk })
 }

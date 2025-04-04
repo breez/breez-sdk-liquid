@@ -114,7 +114,7 @@ impl Persister {
         Ok(persister)
     }
 
-    pub(crate) fn get_connection(&self) -> Result<Connection> {
+    pub fn get_connection(&self) -> Result<Connection> {
         Ok(Connection::open(
             self.main_db_dir.join(DEFAULT_DB_FILENAME),
         )?)
@@ -125,8 +125,8 @@ impl Persister {
         Ok(())
     }
 
-    #[cfg(test)]
-    pub(crate) fn get_database_dir(&self) -> &PathBuf {
+    #[cfg(any(test, feature = "test-utils"))]
+    pub fn get_database_dir(&self) -> &PathBuf {
         &self.main_db_dir
     }
 
@@ -1131,5 +1131,24 @@ mod tests {
         assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
 
         Ok(())
+    }
+}
+
+#[cfg(feature = "test-utils")]
+pub mod test_helpers {
+    use super::*;
+
+    impl Persister {
+        pub fn test_insert_or_update_send_swap(&self, swap: &SendSwap) -> Result<()> {
+            self.insert_or_update_send_swap(swap)
+        }
+
+        pub fn test_insert_or_update_receive_swap(&self, swap: &ReceiveSwap) -> Result<()> {
+            self.insert_or_update_receive_swap(swap)
+        }
+
+        pub fn test_list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
+            self.list_ongoing_swaps()
+        }
     }
 }
