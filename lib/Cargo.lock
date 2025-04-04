@@ -2831,17 +2831,17 @@ dependencies = [
 
 [[package]]
 name = "lightning"
-version = "0.1.1"
-source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc3225b37b2081fec068c481bbc80bd153bec905ada13379f58d462c00da9158"
 dependencies = [
  "bech32 0.11.0",
  "bitcoin 0.32.5",
  "dnssec-prover",
  "hashbrown 0.13.2",
  "libm",
- "lightning-invoice 0.33.1",
+ "lightning-invoice 0.33.2",
  "lightning-types 0.2.0",
- "musig2",
  "possiblyrandom",
 ]
 
@@ -2872,8 +2872,9 @@ dependencies = [
 
 [[package]]
 name = "lightning-invoice"
-version = "0.33.1"
-source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+version = "0.33.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11209f386879b97198b2bfc9e9c1e5d42870825c6bd4376f17f95357244d6600"
 dependencies = [
  "bech32 0.11.0",
  "bitcoin 0.32.5",
@@ -2894,7 +2895,8 @@ dependencies = [
 [[package]]
 name = "lightning-types"
 version = "0.2.0"
-source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2cd84d4e71472035903e43caded8ecc123066ce466329ccd5ae537a8d5488c7"
 dependencies = [
  "bitcoin 0.32.5",
 ]
@@ -3168,14 +3170,6 @@ name = "multimap"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
-
-[[package]]
-name = "musig2"
-version = "0.1.0"
-source = "git+https://github.com/arik-so/rust-musig2?rev=6f95a05718cbb44d8fe3fa6021aea8117aa38d50#6f95a05718cbb44d8fe3fa6021aea8117aa38d50"
-dependencies = [
- "bitcoin 0.32.5",
-]
 
 [[package]]
 name = "native-tls"
@@ -3539,7 +3533,8 @@ dependencies = [
 [[package]]
 name = "possiblyrandom"
 version = "0.2.0"
-source = "git+https://github.com/lightningdevkit/rust-lightning?rev=f80d82e835987e045928955d2c83baba86c445e9#f80d82e835987e045928955d2c83baba86c445e9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b122a615d72104fb3d8b26523fdf9232cd8ee06949fb37e4ce3ff964d15dffd"
 dependencies = [
  "getrandom 0.2.14",
 ]
@@ -4530,7 +4525,7 @@ checksum = "584e070911c7017da6cb2eb0788d09f43d789029b5877d3e5ecc8acf86ceee21"
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=f3746d42f972208824a5a03075098d4dafc27215#f3746d42f972208824a5a03075098d4dafc27215"
+source = "git+https://github.com/breez/breez-sdk?rev=2a077be8bf07ac3d07d611b8bce91babdda3ecde#2a077be8bf07ac3d07d611b8bce91babdda3ecde"
 dependencies = [
  "aes",
  "anyhow",
@@ -4546,7 +4541,7 @@ dependencies = [
  "hickory-resolver",
  "lazy_static",
  "lightning 0.0.118",
- "lightning 0.1.1",
+ "lightning 0.1.2",
  "lightning-invoice 0.26.0",
  "log",
  "maybe-sync",
@@ -4575,7 +4570,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=f3746d42f972208824a5a03075098d4dafc27215#f3746d42f972208824a5a03075098d4dafc27215"
+source = "git+https://github.com/breez/breez-sdk?rev=2a077be8bf07ac3d07d611b8bce91babdda3ecde#2a077be8bf07ac3d07d611b8bce91babdda3ecde"
 dependencies = [
  "proc-macro2",
  "quote",
