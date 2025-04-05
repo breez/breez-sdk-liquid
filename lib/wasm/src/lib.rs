@@ -1,14 +1,20 @@
+mod backup;
 mod error;
 mod event;
 mod logger;
 pub mod model;
 mod signer;
+mod utils;
 
+use std::path::PathBuf;
 use std::rc::Rc;
+use std::str::FromStr;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
 use anyhow::anyhow;
+use breez_sdk_liquid::bitcoin::bip32::{Fingerprint, Xpub};
+use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::wallet::LiquidOnchainWallet;
@@ -51,24 +57,49 @@ async fn connect_inner(
         Rc::clone(&signer),
     )?;
 
+    let fingerprint: Fingerprint = Xpub::decode(
+        &signer
+            .xpub()
+            .map_err(|e| anyhow!("Failed to get xpub: {e}"))?,
+    )
+    .map_err(|e| anyhow!(e.to_string()))?
+    .identifier()[0..4]
+        .try_into()
+        .map_err(|e| anyhow!("Failed to get fingerprint: {e}"))?;
+    let fingerprint = fingerprint.to_hex();
+
+    let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
+        .map_err(|e| anyhow!(e.to_string()))?;
+    let maybe_backup_bytes = backup::load_backup(&wallet_dir).await.unwrap_or_else(|e| {
+        log::error!("Failed to load backup: {:?}", e);
+        None
+    });
+
     let persister = Rc::new(Persister::new_in_memory(
         &config.working_dir,
         config.network,
         config.sync_enabled(),
         config.asset_metadata.clone(),
+        maybe_backup_bytes,
     )?);
 
     let onchain_wallet = Rc::new(LiquidOnchainWallet::new_in_memory(
-        config,
+        config.clone(),
         Rc::clone(&persister),
         signer,
     )?);
 
-    sdk_builder.persister(persister);
+    sdk_builder.persister(persister.clone());
     sdk_builder.onchain_wallet(onchain_wallet);
 
     let sdk = sdk_builder.build()?;
     sdk.start().await?;
+
+    let (sender, receiver) = tokio::sync::mpsc::channel(20);
+    let listener = backup::ForwardingEventListener::new(sender);
+    sdk.add_event_listener(Box::new(listener)).await?;
+
+    backup::start_backup_task(persister, receiver, wallet_dir);
 
     Ok(BindingLiquidSdk { sdk })
 }

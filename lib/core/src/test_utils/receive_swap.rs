@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use anyhow::Result;
 use sdk_common::utils::Arc;
 

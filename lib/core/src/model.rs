@@ -248,11 +248,7 @@ impl Config {
         }
     }
 
-    pub(crate) fn get_wallet_dir(
-        &self,
-        base_dir: &str,
-        fingerprint_hex: &str,
-    ) -> anyhow::Result<String> {
+    pub fn get_wallet_dir(&self, base_dir: &str, fingerprint_hex: &str) -> anyhow::Result<String> {
         Ok(PathBuf::from(base_dir)
             .join(match self.network {
                 LiquidNetwork::Mainnet => "mainnet",

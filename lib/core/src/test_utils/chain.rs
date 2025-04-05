@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use std::sync::Mutex;
 
 use crate::{

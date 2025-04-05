@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use anyhow::Result;
 use hex::FromHex;
 use lazy_static::lazy_static;

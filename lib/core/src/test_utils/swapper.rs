@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use anyhow::Result;
 use boltz_client::{
     boltz::{
