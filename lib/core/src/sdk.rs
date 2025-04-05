@@ -636,6 +636,9 @@ impl LiquidSdk {
                             cloned.receive_swap_handler.on_bitcoin_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
                         }
+
+                        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+                        interval.reset();
                     }
 
                     _ = shutdown_receiver.changed() => {
