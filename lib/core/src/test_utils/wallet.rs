@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use std::{collections::HashMap, str::FromStr, sync::Mutex};
 
 use crate::{

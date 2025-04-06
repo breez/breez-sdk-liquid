@@ -19,10 +19,11 @@ use crate::sync::model::RecordType;
 use crate::{get_invoice_description, utils};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
-use log::warn;
+use log::{error, warn};
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
 use model::PaymentTxDetails;
+use rusqlite::backup::Backup;
 use rusqlite::{
     params, params_from_iter, Connection, OptionalExtension, Row, ToSql, TransactionBehavior,
 };
@@ -72,7 +73,7 @@ impl Persister {
         if !main_db_dir.exists() {
             std::fs::create_dir_all(&main_db_dir)?;
         }
-        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata)
+        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata, None)
     }
 
     /// Creates a new Persister that only keeps data in memory.
@@ -85,9 +86,29 @@ impl Persister {
         network: LiquidNetwork,
         sync_enabled: bool,
         asset_metadata: Option<Vec<AssetMetadata>>,
+        backup_bytes: Option<Vec<u8>>,
     ) -> Result<Self> {
         let main_db_dir = PathBuf::from_str(database_id)?;
-        Self::new_inner(main_db_dir, network, sync_enabled, asset_metadata)
+        let backup_con = backup_bytes
+            .map(|data| {
+                let size = data.len();
+                let cursor = std::io::Cursor::new(data);
+                let mut conn = Connection::open_in_memory()?;
+                conn.deserialize_read_exact(rusqlite::DatabaseName::Main, cursor, size, false)?;
+                Ok::<Connection, anyhow::Error>(conn)
+            })
+            .transpose()
+            .unwrap_or_else(|e| {
+                error!("Failed to deserialize backup data: {e} - proceeding without it");
+                None
+            });
+        Self::new_inner(
+            main_db_dir,
+            network,
+            sync_enabled,
+            asset_metadata,
+            backup_con,
+        )
     }
 
     fn new_inner(
@@ -95,6 +116,7 @@ impl Persister {
         network: LiquidNetwork,
         sync_enabled: bool,
         asset_metadata: Option<Vec<AssetMetadata>>,
+        backup_con: Option<Connection>,
     ) -> Result<Self> {
         let mut sync_trigger = None;
         if sync_enabled {
@@ -107,6 +129,17 @@ impl Persister {
             network,
             sync_trigger,
         };
+
+        if let Some(backup_con) = backup_con {
+            if let Err(e) = (|| {
+                let mut dst_con = persister.get_connection()?;
+                let backup = Backup::new(&backup_con, &mut dst_con)?;
+                backup.step(-1)?;
+                Ok::<(), anyhow::Error>(())
+            })() {
+                error!("Failed to restore from backup: {e} - proceeding without it");
+            }
+        }
 
         persister.init()?;
         persister.replace_asset_metadata(asset_metadata)?;
@@ -125,7 +158,14 @@ impl Persister {
         Ok(())
     }
 
-    #[cfg(test)]
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    pub fn serialize(&self) -> Result<Vec<u8>> {
+        let con = self.get_connection()?;
+        let db_bytes = con.serialize(rusqlite::DatabaseName::Main)?;
+        Ok(db_bytes.to_vec())
+    }
+
+    #[cfg(any(test, feature = "test-utils"))]
     pub(crate) fn get_database_dir(&self) -> &PathBuf {
         &self.main_db_dir
     }
@@ -1131,5 +1171,24 @@ mod tests {
         assert_eq!(storage.list_ongoing_swaps()?.len(), 2);
 
         Ok(())
+    }
+}
+
+#[cfg(feature = "test-utils")]
+pub mod test_helpers {
+    use super::*;
+
+    impl Persister {
+        pub fn test_insert_or_update_send_swap(&self, swap: &SendSwap) -> Result<()> {
+            self.insert_or_update_send_swap(swap)
+        }
+
+        pub fn test_insert_or_update_receive_swap(&self, swap: &ReceiveSwap) -> Result<()> {
+            self.insert_or_update_receive_swap(swap)
+        }
+
+        pub fn test_list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
+            self.list_ongoing_swaps()
+        }
     }
 }

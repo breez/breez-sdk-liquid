@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 use anyhow::{anyhow, Result};
 use sdk_common::prelude::{MockRestClient, RestClient, STAGING_BREEZSERVER_URL};
 use sdk_common::utils::Arc;

@@ -1,10 +1,10 @@
-#![cfg(test)]
+#![cfg_attr(feature = "test-utils", allow(dead_code))]
 
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
 
 pub(crate) mod chain;
 pub(crate) mod chain_swap;
-pub(crate) mod persist;
+pub mod persist;
 pub(crate) mod receive_swap;
 pub(crate) mod recover;
 pub(crate) mod sdk;
