@@ -26,13 +26,13 @@ const question = (message, parser) => {
     return new Promise((resolve, reject) => {
         rl.question(`${message}: `, (answer) => {
             if (answer.length === 0) {
-                reject()
+                reject('No answer provided')
             } else {
                 if (parser) {
                     try {
                         resolve(parser(answer))
                     } catch (e) {
-                        reject()
+                        reject('Invalid answer provided')
                     }
                 } else {
                     resolve(answer)

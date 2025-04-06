@@ -85,7 +85,7 @@ const getInfo = async () => {
 
 const getPayment = async (options) => {
     const sdk = await initSdk()
-    const req = options.paymmentHash
+    const req = options.paymentHash
         ? { type: 'paymentHash', paymentHash: options.paymentHash }
         : options.swapId
         ? { type: 'swapId', swapId: options.swapId }
@@ -94,7 +94,7 @@ const getPayment = async (options) => {
         console.error('Please provide either a payment hash or swap id')
         return
     }
-    const res = await sdk.getPayment(options.paymentId)
+    const res = await sdk.getPayment(req)
     console.log(JSON.stringify(res, null, 2))
 }
 
@@ -137,7 +137,7 @@ const listPayments = async (options) => {
                 : options.address
                 ? { type: 'bitcoin', address: options.address }
                 : undefined,
-        sortAssending: options.assending
+        sortAscending: options.ascending
     })
     console.log(JSON.stringify(res, null, 2))
 }
@@ -152,8 +152,8 @@ const lnurlAuth = async (lnurl) => {
     const sdk = await initSdk()
     const res = await sdk.parse(lnurl)
     if (res.type === 'lnurl-auth') {
-        const res = await sdk.lnurlAuth(res.data)
-        console.log(JSON.stringify(res, null, 2))
+        const authRes = await sdk.lnurlAuth(res.data)
+        console.log(JSON.stringify(authRes, null, 2))
     } else {
         console.log('Not a valid lnurl-auth')
     }
@@ -166,19 +166,19 @@ const lnurlPay = async (lnurl, options) => {
         const data = res.data
         let amount = options.drain ? { type: 'drain' } : { type: 'bitcoin', receiverAmountSat: 0 }
         if (!options.drain) {
-            const minSendable = ceil(data.minSendable / 1000.0)
-            const maxSendable = floor(data.maxSendable / 1000.0)
+            const minSendable = Math.ceil(data.minSendable / 1000.0)
+            const maxSendable = Math.floor(data.maxSendable / 1000.0)
             const message = `Amount to pay (min ${minSendable} sat, max ${maxSendable} sat)`
             const receiverAmountSat = await question(message, parseInt)
             amount = { type: 'bitcoin', receiverAmountSat }
         }
-        const res = await sdk.lnurPay({
+        const payRes = await sdk.lnurlPay({
             data,
             amount,
             bip353Address: res.bip353Address,
             validateSuccessActionUrl: options.validate
         })
-        console.log(JSON.stringify(res, null, 2))
+        console.log(JSON.stringify(payRes, null, 2))
     } else {
         console.log('Not a valid lnurl-pay')
     }
@@ -191,8 +191,8 @@ const lnurlWithdraw = async (lnurl) => {
         const data = res.data
         const message = `Amount to withdraw in millisatoshi (min ${data.minWithdrawable} msat, max ${data.maxWithdrawable} msat)`
         const amountMsat = await question(message, parseInt)
-        const res = await sdk.lnurlWithdraw({ data, amountMsat, description: 'LNURL-withdraw' })
-        console.log(JSON.stringify(res, null, 2))
+        const withdrawRes = await sdk.lnurlWithdraw({ data, amountMsat, description: 'LNURL-withdraw' })
+        console.log(JSON.stringify(withdrawRes, null, 2))
     } else {
         console.log('Not a valid lnurl-withdraw')
     }
