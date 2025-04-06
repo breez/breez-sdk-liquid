@@ -1,3 +1,5 @@
+pub mod persister;
+
 use std::collections::HashMap;
 use std::io::Write;
 use std::str::FromStr;
@@ -12,9 +14,7 @@ use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
 use lwk_wollet::secp256k1::Message;
-use lwk_wollet::{
-    ElementsNetwork, FsPersister, NoPersist, WalletTx, WalletTxOut, Wollet, WolletDescriptor,
-};
+use lwk_wollet::{ElementsNetwork, FsPersister, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -32,6 +32,9 @@ use crate::{
 };
 use sdk_common::utils::Arc;
 
+use crate::wallet::persister::{
+    FsWalletCachePersister, NoWalletCachePersister, WalletCachePersister,
+};
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 use lwk_wollet::blocking::BlockchainBackend;
 
@@ -177,16 +180,16 @@ impl WalletClient {
     }
 }
 
-pub struct LiquidOnchainWallet {
+pub struct LiquidOnchainWallet<WP: WalletCachePersister> {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
     client: Mutex<Option<WalletClient>>,
-    working_dir: Option<String>,
     pub(crate) signer: SdkLwkSigner,
+    wallet_cache_persister: WP,
 }
 
-impl LiquidOnchainWallet {
+impl LiquidOnchainWallet<FsWalletCachePersister> {
     /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
     pub(crate) fn new(
         config: Config,
@@ -195,23 +198,31 @@ impl LiquidOnchainWallet {
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
-        let wollet = Self::create_wallet(&config, Some(&working_dir), &signer)?;
 
-        let working_dir_buf = std::path::PathBuf::from_str(&working_dir)?;
-        if !working_dir_buf.exists() {
-            std::fs::create_dir_all(&working_dir_buf)?;
-        }
+        let wallet_cache_persister = FsWalletCachePersister::new(
+            working_dir.clone(),
+            FsPersister::new(
+                &working_dir,
+                config.network.into(),
+                &get_descriptor(&signer, config.network)?,
+            )?,
+            config.network.into(),
+        )?;
+
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone())?;
 
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
             client: Mutex::new(None),
-            working_dir: Some(working_dir),
             signer,
+            wallet_cache_persister,
         })
     }
+}
 
+impl LiquidOnchainWallet<NoWalletCachePersister> {
     /// Creates a new LiquidOnchainWallet that caches data in memory
     pub fn new_in_memory(
         config: Config,
@@ -219,75 +230,72 @@ impl LiquidOnchainWallet {
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
-        let wollet = Self::create_wallet(&config, None, &signer)?;
+
+        let wallet_cache_persister = NoWalletCachePersister;
+
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone())?;
 
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
             client: Mutex::new(None),
-            working_dir: None,
             signer,
+            wallet_cache_persister,
+        })
+    }
+}
+
+impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
+    /// Creates a new LiquidOnchainWallet with a custom cache persister implementation
+    pub fn new_with_cache_persister(
+        config: Config,
+        persister: Arc<Persister>,
+        user_signer: Arc<Box<dyn Signer>>,
+        wallet_cache_persister: WP,
+    ) -> Result<Self> {
+        let signer = SdkLwkSigner::new(user_signer.clone())?;
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone())?;
+
+        Ok(Self {
+            config,
+            persister,
+            wallet: Arc::new(Mutex::new(wollet)),
+            client: Mutex::new(None),
+            signer,
+            wallet_cache_persister,
         })
     }
 
     fn create_wallet(
         config: &Config,
-        working_dir: Option<&str>,
         signer: &SdkLwkSigner,
+        wallet_cache_persister: WP,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
-        let descriptor = LiquidOnchainWallet::get_descriptor(signer, config.network)?;
-        let wollet_res = match &working_dir {
-            Some(working_dir) => Wollet::new(
-                elements_network,
-                FsPersister::new(working_dir, elements_network, &descriptor)?,
-                descriptor.clone(),
-            ),
-            None => Wollet::new(elements_network, NoPersist::new(), descriptor.clone()),
-        };
+        let descriptor = get_descriptor(signer, config.network)?;
+        let wollet_res = Wollet::new(
+            elements_network,
+            wallet_cache_persister.get_lwk_persister(),
+            descriptor.clone(),
+        );
         match wollet_res {
             Ok(wollet) => Ok(wollet),
             res @ Err(
                 lwk_wollet::Error::PersistError(_)
                 | lwk_wollet::Error::UpdateHeightTooOld { .. }
                 | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
-            ) => match working_dir {
-                Some(working_dir) => {
-                    warn!(
-                        "Update error initialising wollet, wipping storage and retrying: {res:?}"
-                    );
-                    let mut path = std::path::PathBuf::from(working_dir);
-                    path.push(elements_network.as_str());
-                    std::fs::remove_dir_all(&path)?;
-                    warn!("Wiping wallet in path: {:?}", path);
-                    let lwk_persister =
-                        FsPersister::new(working_dir, elements_network, &descriptor)?;
-                    Ok(Wollet::new(
-                        elements_network,
-                        lwk_persister,
-                        descriptor.clone(),
-                    )?)
-                }
-                None => res.map_err(Into::into),
-            },
+            ) => {
+                warn!("Update error initialising wollet, wiping cache and retrying: {res:?}");
+                wallet_cache_persister.clear_cache()?;
+                Ok(Wollet::new(
+                    elements_network,
+                    wallet_cache_persister.get_lwk_persister(),
+                    descriptor.clone(),
+                )?)
+            }
             Err(e) => Err(e.into()),
         }
-    }
-
-    fn get_descriptor(
-        signer: &SdkLwkSigner,
-        network: LiquidNetwork,
-    ) -> Result<WolletDescriptor, PaymentError> {
-        let is_mainnet = network == LiquidNetwork::Mainnet;
-        let descriptor_str = singlesig_desc(
-            signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Slip77,
-            is_mainnet,
-        )
-        .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
-        Ok(descriptor_str.parse()?)
     }
 
     async fn get_txout(&self, wallet: &Wollet, outpoint: &OutPoint) -> Result<TxOut> {
@@ -303,8 +311,23 @@ impl LiquidOnchainWallet {
     }
 }
 
+fn get_descriptor(
+    signer: &SdkLwkSigner,
+    network: LiquidNetwork,
+) -> Result<WolletDescriptor, PaymentError> {
+    let is_mainnet = network == LiquidNetwork::Mainnet;
+    let descriptor_str = singlesig_desc(
+        signer,
+        Singlesig::Wpkh,
+        lwk_common::DescriptorBlindingKey::Slip77,
+        is_mainnet,
+    )
+    .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+    Ok(descriptor_str.parse()?)
+}
+
 #[sdk_macros::async_trait]
-impl OnchainWallet for LiquidOnchainWallet {
+impl<WP: WalletCachePersister> OnchainWallet for LiquidOnchainWallet<WP> {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
         let wallet = self.wallet.lock().await;
@@ -566,8 +589,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             Ok(()) => Ok(()),
             Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
                 warn!("Full scan failed with update height too old, wiping storage and retrying");
-                let mut new_wallet =
-                    Self::create_wallet(&self.config, self.working_dir.as_deref(), &self.signer)?;
+                let mut new_wallet = Self::create_wallet(
+                    &self.config,
+                    &self.signer,
+                    self.wallet_cache_persister.clone(),
+                )?;
                 client
                     .full_scan_to_index(&mut new_wallet, index_with_buffer)
                     .await?;
