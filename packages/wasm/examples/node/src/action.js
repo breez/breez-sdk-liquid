@@ -172,13 +172,17 @@ const lnurlPay = async (lnurl, options) => {
             const receiverAmountSat = await question(message, parseInt)
             amount = { type: 'bitcoin', receiverAmountSat }
         }
-        const payRes = await sdk.lnurlPay({
+        const prepareResponse = await sdk.prepareLnurlPay({
             data,
             amount,
             bip353Address: res.bip353Address,
             validateSuccessActionUrl: options.validate
         })
-        console.log(JSON.stringify(payRes, null, 2))
+        const message = `Fees: ${prepareResponse.feesSat} sat. Are the fees acceptable?`
+        if (await confirm(message)) {
+            const payRes = await sdk.lnurlPay({ prepareResponse })
+            console.log(JSON.stringify(res, null, 2))
+        }
     } else {
         console.log('Not a valid LNURL-pay')
     }
