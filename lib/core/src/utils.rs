@@ -194,11 +194,11 @@ mod tests {
         // Test invalid preimages
         assert!(matches!(
             verify_payment_hash(bolt12_preimage, bolt11_invoice),
-            Err(PaymentError::InvalidPreimage { .. })
+            Err(PaymentError::InvalidPreimage)
         ));
         assert!(matches!(
             verify_payment_hash(bolt11_preimage, bolt12_invoice),
-            Err(PaymentError::InvalidPreimage { .. })
+            Err(PaymentError::InvalidPreimage)
         ));
 
         // Test invalid invoice

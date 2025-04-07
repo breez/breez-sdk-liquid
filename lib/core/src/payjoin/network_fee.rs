@@ -5,6 +5,7 @@ pub const WEIGHT_VIN_SINGLE_SIG_NATIVE: usize = 275;
 pub const WEIGHT_VIN_SINGLE_SIG_NESTED: usize = 367;
 pub const WEIGHT_VOUT_NESTED: usize = 270;
 
+#[allow(clippy::manual_div_ceil)]
 pub fn weight_to_vsize(weight: usize) -> usize {
     (weight + 3) / 4
 }
