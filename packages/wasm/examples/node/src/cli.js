@@ -245,6 +245,7 @@ const initCommand = () => {
                 'Whether or not this is a drain operation. If true, all available funds will be used'
             )
         )
+        .addOption(new Option('--use-asset-fees', 'Whether or not the tx should be paid using the asset'))
         .action(sendPayment)
 
     program

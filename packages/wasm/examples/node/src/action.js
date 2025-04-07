@@ -302,10 +302,16 @@ const sendOnchainPayment = async (address, options) => {
 const sendPayment = async (options) => {
     const sdk = await initSdk()
     const destination = options.invoice || options.offer || options.address
+    const useAssetFees = options.useAssetFees
     const amount = options.drain
         ? { type: 'drain' }
         : options.asset
-        ? { type: 'asset', assetId: options.asset, receiverAmount: options.amount }
+        ? {
+              type: 'asset',
+              assetId: options.asset,
+              receiverAmount: options.amount,
+              estimateAssetFees: useAssetFees
+          }
         : options.amountSat
         ? { type: 'bitcoin', receiverAmountSat: options.amountSat }
         : undefined
@@ -325,9 +331,19 @@ const sendPayment = async (options) => {
         destination,
         amount
     })
-    const message = `Fees: ${prepareResponse.feesSat} sat. Are the fees acceptable?`
+    if (useAssetFees && !prepareResponse.estimatedAssetFees) {
+        console.error('Not able to pay asset fees')
+        return
+    }
+    if (!useAssetFees && !prepareResponse.feesSat) {
+        console.error('Not able to pay satoshi fees')
+        return
+    }
+    const message = useAssetFees
+        ? `Fees: approx ${prepareResponse.estimatedAssetFees}. Are the fees acceptable?`
+        : `Fees: ${prepareResponse.feesSat} sat. Are the fees acceptable?`
     if (await confirm(message)) {
-        const res = await sdk.sendPayment({ prepareResponse })
+        const res = await sdk.sendPayment({ prepareResponse, useAssetFees })
         console.log(JSON.stringify(res, null, 2))
     }
 }
