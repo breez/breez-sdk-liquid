@@ -304,8 +304,6 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             .new_lbtc_refund_wrapper(&Swap::Send(swap.clone()), refund_address)
             .await?;
 
-        self.validate_send_swap_preimage(swap_id, &swap.invoice, &claim_tx_response.preimage)?;
-
         let (partial_sig, pub_nonce) = refund_tx_wrapper.partial_sign(
             &keypair,
             &claim_tx_response.pub_nonce,

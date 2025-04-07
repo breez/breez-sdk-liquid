@@ -57,7 +57,8 @@ pub fn new_send_swap(
             "limits": {
                 "maximal": 25000000,
                 "minimal": 1000,
-                "maximalZeroConf": 100000
+                "maximalZeroConf": 100000,
+                "minimalBatched": 21
             },
             "fees": {
                 "percentage": 0.1,

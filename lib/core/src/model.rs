@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
-    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, SubmarinePair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -1341,6 +1341,12 @@ impl SendSwap {
             blinding_key: internal_create_response.blinding_key.clone(),
         };
         Ok(res)
+    }
+
+    pub(crate) fn get_boltz_pair(&self) -> Result<SubmarinePair> {
+        let pair: SubmarinePair = serde_json::from_str(&self.pair_fees_json)
+            .map_err(|e| anyhow!("Failed to deserialize SubmarinePair: {e:?}"))?;
+        Ok(pair)
     }
 
     pub(crate) fn get_swap_script(&self) -> Result<LBtcSwapScript, SdkError> {

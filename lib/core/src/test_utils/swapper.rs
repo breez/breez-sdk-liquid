@@ -191,7 +191,7 @@ impl Swapper for MockSwapper {
                 maximal: 25_000_000,
                 minimal: 1_000,
                 maximal_zero_conf: 250_000,
-                minimal_batched: None,
+                minimal_batched: Some(21),
             },
             fees: SubmarineFees {
                 percentage: 0.1,
