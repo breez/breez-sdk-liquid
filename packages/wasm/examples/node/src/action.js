@@ -118,7 +118,7 @@ const fetchOnchainLimits = async () => {
 
 const listFiat = async () => {
     const sdk = await initSdk()
-    const res = await sdk.listFiat()
+    const res = await sdk.listFiatCurrencies()
     console.log(JSON.stringify(res, null, 2))
 }
 
@@ -151,18 +151,18 @@ const listRefundables = async () => {
 const lnurlAuth = async (lnurl) => {
     const sdk = await initSdk()
     const res = await sdk.parse(lnurl)
-    if (res.type === 'lnurl-auth') {
+    if (res.type === 'lnUrlAuth') {
         const authRes = await sdk.lnurlAuth(res.data)
         console.log(JSON.stringify(authRes, null, 2))
     } else {
-        console.log('Not a valid lnurl-auth')
+        console.log('Not a valid LNURL-auth')
     }
 }
 
 const lnurlPay = async (lnurl, options) => {
     const sdk = await initSdk()
     const res = await sdk.parse(lnurl)
-    if (res.type === 'lnurl-pay') {
+    if (res.type === 'lnUrlPay') {
         const data = res.data
         let amount = options.drain ? { type: 'drain' } : { type: 'bitcoin', receiverAmountSat: 0 }
         if (!options.drain) {
@@ -180,21 +180,21 @@ const lnurlPay = async (lnurl, options) => {
         })
         console.log(JSON.stringify(payRes, null, 2))
     } else {
-        console.log('Not a valid lnurl-pay')
+        console.log('Not a valid LNURL-pay')
     }
 }
 
 const lnurlWithdraw = async (lnurl) => {
     const sdk = await initSdk()
     const res = await sdk.parse(lnurl)
-    if (res.type === 'lnurl-withdraw') {
+    if (res.type === 'lnUrlWithdraw') {
         const data = res.data
         const message = `Amount to withdraw in millisatoshi (min ${data.minWithdrawable} msat, max ${data.maxWithdrawable} msat)`
         const amountMsat = await question(message, parseInt)
         const withdrawRes = await sdk.lnurlWithdraw({ data, amountMsat, description: 'LNURL-withdraw' })
         console.log(JSON.stringify(withdrawRes, null, 2))
     } else {
-        console.log('Not a valid lnurl-withdraw')
+        console.log('Not a valid LNURL-withdraw')
     }
 }
 
