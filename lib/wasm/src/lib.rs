@@ -24,6 +24,8 @@ use logger::{Logger, WasmLogger};
 use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
 
+pub const BREEZ_WASM_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology:442";
+
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
     sdk: Rc<LiquidSdk>,
@@ -106,11 +108,12 @@ async fn connect_inner(
 
 #[wasm_bindgen(js_name = "defaultConfig")]
 pub fn default_config(network: LiquidNetwork, breez_api_key: Option<String>) -> WasmResult<Config> {
-    let config = match network {
+    let mut config = match network {
         LiquidNetwork::Mainnet => breez_sdk_liquid::model::Config::mainnet_esplora(breez_api_key),
         LiquidNetwork::Testnet => breez_sdk_liquid::model::Config::testnet_esplora(breez_api_key),
         LiquidNetwork::Regtest => breez_sdk_liquid::model::Config::regtest_esplora(),
     };
+    config.sync_service_url = Some(BREEZ_WASM_SYNC_SERVICE_URL.to_string());
     Ok(config.into())
 }
 
