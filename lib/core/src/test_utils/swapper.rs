@@ -4,7 +4,7 @@ use boltz_client::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
         CreateReverseResponse, CreateSubmarineResponse, Leaf, PairLimits, PairMinerFees,
         ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse, SubmarineFees,
-        SubmarinePair, SwapTree,
+        SubmarinePair, SubmarinePairLimits, SwapTree,
     },
     util::secrets::Preimage,
     Amount, PublicKey,
@@ -187,10 +187,11 @@ impl Swapper for MockSwapper {
         Ok(Some(SubmarinePair {
             hash: generate_random_string(10),
             rate: 0.0,
-            limits: PairLimits {
+            limits: SubmarinePairLimits {
                 maximal: 25_000_000,
                 minimal: 1_000,
                 maximal_zero_conf: 250_000,
+                minimal_batched: None,
             },
             fees: SubmarineFees {
                 percentage: 0.1,
