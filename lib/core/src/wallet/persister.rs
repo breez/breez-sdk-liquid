@@ -4,12 +4,15 @@ use maybe_sync::{MaybeSend, MaybeSync};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+pub use lwk_wollet;
+
 pub type LwkPersister = std::sync::Arc<dyn lwk_wollet::Persister + Send + Sync>;
 
+#[sdk_macros::async_trait]
 pub trait WalletCachePersister: Clone + MaybeSend + MaybeSync {
     fn get_lwk_persister(&self) -> LwkPersister;
 
-    fn clear_cache(&self) -> anyhow::Result<()>;
+    async fn clear_cache(&self) -> anyhow::Result<()>;
 }
 
 #[derive(Clone)]
@@ -18,6 +21,7 @@ pub struct FsWalletCachePersister {
     persister: std::sync::Arc<FsPersister>,
     elements_network: ElementsNetwork,
 }
+
 impl FsWalletCachePersister {
     pub(crate) fn new(
         working_dir: String,
@@ -37,12 +41,13 @@ impl FsWalletCachePersister {
     }
 }
 
+#[sdk_macros::async_trait]
 impl WalletCachePersister for FsWalletCachePersister {
     fn get_lwk_persister(&self) -> LwkPersister {
         self.persister.clone()
     }
 
-    fn clear_cache(&self) -> anyhow::Result<()> {
+    async fn clear_cache(&self) -> anyhow::Result<()> {
         let mut path = std::path::PathBuf::from(&self.working_dir);
         path.push(self.elements_network.as_str());
         warn!("Wiping wallet in path: {:?}", path);
@@ -54,12 +59,13 @@ impl WalletCachePersister for FsWalletCachePersister {
 #[derive(Clone)]
 pub struct NoWalletCachePersister;
 
+#[sdk_macros::async_trait]
 impl WalletCachePersister for NoWalletCachePersister {
     fn get_lwk_persister(&self) -> LwkPersister {
         NoPersist::new()
     }
 
-    fn clear_cache(&self) -> anyhow::Result<()> {
+    async fn clear_cache(&self) -> anyhow::Result<()> {
         Ok(())
     }
 }

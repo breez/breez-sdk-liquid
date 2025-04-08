@@ -17,7 +17,7 @@ use super::{
     wallet::{MockSigner, MockWallet},
 };
 
-pub(crate) fn new_liquid_sdk(
+pub(crate) async fn new_liquid_sdk(
     persister: Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
@@ -33,9 +33,10 @@ pub(crate) fn new_liquid_sdk(
         bitcoin_chain_service,
         None,
     )
+    .await
 }
 
-pub(crate) fn new_liquid_sdk_with_chain_services(
+pub(crate) async fn new_liquid_sdk_with_chain_services(
     persister: Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
@@ -78,4 +79,5 @@ pub(crate) fn new_liquid_sdk_with_chain_services(
         .swapper(swapper)
         .sync_service(sync_service)
         .build()
+        .await
 }

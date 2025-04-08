@@ -873,6 +873,7 @@ name = "breez-sdk-liquid-wasm"
 version = "0.7.2-dev1"
 dependencies = [
  "anyhow",
+ "async-trait",
  "breez-sdk-liquid",
  "console_log",
  "getrandom 0.2.15",
@@ -884,6 +885,7 @@ dependencies = [
  "sdk-macros",
  "serde",
  "tokio",
+ "tokio_with_wasm",
  "tsify-next",
  "uuid",
  "wasm-bindgen",

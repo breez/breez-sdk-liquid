@@ -5,6 +5,7 @@ mod logger;
 pub mod model;
 mod signer;
 mod utils;
+mod wallet_persister;
 
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -12,6 +13,7 @@ use std::str::FromStr;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
+use crate::wallet_persister::indexed_db::IndexedDbWalletCachePersister;
 use anyhow::anyhow;
 use breez_sdk_liquid::bitcoin::bip32::{Fingerprint, Xpub};
 use breez_sdk_liquid::elements::hex::ToHex;
@@ -85,16 +87,22 @@ async fn connect_inner(
         maybe_backup_bytes,
     )?);
 
-    let onchain_wallet = Rc::new(LiquidOnchainWallet::new_in_memory(
-        config.clone(),
-        Rc::clone(&persister),
-        signer,
-    )?);
+    let wallet_cache_persister = IndexedDbWalletCachePersister::new("cache".to_string()).await?;
+
+    let onchain_wallet = Rc::new(
+        LiquidOnchainWallet::new_with_cache_persister(
+            config.clone(),
+            Rc::clone(&persister),
+            signer,
+            wallet_cache_persister,
+        )
+        .await?,
+    );
 
     sdk_builder.persister(persister.clone());
     sdk_builder.onchain_wallet(onchain_wallet);
 
-    let sdk = sdk_builder.build()?;
+    let sdk = sdk_builder.build().await?;
     sdk.start().await?;
 
     let (sender, receiver) = tokio::sync::mpsc::channel(20);

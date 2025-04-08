@@ -191,7 +191,7 @@ pub struct LiquidOnchainWallet<WP: WalletCachePersister> {
 
 impl LiquidOnchainWallet<FsWalletCachePersister> {
     /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
-    pub(crate) fn new(
+    pub(crate) async fn new(
         config: Config,
         working_dir: String,
         persister: Arc<Persister>,
@@ -209,7 +209,7 @@ impl LiquidOnchainWallet<FsWalletCachePersister> {
             config.network.into(),
         )?;
 
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone())?;
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
         Ok(Self {
             config,
@@ -224,7 +224,7 @@ impl LiquidOnchainWallet<FsWalletCachePersister> {
 
 impl LiquidOnchainWallet<NoWalletCachePersister> {
     /// Creates a new LiquidOnchainWallet that caches data in memory
-    pub fn new_in_memory(
+    pub async fn new_in_memory(
         config: Config,
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
@@ -233,7 +233,7 @@ impl LiquidOnchainWallet<NoWalletCachePersister> {
 
         let wallet_cache_persister = NoWalletCachePersister;
 
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone())?;
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
         Ok(Self {
             config,
@@ -248,14 +248,14 @@ impl LiquidOnchainWallet<NoWalletCachePersister> {
 
 impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
     /// Creates a new LiquidOnchainWallet with a custom cache persister implementation
-    pub fn new_with_cache_persister(
+    pub async fn new_with_cache_persister(
         config: Config,
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
         wallet_cache_persister: WP,
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone())?;
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
         Ok(Self {
             config,
@@ -267,7 +267,7 @@ impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
         })
     }
 
-    fn create_wallet(
+    async fn create_wallet(
         config: &Config,
         signer: &SdkLwkSigner,
         wallet_cache_persister: WP,
@@ -287,7 +287,7 @@ impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
                 | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
             ) => {
                 warn!("Update error initialising wollet, wiping cache and retrying: {res:?}");
-                wallet_cache_persister.clear_cache()?;
+                wallet_cache_persister.clear_cache().await?;
                 Ok(Wollet::new(
                     elements_network,
                     wallet_cache_persister.get_lwk_persister(),
@@ -593,7 +593,8 @@ impl<WP: WalletCachePersister> OnchainWallet for LiquidOnchainWallet<WP> {
                     &self.config,
                     &self.signer,
                     self.wallet_cache_persister.clone(),
-                )?;
+                )
+                .await?;
                 client
                     .full_scan_to_index(&mut new_wallet, index_with_buffer)
                     .await?;
@@ -663,12 +664,15 @@ mod tests {
                     .to_string();
                 Arc::new(
                     LiquidOnchainWallet::new(config, working_dir, storage, sdk_signer.clone())
+                        .await
                         .unwrap(),
                 )
             }
             #[cfg(all(target_family = "wasm", target_os = "unknown"))]
             Arc::new(
-                LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone()).unwrap(),
+                LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone())
+                    .await
+                    .unwrap(),
             )
         };
 
