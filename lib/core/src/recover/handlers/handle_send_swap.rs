@@ -1,4 +1,5 @@
 use anyhow::Result;
+use boltz_client::boltz::SubmarinePairLimits;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
@@ -130,7 +131,12 @@ impl SendSwapHandler {
         // Update state based on recovered data
         let timeout_block_height = send_swap.timeout_block_height as u32;
         let is_expired = current_block_height >= timeout_block_height;
-        if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+        let pair_limits = send_swap.get_boltz_pair()?.limits;
+        if let Some(new_state) = recovered_data.derive_partial_state(
+            send_swap.receiver_amount_sat,
+            pair_limits,
+            is_expired,
+        ) {
             send_swap.state = new_state;
         }
 
@@ -245,11 +251,19 @@ pub(crate) struct RecoveredOnchainDataSend {
 }
 
 impl RecoveredOnchainDataSend {
-    pub(crate) fn derive_partial_state(&self, is_expired: bool) -> Option<PaymentState> {
+    pub(crate) fn derive_partial_state(
+        &self,
+        receiver_amount_sat: u64,
+        pair_limits: SubmarinePairLimits,
+        is_expired: bool,
+    ) -> Option<PaymentState> {
+        let is_batched_claim = receiver_amount_sat < pair_limits.minimal;
         match &self.lockup_tx_id {
-            Some(_) => match &self.claim_tx_id {
-                Some(_) => Some(PaymentState::Complete),
-                None => match &self.refund_tx_id {
+            Some(_) => match (is_batched_claim, &self.claim_tx_id) {
+                // If it is a batched claim or we have a claim tx id, we can consider the payment complete
+                (true, _) | (false, Some(_)) => Some(PaymentState::Complete),
+                // If it is not a batched claim and we don't have a claim tx id
+                (false, None) => match &self.refund_tx_id {
                     Some(refund_tx_id) => match refund_tx_id.confirmed() {
                         true => Some(PaymentState::Failed),
                         false => Some(PaymentState::RefundPending),
