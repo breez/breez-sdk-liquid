@@ -1,16 +1,16 @@
 use std::{sync::OnceLock, time::Duration};
 
-use anyhow::{anyhow, Context as _, Result};
+use anyhow::{anyhow, bail, Context as _, Result};
 use tokio::sync::RwLock;
 use tokio_with_wasm::alias as tokio;
 
 use crate::{
     elements::{Address, OutPoint, Script, Transaction, Txid},
-    model::{BlockchainExplorer, Config, Utxo},
+    model::{BlockchainExplorer, Config, Utxo, BREEZ_LIQUID_ESPLORA_URL},
     utils,
 };
 
-use log::info;
+use log::{error, info};
 use lwk_wollet::{
     asyncr::EsploraClientBuilder, clients::asyncr::EsploraClient, elements::hex::FromHex as _,
 };
@@ -40,10 +40,23 @@ impl EsploraLiquidChainService {
             BlockchainExplorer::Esplora {
                 url,
                 use_waterfalls,
-            } => EsploraClientBuilder::new(url, self.config.network.into())
-                .timeout(3)
-                .waterfalls(*use_waterfalls)
-                .build(),
+            } => {
+                let mut builder = EsploraClientBuilder::new(url, self.config.network.into());
+                if url == BREEZ_LIQUID_ESPLORA_URL {
+                    match &self.config.breez_api_key {
+                        Some(api_key) => {
+                            builder = builder
+                                .header("authorization".to_string(), format!("Bearer {api_key}"));
+                        }
+                        None => {
+                            let err = "Cannot start Breez Esplora client: Breez API key is not set";
+                            error!("{err}");
+                            bail!(err)
+                        }
+                    };
+                }
+                builder.timeout(3).waterfalls(*use_waterfalls).build()
+            }
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { .. } => {
                 anyhow::bail!("Cannot start Liquid Esplora chain service without an Esplora url")

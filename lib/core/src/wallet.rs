@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use boltz_client::ElementsAddress;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
@@ -22,7 +22,7 @@ use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 use web_time::Instant;
 
-use crate::model::{BlockchainExplorer, Signer};
+use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{
@@ -133,12 +133,22 @@ impl WalletClient {
                 url,
                 use_waterfalls,
             } => {
-                let client = Box::new(
-                    EsploraClientBuilder::new(url, config.network.into())
-                        .timeout(3)
-                        .waterfalls(*use_waterfalls)
-                        .build(),
-                );
+                let waterfalls = *use_waterfalls;
+                let mut builder = EsploraClientBuilder::new(url, config.network.into());
+                if url == BREEZ_LIQUID_ESPLORA_URL {
+                    match &config.breez_api_key {
+                        Some(api_key) => {
+                            builder = builder
+                                .header("authorization".to_string(), format!("Bearer {api_key}"));
+                        }
+                        None => {
+                            let err = "Cannot start Breez Esplora client: Breez API key is not set";
+                            error!("{err}");
+                            bail!(err)
+                        }
+                    };
+                }
+                let client = Box::new(builder.timeout(3).waterfalls(waterfalls).build());
                 Ok(Self::Esplora(client))
             }
         }

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
@@ -40,6 +40,7 @@ use crate::{
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
+pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
 
 const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
 
@@ -128,7 +129,7 @@ impl Config {
     pub fn mainnet_esplora(breez_api_key: Option<String>) -> Self {
         Config {
             liquid_explorer: BlockchainExplorer::Esplora {
-                url: "https://waterfalls.liquidwebwallet.org/liquid/api".to_string(),
+                url: BREEZ_LIQUID_ESPLORA_URL.to_string(),
                 use_waterfalls: true,
             },
             bitcoin_explorer: BlockchainExplorer::Esplora {
@@ -314,15 +315,18 @@ impl Config {
         }
     }
 
-    pub(crate) fn liquid_chain_service(&self) -> Arc<dyn LiquidChainService> {
-        match self.liquid_explorer {
-            BlockchainExplorer::Esplora { .. } => {
-                Arc::new(EsploraLiquidChainService::new(self.clone()))
+    pub(crate) fn liquid_chain_service(&self) -> Result<Arc<dyn LiquidChainService>> {
+        match &self.liquid_explorer {
+            BlockchainExplorer::Esplora { url, .. } => {
+                if url == BREEZ_LIQUID_ESPLORA_URL && self.breez_api_key.is_none() {
+                    bail!("Cannot start the Breez Esplora chain service without providing a valid API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key")
+                }
+                Ok(Arc::new(EsploraLiquidChainService::new(self.clone())))
             }
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-            BlockchainExplorer::Electrum { .. } => Arc::new(
+            BlockchainExplorer::Electrum { .. } => Ok(Arc::new(
                 crate::chain::liquid::electrum::ElectrumLiquidChainService::new(self.clone()),
-            ),
+            )),
         }
     }
 

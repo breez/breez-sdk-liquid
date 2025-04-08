@@ -1,6 +1,6 @@
 use crate::{
     bitcoin, elements,
-    model::{BlockchainExplorer, Config},
+    model::{BlockchainExplorer, Config, BREEZ_LIQUID_ESPLORA_URL},
 };
 use boltz_client::{
     error::Error,
@@ -9,7 +9,9 @@ use boltz_client::{
         BitcoinChain, BitcoinClient as BoltzBitcoinClient, LiquidChain,
         LiquidClient as BoltzLiquidClient,
     },
+    reqwest,
 };
+use log::error;
 use sdk_macros::async_trait;
 
 const BOLTZ_CONNECTION_TIMEOUT: u8 = 100;
@@ -37,7 +39,30 @@ impl LiquidClient {
                 ))
             }
             BlockchainExplorer::Esplora { url, .. } => {
-                Self::Esplora(Box::new(EsploraLiquidClient::new(
+                let mut builder = reqwest::Client::builder();
+                if url == BREEZ_LIQUID_ESPLORA_URL {
+                    match &config.breez_api_key {
+                        Some(api_key) => {
+                            let mut headers = reqwest::header::HeaderMap::new();
+                            let api_key = format!("Bearer {api_key}").parse().map_err(|err| {
+                                Error::Generic(format!("Could not set api key header: {err}"))
+                            })?;
+                            headers.insert(reqwest::header::AUTHORIZATION, api_key);
+                            builder = builder.default_headers(headers)
+                        }
+                        None => {
+                            let err = "Cannot start Breez Esplora client: Breez API key is not set";
+                            error!("{err}");
+                            return Err(Error::Generic(err.to_string()));
+                        }
+                    };
+                }
+                let client = builder.build().map_err(|err| {
+                    Error::Generic(format!("Could not initialize HTTP client: {err}"))
+                })?;
+
+                Self::Esplora(Box::new(EsploraLiquidClient::with_client(
+                    client,
                     config.network.into(),
                     url,
                     BOLTZ_CONNECTION_TIMEOUT as u64,
