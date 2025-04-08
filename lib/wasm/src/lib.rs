@@ -10,10 +10,12 @@ mod wallet_persister;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
-use crate::wallet_persister::indexed_db::IndexedDbWalletCachePersister;
+use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
+use crate::wallet_persister::WasmWalletCachePersister;
 use anyhow::anyhow;
 use breez_sdk_liquid::bitcoin::bip32::{Fingerprint, Xpub};
 use breez_sdk_liquid::elements::hex::ToHex;
@@ -87,7 +89,8 @@ async fn connect_inner(
         maybe_backup_bytes,
     )?);
 
-    let wallet_cache_persister = IndexedDbWalletCachePersister::new("cache".to_string()).await?;
+    let wallet_storage = Arc::new(IndexedDbWalletStorage::new("cache".to_string()));
+    let wallet_cache_persister = WasmWalletCachePersister::new(wallet_storage).await?;
 
     let onchain_wallet = Rc::new(
         LiquidOnchainWallet::new_with_cache_persister(
