@@ -1,5 +1,4 @@
 use anyhow::Result;
-use boltz_client::boltz::SubmarinePairLimits;
 use boltz_client::ToHex;
 use log::{debug, error, warn};
 use lwk_wollet::elements::Txid;
@@ -62,25 +61,33 @@ impl SendSwapHandler {
         let mut recovered_data = Self::recover_onchain_data(&context.tx_map, &swap_id, history)?;
 
         // Recover preimage if needed
-        if let (Some(claim_tx_id), None) = (&recovered_data.claim_tx_id, &send_swap.preimage) {
-            match Self::recover_preimage(
-                context,
-                claim_tx_id.txid,
-                &swap_id,
-                context.swapper.clone(),
-            )
-            .await
+        if recovered_data.lockup_tx_id.is_some() && send_swap.preimage.is_none() {
+            let pair_limits = send_swap.get_boltz_pair()?.limits;
+            // If the swap is batched or we have a claim tx id, we can attempt
+            // to recover the preimage cooperatively. If we cannot recover it
+            // cooperatively, we can try to recover it from the claim tx.
+            if send_swap.receiver_amount_sat < pair_limits.minimal
+                || recovered_data.claim_tx_id.is_some()
             {
-                Ok(Some(preimage)) => {
-                    recovered_data.preimage = Some(preimage);
-                }
-                Ok(None) => {
-                    warn!("No preimage found for Send Swap {swap_id}");
-                    recovered_data.claim_tx_id = None;
-                }
-                Err(e) => {
-                    error!("Failed to recover preimage for swap {swap_id}: {e}");
-                    recovered_data.claim_tx_id = None
+                match Self::recover_preimage(
+                    context,
+                    recovered_data.claim_tx_id.clone(),
+                    &swap_id,
+                    context.swapper.clone(),
+                )
+                .await
+                {
+                    Ok(Some(preimage)) => {
+                        recovered_data.preimage = Some(preimage);
+                    }
+                    Ok(None) => {
+                        warn!("No preimage found for Send Swap {swap_id}");
+                        recovered_data.claim_tx_id = None;
+                    }
+                    Err(e) => {
+                        error!("Failed to recover preimage for swap {swap_id}: {e}");
+                        recovered_data.claim_tx_id = None
+                    }
                 }
             }
         }
@@ -131,12 +138,9 @@ impl SendSwapHandler {
         // Update state based on recovered data
         let timeout_block_height = send_swap.timeout_block_height as u32;
         let is_expired = current_block_height >= timeout_block_height;
-        let pair_limits = send_swap.get_boltz_pair()?.limits;
-        if let Some(new_state) = recovered_data.derive_partial_state(
-            send_swap.receiver_amount_sat,
-            pair_limits,
-            is_expired,
-        ) {
+        if let Some(new_state) =
+            recovered_data.derive_partial_state(send_swap.preimage.clone(), is_expired)
+        {
             send_swap.state = new_state;
         }
 
@@ -187,10 +191,10 @@ impl SendSwapHandler {
         })
     }
 
-    /// Tries to recover the preimage for a send swap from its claim tx
+    /// Tries to recover the preimage for a send swap
     async fn recover_preimage(
         context: &RecoveryContext,
-        claim_tx_id: Txid,
+        claim_tx_id: Option<LBtcHistory>,
         swap_id: &str,
         swapper: Arc<dyn Swapper>,
     ) -> Result<Option<String>> {
@@ -200,17 +204,22 @@ impl SendSwapHandler {
             return Ok(Some(preimage));
         }
         warn!("Could not recover Send swap {swap_id} preimage cooperatively");
-        let claim_txs = context
-            .liquid_chain_service
-            .get_transactions(&[claim_tx_id])
-            .await?;
-
-        match claim_txs.is_empty() {
-            false => Self::extract_preimage_from_claim_tx(&claim_txs[0], swap_id).map(Some),
-            true => {
-                warn!("Could not recover Send swap {swap_id} preimage non cooperatively");
-                Ok(None)
+        match claim_tx_id {
+            // If we have a claim tx id, we can try to recover the preimage from the tx
+            Some(claim_tx_id) => {
+                let claim_txs = context
+                    .liquid_chain_service
+                    .get_transactions(&[claim_tx_id.txid])
+                    .await?;
+                match claim_txs.is_empty() {
+                    false => Self::extract_preimage_from_claim_tx(&claim_txs[0], swap_id).map(Some),
+                    true => {
+                        warn!("Could not recover Send swap {swap_id} preimage non cooperatively");
+                        Ok(None)
+                    }
+                }
             }
+            None => Ok(None),
         }
     }
 
@@ -253,17 +262,13 @@ pub(crate) struct RecoveredOnchainDataSend {
 impl RecoveredOnchainDataSend {
     pub(crate) fn derive_partial_state(
         &self,
-        receiver_amount_sat: u64,
-        pair_limits: SubmarinePairLimits,
+        preimage: Option<String>,
         is_expired: bool,
     ) -> Option<PaymentState> {
-        let is_batched_claim = receiver_amount_sat < pair_limits.minimal;
         match &self.lockup_tx_id {
-            Some(_) => match (is_batched_claim, &self.claim_tx_id) {
-                // If it is a batched claim or we have a claim tx id, we can consider the payment complete
-                (true, _) | (false, Some(_)) => Some(PaymentState::Complete),
-                // If it is not a batched claim and we don't have a claim tx id
-                (false, None) => match &self.refund_tx_id {
+            Some(_) => match preimage {
+                Some(_) => Some(PaymentState::Complete),
+                None => match &self.refund_tx_id {
                     Some(refund_tx_id) => match refund_tx_id.confirmed() {
                         true => Some(PaymentState::Failed),
                         false => Some(PaymentState::RefundPending),
