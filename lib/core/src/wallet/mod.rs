@@ -231,7 +231,7 @@ impl LiquidOnchainWallet<NoWalletCachePersister> {
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
 
-        let wallet_cache_persister = NoWalletCachePersister;
+        let wallet_cache_persister = NoWalletCachePersister {};
 
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 

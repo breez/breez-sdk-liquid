@@ -57,7 +57,7 @@ impl WalletCachePersister for FsWalletCachePersister {
 }
 
 #[derive(Clone)]
-pub struct NoWalletCachePersister;
+pub struct NoWalletCachePersister {}
 
 #[sdk_macros::async_trait]
 impl WalletCachePersister for NoWalletCachePersister {
