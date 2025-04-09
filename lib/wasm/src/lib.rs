@@ -18,11 +18,11 @@ use crate::utils::is_indexed_db_supported;
 use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
 use crate::wallet_persister::AsyncWalletCachePersister;
 use anyhow::anyhow;
-use breez_sdk_liquid::bitcoin::bip32::{Fingerprint, Xpub};
 use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
-use breez_sdk_liquid::wallet::{LiquidOnchainWallet, OnchainWallet};
+use breez_sdk_liquid::signer::SdkLwkSigner;
+use breez_sdk_liquid::wallet::{get_descriptor, LiquidOnchainWallet, OnchainWallet};
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
@@ -64,15 +64,8 @@ async fn connect_inner(
         Rc::clone(&signer),
     )?;
 
-    let fingerprint: Fingerprint = Xpub::decode(
-        &signer
-            .xpub()
-            .map_err(|e| anyhow!("Failed to get xpub: {e}"))?,
-    )
-    .map_err(|e| anyhow!(e.to_string()))?
-    .identifier()[0..4]
-        .try_into()
-        .map_err(|e| anyhow!("Failed to get fingerprint: {e}"))?;
+    let sdk_lwk_signer = SdkLwkSigner::new(Rc::clone(&signer))?;
+    let fingerprint = sdk_lwk_signer.fingerprint()?;
     let fingerprint = fingerprint.to_hex();
 
     let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
@@ -90,8 +83,9 @@ async fn connect_inner(
         maybe_backup_bytes,
     )?);
 
+    let wollet_descriptor = get_descriptor(&sdk_lwk_signer, config.network)?;
     let onchain_wallet: Rc<dyn OnchainWallet> = if is_indexed_db_supported() {
-        let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&wallet_dir));
+        let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&wallet_dir, wollet_descriptor));
         let async_cache_persister = AsyncWalletCachePersister::new(wallet_storage).await?;
 
         Rc::new(
@@ -110,6 +104,7 @@ async fn connect_inner(
                 &wallet_dir,
                 config.network.into(),
                 &fingerprint,
+                wollet_descriptor,
             )?;
             Rc::new(
                 LiquidOnchainWallet::new_with_cache_persister(

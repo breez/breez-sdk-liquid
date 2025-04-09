@@ -76,7 +76,7 @@ impl SdkLwkSigner {
         Ok(Self { sdk_signer })
     }
 
-    pub fn xpub(&self) -> Result<Xpub, SignError> {
+    pub(crate) fn xpub(&self) -> Result<Xpub, SignError> {
         let xpub = self.sdk_signer.xpub()?;
         Ok(Xpub::decode(&xpub)?)
     }
@@ -88,7 +88,7 @@ impl SdkLwkSigner {
         Ok(f)
     }
 
-    pub fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
+    pub(crate) fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
         let sig_bytes = self
             .sdk_signer
             .sign_ecdsa_recoverable(msg.as_ref().to_vec())?;

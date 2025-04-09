@@ -311,7 +311,7 @@ impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
     }
 }
 
-fn get_descriptor(
+pub fn get_descriptor(
     signer: &SdkLwkSigner,
     network: LiquidNetwork,
 ) -> Result<WolletDescriptor, PaymentError> {

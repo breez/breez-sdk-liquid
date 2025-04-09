@@ -1,5 +1,6 @@
 use breez_sdk_liquid::{
     error::{PaymentError, SdkError},
+    signer::{NewError, SignError},
     LnUrlAuthError, LnUrlPayError, LnUrlWithdrawError,
 };
 use std::fmt::Display;
@@ -46,6 +47,8 @@ wasm_error_wrapper!(
     log::ParseLevelError,
     PaymentError,
     SdkError,
+    NewError,
+    SignError,
     &str,
     String
 );

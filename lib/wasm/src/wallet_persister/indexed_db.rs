@@ -1,7 +1,7 @@
 use crate::wallet_persister::AsyncWalletStorage;
 use anyhow::{anyhow, Context};
 use breez_sdk_liquid::wallet::persister::lwk_wollet;
-use breez_sdk_liquid::wallet::persister::lwk_wollet::Update;
+use breez_sdk_liquid::wallet::persister::lwk_wollet::{Update, WolletDescriptor};
 use indexed_db_futures::database::Database;
 use indexed_db_futures::query_source::QuerySource;
 use indexed_db_futures::transaction::TransactionMode;
@@ -13,12 +13,13 @@ const IDB_STORE_NAME: &str = "BREEZ_SDK_LIQUID_WALLET_CACHE_STORE";
 #[derive(Clone)]
 pub(crate) struct IndexedDbWalletStorage {
     db_name: String,
+    desc: WolletDescriptor,
 }
 
 impl IndexedDbWalletStorage {
-    pub fn new(working_dir: &Path) -> Self {
+    pub fn new(working_dir: &Path, desc: WolletDescriptor) -> Self {
         let db_name = format!("{}-wallet-cache", working_dir.to_string_lossy());
-        Self { db_name }
+        Self { db_name, desc }
     }
 }
 
@@ -49,8 +50,10 @@ impl AsyncWalletStorage for IndexedDbWalletStorage {
                 .await
                 .map_err(|e| anyhow!("Failed to get update bytes: {}", e))?
                 .ok_or(anyhow!("Missing update on index {i}"))?;
-            updates
-                .push(Update::deserialize(&update_bytes).context("Failed to deserialize update")?);
+            updates.push(
+                Update::deserialize_decrypted(&update_bytes, &self.desc)
+                    .context("Failed to deserialize update")?,
+            );
         }
 
         Ok(updates)
@@ -58,7 +61,7 @@ impl AsyncWalletStorage for IndexedDbWalletStorage {
 
     async fn persist_update(&self, update: Update, index: u32) -> anyhow::Result<()> {
         let update_bytes = update
-            .serialize()
+            .serialize_encrypted(&self.desc)
             .map_err(|e| anyhow!("Failed to serialize update: {e}"))?;
 
         let idb = open_indexed_db(&self.db_name)

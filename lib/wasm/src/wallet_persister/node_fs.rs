@@ -5,7 +5,9 @@ use crate::utils::node::{
     write_file_vec,
 };
 use crate::wallet_persister::maybe_merge_updates;
-use breez_sdk_liquid::wallet::persister::lwk_wollet::{ElementsNetwork, PersistError, Update};
+use breez_sdk_liquid::wallet::persister::lwk_wollet::{
+    ElementsNetwork, PersistError, Update, WolletDescriptor,
+};
 use breez_sdk_liquid::wallet::persister::{lwk_wollet, LwkPersister, WalletCachePersister};
 use js_sys::Array;
 use std::path::{Path, PathBuf};
@@ -23,6 +25,7 @@ impl NodeFsWalletCachePersister {
         path: P,
         network: ElementsNetwork,
         fingerprint: &str,
+        desc: WolletDescriptor,
     ) -> anyhow::Result<Self> {
         let mut cache_dir_path = path.as_ref().to_path_buf();
         cache_dir_path.push(network.as_str());
@@ -34,7 +37,7 @@ impl NodeFsWalletCachePersister {
 
         Ok(Self {
             cache_dir,
-            lwk_persister: Arc::new(NodeFsLwkPersister::new(cache_dir_path)),
+            lwk_persister: Arc::new(NodeFsLwkPersister::new(cache_dir_path, desc)),
         })
     }
 }
@@ -62,10 +65,11 @@ impl WalletCachePersister for NodeFsWalletCachePersister {
 struct NodeFsLwkPersister {
     cache_dir: PathBuf,
     next_index: Mutex<usize>,
+    desc: WolletDescriptor,
 }
 
 impl NodeFsLwkPersister {
-    fn new(cache_dir: PathBuf) -> Self {
+    fn new(cache_dir: PathBuf, desc: WolletDescriptor) -> Self {
         let initial_index = {
             let entries =
                 readdir_sync(&cache_dir.to_string_lossy()).unwrap_or_else(|_| Array::new());
@@ -84,6 +88,7 @@ impl NodeFsLwkPersister {
         Self {
             cache_dir,
             next_index: Mutex::new(initial_index),
+            desc,
         }
     }
 
@@ -107,7 +112,7 @@ impl lwk_wollet::Persister for NodeFsLwkPersister {
         let bytes = read_file_vec(&file_path).map_err(to_persist_error)?;
 
         log::debug!("Deserializing update from file: {}", file_path);
-        let update = Update::deserialize(&bytes).map_err(to_persist_error)?;
+        let update = Update::deserialize_decrypted(&bytes, &self.desc).map_err(to_persist_error)?;
         Ok(Some(update))
     }
 
@@ -124,7 +129,9 @@ impl lwk_wollet::Persister for NodeFsLwkPersister {
 
         let file_path = self.get_update_file_path(write_index);
         log::debug!("Serializing and writing update to: {}", file_path);
-        let bytes = update.serialize().map_err(to_persist_error)?;
+        let bytes = update
+            .serialize_encrypted(&self.desc)
+            .map_err(to_persist_error)?;
 
         write_file_vec(&file_path, &bytes).map_err(to_persist_error)?;
 

@@ -144,9 +144,14 @@ mod tests {
     use crate::wallet_persister::AsyncWalletCachePersister;
     use breez_sdk_liquid::elements::hashes::Hash;
     use breez_sdk_liquid::elements::{BlockHash, BlockHeader, TxMerkleNode, Txid};
+    use breez_sdk_liquid::model::{LiquidNetwork, Signer};
+    use breez_sdk_liquid::signer::{SdkLwkSigner, SdkSigner};
+    use breez_sdk_liquid::wallet::get_descriptor;
+    use breez_sdk_liquid::wallet::persister::lwk_wollet::WolletDescriptor;
     use breez_sdk_liquid::wallet::persister::{lwk_wollet, WalletCachePersister};
     use std::future::Future;
     use std::path::PathBuf;
+    use std::rc::Rc;
     use std::sync::Arc;
     use std::time::Duration;
     use tokio_with_wasm::alias as tokio;
@@ -154,11 +159,21 @@ mod tests {
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+    fn get_wollet_descriptor() -> anyhow::Result<WolletDescriptor> {
+        let signer: Rc<Box<dyn Signer>> = Rc::new(Box::new(SdkSigner::new("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", "", false)?));
+        let sdk_lwk_signer = SdkLwkSigner::new(signer)?;
+        Ok(get_descriptor(&sdk_lwk_signer, LiquidNetwork::Testnet)?)
+    }
+
     #[sdk_macros::async_test_wasm]
     async fn test_wallet_cache_indexed_db() -> anyhow::Result<()> {
+        let desc = get_wollet_descriptor()?;
         if is_indexed_db_supported() {
             let build_persister = || async {
-                let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&PathBuf::from("test")));
+                let wallet_storage = Arc::new(IndexedDbWalletStorage::new(
+                    &PathBuf::from("test"),
+                    desc.clone(),
+                ));
                 AsyncWalletCachePersister::new(wallet_storage)
                     .await
                     .unwrap()
@@ -173,12 +188,14 @@ mod tests {
     #[cfg(feature = "node-js")]
     #[sdk_macros::async_test_wasm]
     async fn test_wallet_cache_node_fs() -> anyhow::Result<()> {
+        let desc = get_wollet_descriptor()?;
         let working_dir = format!("/tmp/{}", uuid::Uuid::new_v4());
         let build_persister = || async {
             crate::wallet_persister::node_fs::NodeFsWalletCachePersister::new(
                 working_dir.clone(),
                 lwk_wollet::ElementsNetwork::Liquid,
                 "test",
+                desc.clone(),
             )
             .unwrap()
         };
