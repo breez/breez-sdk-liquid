@@ -315,7 +315,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             .inner
             .post_submarine_claim_tx_details(&swap_id.to_string(), pub_nonce, partial_sig)
             .await?;
-        info!("Successfully sent claim details for swap-in {swap_id}");
+        info!("Successfully cooperatively claimed Send Swap {swap_id}");
         Ok(())
     }
 

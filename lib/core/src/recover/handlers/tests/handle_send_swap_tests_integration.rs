@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod test {
     use crate::chain::liquid::MockLiquidChainService;
+    use crate::error::PaymentError;
     use crate::prelude::*;
     use crate::recover::handlers::tests::{
         create_empty_lbtc_transaction, create_mock_lbtc_wallet_tx,
@@ -84,7 +85,14 @@ mod test {
     #[sdk_macros::async_test_all]
     async fn test_recover_with_refund_tx() {
         // Setup mock data
-        let (mut send_swap, recovery_context) = setup_test_data();
+        let (mut send_swap, mut recovery_context) = setup_test_data();
+
+        // Setup mock swapper
+        let mut swapper = MockSwapper::new();
+        swapper
+            .expect_get_submarine_preimage()
+            .returning(move |_| Err(PaymentError::generic("No preimage available")));
+        recovery_context.swapper = Arc::new(swapper);
 
         // Create a lockup tx
         let swap_script = send_swap.get_swap_script().unwrap();
@@ -127,7 +135,15 @@ mod test {
     #[sdk_macros::async_test_all]
     async fn test_recover_with_lockup_only() {
         // Setup mock data
-        let (mut send_swap, recovery_context) = setup_test_data();
+        let (mut send_swap, mut recovery_context) = setup_test_data();
+
+        // Setup mock swapper
+        let preimage = "49666c97f6cea07fa5780c22ece1f0c9957caf1e3c37b9037b4f64dc6d09be7f"; // base64 of "somepreimage1234567890"
+        let mut swapper = MockSwapper::new();
+        swapper
+            .expect_get_submarine_preimage()
+            .returning(move |_| Ok(preimage.to_string()));
+        recovery_context.swapper = Arc::new(swapper);
 
         // Create a lockup tx
         let swap_script = send_swap.get_swap_script().unwrap();
@@ -151,7 +167,7 @@ mod test {
 
         // Verify results
         assert!(result.is_ok());
-        assert_eq!(send_swap.state, PaymentState::Pending); // Not expired -> Pending
+        assert_eq!(send_swap.state, PaymentState::Complete); // Not expired -> Complete
         assert_eq!(send_swap.lockup_tx_id, Some(lockup_tx_id.to_string()));
         assert_eq!(send_swap.refund_tx_id, None);
     }
@@ -161,6 +177,13 @@ mod test {
     async fn test_recover_with_lockup_expired() {
         // Setup mock data
         let (mut send_swap, mut recovery_context) = setup_test_data();
+
+        // Setup mock swapper
+        let mut swapper = MockSwapper::new();
+        swapper
+            .expect_get_submarine_preimage()
+            .returning(move |_| Err(PaymentError::generic("Swap expired")));
+        recovery_context.swapper = Arc::new(swapper);
 
         // Set tip height to make swap expired
         recovery_context.liquid_tip_height = send_swap.timeout_block_height as u32 + 10;
@@ -196,7 +219,14 @@ mod test {
     #[sdk_macros::async_test_all]
     async fn test_recover_with_unconfirmed_refund() {
         // Setup mock data
-        let (mut send_swap, recovery_context) = setup_test_data();
+        let (mut send_swap, mut recovery_context) = setup_test_data();
+
+        // Setup mock swapper
+        let mut swapper = MockSwapper::new();
+        swapper
+            .expect_get_submarine_preimage()
+            .returning(move |_| Err(PaymentError::generic("No preimage available")));
+        recovery_context.swapper = Arc::new(swapper);
 
         // Create a lockup tx
         let swap_script = send_swap.get_swap_script().unwrap();

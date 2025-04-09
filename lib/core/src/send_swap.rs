@@ -6,7 +6,7 @@ use boltz_client::boltz::SubmarineClaimTxResponse;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use futures_util::TryFutureExt;
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
 use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
@@ -98,31 +98,31 @@ impl SendSwapHandler {
             // we can speed up the claim by doing so cooperatively.
             SubSwapStates::TransactionClaimPending => {
                 if swap.metadata.is_local {
-                    let pair = swap.get_boltz_pair()?;
-                    if swap.receiver_amount_sat < pair.limits.minimal {
-                        // The swap will be batched, so we just need to verify the preimage
-                        let preimage = self.swapper.get_submarine_preimage(&swap.id).await?;
-                        utils::verify_payment_hash(&preimage, &swap.invoice)?;
-                        info!("Preimage is valid for Send Swap {id}");
-                        self.update_swap_info(&swap.id, Complete, Some(&preimage), None, None)?;
-                    } else {
-                        // The swap will not be batched, so needs to be cooperatively claimed
-                        let claim_tx_response =
-                            self.swapper.get_send_claim_tx_details(&swap).await?;
-                        self.update_swap_info(
-                            &swap.id,
-                            Complete,
-                            Some(&claim_tx_response.preimage),
-                            None,
-                            None,
-                        )?;
-                        self.cooperate_claim(&swap, claim_tx_response)
-                            .await
-                            .map_err(|e| {
-                                error!("Could not cooperate Send Swap {id} claim: {e}");
-                                anyhow!("Could not post claim details. Err: {e:?}")
-                            })?;
-                    }
+                    let preimage = match self.swapper.get_send_claim_tx_details(&swap).await {
+                        Ok(claim_tx_response) => {
+                            match self.cooperate_claim(&swap, claim_tx_response.clone()).await {
+                                Ok(_) => Some(claim_tx_response.preimage),
+                                Err(e) => {
+                                    warn!("Could not cooperate Send Swap {id} claim: {e:?}");
+                                    None
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            warn!("Could not get claim tx details for Send Swap {id}: {e:?}");
+                            None
+                        }
+                    };
+                    let preimage = match preimage {
+                        Some(preimage) => preimage,
+                        None => {
+                            let preimage = self.swapper.get_submarine_preimage(&swap.id).await?;
+                            utils::verify_payment_hash(&preimage, &swap.invoice)?;
+                            info!("Fetched Send Swap {id} preimage cooperatively");
+                            preimage
+                        }
+                    };
+                    self.update_swap_info(&swap.id, Complete, Some(&preimage), None, None)?;
                 }
 
                 Ok(())

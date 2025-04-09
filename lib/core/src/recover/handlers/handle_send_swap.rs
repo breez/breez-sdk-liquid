@@ -65,26 +65,24 @@ impl SendSwapHandler {
             // We can attempt to recover the preimage cooperatively after we know the
             // lockup tx was broadcast. If we cannot recover it cooperatively,
             // we can try to recover it from the claim tx.
-            if recovered_data.claim_tx_id.is_some() {
-                match Self::recover_preimage(
-                    context,
-                    recovered_data.claim_tx_id.clone(),
-                    &swap_id,
-                    context.swapper.clone(),
-                )
-                .await
-                {
-                    Ok(Some(preimage)) => {
-                        recovered_data.preimage = Some(preimage);
-                    }
-                    Ok(None) => {
-                        warn!("No preimage found for Send Swap {swap_id}");
-                        recovered_data.claim_tx_id = None;
-                    }
-                    Err(e) => {
-                        error!("Failed to recover preimage for swap {swap_id}: {e}");
-                        recovered_data.claim_tx_id = None
-                    }
+            match Self::recover_preimage(
+                context,
+                recovered_data.claim_tx_id.clone(),
+                &swap_id,
+                context.swapper.clone(),
+            )
+            .await
+            {
+                Ok(Some(preimage)) => {
+                    recovered_data.preimage = Some(preimage);
+                }
+                Ok(None) => {
+                    warn!("No preimage found for Send Swap {swap_id}");
+                    recovered_data.claim_tx_id = None;
+                }
+                Err(e) => {
+                    error!("Failed to recover preimage for swap {swap_id}: {e}");
+                    recovered_data.claim_tx_id = None
                 }
             }
         }
@@ -197,7 +195,7 @@ impl SendSwapHandler {
     ) -> Result<Option<String>> {
         // Try cooperative first
         if let Ok(preimage) = swapper.get_submarine_preimage(swap_id).await {
-            log::debug!("Found Send Swap {swap_id} preimage cooperatively: {preimage}");
+            log::debug!("Fetched Send Swap {swap_id} preimage cooperatively: {preimage}");
             return Ok(Some(preimage));
         }
         warn!("Could not recover Send swap {swap_id} preimage cooperatively");
