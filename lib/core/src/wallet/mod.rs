@@ -180,16 +180,16 @@ impl WalletClient {
     }
 }
 
-pub struct LiquidOnchainWallet<WP: WalletCachePersister> {
+pub struct LiquidOnchainWallet {
     config: Config,
     persister: Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
     client: Mutex<Option<WalletClient>>,
     pub(crate) signer: SdkLwkSigner,
-    wallet_cache_persister: WP,
+    wallet_cache_persister: Arc<dyn WalletCachePersister>,
 }
 
-impl LiquidOnchainWallet<FsWalletCachePersister> {
+impl LiquidOnchainWallet {
     /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
     pub(crate) async fn new(
         config: Config,
@@ -199,15 +199,16 @@ impl LiquidOnchainWallet<FsWalletCachePersister> {
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
 
-        let wallet_cache_persister = FsWalletCachePersister::new(
-            working_dir.clone(),
-            FsPersister::new(
-                &working_dir,
+        let wallet_cache_persister: Arc<dyn WalletCachePersister> =
+            Arc::new(FsWalletCachePersister::new(
+                working_dir.clone(),
+                FsPersister::new(
+                    &working_dir,
+                    config.network.into(),
+                    &get_descriptor(&signer, config.network)?,
+                )?,
                 config.network.into(),
-                &get_descriptor(&signer, config.network)?,
-            )?,
-            config.network.into(),
-        )?;
+            )?);
 
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
@@ -220,9 +221,7 @@ impl LiquidOnchainWallet<FsWalletCachePersister> {
             wallet_cache_persister,
         })
     }
-}
 
-impl LiquidOnchainWallet<NoWalletCachePersister> {
     /// Creates a new LiquidOnchainWallet that caches data in memory
     pub async fn new_in_memory(
         config: Config,
@@ -231,7 +230,8 @@ impl LiquidOnchainWallet<NoWalletCachePersister> {
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
 
-        let wallet_cache_persister = NoWalletCachePersister {};
+        let wallet_cache_persister: Arc<dyn WalletCachePersister> =
+            Arc::new(NoWalletCachePersister {});
 
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
@@ -244,15 +244,13 @@ impl LiquidOnchainWallet<NoWalletCachePersister> {
             wallet_cache_persister,
         })
     }
-}
 
-impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
     /// Creates a new LiquidOnchainWallet with a custom cache persister implementation
     pub async fn new_with_cache_persister(
         config: Config,
         persister: Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
-        wallet_cache_persister: WP,
+        wallet_cache_persister: Arc<dyn WalletCachePersister>,
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
@@ -270,7 +268,7 @@ impl<WP: WalletCachePersister> LiquidOnchainWallet<WP> {
     async fn create_wallet(
         config: &Config,
         signer: &SdkLwkSigner,
-        wallet_cache_persister: WP,
+        wallet_cache_persister: Arc<dyn WalletCachePersister>,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
         let descriptor = get_descriptor(signer, config.network)?;
@@ -327,7 +325,7 @@ pub fn get_descriptor(
 }
 
 #[sdk_macros::async_trait]
-impl<WP: WalletCachePersister> OnchainWallet for LiquidOnchainWallet<WP> {
+impl OnchainWallet for LiquidOnchainWallet {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
         let wallet = self.wallet.lock().await;

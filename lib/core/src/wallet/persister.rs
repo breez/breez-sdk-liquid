@@ -9,7 +9,7 @@ pub use lwk_wollet;
 pub type LwkPersister = std::sync::Arc<dyn lwk_wollet::Persister + Send + Sync>;
 
 #[sdk_macros::async_trait]
-pub trait WalletCachePersister: Clone + MaybeSend + MaybeSync {
+pub trait WalletCachePersister: MaybeSend + MaybeSync {
     fn get_lwk_persister(&self) -> LwkPersister;
 
     async fn clear_cache(&self) -> anyhow::Result<()>;

@@ -22,6 +22,7 @@ use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::signer::SdkLwkSigner;
+use breez_sdk_liquid::wallet::persister::WalletCachePersister;
 use breez_sdk_liquid::wallet::{get_descriptor, LiquidOnchainWallet, OnchainWallet};
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
@@ -84,50 +85,48 @@ async fn connect_inner(
     )?);
 
     let wollet_descriptor = get_descriptor(&sdk_lwk_signer, config.network)?;
-    let onchain_wallet: Rc<dyn OnchainWallet> = if is_indexed_db_supported() {
+    let wollet_persister: Option<Rc<dyn WalletCachePersister>> = if is_indexed_db_supported() {
         let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&wallet_dir, wollet_descriptor));
-        let async_cache_persister = AsyncWalletCachePersister::new(wallet_storage).await?;
-
-        Rc::new(
-            LiquidOnchainWallet::new_with_cache_persister(
-                config.clone(),
-                Rc::clone(&persister),
-                Rc::clone(&signer),
-                async_cache_persister,
-            )
-            .await?,
-        )
+        Some(Rc::new(
+            AsyncWalletCachePersister::new(wallet_storage).await?,
+        ))
     } else {
         #[cfg(feature = "node-js")]
         {
-            let node_fs_persister = wallet_persister::node_fs::NodeFsWalletCachePersister::new(
-                &wallet_dir,
-                config.network.into(),
-                &fingerprint,
-                wollet_descriptor,
-            )?;
-            Rc::new(
-                LiquidOnchainWallet::new_with_cache_persister(
-                    config.clone(),
-                    Rc::clone(&persister),
-                    Rc::clone(&signer),
-                    node_fs_persister,
-                )
-                .await?,
-            )
+            Some(Rc::new(
+                wallet_persister::node_fs::NodeFsWalletCachePersister::new(
+                    &wallet_dir,
+                    config.network.into(),
+                    &fingerprint,
+                    wollet_descriptor,
+                )?,
+            ))
         }
         #[cfg(not(feature = "node-js"))]
         {
             log::warn!("Wallet cache persistence not supported in this environment. Proceeding without it.");
-            Rc::new(
-                LiquidOnchainWallet::new_in_memory(
-                    config.clone(),
-                    Rc::clone(&persister),
-                    Rc::clone(&signer),
-                )
-                .await?,
-            )
+            None
         }
+    };
+
+    let onchain_wallet: Rc<dyn OnchainWallet> = match wollet_persister {
+        None => Rc::new(
+            LiquidOnchainWallet::new_in_memory(
+                config.clone(),
+                Rc::clone(&persister),
+                Rc::clone(&signer),
+            )
+            .await?,
+        ),
+        Some(wollet_persister) => Rc::new(
+            LiquidOnchainWallet::new_with_cache_persister(
+                config.clone(),
+                Rc::clone(&persister),
+                Rc::clone(&signer),
+                wollet_persister,
+            )
+            .await?,
+        ),
     };
 
     sdk_builder.persister(persister.clone());
