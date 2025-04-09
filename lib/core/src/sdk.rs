@@ -1118,7 +1118,7 @@ impl LiquidSdk {
     /// * `req` - the [PrepareSendRequest] containing:
     ///     * `destination` - Either a Liquid BIP21 URI/address, a BOLT11 invoice or a BOLT12 offer
     ///     * `amount` - The optional amount of type [PayAmount]. Should only be specified
-    ///        when paying directly onchain or via amount-less BIP21.
+    ///       when paying directly onchain or via amount-less BIP21.
     ///        - [PayAmount::Drain] which uses all Bitcoin funds
     ///        - [PayAmount::Bitcoin] which sets the amount in satoshi that will be received
     ///        - [PayAmount::Asset] which sets the amount of an asset that will be received
@@ -1881,7 +1881,7 @@ impl LiquidSdk {
     ///
     /// * `req` - the [PreparePayOnchainRequest] containing:
     ///     * `amount` - which can be of two types: [PayAmount::Drain], which uses all funds,
-    ///        and [PayAmount::Bitcoin], which sets the amount the receiver should receive
+    ///       and [PayAmount::Bitcoin], which sets the amount the receiver should receive
     ///     * `fee_rate_sat_per_vbyte` - the optional fee rate of the Bitcoin claim transaction. Defaults to the swapper estimated claim fee
     pub async fn prepare_pay_onchain(
         &self,
