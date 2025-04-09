@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::{Receiver, Sender};
 
 #[sdk_macros::async_trait]
-pub(crate) trait WalletStorage: Send + Sync + Clone + 'static {
+pub(crate) trait AsyncWalletStorage: Send + Sync + Clone + 'static {
     // Load all existing updates from the storage backend.
     async fn load_updates(&self) -> Result<Vec<Update>>;
 
@@ -21,20 +21,20 @@ pub(crate) trait WalletStorage: Send + Sync + Clone + 'static {
 }
 
 #[derive(Clone)]
-pub(crate) struct WasmWalletCachePersister<S: WalletStorage> {
-    lwk_persister: Arc<WasmLwkPersister<S>>,
+pub(crate) struct AsyncWalletCachePersister<S: AsyncWalletStorage> {
+    lwk_persister: Arc<AsyncLwkPersister<S>>,
 }
 
-impl<S: WalletStorage> WasmWalletCachePersister<S> {
+impl<S: AsyncWalletStorage> AsyncWalletCachePersister<S> {
     pub async fn new(storage: Arc<S>) -> Result<Self> {
         Ok(Self {
-            lwk_persister: Arc::new(WasmLwkPersister::new(storage).await?),
+            lwk_persister: Arc::new(AsyncLwkPersister::new(storage).await?),
         })
     }
 }
 
 #[sdk_macros::async_trait]
-impl<S: WalletStorage> WalletCachePersister for WasmWalletCachePersister<S> {
+impl<S: AsyncWalletStorage> WalletCachePersister for AsyncWalletCachePersister<S> {
     fn get_lwk_persister(&self) -> LwkPersister {
         let persister = std::sync::Arc::clone(&self.lwk_persister);
         persister as LwkPersister
@@ -47,13 +47,13 @@ impl<S: WalletStorage> WalletCachePersister for WasmWalletCachePersister<S> {
     }
 }
 
-struct WasmLwkPersister<S: WalletStorage> {
+struct AsyncLwkPersister<S: AsyncWalletStorage> {
     updates: Mutex<Vec<Update>>,
     sender: Sender<(Update, /*index*/ u32)>,
     storage: Arc<S>,
 }
 
-impl<S: WalletStorage> WasmLwkPersister<S> {
+impl<S: AsyncWalletStorage> AsyncLwkPersister<S> {
     async fn new(storage: Arc<S>) -> Result<Self> {
         let updates = storage.load_updates().await?;
 
@@ -83,51 +83,70 @@ impl<S: WalletStorage> WasmLwkPersister<S> {
     }
 }
 
-impl<S: WalletStorage> lwk_wollet::Persister for WasmLwkPersister<S> {
+impl<S: AsyncWalletStorage> lwk_wollet::Persister for AsyncLwkPersister<S> {
     fn get(&self, index: usize) -> std::result::Result<Option<Update>, PersistError> {
         Ok(self.updates.lock().unwrap().get(index).cloned())
     }
 
-    fn push(&self, mut update: Update) -> std::result::Result<(), PersistError> {
+    fn push(&self, update: Update) -> std::result::Result<(), PersistError> {
         let mut updates = self.updates.lock().unwrap();
-        let mut next_index = updates.len();
 
-        if update.only_tip() {
-            if let Some(prev_update) = updates.last() {
-                if prev_update.only_tip() {
-                    // If both updates are only tip updates, we can merge them.
-                    // See https://github.com/Blockstream/lwk/blob/0322a63310f8c8414c537adff68dcbbc7ff4662d/lwk_wollet/src/persister.rs#L174
-                    update.wollet_status = prev_update.wollet_status;
-                    next_index -= 1;
-                }
-            }
-        }
+        let (update, write_index) = maybe_merge_updates(update, updates.last(), updates.len());
 
         self.sender
-            .try_send((update.clone(), next_index as u32))
+            .try_send((update.clone(), write_index as u32))
             .map_err(|e| {
                 lwk_wollet::PersistError::Other(format!(
                     "Failed to send update to persister task: {e}"
                 ))
             })?;
 
-        if next_index < updates.len() {
-            updates[next_index] = update;
+        if write_index < updates.len() {
+            updates[write_index] = update;
+            log::info!(
+                "Successfully overwrote tip-only wallet cache update at index {}",
+                write_index
+            );
         } else {
             updates.push(update);
+            log::info!(
+                "Successfully pushed wallet cache update to index {}",
+                write_index
+            );
         }
 
         Ok(())
     }
 }
 
+// If both updates are only tip updates, we can merge them.
+// See https://github.com/Blockstream/lwk/blob/0322a63310f8c8414c537adff68dcbbc7ff4662d/lwk_wollet/src/persister.rs#L174
+fn maybe_merge_updates(
+    mut new_update: Update,
+    prev_update: Option<&Update>,
+    mut next_index: usize,
+) -> (Update, /*index*/ usize) {
+    if new_update.only_tip() {
+        if let Some(prev_update) = prev_update {
+            if prev_update.only_tip() {
+                new_update.wollet_status = prev_update.wollet_status;
+                next_index -= 1;
+            }
+        }
+    }
+    (new_update, next_index)
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::utils::is_indexed_db_supported;
     use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
-    use crate::wallet_persister::WasmWalletCachePersister;
+    use crate::wallet_persister::AsyncWalletCachePersister;
     use breez_sdk_liquid::elements::hashes::Hash;
     use breez_sdk_liquid::elements::{BlockHash, BlockHeader, TxMerkleNode, Txid};
     use breez_sdk_liquid::wallet::persister::{lwk_wollet, WalletCachePersister};
+    use std::future::Future;
+    use std::path::PathBuf;
     use std::sync::Arc;
     use std::time::Duration;
     use tokio_with_wasm::alias as tokio;
@@ -136,9 +155,46 @@ mod tests {
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     #[sdk_macros::async_test_wasm]
-    async fn test_wallet_cache() -> anyhow::Result<()> {
-        let wallet_storage = Arc::new(IndexedDbWalletStorage::new("test".to_string()));
-        let persister = WasmWalletCachePersister::new(wallet_storage).await?;
+    async fn test_wallet_cache_indexed_db() -> anyhow::Result<()> {
+        if is_indexed_db_supported() {
+            let build_persister = || async {
+                let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&PathBuf::from("test")));
+                AsyncWalletCachePersister::new(wallet_storage)
+                    .await
+                    .unwrap()
+            };
+
+            test_wallet_cache(build_persister).await?;
+        }
+
+        Ok(())
+    }
+
+    #[cfg(feature = "node-js")]
+    #[sdk_macros::async_test_wasm]
+    async fn test_wallet_cache_node_fs() -> anyhow::Result<()> {
+        let working_dir = format!("/tmp/{}", uuid::Uuid::new_v4());
+        let build_persister = || async {
+            crate::wallet_persister::node_fs::NodeFsWalletCachePersister::new(
+                working_dir.clone(),
+                lwk_wollet::ElementsNetwork::Liquid,
+                "test",
+            )
+            .unwrap()
+        };
+
+        test_wallet_cache(build_persister).await?;
+
+        Ok(())
+    }
+
+    async fn test_wallet_cache<F, Fut, WP>(build_persister: F) -> anyhow::Result<()>
+    where
+        F: Fn() -> Fut,
+        Fut: Future<Output = WP>,
+        WP: WalletCachePersister,
+    {
+        let persister = build_persister().await;
         let lwk_persister = persister.get_lwk_persister();
 
         assert!(lwk_persister.get(0)?.is_none());
@@ -160,12 +216,11 @@ mod tests {
         assert_eq!(lwk_persister.get(1)?.unwrap().tip.height, 15);
         assert!(lwk_persister.get(2)?.is_none());
 
-        // Allow persister task to persist updates
+        // Allow persister task to persist updates when persister is async
         tokio::time::sleep(Duration::from_secs(2)).await;
 
         // Reload persister
-        let wallet_storage = Arc::new(IndexedDbWalletStorage::new("test".to_string()));
-        let persister = WasmWalletCachePersister::new(wallet_storage).await?;
+        let persister = build_persister().await;
         let lwk_persister = persister.get_lwk_persister();
 
         assert_eq!(lwk_persister.get(0)?.unwrap().tip.height, 5);
@@ -176,6 +231,10 @@ mod tests {
         assert!(lwk_persister.get(0)?.is_none());
         assert!(lwk_persister.get(1)?.is_none());
         assert!(lwk_persister.get(2)?.is_none());
+
+        lwk_persister.push(get_lwk_update(20, false))?;
+        assert_eq!(lwk_persister.get(0)?.unwrap().tip.height, 20);
+        assert!(lwk_persister.get(1)?.is_none());
 
         Ok(())
     }

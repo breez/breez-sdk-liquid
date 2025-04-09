@@ -2,14 +2,8 @@ use anyhow::Result;
 use indexed_db_futures::{
     database::Database, query_source::QuerySource, transaction::TransactionMode, Build,
 };
-use js_sys::{global, Reflect};
 
 const IDB_STORE_NAME: &str = "BREEZ_SDK_LIQUID_DB_BACKUP_STORE";
-
-pub(crate) fn is_indexed_db_supported() -> bool {
-    let global = global();
-    Reflect::get(&global, &"indexedDB".into()).is_ok_and(|v| !v.is_undefined())
-}
 
 pub(crate) async fn backup_to_indexed_db(db_bytes: Vec<u8>, db_name: &str) -> Result<()> {
     let idb = open_indexed_db(db_name).await?;

@@ -14,14 +14,15 @@ use std::sync::Arc;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
+use crate::utils::is_indexed_db_supported;
 use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
-use crate::wallet_persister::WasmWalletCachePersister;
+use crate::wallet_persister::AsyncWalletCachePersister;
 use anyhow::anyhow;
 use breez_sdk_liquid::bitcoin::bip32::{Fingerprint, Xpub};
 use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
-use breez_sdk_liquid::wallet::LiquidOnchainWallet;
+use breez_sdk_liquid::wallet::{LiquidOnchainWallet, OnchainWallet};
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
@@ -89,18 +90,50 @@ async fn connect_inner(
         maybe_backup_bytes,
     )?);
 
-    let wallet_storage = Arc::new(IndexedDbWalletStorage::new("cache".to_string()));
-    let wallet_cache_persister = WasmWalletCachePersister::new(wallet_storage).await?;
+    let onchain_wallet: Rc<dyn OnchainWallet> = if is_indexed_db_supported() {
+        let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&wallet_dir));
+        let async_cache_persister = AsyncWalletCachePersister::new(wallet_storage).await?;
 
-    let onchain_wallet = Rc::new(
-        LiquidOnchainWallet::new_with_cache_persister(
-            config.clone(),
-            Rc::clone(&persister),
-            signer,
-            wallet_cache_persister,
+        Rc::new(
+            LiquidOnchainWallet::new_with_cache_persister(
+                config.clone(),
+                Rc::clone(&persister),
+                Rc::clone(&signer),
+                async_cache_persister,
+            )
+            .await?,
         )
-        .await?,
-    );
+    } else {
+        #[cfg(feature = "node-js")]
+        {
+            let node_fs_persister = wallet_persister::node_fs::NodeFsWalletCachePersister::new(
+                &wallet_dir,
+                config.network.into(),
+                &fingerprint,
+            )?;
+            Rc::new(
+                LiquidOnchainWallet::new_with_cache_persister(
+                    config.clone(),
+                    Rc::clone(&persister),
+                    Rc::clone(&signer),
+                    node_fs_persister,
+                )
+                .await?,
+            )
+        }
+        #[cfg(not(feature = "node-js"))]
+        {
+            log::warn!("Wallet cache persistence not supported in this environment. Proceeding without it.");
+            Rc::new(
+                LiquidOnchainWallet::new_in_memory(
+                    config.clone(),
+                    Rc::clone(&persister),
+                    Rc::clone(&signer),
+                )
+                .await?,
+            )
+        }
+    };
 
     sdk_builder.persister(persister.clone());
     sdk_builder.onchain_wallet(onchain_wallet);

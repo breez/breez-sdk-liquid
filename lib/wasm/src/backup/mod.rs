@@ -1,11 +1,11 @@
 mod indexed_db;
 mod node_fs;
 
-use crate::utils::PathExt;
+use crate::utils::is_indexed_db_supported;
 use anyhow::Result;
 use breez_sdk_liquid::model::{EventListener, SdkEvent};
 use breez_sdk_liquid::persist::Persister;
-use indexed_db::{backup_to_indexed_db, is_indexed_db_supported, load_indexed_db_backup};
+use indexed_db::{backup_to_indexed_db, load_indexed_db_backup};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -55,7 +55,7 @@ async fn backup(persister: &Rc<Persister>, backup_dir_path: &Path) -> Result<()>
     let db_bytes = persister.serialize()?;
 
     if is_indexed_db_supported() {
-        backup_to_indexed_db(db_bytes, backup_dir_path.to_str_safe()?).await?;
+        backup_to_indexed_db(db_bytes, &get_backup_indexed_db_name(backup_dir_path)).await?;
     } else {
         #[cfg(not(feature = "node-js"))]
         return Err(anyhow::anyhow!("No backup mechanism available"));
@@ -70,7 +70,7 @@ async fn backup(persister: &Rc<Persister>, backup_dir_path: &Path) -> Result<()>
 
 pub(crate) async fn load_backup(backup_dir_path: &Path) -> Result<Option<Vec<u8>>> {
     let maybe_data = if is_indexed_db_supported() {
-        load_indexed_db_backup(backup_dir_path.to_str_safe()?).await?
+        load_indexed_db_backup(&get_backup_indexed_db_name(backup_dir_path)).await?
     } else {
         #[cfg(not(feature = "node-js"))]
         return Err(anyhow::anyhow!("No backup restore mechanism available"));
@@ -78,6 +78,10 @@ pub(crate) async fn load_backup(backup_dir_path: &Path) -> Result<Option<Vec<u8>
         node_fs::load_file_system_backup(backup_dir_path)?
     };
     Ok(maybe_data)
+}
+
+fn get_backup_indexed_db_name(backup_dir_path: &Path) -> String {
+    format!("{}-db-backup", backup_dir_path.to_string_lossy())
 }
 
 #[cfg(test)]

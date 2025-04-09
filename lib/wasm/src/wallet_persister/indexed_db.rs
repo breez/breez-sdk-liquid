@@ -1,4 +1,4 @@
-use crate::wallet_persister::WalletStorage;
+use crate::wallet_persister::AsyncWalletStorage;
 use anyhow::{anyhow, Context};
 use breez_sdk_liquid::wallet::persister::lwk_wollet;
 use breez_sdk_liquid::wallet::persister::lwk_wollet::Update;
@@ -6,6 +6,7 @@ use indexed_db_futures::database::Database;
 use indexed_db_futures::query_source::QuerySource;
 use indexed_db_futures::transaction::TransactionMode;
 use indexed_db_futures::Build;
+use std::path::Path;
 
 const IDB_STORE_NAME: &str = "BREEZ_SDK_LIQUID_WALLET_CACHE_STORE";
 
@@ -15,13 +16,14 @@ pub(crate) struct IndexedDbWalletStorage {
 }
 
 impl IndexedDbWalletStorage {
-    pub fn new(db_name: String) -> Self {
+    pub fn new(working_dir: &Path) -> Self {
+        let db_name = format!("{}-wallet-cache", working_dir.to_string_lossy());
         Self { db_name }
     }
 }
 
 #[sdk_macros::async_trait]
-impl WalletStorage for IndexedDbWalletStorage {
+impl AsyncWalletStorage for IndexedDbWalletStorage {
     async fn load_updates(&self) -> anyhow::Result<Vec<Update>> {
         let idb = open_indexed_db(&self.db_name).await?;
 
