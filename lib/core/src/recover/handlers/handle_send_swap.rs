@@ -62,13 +62,10 @@ impl SendSwapHandler {
 
         // Recover preimage if needed
         if recovered_data.lockup_tx_id.is_some() && send_swap.preimage.is_none() {
-            let pair_limits = send_swap.get_boltz_pair()?.limits;
-            // If the swap is batched or we have a claim tx id, we can attempt
-            // to recover the preimage cooperatively. If we cannot recover it
-            // cooperatively, we can try to recover it from the claim tx.
-            if send_swap.receiver_amount_sat < pair_limits.minimal
-                || recovered_data.claim_tx_id.is_some()
-            {
+            // We can attempt to recover the preimage cooperatively after we know the
+            // lockup tx was broadcast. If we cannot recover it cooperatively,
+            // we can try to recover it from the claim tx.
+            if recovered_data.claim_tx_id.is_some() {
                 match Self::recover_preimage(
                     context,
                     recovered_data.claim_tx_id.clone(),
