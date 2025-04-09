@@ -73,7 +73,7 @@ impl<S: AsyncWalletStorage> AsyncLwkPersister<S> {
             // Persist updates and break on any error (giving up on cache persistence for the rest of the session)
             // A failed update followed by a successful one may leave the cache in an inconsistent state
             while let Some((update, index)) = receiver.recv().await {
-                info!("Starting to persist wallet cache update");
+                info!("Starting to persist wallet cache update at index {}", index);
                 if let Err(e) = storage.persist_update(update, index).await {
                     log::error!("Failed to persist wallet cache update: {:?} - giving up on persisting wallet updates...", e);
                     break;
@@ -103,16 +103,8 @@ impl<S: AsyncWalletStorage> lwk_wollet::Persister for AsyncLwkPersister<S> {
 
         if write_index < updates.len() {
             updates[write_index] = update;
-            log::info!(
-                "Successfully overwrote tip-only wallet cache update at index {}",
-                write_index
-            );
         } else {
             updates.push(update);
-            log::info!(
-                "Successfully pushed wallet cache update to index {}",
-                write_index
-            );
         }
 
         Ok(())
