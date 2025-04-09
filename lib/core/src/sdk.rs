@@ -2000,7 +2000,7 @@ impl LiquidSdk {
 
         Ok(LightningPaymentLimitsResponse {
             send: Limits {
-                min_sat: send_limits.minimal,
+                min_sat: send_limits.minimal_batched.unwrap_or(send_limits.minimal),
                 max_sat: send_limits.maximal,
                 max_zero_conf_sat: send_limits.maximal_zero_conf,
             },
