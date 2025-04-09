@@ -4686,7 +4686,7 @@ checksum = "584e070911c7017da6cb2eb0788d09f43d789029b5877d3e5ecc8acf86ceee21"
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=2a077be8bf07ac3d07d611b8bce91babdda3ecde#2a077be8bf07ac3d07d611b8bce91babdda3ecde"
+source = "git+https://github.com/breez/breez-sdk?rev=223002e47a3b1be8306f68e9b8094ee2884c9568#223002e47a3b1be8306f68e9b8094ee2884c9568"
 dependencies = [
  "aes",
  "anyhow",
@@ -4731,7 +4731,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=2a077be8bf07ac3d07d611b8bce91babdda3ecde#2a077be8bf07ac3d07d611b8bce91babdda3ecde"
+source = "git+https://github.com/breez/breez-sdk?rev=223002e47a3b1be8306f68e9b8094ee2884c9568#223002e47a3b1be8306f68e9b8094ee2884c9568"
 dependencies = [
  "proc-macro2",
  "quote",
