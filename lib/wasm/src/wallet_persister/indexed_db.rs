@@ -1,14 +1,122 @@
-use crate::wallet_persister::AsyncWalletStorage;
+#![cfg(feature = "browser")]
+
+use crate::wallet_persister::maybe_merge_updates;
 use anyhow::{anyhow, Context};
-use breez_sdk_liquid::wallet::persister::lwk_wollet;
-use breez_sdk_liquid::wallet::persister::lwk_wollet::{Update, WolletDescriptor};
+use breez_sdk_liquid::wallet::persister::lwk_wollet::{PersistError, Update, WolletDescriptor};
+use breez_sdk_liquid::wallet::persister::{lwk_wollet, LwkPersister, WalletCachePersister};
 use indexed_db_futures::database::Database;
 use indexed_db_futures::query_source::QuerySource;
 use indexed_db_futures::transaction::TransactionMode;
 use indexed_db_futures::Build;
+use log::info;
 use std::path::Path;
+use std::sync::{Arc, Mutex};
+use tokio::sync::mpsc::{Receiver, Sender};
 
 const IDB_STORE_NAME: &str = "BREEZ_SDK_LIQUID_WALLET_CACHE_STORE";
+
+#[sdk_macros::async_trait]
+pub(crate) trait AsyncWalletStorage: Send + Sync + Clone + 'static {
+    // Load all existing updates from the storage backend.
+    async fn load_updates(&self) -> anyhow::Result<Vec<Update>>;
+
+    // Persist a single update at a given index.
+    async fn persist_update(&self, update: Update, index: u32) -> anyhow::Result<()>;
+
+    // Clear all persisted data.
+    async fn clear(&self) -> anyhow::Result<()>;
+}
+
+#[derive(Clone)]
+pub(crate) struct AsyncWalletCachePersister<S: AsyncWalletStorage> {
+    lwk_persister: Arc<AsyncLwkPersister<S>>,
+}
+
+impl<S: AsyncWalletStorage> AsyncWalletCachePersister<S> {
+    pub async fn new(storage: Arc<S>) -> anyhow::Result<Self> {
+        Ok(Self {
+            lwk_persister: Arc::new(AsyncLwkPersister::new(storage).await?),
+        })
+    }
+}
+
+#[sdk_macros::async_trait]
+impl<S: AsyncWalletStorage> WalletCachePersister for AsyncWalletCachePersister<S> {
+    fn get_lwk_persister(&self) -> LwkPersister {
+        let persister = std::sync::Arc::clone(&self.lwk_persister);
+        persister as LwkPersister
+    }
+
+    async fn clear_cache(&self) -> anyhow::Result<()> {
+        self.lwk_persister.storage.clear().await?;
+        self.lwk_persister.updates.lock().unwrap().clear();
+        Ok(())
+    }
+}
+
+struct AsyncLwkPersister<S: AsyncWalletStorage> {
+    updates: Mutex<Vec<Update>>,
+    sender: Sender<(Update, /*index*/ u32)>,
+    storage: Arc<S>,
+}
+
+impl<S: AsyncWalletStorage> AsyncLwkPersister<S> {
+    async fn new(storage: Arc<S>) -> anyhow::Result<Self> {
+        let updates = storage.load_updates().await?;
+
+        let (sender, receiver) = tokio::sync::mpsc::channel(20);
+
+        Self::start_persist_task(storage.clone(), receiver);
+
+        Ok(Self {
+            updates: Mutex::new(updates),
+            sender,
+            storage,
+        })
+    }
+
+    fn start_persist_task(storage: Arc<S>, mut receiver: Receiver<(Update, /*index*/ u32)>) {
+        wasm_bindgen_futures::spawn_local(async move {
+            // Persist updates and break on any error (giving up on cache persistence for the rest of the session)
+            // A failed update followed by a successful one may leave the cache in an inconsistent state
+            while let Some((update, index)) = receiver.recv().await {
+                info!("Starting to persist wallet cache update at index {}", index);
+                if let Err(e) = storage.persist_update(update, index).await {
+                    log::error!("Failed to persist wallet cache update: {:?} - giving up on persisting wallet updates...", e);
+                    break;
+                }
+            }
+        });
+    }
+}
+
+impl<S: AsyncWalletStorage> lwk_wollet::Persister for AsyncLwkPersister<S> {
+    fn get(&self, index: usize) -> std::result::Result<Option<Update>, PersistError> {
+        Ok(self.updates.lock().unwrap().get(index).cloned())
+    }
+
+    fn push(&self, update: Update) -> std::result::Result<(), PersistError> {
+        let mut updates = self.updates.lock().unwrap();
+
+        let (update, write_index) = maybe_merge_updates(update, updates.last(), updates.len());
+
+        self.sender
+            .try_send((update.clone(), write_index as u32))
+            .map_err(|e| {
+                lwk_wollet::PersistError::Other(format!(
+                    "Failed to send update to persister task: {e}"
+                ))
+            })?;
+
+        if write_index < updates.len() {
+            updates[write_index] = update;
+        } else {
+            updates.push(update);
+        }
+
+        Ok(())
+    }
+}
 
 #[derive(Clone)]
 pub(crate) struct IndexedDbWalletStorage {

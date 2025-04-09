@@ -36,5 +36,5 @@ uuid = "1.16.0"
 tokio_with_wasm = { version = "0.8.2" }
 
 [features]
+browser = []
 node-js = []
-browser-tests = []

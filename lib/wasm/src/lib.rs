@@ -1,4 +1,5 @@
 mod backup;
+mod builders;
 mod error;
 mod event;
 mod logger;
@@ -10,20 +11,16 @@ mod wallet_persister;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
-use crate::utils::is_indexed_db_supported;
-use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
-use crate::wallet_persister::AsyncWalletCachePersister;
+
 use anyhow::anyhow;
 use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::signer::SdkLwkSigner;
-use breez_sdk_liquid::wallet::persister::WalletCachePersister;
-use breez_sdk_liquid::wallet::{get_descriptor, LiquidOnchainWallet, OnchainWallet};
+use breez_sdk_liquid::wallet::get_descriptor;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
@@ -71,10 +68,15 @@ async fn connect_inner(
 
     let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
         .map_err(|e| anyhow!(e.to_string()))?;
-    let maybe_backup_bytes = backup::load_backup(&wallet_dir).await.unwrap_or_else(|e| {
-        log::error!("Failed to load backup: {:?}", e);
-        None
-    });
+
+    let maybe_db_backup_persister = builders::create_db_backup_persister(&wallet_dir).ok();
+    let maybe_backup_bytes = match &maybe_db_backup_persister {
+        Some(p) => p.load_backup().await.unwrap_or_else(|e| {
+            log::error!("Failed to load db backup: {:?}", e);
+            None
+        }),
+        None => None,
+    };
 
     let persister = Rc::new(Persister::new_in_memory(
         &config.working_dir,
@@ -85,49 +87,15 @@ async fn connect_inner(
     )?);
 
     let wollet_descriptor = get_descriptor(&sdk_lwk_signer, config.network)?;
-    let wollet_persister: Option<Rc<dyn WalletCachePersister>> = if is_indexed_db_supported() {
-        let wallet_storage = Arc::new(IndexedDbWalletStorage::new(&wallet_dir, wollet_descriptor));
-        Some(Rc::new(
-            AsyncWalletCachePersister::new(wallet_storage).await?,
-        ))
-    } else {
-        #[cfg(feature = "node-js")]
-        {
-            Some(Rc::new(
-                wallet_persister::node_fs::NodeFsWalletCachePersister::new(
-                    &wallet_dir,
-                    config.network.into(),
-                    &fingerprint,
-                    wollet_descriptor,
-                )?,
-            ))
-        }
-        #[cfg(not(feature = "node-js"))]
-        {
-            log::warn!("Wallet cache persistence not supported in this environment. Proceeding without it.");
-            None
-        }
-    };
-
-    let onchain_wallet: Rc<dyn OnchainWallet> = match wollet_persister {
-        None => Rc::new(
-            LiquidOnchainWallet::new_in_memory(
-                config.clone(),
-                Rc::clone(&persister),
-                Rc::clone(&signer),
-            )
-            .await?,
-        ),
-        Some(wollet_persister) => Rc::new(
-            LiquidOnchainWallet::new_with_cache_persister(
-                config.clone(),
-                Rc::clone(&persister),
-                Rc::clone(&signer),
-                wollet_persister,
-            )
-            .await?,
-        ),
-    };
+    let onchain_wallet = builders::create_onchain_wallet(
+        &wallet_dir,
+        config.clone(),
+        wollet_descriptor,
+        &fingerprint,
+        Rc::clone(&persister),
+        Rc::clone(&signer),
+    )
+    .await?;
 
     sdk_builder.persister(persister.clone());
     sdk_builder.onchain_wallet(onchain_wallet);
@@ -135,11 +103,13 @@ async fn connect_inner(
     let sdk = sdk_builder.build().await?;
     sdk.start().await?;
 
-    let (sender, receiver) = tokio::sync::mpsc::channel(20);
-    let listener = backup::ForwardingEventListener::new(sender);
-    sdk.add_event_listener(Box::new(listener)).await?;
+    if let Some(db_backup_persister) = maybe_db_backup_persister {
+        let (sender, receiver) = tokio::sync::mpsc::channel(20);
+        let listener = backup::ForwardingEventListener::new(sender);
+        sdk.add_event_listener(Box::new(listener)).await?;
 
-    backup::start_backup_task(persister, receiver, wallet_dir);
+        db_backup_persister.start_backup_task(persister, receiver);
+    }
 
     Ok(BindingLiquidSdk { sdk })
 }

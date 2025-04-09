@@ -1,115 +1,9 @@
+#![cfg(any(feature = "browser", feature = "node-js"))]
+
 pub(crate) mod indexed_db;
 pub(crate) mod node_fs;
 
-use anyhow::Result;
-use breez_sdk_liquid::wallet::persister::lwk_wollet::{PersistError, Update};
-use breez_sdk_liquid::wallet::persister::{lwk_wollet, LwkPersister, WalletCachePersister};
-use log::info;
-use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc::{Receiver, Sender};
-
-#[sdk_macros::async_trait]
-pub(crate) trait AsyncWalletStorage: Send + Sync + Clone + 'static {
-    // Load all existing updates from the storage backend.
-    async fn load_updates(&self) -> Result<Vec<Update>>;
-
-    // Persist a single update at a given index.
-    async fn persist_update(&self, update: Update, index: u32) -> Result<()>;
-
-    // Clear all persisted data.
-    async fn clear(&self) -> Result<()>;
-}
-
-#[derive(Clone)]
-pub(crate) struct AsyncWalletCachePersister<S: AsyncWalletStorage> {
-    lwk_persister: Arc<AsyncLwkPersister<S>>,
-}
-
-impl<S: AsyncWalletStorage> AsyncWalletCachePersister<S> {
-    pub async fn new(storage: Arc<S>) -> Result<Self> {
-        Ok(Self {
-            lwk_persister: Arc::new(AsyncLwkPersister::new(storage).await?),
-        })
-    }
-}
-
-#[sdk_macros::async_trait]
-impl<S: AsyncWalletStorage> WalletCachePersister for AsyncWalletCachePersister<S> {
-    fn get_lwk_persister(&self) -> LwkPersister {
-        let persister = std::sync::Arc::clone(&self.lwk_persister);
-        persister as LwkPersister
-    }
-
-    async fn clear_cache(&self) -> Result<()> {
-        self.lwk_persister.storage.clear().await?;
-        self.lwk_persister.updates.lock().unwrap().clear();
-        Ok(())
-    }
-}
-
-struct AsyncLwkPersister<S: AsyncWalletStorage> {
-    updates: Mutex<Vec<Update>>,
-    sender: Sender<(Update, /*index*/ u32)>,
-    storage: Arc<S>,
-}
-
-impl<S: AsyncWalletStorage> AsyncLwkPersister<S> {
-    async fn new(storage: Arc<S>) -> Result<Self> {
-        let updates = storage.load_updates().await?;
-
-        let (sender, receiver) = tokio::sync::mpsc::channel(20);
-
-        Self::start_persist_task(storage.clone(), receiver);
-
-        Ok(Self {
-            updates: Mutex::new(updates),
-            sender,
-            storage,
-        })
-    }
-
-    fn start_persist_task(storage: Arc<S>, mut receiver: Receiver<(Update, /*index*/ u32)>) {
-        wasm_bindgen_futures::spawn_local(async move {
-            // Persist updates and break on any error (giving up on cache persistence for the rest of the session)
-            // A failed update followed by a successful one may leave the cache in an inconsistent state
-            while let Some((update, index)) = receiver.recv().await {
-                info!("Starting to persist wallet cache update at index {}", index);
-                if let Err(e) = storage.persist_update(update, index).await {
-                    log::error!("Failed to persist wallet cache update: {:?} - giving up on persisting wallet updates...", e);
-                    break;
-                }
-            }
-        });
-    }
-}
-
-impl<S: AsyncWalletStorage> lwk_wollet::Persister for AsyncLwkPersister<S> {
-    fn get(&self, index: usize) -> std::result::Result<Option<Update>, PersistError> {
-        Ok(self.updates.lock().unwrap().get(index).cloned())
-    }
-
-    fn push(&self, update: Update) -> std::result::Result<(), PersistError> {
-        let mut updates = self.updates.lock().unwrap();
-
-        let (update, write_index) = maybe_merge_updates(update, updates.last(), updates.len());
-
-        self.sender
-            .try_send((update.clone(), write_index as u32))
-            .map_err(|e| {
-                lwk_wollet::PersistError::Other(format!(
-                    "Failed to send update to persister task: {e}"
-                ))
-            })?;
-
-        if write_index < updates.len() {
-            updates[write_index] = update;
-        } else {
-            updates.push(update);
-        }
-
-        Ok(())
-    }
-}
+use breez_sdk_liquid::wallet::persister::lwk_wollet::Update;
 
 // If both updates are only tip updates, we can merge them.
 // See https://github.com/Blockstream/lwk/blob/0322a63310f8c8414c537adff68dcbbc7ff4662d/lwk_wollet/src/persister.rs#L174
@@ -131,9 +25,9 @@ fn maybe_merge_updates(
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::is_indexed_db_supported;
-    use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
-    use crate::wallet_persister::AsyncWalletCachePersister;
+    #![allow(unused)]
+
+    use crate::builders::create_wallet_persister;
     use breez_sdk_liquid::elements::hashes::Hash;
     use breez_sdk_liquid::elements::{BlockHash, BlockHeader, TxMerkleNode, Txid};
     use breez_sdk_liquid::model::{LiquidNetwork, Signer};
@@ -141,14 +35,13 @@ mod tests {
     use breez_sdk_liquid::wallet::get_descriptor;
     use breez_sdk_liquid::wallet::persister::lwk_wollet::WolletDescriptor;
     use breez_sdk_liquid::wallet::persister::{lwk_wollet, WalletCachePersister};
-    use std::future::Future;
     use std::path::PathBuf;
     use std::rc::Rc;
     use std::sync::Arc;
     use std::time::Duration;
     use tokio_with_wasm::alias as tokio;
 
-    #[cfg(feature = "browser-tests")]
+    #[cfg(feature = "browser")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     fn get_wollet_descriptor() -> anyhow::Result<WolletDescriptor> {
@@ -157,53 +50,23 @@ mod tests {
         Ok(get_descriptor(&sdk_lwk_signer, LiquidNetwork::Testnet)?)
     }
 
-    #[sdk_macros::async_test_wasm]
-    async fn test_wallet_cache_indexed_db() -> anyhow::Result<()> {
+    async fn build_persister(working_dir: &str) -> anyhow::Result<Rc<dyn WalletCachePersister>> {
         let desc = get_wollet_descriptor()?;
-        if is_indexed_db_supported() {
-            let build_persister = || async {
-                let wallet_storage = Arc::new(IndexedDbWalletStorage::new(
-                    &PathBuf::from("test"),
-                    desc.clone(),
-                ));
-                AsyncWalletCachePersister::new(wallet_storage)
-                    .await
-                    .unwrap()
-            };
-
-            test_wallet_cache(build_persister).await?;
-        }
-
-        Ok(())
+        create_wallet_persister(
+            &PathBuf::from(working_dir),
+            desc,
+            LiquidNetwork::Testnet,
+            "aaaaaaaa",
+        )
+        .await
     }
 
-    #[cfg(feature = "node-js")]
+    #[cfg(any(feature = "browser", feature = "node-js"))]
     #[sdk_macros::async_test_wasm]
-    async fn test_wallet_cache_node_fs() -> anyhow::Result<()> {
-        let desc = get_wollet_descriptor()?;
+    async fn test_wallet_cache() -> anyhow::Result<()> {
         let working_dir = format!("/tmp/{}", uuid::Uuid::new_v4());
-        let build_persister = || async {
-            crate::wallet_persister::node_fs::NodeFsWalletCachePersister::new(
-                working_dir.clone(),
-                lwk_wollet::ElementsNetwork::Liquid,
-                "test",
-                desc.clone(),
-            )
-            .unwrap()
-        };
 
-        test_wallet_cache(build_persister).await?;
-
-        Ok(())
-    }
-
-    async fn test_wallet_cache<F, Fut, WP>(build_persister: F) -> anyhow::Result<()>
-    where
-        F: Fn() -> Fut,
-        Fut: Future<Output = WP>,
-        WP: WalletCachePersister,
-    {
-        let persister = build_persister().await;
+        let persister = build_persister(&working_dir).await?;
         let lwk_persister = persister.get_lwk_persister();
 
         assert!(lwk_persister.get(0)?.is_none());
@@ -229,7 +92,7 @@ mod tests {
         tokio::time::sleep(Duration::from_secs(2)).await;
 
         // Reload persister
-        let persister = build_persister().await;
+        let persister = build_persister(&working_dir).await?;
         let lwk_persister = persister.get_lwk_persister();
 
         assert_eq!(lwk_persister.get(0)?.unwrap().tip.height, 5);
