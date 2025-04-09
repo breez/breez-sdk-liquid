@@ -33,12 +33,7 @@ getrandom = { version = "0.2", features = ["js"] }
 sdk-common = { workspace = true, features = ["test-utils"] }
 wasm-bindgen-test = "0.3.33"
 uuid = "1.16.0"
-tokio_with_wasm = { version = "0.8.2", features = [
-    "macros",
-    "rt",
-    "sync",
-    "time",
-] }
+tokio_with_wasm = { version = "0.8.2" }
 
 [features]
 node-js = []
