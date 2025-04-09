@@ -14,7 +14,7 @@ on:
         description: 'array of packages to publish (remove what you do not want)'
         required: true
         type: string
-        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "flutter", "react-native", "python", "swift"]'
+        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "flutter", "react-native", "python", "swift", "wasm"]'
       csharp-ref:
         description: 'optional commit/tag/branch reference for the C# project. Defaults to ref.'
         required: false
