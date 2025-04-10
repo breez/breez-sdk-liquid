@@ -22,7 +22,7 @@ clippy-node:
 build: build-bundle build-deno build-node build-web
 
 build-bundle:
-	$(CLANG_PREFIX) wasm-pack build --target bundler --release --out-dir pkg/bundle -- features browser
+	$(CLANG_PREFIX) wasm-pack build --target bundler --release --out-dir pkg/bundle --features browser
 
 build-deno:
 	$(CLANG_PREFIX) wasm-pack build --target deno --release --out-dir pkg/deno
@@ -31,7 +31,7 @@ build-node:
 	$(CLANG_PREFIX) wasm-pack build --target nodejs --release --out-dir pkg/node --features node-js
 
 build-web:
-	$(CLANG_PREFIX) wasm-pack build --target web --release --out-dir pkg/web -- features browser
+	$(CLANG_PREFIX) wasm-pack build --target web --release --out-dir pkg/web --features browser
 
 test: test-firefox test-node
 
