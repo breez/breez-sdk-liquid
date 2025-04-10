@@ -1,7 +1,11 @@
-use crate::backup::indexed_db::IndexedDbBackupStorage;
-use crate::backup::BackupPersister;
-use crate::wallet_persister::indexed_db::AsyncWalletCachePersister;
-use crate::wallet_persister::indexed_db::IndexedDbWalletStorage;
+mod db_backup;
+mod wallet_persister;
+
+use crate::platform::browser::db_backup::IndexedDbBackupStorage;
+use crate::platform::browser::wallet_persister::{
+    AsyncWalletCachePersister, IndexedDbWalletStorage,
+};
+use crate::platform::db_backup_common::BackupPersister;
 use anyhow::Result;
 use breez_sdk_liquid::model::{Config, LiquidNetwork, Signer};
 use breez_sdk_liquid::persist::Persister;

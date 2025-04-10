@@ -1,12 +1,9 @@
-mod backup;
-mod builders;
 mod error;
 mod event;
 mod logger;
 pub mod model;
+mod platform;
 mod signer;
-mod utils;
-mod wallet_persister;
 
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -69,7 +66,7 @@ async fn connect_inner(
     let wallet_dir = PathBuf::from_str(&config.get_wallet_dir(&config.working_dir, &fingerprint)?)
         .map_err(|e| anyhow!(e.to_string()))?;
 
-    let maybe_db_backup_persister = builders::create_db_backup_persister(&wallet_dir).ok();
+    let maybe_db_backup_persister = platform::create_db_backup_persister(&wallet_dir).ok();
     let maybe_backup_bytes = match &maybe_db_backup_persister {
         Some(p) => p.load_backup().await.unwrap_or_else(|e| {
             log::error!("Failed to load db backup: {:?}", e);
@@ -87,7 +84,7 @@ async fn connect_inner(
     )?);
 
     let wollet_descriptor = get_descriptor(&sdk_lwk_signer, config.network)?;
-    let onchain_wallet = builders::create_onchain_wallet(
+    let onchain_wallet = platform::create_onchain_wallet(
         &wallet_dir,
         config.clone(),
         wollet_descriptor,
@@ -105,7 +102,7 @@ async fn connect_inner(
 
     if let Some(db_backup_persister) = maybe_db_backup_persister {
         let (sender, receiver) = tokio::sync::mpsc::channel(20);
-        let listener = backup::ForwardingEventListener::new(sender);
+        let listener = platform::db_backup_common::ForwardingEventListener::new(sender);
         sdk.add_event_listener(Box::new(listener)).await?;
 
         db_backup_persister.start_backup_task(persister, receiver);

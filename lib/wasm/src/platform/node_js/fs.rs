@@ -1,5 +1,3 @@
-#![cfg(feature = "node-js")]
-
 use anyhow::{anyhow, Context};
 use js_sys::Reflect;
 use wasm_bindgen::prelude::wasm_bindgen;

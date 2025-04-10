@@ -1,8 +1,5 @@
-#![cfg(feature = "node-js")]
-
-use crate::utils::node::{ensure_dir_exists, exists_sync, read_file_vec, write_file_vec};
-
-use crate::backup::BackupStorage;
+use super::fs::{ensure_dir_exists, exists_sync, read_file_vec, write_file_vec};
+use crate::platform::db_backup_common::BackupStorage;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 

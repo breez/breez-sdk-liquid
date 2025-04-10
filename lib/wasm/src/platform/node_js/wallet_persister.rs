@@ -1,10 +1,8 @@
-#![cfg(feature = "node-js")]
-
-use crate::utils::node::{
+use super::fs::{
     ensure_dir_exists, exists_sync, read_file_vec, readdir_sync, remove_dir_all_sync,
     write_file_vec,
 };
-use crate::wallet_persister::maybe_merge_updates;
+use crate::platform::wallet_persister_common::maybe_merge_updates;
 use breez_sdk_liquid::wallet::persister::lwk_wollet::{
     ElementsNetwork, PersistError, Update, WolletDescriptor,
 };

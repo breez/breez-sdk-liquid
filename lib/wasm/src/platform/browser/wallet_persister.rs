@@ -1,6 +1,4 @@
-#![cfg(feature = "browser")]
-
-use crate::wallet_persister::maybe_merge_updates;
+use crate::platform::wallet_persister_common::maybe_merge_updates;
 use anyhow::{anyhow, Context};
 use breez_sdk_liquid::wallet::persister::lwk_wollet::{PersistError, Update, WolletDescriptor};
 use breez_sdk_liquid::wallet::persister::{lwk_wollet, LwkPersister, WalletCachePersister};

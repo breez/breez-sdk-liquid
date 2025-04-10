@@ -18,3 +18,11 @@ pub(crate) use node_js::{
 mod default;
 #[cfg(all(not(feature = "browser"), not(feature = "node-js")))]
 pub(crate) use default::{create_db_backup_persister, create_onchain_wallet};
+
+#[cfg_attr(
+    all(not(feature = "browser"), not(feature = "node-js")),
+    allow(dead_code)
+)]
+pub(crate) mod db_backup_common;
+#[cfg(any(feature = "browser", feature = "node-js"))]
+mod wallet_persister_common;

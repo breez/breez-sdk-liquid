@@ -1,6 +1,10 @@
-use crate::backup::node_fs::NodeFsBackupStorage;
-use crate::backup::BackupPersister;
-use crate::wallet_persister::node_fs::NodeFsWalletCachePersister;
+mod db_backup;
+mod fs;
+mod wallet_persister;
+
+use crate::platform::db_backup_common::BackupPersister;
+use crate::platform::node_js::db_backup::NodeFsBackupStorage;
+use crate::platform::node_js::wallet_persister::NodeFsWalletCachePersister;
 use anyhow::Result;
 use breez_sdk_liquid::model::LiquidNetwork;
 use breez_sdk_liquid::model::{Config, Signer};

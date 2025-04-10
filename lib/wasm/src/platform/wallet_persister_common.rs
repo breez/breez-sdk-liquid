@@ -1,13 +1,8 @@
-#![cfg(any(feature = "browser", feature = "node-js"))]
-
-pub(crate) mod indexed_db;
-pub(crate) mod node_fs;
-
 use breez_sdk_liquid::wallet::persister::lwk_wollet::Update;
 
 // If both updates are only tip updates, we can merge them.
 // See https://github.com/Blockstream/lwk/blob/0322a63310f8c8414c537adff68dcbbc7ff4662d/lwk_wollet/src/persister.rs#L174
-fn maybe_merge_updates(
+pub(crate) fn maybe_merge_updates(
     mut new_update: Update,
     prev_update: Option<&Update>,
     mut next_index: usize,
@@ -23,11 +18,10 @@ fn maybe_merge_updates(
     (new_update, next_index)
 }
 
+#[cfg(any(feature = "browser", feature = "node-js"))]
 #[cfg(test)]
 mod tests {
-    #![allow(unused)]
-
-    use crate::builders::create_wallet_persister;
+    use crate::platform::create_wallet_persister;
     use breez_sdk_liquid::elements::hashes::Hash;
     use breez_sdk_liquid::elements::{BlockHash, BlockHeader, TxMerkleNode, Txid};
     use breez_sdk_liquid::model::{LiquidNetwork, Signer};
@@ -61,7 +55,6 @@ mod tests {
         .await
     }
 
-    #[cfg(any(feature = "browser", feature = "node-js"))]
     #[sdk_macros::async_test_wasm]
     async fn test_wallet_cache() -> anyhow::Result<()> {
         let working_dir = format!("/tmp/{}", uuid::Uuid::new_v4());

@@ -1,11 +1,3 @@
-#![cfg_attr(
-    all(not(feature = "node-js"), not(feature = "browser")),
-    allow(dead_code)
-)]
-
-pub(crate) mod indexed_db;
-pub(crate) mod node_fs;
-
 use anyhow::Result;
 use breez_sdk_liquid::model::{EventListener, SdkEvent};
 use breez_sdk_liquid::persist::Persister;
@@ -91,7 +83,7 @@ mod tests {
     use std::path::PathBuf;
     use std::str::FromStr;
 
-    use crate::builders::create_db_backup_persister;
+    use crate::platform::create_db_backup_persister;
     use breez_sdk_liquid::model::PaymentState;
     use breez_sdk_liquid::persist::Persister;
     use breez_sdk_liquid::prelude::LiquidNetwork;

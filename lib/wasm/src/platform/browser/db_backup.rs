@@ -1,6 +1,4 @@
-#![cfg(feature = "browser")]
-
-use crate::backup::BackupStorage;
+use crate::platform::db_backup_common::BackupStorage;
 use anyhow::Result;
 use indexed_db_futures::{
     database::Database, query_source::QuerySource, transaction::TransactionMode, Build,

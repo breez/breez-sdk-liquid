@@ -1,4 +1,4 @@
-use crate::backup::BackupPersister;
+use crate::platform::db_backup_common::BackupPersister;
 use anyhow::{bail, Result};
 use breez_sdk_liquid::model::{Config, Signer};
 use breez_sdk_liquid::persist::Persister;
