@@ -175,7 +175,7 @@ impl LiquidSdkBuilder {
             .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)
     }
 
-    pub fn build(&self) -> Result<Arc<LiquidSdk>> {
+    pub async fn build(&self) -> Result<Arc<LiquidSdk>> {
         if let Some(breez_api_key) = &self.config.breez_api_key {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
@@ -226,12 +226,15 @@ impl LiquidSdkBuilder {
 
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
             Some(onchain_wallet) => onchain_wallet,
-            None => Arc::new(LiquidOnchainWallet::new(
-                self.config.clone(),
-                cache_dir,
-                persister.clone(),
-                self.signer.clone(),
-            )?),
+            None => Arc::new(
+                LiquidOnchainWallet::new(
+                    self.config.clone(),
+                    cache_dir,
+                    persister.clone(),
+                    self.signer.clone(),
+                )
+                .await?,
+            ),
         };
 
         let event_manager = Arc::new(EventManager::new());
@@ -435,7 +438,8 @@ impl LiquidSdk {
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
         )?
-        .build()?;
+        .build()
+        .await?;
         sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);
@@ -4196,7 +4200,8 @@ mod tests {
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             None,
-        )?;
+        )
+        .await?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -4303,11 +4308,9 @@ mod tests {
         let swapper = Arc::new(MockSwapper::default());
         let status_stream = Arc::new(MockStatusStream::new());
 
-        let sdk = Arc::new(new_liquid_sdk(
-            persister.clone(),
-            swapper.clone(),
-            status_stream.clone(),
-        )?);
+        let sdk = Arc::new(
+            new_liquid_sdk(persister.clone(), swapper.clone(), status_stream.clone()).await?,
+        );
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -4368,7 +4371,8 @@ mod tests {
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             None,
-        )?;
+        )
+        .await?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -4598,7 +4602,8 @@ mod tests {
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             None,
-        )?;
+        )
+        .await?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
@@ -4659,7 +4664,8 @@ mod tests {
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
             Some(onchain_fee_rate_leeway_sat_per_vbyte),
-        )?;
+        )
+        .await?;
 
         LiquidSdk::track_swap_updates(&sdk);
 
