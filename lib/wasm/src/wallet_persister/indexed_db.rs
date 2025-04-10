@@ -100,13 +100,9 @@ impl<S: AsyncWalletStorage> lwk_wollet::Persister for AsyncLwkPersister<S> {
 
         let (update, write_index) = maybe_merge_updates(update, updates.last(), updates.len());
 
-        self.sender
-            .try_send((update.clone(), write_index as u32))
-            .map_err(|e| {
-                lwk_wollet::PersistError::Other(format!(
-                    "Failed to send update to persister task: {e}"
-                ))
-            })?;
+        if let Err(e) = self.sender.try_send((update.clone(), write_index as u32)) {
+            log::error!("Failed to send update to persister task {e}");
+        }
 
         if write_index < updates.len() {
             updates[write_index] = update;
