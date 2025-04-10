@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use log::{info, trace, warn};
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
@@ -18,8 +18,7 @@ use crate::recover::recoverer::Recoverer;
 use crate::sync::model::data::{
     ChainSyncData, PaymentDetailsSyncData, ReceiveSyncData, SendSyncData,
 };
-use crate::sync::model::DecryptionInfo;
-use crate::sync::model::{Record, SetRecordRequest, SetRecordStatus};
+use crate::sync::model::{DecryptionInfo, Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
 use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
@@ -87,15 +86,34 @@ impl SyncService {
         }
     }
 
-    async fn run_event_loop(&self) {
+    async fn run_event_loop(&self, failed_sync_counter: &mut u8) {
         info!("realtime-sync: Running sync event loop");
-        let Ok(pulled_records_count) = self.pull().await else {
-            warn!("realtime-sync: Could not pull records");
-            return;
+
+        if *failed_sync_counter >= 5 {
+            warn!("realtime-sync: Consecutive failed sync counter reached, wiping database and retrying.");
+            if let Err(err) = self.persister.reset_sync() {
+                warn!("realtime-sync: Could not wipe sync database: {err:?}");
+                return;
+            }
+            *failed_sync_counter = 0;
+        }
+
+        let pulled_records_count = match self.pull().await {
+            Ok(pulled_records_count) => pulled_records_count,
+            Err(err) => {
+                warn!("realtime-sync: Could not pull records - {err:?}");
+                *failed_sync_counter += 1;
+                return;
+            }
         };
-        let Ok(pushed_records_count) = self.push().await else {
-            warn!("realtime-sync: Could not push records");
-            return;
+
+        let pushed_records_count = match self.push().await {
+            Ok(pushed_records_count) => pushed_records_count,
+            Err(err) => {
+                warn!("realtime-sync: Could not push records - {err:?}");
+                *failed_sync_counter += 1;
+                return;
+            }
         };
 
         if let Err(e) = self.subscription_notifier.send(Event::SyncedCompleted {
@@ -106,6 +124,8 @@ impl SyncService {
         }) {
             warn!("realtime-sync: Could not send sync completed event {:?}", e);
         }
+
+        *failed_sync_counter = 0;
     }
 
     async fn new_listener(&self) -> Result<Streaming<Notification>> {
@@ -145,6 +165,7 @@ impl SyncService {
                         continue;
                     }
                 };
+                let mut failed_sync_counter = 0;
                 info!("realtime-sync: Starting sync service loop");
                 loop {
                     info!("realtime-sync: before tokio_select");
@@ -152,7 +173,7 @@ impl SyncService {
                         local_event = local_sync_trigger.recv() => {
                           info!("realtime-sync: Received local message");
                           match local_event {
-                            Ok(_) => self.run_event_loop().await,
+                            Ok(_) => self.run_event_loop(&mut failed_sync_counter).await,
                             Err(err) => {
                                 warn!("realtime-sync: local trigger received error, probably lagging behind {err:?}");
                             }
@@ -166,7 +187,7 @@ impl SyncService {
                                     info!("realtime-sync: Notification client_id matches our own, skipping update.");
                                     continue;
                                 }
-                                self.run_event_loop().await;
+                                self.run_event_loop(&mut failed_sync_counter).await;
                             }
                             Err(err) => {
                                 warn!("realtime-sync: Received status {} from remote, attempting to reconnect.", err.message());
@@ -398,15 +419,22 @@ impl SyncService {
 
         // Step 2: Grab all pending incoming records from the database
         let incoming_records = self.persister.get_incoming_records()?;
+        let incoming_records_len = incoming_records.len();
 
         // Step 3: Decrypt all the records, if possible. Filter those whose revision/schema is not
         // applicable
         let mut succeded = vec![];
+        let mut inapplicable_records = 0;
         let mut decrypted: Vec<DecryptionInfo> = vec![];
         for record in incoming_records {
             let record_id = record.id.clone();
             match self.handle_decryption(record).await {
                 Ok(decryption_info) => decrypted.push(decryption_info),
+                // If the record is not applicable, we should keep it persisted for later
+                Err(DecryptionError::SchemaNotApplicable) => {
+                    info!("realtime-sync: Incoming record {record_id} has schema version too far ahead, skipping.");
+                    inapplicable_records += 1;
+                }
                 // If we already have this record, it should be cleaned from sync_incoming
                 Err(DecryptionError::AlreadyPersisted) => {
                     info!("realtime-sync: Incoming record {record_id} was already persisted, skipping.",);
@@ -458,16 +486,19 @@ impl SyncService {
         }
 
         // Step 8: Clear succeded records
-        if !succeded.is_empty() {
-            info!(
-                "realtime-sync: Cleaning {} incoming records",
-                succeded.len()
-            );
+        let succeded_len = succeded.len();
+        if succeded_len > 0 {
+            info!("realtime-sync: Cleaning {succeded_len} incoming records",);
             self.persister.remove_incoming_records(succeded.clone())?;
             info!("realtime-sync: Successfully cleaned records");
         }
 
-        Ok(succeded.len() as u32)
+        // Step 9: Check if all (applicable) records succeded
+        if succeded_len != incoming_records_len - inapplicable_records {
+            bail!("Previous pull completed with some failed records: succeded {succeded_len} inapplicable {inapplicable_records} total {incoming_records_len}");
+        }
+
+        Ok(succeded_len as u32)
     }
 
     async fn handle_push(
@@ -533,6 +564,7 @@ impl SyncService {
 
     async fn push(&self) -> Result<u32> {
         let outgoing_changes = self.persister.get_sync_outgoing_changes()?;
+        let total_changes = outgoing_changes.len();
 
         let mut succeded = vec![];
         for SyncOutgoingChanges {
@@ -549,12 +581,17 @@ impl SyncService {
             succeded.push(record_id);
         }
 
-        if !succeded.is_empty() {
+        let succeded_len = succeded.len();
+        if succeded_len > 0 {
             self.persister
                 .remove_sync_outgoing_changes(succeded.clone())?;
         }
 
-        Ok(succeded.len() as u32)
+        if succeded_len != total_changes {
+            bail!("Previous push completed with some failed records: succeded {succeded_len} total {total_changes}");
+        }
+
+        Ok(succeded_len as u32)
     }
 }
 
