@@ -18,7 +18,7 @@ mod test {
     use std::collections::HashMap;
     use std::str::FromStr;
 
-    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     /// Test recovery with a claim transaction and preimage

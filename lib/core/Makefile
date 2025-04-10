@@ -37,27 +37,37 @@ regtest-stop:
 
 REGTEST_TESTS ?= regtest
 cargo-regtest-test: check-regtest
-	$(REGTEST_PREFIX) cargo test $(REGTEST_TESTS) --features "regtest"
+	$(REGTEST_PREFIX) cargo test $(REGTEST_TESTS) --features regtest
 
 wasm-clippy:
 	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown -- -D warnings
 
 BROWSER ?= firefox
 
-wasm-test:
-	$(CLANG_PREFIX) wasm-pack test --headless --$(BROWSER)
+wasm-test: test-browser test-node
+
+test-node:
+	$(CLANG_PREFIX) wasm-pack test --node
+
+test-browser:
+	$(CLANG_PREFIX) wasm-pack test --headless --$(BROWSER) --features browser-tests
 
 test-chrome:
-	BROWSER=chrome $(MAKE) wasm-test
+	BROWSER=chrome $(MAKE) test-browser
 
 test-safari:
-	BROWSER=safari $(MAKE) wasm-test
+	BROWSER=safari $(MAKE) test-browser
 
-wasm-regtest-test: check-regtest
-	$(CLANG_PREFIX) $(REGTEST_PREFIX) WASM_BINDGEN_TEST_TIMEOUT=500 wasm-pack test --headless --$(BROWSER) --features regtest -- $(REGTEST_TESTS)
+wasm-regtest-test: wasm-regtest-test-browser wasm-regtest-test-node
+
+wasm-regtest-test-node: check-regtest
+	$(CLANG_PREFIX) $(REGTEST_PREFIX) WASM_BINDGEN_TEST_TIMEOUT=500 wasm-pack test --node --features regtest -- $(REGTEST_TESTS)
+
+wasm-regtest-test-browser: check-regtest
+	$(CLANG_PREFIX) $(REGTEST_PREFIX) WASM_BINDGEN_TEST_TIMEOUT=500 wasm-pack test --headless --$(BROWSER) --features regtest,browser-tests -- $(REGTEST_TESTS)
 
 wasm-regtest-test-chrome:
-	BROWSER=chrome $(MAKE) wasm-regtest-test
+	BROWSER=chrome $(MAKE) wasm-regtest-test-browser
 
 wasm-regtest-test-safari:
-	BROWSER=safari $(MAKE) wasm-regtest-test
+	BROWSER=safari $(MAKE) wasm-regtest-test-browser

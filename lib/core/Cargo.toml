@@ -13,7 +13,8 @@ frb = ["dep:flutter_rust_bridge"]
 # Uniffi features required to build using cargo-lipo
 uniffi-25 = []
 uniffi-28 = []
-regtest = []   # Enable regtest tests
+regtest = []        # Enable regtest tests
+browser-tests = []  # Enable browser wasm-pack tests
 test-utils = ["sdk-common/test-utils"]
 
 [lints]

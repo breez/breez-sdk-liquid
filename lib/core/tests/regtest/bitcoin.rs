@@ -8,7 +8,7 @@ use serial_test::serial;
 
 use crate::regtest::{utils, SdkNodeHandle, TIMEOUT};
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(feature = "browser-tests")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[sdk_macros::async_test_all]

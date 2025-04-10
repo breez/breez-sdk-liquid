@@ -298,7 +298,7 @@ mod tests {
     };
     use std::collections::BTreeMap;
 
-    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     fn get_descriptor<S: LwkSigner>(
