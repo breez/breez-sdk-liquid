@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use anyhow::{anyhow, ensure, Result};
 use lwk_wollet::elements::AssetId;
 
-use crate::payjoin::utxo_select::{utxo_select_best, InOut};
+use crate::wallet::utxo_select::{utxo_select_best, InOut};
 
 pub(crate) struct AssetSelectRequest {
     pub fee_asset: AssetId,
