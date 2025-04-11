@@ -46,12 +46,6 @@ pub(crate) struct Recipient {
     pub amount: u64,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub(crate) struct InOut {
-    pub asset_id: AssetId,
-    pub value: u64,
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct Utxo {
     pub txid: Txid,

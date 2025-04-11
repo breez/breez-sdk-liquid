@@ -7,14 +7,10 @@ use anyhow::{anyhow, ensure, Result};
 use asset::{asset_select, AssetSelectRequest, AssetSelectResult};
 use lwk_wollet::elements::AssetId;
 
-use crate::payjoin::{
-    model::InOut,
+use crate::wallet::{
     network_fee::{self, TxFee},
+    utxo_select::{utxo_select_fixed, utxo_select_in_range, InOut},
 };
-
-// TOTAL_TRIES in Core:
-// https://github.com/bitcoin/bitcoin/blob/1d9da8da309d1dbf9aef15eb8dc43b4a2dc3d309/src/wallet/coinselection.cpp#L74
-const UTXO_SELECTION_ITERATION_LIMIT: u32 = 100_000;
 
 #[derive(Debug, Clone)]
 pub(crate) struct UtxoSelectRequest {
@@ -50,168 +46,6 @@ pub(crate) fn utxo_select(req: UtxoSelectRequest) -> Result<UtxoSelectResult> {
         validate_selection(&req, res)?;
     }
     utxo_select_res
-}
-
-pub(crate) fn utxo_select_fixed(
-    target_value: u64,
-    target_utxo_count: usize,
-    utxos: &[u64],
-) -> Option<Vec<u64>> {
-    let selected_utxos = utxos
-        .iter()
-        .copied()
-        .take(target_utxo_count)
-        .collect::<Vec<_>>();
-    let selected_value = selected_utxos.iter().sum::<u64>();
-    if selected_value < target_value {
-        None
-    } else {
-        Some(selected_utxos)
-    }
-}
-
-pub(crate) fn utxo_select_basic(target_value: u64, utxos: &[u64]) -> Option<Vec<u64>> {
-    let mut selected_utxos = Vec::new();
-    let mut selected_value = 0;
-
-    if target_value > 0 {
-        for utxo in utxos {
-            selected_utxos.push(*utxo);
-            selected_value += utxo;
-            if selected_value >= target_value {
-                break;
-            }
-        }
-    }
-
-    if selected_value < target_value {
-        None
-    } else {
-        Some(selected_utxos)
-    }
-}
-
-pub(crate) fn utxo_select_best(target_value: u64, utxos: &[u64]) -> Option<Vec<u64>> {
-    utxo_select_in_range(target_value, 0, 0, utxos)
-        .or_else(|| utxo_select_basic(target_value, utxos))
-}
-
-/// Try to select utxos so that their sum is in the range [target_value..target_value + upper_bound_delta].
-/// Set `upper_bound_delta` to 0 if you want to find utxos without change.
-/// All the values must be "sane" so their sum does not overflow.
-fn utxo_select_in_range(
-    target_value: u64,
-    upper_bound_delta: u64,
-    target_utxo_count: usize,
-    utxos: &[u64],
-) -> Option<Vec<u64>> {
-    let mut utxos = utxos.to_vec();
-    utxos.sort();
-    utxos.reverse();
-
-    let mut iteration = 0;
-    let mut index = 0;
-    let mut value = 0;
-
-    let mut current_change = 0;
-    let mut best_change = u64::MAX;
-
-    let mut index_selection: Vec<usize> = vec![];
-    let mut best_selection: Option<Vec<usize>> = None;
-
-    let upper_bound = target_value + upper_bound_delta;
-    let mut available_value = utxos.iter().sum::<u64>();
-
-    if available_value < target_value {
-        return None;
-    }
-
-    while iteration < UTXO_SELECTION_ITERATION_LIMIT {
-        let mut step_back = false;
-
-        if available_value + value < target_value
-            // If any of the conditions are met, step back.
-            //
-            // Provides an upper bound on the change value that is allowed.
-            // Since value is lost when we create a change output due to increasing the size of the
-            // transaction by an output (the change output), we accept solutions that may be
-            // larger than the target.  The change is added to the solutions change score.
-            // However, values greater than value + upper_bound_delta are not considered.
-            //
-            // This creates a range of possible solutions where;
-            // range = (target, target + upper_bound_delta]
-            //
-            // That is, the range includes solutions that exactly equal the target up to but not
-            // including values greater than target + upper_bound_delta.
-            || value > upper_bound
-            || current_change > best_change
-        {
-            step_back = true;
-        } else if value >= target_value {
-            // Value meets or exceeds the target.
-            // Record the solution and the change then continue.
-            step_back = true;
-
-            let change = value - target_value;
-            current_change += change;
-
-            // Check if index_selection is better than the previous known best, and
-            // update best_selection accordingly.
-            if current_change <= best_change
-                && ((target_utxo_count == 0
-                    && best_selection.clone().is_none_or(|best_selection| {
-                        index_selection.len() <= best_selection.len()
-                    }))
-                    || index_selection.len() == target_utxo_count)
-            {
-                best_selection = Some(index_selection.clone());
-                best_change = current_change;
-            }
-
-            current_change = current_change.saturating_sub(change);
-        }
-
-        if target_utxo_count != 0 && index_selection.len() >= target_utxo_count {
-            step_back = true;
-        }
-
-        if step_back {
-            // Step back
-            if index_selection.is_empty() {
-                break;
-            }
-
-            loop {
-                index -= 1;
-
-                if index_selection.last().is_none_or(|last| index <= *last) {
-                    break;
-                }
-
-                let utxo_value = utxos[index];
-                available_value += utxo_value;
-            }
-
-            if index_selection.last().is_some_and(|last| index == *last) {
-                let utxo_value = utxos[index];
-                value = value.saturating_sub(utxo_value);
-                index_selection.pop();
-            }
-        } else {
-            // Add the utxo to the current selection
-            let utxo_value = utxos[index];
-
-            index_selection.push(index);
-
-            value += utxo_value;
-            available_value = available_value.saturating_sub(utxo_value);
-        }
-
-        index += 1;
-        iteration += 1;
-    }
-
-    best_selection.map(|best_selection| best_selection.iter().map(|index| utxos[*index]).collect())
 }
 
 fn utxo_select_inner(
@@ -275,11 +109,11 @@ fn utxo_select_inner(
                         + 1; // Server fee output
 
                     let min_network_fee = TxFee {
-                        server_inputs: server_input_count,
-                        user_inputs: user_input_count,
+                        native_inputs: server_input_count,
+                        nested_inputs: user_input_count,
                         outputs: output_count,
                     }
-                    .fee();
+                    .fee(None);
 
                     let server_inputs = if with_server_change {
                         utxo_select_fixed(min_network_fee + 1, server_input_count, &server_utxos)
@@ -446,11 +280,11 @@ fn validate_selection(
         + usize::from(fee_change.is_some());
 
     let min_network_fee = TxFee {
-        server_inputs: server_input_count,
-        user_inputs: client_input_count,
+        native_inputs: server_input_count,
+        nested_inputs: client_input_count,
         outputs: output_count,
     }
-    .fee();
+    .fee(None);
 
     let actual_network_fee = network_fee.value;
     ensure!(actual_network_fee >= min_network_fee);

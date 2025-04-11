@@ -1,6 +1,6 @@
 pub const MIN_FEE_RATE: f64 = 0.1;
 
-pub const WEIGHT_FIXED: usize = 222;
+pub const WEIGHT_FIXED: usize = 218;
 pub const WEIGHT_VIN_SINGLE_SIG_NATIVE: usize = 275;
 pub const WEIGHT_VIN_SINGLE_SIG_NESTED: usize = 367;
 pub const WEIGHT_VOUT_NESTED: usize = 270;
@@ -20,31 +20,33 @@ pub fn weight_to_fee(weight: usize, fee_rate: f64) -> u64 {
 
 #[derive(Copy, Clone, Default)]
 pub struct TxFee {
-    pub server_inputs: usize,
-    pub user_inputs: usize,
+    pub native_inputs: usize,
+    pub nested_inputs: usize,
     pub outputs: usize,
 }
 
 impl TxFee {
     pub fn tx_weight(&self) -> usize {
         let TxFee {
-            server_inputs,
-            user_inputs,
+            native_inputs,
+            nested_inputs,
             outputs,
         } = self;
         WEIGHT_FIXED
-            + WEIGHT_VIN_SINGLE_SIG_NATIVE * server_inputs
-            + WEIGHT_VIN_SINGLE_SIG_NESTED * user_inputs
+            + WEIGHT_VIN_SINGLE_SIG_NATIVE * native_inputs
+            + WEIGHT_VIN_SINGLE_SIG_NESTED * nested_inputs
             + WEIGHT_VOUT_NESTED * outputs
     }
 
-    pub fn fee(&self) -> u64 {
-        weight_to_fee(self.tx_weight(), MIN_FEE_RATE)
+    pub fn fee(&self, fee_rate: Option<f64>) -> u64 {
+        weight_to_fee(self.tx_weight(), fee_rate.unwrap_or(MIN_FEE_RATE))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::wallet::network_fee::{vsize_to_fee, weight_to_vsize};
+
     use super::*;
 
     #[cfg(feature = "browser-tests")]
@@ -81,8 +83,8 @@ mod tests {
     #[sdk_macros::test_all]
     fn test_tx_fee_calculation() {
         let fee = TxFee {
-            server_inputs: 1,
-            user_inputs: 1,
+            native_inputs: 1,
+            nested_inputs: 1,
             outputs: 2,
         };
 
@@ -96,11 +98,18 @@ mod tests {
 
         let empty_fee = TxFee::default();
         assert_eq!(empty_fee.tx_weight(), WEIGHT_FIXED);
-        assert_eq!(empty_fee.fee(), weight_to_fee(WEIGHT_FIXED, MIN_FEE_RATE));
+        assert_eq!(
+            empty_fee.fee(None),
+            weight_to_fee(WEIGHT_FIXED, MIN_FEE_RATE)
+        );
+        assert_eq!(
+            empty_fee.fee(Some(MIN_FEE_RATE)),
+            weight_to_fee(WEIGHT_FIXED, MIN_FEE_RATE)
+        );
 
         let complex_fee = TxFee {
-            server_inputs: 3,
-            user_inputs: 2,
+            native_inputs: 3,
+            nested_inputs: 2,
             outputs: 4,
         };
         assert_eq!(
