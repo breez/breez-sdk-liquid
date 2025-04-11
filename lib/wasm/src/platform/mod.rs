@@ -25,4 +25,4 @@ pub(crate) use default::{create_db_backup_persister, create_onchain_wallet};
 )]
 pub(crate) mod db_backup_common;
 #[cfg(any(feature = "browser", feature = "node-js"))]
-mod wallet_persister_common;
+pub(crate) mod wallet_persister_common;
