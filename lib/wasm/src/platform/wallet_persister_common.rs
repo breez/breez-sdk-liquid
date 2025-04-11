@@ -20,7 +20,7 @@ pub(crate) fn maybe_merge_updates(
 
 #[cfg(any(feature = "browser", feature = "node-js"))]
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use crate::platform::create_wallet_persister;
     use breez_sdk_liquid::elements::hashes::Hash;
     use breez_sdk_liquid::elements::{BlockHash, BlockHeader, TxMerkleNode, Txid};
@@ -38,7 +38,7 @@ mod tests {
     #[cfg(feature = "browser")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    fn get_wollet_descriptor() -> anyhow::Result<WolletDescriptor> {
+    pub(crate) fn get_wollet_descriptor() -> anyhow::Result<WolletDescriptor> {
         let signer: Rc<Box<dyn Signer>> = Rc::new(Box::new(SdkSigner::new("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about", "", false)?));
         let sdk_lwk_signer = SdkLwkSigner::new(signer)?;
         Ok(get_descriptor(&sdk_lwk_signer, LiquidNetwork::Testnet)?)
@@ -104,7 +104,7 @@ mod tests {
         Ok(())
     }
 
-    fn get_lwk_update(height: u32, only_tip: bool) -> lwk_wollet::Update {
+    pub(crate) fn get_lwk_update(height: u32, only_tip: bool) -> lwk_wollet::Update {
         let txid_height_new = match only_tip {
             true => Vec::new(),
             false => {
