@@ -1,32 +1,32 @@
-pub const MIN_FEE_RATE: f64 = 0.1;
+pub(crate) const MIN_FEE_RATE: f64 = 0.1;
 
-pub const WEIGHT_FIXED: usize = 218;
-pub const WEIGHT_VIN_SINGLE_SIG_NATIVE: usize = 275;
-pub const WEIGHT_VIN_SINGLE_SIG_NESTED: usize = 367;
-pub const WEIGHT_VOUT_NESTED: usize = 270;
+pub(crate) const WEIGHT_FIXED: usize = 218;
+pub(crate) const WEIGHT_VIN_SINGLE_SIG_NATIVE: usize = 275;
+pub(crate) const WEIGHT_VIN_SINGLE_SIG_NESTED: usize = 367;
+pub(crate) const WEIGHT_VOUT_NESTED: usize = 270;
 
 #[allow(clippy::manual_div_ceil)]
-pub fn weight_to_vsize(weight: usize) -> usize {
+pub(crate) fn weight_to_vsize(weight: usize) -> usize {
     (weight + 3) / 4
 }
 
-pub fn vsize_to_fee(vsize: usize, fee_rate: f64) -> u64 {
+pub(crate) fn vsize_to_fee(vsize: usize, fee_rate: f64) -> u64 {
     (vsize as f64 * fee_rate).ceil() as u64
 }
 
-pub fn weight_to_fee(weight: usize, fee_rate: f64) -> u64 {
+pub(crate) fn weight_to_fee(weight: usize, fee_rate: f64) -> u64 {
     vsize_to_fee(weight_to_vsize(weight), fee_rate)
 }
 
 #[derive(Copy, Clone, Default)]
-pub struct TxFee {
+pub(crate) struct TxFee {
     pub native_inputs: usize,
     pub nested_inputs: usize,
     pub outputs: usize,
 }
 
 impl TxFee {
-    pub fn tx_weight(&self) -> usize {
+    pub(crate) fn tx_weight(&self) -> usize {
         let TxFee {
             native_inputs,
             nested_inputs,
@@ -38,7 +38,7 @@ impl TxFee {
             + WEIGHT_VOUT_NESTED * outputs
     }
 
-    pub fn fee(&self, fee_rate: Option<f64>) -> u64 {
+    pub(crate) fn fee(&self, fee_rate: Option<f64>) -> u64 {
         weight_to_fee(self.tx_weight(), fee_rate.unwrap_or(MIN_FEE_RATE))
     }
 }
