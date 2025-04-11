@@ -10,7 +10,7 @@ use std::str::FromStr;
 
 use crate::payjoin::pset::{construct_pset, ConstructPsetRequest, PsetInput, PsetOutput};
 
-#[cfg(all(target_family = "wasm", target_os = "unknown"))]
+#[cfg(feature = "browser-tests")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 fn create_test_secret_key() -> SecretKey {
