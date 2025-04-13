@@ -89,7 +89,7 @@ impl SyncService {
     async fn run_event_loop(&self, failed_sync_counter: &mut u8) {
         info!("realtime-sync: Running sync event loop");
 
-        if *failed_sync_counter >= 5 {
+        if *failed_sync_counter > 4 {
             warn!("realtime-sync: Consecutive failed sync counter reached, wiping database and retrying.");
             if let Err(err) = self.persister.reset_sync() {
                 warn!("realtime-sync: Could not wipe sync database: {err:?}");
