@@ -42,9 +42,9 @@ impl<S: AsyncWalletStorage> AsyncWalletCachePersister<S> {
 
 #[sdk_macros::async_trait]
 impl<S: AsyncWalletStorage> WalletCachePersister for AsyncWalletCachePersister<S> {
-    fn get_lwk_persister(&self) -> LwkPersister {
+    fn get_lwk_persister(&self) -> anyhow::Result<LwkPersister> {
         let persister = std::sync::Arc::clone(&self.lwk_persister);
-        persister as LwkPersister
+        Ok(persister as LwkPersister)
     }
 
     async fn clear_cache(&self) -> anyhow::Result<()> {

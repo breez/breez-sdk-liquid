@@ -14,7 +14,7 @@ use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
 use lwk_wollet::secp256k1::Message;
-use lwk_wollet::{ElementsNetwork, FsPersister, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
+use lwk_wollet::{ElementsNetwork, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -202,11 +202,7 @@ impl LiquidOnchainWallet {
         let wallet_cache_persister: Arc<dyn WalletCachePersister> =
             Arc::new(FsWalletCachePersister::new(
                 working_dir.clone(),
-                FsPersister::new(
-                    &working_dir,
-                    config.network.into(),
-                    &get_descriptor(&signer, config.network)?,
-                )?,
+                get_descriptor(&signer, config.network)?,
                 config.network.into(),
             )?);
 
@@ -274,7 +270,7 @@ impl LiquidOnchainWallet {
         let descriptor = get_descriptor(signer, config.network)?;
         let wollet_res = Wollet::new(
             elements_network,
-            wallet_cache_persister.get_lwk_persister(),
+            wallet_cache_persister.get_lwk_persister()?,
             descriptor.clone(),
         );
         match wollet_res {
@@ -288,7 +284,7 @@ impl LiquidOnchainWallet {
                 wallet_cache_persister.clear_cache().await?;
                 Ok(Wollet::new(
                     elements_network,
-                    wallet_cache_persister.get_lwk_persister(),
+                    wallet_cache_persister.get_lwk_persister()?,
                     descriptor.clone(),
                 )?)
             }

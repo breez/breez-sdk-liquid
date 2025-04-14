@@ -1,5 +1,6 @@
+use anyhow::Result;
 use log::warn;
-use lwk_wollet::{ElementsNetwork, FsPersister, NoPersist};
+use lwk_wollet::{ElementsNetwork, FsPersister, NoPersist, WolletDescriptor};
 use maybe_sync::{MaybeSend, MaybeSync};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -10,24 +11,24 @@ pub type LwkPersister = std::sync::Arc<dyn lwk_wollet::Persister + Send + Sync>;
 
 #[sdk_macros::async_trait]
 pub trait WalletCachePersister: MaybeSend + MaybeSync {
-    fn get_lwk_persister(&self) -> LwkPersister;
+    fn get_lwk_persister(&self) -> Result<LwkPersister>;
 
-    async fn clear_cache(&self) -> anyhow::Result<()>;
+    async fn clear_cache(&self) -> Result<()>;
 }
 
 #[derive(Clone)]
 pub struct FsWalletCachePersister {
     working_dir: String,
-    persister: std::sync::Arc<FsPersister>,
+    descriptor: WolletDescriptor,
     elements_network: ElementsNetwork,
 }
 
 impl FsWalletCachePersister {
     pub(crate) fn new(
         working_dir: String,
-        persister: std::sync::Arc<FsPersister>,
+        descriptor: WolletDescriptor,
         elements_network: ElementsNetwork,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         let working_dir_buf = PathBuf::from_str(&working_dir)?;
         if !working_dir_buf.exists() {
             std::fs::create_dir_all(&working_dir_buf)?;
@@ -35,7 +36,7 @@ impl FsWalletCachePersister {
 
         Ok(Self {
             working_dir,
-            persister,
+            descriptor,
             elements_network,
         })
     }
@@ -43,11 +44,15 @@ impl FsWalletCachePersister {
 
 #[sdk_macros::async_trait]
 impl WalletCachePersister for FsWalletCachePersister {
-    fn get_lwk_persister(&self) -> LwkPersister {
-        self.persister.clone()
+    fn get_lwk_persister(&self) -> Result<LwkPersister> {
+        Ok(FsPersister::new(
+            &self.working_dir,
+            self.elements_network,
+            &self.descriptor,
+        )?)
     }
 
-    async fn clear_cache(&self) -> anyhow::Result<()> {
+    async fn clear_cache(&self) -> Result<()> {
         let mut path = std::path::PathBuf::from(&self.working_dir);
         path.push(self.elements_network.as_str());
         warn!("Wiping wallet in path: {:?}", path);
@@ -61,11 +66,11 @@ pub struct NoWalletCachePersister {}
 
 #[sdk_macros::async_trait]
 impl WalletCachePersister for NoWalletCachePersister {
-    fn get_lwk_persister(&self) -> LwkPersister {
-        NoPersist::new()
+    fn get_lwk_persister(&self) -> Result<LwkPersister> {
+        Ok(NoPersist::new())
     }
 
-    async fn clear_cache(&self) -> anyhow::Result<()> {
+    async fn clear_cache(&self) -> Result<()> {
         Ok(())
     }
 }
