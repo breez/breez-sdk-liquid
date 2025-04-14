@@ -42,9 +42,9 @@ impl NodeFsWalletCachePersister {
 
 #[sdk_macros::async_trait]
 impl WalletCachePersister for NodeFsWalletCachePersister {
-    fn get_lwk_persister(&self) -> LwkPersister {
+    fn get_lwk_persister(&self) -> anyhow::Result<LwkPersister> {
         let persister = Arc::clone(&self.lwk_persister);
-        persister as LwkPersister
+        Ok(persister as LwkPersister)
     }
 
     async fn clear_cache(&self) -> anyhow::Result<()> {

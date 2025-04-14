@@ -60,7 +60,7 @@ pub(crate) mod tests {
         let working_dir = format!("/tmp/{}", uuid::Uuid::new_v4());
 
         let persister = build_persister(&working_dir).await?;
-        let lwk_persister = persister.get_lwk_persister();
+        let lwk_persister = persister.get_lwk_persister()?;
 
         assert!(lwk_persister.get(0)?.is_none());
 
@@ -86,7 +86,7 @@ pub(crate) mod tests {
 
         // Reload persister
         let persister = build_persister(&working_dir).await?;
-        let lwk_persister = persister.get_lwk_persister();
+        let lwk_persister = persister.get_lwk_persister()?;
 
         assert_eq!(lwk_persister.get(0)?.unwrap().tip.height, 5);
         assert_eq!(lwk_persister.get(1)?.unwrap().tip.height, 15);
