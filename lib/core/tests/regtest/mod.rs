@@ -19,7 +19,7 @@ use breez_sdk_liquid::{
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
-pub const TIMEOUT: Duration = Duration::from_secs(15);
+pub const TIMEOUT: Duration = Duration::from_secs(30);
 
 struct ForwardingEventListener {
     sender: Sender<SdkEvent>,

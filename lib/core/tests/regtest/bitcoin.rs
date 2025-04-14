@@ -16,6 +16,11 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 async fn bitcoin() {
     let mut handle = SdkNodeHandle::init_node().await.unwrap();
 
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
+
     // --------------RECEIVE--------------
     let payer_amount_sat = 100_000;
 
@@ -258,12 +263,6 @@ async fn bitcoin() {
     assert_eq!(payments.len(), 3);
     let payment = &payments[0];
     assert_eq!(payment.status, PaymentState::Failed);
-    println!("Payment details: {:?}", payment.details);
-    println!("Lockup amount sat: {}", lockup_amount_sat);
-    println!(
-        "Prepare refund rbf response: {:?}",
-        prepare_refund_rbf_response
-    );
     // The following fails because the payment's refund_tx_amount_sat is None. Related issue: https://github.com/breez/breez-sdk-liquid/issues/773
     // TODO: uncomment once the issue is fixed
     /*assert!(matches!(
