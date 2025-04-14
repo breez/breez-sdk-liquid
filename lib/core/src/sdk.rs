@@ -574,12 +574,9 @@ impl LiquidSdk {
             let mut current_liquid_block: u32 = 0;
             let mut current_bitcoin_block: u32 = 0;
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
-            let mut interval = tokio::time::interval(Duration::from_secs(10));
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! {
-                    _ = interval.tick() => {
+                    _ = tokio::time::sleep(Duration::from_secs(10)) => {
                         info!("Track blocks loop ticked");
                         // Get the Liquid tip and process a new block
                         let t0 = Instant::now();
@@ -640,9 +637,6 @@ impl LiquidSdk {
                             cloned.receive_swap_handler.on_bitcoin_block(current_liquid_block).await;
                             cloned.send_swap_handler.on_bitcoin_block(current_bitcoin_block).await;
                         }
-
-                        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-                        interval.reset();
                     }
 
                     _ = shutdown_receiver.changed() => {
@@ -4029,6 +4023,7 @@ fn extract_description_from_metadata(request_data: &LnUrlPayRequestData) -> Opti
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;
+    use std::time::Duration;
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
@@ -4710,6 +4705,33 @@ mod tests {
             }
         })
         .await?;
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_background_tasks() -> Result<()> {
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::new());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+        let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
+
+        let sdk = new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            None,
+        )
+        .await?;
+
+        sdk.start().await?;
+
+        tokio::time::sleep(Duration::from_secs(3)).await;
+
+        sdk.disconnect().await?;
 
         Ok(())
     }

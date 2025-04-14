@@ -65,10 +65,6 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
 
                         callback.subscribe_swaps().await;
 
-                        let mut interval = tokio::time::interval(keep_alive_ping_interval);
-                        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-                        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-
                         loop {
                             tokio::select! {
                                 _ = shutdown.changed() => {
@@ -76,7 +72,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                                     return;
                                 },
 
-                                _ = interval.tick() => {
+                                _ = tokio::time::sleep(keep_alive_ping_interval) => {
                                     match serde_json::to_string(&WsRequest::Ping) {
                                         Ok(ping_msg) => {
                                             match sender.send(Message::Text(ping_msg.into())).await {
