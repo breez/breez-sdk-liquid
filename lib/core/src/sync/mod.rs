@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, bail, Result};
 use log::{info, trace, warn};
+use model::PushError;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
@@ -430,20 +431,15 @@ impl SyncService {
             let record_id = record.id.clone();
             match self.handle_decryption(record).await {
                 Ok(decryption_info) => decrypted.push(decryption_info),
-                // If the record is not applicable, we should keep it persisted for later
-                Err(DecryptionError::SchemaNotApplicable) => {
-                    info!("realtime-sync: Incoming record {record_id} has schema version too far ahead, skipping.");
-                    inapplicable_records += 1;
-                }
-                // If we already have this record, it should be cleaned from sync_incoming
-                Err(DecryptionError::AlreadyPersisted) => {
-                    info!("realtime-sync: Incoming record {record_id} was already persisted, skipping.",);
-                    succeded.push(record_id);
-                }
-                Err(e) => {
-                    info!(
-                        "realtime-sync: Could not handle decryption of incoming record {record_id}: {e:?}",
-                    );
+                Err(err) => {
+                    warn!("realtime-sync: Could not handle decryption of incoming record {record_id}: {err}");
+                    match err {
+                        // If the record is not applicable, we should keep it persisted for later
+                        DecryptionError::SchemaNotApplicable => inapplicable_records += 1,
+                        // If we already have this record, it should be cleaned from sync_incoming
+                        DecryptionError::AlreadyPersisted => succeded.push(record_id),
+                        _ => continue,
+                    }
                 }
             }
         }
@@ -506,7 +502,7 @@ impl SyncService {
         record_id: &str,
         data_id: &str,
         record_type: RecordType,
-    ) -> Result<()> {
+    ) -> Result<(), PushError> {
         info!("realtime-sync: Handling push for record record_id {record_id} data_id {data_id}");
 
         // Step 1: Get the sync state, if it exists, to compute the revision
@@ -544,9 +540,7 @@ impl SyncService {
 
         // Step 5: Check for conflict. If present, skip and retry on the next call
         if reply.status() == SetRecordStatus::Conflict {
-            return Err(anyhow!(
-                "Got conflict status when attempting to push record"
-            ));
+            return Err(PushError::RecordConflict);
         }
 
         // Step 6: Set/update the state revision
@@ -567,6 +561,7 @@ impl SyncService {
         let total_changes = outgoing_changes.len();
 
         let mut succeded = vec![];
+        let mut recoverable_errors = 0;
         for SyncOutgoingChanges {
             record_id,
             data_id,
@@ -574,11 +569,20 @@ impl SyncService {
             ..
         } in outgoing_changes
         {
-            if let Err(err) = self.handle_push(&record_id, &data_id, record_type).await {
-                warn!("realtime-sync: Could not handle push for record {record_id}: {err:?}");
-                continue;
+            match self.handle_push(&record_id, &data_id, record_type).await {
+                Ok(_) => succeded.push(record_id),
+                Err(err) => {
+                    warn!("realtime-sync: Could not handle push for record {record_id}: {err}");
+                    match err {
+                        // If we get a record conflict, we want to increment the failed counter.
+                        // This way, we will reset the local sync tables after too many failed
+                        // attempts (something is probably wrong with the local revisions)
+                        PushError::RecordConflict => {}
+                        _ => recoverable_errors += 1,
+                    }
+                    continue;
+                }
             }
-            succeded.push(record_id);
         }
 
         let succeded_len = succeded.len();
@@ -587,8 +591,8 @@ impl SyncService {
                 .remove_sync_outgoing_changes(succeded.clone())?;
         }
 
-        if succeded_len != total_changes {
-            bail!("Previous push completed with some failed records: succeded {succeded_len} total {total_changes}");
+        if succeded_len != total_changes - recoverable_errors {
+            bail!("Previous push completed with some failed records: succeded {succeded_len} total {total_changes} recoverable {recoverable_errors}");
         }
 
         Ok(succeded_len as u32)

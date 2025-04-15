@@ -127,6 +127,34 @@ pub(crate) struct DecryptionInfo {
     pub(crate) last_commit_time: Option<u32>,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum PushError {
+    #[error("Received conflict status from remote")]
+    RecordConflict,
+
+    #[error("Could not encrypt payload with signer: {err}")]
+    InvalidPayload { err: String },
+
+    #[error("Generic error: {err}")]
+    Generic { err: String },
+}
+
+impl From<anyhow::Error> for PushError {
+    fn from(value: anyhow::Error) -> Self {
+        Self::Generic {
+            err: value.to_string(),
+        }
+    }
+}
+
+impl From<crate::model::SignerError> for PushError {
+    fn from(value: crate::model::SignerError) -> Self {
+        Self::InvalidPayload {
+            err: value.to_string(),
+        }
+    }
+}
+
 impl Record {
     pub(crate) fn new(
         data: SyncData,
