@@ -385,7 +385,7 @@ impl InternalCreateReverseResponse {
     pub(crate) fn try_convert_from_boltz(
         boltz_create_response: &CreateReverseResponse,
         expected_swap_id: &str,
-        expected_invoice: &str,
+        expected_invoice: Option<&str>,
     ) -> Result<Self, PaymentError> {
         // Do not store the CreateResponse fields that are already stored separately
         // Before skipping them, ensure they match the separately stored ones
@@ -393,10 +393,15 @@ impl InternalCreateReverseResponse {
             boltz_create_response.id == expected_swap_id,
             PaymentError::PersistError
         );
-        ensure_sdk!(
-            boltz_create_response.invoice == expected_invoice,
-            PaymentError::PersistError
-        );
+        match (&boltz_create_response.invoice, expected_invoice) {
+            (Some(invoice), Some(expected_invoice)) => {
+                ensure_sdk!(invoice == expected_invoice, PaymentError::PersistError);
+            }
+            (None, None) => {}
+            _ => {
+                return Err(PaymentError::PersistError);
+            }
+        }
 
         let res = InternalCreateReverseResponse {
             swap_tree: boltz_create_response.swap_tree.clone().into(),

@@ -1,6 +1,7 @@
 mod address;
 pub(crate) mod asset_metadata;
 mod backup;
+pub(crate) mod bolt12_offer;
 pub(crate) mod cache;
 pub(crate) mod chain;
 mod migrations;

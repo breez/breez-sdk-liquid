@@ -3,6 +3,7 @@ use std::ops::Not as _;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
+use boltz_client::Secp256k1;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
 use chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService};
@@ -15,11 +16,28 @@ use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
-use lwk_wollet::secp256k1::Message;
 use persist::model::PaymentTxDetails;
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
+use sdk_common::lightning_with_bolt12::blinded_path::message::{
+    BlindedMessagePath, MessageContext, OffersContext,
+};
+use sdk_common::lightning_with_bolt12::blinded_path::payment::{
+    BlindedPaymentPath, Bolt12OfferContext, PaymentConstraints, PaymentContext,
+    UnauthenticatedReceiveTlvs,
+};
+use sdk_common::lightning_with_bolt12::blinded_path::{self, IntroductionNode};
+use sdk_common::lightning_with_bolt12::bolt11_invoice::PaymentSecret;
+use sdk_common::lightning_with_bolt12::ln::inbound_payment::ExpandedKey;
+use sdk_common::lightning_with_bolt12::offers::invoice_request::{
+    InvoiceRequest, InvoiceRequestFields,
+};
+use sdk_common::lightning_with_bolt12::offers::nonce::Nonce;
+use sdk_common::lightning_with_bolt12::offers::offer::{Offer, OfferBuilder};
+use sdk_common::lightning_with_bolt12::sign::RandomBytes;
+use sdk_common::lightning_with_bolt12::types::payment::PaymentHash;
+use sdk_common::lightning_with_bolt12::util::string::UntrustedString;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use sdk_common::utils::Arc;
@@ -28,7 +46,7 @@ use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_with_wasm::alias as tokio;
-use web_time::Instant;
+use web_time::{Instant, SystemTime, UNIX_EPOCH};
 use x509_parser::parse_x509_certificate;
 
 use crate::chain_swap::ChainSwapHandler;
@@ -44,6 +62,7 @@ use crate::swapper::SubscriptionHandler;
 use crate::swapper::{
     boltz::BoltzSwapper, Swapper, SwapperStatusStream, SwapperSubscriptionHandler,
 };
+use crate::utils::bolt12::encode_invoice;
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -52,7 +71,7 @@ use crate::{
     persist::Persister,
     utils, *,
 };
-use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
+use sdk_common::lightning_with_bolt12::offers::invoice::{Bolt12Invoice, UnsignedBolt12Invoice};
 
 use self::sync::client::BreezSyncerClient;
 use self::sync::SyncService;
@@ -934,7 +953,7 @@ impl LiquidSdk {
         let invoice = invoice
             .trim()
             .parse::<Bolt11Invoice>()
-            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
+            .map_err(|err| PaymentError::invalid_invoice(err.to_string()))?;
 
         match (invoice.network().to_string().as_str(), self.config.network) {
             ("bitcoin", LiquidNetwork::Mainnet) => {}
@@ -971,7 +990,7 @@ impl LiquidSdk {
         user_specified_receiver_amount_sat: u64,
         invoice: &str,
     ) -> Result<Bolt12Invoice, PaymentError> {
-        let invoice_parsed = utils::parse_bolt12_invoice(invoice)?;
+        let invoice_parsed = utils::bolt12::decode_invoice(invoice)?;
         let invoice_signing_pubkey = invoice_parsed.signing_pubkey().to_hex();
 
         // Check if the invoice is signed by same key as the offer
@@ -1974,7 +1993,7 @@ impl LiquidSdk {
                     payer_amount_sat,
                     receiver_amount_sat,
                     pair_fees_json: serde_json::to_string(&lbtc_pair).map_err(|e| {
-                        PaymentError::generic(&format!("Failed to serialize SubmarinePair: {e:?}"))
+                        PaymentError::generic(format!("Failed to serialize SubmarinePair: {e:?}"))
                     })?,
                     create_response_json,
                     lockup_tx_id: None,
@@ -2274,7 +2293,7 @@ impl LiquidSdk {
             accepted_receiver_amount_sat: None,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
-                PaymentError::generic(&format!("Failed to serialize outgoing ChainPair: {e:?}"))
+                PaymentError::generic(format!("Failed to serialize outgoing ChainPair: {e:?}"))
             })?,
             accept_zero_conf,
             create_response_json,
@@ -2369,7 +2388,7 @@ impl LiquidSdk {
     /// # Arguments
     ///
     /// * `req` - the [PrepareReceiveRequest] containing:
-    ///     * `payment_method` - the supported payment methods; either an invoice, a Liquid address or a Bitcoin address
+    ///     * `payment_method` - the supported payment methods; either an invoice, an offer, a Liquid address or a Bitcoin address
     ///     * `amount` - The optional amount of type [ReceiveAmount] to be paid.
     ///        - [ReceiveAmount::Bitcoin] which sets the amount in satoshi that should be paid
     ///        - [ReceiveAmount::Asset] which sets the amount of an asset that should be paid
@@ -2379,53 +2398,71 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        let mut min_payer_amount_sat = None;
-        let mut max_payer_amount_sat = None;
-        let mut swapper_feerate = None;
-        let fees_sat;
-        match req.payment_method {
+        match req.payment_method.clone() {
             PaymentMethod::Lightning => {
-                let payer_amount_sat = match req.amount {
-                    Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::asset_error(
-                            "Cannot receive an asset when the payment method is Lightning",
-                        ));
-                    }
-                    Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => payer_amount_sat,
-                    None => {
-                        return Err(PaymentError::generic(
-                            "Bitcoin payer amount must be set when the payment method is Lightning",
-                        ));
-                    }
-                };
+                self.prepare_receive_payment_lightning(req, req.amount.clone())
+                    .await
+            }
+            PaymentMethod::Bolt12Offer => {
+                if req.amount.is_some() {
+                    return Err(PaymentError::generic(
+                        "Amount cannot be set for this payment method",
+                    ));
+                }
+                self.persister
+                    .get_webhook_url()?
+                    .ok_or(PaymentError::generic("Webhook URL not set"))?;
+
                 let reverse_pair = self
                     .swapper
                     .get_reverse_swap_pairs()
                     .await?
                     .ok_or(PaymentError::PairsNotFound)?;
 
-                fees_sat = reverse_pair.fees.total(payer_amount_sat);
+                let fees_sat = reverse_pair.fees.total(0);
+                debug!("Preparing Bolt12Offer Receive Swap with: min fees_sat {fees_sat}");
 
-                ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
-
-                reverse_pair
-                    .limits
-                    .within(payer_amount_sat)
-                    .map_err(|_| PaymentError::AmountOutOfRange)?;
-
-                min_payer_amount_sat = Some(reverse_pair.limits.minimal);
-                max_payer_amount_sat = Some(reverse_pair.limits.maximal);
-                swapper_feerate = Some(reverse_pair.fees.percentage);
-
-                debug!(
-                    "Preparing Lightning Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
-                );
+                Ok(PrepareReceiveResponse {
+                    payment_method: req.payment_method.clone(),
+                    amount: req.amount.clone(),
+                    offer: None,
+                    invoice_request: None,
+                    fees_sat,
+                    min_payer_amount_sat: Some(reverse_pair.limits.minimal),
+                    max_payer_amount_sat: Some(reverse_pair.limits.maximal),
+                    swapper_feerate: Some(reverse_pair.fees.percentage),
+                })
+            }
+            PaymentMethod::Bolt12Invoice => {
+                let offer = req.offer.as_ref().ok_or(PaymentError::generic(
+                    "Offer must be set for this payment method",
+                ))?;
+                let invoice_request = req.invoice_request.as_ref().ok_or(PaymentError::generic(
+                    "Invoice request must be set for this payment method",
+                ))?;
+                self.persister
+                    .fetch_bolt12_offer_by_id(offer)?
+                    .ok_or(PaymentError::generic(format!(
+                        "Bolt12 offer not found: {offer}",
+                    )))?;
+                if req.amount.is_some() {
+                    return Err(PaymentError::generic(
+                        "Amount cannot be set for this payment method",
+                    ));
+                }
+                let invoice_request = utils::bolt12::decode_invoice_request(invoice_request)?;
+                let amount = invoice_request
+                    .amount_msats()
+                    .map(|msats| ReceiveAmount::Bitcoin {
+                        payer_amount_sat: msats / 1_000,
+                    });
+                self.prepare_receive_payment_lightning(req, amount).await
             }
             PaymentMethod::BitcoinAddress => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(
-                            "Cannot receive an asset when the payment method is Bitcoin",
+                            "Asset cannot be received for this payment method",
                         ));
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
@@ -2440,12 +2477,19 @@ impl LiquidSdk {
                     .map(|user_lockup_amount_sat| pair.fees.boltz(user_lockup_amount_sat))
                     .unwrap_or_default();
 
-                min_payer_amount_sat = Some(pair.limits.minimal);
-                max_payer_amount_sat = Some(pair.limits.maximal);
-                swapper_feerate = Some(pair.fees.percentage);
-
-                fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
+                let fees_sat = service_fees_sat + claim_fees_sat + server_fees_sat;
                 debug!("Preparing Chain Receive Swap with: payer_amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
+
+                Ok(PrepareReceiveResponse {
+                    payment_method: req.payment_method.clone(),
+                    amount: req.amount.clone(),
+                    offer: None,
+                    invoice_request: None,
+                    fees_sat,
+                    min_payer_amount_sat: Some(pair.limits.minimal),
+                    max_payer_amount_sat: Some(pair.limits.maximal),
+                    swapper_feerate: Some(pair.fees.percentage),
+                })
             }
             PaymentMethod::LiquidAddress => {
                 let (asset_id, payer_amount, payer_amount_sat) = match req.amount.clone() {
@@ -2458,15 +2502,70 @@ impl LiquidSdk {
                     }
                     None => (self.config.lbtc_asset_id(), None, None),
                 };
-                fees_sat = 0;
-                debug!("Preparing Liquid Receive with: asset_id {asset_id}, amount {payer_amount:?}, amount_sat {payer_amount_sat:?}, fees_sat {fees_sat}");
+
+                debug!("Preparing Liquid Receive with: asset_id {asset_id}, amount {payer_amount:?}, amount_sat {payer_amount_sat:?}");
+
+                Ok(PrepareReceiveResponse {
+                    payment_method: req.payment_method.clone(),
+                    amount: req.amount.clone(),
+                    offer: None,
+                    invoice_request: None,
+                    fees_sat: 0,
+                    min_payer_amount_sat: None,
+                    max_payer_amount_sat: None,
+                    swapper_feerate: None,
+                })
+            }
+        }
+    }
+
+    async fn prepare_receive_payment_lightning(
+        &self,
+        req: &PrepareReceiveRequest,
+        amount: Option<ReceiveAmount>,
+    ) -> Result<PrepareReceiveResponse, PaymentError> {
+        let payer_amount_sat = match amount {
+            Some(ReceiveAmount::Asset { .. }) => {
+                return Err(PaymentError::asset_error(
+                    "Cannot receive an asset for this payment method",
+                ));
+            }
+            Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => payer_amount_sat,
+            None => {
+                return Err(PaymentError::generic(
+                    "Bitcoin payer amount must be set for this payment method",
+                ));
             }
         };
+        let reverse_pair = self
+            .swapper
+            .get_reverse_swap_pairs()
+            .await?
+            .ok_or(PaymentError::PairsNotFound)?;
+
+        let fees_sat = reverse_pair.fees.total(payer_amount_sat);
+
+        ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
+
+        reverse_pair
+            .limits
+            .within(payer_amount_sat)
+            .map_err(|_| PaymentError::AmountOutOfRange)?;
+
+        let min_payer_amount_sat = Some(reverse_pair.limits.minimal);
+        let max_payer_amount_sat = Some(reverse_pair.limits.maximal);
+        let swapper_feerate = Some(reverse_pair.fees.percentage);
+
+        debug!(
+            "Preparing Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat"
+        );
 
         Ok(PrepareReceiveResponse {
-            amount: req.amount.clone(),
-            fees_sat,
             payment_method: req.payment_method.clone(),
+            amount: amount.clone(),
+            offer: req.offer.clone(),
+            invoice_request: req.invoice_request.clone(),
+            fees_sat,
             min_payer_amount_sat,
             max_payer_amount_sat,
             swapper_feerate,
@@ -2486,7 +2585,12 @@ impl LiquidSdk {
     /// # Returns
     ///
     /// * A [ReceivePaymentResponse] containing:
-    ///     * `destination` - the final destination to be paid by the payer, either a BIP21 URI (Liquid or Bitcoin), a Liquid address or an invoice
+    ///     * `destination` - the final destination to be paid by the payer, either:
+    ///        - a BIP21 URI (Liquid or Bitcoin)
+    ///        - a Liquid address
+    ///        - a BOLT11 invoice
+    ///        - a BOLT12 invoice
+    ///        - a BOLT12 offer
     pub async fn receive_payment(
         &self,
         req: &ReceivePaymentRequest,
@@ -2496,22 +2600,24 @@ impl LiquidSdk {
         let PrepareReceiveResponse {
             payment_method,
             amount,
+            offer,
+            invoice_request,
             fees_sat,
             ..
-        } = &req.prepare_response;
+        } = req.prepare_response.clone();
 
         match payment_method {
             PaymentMethod::Lightning => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(
-                            "Cannot receive an asset when the payment method is Lightning",
+                            "Asset cannot be received for this payment method",
                         ));
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => payer_amount_sat,
                     None => {
                         return Err(PaymentError::generic(
-                            "Bitcoin payer amount must be set when the payment method is Lightning",
+                            "Bitcoin payer amount must be set for this payment method",
                         ));
                     }
                 };
@@ -2530,20 +2636,48 @@ impl LiquidSdk {
                         })
                     }
                 };
-                self.create_receive_swap(amount_sat, *fees_sat, description, description_hash)
+                self.create_bolt11_receive_swap(amount_sat, fees_sat, description, description_hash)
+                    .await
+            }
+            PaymentMethod::Bolt12Offer => {
+                let default_description = "default".to_string();
+                match self
+                    .persister
+                    .fetch_bolt12_offer_by_description(&default_description)?
+                {
+                    Some(bolt12_offer) => Ok(ReceivePaymentResponse {
+                        destination: bolt12_offer.id,
+                    }),
+                    None => self.create_bolt12_offer(default_description).await,
+                }
+            }
+            PaymentMethod::Bolt12Invoice => {
+                let offer = offer.ok_or(PaymentError::generic(
+                    "Offer must be set for this payment method",
+                ))?;
+                let invoice_request = invoice_request.as_ref().ok_or(PaymentError::generic(
+                    "Invoice request must be set for this payment method",
+                ))?;
+
+                let bolt12_offer = self.persister.fetch_bolt12_offer_by_id(&offer)?.ok_or(
+                    PaymentError::generic(format!("Bolt12 offer not found: {offer}",)),
+                )?;
+                let invoice_request = utils::bolt12::decode_invoice_request(invoice_request)?;
+
+                self.create_bolt12_receive_swap(bolt12_offer, invoice_request, fees_sat)
                     .await
             }
             PaymentMethod::BitcoinAddress => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(
-                            "Cannot receive an asset when the payment method is Bitcoin",
+                            "Asset cannot be received for this payment method",
                         ));
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
                     None => None,
                 };
-                self.receive_onchain(amount_sat, *fees_sat).await
+                self.receive_onchain(amount_sat, fees_sat).await
             }
             PaymentMethod::LiquidAddress => {
                 let lbtc_asset_id = self.config.lbtc_asset_id();
@@ -2585,7 +2719,7 @@ impl LiquidSdk {
         }
     }
 
-    async fn create_receive_swap(
+    async fn create_bolt11_receive_swap(
         &self,
         payer_amount_sat: u64,
         fees_sat: u64,
@@ -2600,7 +2734,7 @@ impl LiquidSdk {
         let new_fees_sat = reverse_pair.fees.total(payer_amount_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
 
-        debug!("Creating Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+        debug!("Creating BOLT11 Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
         let keypair = utils::generate_keypair();
 
@@ -2610,12 +2744,9 @@ impl LiquidSdk {
 
         // Address to be used for a BIP-21 direct payment
         let mrh_addr = self.onchain_wallet.next_unused_address().await?;
-
         // Signature of the claim public key of the SHA256 hash of the address for the direct payment
         let mrh_addr_str = mrh_addr.to_string();
-        let mrh_addr_hash = sha256::Hash::hash(mrh_addr_str.as_bytes());
-        let mrh_addr_hash_sig =
-            keypair.sign_schnorr(Message::from_digest_slice(mrh_addr_hash.as_byte_array())?);
+        let mrh_addr_hash_sig = utils::sign_message_hash(&mrh_addr_str, &keypair)?;
 
         let receiver_amount_sat = payer_amount_sat - fees_sat;
         let webhook_claim_status =
@@ -2630,10 +2761,11 @@ impl LiquidSdk {
         });
 
         let v2_req = CreateReverseRequest {
-            invoice_amount: payer_amount_sat,
             from: "BTC".to_string(),
             to: "L-BTC".to_string(),
-            preimage_hash: preimage.sha256,
+            invoice: None,
+            invoice_amount: Some(payer_amount_sat),
+            preimage_hash: Some(preimage.sha256),
             claim_public_key: keypair.public_key().into(),
             description,
             description_hash,
@@ -2643,6 +2775,10 @@ impl LiquidSdk {
             webhook,
         };
         let create_response = self.swapper.create_receive_swap(v2_req).await?;
+        let invoice_str = create_response
+            .invoice
+            .clone()
+            .ok_or(PaymentError::receive_error("Invoice not found"))?;
 
         // Reserve this address until the timeout block height
         self.persister.insert_or_update_reserved_address(
@@ -2653,7 +2789,7 @@ impl LiquidSdk {
         // Check if correct MRH was added to the invoice by Boltz
         let (bip21_lbtc_address, _bip21_amount_btc) = self
             .swapper
-            .check_for_mrh(&create_response.invoice)
+            .check_for_mrh(&invoice_str)
             .await?
             .ok_or(PaymentError::receive_error("Invoice has no MRH"))?;
         ensure_sdk!(
@@ -2662,8 +2798,8 @@ impl LiquidSdk {
         );
 
         let swap_id = create_response.id.clone();
-        let invoice = Bolt11Invoice::from_str(&create_response.invoice)
-            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
+        let invoice = Bolt11Invoice::from_str(&invoice_str)
+            .map_err(|err| PaymentError::invalid_invoice(err.to_string()))?;
         let payer_amount_sat =
             invoice
                 .amount_milli_satoshis()
@@ -2683,7 +2819,7 @@ impl LiquidSdk {
         let create_response_json = ReceiveSwap::from_boltz_struct_to_json(
             &create_response,
             &swap_id,
-            &invoice.to_string(),
+            Some(&invoice.to_string()),
         )?;
         let invoice_description = match invoice.description() {
             Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
@@ -2704,7 +2840,7 @@ impl LiquidSdk {
                 payer_amount_sat,
                 receiver_amount_sat,
                 pair_fees_json: serde_json::to_string(&reverse_pair).map_err(|e| {
-                    PaymentError::generic(&format!("Failed to serialize ReversePair: {e:?}"))
+                    PaymentError::generic(format!("Failed to serialize ReversePair: {e:?}"))
                 })?,
                 claim_fees_sat: reverse_pair.fees.claim_estimate(),
                 lockup_tx_id: None,
@@ -2721,6 +2857,248 @@ impl LiquidSdk {
 
         Ok(ReceivePaymentResponse {
             destination: invoice.to_string(),
+        })
+    }
+
+    async fn create_bolt12_receive_swap(
+        &self,
+        offer: Bolt12Offer,
+        invoice_request: InvoiceRequest,
+        fees_sat: u64,
+    ) -> Result<ReceivePaymentResponse, PaymentError> {
+        let payer_amount_sat = invoice_request
+            .amount_msats()
+            .map(|msats| msats / 1_000)
+            .ok_or(PaymentError::amount_missing(
+                "Invoice request must contain an amount",
+            ))?;
+        let cln_node = self
+            .swapper
+            .get_nodes()
+            .await?
+            .get_btc_cln_node()
+            .ok_or(PaymentError::generic("No BTC CLN node found"))?;
+        let params = self.swapper.get_bolt12_params().await?;
+        let reverse_pair = self
+            .swapper
+            .get_reverse_swap_pairs()
+            .await?
+            .ok_or(PaymentError::PairsNotFound)?;
+        let new_fees_sat = reverse_pair.fees.total(payer_amount_sat);
+        ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
+        debug!("Creating BOLT12 Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
+
+        let secp = Secp256k1::new();
+        let keypair = offer.get_keypair()?;
+        let preimage = Preimage::new();
+        let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
+        let preimage_hash = preimage.sha256.to_byte_array();
+
+        // Address to be used for a BIP-21 direct payment
+        let mrh_addr = self.onchain_wallet.next_unused_address().await?;
+        // Signature of the claim public key of the SHA256 hash of the address for the direct payment
+        let mrh_addr_str = mrh_addr.to_string();
+        let mrh_addr_hash_sig = utils::sign_message_hash(&mrh_addr_str, &keypair)?;
+
+        let entropy_source = RandomBytes::new(utils::generate_entropy());
+        let nonce = Nonce::from_entropy_source(&entropy_source);
+        let payment_context = PaymentContext::Bolt12Offer(Bolt12OfferContext {
+            offer_id: Offer::try_from(offer)?.id(),
+            invoice_request: InvoiceRequestFields {
+                payer_signing_pubkey: invoice_request.payer_signing_pubkey(),
+                quantity: invoice_request.quantity(),
+                payer_note_truncated: invoice_request
+                    .payer_note()
+                    .map(|s| UntrustedString(s.to_string())),
+                human_readable_name: invoice_request.offer_from_hrn().clone(),
+            },
+        });
+        let expanded_key = ExpandedKey::new(keypair.secret_key().secret_bytes());
+        let payee_tlvs = UnauthenticatedReceiveTlvs {
+            payment_secret: PaymentSecret(utils::generate_entropy()),
+            payment_constraints: PaymentConstraints {
+                max_cltv_expiry: 1_000_000,
+                htlc_minimum_msat: 1,
+            },
+            payment_context,
+        }
+        .authenticate(nonce, &expanded_key);
+
+        // Configure the blinded payment paths to include the MRH address
+        let default_payment_path = BlindedPaymentPath::one_hop(
+            cln_node.public_key,
+            payee_tlvs.clone(),
+            params.min_cltv as u16,
+            &entropy_source,
+            &secp,
+        )
+        .map_err(|_| {
+            PaymentError::generic(
+                "Failed to create BOLT12 invoice: Error creating blinded payment path",
+            )
+        })?;
+        let mrh_payment_path = {
+            let mut payment_path = default_payment_path.clone();
+            payment_path.inner_path.introduction_node = IntroductionNode::DirectedShortChannelId(
+                blinded_path::Direction::NodeOne,
+                params.magic_routing_hint.channel_id,
+            );
+            payment_path
+        };
+        let payment_paths = vec![default_payment_path, mrh_payment_path];
+
+        // Create the invoice
+        let invoice = invoice_request
+            .respond_with_no_std(
+                payment_paths,
+                PaymentHash(preimage_hash),
+                SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| {
+                    PaymentError::generic(format!("Failed to create BOLT12 invoice: {e:?}"))
+                })?,
+            )?
+            .build()?
+            .sign(|unsigned_invoice: &UnsignedBolt12Invoice| {
+                Ok(secp.sign_schnorr_no_aux_rand(unsigned_invoice.as_ref().as_digest(), &keypair))
+            })
+            .map_err(|e| {
+                PaymentError::generic(format!("Failed to create BOLT12 invoice: {e:?}"))
+            })?;
+        let invoice_str = encode_invoice(&invoice).map_err(|e| {
+            PaymentError::generic(format!("Failed to create BOLT12 invoice: {e:?}"))
+        })?;
+        debug!("Created BOLT12 invoice: {invoice_str}");
+
+        let claim_keypair = utils::generate_keypair();
+        let receiver_amount_sat = payer_amount_sat - fees_sat;
+        let webhook_claim_status =
+            match receiver_amount_sat > self.config.zero_conf_max_amount_sat() {
+                true => RevSwapStates::TransactionConfirmed,
+                false => RevSwapStates::TransactionMempool,
+            };
+        let webhook = self.persister.get_webhook_url()?.map(|url| Webhook {
+            url,
+            hash_swap_id: Some(true),
+            status: Some(vec![webhook_claim_status]),
+        });
+
+        let v2_req = CreateReverseRequest {
+            from: "BTC".to_string(),
+            to: "L-BTC".to_string(),
+            invoice: Some(invoice_str.clone()),
+            invoice_amount: None,
+            preimage_hash: None,
+            claim_public_key: claim_keypair.public_key().into(),
+            description: None,
+            description_hash: None,
+            address: Some(mrh_addr_str.clone()),
+            address_signature: Some(mrh_addr_hash_sig.to_hex()),
+            referral_id: None,
+            webhook,
+        };
+        let create_response = self.swapper.create_receive_swap(v2_req).await?;
+
+        // Reserve this address until the timeout block height
+        self.persister.insert_or_update_reserved_address(
+            &mrh_addr_str,
+            create_response.timeout_block_height,
+        )?;
+
+        let swap_id = create_response.id.clone();
+        let destination_pubkey = cln_node.public_key.to_hex();
+
+        let create_response_json =
+            ReceiveSwap::from_boltz_struct_to_json(&create_response, &swap_id, None)?;
+        let invoice_description = invoice.description().map(|s| s.to_string());
+
+        self.persister
+            .insert_or_update_receive_swap(&ReceiveSwap {
+                id: swap_id.clone(),
+                preimage: preimage_str,
+                create_response_json,
+                claim_private_key: claim_keypair.display_secret().to_string(),
+                invoice: invoice_str.clone(),
+                payment_hash: Some(preimage.sha256.to_string()),
+                destination_pubkey: Some(destination_pubkey),
+                timeout_block_height: create_response.timeout_block_height,
+                description: invoice_description,
+                payer_amount_sat,
+                receiver_amount_sat,
+                pair_fees_json: serde_json::to_string(&reverse_pair).map_err(|e| {
+                    PaymentError::generic(format!("Failed to serialize ReversePair: {e:?}"))
+                })?,
+                claim_fees_sat: reverse_pair.fees.claim_estimate(),
+                lockup_tx_id: None,
+                claim_address: None,
+                claim_tx_id: None,
+                mrh_address: mrh_addr_str,
+                mrh_tx_id: None,
+                created_at: utils::now(),
+                state: PaymentState::Created,
+                metadata: Default::default(),
+            })
+            .map_err(|_| PaymentError::PersistError)?;
+        self.status_stream.track_swap_id(&swap_id)?;
+
+        Ok(ReceivePaymentResponse {
+            destination: invoice_str,
+        })
+    }
+
+    async fn create_bolt12_offer(
+        &self,
+        description: String,
+    ) -> Result<ReceivePaymentResponse, PaymentError> {
+        let webhook_url = self
+            .persister
+            .get_webhook_url()?
+            .ok_or(PaymentError::generic("Webhook URL not set"))?;
+        let cln_node = self
+            .swapper
+            .get_nodes()
+            .await?
+            .get_btc_cln_node()
+            .ok_or(PaymentError::generic("No BTC CLN node found"))?;
+        debug!("Creating BOLT12 offer for description: {description}");
+        let keypair = utils::generate_keypair();
+        let entropy_source = RandomBytes::new(utils::generate_entropy());
+        let secp = Secp256k1::new();
+        let message_context = MessageContext::Offers(OffersContext::InvoiceRequest {
+            nonce: Nonce::from_entropy_source(&entropy_source),
+        });
+
+        // Build the offer with a one-hop blinded path to the swapper CLN node
+        let offer = OfferBuilder::new(keypair.public_key())
+            .chain(self.config.network.into())
+            .path(
+                BlindedMessagePath::one_hop(
+                    cln_node.public_key,
+                    message_context,
+                    &entropy_source,
+                    &secp,
+                )
+                .map_err(|_| {
+                    PaymentError::generic(
+                        "Error creating Bolt12 Offer: Could not create a one-hop blinded path",
+                    )
+                })?,
+            )
+            .build()?;
+        let offer_str = utils::bolt12::encode_offer(&offer)?;
+        info!("Created BOLT12 offer: {offer_str}");
+        self.swapper
+            .create_bolt12_offer(&offer_str, &webhook_url)
+            .await?;
+        // Store the bolt12 offer
+        self.persister.insert_or_update_bolt12_offer(&Bolt12Offer {
+            id: offer_str.clone(),
+            description,
+            private_key: keypair.display_secret().to_string(),
+            webhook_url,
+            created_at: utils::now(),
+        })?;
+
+        Ok(ReceivePaymentResponse {
+            destination: offer_str,
         })
     }
 
@@ -2808,7 +3186,7 @@ impl LiquidSdk {
             accepted_receiver_amount_sat: None,
             claim_fees_sat,
             pair_fees_json: serde_json::to_string(&pair).map_err(|e| {
-                PaymentError::generic(&format!("Failed to serialize incoming ChainPair: {e:?}"))
+                PaymentError::generic(format!("Failed to serialize incoming ChainPair: {e:?}"))
             })?,
             accept_zero_conf,
             create_response_json,
@@ -3028,6 +3406,8 @@ impl LiquidSdk {
                 amount: Some(ReceiveAmount::Bitcoin {
                     payer_amount_sat: req.amount_sat,
                 }),
+                offer: None,
+                invoice_request: None,
             })
             .await?;
 
@@ -3849,6 +4229,8 @@ impl LiquidSdk {
                     amount: Some(ReceiveAmount::Bitcoin {
                         payer_amount_sat: req.amount_msat / 1_000,
                     }),
+                    offer: None,
+                    invoice_request: None,
                 }
             })
             .await?;
@@ -3920,7 +4302,33 @@ impl LiquidSdk {
     /// the new correct `webhook_url`. To unregister a webhook call [LiquidSdk::unregister_webhook].
     pub async fn register_webhook(&self, webhook_url: String) -> SdkResult<()> {
         info!("Registering for webhook notifications");
-        self.persister.set_webhook_url(webhook_url)?;
+        let maybe_old_webhook_url = self.persister.get_webhook_url()?;
+
+        self.persister.set_webhook_url(webhook_url.clone())?;
+
+        // If the webhook URL has changed, update all bolt12 offers
+        // that were created with the old webhook URL
+        if let Some(old_webhook_url) = maybe_old_webhook_url {
+            if old_webhook_url != webhook_url {
+                let bolt12_offers = self
+                    .persister
+                    .list_bolt12_offers_by_webhook_url(&old_webhook_url)?;
+                for bolt12_offer in bolt12_offers {
+                    let keypair = bolt12_offer.get_keypair()?;
+                    let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
+                    self.swapper
+                        .update_bolt12_offer(
+                            &bolt12_offer.id,
+                            &webhook_url,
+                            &webhook_url_hash_sig.to_hex(),
+                        )
+                        .await?;
+                    self.persister
+                        .set_bolt12_offer_webhook_url(&bolt12_offer.id, &webhook_url)?;
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -3978,7 +4386,7 @@ impl LiquidSdk {
         let input_type =
             parse_with_rest_client(self.rest_client.as_ref(), input, Some(external_parsers))
                 .await
-                .map_err(|e| PaymentError::generic(&e.to_string()))?;
+                .map_err(|e| PaymentError::generic(e.to_string()))?;
 
         let res = match input_type {
             InputType::LiquidAddress { ref address } => match &address.asset_id {
@@ -4001,7 +4409,7 @@ impl LiquidSdk {
 
     /// Parses a string into an [LNInvoice]. See [invoice::parse_invoice].
     pub fn parse_invoice(input: &str) -> Result<LNInvoice, PaymentError> {
-        parse_invoice(input).map_err(|e| PaymentError::invalid_invoice(&e.to_string()))
+        parse_invoice(input).map_err(|e| PaymentError::invalid_invoice(e.to_string()))
     }
 
     /// Configures a global SDK logger that will log to file and will forward log events to
@@ -4054,12 +4462,19 @@ mod tests {
     use boltz_client::{
         boltz::{self, TransactionInfo},
         swaps::boltz::{ChainSwapStates, RevSwapStates, SubSwapStates},
+        Secp256k1,
     };
-    use lwk_wollet::hashes::hex::DisplayHex as _;
-    use sdk_common::utils::Arc;
+    use lwk_wollet::{bitcoin::Network, hashes::hex::DisplayHex as _};
+    use sdk_common::{
+        lightning_with_bolt12::{
+            ln::{channelmanager::PaymentId, inbound_payment::ExpandedKey},
+            offers::{nonce::Nonce, offer::Offer},
+            sign::RandomBytes,
+        },
+        utils::Arc,
+    };
     use tokio_with_wasm::alias as tokio;
 
-    use crate::chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE;
     use crate::test_utils::chain_swap::{
         TEST_BITCOIN_OUTGOING_SERVER_LOCKUP_TX, TEST_LIQUID_INCOMING_SERVER_LOCKUP_TX,
         TEST_LIQUID_OUTGOING_USER_LOCKUP_TX,
@@ -4079,6 +4494,7 @@ mod tests {
             swapper::MockSwapper,
         },
     };
+    use crate::{chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE, utils};
     use paste::paste;
 
     #[cfg(feature = "browser-tests")]
@@ -4757,6 +5173,86 @@ mod tests {
         tokio::time::sleep(Duration::from_secs(3)).await;
 
         sdk.disconnect().await?;
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_create_bolt12_offer() -> Result<()> {
+        create_persister!(persister);
+
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let sdk = new_liquid_sdk(persister.clone(), swapper.clone(), status_stream.clone()).await?;
+
+        // Register a webhook URL
+        let webhook_url = "https://example.com/webhook";
+        persister.set_webhook_url(webhook_url.to_string())?;
+
+        // Call create_bolt12_offer
+        let description = "test offer".to_string();
+        let response = sdk.create_bolt12_offer(description.clone()).await?;
+
+        // Verify that the response contains a destination (offer string)
+        assert!(!response.destination.is_empty());
+
+        // Verify the offer was stored in the persister
+        let offers = persister.list_bolt12_offers_by_webhook_url(webhook_url)?;
+        assert_eq!(offers.len(), 1);
+
+        // Verify the offer details
+        let offer = &offers[0];
+        assert_eq!(offer.description, description);
+        assert_eq!(offer.webhook_url, webhook_url);
+        assert_eq!(offer.id, response.destination);
+
+        // Verify the offer has a private key
+        assert!(!offer.private_key.is_empty());
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_create_bolt12_receive_swap() -> Result<()> {
+        create_persister!(persister);
+
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let sdk = new_liquid_sdk(persister.clone(), swapper.clone(), status_stream.clone()).await?;
+
+        // Register a webhook URL
+        let webhook_url = "https://example.com/webhook";
+        persister.set_webhook_url(webhook_url.to_string())?;
+
+        // Call create_bolt12_offer
+        let description = "test offer".to_string();
+        let response = sdk.create_bolt12_offer(description.clone()).await?;
+        let offer = persister
+            .fetch_bolt12_offer_by_id(&response.destination)?
+            .unwrap();
+
+        // Create the invoice request
+        let expanded_key = ExpandedKey::new([42; 32]);
+        let entropy_source = RandomBytes::new(utils::generate_entropy());
+        let nonce = Nonce::from_entropy_source(&entropy_source);
+        let secp = Secp256k1::new();
+        let payment_id = PaymentId([1; 32]);
+        let invoice_request = TryInto::<Offer>::try_into(offer.clone())?
+            .request_invoice(&expanded_key, nonce, &secp, payment_id)
+            .unwrap()
+            .amount_msats(1_000_000)
+            .unwrap()
+            .chain(Network::Testnet)
+            .unwrap()
+            .build_and_sign()
+            .unwrap();
+
+        // Call create_bolt12_receive_swap
+        let swap_res = sdk
+            .create_bolt12_receive_swap(offer, invoice_request, 43)
+            .await
+            .unwrap();
+        assert!(swap_res.destination.starts_with("lni"));
 
         Ok(())
     }
