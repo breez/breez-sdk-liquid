@@ -14,6 +14,11 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 async fn liquid() {
     let mut handle = SdkNodeHandle::init_node().await.unwrap();
 
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
+
     // --------------RECEIVE--------------
 
     let (prepare_response, receive_response) = handle

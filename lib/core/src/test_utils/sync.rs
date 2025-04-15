@@ -42,7 +42,7 @@ impl MockSyncerClient {
 #[sdk_macros::async_trait]
 impl SyncerClient for MockSyncerClient {
     async fn connect(&self, _connect_url: String) -> Result<()> {
-        todo!()
+        Ok(())
     }
 
     async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply> {
@@ -68,7 +68,7 @@ impl SyncerClient for MockSyncerClient {
             });
         }
 
-        return Err(anyhow::anyhow!("No record was sent"));
+        Err(anyhow::anyhow!("No record was sent"))
     }
 
     async fn pull(&self, _req: ListChangesRequest) -> Result<ListChangesReply> {
@@ -79,11 +79,11 @@ impl SyncerClient for MockSyncerClient {
     }
 
     async fn listen(&self, _req: ListenChangesRequest) -> Result<Streaming<Notification>> {
-        todo!()
+        Err(anyhow::anyhow!("Not implemented"))
     }
 
     async fn disconnect(&self) -> Result<()> {
-        todo!()
+        Ok(())
     }
 }
 

@@ -17,6 +17,16 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[serial]
 async fn bolt11() {
     let mut handle_alice = SdkNodeHandle::init_node().await.unwrap();
+    let mut handle_bob = SdkNodeHandle::init_node().await.unwrap();
+
+    handle_alice
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
+    handle_bob
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
 
     // -------------------RECEIVE SWAP-------------------
     let payer_amount_sat = 200_000;
@@ -136,8 +146,6 @@ async fn bolt11() {
     assert!(matches!(payment.details, PaymentDetails::Lightning { .. }));
 
     // -------------------MRH-------------------
-    let mut handle_bob = SdkNodeHandle::init_node().await.unwrap();
-
     let receiver_amount_sat = 50_000;
 
     let (_, receive_response) = handle_bob
