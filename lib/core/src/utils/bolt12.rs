@@ -6,7 +6,6 @@ use sdk_common::lightning_with_bolt12::offers::invoice_request::InvoiceRequest;
 use sdk_common::lightning_with_bolt12::offers::offer::Offer;
 use sdk_common::lightning_with_bolt12::util::ser::Writeable;
 
-
 pub fn encode_invoice(invoice: &Bolt12Invoice) -> Result<String> {
     let mut writer = Vec::new();
     invoice.write(&mut writer)?;
