@@ -72,6 +72,8 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         
         self.logger.log(tag: TAG, line: "\(notificationType) data string: \(payload)", level: "INFO")
         switch(notificationType) {
+        case Constants.MESSAGE_TYPE_INVOICE_REQUEST:
+            return InvoiceRequestTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
         case Constants.MESSAGE_TYPE_SWAP_UPDATED:
             return SwapUpdatedTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
         case Constants.MESSAGE_TYPE_LNURL_PAY_INFO:
