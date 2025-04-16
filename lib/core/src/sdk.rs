@@ -1711,15 +1711,40 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        self.send_payment_via_swap(
-            invoice_str,
-            Some(offer.offer.clone()),
-            &invoice.payment_hash().to_string(),
-            invoice.description().map(|desc| desc.to_string()),
-            receiver_amount_sat,
-            fees_sat,
-        )
-        .await
+        match self.swapper.check_for_mrh(invoice_str).await? {
+            // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
+            Some((address, _)) => {
+                info!("Found MRH for L-BTC address {address}, invoice amount_sat {receiver_amount_sat}");
+                self.pay_liquid(
+                    LiquidAddressData {
+                        address,
+                        network: self.config.network.into(),
+                        asset_id: None,
+                        amount: None,
+                        amount_sat: None,
+                        label: None,
+                        message: None,
+                    },
+                    receiver_amount_sat,
+                    fees_sat,
+                    false,
+                )
+                .await
+            }
+
+            // If no MRH found, perform usual swap
+            None => {
+                self.send_payment_via_swap(
+                    invoice_str,
+                    Some(offer.offer.clone()),
+                    &invoice.payment_hash().to_string(),
+                    invoice.description().map(|desc| desc.to_string()),
+                    receiver_amount_sat,
+                    fees_sat,
+                )
+                .await
+            }
+        }
     }
 
     /// Performs a Send Payment by doing an onchain tx to a Liquid address
