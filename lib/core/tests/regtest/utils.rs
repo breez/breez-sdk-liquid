@@ -1,6 +1,4 @@
 use base64::Engine;
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-use futures::FutureExt;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::error::Error;
@@ -140,28 +138,6 @@ pub async fn pay_invoice_lnd(invoice: &str) -> Result<(), Box<dyn Error>> {
     )
     .await?;
     Ok(())
-}
-
-pub fn start_pay_invoice_lnd(invoice: String) {
-    let task = async move {
-        pay_invoice_lnd(&invoice).await.unwrap();
-    };
-
-    #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
-    {
-        tokio::spawn(task);
-    }
-
-    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-    {
-        wasm_bindgen_futures::spawn_local(async {
-            let timeout_future = gloo_timers::future::TimeoutFuture::new(5000);
-            let _ = futures::select! {
-                _ = task.fuse() => {},
-                _ = timeout_future.fuse() => {},
-            };
-        });
-    }
 }
 
 pub async fn mine_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {

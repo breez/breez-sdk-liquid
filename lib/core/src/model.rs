@@ -227,8 +227,8 @@ impl Config {
     pub fn regtest_esplora() -> Self {
         Config {
             liquid_explorer: BlockchainExplorer::Esplora {
-                url: "http://localhost:4003/api".to_string(),
-                use_waterfalls: false,
+                url: "http://localhost:3120/api".to_string(),
+                use_waterfalls: true,
             },
             bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "http://localhost:4002/api".to_string(),
@@ -238,7 +238,7 @@ impl Config {
             cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
-            sync_service_url: Some("http://localhost:8088".to_string()),
+            sync_service_url: Some("http://localhost:8089".to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key: None,
             external_input_parsers: None,

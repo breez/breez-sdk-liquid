@@ -1,19 +1,33 @@
+use crate::regtest::{utils, ChainBackend, SdkNodeHandle, TIMEOUT};
 use breez_sdk_liquid::model::{
     PayAmount, PaymentDetails, PaymentMethod, PaymentState, PaymentType, PrepareReceiveRequest,
     PrepareSendRequest, SdkEvent,
 };
 use serial_test::serial;
 
-use crate::regtest::{utils, SdkNodeHandle, TIMEOUT};
-
 #[cfg(feature = "browser-tests")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+#[sdk_macros::async_test_not_wasm]
+#[serial]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn liquid_electrum() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    liquid(handle).await;
+}
+
 #[sdk_macros::async_test_all]
 #[serial]
-async fn liquid() {
-    let mut handle = SdkNodeHandle::init_node().await.unwrap();
+async fn liquid_esplora() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    liquid(handle).await;
+}
 
+async fn liquid(mut handle: SdkNodeHandle) {
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
@@ -108,4 +122,7 @@ async fn liquid() {
     assert_eq!(payment.payment_type, PaymentType::Send);
     assert_eq!(payment.status, PaymentState::Complete);
     assert!(matches!(payment.details, PaymentDetails::Liquid { .. }));
+
+    // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
+    handle.sdk.disconnect().await.unwrap();
 }
