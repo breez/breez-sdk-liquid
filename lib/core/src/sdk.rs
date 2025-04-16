@@ -953,13 +953,14 @@ impl LiquidSdk {
                 .timestamp()
                 .duration_since(std::time::SystemTime::UNIX_EPOCH)
                 .map_err(|_| PaymentError::invalid_invoice("Invalid invoice timestamp"))?;
-        let elapsed_web_time = web_time::SystemTime::now()
-            .duration_since(invoice_ts_web_time)
-            .map_err(|_| PaymentError::invalid_invoice("Invoice timestamp is in the future"))?;
-        ensure_sdk!(
-            elapsed_web_time <= invoice.expiry_time(),
-            PaymentError::invalid_invoice("Invoice has expired")
-        );
+        if let Ok(elapsed_web_time) =
+            web_time::SystemTime::now().duration_since(invoice_ts_web_time)
+        {
+            ensure_sdk!(
+                elapsed_web_time <= invoice.expiry_time(),
+                PaymentError::invalid_invoice("Invoice has expired")
+            )
+        }
 
         Ok(invoice)
     }
