@@ -24,7 +24,10 @@ fn sign_message(msg: &[u8], signer: Arc<Box<dyn Signer>>) -> Result<String, Sign
 }
 
 impl ListChangesRequest {
-    pub(crate) fn new(since_revision: u64, signer: Arc<Box<dyn Signer>>) -> Result<Self> {
+    pub(crate) fn new(
+        since_revision: u64,
+        signer: Arc<Box<dyn Signer>>,
+    ) -> Result<Self, SignerError> {
         let request_time = utils::now();
         let msg = format!("{}-{}", since_revision, request_time);
         let signature = sign_message(msg.as_bytes(), signer)?;

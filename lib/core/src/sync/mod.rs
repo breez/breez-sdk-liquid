@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use log::{info, trace, warn};
+use model::{PullError, PushError};
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
@@ -12,14 +13,13 @@ use tonic::Streaming;
 
 use self::client::SyncerClient;
 use self::model::{data::SyncData, ListChangesRequest, RecordType, SyncState};
-use self::model::{DecryptionError, ListenChangesRequest, Notification, SyncOutgoingChanges};
+use self::model::{ListenChangesRequest, Notification, SyncOutgoingChanges};
 use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
 use crate::sync::model::data::{
     ChainSyncData, PaymentDetailsSyncData, ReceiveSyncData, SendSyncData,
 };
-use crate::sync::model::DecryptionInfo;
-use crate::sync::model::{Record, SetRecordRequest, SetRecordStatus};
+use crate::sync::model::{DecryptionInfo, Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
 use crate::{
     persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},
@@ -28,6 +28,8 @@ use crate::{
 
 pub(crate) mod client;
 pub(crate) mod model;
+
+const MAX_FAILED_PUSH: u8 = 5;
 
 #[derive(Clone, Debug)]
 pub(crate) enum Event {
@@ -87,15 +89,35 @@ impl SyncService {
         }
     }
 
-    async fn run_event_loop(&self) {
+    async fn run_event_loop(&self, failed_push_counter: &mut u8) {
         info!("realtime-sync: Running sync event loop");
-        let Ok(pulled_records_count) = self.pull().await else {
-            warn!("realtime-sync: Could not pull records");
-            return;
+
+        if *failed_push_counter > MAX_FAILED_PUSH {
+            warn!("realtime-sync: Outward sync has conflicted more than {MAX_FAILED_PUSH} times, wiping database and retrying.");
+            if let Err(err) = self.persister.reset_sync() {
+                warn!("realtime-sync: Could not wipe sync database: {err:?}");
+                return;
+            }
+            *failed_push_counter = 0;
+        }
+
+        let pulled_records_count = match self.pull().await {
+            Ok(pulled_records_count) => pulled_records_count,
+            Err(err) => {
+                warn!("realtime-sync: Could not pull records - {err}");
+                return;
+            }
         };
-        let Ok(pushed_records_count) = self.push().await else {
-            warn!("realtime-sync: Could not push records");
-            return;
+
+        let pushed_records_count = match self.push().await {
+            Ok(pushed_records_count) => pushed_records_count,
+            Err(err) => {
+                if let PushError::ExcessiveRecordConflicts { .. } = err {
+                    *failed_push_counter += 1
+                }
+                warn!("realtime-sync: Could not push records - {err}");
+                return;
+            }
         };
 
         if let Err(e) = self.subscription_notifier.send(Event::SyncedCompleted {
@@ -106,6 +128,8 @@ impl SyncService {
         }) {
             warn!("realtime-sync: Could not send sync completed event {:?}", e);
         }
+
+        *failed_push_counter = 0;
     }
 
     async fn new_listener(&self) -> Result<Streaming<Notification>> {
@@ -114,22 +138,22 @@ impl SyncService {
     }
 
     pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
-        log::info!("sync-reconnect start service");
+        info!("realtime-sync: sync-reconnect start service");
         tokio::spawn(async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
-                log::warn!("realtime-sync: Could not connect to sync service: {err:?}");
+                warn!("realtime-sync: Could not connect to sync service: {err:?}");
                 return;
             }
             if let Err(err) = self.check_remote_change() {
-                log::warn!("realtime-sync: Could not check for remote change: {err:?}");
+                warn!("realtime-sync: Could not check for remote change: {err:?}");
                 return;
             }
             let Ok(mut local_sync_trigger) = self.persister.subscribe_sync_trigger() else {
-                log::warn!("realtime-sync: Could not subscribe to local sync trigger");
+                warn!("realtime-sync: Could not subscribe to local sync trigger");
                 return;
             };
 
-            log::debug!("realtime-sync: Starting real-time sync event loop");
+            info!("realtime-sync: Starting real-time sync event loop");
             loop {
                 if shutdown.has_changed().unwrap_or(true) {
                     return;
@@ -145,39 +169,40 @@ impl SyncService {
                         continue;
                     }
                 };
-                log::info!("realtime-sync: Starting sync service loop");
+                let mut failed_push_counter = 0;
+                info!("realtime-sync: Starting sync service loop");
                 loop {
-                    log::info!("realtime-sync: before tokio_select");
+                    info!("realtime-sync: before tokio_select");
                     tokio::select! {
                         local_event = local_sync_trigger.recv() => {
-                          log::info!("realtime-sync: Received local message");
+                          info!("realtime-sync: Received local message");
                           match local_event {
-                            Ok(_) => self.run_event_loop().await,
+                            Ok(_) => self.run_event_loop(&mut failed_push_counter).await,
                             Err(err) => {
-                                log::warn!("realtime-sync: local trigger received error, probably lagging behind {err:?}");
+                                warn!("realtime-sync: local trigger received error, probably lagging behind {err:?}");
                             }
                           }
                         }
                         Some(msg) = remote_sync_trigger.next() => {
-                          log::info!("realtime-sync: Received remote message");
+                          info!("realtime-sync: Received remote message");
                           match msg {
                             Ok(Notification { client_id }) => {
                                 if client_id.is_some_and(|id| id == self.client_id) {
-                                    log::info!("realtime-sync: Notification client_id matches our own, skipping update.");
+                                    info!("realtime-sync: Notification client_id matches our own, skipping update.");
                                     continue;
                                 }
-                                self.run_event_loop().await;
+                                self.run_event_loop(&mut failed_push_counter).await;
                             }
                             Err(err) => {
-                                log::warn!("realtime-sync: Received status {} from remote, attempting to reconnect.", err.message());
+                                warn!("realtime-sync: Received status {} from remote, attempting to reconnect.", err.message());
                                 break; // break the inner loop which will start the main loop by reconnecting
                             }
                           }
                         },
                         _ = shutdown.changed() => {
-                            log::info!("realtime-sync: Received shutdown signal, exiting realtime sync service loop");
+                            info!("realtime-sync: Received shutdown signal, exiting realtime sync service loop");
                             if let Err(err) = self.client.disconnect().await {
-                                log::debug!("realtime-sync: Could not disconnect sync service client: {err:?}");
+                                warn!("realtime-sync: Could not disconnect sync service client: {err:?}");
                             };
                             return;
                         }
@@ -265,53 +290,67 @@ impl SyncService {
         Ok(data)
     }
 
-    async fn fetch_and_save_records(&self) -> Result<()> {
-        log::info!("Initiating record pull");
+    async fn fetch_and_save_records(&self) -> Result<(), PullError> {
+        info!("realtime-sync: Initiating record pull");
 
         let local_latest_revision = self
             .persister
-            .get_sync_settings()?
+            .get_sync_settings()
+            .map_err(PullError::persister)?
             .latest_revision
             .unwrap_or(0);
-        let req = ListChangesRequest::new(local_latest_revision, self.signer.clone())?;
-        let incoming_records = self.client.pull(req).await?.changes;
+        let req = ListChangesRequest::new(local_latest_revision, self.signer.clone())
+            .map_err(PullError::signing)?;
+        let incoming_records = self
+            .client
+            .pull(req)
+            .await
+            .map_err(PullError::network)?
+            .changes;
 
-        self.persister.set_incoming_records(&incoming_records)?;
+        self.persister
+            .set_incoming_records(&incoming_records)
+            .map_err(PullError::persister)?;
         let remote_latest_revision = incoming_records.last().map(|record| record.revision);
         if let Some(latest_revision) = remote_latest_revision {
-            self.persister.set_sync_settings(HashMap::from([(
-                "latest_revision",
-                latest_revision.to_string(),
-            )]))?;
-            log::info!(
-                "Successfully pulled and persisted records. New latest revision: {latest_revision}"
+            self.persister
+                .set_sync_settings(HashMap::from([(
+                    "latest_revision",
+                    latest_revision.to_string(),
+                )]))
+                .map_err(PullError::persister)?;
+            info!(
+                "realtime-sync: Successfully pulled and persisted records. New latest revision: {latest_revision}"
             );
         } else {
-            log::info!("No new records found. Local latest revision: {local_latest_revision}");
+            info!("realtime-sync: No new records found. Local latest revision: {local_latest_revision}");
         }
 
         Ok(())
     }
 
-    async fn handle_decryption(
-        &self,
-        new_record: Record,
-    ) -> Result<DecryptionInfo, DecryptionError> {
-        log::debug!(
-            "Handling decryption for record record_id {}",
+    async fn handle_decryption(&self, new_record: Record) -> Result<DecryptionInfo, PullError> {
+        info!(
+            "realtime-sync: Handling decryption for record record_id {}",
             &new_record.id
         );
 
         // Step 3: Check whether or not record is applicable (from its schema_version)
-        if !new_record.is_applicable()? {
-            return Err(DecryptionError::SchemaNotApplicable);
+        if !new_record
+            .is_applicable()
+            .map_err(PullError::invalid_record_version)?
+        {
+            return Err(PullError::SchemaNotApplicable);
         }
 
         // Step 4: Check whether we already have this record, and if the revision is newer
-        let maybe_sync_state = self.persister.get_sync_state_by_record_id(&new_record.id)?;
+        let maybe_sync_state = self
+            .persister
+            .get_sync_state_by_record_id(&new_record.id)
+            .map_err(PullError::persister)?;
         if let Some(sync_state) = &maybe_sync_state {
             if sync_state.record_revision >= new_record.revision {
-                return Err(DecryptionError::AlreadyPersisted);
+                return Err(PullError::AlreadyPersisted);
             }
         }
 
@@ -321,13 +360,18 @@ impl SyncService {
         // Step 6: Merge with outgoing records, if present
         let maybe_outgoing_changes = self
             .persister
-            .get_sync_outgoing_changes_by_id(&decrypted_record.id)?;
+            .get_sync_outgoing_changes_by_id(&decrypted_record.id)
+            .map_err(PullError::persister)?;
 
         if let Some(outgoing_changes) = &maybe_outgoing_changes {
             if let Some(updated_fields) = &outgoing_changes.updated_fields {
-                let local_data =
-                    self.load_sync_data(decrypted_record.data.id(), outgoing_changes.record_type)?;
-                decrypted_record.data.merge(&local_data, updated_fields)?;
+                let local_data = self
+                    .load_sync_data(decrypted_record.data.id(), outgoing_changes.record_type)
+                    .map_err(PullError::persister)?;
+                decrypted_record
+                    .data
+                    .merge(&local_data, updated_fields)
+                    .map_err(PullError::merge)?;
             }
         }
 
@@ -342,7 +386,10 @@ impl SyncService {
         };
         let last_commit_time = maybe_outgoing_changes.map(|details| details.commit_time);
 
-        log::debug!("Successfully decrypted record {}", &decrypted_record.id);
+        info!(
+            "realtime-sync: Successfully decrypted record {}",
+            &decrypted_record.id
+        );
 
         Ok(DecryptionInfo {
             new_sync_state,
@@ -354,7 +401,7 @@ impl SyncService {
     async fn handle_recovery(
         &self,
         swap_decryption_info: Vec<DecryptionInfo>,
-    ) -> Result<Vec<(DecryptionInfo, Swap)>> {
+    ) -> Result<Vec<(DecryptionInfo, Swap)>, PullError> {
         let mut succeded = vec![];
         let mut swaps = vec![];
 
@@ -377,24 +424,30 @@ impl SyncService {
                     swaps.push(swap);
                 }
                 Err(e) => {
-                    log::warn!("Could not convert sync data to swap: {e}");
+                    warn!("realtime-sync: Could not convert sync data to swap: {e}");
                     continue;
                 }
             };
         }
 
         // Step 2: Recover each swap's data from chain
-        self.recoverer.recover_from_onchain(&mut swaps).await?;
+        self.recoverer
+            .recover_from_onchain(&mut swaps)
+            .await
+            .map_err(PullError::recovery)?;
 
         Ok(succeded.into_iter().zip(swaps.into_iter()).collect())
     }
 
-    pub(crate) async fn pull(&self) -> Result<u32> {
+    pub(crate) async fn pull(&self) -> Result<u32, PullError> {
         // Step 1: Fetch and save incoming records from remote, then update local tip
         self.fetch_and_save_records().await?;
 
         // Step 2: Grab all pending incoming records from the database
-        let incoming_records = self.persister.get_incoming_records()?;
+        let incoming_records = self
+            .persister
+            .get_incoming_records()
+            .map_err(PullError::persister)?;
 
         // Step 3: Decrypt all the records, if possible. Filter those whose revision/schema is not
         // applicable
@@ -404,13 +457,13 @@ impl SyncService {
             let record_id = record.id.clone();
             match self.handle_decryption(record).await {
                 Ok(decryption_info) => decrypted.push(decryption_info),
-                // If we already have this record, it should be cleaned from sync_incoming
-                Err(DecryptionError::AlreadyPersisted) => succeded.push(record_id),
-                Err(e) => {
-                    log::debug!(
-                        "Could not handle decryption of incoming record {record_id}: {e:?}",
-                    );
-                    continue;
+                Err(err) => {
+                    warn!("realtime-sync: Could not handle decryption of incoming record {record_id}: {err}");
+                    match err {
+                        // If we already have this record, it should be cleaned from sync_incoming
+                        PullError::AlreadyPersisted => succeded.push(record_id),
+                        _ => continue,
+                    }
                 }
             }
         }
@@ -428,7 +481,7 @@ impl SyncService {
         // Step 5: Apply derivation index updates (step 6 requires having knowledge of the last derivation index)
         for decryption_info in decrypted_last_derivation_index_info {
             if let Err(e) = self.commit_record(&decryption_info, None) {
-                warn!("Could not commit last derivation index record: {e:?}");
+                warn!("realtime-sync: Could not commit last derivation index record: {e:?}");
                 continue;
             }
             succeded.push(decryption_info.record.id);
@@ -437,7 +490,7 @@ impl SyncService {
         // Step 6: Recover the swap records' data from onchain, and commit it
         for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
             if let Err(e) = self.commit_record(&decryption_info, Some(swap)) {
-                warn!("Could not commit swap record: {e:?}");
+                warn!("realtime-sync: Could not commit swap record: {e:?}");
                 continue;
             }
             succeded.push(decryption_info.record.id);
@@ -446,18 +499,23 @@ impl SyncService {
         // Step 7: Commit non-swap-related data
         for decryption_info in decrypted_others_info {
             if let Err(e) = self.commit_record(&decryption_info, None) {
-                warn!("Could not commit generic record: {e:?}");
+                warn!("realtime-sync: Could not commit generic record: {e:?}");
                 continue;
             }
             succeded.push(decryption_info.record.id);
         }
 
         // Step 8: Clear succeded records
-        if !succeded.is_empty() {
-            self.persister.remove_incoming_records(succeded.clone())?;
+        let succeded_len = succeded.len();
+        if succeded_len > 0 {
+            info!("realtime-sync: Cleaning {succeded_len} incoming records",);
+            self.persister
+                .remove_incoming_records(succeded.clone())
+                .map_err(PullError::persister)?;
+            info!("realtime-sync: Successfully cleaned records");
         }
 
-        Ok(succeded.len() as u32)
+        Ok(succeded_len as u32)
     }
 
     async fn handle_push(
@@ -465,27 +523,35 @@ impl SyncService {
         record_id: &str,
         data_id: &str,
         record_type: RecordType,
-    ) -> Result<()> {
-        log::debug!("Handling push for record record_id {record_id} data_id {data_id}");
+    ) -> Result<(), PushError> {
+        info!("realtime-sync: Handling push for record record_id {record_id} data_id {data_id}");
 
         // Step 1: Get the sync state, if it exists, to compute the revision
-        let maybe_sync_state = self.persister.get_sync_state_by_record_id(record_id)?;
-        trace!("Got sync state: {}", maybe_sync_state.is_some());
+        let maybe_sync_state = self
+            .persister
+            .get_sync_state_by_record_id(record_id)
+            .map_err(PushError::persister)?;
+        trace!(
+            "realtime-sync: Got sync state: {}",
+            maybe_sync_state.is_some()
+        );
         let record_revision = maybe_sync_state
             .as_ref()
             .map(|s| s.record_revision)
             .unwrap_or(0);
-        trace!("Got revision: {}", record_revision);
+        trace!("realtime-sync: Got revision: {}", record_revision);
         let is_local = maybe_sync_state.map(|s| s.is_local).unwrap_or(true);
-        trace!("Got is local: {}", is_local);
+        trace!("realtime-sync: Got is local: {}", is_local);
 
         // Step 2: Fetch the sync data
-        let sync_data = self.load_sync_data(data_id, record_type)?;
-        trace!("Got sync data: {sync_data:?}");
+        let sync_data = self
+            .load_sync_data(data_id, record_type)
+            .map_err(PushError::persister)?;
+        trace!("realtime-sync: Got sync data: {sync_data:?}");
 
         // Step 3: Create the record to push outwards
         let record = Record::new(sync_data, record_revision, self.signer.clone())?;
-        trace!("Got record: {record:?}");
+        trace!("realtime-sync: Got record: {record:?}");
 
         // Step 4: Push the record
         let req = SetRecordRequest::new(
@@ -493,35 +559,41 @@ impl SyncService {
             utils::now(),
             self.signer.clone(),
             self.client_id.clone(),
-        )?;
-        trace!("Got set record request: {req:?}");
-        let reply = self.client.push(req).await?;
-        trace!("Got reply: {reply:?}");
+        )
+        .map_err(PushError::signing)?;
+        trace!("realtime-sync: Got set record request: {req:?}");
+        let reply = self.client.push(req).await.map_err(PushError::network)?;
+        trace!("realtime-sync: Got reply: {reply:?}");
 
         // Step 5: Check for conflict. If present, skip and retry on the next call
         if reply.status() == SetRecordStatus::Conflict {
-            return Err(anyhow!(
-                "Got conflict status when attempting to push record"
-            ));
+            return Err(PushError::RecordConflict);
         }
 
         // Step 6: Set/update the state revision
-        self.persister.set_sync_state(SyncState {
-            data_id: data_id.to_string(),
-            record_id: record_id.to_string(),
-            record_revision: reply.new_revision,
-            is_local,
-        })?;
+        self.persister
+            .set_sync_state(SyncState {
+                data_id: data_id.to_string(),
+                record_id: record_id.to_string(),
+                record_revision: reply.new_revision,
+                is_local,
+            })
+            .map_err(PushError::persister)?;
 
-        log::info!("Successfully pushed record record_id {record_id}");
+        info!("realtime-sync: Successfully pushed record record_id {record_id}");
 
         Ok(())
     }
 
-    async fn push(&self) -> Result<u32> {
-        let outgoing_changes = self.persister.get_sync_outgoing_changes()?;
+    async fn push(&self) -> Result<u32, PushError> {
+        let outgoing_changes = self
+            .persister
+            .get_sync_outgoing_changes()
+            .map_err(PushError::persister)?;
+        let total_changes = outgoing_changes.len();
 
         let mut succeded = vec![];
+        let mut recoverable_errors = 0;
         for SyncOutgoingChanges {
             record_id,
             data_id,
@@ -529,19 +601,38 @@ impl SyncService {
             ..
         } in outgoing_changes
         {
-            if let Err(err) = self.handle_push(&record_id, &data_id, record_type).await {
-                log::debug!("Could not handle push for record {record_id}: {err:?}");
-                continue;
+            match self.handle_push(&record_id, &data_id, record_type).await {
+                Ok(_) => succeded.push(record_id),
+                Err(err) => {
+                    warn!("realtime-sync: Could not handle push for record {record_id}: {err}");
+                    match err {
+                        // If we get a record conflict, we want to increment the failed counter.
+                        // This way, we will reset the local sync tables after too many failed
+                        // attempts (something is probably wrong with the local revisions)
+                        PushError::RecordConflict => {}
+                        _ => recoverable_errors += 1,
+                    }
+                    continue;
+                }
             }
-            succeded.push(record_id);
         }
 
-        if !succeded.is_empty() {
+        let succeded_len = succeded.len();
+        if succeded_len > 0 {
             self.persister
-                .remove_sync_outgoing_changes(succeded.clone())?;
+                .remove_sync_outgoing_changes(succeded.clone())
+                .map_err(PushError::persister)?;
         }
 
-        Ok(succeded.len() as u32)
+        if succeded_len != total_changes - recoverable_errors {
+            return Err(PushError::ExcessiveRecordConflicts {
+                succeded: succeded_len,
+                total: total_changes,
+                recoverable: recoverable_errors,
+            });
+        }
+
+        Ok(succeded_len as u32)
     }
 }
 

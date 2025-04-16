@@ -116,14 +116,13 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn set_new_remote(&self, remote_url: String) -> Result<()> {
-        let mut con = self.get_connection()?;
-        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
+    fn reset_sync_inner(tx: &Connection) -> rusqlite::Result<()> {
+        // Delete all data from sync tables
         tx.execute("DELETE FROM sync_state", [])?;
         tx.execute("DELETE FROM sync_incoming", [])?;
         tx.execute("DELETE FROM sync_outgoing", [])?;
 
+        // Enqueue all swaps again
         let swap_tables = HashMap::from([
             ("receive_swaps", RecordType::Receive),
             ("send_swaps", RecordType::Send),
@@ -151,14 +150,28 @@ impl Persister {
                 )?;
             }
         }
+        Ok(())
+    }
 
+    pub(crate) fn set_new_remote(&self, remote_url: String) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+
+        Self::reset_sync_inner(&tx)?;
         Self::set_sync_setting_stmt(&tx)?.execute(named_params! {
             ":key": "remote_url",
             ":value": remote_url
         })?;
 
         tx.commit()?;
+        Ok(())
+    }
 
+    pub(crate) fn reset_sync(&self) -> Result<()> {
+        let mut con = self.get_connection()?;
+        let tx = con.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        Self::reset_sync_inner(&tx)?;
+        tx.commit()?;
         Ok(())
     }
 

@@ -1,7 +1,7 @@
 tonic::include_proto!("sync");
 
 use self::data::SyncData;
-use crate::prelude::Signer;
+use crate::prelude::{Signer, SignerError};
 use anyhow::Result;
 use lazy_static::lazy_static;
 use log::trace;
@@ -81,50 +81,153 @@ pub(crate) struct DecryptedRecord {
     pub(crate) data: SyncData,
 }
 
+pub(crate) struct DecryptionInfo {
+    pub(crate) new_sync_state: SyncState,
+    pub(crate) record: DecryptedRecord,
+    pub(crate) last_commit_time: Option<u32>,
+}
+
 #[derive(thiserror::Error, Debug)]
-pub(crate) enum DecryptionError {
+pub(crate) enum PullError {
     #[error("Record is not applicable: schema_version too high")]
     SchemaNotApplicable,
 
     #[error("Remote record revision is lower or equal to the persisted one. Skipping update.")]
     AlreadyPersisted,
 
-    #[error("Could not decrypt payload with signer: {err}")]
-    InvalidPayload { err: String },
+    #[error("Could not sign outgoing payload: {err}")]
+    Signing { err: String },
 
-    #[error("Could not deserialize JSON bytes: {err}")]
-    DeserializeError { err: String },
+    #[error("Could not decrypt incoming record: {err}")]
+    Decryption { err: String },
 
-    #[error("Generic error: {err}")]
-    Generic { err: String },
+    #[error("Could not deserialize record data: {err}")]
+    Deserialization { err: String },
+
+    #[error("Remote record version could not be parsed: {err}")]
+    InvalidRecordVersion { err: String },
+
+    #[error("Could not contact remote: {err}")]
+    Network { err: String },
+
+    #[error("Could not call the persister: {err}")]
+    Persister { err: String },
+
+    #[error("Could not merge record with updated fields: {err}")]
+    Merge { err: String },
+
+    #[error("Could not recover record data from onchain: {err}")]
+    Recovery { err: String },
 }
 
-impl DecryptionError {
-    pub(crate) fn invalid_payload(err: crate::model::SignerError) -> Self {
-        Self::InvalidPayload {
+impl PullError {
+    pub(crate) fn signing(err: SignerError) -> Self {
+        Self::Signing {
             err: err.to_string(),
         }
     }
 
-    pub(crate) fn deserialize_error(err: serde_json::Error) -> Self {
-        Self::DeserializeError {
+    pub(crate) fn decryption(err: SignerError) -> Self {
+        Self::Decryption {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn deserialization(err: serde_json::Error) -> Self {
+        Self::Deserialization {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn invalid_record_version(err: semver::Error) -> Self {
+        Self::InvalidRecordVersion {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn network(err: anyhow::Error) -> Self {
+        Self::Network {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn persister(err: anyhow::Error) -> Self {
+        Self::Persister {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn merge(err: anyhow::Error) -> Self {
+        Self::Merge {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn recovery(err: anyhow::Error) -> Self {
+        Self::Recovery {
             err: err.to_string(),
         }
     }
 }
 
-impl From<anyhow::Error> for DecryptionError {
-    fn from(value: anyhow::Error) -> Self {
-        Self::Generic {
-            err: value.to_string(),
-        }
-    }
+#[derive(thiserror::Error, Debug)]
+pub(crate) enum PushError {
+    #[error("Received conflict status from remote")]
+    RecordConflict,
+
+    #[error("Could not sign outgoing payload: {err}")]
+    Signing { err: String },
+
+    #[error("Could not encrypt outgoing record: {err}")]
+    Encryption { err: String },
+
+    #[error("Could not serialize record data: {err}")]
+    Serialization { err: String },
+
+    #[error("Could not contact remote: {err}")]
+    Network { err: String },
+
+    #[error("Could not call the persister: {err}")]
+    Persister { err: String },
+
+    #[error("Push completed with too many failed records: succeded {succeded} total {total} recoverable {recoverable}")]
+    ExcessiveRecordConflicts {
+        succeded: usize,
+        total: usize,
+        recoverable: usize,
+    },
 }
 
-pub(crate) struct DecryptionInfo {
-    pub(crate) new_sync_state: SyncState,
-    pub(crate) record: DecryptedRecord,
-    pub(crate) last_commit_time: Option<u32>,
+impl PushError {
+    pub(crate) fn signing(err: SignerError) -> Self {
+        Self::Signing {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn encryption(err: SignerError) -> Self {
+        Self::Encryption {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn serialization(err: serde_json::Error) -> Self {
+        Self::Serialization {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn network(err: anyhow::Error) -> Self {
+        Self::Network {
+            err: err.to_string(),
+        }
+    }
+
+    pub(crate) fn persister(err: anyhow::Error) -> Self {
+        Self::Persister {
+            err: err.to_string(),
+        }
+    }
 }
 
 impl Record {
@@ -132,13 +235,11 @@ impl Record {
         data: SyncData,
         revision: u64,
         signer: Arc<Box<dyn Signer>>,
-    ) -> Result<Self, anyhow::Error> {
+    ) -> Result<Self, PushError> {
         let id = Self::get_id_from_sync_data(&data);
-        let data = data.to_bytes()?;
+        let data = data.to_bytes().map_err(PushError::serialization)?;
         trace!("About to encrypt sync data: {data:?}");
-        let data = signer
-            .ecies_encrypt(data)
-            .map_err(|err| anyhow::anyhow!("Could not encrypt sync data: {err:?}"))?;
+        let data = signer.ecies_encrypt(data).map_err(PushError::encryption)?;
         trace!("Got encrypted sync data: {data:?}");
         let schema_version = CURRENT_SCHEMA_VERSION.to_string();
         Ok(Self {
@@ -177,7 +278,7 @@ impl Record {
         Self::id(prefix, data_id)
     }
 
-    pub(crate) fn is_applicable(&self) -> Result<bool> {
+    pub(crate) fn is_applicable(&self) -> Result<bool, semver::Error> {
         let record_version = Version::parse(&self.schema_version)?;
         Ok(CURRENT_SCHEMA_VERSION.major >= record_version.major)
     }
@@ -185,11 +286,11 @@ impl Record {
     pub(crate) fn decrypt(
         self,
         signer: Arc<Box<dyn Signer>>,
-    ) -> Result<DecryptedRecord, DecryptionError> {
+    ) -> Result<DecryptedRecord, PullError> {
         let dec_data = signer
             .ecies_decrypt(self.data)
-            .map_err(DecryptionError::invalid_payload)?;
-        let data = serde_json::from_slice(&dec_data).map_err(DecryptionError::deserialize_error)?;
+            .map_err(PullError::decryption)?;
+        let data = serde_json::from_slice(&dec_data).map_err(PullError::deserialization)?;
         Ok(DecryptedRecord {
             id: self.id,
             revision: self.revision,
