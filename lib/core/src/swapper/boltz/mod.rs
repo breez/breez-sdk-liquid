@@ -30,6 +30,8 @@ pub(crate) mod liquid;
 pub(crate) mod proxy;
 pub mod status_stream;
 
+const CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
+
 pub(crate) struct BoltzClient {
     referral_id: Option<String>,
     inner: BoltzApiClientV2,
@@ -77,7 +79,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
 
         let boltz_client = self.boltz_client.get_or_init(|| BoltzClient {
-            inner: BoltzApiClientV2::new(boltz_url, Duration::from_secs(20)),
+            inner: BoltzApiClientV2::new(boltz_url, CONNECTION_TIMEOUT),
             referral_id,
         });
         Ok(boltz_client)
