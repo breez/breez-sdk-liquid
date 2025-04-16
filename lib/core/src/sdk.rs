@@ -2937,11 +2937,16 @@ impl LiquidSdk {
                 "Failed to create BOLT12 invoice: Error creating blinded payment path",
             )
         })?;
+        let channel_id = params
+            .magic_routing_hint
+            .channel_id
+            .parse::<u64>()
+            .map_err(|e| PaymentError::generic(format!("Failed to create BOLT12 invoice: {e}")))?;
         let mrh_payment_path = {
             let mut payment_path = default_payment_path.clone();
             payment_path.inner_path.introduction_node = IntroductionNode::DirectedShortChannelId(
                 blinded_path::Direction::NodeOne,
-                params.magic_routing_hint.channel_id,
+                channel_id,
             );
             payment_path
         };

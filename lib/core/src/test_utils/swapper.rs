@@ -374,7 +374,7 @@ impl Swapper for MockSwapper {
         Ok(GetBolt12ParamsResponse {
             min_cltv: 180,
             magic_routing_hint: MagicRoutingHint {
-                channel_id: 596385002596073472,
+                channel_id: "596385002596073472".to_string(),
             },
         })
     }
