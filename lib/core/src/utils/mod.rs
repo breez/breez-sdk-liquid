@@ -23,7 +23,7 @@ use lwk_wollet::elements::{
 };
 use lwk_wollet::hashes::{sha256, Hash};
 use lwk_wollet::secp256k1::schnorr::Signature;
-use sdk_common::lightning_invoice::Bolt11Invoice;
+use sdk_common::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use web_time::{SystemTime, UNIX_EPOCH};
 
 lazy_static! {
@@ -98,6 +98,23 @@ pub(crate) fn get_invoice_destination_pubkey(invoice: &str, is_bolt12: bool) -> 
             .parse::<Bolt11Invoice>()
             .map(|i| sdk_common::prelude::invoice_pubkey(&i))
             .map_err(Into::into)
+    }
+}
+
+/// Parse and extract the description from the BOLT11/12 invoice
+pub(crate) fn get_invoice_description(invoice: &str) -> Result<Option<String>, PaymentError> {
+    let invoice = invoice.trim();
+    match Bolt11Invoice::from_str(invoice) {
+        Ok(invoice) => match invoice.description() {
+            Bolt11InvoiceDescription::Direct(d) => Ok(Some(d.to_string())),
+            Bolt11InvoiceDescription::Hash(_) => Ok(None),
+        },
+        Err(_) => match decode_invoice(invoice) {
+            Ok(invoice) => Ok(invoice.description().map(|d| d.to_string())),
+            Err(e) => Err(PaymentError::InvalidInvoice {
+                err: format!("Could not parse invoice: {e:?}"),
+            }),
+        },
     }
 }
 

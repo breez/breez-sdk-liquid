@@ -1646,7 +1646,12 @@ impl LiquidSdk {
         self.ensure_send_is_not_self_transfer(invoice)?;
         let bolt11_invoice = self.validate_bolt11_invoice(invoice)?;
 
-        let amount_sat = get_invoice_amount!(invoice);
+        let amount_sat = bolt11_invoice
+            .amount_milli_satoshis()
+            .map(|msat| msat / 1_000)
+            .ok_or(PaymentError::AmountMissing {
+                err: "Invoice amount is missing".to_string(),
+            })?;
         let payer_amount_sat = amount_sat + fees_sat;
         ensure_sdk!(
             payer_amount_sat <= self.get_info().await?.wallet_info.balance_sat,

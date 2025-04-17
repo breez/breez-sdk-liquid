@@ -111,6 +111,7 @@ serial_test = "3.2.0"
 
 # Non-Wasm dev dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dev-dependencies]
+axum = "0.8.3"
 tempdir = "0.3.7"
 
 # Wasm dev dependencies

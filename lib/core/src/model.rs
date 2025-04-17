@@ -2463,33 +2463,6 @@ impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
 }
 
 #[macro_export]
-macro_rules! get_invoice_amount {
-    ($invoice:expr) => {
-        $invoice
-            .parse::<Bolt11Invoice>()
-            .expect("Expecting valid invoice")
-            .amount_milli_satoshis()
-            .expect("Expecting valid amount")
-            / 1000
-    };
-}
-
-#[macro_export]
-macro_rules! get_invoice_description {
-    ($invoice:expr) => {
-        match $invoice
-            .trim()
-            .parse::<Bolt11Invoice>()
-            .expect("Expecting valid invoice")
-            .description()
-        {
-            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
-            Bolt11InvoiceDescription::Hash(_) => None,
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! get_updated_fields {
     ($($var:ident),* $(,)?) => {{
         let mut options = Vec::new();

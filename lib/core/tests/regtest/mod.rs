@@ -2,6 +2,8 @@
 
 mod bitcoin;
 mod bolt11;
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+mod bolt12;
 mod liquid;
 mod utils;
 
