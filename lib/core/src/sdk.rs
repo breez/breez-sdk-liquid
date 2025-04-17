@@ -2967,18 +2967,32 @@ impl LiquidSdk {
                 "Failed to create BOLT12 invoice: Error creating blinded payment path",
             )
         })?;
-        let channel_id = params
-            .magic_routing_hint
-            .channel_id
-            .parse::<u64>()
-            .map_err(|e| PaymentError::generic(format!("Failed to create BOLT12 invoice: {e}")))?;
         let mrh_payment_path = {
-            let mut payment_path = default_payment_path.clone();
-            payment_path.inner_path.introduction_node = IntroductionNode::DirectedShortChannelId(
-                blinded_path::Direction::NodeOne,
-                channel_id,
-            );
-            payment_path
+            let channel_id = params
+                .magic_routing_hint
+                .channel_id
+                .parse::<u64>()
+                .map_err(|e| {
+                    PaymentError::generic(format!("Failed to create BOLT12 invoice: {e}"))
+                })?;
+            BlindedPaymentPath::new(
+                &[],
+                Some(IntroductionNode::DirectedShortChannelId(
+                    blinded_path::Direction::NodeOne,
+                    channel_id,
+                )),
+                cln_node.public_key,
+                payee_tlvs.clone(),
+                u64::MAX,
+                params.min_cltv as u16,
+                &entropy_source,
+                &secp,
+            )
+            .map_err(|_| {
+                PaymentError::generic(
+                    "Failed to create BOLT12 invoice: Error creating blinded MRH payment path",
+                )
+            })?
         };
         let payment_paths = vec![default_payment_path, mrh_payment_path];
 

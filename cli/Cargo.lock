@@ -2585,17 +2585,17 @@ dependencies = [
 [[package]]
 name = "lightning"
 version = "0.1.2"
-source = "git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7#a1b7528962c472dc82e584294fd02d52a764a6b7"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
  "bech32 0.11.0",
  "bitcoin 0.32.5",
  "dnssec-prover",
  "hashbrown 0.13.2",
  "libm",
- "lightning-invoice 0.33.2 (git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7)",
- "lightning-types 0.2.0 (git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7)",
+ "lightning-invoice 0.33.2 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
+ "lightning-types 0.2.0 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
  "musig2",
- "possiblyrandom 0.2.0 (git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7)",
+ "possiblyrandom 0.2.0 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
 ]
 
 [[package]]
@@ -2626,11 +2626,11 @@ dependencies = [
 [[package]]
 name = "lightning-invoice"
 version = "0.33.2"
-source = "git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7#a1b7528962c472dc82e584294fd02d52a764a6b7"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
  "bech32 0.11.0",
  "bitcoin 0.32.5",
- "lightning-types 0.2.0 (git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7)",
+ "lightning-types 0.2.0 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
 ]
 
 [[package]]
@@ -2645,7 +2645,7 @@ dependencies = [
 [[package]]
 name = "lightning-types"
 version = "0.2.0"
-source = "git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7#a1b7528962c472dc82e584294fd02d52a764a6b7"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
  "bitcoin 0.32.5",
 ]
@@ -3281,7 +3281,7 @@ dependencies = [
 [[package]]
 name = "possiblyrandom"
 version = "0.2.0"
-source = "git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7#a1b7528962c472dc82e584294fd02d52a764a6b7"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
  "getrandom 0.2.14",
 ]
@@ -4190,7 +4190,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=f2890bb8f6ec3fac9ccb57a26fbed451cd641ebe#f2890bb8f6ec3fac9ccb57a26fbed451cd641ebe"
+source = "git+https://github.com/breez/breez-sdk?rev=4e1165bd0f78af6c716c52ab8ba401cfaac76f55#4e1165bd0f78af6c716c52ab8ba401cfaac76f55"
 dependencies = [
  "aes",
  "anyhow",
@@ -4206,7 +4206,7 @@ dependencies = [
  "hickory-resolver",
  "lazy_static",
  "lightning 0.0.118",
- "lightning 0.1.2 (git+https://github.com/breez/rust-lightning?rev=a1b7528962c472dc82e584294fd02d52a764a6b7)",
+ "lightning 0.1.2 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
  "lightning-invoice 0.26.0",
  "log",
  "maybe-sync",
@@ -4235,7 +4235,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=f2890bb8f6ec3fac9ccb57a26fbed451cd641ebe#f2890bb8f6ec3fac9ccb57a26fbed451cd641ebe"
+source = "git+https://github.com/breez/breez-sdk?rev=4e1165bd0f78af6c716c52ab8ba401cfaac76f55#4e1165bd0f78af6c716c52ab8ba401cfaac76f55"
 dependencies = [
  "proc-macro2",
  "quote",
