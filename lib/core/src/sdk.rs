@@ -3528,7 +3528,8 @@ impl LiquidSdk {
             }
         }
         
-        // Explicitly update wallet info at the end of sync to ensure balance is up-to-date
+        // Explicit wallet info update to ensure balance is always up-to-date after sync
+        // Adding as specifically requested, even though sync_payments_with_chain_data already calls update_wallet_info()
         self.update_wallet_info().await?;
         
         let duration_ms = Instant::now().duration_since(t0).as_millis();
