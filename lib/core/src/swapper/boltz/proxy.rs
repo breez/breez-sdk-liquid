@@ -1,5 +1,6 @@
 use std::sync::OnceLock;
 
+use crate::PRODUCTION_BREEZSERVER_URL;
 use anyhow::Result;
 use sdk_common::prelude::BreezServer;
 use sdk_common::utils::Arc;
@@ -45,7 +46,7 @@ impl ProxyUrlFetcher for BoltzProxyFetcher {
         }
 
         let maybe_swapper_proxy_url =
-            match BreezServer::new("https://bs1.breez.technology:443".into(), None) {
+            match BreezServer::new(PRODUCTION_BREEZSERVER_URL.into(), None) {
                 Ok(breez_server) => {
                     let maybe_swapper_proxy_url = breez_server
                         .fetch_boltz_swapper_urls()
