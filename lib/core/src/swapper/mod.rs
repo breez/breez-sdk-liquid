@@ -2,8 +2,9 @@ use anyhow::Result;
 use boltz_client::{
     boltz::{
         ChainPair, CreateChainRequest, CreateChainResponse, CreateReverseRequest,
-        CreateReverseResponse, CreateSubmarineRequest, CreateSubmarineResponse, ReversePair,
-        SubmarineClaimTxResponse, SubmarinePair,
+        CreateReverseResponse, CreateSubmarineRequest, CreateSubmarineResponse,
+        GetBolt12ParamsResponse, GetNodesResponse, ReversePair, SubmarineClaimTxResponse,
+        SubmarinePair,
     },
     network::Chain,
     Amount,
@@ -129,6 +130,21 @@ pub trait Swapper: MaybeSend + MaybeSync {
         offer: &str,
         amount_sat: u64,
     ) -> Result<String, PaymentError>;
+
+    async fn create_bolt12_offer(&self, offer: &str, url: &str) -> Result<(), SdkError>;
+
+    async fn update_bolt12_offer(
+        &self,
+        offer: &str,
+        url: &str,
+        signature: &str,
+    ) -> Result<(), SdkError>;
+
+    async fn delete_bolt12_offer(&self, offer: &str, signature: &str) -> Result<(), SdkError>;
+
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError>;
+
+    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError>;
 }
 
 pub trait SwapperStatusStream: MaybeSend + MaybeSync {

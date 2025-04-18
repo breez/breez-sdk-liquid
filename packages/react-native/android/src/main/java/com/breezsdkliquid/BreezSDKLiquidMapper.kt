@@ -2076,13 +2076,26 @@ fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveR
         } else {
             null
         }
-    return PrepareReceiveRequest(paymentMethod, amount)
+    val offer = if (hasNonNullKey(prepareReceiveRequest, "offer")) prepareReceiveRequest.getString("offer") else null
+    val invoiceRequest =
+        if (hasNonNullKey(
+                prepareReceiveRequest,
+                "invoiceRequest",
+            )
+        ) {
+            prepareReceiveRequest.getString("invoiceRequest")
+        } else {
+            null
+        }
+    return PrepareReceiveRequest(paymentMethod, amount, offer, invoiceRequest)
 }
 
 fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
     readableMapOf(
         "paymentMethod" to prepareReceiveRequest.paymentMethod.name.lowercase(),
         "amount" to prepareReceiveRequest.amount?.let { readableMapOf(it) },
+        "offer" to prepareReceiveRequest.offer,
+        "invoiceRequest" to prepareReceiveRequest.invoiceRequest,
     )
 
 fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest> {
@@ -2117,6 +2130,17 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
+    val offer = if (hasNonNullKey(prepareReceiveResponse, "offer")) prepareReceiveResponse.getString("offer") else null
+    val invoiceRequest =
+        if (hasNonNullKey(
+                prepareReceiveResponse,
+                "invoiceRequest",
+            )
+        ) {
+            prepareReceiveResponse.getString("invoiceRequest")
+        } else {
+            null
+        }
     val minPayerAmountSat =
         if (hasNonNullKey(
                 prepareReceiveResponse,
@@ -2147,7 +2171,16 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
-    return PrepareReceiveResponse(paymentMethod, feesSat, amount, minPayerAmountSat, maxPayerAmountSat, swapperFeerate)
+    return PrepareReceiveResponse(
+        paymentMethod,
+        feesSat,
+        amount,
+        offer,
+        invoiceRequest,
+        minPayerAmountSat,
+        maxPayerAmountSat,
+        swapperFeerate,
+    )
 }
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
@@ -2155,6 +2188,8 @@ fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
         "paymentMethod" to prepareReceiveResponse.paymentMethod.name.lowercase(),
         "feesSat" to prepareReceiveResponse.feesSat,
         "amount" to prepareReceiveResponse.amount?.let { readableMapOf(it) },
+        "offer" to prepareReceiveResponse.offer,
+        "invoiceRequest" to prepareReceiveResponse.invoiceRequest,
         "minPayerAmountSat" to prepareReceiveResponse.minPayerAmountSat,
         "maxPayerAmountSat" to prepareReceiveResponse.maxPayerAmountSat,
         "swapperFeerate" to prepareReceiveResponse.swapperFeerate,

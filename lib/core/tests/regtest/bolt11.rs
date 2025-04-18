@@ -34,9 +34,9 @@ async fn bolt11() {
     let (prepare_response, receive_response) = handle_alice
         .receive_payment(&PrepareReceiveRequest {
             payment_method: breez_sdk_liquid::model::PaymentMethod::Lightning,
-            amount: Some(breez_sdk_liquid::model::ReceiveAmount::Bitcoin {
-                payer_amount_sat: payer_amount_sat,
-            }),
+            amount: Some(breez_sdk_liquid::model::ReceiveAmount::Bitcoin { payer_amount_sat }),
+            offer: None,
+            invoice_request: None,
         })
         .await
         .unwrap();
@@ -154,6 +154,8 @@ async fn bolt11() {
             amount: Some(breez_sdk_liquid::model::ReceiveAmount::Bitcoin {
                 payer_amount_sat: receiver_amount_sat,
             }),
+            offer: None,
+            invoice_request: None,
         })
         .await
         .unwrap();

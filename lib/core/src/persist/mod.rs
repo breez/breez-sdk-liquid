@@ -1,6 +1,7 @@
 mod address;
 pub(crate) mod asset_metadata;
 mod backup;
+pub(crate) mod bolt12_offer;
 pub(crate) mod cache;
 pub(crate) mod chain;
 mod migrations;
@@ -13,10 +14,9 @@ use std::collections::{HashMap, HashSet};
 use std::ops::Not;
 use std::{path::PathBuf, str::FromStr};
 
-use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::*;
 use crate::sync::model::RecordType;
-use crate::{get_invoice_description, utils};
+use crate::utils;
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use log::{error, warn};
@@ -692,7 +692,9 @@ impl Persister {
                         destination_pubkey: maybe_receive_swap_destination_pubkey,
                         description: maybe_receive_swap_description.unwrap_or_else(|| {
                             maybe_receive_swap_invoice
-                                .and_then(|bolt11| get_invoice_description!(bolt11))
+                                .and_then(|invoice| {
+                                    utils::get_invoice_description(&invoice).ok().flatten()
+                                })
                                 .unwrap_or("Lightning payment".to_string())
                         }),
                         payer_amount_sat,

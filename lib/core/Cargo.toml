@@ -77,7 +77,7 @@ maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "b54f181e218d", features = ["electrum"] }
+boltz-client = { git = "https://github.com/dangeross/boltz-rust", rev = "a873643ad1150da2089a45b1ed632fc8d51319b3", features = ["electrum"] }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
     "bundled",
@@ -96,7 +96,7 @@ tonic = { version = "0.12", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-boltz-client = { git = "https://github.com/hydra-yse/boltz-rust", rev = "b54f181e218d" }
+boltz-client = { git = "https://github.com/dangeross/boltz-rust", rev = "a873643ad1150da2089a45b1ed632fc8d51319b3" }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
     "bundled",
@@ -111,6 +111,7 @@ serial_test = "3.2.0"
 
 # Non-Wasm dev dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dev-dependencies]
+axum = "0.8.3"
 tempdir = "0.3.7"
 
 # Wasm dev dependencies

@@ -25,6 +25,8 @@ async fn liquid() {
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::LiquidAddress,
             amount: None,
+            offer: None,
+            invoice_request: None,
         })
         .await
         .unwrap();

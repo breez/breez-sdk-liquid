@@ -37,8 +37,8 @@ anyhow = "1.0"
 log = "0.4.20"
 once_cell = "1.19"
 serde = { version = "1.0", features = ["derive"] }
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "223002e47a3b1be8306f68e9b8094ee2884c9568", features = ["liquid"] }
-sdk-macros = { git = "https://github.com/breez/breez-sdk", rev = "223002e47a3b1be8306f68e9b8094ee2884c9568" }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "4e1165bd0f78af6c716c52ab8ba401cfaac76f55", features = ["liquid"] }
+sdk-macros = { git = "https://github.com/breez/breez-sdk", rev = "4e1165bd0f78af6c716c52ab8ba401cfaac76f55" }
 thiserror = "1.0"
 
 [patch.crates-io]
