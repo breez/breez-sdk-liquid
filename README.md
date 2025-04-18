@@ -95,9 +95,9 @@ Contributions are always welcome. Please read our [contribution guide](CONTRIBUT
 - [x]  BIP353 pay codes
 - [x]  Amountless BTC swaps
 - [x]  Support USTD and other Liquid assets
+- [x]  Pay fees with USDT
+- [x]  Lower minimum payment amount
+- [x]  WebAssembly
 - [ ]  USDT <-> LBTC swaps
-- [ ]  Pay fees with USDT
 - [ ]  Bolt12 receive
-- [ ]  Lower minimum payment amount
-- [ ]  TLV support
-- [ ]  WebAssembly 
+- [ ]  TLV support 
