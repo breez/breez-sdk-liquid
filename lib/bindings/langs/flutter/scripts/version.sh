@@ -4,7 +4,7 @@ ROOT="$SCRIPT_DIR/../../../../.."
 TAG_NAME=`awk '/^version: /{print $2}' $ROOT/packages/flutter/pubspec.yaml`
 
 # Update Flutter plugin to use the same Dart plugin version
-sed -i.bak -E "/breez_liquid:/,/ref:/s|(ref: ).*|\1$TAG_NAME|" "$ROOT/packages/flutter/pubspec.yaml"
+sed -i.bak -E "/breez_liquid:/,/ref:/s|(ref: ).*|\1v$TAG_NAME|" "$ROOT/packages/flutter/pubspec.yaml"
 rm "$ROOT/packages/flutter/pubspec.yaml.bak"
 
 # iOS & macOS
