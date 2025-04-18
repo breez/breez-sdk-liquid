@@ -1,3 +1,4 @@
+use crate::swapper::boltz::CONNECTION_TIMEOUT;
 use crate::{
     bitcoin, elements,
     model::{BlockchainExplorer, Config, BREEZ_LIQUID_ESPLORA_URL},
@@ -13,8 +14,6 @@ use boltz_client::{
 };
 use log::error;
 use sdk_macros::async_trait;
-
-const BOLTZ_CONNECTION_TIMEOUT: u8 = 100;
 
 pub(crate) enum LiquidClient {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -34,7 +33,7 @@ impl LiquidClient {
                         url,
                         tls,
                         validate_domain,
-                        BOLTZ_CONNECTION_TIMEOUT,
+                        CONNECTION_TIMEOUT.as_secs() as u8,
                     )?,
                 ))
             }
@@ -65,7 +64,7 @@ impl LiquidClient {
                     client,
                     config.network.into(),
                     url,
-                    BOLTZ_CONNECTION_TIMEOUT as u64,
+                    CONNECTION_TIMEOUT.as_secs(),
                 )))
             }
         })
@@ -128,7 +127,7 @@ impl BitcoinClient {
                         url,
                         tls,
                         validate_domain,
-                        BOLTZ_CONNECTION_TIMEOUT,
+                        CONNECTION_TIMEOUT.as_secs() as u8,
                     )?,
                 ))
             }
@@ -136,7 +135,7 @@ impl BitcoinClient {
                 Self::Esplora(Box::new(EsploraBitcoinClient::new(
                     config.network.as_bitcoin_chain(),
                     url,
-                    BOLTZ_CONNECTION_TIMEOUT as u64,
+                    CONNECTION_TIMEOUT.as_secs(),
                 )))
             }
         })

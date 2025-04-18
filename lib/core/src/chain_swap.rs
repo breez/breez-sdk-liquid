@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::str::FromStr;
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -11,7 +12,7 @@ use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
 use sdk_common::utils::Arc;
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, Mutex};
 
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -41,6 +42,7 @@ pub(crate) struct ChainSwapHandler {
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
     subscription_notifier: broadcast::Sender<String>,
+    claiming_swaps: Arc<Mutex<HashSet<String>>>,
 }
 
 #[sdk_macros::async_trait]
@@ -79,6 +81,7 @@ impl ChainSwapHandler {
             liquid_chain_service,
             bitcoin_chain_service,
             subscription_notifier,
+            claiming_swaps: Arc::new(Mutex::new(HashSet::new())),
         })
     }
 
@@ -839,6 +842,26 @@ impl ChainSwapHandler {
     }
 
     async fn claim(&self, swap_id: &str) -> Result<(), PaymentError> {
+        {
+            let mut claiming_guard = self.claiming_swaps.lock().await;
+            if claiming_guard.contains(swap_id) {
+                debug!("Claim for swap {swap_id} already in progress, skipping.");
+                return Ok(());
+            }
+            claiming_guard.insert(swap_id.to_string());
+        }
+
+        let result = self.claim_inner(swap_id).await;
+
+        {
+            let mut claiming_guard = self.claiming_swaps.lock().await;
+            claiming_guard.remove(swap_id);
+        }
+
+        result
+    }
+
+    async fn claim_inner(&self, swap_id: &str) -> Result<(), PaymentError> {
         let swap = self.fetch_chain_swap_by_id(swap_id)?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 

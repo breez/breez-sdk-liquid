@@ -31,7 +31,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                         swap_script.as_bitcoin_script()?,
                         refund_address,
                         bitcoin_client,
-                        self.get_url().await?,
+                        &self.get_boltz_client().await?.inner,
                         swap.id.clone(),
                     )
                     .await
@@ -121,7 +121,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             claim_swap_script,
             claim_address,
             bitcoin_client,
-            self.get_url().await?,
+            &self.get_boltz_client().await?.inner,
             swap.id.clone(),
         )
         .await?;
