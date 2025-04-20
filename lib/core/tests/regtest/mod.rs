@@ -16,8 +16,8 @@ use breez_sdk_liquid::{
         PrepareReceiveResponse, PrepareSendRequest, PrepareSendResponse, ReceivePaymentRequest,
         ReceivePaymentResponse, SdkEvent, SendPaymentRequest, SendPaymentResponse,
     },
+    prelude::Arc,
     sdk::LiquidSdk,
-    utils::Arc,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_with_wasm::alias as tokio;

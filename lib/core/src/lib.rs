@@ -192,7 +192,7 @@ pub mod test_utils;
 #[cfg(not(feature = "test-utils"))]
 pub(crate) mod test_utils;
 #[allow(hidden_glob_reexports)]
-pub mod utils;
+pub(crate) mod utils;
 pub mod wallet;
 
 pub use lwk_wollet::bitcoin;
@@ -206,4 +206,5 @@ pub mod prelude {
     pub use crate::model::*;
     pub use crate::sdk::*;
     pub use crate::signer::SdkSigner;
+    pub use sdk_common::utils::Arc;
 }
