@@ -1,4 +1,4 @@
-use std::sync::OnceLock;
+use std::{sync::OnceLock, time::Duration};
 
 use crate::{
     error::{PaymentError, SdkError},
@@ -30,8 +30,9 @@ pub(crate) mod liquid;
 pub(crate) mod proxy;
 pub mod status_stream;
 
+const CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
+
 pub(crate) struct BoltzClient {
-    url: String,
     referral_id: Option<String>,
     inner: BoltzApiClientV2,
 }
@@ -78,8 +79,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
 
         let boltz_client = self.boltz_client.get_or_init(|| BoltzClient {
-            inner: BoltzApiClientV2::new(&boltz_url),
-            url: boltz_url,
+            inner: BoltzApiClientV2::new(boltz_url, Some(CONNECTION_TIMEOUT)),
             referral_id,
         });
         Ok(boltz_client)
@@ -103,10 +103,6 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             .map_err(|err| anyhow!("Could not create Boltz Bitcoin client: {err:?}"))?;
         let bitcoin_client = self.bitcoin_client.get_or_init(|| bitcoin_client);
         Ok(bitcoin_client)
-    }
-
-    async fn get_url(&self) -> Result<String> {
-        Ok(self.get_boltz_client().await?.url.clone())
     }
 
     async fn get_claim_partial_sig(

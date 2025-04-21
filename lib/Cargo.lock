@@ -760,7 +760,7 @@ checksum = "829a082bd3761fde7476dc2ed85ca56c11628948460ece621e4f56fef5046567"
 [[package]]
 name = "boltz-client"
 version = "0.3.0"
-source = "git+https://github.com/hydra-yse/boltz-rust?rev=b54f181e218d#b54f181e218d6c7d44d7bfd3eabda3681006fbc0"
+source = "git+https://github.com/danielgranhao/boltz-rust?rev=9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a#9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a"
 dependencies = [
  "async-trait",
  "bip39",
@@ -3184,7 +3184,7 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.0.0"
-source = "git+https://github.com/hydra-yse/boltz-rust?rev=b54f181e218d#b54f181e218d6c7d44d7bfd3eabda3681006fbc0"
+source = "git+https://github.com/danielgranhao/boltz-rust?rev=9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a#9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a"
 dependencies = [
  "proc-macro2",
  "quote",
