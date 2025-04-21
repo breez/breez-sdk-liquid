@@ -141,7 +141,9 @@ impl SendSwapHandler {
                     None => {
                         debug!("The claim tx was a script path spend (non-cooperative claim)");
                         let mut swaps = vec![Swap::Send(swap.clone())];
-                        self.recoverer.recover_from_onchain(&mut swaps).await?;
+                        self.recoverer
+                            .recover_from_onchain(&mut swaps, None)
+                            .await?;
 
                         let Swap::Send(s) = swaps[0].clone() else {
                             return Err(anyhow!("Expected a Send swap"));

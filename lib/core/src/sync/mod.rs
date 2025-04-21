@@ -432,7 +432,7 @@ impl SyncService {
 
         // Step 2: Recover each swap's data from chain
         self.recoverer
-            .recover_from_onchain(&mut swaps)
+            .recover_from_onchain(&mut swaps, None)
             .await
             .map_err(PullError::recovery)?;
 
