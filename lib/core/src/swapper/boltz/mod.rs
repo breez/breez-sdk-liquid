@@ -79,7 +79,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
 
         let boltz_client = self.boltz_client.get_or_init(|| BoltzClient {
-            inner: BoltzApiClientV2::new(boltz_url, CONNECTION_TIMEOUT),
+            inner: BoltzApiClientV2::new(boltz_url, Some(CONNECTION_TIMEOUT)),
             referral_id,
         });
         Ok(boltz_client)
