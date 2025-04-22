@@ -610,18 +610,25 @@ impl LiquidSdk {
             }
         };
 
-        if let (Ok(liquid_tip), Ok(bitcoin_tip)) = (liquid_tip_res, bitcoin_tip_res) {
-            self.persister
-                .set_blockchain_info(&BlockchainInfo {
+        let maybe_chain_tips =
+            if let (Ok(liquid_tip), Ok(bitcoin_tip)) = (liquid_tip_res, bitcoin_tip_res) {
+                self.persister
+                    .set_blockchain_info(&BlockchainInfo {
+                        liquid_tip,
+                        bitcoin_tip,
+                    })
+                    .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
+                Some(ChainTips {
                     liquid_tip,
                     bitcoin_tip,
                 })
-                .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
-        };
+            } else {
+                None
+            };
 
         // Only partial sync when there are no new Liquid or Bitcoin blocks
         let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
-        _ = self.sync(partial_sync).await;
+        _ = self.sync_inner(partial_sync, maybe_chain_tips).await;
 
         // Update swap handlers
         if is_new_liquid_block {
@@ -2977,7 +2984,7 @@ impl LiquidSdk {
             .map(Into::into)
             .collect();
         self.recoverer
-            .recover_from_onchain(&mut rescannable_swaps)
+            .recover_from_onchain(&mut rescannable_swaps, None)
             .await?;
         let scanned_len = rescannable_swaps.len();
         for swap in rescannable_swaps {
@@ -3077,7 +3084,11 @@ impl LiquidSdk {
             .await?)
     }
 
-    pub(crate) async fn get_monitored_swaps_list(&self, partial_sync: bool) -> Result<Vec<Swap>> {
+    pub(crate) async fn get_monitored_swaps_list(
+        &self,
+        partial_sync: bool,
+        chain_tips: ChainTips,
+    ) -> Result<Vec<Swap>> {
         let receive_swaps = self
             .persister
             .list_recoverable_receive_swaps()?
@@ -3086,8 +3097,6 @@ impl LiquidSdk {
             .collect();
         match partial_sync {
             false => {
-                let bitcoin_height = self.bitcoin_chain_service.tip().await?;
-                let liquid_height = self.liquid_chain_service.tip().await?;
                 let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
                 let send_swaps = self
@@ -3102,13 +3111,13 @@ impl LiquidSdk {
                     .into_iter()
                     .filter(|swap| match swap.direction {
                         Direction::Incoming => {
-                            bitcoin_height
+                            chain_tips.bitcoin_tip
                                 <= swap.timeout_block_height
                                     + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
                         }
                         Direction::Outgoing => {
                             !final_swap_states.contains(&swap.state)
-                                && liquid_height <= swap.timeout_block_height
+                                && chain_tips.liquid_tip <= swap.timeout_block_height
                         }
                     })
                     .map(Into::into)
@@ -3121,11 +3130,17 @@ impl LiquidSdk {
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
     /// it inserts or updates a corresponding entry in our Payments table.
-    async fn sync_payments_with_chain_data(&self, partial_sync: bool) -> Result<()> {
-        let mut recoverable_swaps = self.get_monitored_swaps_list(partial_sync).await?;
+    async fn sync_payments_with_chain_data(
+        &self,
+        partial_sync: bool,
+        chain_tips: ChainTips,
+    ) -> Result<()> {
+        let mut recoverable_swaps = self
+            .get_monitored_swaps_list(partial_sync, chain_tips)
+            .await?;
         let mut wallet_tx_map = self
             .recoverer
-            .recover_from_onchain(&mut recoverable_swaps)
+            .recover_from_onchain(&mut recoverable_swaps, Some(chain_tips))
             .await?;
 
         let all_wallet_tx_ids: HashSet<String> =
@@ -3509,6 +3524,14 @@ impl LiquidSdk {
 
     /// Synchronizes the local state with the mempool and onchain data.
     pub async fn sync(&self, partial_sync: bool) -> SdkResult<()> {
+        self.sync_inner(partial_sync, None).await
+    }
+
+    async fn sync_inner(
+        &self,
+        partial_sync: bool,
+        maybe_chain_tips: Option<ChainTips>,
+    ) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
@@ -3517,6 +3540,14 @@ impl LiquidSdk {
             error!("Failed to scan wallet: {err:?}");
         }
 
+        let chain_tips = match maybe_chain_tips {
+            None => ChainTips {
+                liquid_tip: self.liquid_chain_service.tip().await?,
+                bitcoin_tip: self.bitcoin_chain_service.tip().await?,
+            },
+            Some(tips) => tips,
+        };
+
         let is_first_sync = !self
             .persister
             .get_is_first_sync_complete()?
@@ -3524,12 +3555,14 @@ impl LiquidSdk {
         match is_first_sync {
             true => {
                 self.event_manager.pause_notifications();
-                self.sync_payments_with_chain_data(partial_sync).await?;
+                self.sync_payments_with_chain_data(partial_sync, chain_tips)
+                    .await?;
                 self.event_manager.resume_notifications();
                 self.persister.set_is_first_sync_complete(true)?;
             }
             false => {
-                self.sync_payments_with_chain_data(partial_sync).await?;
+                self.sync_payments_with_chain_data(partial_sync, chain_tips)
+                    .await?;
             }
         }
         let duration_ms = Instant::now().duration_since(t0).as_millis();

@@ -70,22 +70,28 @@ impl Recoverer {
     /// ### Arguments
     ///
     /// - `swaps`: The swaps for which we want to recover onchain data.
+    /// - `maybe_chain_tips`: Optional chain tips. If not provided, the latest tips will be fetched.
     ///
     /// Returns the raw onchain tx map used for recovery.
     pub(crate) async fn recover_from_onchain(
         &self,
         swaps: &mut [Swap],
+        maybe_chain_tips: Option<ChainTips>,
     ) -> Result<HashMap<Txid, WalletTx>> {
-        self.sync_wallet_if_needed().await?;
+        let chain_tips = match maybe_chain_tips {
+            None => ChainTips {
+                liquid_tip: self.liquid_chain_service.tip().await?,
+                bitcoin_tip: self.bitcoin_chain_service.tip().await?,
+            },
+            Some(tips) => tips,
+        };
+
+        self.sync_wallet_if_needed(chain_tips.liquid_tip).await?;
 
         let recovery_started_at = utils::now();
 
         // Create wallet transactions map
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
-
-        // Fetch chain tips for expiration checks
-        let bitcoin_tip = self.bitcoin_chain_service.tip().await?;
-        let liquid_tip = self.liquid_chain_service.tip().await?;
 
         // Convert swaps to SwapsList and fetch history data
         let swaps_list = swaps.to_vec().try_into()?;
@@ -93,8 +99,8 @@ impl Recoverer {
             .create_recovery_context(
                 &swaps_list,
                 TxMap::from_raw_tx_map(raw_tx_map.clone()),
-                liquid_tip,
-                bitcoin_tip,
+                chain_tips.liquid_tip,
+                chain_tips.bitcoin_tip,
                 self.master_blinding_key,
             )
             .await?;
@@ -150,9 +156,8 @@ impl Recoverer {
         Ok(raw_tx_map)
     }
 
-    async fn sync_wallet_if_needed(&self) -> Result<()> {
+    async fn sync_wallet_if_needed(&self, liquid_tip: u32) -> Result<()> {
         let wallet_tip = self.onchain_wallet.tip().await;
-        let liquid_tip = self.liquid_chain_service.tip().await?;
         let tip_difference = wallet_tip.abs_diff(liquid_tip);
         let tips_too_far_apart = tip_difference > LIQUID_TIP_LEEWAY;
 

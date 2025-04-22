@@ -833,6 +833,12 @@ pub struct BlockchainInfo {
     pub bitcoin_tip: u32,
 }
 
+#[derive(Copy, Clone)]
+pub(crate) struct ChainTips {
+    pub liquid_tip: u32,
+    pub bitcoin_tip: u32,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WalletInfo {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
