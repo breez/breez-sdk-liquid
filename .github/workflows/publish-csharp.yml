@@ -105,8 +105,7 @@ jobs:
       matrix:
         target: [
           windows-latest,
-          ubuntu-latest,
-          ubuntu-20.04,
+          ubuntu-latest,          
           macOS-latest,
         ]
     steps:
