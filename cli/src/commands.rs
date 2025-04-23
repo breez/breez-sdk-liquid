@@ -83,9 +83,17 @@ pub(crate) enum Command {
     },
     /// Receive a payment directly or via a swap
     ReceivePayment {
-        /// The method to use when receiving. Either "lightning", "bitcoin" or "liquid"
+        /// The method to use when receiving. Either "lightning", "offer", "bolt12", "bitcoin" or "liquid"
         #[arg(short = 'm', long = "method")]
-        payment_method: Option<PaymentMethod>,
+        payment_method: Option<String>,
+
+        /// Optional BOLT12 offer. Must be set if the payment method is "bolt12"
+        #[clap(short = 'o', long = "offer")]
+        offer: Option<String>,
+
+        /// Optional BOLT12 invoice request. Must be set if the payment method is "bolt12"
+        #[clap(short = 'i', long = "invoice_request")]
+        invoice_request: Option<String>,
 
         /// Optional description for the invoice
         #[clap(short = 'd', long = "description")]
@@ -311,9 +319,21 @@ pub(crate) async fn handle_command(
             amount_sat,
             amount,
             asset_id,
+            offer,
+            invoice_request,
             description,
             use_description_hash,
         } => {
+            let payment_method = payment_method.map_or(Ok(PaymentMethod::Lightning), |method| {
+                match method.as_str() {
+                    "lightning" => Ok(PaymentMethod::Lightning),
+                    "offer" => Ok(PaymentMethod::Bolt12Offer),
+                    "bolt12" => Ok(PaymentMethod::Bolt12Invoice),
+                    "bitcoin" => Ok(PaymentMethod::BitcoinAddress),
+                    "liquid" => Ok(PaymentMethod::LiquidAddress),
+                    _ => Err(anyhow!("Invalid payment method")),
+                }
+            })?;
             let amount = match asset_id {
                 Some(asset_id) => Some(ReceiveAmount::Asset {
                     asset_id,
@@ -325,8 +345,10 @@ pub(crate) async fn handle_command(
             };
             let prepare_response = sdk
                 .prepare_receive_payment(&PrepareReceiveRequest {
-                    payment_method: payment_method.unwrap_or(PaymentMethod::Lightning),
+                    payment_method,
                     amount: amount.clone(),
+                    offer,
+                    invoice_request,
                 })
                 .await?;
 
@@ -359,6 +381,9 @@ pub(crate) async fn handle_command(
 
             match sdk.parse(&response.destination).await? {
                 InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
+                InputType::Bolt12Offer { offer, .. } => {
+                    result.push_str(&build_qr_text(&offer.offer))
+                }
                 InputType::LiquidAddress { address } => {
                     result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
                         anyhow!("Could not build BIP21 from address data: {e:?}")

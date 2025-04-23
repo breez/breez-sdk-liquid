@@ -10,7 +10,8 @@ use boltz_client::{
     boltz::{
         self, BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
-        CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
+        CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
+        SubmarineClaimTxResponse, SubmarinePair,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::Chain,
@@ -442,7 +443,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             Swap::Chain(chain_swap) => match chain_swap.direction {
                 Direction::Incoming => {
                     let Some(broadcast_fee_rate_sat_per_vb) = broadcast_fee_rate_sat_per_vb else {
-                        return Err(PaymentError::generic(&format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")));
+                        return Err(PaymentError::generic(format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")));
                     };
 
                     Transaction::Bitcoin(
@@ -519,5 +520,55 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             .await?;
         info!("Received BOLT12 invoice response: {invoice_res:?}");
         Ok(invoice_res.invoice)
+    }
+
+    async fn create_bolt12_offer(&self, offer: &str, url: &str) -> Result<(), SdkError> {
+        self.get_boltz_client()
+            .await?
+            .inner
+            .post_bolt12_offer(offer, url)
+            .await?;
+        info!("Created BOLT12 offer: {offer:?}");
+        Ok(())
+    }
+
+    async fn update_bolt12_offer(
+        &self,
+        offer: &str,
+        url: &str,
+        signature: &str,
+    ) -> Result<(), SdkError> {
+        self.get_boltz_client()
+            .await?
+            .inner
+            .patch_bolt12_offer(offer, url, signature)
+            .await?;
+        info!("Updated BOLT12 offer: {offer:?}");
+        Ok(())
+    }
+
+    async fn delete_bolt12_offer(&self, offer: &str, signature: &str) -> Result<(), SdkError> {
+        self.get_boltz_client()
+            .await?
+            .inner
+            .delete_bolt12_offer(offer, signature)
+            .await?;
+        info!("Deleted BOLT12 offer: {offer:?}");
+        Ok(())
+    }
+
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {
+        let res = self
+            .get_boltz_client()
+            .await?
+            .inner
+            .get_bolt12_params()
+            .await?;
+        Ok(res)
+    }
+
+    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError> {
+        let res = self.get_boltz_client().await?.inner.get_nodes().await?;
+        Ok(res)
     }
 }

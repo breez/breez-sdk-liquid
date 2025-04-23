@@ -3617,6 +3617,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.payment_method = cst_encode_payment_method(apiObj.paymentMethod);
     wireObj.amount = cst_encode_opt_box_autoadd_receive_amount(apiObj.amount);
+    wireObj.offer = cst_encode_opt_String(apiObj.offer);
+    wireObj.invoice_request = cst_encode_opt_String(apiObj.invoiceRequest);
   }
 
   @protected
@@ -3625,8 +3627,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_prepare_receive_response wireObj,
   ) {
     wireObj.payment_method = cst_encode_payment_method(apiObj.paymentMethod);
-    wireObj.amount = cst_encode_opt_box_autoadd_receive_amount(apiObj.amount);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
+    wireObj.amount = cst_encode_opt_box_autoadd_receive_amount(apiObj.amount);
+    wireObj.offer = cst_encode_opt_String(apiObj.offer);
+    wireObj.invoice_request = cst_encode_opt_String(apiObj.invoiceRequest);
     wireObj.min_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.minPayerAmountSat);
     wireObj.max_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.maxPayerAmountSat);
     wireObj.swapper_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.swapperFeerate);
@@ -6774,6 +6778,10 @@ final class wire_cst_prepare_receive_request extends ffi.Struct {
   external int payment_method;
 
   external ffi.Pointer<wire_cst_receive_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 }
 
 final class wire_cst_prepare_refund_request extends ffi.Struct {
@@ -6795,10 +6803,14 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
   @ffi.Int32()
   external int payment_method;
 
-  external ffi.Pointer<wire_cst_receive_amount> amount;
-
   @ffi.Uint64()
   external int fees_sat;
+
+  external ffi.Pointer<wire_cst_receive_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 
   external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
 

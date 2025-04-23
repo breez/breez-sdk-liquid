@@ -9,11 +9,14 @@ struct Constants {
     static let MESSAGE_DATA_TYPE = "notification_type"
     static let MESSAGE_DATA_PAYLOAD = "notification_payload"
     
+    static let MESSAGE_TYPE_INVOICE_REQUEST = "invoice_request"
     static let MESSAGE_TYPE_SWAP_UPDATED = "swap_updated"
     static let MESSAGE_TYPE_LNURL_PAY_INFO = "lnurlpay_info"
     static let MESSAGE_TYPE_LNURL_PAY_INVOICE = "lnurlpay_invoice"
     
     // Resource Identifiers
+    static let INVOICE_REQUEST_NOTIFICATION_TITLE = "invoice_request_notification_title"
+    static let INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE = "invoice_request_notification_failure_title"
     static let LNURL_PAY_INFO_NOTIFICATION_TITLE = "lnurl_pay_info_notification_title"
     static let LNURL_PAY_INVOICE_NOTIFICATION_TITLE = "lnurl_pay_invoice_notification_title"
     static let LNURL_PAY_METADATA_PLAIN_TEXT = "lnurl_pay_metadata_plain_text"
@@ -26,6 +29,8 @@ struct Constants {
     static let SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE = "swap_confirmed_notification_failure_title"
     
     // Resource Identifier Defaults
+    static let DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE = "Fetching Invoice"
+    static let DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE = "Invoice Request Failed"
     static let DEFAULT_LNURL_PAY_INFO_NOTIFICATION_TITLE = "Retrieving Payment Information"
     static let DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE = "Fetching Invoice"
     static let DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT = "Pay with LNURL"

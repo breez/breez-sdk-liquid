@@ -14,9 +14,9 @@ use lwk_wollet::ElementsNetwork;
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
-use sdk_common::bitcoin::hashes::hex::ToHex as _;
 use sdk_common::prelude::*;
 use sdk_common::utils::Arc;
+use sdk_common::{bitcoin::hashes::hex::ToHex, lightning_with_bolt12::offers::offer::Offer};
 use serde::{Deserialize, Serialize};
 use std::cmp::PartialEq;
 use std::path::PathBuf;
@@ -573,13 +573,12 @@ pub(crate) struct ReservedAddress {
 }
 
 /// The send/receive methods supported by the SDK
-#[derive(Clone, Debug, EnumString, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Serialize)]
 pub enum PaymentMethod {
-    #[strum(serialize = "lightning")]
     Lightning,
-    #[strum(serialize = "bitcoin")]
+    Bolt12Offer,
+    Bolt12Invoice,
     BitcoinAddress,
-    #[strum(serialize = "liquid")]
     LiquidAddress,
 }
 
@@ -599,17 +598,20 @@ pub enum ReceiveAmount {
 #[derive(Debug, Serialize)]
 pub struct PrepareReceiveRequest {
     pub payment_method: PaymentMethod,
-
     /// The amount to be paid in either Bitcoin or another asset
     pub amount: Option<ReceiveAmount>,
+    /// The optional BOLT12 offer.
+    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
+    pub offer: Option<String>,
+    /// The optional BOLT12 invoice request.
+    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
+    pub invoice_request: Option<String>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
-    pub amount: Option<ReceiveAmount>,
-
     /// Generally represents the total fees that would be paid to send or receive this payment.
     ///
     /// In case of Zero-Amount Receive Chain swaps, the swapper service fee (`swapper_feerate` times
@@ -619,17 +621,22 @@ pub struct PrepareReceiveResponse {
     ///
     /// In all other types of swaps, the swapper service fee is included in `fees_sat`.
     pub fees_sat: u64,
-
+    /// The amount to be paid in either Bitcoin or another asset
+    pub amount: Option<ReceiveAmount>,
+    /// The optional BOLT12 offer.
+    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
+    pub offer: Option<String>,
+    /// The optional BOLT12 invoice request.
+    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
+    pub invoice_request: Option<String>,
     /// The minimum amount the payer can send for this swap to succeed.
     ///
     /// When the method is [PaymentMethod::LiquidAddress], this is empty.
     pub min_payer_amount_sat: Option<u64>,
-
     /// The maximum amount the payer can send for this swap to succeed.
     ///
     /// When the method is [PaymentMethod::LiquidAddress], this is empty.
     pub max_payer_amount_sat: Option<u64>,
-
     /// The percentage of the sent amount that will count towards the service fee.
     ///
     /// When the method is [PaymentMethod::LiquidAddress], this is empty.
@@ -1444,7 +1451,7 @@ impl ReceiveSwap {
 
         let res = CreateReverseResponse {
             id: self.id.clone(),
-            invoice: self.invoice.clone(),
+            invoice: Some(self.invoice.clone()),
             swap_tree: internal_create_response.swap_tree.clone().into(),
             lockup_address: internal_create_response.lockup_address.clone(),
             refund_public_key: crate::utils::json_to_pubkey(
@@ -1479,7 +1486,7 @@ impl ReceiveSwap {
     pub(crate) fn from_boltz_struct_to_json(
         create_response: &CreateReverseResponse,
         expected_swap_id: &str,
-        expected_invoice: &str,
+        expected_invoice: Option<&str>,
     ) -> Result<String, PaymentError> {
         let internal_create_response =
             crate::persist::receive::InternalCreateReverseResponse::try_convert_from_boltz(
@@ -1508,6 +1515,35 @@ pub struct RefundableSwap {
     pub amount_sat: u64,
     /// The txid of the last broadcasted refund tx, if any
     pub last_refund_tx_id: Option<String>,
+}
+
+/// A BOLT12 offer
+#[derive(Clone, Debug, Derivative)]
+#[derivative(PartialEq)]
+pub(crate) struct Bolt12Offer {
+    /// The BOLT12 offer string
+    pub(crate) id: String,
+    /// The description of the offer
+    pub(crate) description: String,
+    /// The private key used to create the offer
+    pub(crate) private_key: String,
+    /// The optional webhook URL where the offer invoice request will be sent
+    pub(crate) webhook_url: Option<String>,
+    /// The creation time of the offer
+    pub(crate) created_at: u32,
+}
+impl Bolt12Offer {
+    pub(crate) fn get_keypair(&self) -> Result<Keypair, SdkError> {
+        utils::decode_keypair(&self.private_key)
+    }
+}
+impl TryFrom<Bolt12Offer> for Offer {
+    type Error = SdkError;
+
+    fn try_from(val: Bolt12Offer) -> Result<Self, Self::Error> {
+        Offer::from_str(&val.id)
+            .map_err(|e| SdkError::generic(format!("Failed to parse BOLT12 offer: {e:?}")))
+    }
 }
 
 /// The payment state of an individual payment.
@@ -2430,33 +2466,6 @@ impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
             unconfirmed: val.unconfirmed,
         }
     }
-}
-
-#[macro_export]
-macro_rules! get_invoice_amount {
-    ($invoice:expr) => {
-        $invoice
-            .parse::<Bolt11Invoice>()
-            .expect("Expecting valid invoice")
-            .amount_milli_satoshis()
-            .expect("Expecting valid amount")
-            / 1000
-    };
-}
-
-#[macro_export]
-macro_rules! get_invoice_description {
-    ($invoice:expr) => {
-        match $invoice
-            .trim()
-            .parse::<Bolt11Invoice>()
-            .expect("Expecting valid invoice")
-            .description()
-        {
-            Bolt11InvoiceDescription::Direct(msg) => Some(msg.to_string()),
-            Bolt11InvoiceDescription::Hash(_) => None,
-        }
-    };
 }
 
 #[macro_export]

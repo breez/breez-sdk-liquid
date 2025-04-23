@@ -2,6 +2,7 @@ use anyhow::bail;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    model::Bolt12Offer,
     persist::model::PaymentTxDetails,
     prelude::{ChainSwap, Direction, LnUrlInfo, PaymentState, ReceiveSwap, SendSwap, Swap},
 };
@@ -353,6 +354,66 @@ impl From<PaymentDetailsSyncData> for PaymentTxDetails {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub(crate) struct Bolt12OfferSyncData {
+    pub(crate) id: String,
+    pub(crate) description: String,
+    pub(crate) private_key: String,
+    pub(crate) webhook_url: Option<String>,
+    pub(crate) created_at: u32,
+}
+
+impl Bolt12OfferSyncData {
+    pub(crate) fn merge(&mut self, other: &Self, updated_fields: &[String]) {
+        for field in updated_fields {
+            match field.as_str() {
+                "webhook_url" => self.webhook_url.clone_from(&other.webhook_url),
+                _ => continue,
+            }
+        }
+    }
+
+    pub(crate) fn updated_fields(
+        bolt12_offer: Option<Bolt12Offer>,
+        update: &Bolt12Offer,
+    ) -> Option<Vec<String>> {
+        match bolt12_offer {
+            Some(bolt12_offer) => {
+                let mut updated_fields = vec![];
+                if update.webhook_url != bolt12_offer.webhook_url {
+                    updated_fields.push("webhook_url".to_string());
+                }
+                Some(updated_fields)
+            }
+            None => None,
+        }
+    }
+}
+
+impl From<Bolt12Offer> for Bolt12OfferSyncData {
+    fn from(value: Bolt12Offer) -> Self {
+        Self {
+            id: value.id,
+            description: value.description,
+            private_key: value.private_key,
+            webhook_url: value.webhook_url,
+            created_at: value.created_at,
+        }
+    }
+}
+
+impl From<Bolt12OfferSyncData> for Bolt12Offer {
+    fn from(val: Bolt12OfferSyncData) -> Self {
+        Bolt12Offer {
+            id: val.id,
+            description: val.description,
+            private_key: val.private_key,
+            webhook_url: val.webhook_url,
+            created_at: val.created_at,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "data_type", content = "data")]
 pub(crate) enum SyncData {
     Chain(ChainSyncData),
@@ -360,6 +421,7 @@ pub(crate) enum SyncData {
     Receive(ReceiveSyncData),
     LastDerivationIndex(u32),
     PaymentDetails(PaymentDetailsSyncData),
+    Bolt12Offer(Bolt12OfferSyncData),
 }
 
 impl SyncData {
@@ -370,6 +432,7 @@ impl SyncData {
             SyncData::Receive(receive_data) => &receive_data.swap_id,
             SyncData::LastDerivationIndex(_) => LAST_DERIVATION_INDEX_DATA_ID,
             SyncData::PaymentDetails(payment_details) => &payment_details.tx_id,
+            SyncData::Bolt12Offer(bolt12_offer_data) => &bolt12_offer_data.id,
         }
     }
 
@@ -380,7 +443,9 @@ impl SyncData {
     /// Whether the data is a swap
     pub(crate) fn is_swap(&self) -> bool {
         match self {
-            SyncData::LastDerivationIndex(_) | SyncData::PaymentDetails(_) => false,
+            SyncData::Bolt12Offer(_)
+            | SyncData::LastDerivationIndex(_)
+            | SyncData::PaymentDetails(_) => false,
             SyncData::Chain(_) | SyncData::Send(_) | SyncData::Receive(_) => true,
         }
     }
@@ -403,6 +468,9 @@ impl SyncData {
                 *our_index = std::cmp::max(*their_index, *our_index);
             }
             (SyncData::PaymentDetails(ref mut base), SyncData::PaymentDetails(other)) => {
+                base.merge(other, updated_fields)
+            }
+            (SyncData::Bolt12Offer(ref mut base), SyncData::Bolt12Offer(other)) => {
                 base.merge(other, updated_fields)
             }
             _ => return Err(anyhow::anyhow!("Cannot merge data from two separate types")),

@@ -1,6 +1,9 @@
 use anyhow::Error;
 use lwk_wollet::secp256k1;
-use sdk_common::prelude::{LnUrlAuthError, LnUrlPayError, LnUrlWithdrawError};
+use sdk_common::{
+    lightning_with_bolt12::offers::parse::Bolt12SemanticError,
+    prelude::{LnUrlAuthError, LnUrlPayError, LnUrlWithdrawError},
+};
 
 use crate::payjoin::error::PayjoinError;
 
@@ -127,39 +130,47 @@ pub enum PaymentError {
     SignerError { err: String },
 }
 impl PaymentError {
-    pub(crate) fn asset_error(err: &str) -> Self {
+    pub(crate) fn asset_error<S: AsRef<str>>(err: S) -> Self {
         Self::AssetError {
-            err: err.to_string(),
+            err: err.as_ref().to_string(),
         }
     }
 
-    pub(crate) fn generic(err: &str) -> Self {
+    pub(crate) fn generic<S: AsRef<str>>(err: S) -> Self {
         Self::Generic {
-            err: err.to_string(),
+            err: err.as_ref().to_string(),
         }
     }
 
-    pub(crate) fn invalid_invoice(err: &str) -> Self {
+    pub(crate) fn invalid_invoice<S: AsRef<str>>(err: S) -> Self {
         Self::InvalidInvoice {
-            err: err.to_string(),
+            err: err.as_ref().to_string(),
         }
     }
 
-    pub(crate) fn invalid_network(err: &str) -> Self {
+    pub(crate) fn invalid_network<S: AsRef<str>>(err: S) -> Self {
         Self::InvalidNetwork {
-            err: err.to_string(),
+            err: err.as_ref().to_string(),
         }
     }
 
-    pub(crate) fn receive_error(err: &str) -> Self {
+    pub(crate) fn receive_error<S: AsRef<str>>(err: S) -> Self {
         Self::ReceiveError {
-            err: err.to_string(),
+            err: err.as_ref().to_string(),
         }
     }
 
-    pub(crate) fn amount_missing(err: &str) -> Self {
+    pub(crate) fn amount_missing<S: AsRef<str>>(err: S) -> Self {
         Self::AmountMissing {
-            err: err.to_string(),
+            err: err.as_ref().to_string(),
+        }
+    }
+}
+
+impl From<Bolt12SemanticError> for PaymentError {
+    fn from(err: Bolt12SemanticError) -> Self {
+        PaymentError::Generic {
+            err: format!("Failed to create BOLT12 invoice: {err:?}"),
         }
     }
 }

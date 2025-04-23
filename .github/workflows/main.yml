@@ -216,6 +216,16 @@ jobs:
         with:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add compose override
+        working-directory: regtest/boltz
+        run: |
+          cat > docker-compose.override.yml <<EOL
+          services:
+            boltz-backend:
+              extra_hosts:
+                - "host.docker.internal:host-gateway"
+          EOL
       
       - name: Start regtest environment
         working-directory: regtest

@@ -416,6 +416,8 @@ typedef struct wire_cst_receive_amount {
 typedef struct wire_cst_prepare_receive_request {
   int32_t payment_method;
   struct wire_cst_receive_amount *amount;
+  struct wire_cst_list_prim_u_8_strict *offer;
+  struct wire_cst_list_prim_u_8_strict *invoice_request;
 } wire_cst_prepare_receive_request;
 
 typedef struct wire_cst_prepare_refund_request {
@@ -431,8 +433,10 @@ typedef struct wire_cst_prepare_send_request {
 
 typedef struct wire_cst_prepare_receive_response {
   int32_t payment_method;
-  struct wire_cst_receive_amount *amount;
   uint64_t fees_sat;
+  struct wire_cst_receive_amount *amount;
+  struct wire_cst_list_prim_u_8_strict *offer;
+  struct wire_cst_list_prim_u_8_strict *invoice_request;
   uint64_t *min_payer_amount_sat;
   uint64_t *max_payer_amount_sat;
   double *swapper_feerate;

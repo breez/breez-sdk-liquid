@@ -23,6 +23,7 @@ object Constants {
     @Suppress("unused")
     const val MESSAGE_DATA_PAYLOAD = "notification_payload"
 
+    const val MESSAGE_TYPE_INVOICE_REQUEST = "invoice_request"
     const val MESSAGE_TYPE_LNURL_PAY_INFO = "lnurlpay_info"
     const val MESSAGE_TYPE_LNURL_PAY_INVOICE = "lnurlpay_invoice"
     const val MESSAGE_TYPE_SWAP_UPDATED = "swap_updated"
@@ -42,6 +43,10 @@ object Constants {
         "foreground_service_notification_channel_name"
     const val FOREGROUND_SERVICE_NOTIFICATION_TITLE =
         "foreground_service_notification_title"
+    const val INVOICE_REQUEST_NOTIFICATION_TITLE =
+        "invoice_request_notification_title"
+    const val INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE =
+        "invoice_request_notification_failure_title"
     const val LNURL_PAY_INFO_NOTIFICATION_TITLE =
         "lnurl_pay_info_notification_title"
     const val LNURL_PAY_INVOICE_NOTIFICATION_TITLE =
@@ -93,6 +98,10 @@ object Constants {
         "Running in the background"
     const val DEFAULT_LNURL_PAY_INFO_NOTIFICATION_TITLE =
         "Retrieving Payment Information"
+    const val DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE =
+        "Fetching Invoice"
+    const val DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE =
+        "Invoice Request Failed"
     const val DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE =
         "Fetching Invoice"
     const val DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT =

@@ -441,7 +441,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b829e4e32b91e643de6eafe82b1d90675f5874230191a4ffbc1b336dec4d6bf"
 dependencies = [
  "async-trait",
- "axum-core",
+ "axum-core 0.3.4",
  "bitflags 1.3.2",
  "bytes",
  "futures-util",
@@ -449,7 +449,7 @@ dependencies = [
  "http-body 0.4.6",
  "hyper 0.14.32",
  "itoa",
- "matchit",
+ "matchit 0.7.3",
  "memchr",
  "mime",
  "percent-encoding",
@@ -460,6 +460,40 @@ dependencies = [
  "tower 0.4.13",
  "tower-layer",
  "tower-service",
+]
+
+[[package]]
+name = "axum"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de45108900e1f9b9242f7f2e254aa3e2c029c921c258fe9e6b4217eeebd54288"
+dependencies = [
+ "axum-core 0.5.2",
+ "bytes",
+ "form_urlencoded",
+ "futures-util",
+ "http 1.3.1",
+ "http-body 1.0.1",
+ "http-body-util",
+ "hyper 1.6.0",
+ "hyper-util",
+ "itoa",
+ "matchit 0.8.4",
+ "memchr",
+ "mime",
+ "percent-encoding",
+ "pin-project-lite",
+ "rustversion",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_urlencoded",
+ "sync_wrapper 1.0.2",
+ "tokio",
+ "tower 0.5.2",
+ "tower-layer",
+ "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -477,6 +511,26 @@ dependencies = [
  "rustversion",
  "tower-layer",
  "tower-service",
+]
+
+[[package]]
+name = "axum-core"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68464cd0412f486726fb3373129ef5d2993f90c34bc2bc1c1e9943b2f4fc7ca6"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "http 1.3.1",
+ "http-body 1.0.1",
+ "http-body-util",
+ "mime",
+ "pin-project-lite",
+ "rustversion",
+ "sync_wrapper 1.0.2",
+ "tower-layer",
+ "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -760,7 +814,7 @@ checksum = "829a082bd3761fde7476dc2ed85ca56c11628948460ece621e4f56fef5046567"
 [[package]]
 name = "boltz-client"
 version = "0.3.0"
-source = "git+https://github.com/danielgranhao/boltz-rust?rev=9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a#9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a"
+source = "git+https://github.com/dangeross/boltz-rust?rev=2b150c40906fac9c312902c72003b4bd0a89dc2c#2b150c40906fac9c312902c72003b4bd0a89dc2c"
 dependencies = [
  "async-trait",
  "bip39",
@@ -771,7 +825,7 @@ dependencies = [
  "getrandom 0.2.15",
  "hex",
  "js-sys",
- "lightning-invoice 0.32.0",
+ "lightning 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "macros",
  "reqwest 0.12.12",
@@ -790,6 +844,7 @@ version = "0.8.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "axum 0.8.3",
  "base64 0.22.1",
  "bip39",
  "boltz-client",
@@ -2319,6 +2374,7 @@ dependencies = [
  "http 1.3.1",
  "http-body 1.0.1",
  "httparse",
+ "httpdate",
  "itoa",
  "pin-project-lite",
  "smallvec",
@@ -2955,9 +3011,25 @@ dependencies = [
  "dnssec-prover",
  "hashbrown 0.13.2",
  "libm",
- "lightning-invoice 0.33.2",
- "lightning-types 0.2.0",
- "possiblyrandom",
+ "lightning-invoice 0.33.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lightning-types 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "possiblyrandom 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "lightning"
+version = "0.1.2"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
+dependencies = [
+ "bech32 0.11.0",
+ "bitcoin 0.32.5",
+ "dnssec-prover",
+ "hashbrown 0.13.2",
+ "libm",
+ "lightning-invoice 0.33.2 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
+ "lightning-types 0.2.0 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
+ "musig2",
+ "possiblyrandom 0.2.0 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
 ]
 
 [[package]]
@@ -2976,35 +3048,23 @@ dependencies = [
 
 [[package]]
 name = "lightning-invoice"
-version = "0.32.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90ab9f6ea77e20e3129235e62a2e6bd64ed932363df104e864ee65ccffb54a8f"
-dependencies = [
- "bech32 0.9.1",
- "bitcoin 0.32.5",
- "lightning-types 0.1.0",
-]
-
-[[package]]
-name = "lightning-invoice"
 version = "0.33.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11209f386879b97198b2bfc9e9c1e5d42870825c6bd4376f17f95357244d6600"
 dependencies = [
  "bech32 0.11.0",
  "bitcoin 0.32.5",
- "lightning-types 0.2.0",
+ "lightning-types 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "lightning-types"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1083b8d9137000edf3bfcb1ff011c0d25e0cdd2feb98cc21d6765e64a494148f"
+name = "lightning-invoice"
+version = "0.33.2"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
- "bech32 0.9.1",
+ "bech32 0.11.0",
  "bitcoin 0.32.5",
- "hex-conservative 0.2.1",
+ "lightning-types 0.2.0 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
 ]
 
 [[package]]
@@ -3012,6 +3072,14 @@ name = "lightning-types"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2cd84d4e71472035903e43caded8ecc123066ce466329ccd5ae537a8d5488c7"
+dependencies = [
+ "bitcoin 0.32.5",
+]
+
+[[package]]
+name = "lightning-types"
+version = "0.2.0"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
  "bitcoin 0.32.5",
 ]
@@ -3184,7 +3252,7 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.0.0"
-source = "git+https://github.com/danielgranhao/boltz-rust?rev=9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a#9c703b20a86cb8a4d9a0d3d6dc2f610a0389fe7a"
+source = "git+https://github.com/dangeross/boltz-rust?rev=2b150c40906fac9c312902c72003b4bd0a89dc2c#2b150c40906fac9c312902c72003b4bd0a89dc2c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3196,6 +3264,12 @@ name = "matchit"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
+
+[[package]]
+name = "matchit"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
 name = "maybe-sync"
@@ -3333,6 +3407,14 @@ name = "multimap"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
+
+[[package]]
+name = "musig2"
+version = "0.1.0"
+source = "git+https://github.com/arik-so/rust-musig2?rev=6f95a05718cbb44d8fe3fa6021aea8117aa38d50#6f95a05718cbb44d8fe3fa6021aea8117aa38d50"
+dependencies = [
+ "bitcoin 0.32.5",
+]
 
 [[package]]
 name = "native-tls"
@@ -3698,6 +3780,14 @@ name = "possiblyrandom"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b122a615d72104fb3d8b26523fdf9232cd8ee06949fb37e4ce3ff964d15dffd"
+dependencies = [
+ "getrandom 0.2.15",
+]
+
+[[package]]
+name = "possiblyrandom"
+version = "0.2.0"
+source = "git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6#1ed173a39d4a415bab8171c3348b459f51f3b5e6"
 dependencies = [
  "getrandom 0.2.15",
 ]
@@ -4688,7 +4778,7 @@ checksum = "584e070911c7017da6cb2eb0788d09f43d789029b5877d3e5ecc8acf86ceee21"
 [[package]]
 name = "sdk-common"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=223002e47a3b1be8306f68e9b8094ee2884c9568#223002e47a3b1be8306f68e9b8094ee2884c9568"
+source = "git+https://github.com/breez/breez-sdk?rev=4e1165bd0f78af6c716c52ab8ba401cfaac76f55#4e1165bd0f78af6c716c52ab8ba401cfaac76f55"
 dependencies = [
  "aes",
  "anyhow",
@@ -4704,7 +4794,7 @@ dependencies = [
  "hickory-resolver",
  "lazy_static",
  "lightning 0.0.118",
- "lightning 0.1.2",
+ "lightning 0.1.2 (git+https://github.com/breez/rust-lightning?rev=1ed173a39d4a415bab8171c3348b459f51f3b5e6)",
  "lightning-invoice 0.26.0",
  "log",
  "maybe-sync",
@@ -4733,7 +4823,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.6.2"
-source = "git+https://github.com/breez/breez-sdk?rev=223002e47a3b1be8306f68e9b8094ee2884c9568#223002e47a3b1be8306f68e9b8094ee2884c9568"
+source = "git+https://github.com/breez/breez-sdk?rev=4e1165bd0f78af6c716c52ab8ba401cfaac76f55#4e1165bd0f78af6c716c52ab8ba401cfaac76f55"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4908,6 +4998,16 @@ dependencies = [
  "itoa",
  "memchr",
  "ryu",
+ "serde",
+]
+
+[[package]]
+name = "serde_path_to_error"
+version = "0.1.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59fab13f937fa393d08645bf3a84bdfe86e296747b506ada67bb15f10f218b2a"
+dependencies = [
+ "itoa",
  "serde",
 ]
 
@@ -5529,7 +5629,7 @@ checksum = "8f219fad3b929bef19b1f86fbc0358d35daed8f2cac972037ac0dc10bbb8d5fb"
 dependencies = [
  "async-stream",
  "async-trait",
- "axum",
+ "axum 0.6.20",
  "base64 0.13.1",
  "bytes",
  "futures-core",
@@ -5663,6 +5763,7 @@ dependencies = [
  "tokio",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -5683,6 +5784,7 @@ version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
 dependencies = [
+ "log",
  "pin-project-lite",
  "tracing-attributes",
  "tracing-core",

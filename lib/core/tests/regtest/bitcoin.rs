@@ -44,6 +44,8 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::BitcoinAddress,
             amount: Some(ReceiveAmount::Bitcoin { payer_amount_sat }),
+            offer: None,
+            invoice_request: None,
         })
         .await
         .unwrap();
@@ -179,6 +181,8 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::BitcoinAddress,
             amount: Some(ReceiveAmount::Bitcoin { payer_amount_sat }),
+            offer: None,
+            invoice_request: None,
         })
         .await
         .unwrap();

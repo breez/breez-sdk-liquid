@@ -4667,6 +4667,10 @@ final class wire_cst_prepare_receive_request extends ffi.Struct {
   external int payment_method;
 
   external ffi.Pointer<wire_cst_receive_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 }
 
 final class wire_cst_prepare_refund_request extends ffi.Struct {
@@ -4688,10 +4692,14 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
   @ffi.Int32()
   external int payment_method;
 
-  external ffi.Pointer<wire_cst_receive_amount> amount;
-
   @ffi.Uint64()
   external int fees_sat;
+
+  external ffi.Pointer<wire_cst_receive_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 
   external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
 

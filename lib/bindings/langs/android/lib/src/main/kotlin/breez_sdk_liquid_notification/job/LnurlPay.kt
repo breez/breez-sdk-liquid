@@ -18,25 +18,6 @@ data class LnurlErrorResponse(
 interface LnurlPayJob : Job {
     override fun onEvent(e: SdkEvent) {}
 
-    fun replyServer(
-        payload: String,
-        replyURL: String,
-    ): Boolean {
-        val url = URL(replyURL)
-        val response = payload.toByteArray()
-
-        with(url.openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-            doOutput = true
-            useCaches = false
-            setRequestProperty("Content-Type", "application/json")
-            setRequestProperty("Content-Length", response.size.toString())
-            DataOutputStream(outputStream).use { it.write(response, 0, response.size) }
-
-            return responseCode == 200
-        }
-    }
-
     fun fail(
         withError: String?,
         replyURL: String,

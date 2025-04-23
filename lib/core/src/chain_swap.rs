@@ -469,7 +469,7 @@ impl ChainSwapHandler {
 
         ensure_sdk!(
             matches!(swap.direction, Direction::Incoming),
-            PaymentError::generic(&format!(
+            PaymentError::generic(format!(
                 "Only an incoming chain swap can be a zero-amount swap. Swap ID: {}",
                 &swap.id
             ))

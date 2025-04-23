@@ -17,7 +17,7 @@ use self::model::{ListenChangesRequest, Notification, SyncOutgoingChanges};
 use crate::prelude::Swap;
 use crate::recover::recoverer::Recoverer;
 use crate::sync::model::data::{
-    ChainSyncData, PaymentDetailsSyncData, ReceiveSyncData, SendSyncData,
+    Bolt12OfferSyncData, ChainSyncData, PaymentDetailsSyncData, ReceiveSyncData, SendSyncData,
 };
 use crate::sync::model::{DecryptionInfo, Record, SetRecordRequest, SetRecordStatus};
 use crate::utils;
@@ -243,6 +243,13 @@ impl SyncService {
                     *last_commit_time,
                 )
             }
+            SyncData::Bolt12Offer(bolt12_offer_data) => {
+                self.persister.commit_incoming_bolt12_offer(
+                    bolt12_offer_data.into(),
+                    new_sync_state,
+                    *last_commit_time,
+                )
+            }
         }
     }
 
@@ -285,6 +292,14 @@ impl SyncService {
                     .ok_or(anyhow!("Could not find Payment Details {data_id}"))?
                     .into();
                 SyncData::PaymentDetails(payment_details_data)
+            }
+            RecordType::Bolt12Offer => {
+                let bolt12_offer_data: Bolt12OfferSyncData = self
+                    .persister
+                    .fetch_bolt12_offer_by_id(data_id)?
+                    .ok_or(anyhow!("Could not find Bolt12 Offer {data_id}"))?
+                    .into();
+                SyncData::Bolt12Offer(bolt12_offer_data)
             }
         };
         Ok(data)
