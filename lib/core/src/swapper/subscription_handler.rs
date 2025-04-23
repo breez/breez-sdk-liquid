@@ -61,14 +61,15 @@ impl SubscriptionHandler for SwapperSubscriptionHandler {
                         error!("Failed to get keypair for BOLT12 offer: {offer}");
                         continue;
                     };
-                    let Ok(offer_hash_sig) = utils::sign_message_hash(offer, &keypair) else {
+                    let Ok(subscribe_hash_sig) = utils::sign_message_hash("SUBSCRIBE", &keypair)
+                    else {
                         error!("Failed to sign hash for BOLT12 offer: {offer}");
                         continue;
                     };
 
                     match self
                         .status_stream
-                        .track_offer(offer, &offer_hash_sig.to_hex())
+                        .track_offer(offer, &subscribe_hash_sig.to_hex())
                     {
                         Ok(_) => info!("Tracking bolt12 offer: {offer}"),
                         Err(e) => error!("Failed to track bolt12 offer: {e:?}"),
