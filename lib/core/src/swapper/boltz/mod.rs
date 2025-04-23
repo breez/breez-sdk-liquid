@@ -8,10 +8,10 @@ use crate::{
 use anyhow::{anyhow, Result};
 use boltz_client::{
     boltz::{
-        self, BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
-        CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
-        CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
-        SubmarineClaimTxResponse, SubmarinePair,
+        self, BoltzApiClientV2, ChainPair, Cooperative, CreateBolt12OfferRequest,
+        CreateChainRequest, CreateChainResponse, CreateReverseRequest, CreateReverseResponse,
+        CreateSubmarineRequest, CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse,
+        ReversePair, SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::Chain,
@@ -44,14 +44,16 @@ pub struct BoltzSwapper<P: ProxyUrlFetcher> {
     liquid_client: OnceLock<LiquidClient>,
     bitcoin_client: OnceLock<BitcoinClient>,
     proxy_url: Arc<P>,
-    subscription_notifier: broadcast::Sender<String>,
+    request_notifier: broadcast::Sender<WsRequest>,
     update_notifier: broadcast::Sender<boltz::SwapStatus>,
+    invoice_request_notifier: broadcast::Sender<boltz::InvoiceRequest>,
 }
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub fn new(config: Config, proxy_url: Arc<P>) -> Result<Self, SdkError> {
-        let (subscription_notifier, _) = broadcast::channel::<String>(30);
+        let (request_notifier, _) = broadcast::channel::<WsRequest>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::SwapStatus>(30);
+        let (invoice_request_notifier, _) = broadcast::channel::<boltz::InvoiceRequest>(30);
 
         Ok(Self {
             proxy_url,
@@ -59,8 +61,9 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             boltz_client: OnceLock::new(),
             liquid_client: OnceLock::new(),
             bitcoin_client: OnceLock::new(),
-            subscription_notifier,
+            request_notifier,
             update_notifier,
+            invoice_request_notifier,
         })
     }
 
@@ -522,28 +525,21 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         Ok(invoice_res.invoice)
     }
 
-    async fn create_bolt12_offer(&self, offer: &str, url: &str) -> Result<(), SdkError> {
+    async fn create_bolt12_offer(&self, req: CreateBolt12OfferRequest) -> Result<(), SdkError> {
         self.get_boltz_client()
             .await?
             .inner
-            .post_bolt12_offer(offer, url)
+            .post_bolt12_offer(req)
             .await?;
-        info!("Created BOLT12 offer: {offer:?}");
         Ok(())
     }
 
-    async fn update_bolt12_offer(
-        &self,
-        offer: &str,
-        url: &str,
-        signature: &str,
-    ) -> Result<(), SdkError> {
+    async fn update_bolt12_offer(&self, req: UpdateBolt12OfferRequest) -> Result<(), SdkError> {
         self.get_boltz_client()
             .await?
             .inner
-            .patch_bolt12_offer(offer, url, signature)
+            .patch_bolt12_offer(req)
             .await?;
-        info!("Updated BOLT12 offer: {offer:?}");
         Ok(())
     }
 
@@ -553,7 +549,6 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             .inner
             .delete_bolt12_offer(offer, signature)
             .await?;
-        info!("Deleted BOLT12 offer: {offer:?}");
         Ok(())
     }
 

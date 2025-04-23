@@ -1,68 +1,15 @@
-use std::sync::Arc;
 use std::time::Duration;
 
-use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
 use breez_sdk_liquid::model::{
     PayAmount, PaymentDetails, PaymentMethod, PaymentState, PaymentType, PrepareReceiveRequest,
-    PrepareSendRequest, ReceivePaymentRequest, SdkEvent,
+    PrepareSendRequest, SdkEvent,
 };
-use breez_sdk_liquid::sdk::LiquidSdk;
-use serde::{Deserialize, Serialize};
 use serial_test::serial;
 
 use crate::regtest::{
     utils::{self, mine_blocks},
     SdkNodeHandle, TIMEOUT,
 };
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InvoiceRequestData {
-    pub offer: String,
-    #[serde(rename = "invoiceRequest")]
-    pub invoice_request: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WebhookRequest {
-    pub data: InvoiceRequestData,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WebhookResponse {
-    pub invoice: String,
-}
-
-#[derive(Clone)]
-pub struct State {
-    pub sdk: Arc<LiquidSdk>,
-}
-
-pub async fn handle_webhook(
-    Extension(state): Extension<State>,
-    Json(req): Json<WebhookRequest>,
-) -> impl IntoResponse {
-    let prepare_response = state
-        .sdk
-        .prepare_receive_payment(&PrepareReceiveRequest {
-            payment_method: PaymentMethod::Bolt12Invoice,
-            amount: None,
-            offer: Some(req.data.offer),
-            invoice_request: Some(req.data.invoice_request),
-        })
-        .await
-        .unwrap();
-    let response = state
-        .sdk
-        .receive_payment(&ReceivePaymentRequest {
-            prepare_response,
-            description: None,
-            use_description_hash: None,
-        })
-        .await
-        .unwrap();
-    let invoice = response.destination;
-    (StatusCode::OK, Json(WebhookResponse { invoice })).into_response()
-}
 
 #[cfg(feature = "browser-tests")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -116,28 +63,7 @@ async fn bolt12() {
         .await
         .unwrap();
 
-    // Setup a webhook server for Bob
-    let state = State {
-        sdk: handle_bob.sdk.clone(),
-    };
-    let router = Router::new()
-        .route("/notify", post(handle_webhook))
-        .layer(Extension(state));
-    let addr = "localhost:7678";
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    tokio::spawn(async {
-        axum::serve(listener, router.into_make_service())
-            .await
-            .unwrap();
-    });
-
     // -------------------CREATE BOLT12 OFFER-------------------
-    handle_bob
-        .sdk
-        .register_webhook(format!("http://host.docker.internal:7678/notify"))
-        .await
-        .unwrap();
-
     let (_, receive_response) = handle_bob
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::Bolt12Offer,

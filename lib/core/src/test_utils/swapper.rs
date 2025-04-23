@@ -1,11 +1,11 @@
 use anyhow::Result;
 use boltz_client::{
     boltz::{
-        ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
-        CreateReverseResponse, CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse,
-        Leaf, MagicRoutingHint, Node, PairLimits, PairMinerFees, ReverseFees, ReverseLimits,
-        ReversePair, SubmarineClaimTxResponse, SubmarineFees, SubmarinePair, SubmarinePairLimits,
-        SwapTree,
+        ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateBolt12OfferRequest,
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse,
+        GetBolt12ParamsResponse, GetNodesResponse, Leaf, MagicRoutingHint, Node, PairLimits,
+        PairMinerFees, ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse,
+        SubmarineFees, SubmarinePair, SubmarinePairLimits, SwapTree, UpdateBolt12OfferRequest,
     },
     util::secrets::Preimage,
     Amount, PublicKey,
@@ -353,21 +353,16 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
-    async fn create_bolt12_offer(&self, _offer: &str, _url: &str) -> Result<(), SdkError> {
+    async fn create_bolt12_offer(&self, _req: CreateBolt12OfferRequest) -> Result<(), SdkError> {
         Ok(())
     }
 
-    async fn update_bolt12_offer(
-        &self,
-        _offer: &str,
-        _url: &str,
-        _signature: &str,
-    ) -> Result<(), SdkError> {
-        unimplemented!()
+    async fn update_bolt12_offer(&self, _req: UpdateBolt12OfferRequest) -> Result<(), SdkError> {
+        Ok(())
     }
 
     async fn delete_bolt12_offer(&self, _offer: &str, _signature: &str) -> Result<(), SdkError> {
-        unimplemented!()
+        Ok(())
     }
 
     async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {

@@ -114,6 +114,11 @@ impl Persister {
         })
     }
 
+    pub(crate) fn list_bolt12_offers(&self) -> Result<Vec<Bolt12Offer>> {
+        let con: Connection = self.get_connection()?;
+        self.list_bolt12_offers_where(&con, vec![], params![])
+    }
+
     pub(crate) fn list_bolt12_offers_where<P>(
         &self,
         con: &Connection,
@@ -144,7 +149,7 @@ impl Persister {
     pub(crate) fn set_bolt12_offer_webhook_url(
         &self,
         offer_id: &str,
-        webhook_url: &str,
+        webhook_url: Option<String>,
     ) -> Result<()> {
         let con = self.get_connection()?;
         con.execute(
@@ -221,7 +226,10 @@ mod tests {
         let offers = storage.list_bolt12_offers_by_webhook_url("http://localhost:4004/notify")?;
         assert_eq!(offers.len(), 1);
 
-        storage.set_bolt12_offer_webhook_url(&bolt12_offer.id, "http://other.local:4004/notify")?;
+        storage.set_bolt12_offer_webhook_url(
+            &bolt12_offer.id,
+            Some("http://other.local:4004/notify".to_string()),
+        )?;
 
         let offers = storage.list_bolt12_offers_by_webhook_url("http://localhost:4004/notify")?;
         assert_eq!(offers.len(), 0);
@@ -238,6 +246,11 @@ mod tests {
             offer.webhook_url,
             Some("http://other.local:4004/notify".to_string())
         );
+
+        storage.set_bolt12_offer_webhook_url(&bolt12_offer.id, None)?;
+
+        let offers = storage.list_bolt12_offers_by_webhook_url("http://other.local:4004/notify")?;
+        assert_eq!(offers.len(), 0);
 
         Ok(())
     }

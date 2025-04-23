@@ -1,15 +1,15 @@
 use log::{error, info};
 use maybe_sync::{MaybeSend, MaybeSync};
-
-use crate::persist::Persister;
-
+use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::utils::Arc;
+
+use crate::{persist::Persister, utils};
 
 use super::SwapperStatusStream;
 
 #[sdk_macros::async_trait]
 pub trait SubscriptionHandler: MaybeSend + MaybeSync {
-    async fn subscribe_swaps(&self);
+    async fn track_subscriptions(&self);
 }
 
 #[derive(Clone)]
@@ -32,7 +32,7 @@ impl SwapperSubscriptionHandler {
 
 #[sdk_macros::async_trait]
 impl SubscriptionHandler for SwapperSubscriptionHandler {
-    async fn subscribe_swaps(&self) {
+    async fn track_subscriptions(&self) {
         match self.persister.list_ongoing_swaps() {
             Ok(initial_ongoing_swaps) => {
                 info!(
@@ -47,6 +47,35 @@ impl SubscriptionHandler for SwapperSubscriptionHandler {
                 }
             }
             Err(e) => error!("Failed to list initial ongoing swaps: {e:?}"),
+        }
+
+        match self.persister.list_bolt12_offers() {
+            Ok(initial_bolt12_offers) => {
+                info!(
+                    "On stream reconnection, got {} initial BOLT12 offers",
+                    initial_bolt12_offers.len()
+                );
+                for bolt12_offer in initial_bolt12_offers {
+                    let offer = &bolt12_offer.id;
+                    let Ok(keypair) = bolt12_offer.get_keypair() else {
+                        error!("Failed to get keypair for BOLT12 offer: {offer}");
+                        continue;
+                    };
+                    let Ok(offer_hash_sig) = utils::sign_message_hash(offer, &keypair) else {
+                        error!("Failed to sign hash for BOLT12 offer: {offer}");
+                        continue;
+                    };
+
+                    match self
+                        .status_stream
+                        .track_offer(offer, &offer_hash_sig.to_hex())
+                    {
+                        Ok(_) => info!("Tracking bolt12 offer: {offer}"),
+                        Err(e) => error!("Failed to track bolt12 offer: {e:?}"),
+                    }
+                }
+            }
+            Err(e) => error!("Failed to list initial bolt12 offers: {e:?}"),
         }
     }
 }

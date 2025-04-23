@@ -30,9 +30,7 @@ use sdk_common::lightning_with_bolt12::blinded_path::payment::{
 use sdk_common::lightning_with_bolt12::blinded_path::{self, IntroductionNode};
 use sdk_common::lightning_with_bolt12::bolt11_invoice::PaymentSecret;
 use sdk_common::lightning_with_bolt12::ln::inbound_payment::ExpandedKey;
-use sdk_common::lightning_with_bolt12::offers::invoice_request::{
-    InvoiceRequest, InvoiceRequestFields,
-};
+use sdk_common::lightning_with_bolt12::offers::invoice_request::InvoiceRequestFields;
 use sdk_common::lightning_with_bolt12::offers::nonce::Nonce;
 use sdk_common::lightning_with_bolt12::offers::offer::{Offer, OfferBuilder};
 use sdk_common::lightning_with_bolt12::sign::RandomBytes;
@@ -571,7 +569,7 @@ impl LiquidSdk {
                                     );
                                     let did_pull_new_records = data.pulled_records_count > 0;
                                     if did_pull_new_records {
-                                        subscription_handler.subscribe_swaps().await;
+                                        subscription_handler.track_subscriptions().await;
                                     }
                                     cloned.notify_event_listeners(SdkEvent::DataSynced {did_pull_new_records}).await
                                 }
@@ -703,6 +701,7 @@ impl LiquidSdk {
         tokio::spawn(async move {
             let mut shutdown_receiver = cloned.shutdown_receiver.clone();
             let mut updates_stream = cloned.status_stream.subscribe_swap_updates();
+            let mut invoice_request_stream = cloned.status_stream.subscribe_invoice_requests();
             let swaps_streams = vec![
                 cloned.send_swap_handler.subscribe_payment_updates(),
                 cloned.receive_swap_handler.subscribe_payment_updates(),
@@ -745,7 +744,24 @@ impl LiquidSdk {
                                 }
                             }
                         }
-                        Err(e) => error!("Received stream error: {e:?}"),
+                        Err(e) => error!("Received update stream error: {e:?}"),
+                    },
+                    invoice_request_res = invoice_request_stream.recv() => match invoice_request_res {
+                        Ok(boltz_client::boltz::InvoiceRequest{id, offer, invoice_request}) => {
+                            match cloned.create_bolt12_receive_swap(&offer, &invoice_request, None).await {
+                                Ok(response) => {
+                                    match cloned.status_stream.send_invoice_created(&id, &response.destination) {
+                                        Ok(_) => info!("Successfully handled invoice request {id}"),
+                                        Err(e) => error!("Failed to handle invoice request {id}: {e}")
+                                    }
+                                },
+                                Err(e) => {
+                                    error!("Failed to create invoice from request {id}: {e:?}");
+                                    continue;
+                                },
+                            };
+                        },
+                        Err(e) => error!("Received invoice request stream error: {e:?}"),
                     },
                     _ = shutdown_receiver.changed() => {
                         info!("Received shutdown signal, exiting swap updates loop");
@@ -2446,9 +2462,6 @@ impl LiquidSdk {
                         "Amount cannot be set for this payment method",
                     ));
                 }
-                self.persister
-                    .get_webhook_url()?
-                    .ok_or(PaymentError::generic("Webhook URL not set"))?;
 
                 let reverse_pair = self
                     .swapper
@@ -2692,16 +2705,11 @@ impl LiquidSdk {
                 let offer = offer.ok_or(PaymentError::generic(
                     "Offer must be set for this payment method",
                 ))?;
-                let invoice_request = invoice_request.as_ref().ok_or(PaymentError::generic(
+                let invoice_request = invoice_request.ok_or(PaymentError::generic(
                     "Invoice request must be set for this payment method",
                 ))?;
 
-                let bolt12_offer = self.persister.fetch_bolt12_offer_by_id(&offer)?.ok_or(
-                    PaymentError::generic(format!("Bolt12 offer not found: {offer}",)),
-                )?;
-                let invoice_request = utils::bolt12::decode_invoice_request(invoice_request)?;
-
-                self.create_bolt12_receive_swap(bolt12_offer, invoice_request, fees_sat)
+                self.create_bolt12_receive_swap(&offer, &invoice_request, Some(fees_sat))
                     .await
             }
             PaymentMethod::BitcoinAddress => {
@@ -2899,10 +2907,17 @@ impl LiquidSdk {
 
     async fn create_bolt12_receive_swap(
         &self,
-        offer: Bolt12Offer,
-        invoice_request: InvoiceRequest,
-        fees_sat: u64,
+        offer: &str,
+        invoice_request: &str,
+        fees_sat: Option<u64>,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
+        let bolt12_offer =
+            self.persister
+                .fetch_bolt12_offer_by_id(offer)?
+                .ok_or(PaymentError::generic(format!(
+                    "Bolt12 offer not found: {offer}",
+                )))?;
+        let invoice_request = utils::bolt12::decode_invoice_request(invoice_request)?;
         let payer_amount_sat = invoice_request
             .amount_msats()
             .map(|msats| msats / 1_000)
@@ -2922,11 +2937,12 @@ impl LiquidSdk {
             .await?
             .ok_or(PaymentError::PairsNotFound)?;
         let new_fees_sat = reverse_pair.fees.total(payer_amount_sat);
+        let fees_sat = fees_sat.unwrap_or(new_fees_sat);
         ensure_sdk!(fees_sat == new_fees_sat, PaymentError::InvalidOrExpiredFees);
         debug!("Creating BOLT12 Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
         let secp = Secp256k1::new();
-        let keypair = offer.get_keypair()?;
+        let keypair = bolt12_offer.get_keypair()?;
         let preimage = Preimage::new();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_byte_array();
@@ -2940,7 +2956,7 @@ impl LiquidSdk {
         let entropy_source = RandomBytes::new(utils::generate_entropy());
         let nonce = Nonce::from_entropy_source(&entropy_source);
         let payment_context = PaymentContext::Bolt12Offer(Bolt12OfferContext {
-            offer_id: Offer::try_from(offer)?.id(),
+            offer_id: Offer::try_from(bolt12_offer)?.id(),
             invoice_request: InvoiceRequestFields {
                 payer_signing_pubkey: invoice_request.payer_signing_pubkey(),
                 quantity: invoice_request.quantity(),
@@ -3104,10 +3120,7 @@ impl LiquidSdk {
         &self,
         description: String,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
-        let webhook_url = self
-            .persister
-            .get_webhook_url()?
-            .ok_or(PaymentError::generic("Webhook URL not set"))?;
+        let webhook_url = self.persister.get_webhook_url()?;
         let cln_node = self
             .swapper
             .get_nodes()
@@ -3142,16 +3155,23 @@ impl LiquidSdk {
         let offer_str = utils::bolt12::encode_offer(&offer)?;
         info!("Created BOLT12 offer: {offer_str}");
         self.swapper
-            .create_bolt12_offer(&offer_str, &webhook_url)
+            .create_bolt12_offer(CreateBolt12OfferRequest {
+                offer: offer_str.clone(),
+                url: webhook_url.clone(),
+            })
             .await?;
         // Store the bolt12 offer
         self.persister.insert_or_update_bolt12_offer(&Bolt12Offer {
             id: offer_str.clone(),
             description,
             private_key: keypair.display_secret().to_string(),
-            webhook_url: Some(webhook_url),
+            webhook_url,
             created_at: utils::now(),
         })?;
+        // Start tracking the offer with the status stream
+        let subscribe_hash_sig = utils::sign_message_hash("SUBSCRIBE", &keypair)?;
+        self.status_stream
+            .track_offer(&offer_str, &subscribe_hash_sig.to_hex())?;
 
         Ok(ReceivePaymentResponse {
             destination: offer_str,
@@ -4389,24 +4409,35 @@ impl LiquidSdk {
         self.persister.set_webhook_url(webhook_url.clone())?;
 
         // If the webhook URL has changed, update all bolt12 offers
-        // that were created with the old webhook URL
+        // that were created with the old webhook URL or without a webhook URL
         if let Some(old_webhook_url) = maybe_old_webhook_url {
             if old_webhook_url != webhook_url {
                 let bolt12_offers = self
                     .persister
-                    .list_bolt12_offers_by_webhook_url(&old_webhook_url)?;
+                    .list_bolt12_offers()?
+                    .into_iter()
+                    .filter(|bolt12_offer| {
+                        bolt12_offer
+                            .webhook_url
+                            .clone()
+                            .is_none_or(|url| url == old_webhook_url)
+                    })
+                    .collect::<Vec<_>>();
+
                 for bolt12_offer in bolt12_offers {
                     let keypair = bolt12_offer.get_keypair()?;
                     let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
                     self.swapper
-                        .update_bolt12_offer(
-                            &bolt12_offer.id,
-                            &webhook_url,
-                            &webhook_url_hash_sig.to_hex(),
-                        )
+                        .update_bolt12_offer(UpdateBolt12OfferRequest {
+                            offer: bolt12_offer.id.clone(),
+                            url: Some(webhook_url.clone()),
+                            signature: webhook_url_hash_sig.to_hex(),
+                        })
                         .await?;
-                    self.persister
-                        .set_bolt12_offer_webhook_url(&bolt12_offer.id, &webhook_url)?;
+                    self.persister.set_bolt12_offer_webhook_url(
+                        &bolt12_offer.id,
+                        Some(webhook_url.clone()),
+                    )?;
                 }
             }
         }
@@ -4422,7 +4453,30 @@ impl LiquidSdk {
     /// To register a webhook call [LiquidSdk::register_webhook].
     pub async fn unregister_webhook(&self) -> SdkResult<()> {
         info!("Unregistering for webhook notifications");
+        let maybe_old_webhook_url = self.persister.get_webhook_url()?;
+
         self.persister.remove_webhook_url()?;
+
+        // Update all bolt12 offers that were created with the old webhook URL
+        if let Some(old_webhook_url) = maybe_old_webhook_url {
+            let bolt12_offers = self
+                .persister
+                .list_bolt12_offers_by_webhook_url(&old_webhook_url)?;
+            for bolt12_offer in bolt12_offers {
+                let keypair = bolt12_offer.get_keypair()?;
+                let update_hash_sig = utils::sign_message_hash("UPDATE", &keypair)?;
+                self.swapper
+                    .update_bolt12_offer(UpdateBolt12OfferRequest {
+                        offer: bolt12_offer.id.clone(),
+                        url: None,
+                        signature: update_hash_sig.to_hex(),
+                    })
+                    .await?;
+                self.persister
+                    .set_bolt12_offer_webhook_url(&bolt12_offer.id, None)?;
+            }
+        }
+
         Ok(())
     }
 
@@ -4548,10 +4602,12 @@ mod tests {
     };
     use lwk_wollet::{bitcoin::Network, hashes::hex::DisplayHex as _};
     use sdk_common::{
+        bitcoin::hashes::hex::ToHex,
         lightning_with_bolt12::{
             ln::{channelmanager::PaymentId, inbound_payment::ExpandedKey},
             offers::{nonce::Nonce, offer::Offer},
             sign::RandomBytes,
+            util::ser::Writeable,
         },
         utils::Arc,
     };
@@ -5328,10 +5384,12 @@ mod tests {
             .unwrap()
             .build_and_sign()
             .unwrap();
+        let mut buffer = Vec::new();
+        invoice_request.write(&mut buffer).unwrap();
 
         // Call create_bolt12_receive_swap
         let swap_res = sdk
-            .create_bolt12_receive_swap(offer, invoice_request, 43)
+            .create_bolt12_receive_swap(&offer.id, &buffer.to_hex(), Some(43))
             .await
             .unwrap();
         assert!(swap_res.destination.starts_with("lni"));

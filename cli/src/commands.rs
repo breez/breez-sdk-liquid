@@ -377,24 +377,27 @@ pub(crate) async fn handle_command(
                 .await?;
 
             let mut result = command_result!(&response);
-            result.push('\n');
-
-            match sdk.parse(&response.destination).await? {
-                InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
-                InputType::Bolt12Offer { offer, .. } => {
-                    result.push_str(&build_qr_text(&offer.offer))
+            if let Ok(parsed) = sdk.parse(&response.destination).await {
+                result.push('\n');
+                match parsed {
+                    InputType::Bolt11 { invoice } => {
+                        result.push_str(&build_qr_text(&invoice.bolt11))
+                    }
+                    InputType::Bolt12Offer { offer, .. } => {
+                        result.push_str(&build_qr_text(&offer.offer))
+                    }
+                    InputType::LiquidAddress { address } => {
+                        result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
+                            anyhow!("Could not build BIP21 from address data: {e:?}")
+                        })?))
+                    }
+                    InputType::BitcoinAddress { address } => {
+                        result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
+                            anyhow!("Could not build BIP21 from address data: {e:?}")
+                        })?))
+                    }
+                    _ => {}
                 }
-                InputType::LiquidAddress { address } => {
-                    result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow!("Could not build BIP21 from address data: {e:?}")
-                    })?))
-                }
-                InputType::BitcoinAddress { address } => {
-                    result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow!("Could not build BIP21 from address data: {e:?}")
-                    })?))
-                }
-                _ => {}
             }
             result
         }
