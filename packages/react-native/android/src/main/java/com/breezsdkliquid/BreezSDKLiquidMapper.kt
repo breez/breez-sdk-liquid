@@ -594,6 +594,69 @@ fun asConnectWithSignerRequestList(arr: ReadableArray): List<ConnectWithSignerRe
     return list
 }
 
+fun asCreateBolt12InvoiceRequest(createBolt12InvoiceRequest: ReadableMap): CreateBolt12InvoiceRequest? {
+    if (!validateMandatoryFields(
+            createBolt12InvoiceRequest,
+            arrayOf(
+                "offer",
+                "invoiceRequest",
+            ),
+        )
+    ) {
+        return null
+    }
+    val offer = createBolt12InvoiceRequest.getString("offer")!!
+    val invoiceRequest = createBolt12InvoiceRequest.getString("invoiceRequest")!!
+    return CreateBolt12InvoiceRequest(offer, invoiceRequest)
+}
+
+fun readableMapOf(createBolt12InvoiceRequest: CreateBolt12InvoiceRequest): ReadableMap =
+    readableMapOf(
+        "offer" to createBolt12InvoiceRequest.offer,
+        "invoiceRequest" to createBolt12InvoiceRequest.invoiceRequest,
+    )
+
+fun asCreateBolt12InvoiceRequestList(arr: ReadableArray): List<CreateBolt12InvoiceRequest> {
+    val list = ArrayList<CreateBolt12InvoiceRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCreateBolt12InvoiceRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asCreateBolt12InvoiceResponse(createBolt12InvoiceResponse: ReadableMap): CreateBolt12InvoiceResponse? {
+    if (!validateMandatoryFields(
+            createBolt12InvoiceResponse,
+            arrayOf(
+                "invoice",
+            ),
+        )
+    ) {
+        return null
+    }
+    val invoice = createBolt12InvoiceResponse.getString("invoice")!!
+    return CreateBolt12InvoiceResponse(invoice)
+}
+
+fun readableMapOf(createBolt12InvoiceResponse: CreateBolt12InvoiceResponse): ReadableMap =
+    readableMapOf(
+        "invoice" to createBolt12InvoiceResponse.invoice,
+    )
+
+fun asCreateBolt12InvoiceResponseList(arr: ReadableArray): List<CreateBolt12InvoiceResponse> {
+    val list = ArrayList<CreateBolt12InvoiceResponse>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCreateBolt12InvoiceResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asCurrencyInfo(currencyInfo: ReadableMap): CurrencyInfo? {
     if (!validateMandatoryFields(
             currencyInfo,
@@ -2076,26 +2139,13 @@ fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveR
         } else {
             null
         }
-    val offer = if (hasNonNullKey(prepareReceiveRequest, "offer")) prepareReceiveRequest.getString("offer") else null
-    val invoiceRequest =
-        if (hasNonNullKey(
-                prepareReceiveRequest,
-                "invoiceRequest",
-            )
-        ) {
-            prepareReceiveRequest.getString("invoiceRequest")
-        } else {
-            null
-        }
-    return PrepareReceiveRequest(paymentMethod, amount, offer, invoiceRequest)
+    return PrepareReceiveRequest(paymentMethod, amount)
 }
 
 fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
     readableMapOf(
         "paymentMethod" to prepareReceiveRequest.paymentMethod.name.lowercase(),
         "amount" to prepareReceiveRequest.amount?.let { readableMapOf(it) },
-        "offer" to prepareReceiveRequest.offer,
-        "invoiceRequest" to prepareReceiveRequest.invoiceRequest,
     )
 
 fun asPrepareReceiveRequestList(arr: ReadableArray): List<PrepareReceiveRequest> {
@@ -2130,17 +2180,6 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
-    val offer = if (hasNonNullKey(prepareReceiveResponse, "offer")) prepareReceiveResponse.getString("offer") else null
-    val invoiceRequest =
-        if (hasNonNullKey(
-                prepareReceiveResponse,
-                "invoiceRequest",
-            )
-        ) {
-            prepareReceiveResponse.getString("invoiceRequest")
-        } else {
-            null
-        }
     val minPayerAmountSat =
         if (hasNonNullKey(
                 prepareReceiveResponse,
@@ -2171,16 +2210,7 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
         } else {
             null
         }
-    return PrepareReceiveResponse(
-        paymentMethod,
-        feesSat,
-        amount,
-        offer,
-        invoiceRequest,
-        minPayerAmountSat,
-        maxPayerAmountSat,
-        swapperFeerate,
-    )
+    return PrepareReceiveResponse(paymentMethod, feesSat, amount, minPayerAmountSat, maxPayerAmountSat, swapperFeerate)
 }
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
@@ -2188,8 +2218,6 @@ fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
         "paymentMethod" to prepareReceiveResponse.paymentMethod.name.lowercase(),
         "feesSat" to prepareReceiveResponse.feesSat,
         "amount" to prepareReceiveResponse.amount?.let { readableMapOf(it) },
-        "offer" to prepareReceiveResponse.offer,
-        "invoiceRequest" to prepareReceiveResponse.invoiceRequest,
         "minPayerAmountSat" to prepareReceiveResponse.minPayerAmountSat,
         "maxPayerAmountSat" to prepareReceiveResponse.maxPayerAmountSat,
         "swapperFeerate" to prepareReceiveResponse.swapperFeerate,

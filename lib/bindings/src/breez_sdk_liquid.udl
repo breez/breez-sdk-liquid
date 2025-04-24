@@ -460,7 +460,6 @@ dictionary SendPaymentResponse {
 enum PaymentMethod {
     "Lightning",
     "Bolt12Offer",
-    "Bolt12Invoice",
     "BitcoinAddress",
     "LiquidAddress",
 };
@@ -474,16 +473,12 @@ interface ReceiveAmount {
 dictionary PrepareReceiveRequest {
     PaymentMethod payment_method;
     ReceiveAmount? amount = null;
-    string? offer = null;
-    string? invoice_request = null;
 };
 
 dictionary PrepareReceiveResponse {
     PaymentMethod payment_method;
     u64 fees_sat;
     ReceiveAmount? amount;
-    string? offer;
-    string? invoice_request;
     u64? min_payer_amount_sat;
     u64? max_payer_amount_sat;
     f64? swapper_feerate;
@@ -497,6 +492,15 @@ dictionary ReceivePaymentRequest {
 
 dictionary ReceivePaymentResponse {
     string destination;
+};
+
+dictionary CreateBolt12InvoiceRequest {
+    string offer;
+    string invoice_request;
+};
+
+dictionary CreateBolt12InvoiceResponse {
+    string invoice;
 };
 
 dictionary Limits {
@@ -813,6 +817,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
+
+    [Throws=PaymentError]
+    CreateBolt12InvoiceResponse create_bolt12_invoice(CreateBolt12InvoiceRequest req);
 
     [Throws=PaymentError]
     LightningPaymentLimitsResponse fetch_lightning_limits();

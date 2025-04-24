@@ -1,11 +1,9 @@
 package breez_sdk_liquid_notification.job
 
 import android.content.Context
+import breez_sdk_liquid.CreateBolt12InvoiceRequest
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid.BindingLiquidSdk
-import breez_sdk_liquid.PaymentMethod
-import breez_sdk_liquid.PrepareReceiveRequest
-import breez_sdk_liquid.ReceivePaymentRequest
 import breez_sdk_liquid_notification.Constants.DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE
@@ -46,19 +44,11 @@ class InvoiceRequestJob(
         var request: InvoiceRequestRequest? = null
         try {
             request = Json.decodeFromString(InvoiceRequestRequest.serializer(), payload)
-            val prepareReceivePaymentRes =
-                liquidSDK.prepareReceivePayment(
-                    PrepareReceiveRequest(
-                        PaymentMethod.BOLT12_INVOICE, 
-                        offer = request.offer, 
-                        invoiceRequest = request.invoiceRequest
-                    ),
+            val createBolt12InvoiceResponse =
+                liquidSDK.createBolt12Invoice(
+                    CreateBolt12InvoiceRequest(request.offer, request.invoiceRequest),
                 )
-            val receivePaymentResponse =
-                liquidSDK.receivePayment(
-                    ReceivePaymentRequest(prepareReceivePaymentRes),
-                )
-            val response = InvoiceRequestResponse(receivePaymentResponse.destination)
+            val response = InvoiceRequestResponse(createBolt12InvoiceResponse.invoice)
             val success = replyServer(Json.encodeToString(response), request.replyURL)
             notifyChannel(
                 context,

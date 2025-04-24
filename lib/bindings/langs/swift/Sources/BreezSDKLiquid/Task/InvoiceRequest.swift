@@ -35,9 +35,8 @@ class InvoiceRequestTask : ReplyableTask {
         }
         
         do {
-            let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.bolt12Invoice, offer: request!.offer, invoiceRequest: request!.invoice_request))
-            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes))
-            self.replyServer(encodable: InvoiceRequestResponse(invoice: receivePaymentRes.destination), replyURL: request!.reply_url)
+            let createBolt12InvoiceRes = try liquidSDK.createBolt12Invoice(req: CreateBolt12InvoiceRequest(offer: request!.offer, invoiceRequest: request!.invoice_request))
+            self.replyServer(encodable: InvoiceRequestResponse(invoice: createBolt12InvoiceRes.invoice), replyURL: request!.reply_url)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process invoice request: \(e)", level: "ERROR")
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)

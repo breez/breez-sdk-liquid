@@ -391,6 +391,44 @@ class ConnectRequest {
           seed == other.seed;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
+class CreateBolt12InvoiceRequest {
+  /// The BOLT12 offer
+  final String offer;
+
+  /// The invoice request created from the offer
+  final String invoiceRequest;
+
+  const CreateBolt12InvoiceRequest({required this.offer, required this.invoiceRequest});
+
+  @override
+  int get hashCode => offer.hashCode ^ invoiceRequest.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateBolt12InvoiceRequest &&
+          runtimeType == other.runtimeType &&
+          offer == other.offer &&
+          invoiceRequest == other.invoiceRequest;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
+class CreateBolt12InvoiceResponse {
+  /// The BOLT12 invoice
+  final String invoice;
+
+  const CreateBolt12InvoiceResponse({required this.invoice});
+
+  @override
+  int get hashCode => invoice.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateBolt12InvoiceResponse && runtimeType == other.runtimeType && invoice == other.invoice;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
 class FetchPaymentProposedFeesRequest {
   final String swapId;
@@ -964,7 +1002,7 @@ sealed class PaymentDetails with _$PaymentDetails {
 }
 
 /// The send/receive methods supported by the SDK
-enum PaymentMethod { lightning, bolt12Offer, bolt12Invoice, bitcoinAddress, liquidAddress }
+enum PaymentMethod { lightning, bolt12Offer, bitcoinAddress, liquidAddress }
 
 /// The payment state of an individual payment.
 enum PaymentState {
@@ -1231,18 +1269,10 @@ class PrepareReceiveRequest {
   /// The amount to be paid in either Bitcoin or another asset
   final ReceiveAmount? amount;
 
-  /// The optional BOLT12 offer.
-  /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-  final String? offer;
-
-  /// The optional BOLT12 invoice request.
-  /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-  final String? invoiceRequest;
-
-  const PrepareReceiveRequest({required this.paymentMethod, this.amount, this.offer, this.invoiceRequest});
+  const PrepareReceiveRequest({required this.paymentMethod, this.amount});
 
   @override
-  int get hashCode => paymentMethod.hashCode ^ amount.hashCode ^ offer.hashCode ^ invoiceRequest.hashCode;
+  int get hashCode => paymentMethod.hashCode ^ amount.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1250,9 +1280,7 @@ class PrepareReceiveRequest {
       other is PrepareReceiveRequest &&
           runtimeType == other.runtimeType &&
           paymentMethod == other.paymentMethod &&
-          amount == other.amount &&
-          offer == other.offer &&
-          invoiceRequest == other.invoiceRequest;
+          amount == other.amount;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
@@ -1271,14 +1299,6 @@ class PrepareReceiveResponse {
 
   /// The amount to be paid in either Bitcoin or another asset
   final ReceiveAmount? amount;
-
-  /// The optional BOLT12 offer.
-  /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-  final String? offer;
-
-  /// The optional BOLT12 invoice request.
-  /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-  final String? invoiceRequest;
 
   /// The minimum amount the payer can send for this swap to succeed.
   ///
@@ -1299,8 +1319,6 @@ class PrepareReceiveResponse {
     required this.paymentMethod,
     required this.feesSat,
     this.amount,
-    this.offer,
-    this.invoiceRequest,
     this.minPayerAmountSat,
     this.maxPayerAmountSat,
     this.swapperFeerate,
@@ -1311,8 +1329,6 @@ class PrepareReceiveResponse {
       paymentMethod.hashCode ^
       feesSat.hashCode ^
       amount.hashCode ^
-      offer.hashCode ^
-      invoiceRequest.hashCode ^
       minPayerAmountSat.hashCode ^
       maxPayerAmountSat.hashCode ^
       swapperFeerate.hashCode;
@@ -1325,8 +1341,6 @@ class PrepareReceiveResponse {
           paymentMethod == other.paymentMethod &&
           feesSat == other.feesSat &&
           amount == other.amount &&
-          offer == other.offer &&
-          invoiceRequest == other.invoiceRequest &&
           minPayerAmountSat == other.minPayerAmountSat &&
           maxPayerAmountSat == other.maxPayerAmountSat &&
           swapperFeerate == other.swapperFeerate;

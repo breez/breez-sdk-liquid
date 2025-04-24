@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 1264782025;
+  int get rustContentHash => 464449310;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -80,6 +80,11 @@ abstract class RustLibApi extends BaseApi {
   CheckMessageResponse crateBindingsBindingLiquidSdkCheckMessage({
     required BindingLiquidSdk that,
     required CheckMessageRequest req,
+  });
+
+  Future<CreateBolt12InvoiceResponse> crateBindingsBindingLiquidSdkCreateBolt12Invoice({
+    required BindingLiquidSdk that,
+    required CreateBolt12InvoiceRequest req,
   });
 
   Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that});
@@ -369,6 +374,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkCheckMessageConstMeta =>
       const TaskConstMeta(debugName: "BindingLiquidSdk_check_message", argNames: ["that", "req"]);
+
+  @override
+  Future<CreateBolt12InvoiceResponse> crateBindingsBindingLiquidSdkCreateBolt12Invoice({
+    required BindingLiquidSdk that,
+    required CreateBolt12InvoiceRequest req,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that,
+              );
+          var arg1 = cst_encode_box_autoadd_create_bolt_12_invoice_request(req);
+          return wire.wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice(port_, arg0, arg1);
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_create_bolt_12_invoice_response,
+          decodeErrorData: dco_decode_payment_error,
+        ),
+        constMeta: kCrateBindingsBindingLiquidSdkCreateBolt12InvoiceConstMeta,
+        argValues: [that, req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkCreateBolt12InvoiceConstMeta =>
+      const TaskConstMeta(debugName: "BindingLiquidSdk_create_bolt12_invoice", argNames: ["that", "req"]);
 
   @override
   Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that}) {
@@ -1638,6 +1672,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CreateBolt12InvoiceRequest dco_decode_box_autoadd_create_bolt_12_invoice_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_create_bolt_12_invoice_request(raw);
+  }
+
+  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
@@ -1960,6 +2000,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       passphrase: dco_decode_opt_String(arr[2]),
       seed: dco_decode_opt_list_prim_u_8_strict(arr[3]),
     );
+  }
+
+  @protected
+  CreateBolt12InvoiceRequest dco_decode_create_bolt_12_invoice_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return CreateBolt12InvoiceRequest(
+      offer: dco_decode_String(arr[0]),
+      invoiceRequest: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  CreateBolt12InvoiceResponse dco_decode_create_bolt_12_invoice_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return CreateBolt12InvoiceResponse(invoice: dco_decode_String(arr[0]));
   }
 
   @protected
@@ -2961,12 +3020,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceiveRequest dco_decode_prepare_receive_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PrepareReceiveRequest(
       paymentMethod: dco_decode_payment_method(arr[0]),
       amount: dco_decode_opt_box_autoadd_receive_amount(arr[1]),
-      offer: dco_decode_opt_String(arr[2]),
-      invoiceRequest: dco_decode_opt_String(arr[3]),
     );
   }
 
@@ -2974,16 +3031,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareReceiveResponse dco_decode_prepare_receive_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return PrepareReceiveResponse(
       paymentMethod: dco_decode_payment_method(arr[0]),
       feesSat: dco_decode_u_64(arr[1]),
       amount: dco_decode_opt_box_autoadd_receive_amount(arr[2]),
-      offer: dco_decode_opt_String(arr[3]),
-      invoiceRequest: dco_decode_opt_String(arr[4]),
-      minPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[5]),
-      maxPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
-      swapperFeerate: dco_decode_opt_box_autoadd_f_64(arr[7]),
+      minPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      maxPayerAmountSat: dco_decode_opt_box_autoadd_u_64(arr[4]),
+      swapperFeerate: dco_decode_opt_box_autoadd_f_64(arr[5]),
     );
   }
 
@@ -3687,6 +3742,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CreateBolt12InvoiceRequest sse_decode_box_autoadd_create_bolt_12_invoice_request(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_create_bolt_12_invoice_request(deserializer));
+  }
+
+  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_f_64(deserializer));
@@ -4019,6 +4082,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       passphrase: var_passphrase,
       seed: var_seed,
     );
+  }
+
+  @protected
+  CreateBolt12InvoiceRequest sse_decode_create_bolt_12_invoice_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_offer = sse_decode_String(deserializer);
+    var var_invoiceRequest = sse_decode_String(deserializer);
+    return CreateBolt12InvoiceRequest(offer: var_offer, invoiceRequest: var_invoiceRequest);
+  }
+
+  @protected
+  CreateBolt12InvoiceResponse sse_decode_create_bolt_12_invoice_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_invoice = sse_decode_String(deserializer);
+    return CreateBolt12InvoiceResponse(invoice: var_invoice);
   }
 
   @protected
@@ -5353,14 +5431,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_paymentMethod = sse_decode_payment_method(deserializer);
     var var_amount = sse_decode_opt_box_autoadd_receive_amount(deserializer);
-    var var_offer = sse_decode_opt_String(deserializer);
-    var var_invoiceRequest = sse_decode_opt_String(deserializer);
-    return PrepareReceiveRequest(
-      paymentMethod: var_paymentMethod,
-      amount: var_amount,
-      offer: var_offer,
-      invoiceRequest: var_invoiceRequest,
-    );
+    return PrepareReceiveRequest(paymentMethod: var_paymentMethod, amount: var_amount);
   }
 
   @protected
@@ -5369,8 +5440,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_paymentMethod = sse_decode_payment_method(deserializer);
     var var_feesSat = sse_decode_u_64(deserializer);
     var var_amount = sse_decode_opt_box_autoadd_receive_amount(deserializer);
-    var var_offer = sse_decode_opt_String(deserializer);
-    var var_invoiceRequest = sse_decode_opt_String(deserializer);
     var var_minPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_maxPayerAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_swapperFeerate = sse_decode_opt_box_autoadd_f_64(deserializer);
@@ -5378,8 +5447,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       paymentMethod: var_paymentMethod,
       feesSat: var_feesSat,
       amount: var_amount,
-      offer: var_offer,
-      invoiceRequest: var_invoiceRequest,
       minPayerAmountSat: var_minPayerAmountSat,
       maxPayerAmountSat: var_maxPayerAmountSat,
       swapperFeerate: var_swapperFeerate,
@@ -6187,6 +6254,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_create_bolt_12_invoice_request(
+    CreateBolt12InvoiceRequest self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_create_bolt_12_invoice_request(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_f_64(self, serializer);
@@ -6515,6 +6591,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.mnemonic, serializer);
     sse_encode_opt_String(self.passphrase, serializer);
     sse_encode_opt_list_prim_u_8_strict(self.seed, serializer);
+  }
+
+  @protected
+  void sse_encode_create_bolt_12_invoice_request(CreateBolt12InvoiceRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.offer, serializer);
+    sse_encode_String(self.invoiceRequest, serializer);
+  }
+
+  @protected
+  void sse_encode_create_bolt_12_invoice_response(
+    CreateBolt12InvoiceResponse self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.invoice, serializer);
   }
 
   @protected
@@ -7598,8 +7690,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_payment_method(self.paymentMethod, serializer);
     sse_encode_opt_box_autoadd_receive_amount(self.amount, serializer);
-    sse_encode_opt_String(self.offer, serializer);
-    sse_encode_opt_String(self.invoiceRequest, serializer);
   }
 
   @protected
@@ -7608,8 +7698,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_payment_method(self.paymentMethod, serializer);
     sse_encode_u_64(self.feesSat, serializer);
     sse_encode_opt_box_autoadd_receive_amount(self.amount, serializer);
-    sse_encode_opt_String(self.offer, serializer);
-    sse_encode_opt_String(self.invoiceRequest, serializer);
     sse_encode_opt_box_autoadd_u_64(self.minPayerAmountSat, serializer);
     sse_encode_opt_box_autoadd_u_64(self.maxPayerAmountSat, serializer);
     sse_encode_opt_box_autoadd_f_64(self.swapperFeerate, serializer);
@@ -7966,6 +8054,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   CheckMessageResponse checkMessage({required CheckMessageRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkCheckMessage(that: this, req: req);
+
+  Future<CreateBolt12InvoiceResponse> createBolt12Invoice({required CreateBolt12InvoiceRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkCreateBolt12Invoice(that: this, req: req);
 
   Future<void> disconnect() => RustLib.instance.api.crateBindingsBindingLiquidSdkDisconnect(that: this);
 

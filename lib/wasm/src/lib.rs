@@ -202,6 +202,14 @@ impl BindingLiquidSdk {
         Ok(self.sdk.receive_payment(&req.into()).await?.into())
     }
 
+    #[wasm_bindgen(js_name = "createBolt12Invoice")]
+    pub async fn create_bolt12_invoice(
+        &self,
+        req: CreateBolt12InvoiceRequest,
+    ) -> WasmResult<CreateBolt12InvoiceResponse> {
+        Ok(self.sdk.create_bolt12_invoice(&req.into()).await?.into())
+    }
+
     #[wasm_bindgen(js_name = "fetchLightningLimits")]
     pub async fn fetch_lightning_limits(&self) -> WasmResult<LightningPaymentLimitsResponse> {
         Ok(self.sdk.fetch_lightning_limits().await?.into())

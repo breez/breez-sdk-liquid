@@ -135,6 +135,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest dco_decode_box_autoadd_connect_request(dynamic raw);
 
   @protected
+  CreateBolt12InvoiceRequest dco_decode_box_autoadd_create_bolt_12_invoice_request(dynamic raw);
+
+  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
@@ -277,6 +280,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest dco_decode_connect_request(dynamic raw);
+
+  @protected
+  CreateBolt12InvoiceRequest dco_decode_create_bolt_12_invoice_request(dynamic raw);
+
+  @protected
+  CreateBolt12InvoiceResponse dco_decode_create_bolt_12_invoice_response(dynamic raw);
 
   @protected
   CurrencyInfo dco_decode_currency_info(dynamic raw);
@@ -781,6 +790,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ConnectRequest sse_decode_box_autoadd_connect_request(SseDeserializer deserializer);
 
   @protected
+  CreateBolt12InvoiceRequest sse_decode_box_autoadd_create_bolt_12_invoice_request(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
@@ -925,6 +939,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ConnectRequest sse_decode_connect_request(SseDeserializer deserializer);
+
+  @protected
+  CreateBolt12InvoiceRequest sse_decode_create_bolt_12_invoice_request(SseDeserializer deserializer);
+
+  @protected
+  CreateBolt12InvoiceResponse sse_decode_create_bolt_12_invoice_response(SseDeserializer deserializer);
 
   @protected
   CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
@@ -1463,6 +1483,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_connect_request();
     cst_api_fill_to_wire_connect_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_create_bolt_12_invoice_request> cst_encode_box_autoadd_create_bolt_12_invoice_request(
+    CreateBolt12InvoiceRequest raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_create_bolt_12_invoice_request();
+    cst_api_fill_to_wire_create_bolt_12_invoice_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -2391,6 +2421,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_create_bolt_12_invoice_request(
+    CreateBolt12InvoiceRequest apiObj,
+    ffi.Pointer<wire_cst_create_bolt_12_invoice_request> wireObj,
+  ) {
+    cst_api_fill_to_wire_create_bolt_12_invoice_request(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_fetch_payment_proposed_fees_request(
     FetchPaymentProposedFeesRequest apiObj,
     ffi.Pointer<wire_cst_fetch_payment_proposed_fees_request> wireObj,
@@ -2735,6 +2773,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.mnemonic = cst_encode_opt_String(apiObj.mnemonic);
     wireObj.passphrase = cst_encode_opt_String(apiObj.passphrase);
     wireObj.seed = cst_encode_opt_list_prim_u_8_strict(apiObj.seed);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_create_bolt_12_invoice_request(
+    CreateBolt12InvoiceRequest apiObj,
+    wire_cst_create_bolt_12_invoice_request wireObj,
+  ) {
+    wireObj.offer = cst_encode_String(apiObj.offer);
+    wireObj.invoice_request = cst_encode_String(apiObj.invoiceRequest);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_create_bolt_12_invoice_response(
+    CreateBolt12InvoiceResponse apiObj,
+    wire_cst_create_bolt_12_invoice_response wireObj,
+  ) {
+    wireObj.invoice = cst_encode_String(apiObj.invoice);
   }
 
   @protected
@@ -3617,8 +3672,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.payment_method = cst_encode_payment_method(apiObj.paymentMethod);
     wireObj.amount = cst_encode_opt_box_autoadd_receive_amount(apiObj.amount);
-    wireObj.offer = cst_encode_opt_String(apiObj.offer);
-    wireObj.invoice_request = cst_encode_opt_String(apiObj.invoiceRequest);
   }
 
   @protected
@@ -3629,8 +3682,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.payment_method = cst_encode_payment_method(apiObj.paymentMethod);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     wireObj.amount = cst_encode_opt_box_autoadd_receive_amount(apiObj.amount);
-    wireObj.offer = cst_encode_opt_String(apiObj.offer);
-    wireObj.invoice_request = cst_encode_opt_String(apiObj.invoiceRequest);
     wireObj.min_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.minPayerAmountSat);
     wireObj.max_payer_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.maxPayerAmountSat);
     wireObj.swapper_feerate = cst_encode_opt_box_autoadd_f_64(apiObj.swapperFeerate);
@@ -4172,6 +4223,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_connect_request(ConnectRequest self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_create_bolt_12_invoice_request(
+    CreateBolt12InvoiceRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
@@ -4335,6 +4392,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_connect_request(ConnectRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_bolt_12_invoice_request(CreateBolt12InvoiceRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_create_bolt_12_invoice_response(CreateBolt12InvoiceResponse self, SseSerializer serializer);
 
   @protected
   void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
@@ -4843,6 +4906,23 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_check_message =
       _wire__crate__bindings__BindingLiquidSdk_check_messagePtr
           .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_check_message_request>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_create_bolt_12_invoice_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice(port_, that, req);
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoicePtr = _lookup<
+    ffi.NativeFunction<
+      ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_create_bolt_12_invoice_request>)
+    >
+  >('frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice');
+  late final _wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice =
+      _wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoicePtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_create_bolt_12_invoice_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_disconnect(int port_, int that) {
     return _wire__crate__bindings__BindingLiquidSdk_disconnect(port_, that);
@@ -5555,6 +5635,18 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_connect_request =
       _cst_new_box_autoadd_connect_requestPtr.asFunction<ffi.Pointer<wire_cst_connect_request> Function()>();
+
+  ffi.Pointer<wire_cst_create_bolt_12_invoice_request> cst_new_box_autoadd_create_bolt_12_invoice_request() {
+    return _cst_new_box_autoadd_create_bolt_12_invoice_request();
+  }
+
+  late final _cst_new_box_autoadd_create_bolt_12_invoice_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_create_bolt_12_invoice_request> Function()>>(
+        'frbgen_breez_liquid_cst_new_box_autoadd_create_bolt_12_invoice_request',
+      );
+  late final _cst_new_box_autoadd_create_bolt_12_invoice_request =
+      _cst_new_box_autoadd_create_bolt_12_invoice_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_create_bolt_12_invoice_request> Function()>();
 
   ffi.Pointer<ffi.Double> cst_new_box_autoadd_f_64(double value) {
     return _cst_new_box_autoadd_f_64(value);
@@ -6296,6 +6388,12 @@ final class wire_cst_check_message_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
 }
 
+final class wire_cst_create_bolt_12_invoice_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
+}
+
 final class wire_cst_fetch_payment_proposed_fees_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
@@ -6778,10 +6876,6 @@ final class wire_cst_prepare_receive_request extends ffi.Struct {
   external int payment_method;
 
   external ffi.Pointer<wire_cst_receive_amount> amount;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 }
 
 final class wire_cst_prepare_refund_request extends ffi.Struct {
@@ -6807,10 +6901,6 @@ final class wire_cst_prepare_receive_response extends ffi.Struct {
   external int fees_sat;
 
   external ffi.Pointer<wire_cst_receive_amount> amount;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> offer;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 
   external ffi.Pointer<ffi.Uint64> min_payer_amount_sat;
 
@@ -7385,6 +7475,10 @@ final class wire_cst_blockchain_info extends ffi.Struct {
 final class wire_cst_check_message_response extends ffi.Struct {
   @ffi.Bool()
   external bool is_valid;
+}
+
+final class wire_cst_create_bolt_12_invoice_response extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
 }
 
 final class wire_cst_wallet_info extends ffi.Struct {

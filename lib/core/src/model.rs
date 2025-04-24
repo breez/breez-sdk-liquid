@@ -577,7 +577,6 @@ pub(crate) struct ReservedAddress {
 pub enum PaymentMethod {
     Lightning,
     Bolt12Offer,
-    Bolt12Invoice,
     BitcoinAddress,
     LiquidAddress,
 }
@@ -600,12 +599,6 @@ pub struct PrepareReceiveRequest {
     pub payment_method: PaymentMethod,
     /// The amount to be paid in either Bitcoin or another asset
     pub amount: Option<ReceiveAmount>,
-    /// The optional BOLT12 offer.
-    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-    pub offer: Option<String>,
-    /// The optional BOLT12 invoice request.
-    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-    pub invoice_request: Option<String>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
@@ -623,12 +616,6 @@ pub struct PrepareReceiveResponse {
     pub fees_sat: u64,
     /// The amount to be paid in either Bitcoin or another asset
     pub amount: Option<ReceiveAmount>,
-    /// The optional BOLT12 offer.
-    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-    pub offer: Option<String>,
-    /// The optional BOLT12 invoice request.
-    /// Only used when the payment method is [PaymentMethod::Bolt12Invoice].
-    pub invoice_request: Option<String>,
     /// The minimum amount the payer can send for this swap to succeed.
     ///
     /// When the method is [PaymentMethod::LiquidAddress], this is empty.
@@ -659,6 +646,22 @@ pub struct ReceivePaymentResponse {
     /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
     /// or an invoice, depending on the [PrepareReceiveResponse] parameters
     pub destination: String,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
+#[derive(Debug, Serialize)]
+pub struct CreateBolt12InvoiceRequest {
+    /// The BOLT12 offer
+    pub offer: String,
+    /// The invoice request created from the offer
+    pub invoice_request: String,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
+#[derive(Debug, Serialize, Clone)]
+pub struct CreateBolt12InvoiceResponse {
+    /// The BOLT12 invoice
+    pub invoice: String,
 }
 
 /// The minimum and maximum in satoshis of a Lightning or onchain payment.

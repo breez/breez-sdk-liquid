@@ -713,6 +713,72 @@ enum BreezSDKLiquidMapper {
         return connectWithSignerRequestList.map { v -> [String: Any?] in return dictionaryOf(connectWithSignerRequest: v) }
     }
 
+    static func asCreateBolt12InvoiceRequest(createBolt12InvoiceRequest: [String: Any?]) throws -> CreateBolt12InvoiceRequest {
+        guard let offer = createBolt12InvoiceRequest["offer"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "offer", typeName: "CreateBolt12InvoiceRequest"))
+        }
+        guard let invoiceRequest = createBolt12InvoiceRequest["invoiceRequest"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "invoiceRequest", typeName: "CreateBolt12InvoiceRequest"))
+        }
+
+        return CreateBolt12InvoiceRequest(offer: offer, invoiceRequest: invoiceRequest)
+    }
+
+    static func dictionaryOf(createBolt12InvoiceRequest: CreateBolt12InvoiceRequest) -> [String: Any?] {
+        return [
+            "offer": createBolt12InvoiceRequest.offer,
+            "invoiceRequest": createBolt12InvoiceRequest.invoiceRequest,
+        ]
+    }
+
+    static func asCreateBolt12InvoiceRequestList(arr: [Any]) throws -> [CreateBolt12InvoiceRequest] {
+        var list = [CreateBolt12InvoiceRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var createBolt12InvoiceRequest = try asCreateBolt12InvoiceRequest(createBolt12InvoiceRequest: val)
+                list.append(createBolt12InvoiceRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "CreateBolt12InvoiceRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(createBolt12InvoiceRequestList: [CreateBolt12InvoiceRequest]) -> [Any] {
+        return createBolt12InvoiceRequestList.map { v -> [String: Any?] in return dictionaryOf(createBolt12InvoiceRequest: v) }
+    }
+
+    static func asCreateBolt12InvoiceResponse(createBolt12InvoiceResponse: [String: Any?]) throws -> CreateBolt12InvoiceResponse {
+        guard let invoice = createBolt12InvoiceResponse["invoice"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "invoice", typeName: "CreateBolt12InvoiceResponse"))
+        }
+
+        return CreateBolt12InvoiceResponse(invoice: invoice)
+    }
+
+    static func dictionaryOf(createBolt12InvoiceResponse: CreateBolt12InvoiceResponse) -> [String: Any?] {
+        return [
+            "invoice": createBolt12InvoiceResponse.invoice,
+        ]
+    }
+
+    static func asCreateBolt12InvoiceResponseList(arr: [Any]) throws -> [CreateBolt12InvoiceResponse] {
+        var list = [CreateBolt12InvoiceResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var createBolt12InvoiceResponse = try asCreateBolt12InvoiceResponse(createBolt12InvoiceResponse: val)
+                list.append(createBolt12InvoiceResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "CreateBolt12InvoiceResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(createBolt12InvoiceResponseList: [CreateBolt12InvoiceResponse]) -> [Any] {
+        return createBolt12InvoiceResponseList.map { v -> [String: Any?] in return dictionaryOf(createBolt12InvoiceResponse: v) }
+    }
+
     static func asCurrencyInfo(currencyInfo: [String: Any?]) throws -> CurrencyInfo {
         guard let name = currencyInfo["name"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "name", typeName: "CurrencyInfo"))
@@ -2459,30 +2525,13 @@ enum BreezSDKLiquidMapper {
             amount = try asReceiveAmount(receiveAmount: amountTmp)
         }
 
-        var offer: String?
-        if hasNonNilKey(data: prepareReceiveRequest, key: "offer") {
-            guard let offerTmp = prepareReceiveRequest["offer"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "offer"))
-            }
-            offer = offerTmp
-        }
-        var invoiceRequest: String?
-        if hasNonNilKey(data: prepareReceiveRequest, key: "invoiceRequest") {
-            guard let invoiceRequestTmp = prepareReceiveRequest["invoiceRequest"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "invoiceRequest"))
-            }
-            invoiceRequest = invoiceRequestTmp
-        }
-
-        return PrepareReceiveRequest(paymentMethod: paymentMethod, amount: amount, offer: offer, invoiceRequest: invoiceRequest)
+        return PrepareReceiveRequest(paymentMethod: paymentMethod, amount: amount)
     }
 
     static func dictionaryOf(prepareReceiveRequest: PrepareReceiveRequest) -> [String: Any?] {
         return [
             "paymentMethod": valueOf(paymentMethod: prepareReceiveRequest.paymentMethod),
             "amount": prepareReceiveRequest.amount == nil ? nil : dictionaryOf(receiveAmount: prepareReceiveRequest.amount!),
-            "offer": prepareReceiveRequest.offer == nil ? nil : prepareReceiveRequest.offer,
-            "invoiceRequest": prepareReceiveRequest.invoiceRequest == nil ? nil : prepareReceiveRequest.invoiceRequest,
         ]
     }
 
@@ -2517,20 +2566,6 @@ enum BreezSDKLiquidMapper {
             amount = try asReceiveAmount(receiveAmount: amountTmp)
         }
 
-        var offer: String?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "offer") {
-            guard let offerTmp = prepareReceiveResponse["offer"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "offer"))
-            }
-            offer = offerTmp
-        }
-        var invoiceRequest: String?
-        if hasNonNilKey(data: prepareReceiveResponse, key: "invoiceRequest") {
-            guard let invoiceRequestTmp = prepareReceiveResponse["invoiceRequest"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "invoiceRequest"))
-            }
-            invoiceRequest = invoiceRequestTmp
-        }
         var minPayerAmountSat: UInt64?
         if hasNonNilKey(data: prepareReceiveResponse, key: "minPayerAmountSat") {
             guard let minPayerAmountSatTmp = prepareReceiveResponse["minPayerAmountSat"] as? UInt64 else {
@@ -2553,7 +2588,7 @@ enum BreezSDKLiquidMapper {
             swapperFeerate = swapperFeerateTmp
         }
 
-        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, amount: amount, offer: offer, invoiceRequest: invoiceRequest, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat, swapperFeerate: swapperFeerate)
+        return PrepareReceiveResponse(paymentMethod: paymentMethod, feesSat: feesSat, amount: amount, minPayerAmountSat: minPayerAmountSat, maxPayerAmountSat: maxPayerAmountSat, swapperFeerate: swapperFeerate)
     }
 
     static func dictionaryOf(prepareReceiveResponse: PrepareReceiveResponse) -> [String: Any?] {
@@ -2561,8 +2596,6 @@ enum BreezSDKLiquidMapper {
             "paymentMethod": valueOf(paymentMethod: prepareReceiveResponse.paymentMethod),
             "feesSat": prepareReceiveResponse.feesSat,
             "amount": prepareReceiveResponse.amount == nil ? nil : dictionaryOf(receiveAmount: prepareReceiveResponse.amount!),
-            "offer": prepareReceiveResponse.offer == nil ? nil : prepareReceiveResponse.offer,
-            "invoiceRequest": prepareReceiveResponse.invoiceRequest == nil ? nil : prepareReceiveResponse.invoiceRequest,
             "minPayerAmountSat": prepareReceiveResponse.minPayerAmountSat == nil ? nil : prepareReceiveResponse.minPayerAmountSat,
             "maxPayerAmountSat": prepareReceiveResponse.maxPayerAmountSat == nil ? nil : prepareReceiveResponse.maxPayerAmountSat,
             "swapperFeerate": prepareReceiveResponse.swapperFeerate == nil ? nil : prepareReceiveResponse.swapperFeerate,
@@ -4486,9 +4519,6 @@ enum BreezSDKLiquidMapper {
         case "bolt12Offer":
             return PaymentMethod.bolt12Offer
 
-        case "bolt12Invoice":
-            return PaymentMethod.bolt12Invoice
-
         case "bitcoinAddress":
             return PaymentMethod.bitcoinAddress
 
@@ -4506,9 +4536,6 @@ enum BreezSDKLiquidMapper {
 
         case .bolt12Offer:
             return "bolt12Offer"
-
-        case .bolt12Invoice:
-            return "bolt12Invoice"
 
         case .bitcoinAddress:
             return "bitcoinAddress"

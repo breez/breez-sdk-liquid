@@ -5,10 +5,11 @@ use breez_sdk_liquid::model::{
     PrepareSendRequest, SdkEvent,
 };
 use serial_test::serial;
+use tokio_with_wasm::alias as tokio;
 
 use crate::regtest::{
     utils::{self, mine_blocks},
-    SdkNodeHandle, TIMEOUT,
+    ChainBackend, SdkNodeHandle, TIMEOUT,
 };
 
 #[cfg(feature = "browser-tests")]
@@ -16,10 +17,30 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[sdk_macros::async_test_not_wasm]
 #[serial]
-async fn bolt12() {
-    let mut handle_alice = SdkNodeHandle::init_node().await.unwrap();
-    let mut handle_bob = SdkNodeHandle::init_node().await.unwrap();
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn bolt12_electrum() {
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bolt12(handle_alice, handle_bob).await;
+}
 
+#[sdk_macros::async_test_all]
+#[serial]
+async fn bolt12_esplora() {
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bolt12(handle_alice, handle_bob).await;
+}
+
+async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) {
     handle_alice
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
@@ -35,8 +56,6 @@ async fn bolt12() {
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::LiquidAddress,
             amount: None,
-            offer: None,
-            invoice_request: None,
         })
         .await
         .unwrap();
@@ -68,8 +87,6 @@ async fn bolt12() {
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::Bolt12Offer,
             amount: None,
-            offer: None,
-            invoice_request: None,
         })
         .await
         .unwrap();
@@ -136,4 +153,8 @@ async fn bolt12() {
         bob_payment.details,
         PaymentDetails::Lightning { .. }
     ));*/
+
+    // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
+    handle_alice.sdk.disconnect().await.unwrap();
+    handle_bob.sdk.disconnect().await.unwrap();
 }

@@ -357,7 +357,6 @@ pub struct ConnectWithSignerRequest {
 pub enum PaymentMethod {
     Lightning,
     Bolt12Offer,
-    Bolt12Invoice,
     BitcoinAddress,
     LiquidAddress,
 }
@@ -377,8 +376,6 @@ pub enum ReceiveAmount {
 pub struct PrepareReceiveRequest {
     pub payment_method: PaymentMethod,
     pub amount: Option<ReceiveAmount>,
-    pub offer: Option<String>,
-    pub invoice_request: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareReceiveResponse)]
@@ -386,8 +383,6 @@ pub struct PrepareReceiveResponse {
     pub payment_method: PaymentMethod,
     pub fees_sat: u64,
     pub amount: Option<ReceiveAmount>,
-    pub offer: Option<String>,
-    pub invoice_request: Option<String>,
     pub min_payer_amount_sat: Option<u64>,
     pub max_payer_amount_sat: Option<u64>,
     pub swapper_feerate: Option<f64>,
@@ -403,6 +398,17 @@ pub struct ReceivePaymentRequest {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ReceivePaymentResponse)]
 pub struct ReceivePaymentResponse {
     pub destination: String,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::CreateBolt12InvoiceRequest)]
+pub struct CreateBolt12InvoiceRequest {
+    pub offer: String,
+    pub invoice_request: String,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::CreateBolt12InvoiceResponse)]
+pub struct CreateBolt12InvoiceResponse {
+    pub invoice: String,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::Limits)]

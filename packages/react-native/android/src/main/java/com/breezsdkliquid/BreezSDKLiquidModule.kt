@@ -293,6 +293,24 @@ class BreezSDKLiquidModule(
     }
 
     @ReactMethod
+    fun createBolt12Invoice(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val createBolt12InvoiceRequest =
+                    asCreateBolt12InvoiceRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "CreateBolt12InvoiceRequest")) }
+                val res = getBindingLiquidSdk().createBolt12Invoice(createBolt12InvoiceRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
     fun fetchLightningLimits(promise: Promise) {
         executor.execute {
             try {
