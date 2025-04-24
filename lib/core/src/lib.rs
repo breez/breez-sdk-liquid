@@ -183,6 +183,7 @@ pub mod receive_swap;
 pub(crate) mod recover;
 pub mod sdk;
 pub(crate) mod send_swap;
+pub(crate) mod side_swap;
 pub mod signer;
 pub(crate) mod swapper;
 pub(crate) mod sync;
