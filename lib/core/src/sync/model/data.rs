@@ -232,6 +232,7 @@ pub(crate) struct ReceiveSyncData {
     #[serde(default)]
     pub(crate) timeout_block_height: u32,
     pub(crate) created_at: u32,
+    pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
@@ -256,6 +257,7 @@ impl From<ReceiveSwap> for ReceiveSyncData {
     fn from(value: ReceiveSwap) -> Self {
         Self {
             swap_id: value.id,
+            bolt12_offer: value.bolt12_offer,
             payment_hash: value.payment_hash,
             invoice: value.invoice,
             preimage: value.preimage,
@@ -283,6 +285,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             pair_fees_json: val.pair_fees_json,
             claim_private_key: val.claim_private_key,
             invoice: val.invoice,
+            bolt12_offer: val.bolt12_offer,
             payment_hash: val.payment_hash,
             destination_pubkey: val.destination_pubkey,
             description: val.description,

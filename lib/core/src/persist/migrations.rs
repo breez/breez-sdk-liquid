@@ -337,5 +337,6 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
             created_at INTEGER NOT NULL
         ) STRICT;
         ",
+        "ALTER TABLE receive_swaps ADD COLUMN bolt12_offer TEXT;",
     ]
 }

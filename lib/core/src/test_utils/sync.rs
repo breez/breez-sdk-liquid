@@ -125,6 +125,7 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
         claim_private_key: "".to_string(),
         mrh_address: "".to_string(),
         preimage: "".to_string(),
+        bolt12_offer: None,
         payment_hash: None,
         description: None,
         destination_pubkey: None,

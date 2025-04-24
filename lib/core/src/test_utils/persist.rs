@@ -106,6 +106,7 @@ pub fn new_receive_swap(
         create_response_json: r#"{"swap_tree":{"claim_leaf":{"output":"82012088a91476089e96a323d103b4d9546ab0b64505672197f58820d5272b21c51e7fe6a2e0d6b3ddafde514ff2b31ca70399a3a0960f19f3b1853dac","version":196},"refund_leaf":{"output":"20859b5e5e3b66c76e0920a21a41f4a64246caf2cf0084307c447ba94a2e3a483dad03842231b1","version":196}},"lockup_address":"lq1pq0ka6jmyx62herardll0ccu3zze4qvmh04vnzdw4c5338rp3yquggh47wr29jh6akr6mtw2zzrgn6nuv68setq76d2uk9fqs0l84z7t2jhw58m0crqu4","refund_public_key":"03859b5e5e3b66c76e0920a21a41f4a64246caf2cf0084307c447ba94a2e3a483d","timeout_block_height":3220100,"onchain_amount":971,"blinding_key":"ef121ccd2906a4cc80f8a9b33b18fa2ba4de7e9032b7b143bfc816494d46dc66"}"#.to_string(),
         claim_private_key: "08e4555d4388552fe6a72a89953b3d333ddbb66b7ae2167f5f66327ec66cede1".to_string(),
         invoice: "lnbc10u1pnez5ulsp5szkn8zq25p99m3kkhcyv5xfaszvya80gca2efduhp9v0g3qy9spqpp52m3vvah5xj8mzu6knwl4gtcymzg9w7lmm90yctwr39kae36sjpsqdpz2djkuepqw3hjqnpdgf2yxgrpv3j8yetnwvxqyp2xqcqz95rzjqt2jw2epc508le4zurtt8hd0meg5lu4nrjns8xdr5ztq7x0nkxzn6zzxeyqq28qqqqqqqqqqqqqqq9gq2y9qyysgq4kue7c5mrla8cxgzlpddvl62a3quzpkhlza84tkrxea3hmvq4zcnn2rcve7l9cu5xdxglflerp5rcyeyc88j33mht4fea60jj9e7cqspe058nk".to_string(),
+        bolt12_offer: None,
         payment_hash: Some("56e2c676f4348fb173569bbf542f04d890577bfbd95e4c2dc3896ddcc7509060".to_string()),
         destination_pubkey: Some("02d96eadea3d780104449aca5c93461ce67c1564e2e1d73225fa67dd3b997a6018".to_string()),
         payer_amount_sat: 1000,

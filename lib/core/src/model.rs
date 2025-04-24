@@ -1400,6 +1400,8 @@ pub struct ReceiveSwap {
     pub(crate) create_response_json: String,
     pub(crate) claim_private_key: String,
     pub(crate) invoice: String,
+    /// The bolt12 offer, if used to create the swap
+    pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
