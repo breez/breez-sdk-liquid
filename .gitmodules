@@ -1,3 +1,6 @@
 [submodule "regtest/boltz"]
 	path = regtest/boltz
 	url = https://github.com/BoltzExchange/regtest.git
+[submodule "regtest/waterfalls-service/waterfalls"]
+	path = regtest/waterfalls-service/waterfalls
+	url = https://github.com/breez/waterfalls.git

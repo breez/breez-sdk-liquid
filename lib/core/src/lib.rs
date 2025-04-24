@@ -206,4 +206,5 @@ pub mod prelude {
     pub use crate::model::*;
     pub use crate::sdk::*;
     pub use crate::signer::SdkSigner;
+    pub use sdk_common::utils::Arc;
 }

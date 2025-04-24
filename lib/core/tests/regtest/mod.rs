@@ -5,21 +5,24 @@ mod bolt11;
 mod liquid;
 mod utils;
 
-use std::{fs, path::PathBuf, sync::Arc, time::Duration};
+use std::{fs, path::PathBuf, time::Duration};
 
 use anyhow::Result;
+use breez_sdk_liquid::model::Config;
 use breez_sdk_liquid::{
     model::{
-        ConnectRequest, EventListener, LiquidNetwork, ListPaymentsRequest, PayOnchainRequest,
-        Payment, PreparePayOnchainRequest, PreparePayOnchainResponse, PrepareReceiveRequest,
+        ConnectRequest, EventListener, ListPaymentsRequest, PayOnchainRequest, Payment,
+        PreparePayOnchainRequest, PreparePayOnchainResponse, PrepareReceiveRequest,
         PrepareReceiveResponse, PrepareSendRequest, PrepareSendResponse, ReceivePaymentRequest,
         ReceivePaymentResponse, SdkEvent, SendPaymentRequest, SendPaymentResponse,
     },
+    prelude::Arc,
     sdk::LiquidSdk,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio_with_wasm::alias as tokio;
 
-pub const TIMEOUT: Duration = Duration::from_secs(30);
+pub const TIMEOUT: Duration = Duration::from_secs(40);
 
 struct ForwardingEventListener {
     sender: Sender<SdkEvent>,
@@ -36,8 +39,17 @@ pub struct SdkNodeHandle {
     receiver: Receiver<SdkEvent>,
 }
 
+pub enum ChainBackend {
+    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+    Electrum,
+    Esplora,
+}
+
 impl SdkNodeHandle {
-    pub async fn init_node() -> Result<Self> {
+    pub async fn init_node(backend: ChainBackend) -> Result<Self> {
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let _ = console_log::init_with_level(log::Level::Debug);
+
         let data_dir = PathBuf::from(format!("/tmp/{}", uuid::Uuid::new_v4()));
         if data_dir.exists() {
             fs::remove_dir_all(&data_dir)?;
@@ -45,9 +57,53 @@ impl SdkNodeHandle {
 
         let mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12)?;
 
-        let mut config = LiquidSdk::default_config(LiquidNetwork::Regtest, None)?;
+        let mut config = match backend {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            ChainBackend::Electrum => Config::regtest(),
+            ChainBackend::Esplora => Config::regtest_esplora(),
+        };
         config.working_dir = data_dir.to_str().unwrap().to_string();
 
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let sdk = {
+            let connect_req = ConnectRequest {
+                config: config.clone(),
+                mnemonic: Some(mnemonic.to_string()),
+                passphrase: None,
+                seed: None,
+            };
+            let signer: Arc<Box<dyn breez_sdk_liquid::model::Signer>> =
+                Arc::new(Box::new(LiquidSdk::default_signer(&connect_req)?));
+            let mut sdk_builder = breez_sdk_liquid::sdk::LiquidSdkBuilder::new(
+                config.clone(),
+                sdk_common::prelude::PRODUCTION_BREEZSERVER_URL.to_string(),
+                signer.clone(),
+            )?;
+            let persister = Arc::new(breez_sdk_liquid::persist::Persister::new_in_memory(
+                &config.working_dir,
+                config.network,
+                config.sync_enabled(),
+                config.asset_metadata.clone(),
+                None,
+            )?);
+
+            let onchain_wallet = Arc::new(
+                breez_sdk_liquid::wallet::LiquidOnchainWallet::new_in_memory(
+                    config,
+                    Arc::clone(&persister),
+                    signer,
+                )
+                .await?,
+            );
+
+            sdk_builder.persister(persister);
+            sdk_builder.onchain_wallet(onchain_wallet);
+
+            let sdk = sdk_builder.build().await?;
+            sdk.start().await?;
+            sdk
+        };
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         let sdk = LiquidSdk::connect(ConnectRequest {
             config,
             mnemonic: Some(mnemonic.to_string()),
