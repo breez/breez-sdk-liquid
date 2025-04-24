@@ -4426,7 +4426,7 @@ impl LiquidSdk {
                     })
                     .collect::<Vec<_>>();
 
-                for bolt12_offer in bolt12_offers {
+                for mut bolt12_offer in bolt12_offers {
                     let keypair = bolt12_offer.get_keypair()?;
                     let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
                     self.swapper
@@ -4436,10 +4436,9 @@ impl LiquidSdk {
                             signature: webhook_url_hash_sig.to_hex(),
                         })
                         .await?;
-                    self.persister.set_bolt12_offer_webhook_url(
-                        &bolt12_offer.id,
-                        Some(webhook_url.clone()),
-                    )?;
+                    bolt12_offer.webhook_url = Some(webhook_url.clone());
+                    self.persister
+                        .insert_or_update_bolt12_offer(&bolt12_offer)?;
                 }
             }
         }
@@ -4464,7 +4463,7 @@ impl LiquidSdk {
             let bolt12_offers = self
                 .persister
                 .list_bolt12_offers_by_webhook_url(&old_webhook_url)?;
-            for bolt12_offer in bolt12_offers {
+            for mut bolt12_offer in bolt12_offers {
                 let keypair = bolt12_offer.get_keypair()?;
                 let update_hash_sig = utils::sign_message_hash("UPDATE", &keypair)?;
                 self.swapper
@@ -4474,8 +4473,9 @@ impl LiquidSdk {
                         signature: update_hash_sig.to_hex(),
                     })
                     .await?;
+                bolt12_offer.webhook_url = None;
                 self.persister
-                    .set_bolt12_offer_webhook_url(&bolt12_offer.id, None)?;
+                    .insert_or_update_bolt12_offer(&bolt12_offer)?;
             }
         }
 

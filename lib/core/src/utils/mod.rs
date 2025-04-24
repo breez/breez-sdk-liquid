@@ -8,7 +8,6 @@ use crate::error::{PaymentError, SdkResult};
 use crate::prelude::LiquidNetwork;
 use anyhow::{anyhow, Result};
 use bip39::rand::{self, RngCore};
-use bolt12::decode_invoice;
 use boltz_client::boltz::SubmarinePair;
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Keypair, ToHex};
@@ -91,7 +90,7 @@ pub(crate) fn sign_message_hash<S: AsRef<str>>(msg: S, keypair: &Keypair) -> Res
 /// The payee pubkey for Bolt11 and signing pubkey for Bolt12.
 pub(crate) fn get_invoice_destination_pubkey(invoice: &str, is_bolt12: bool) -> Result<String> {
     if is_bolt12 {
-        decode_invoice(invoice).map(|i| i.signing_pubkey().to_hex())
+        bolt12::decode_invoice(invoice).map(|i| i.signing_pubkey().to_hex())
     } else {
         invoice
             .trim()
@@ -109,7 +108,7 @@ pub(crate) fn get_invoice_description(invoice: &str) -> Result<Option<String>, P
             Bolt11InvoiceDescription::Direct(d) => Ok(Some(d.to_string())),
             Bolt11InvoiceDescription::Hash(_) => Ok(None),
         },
-        Err(_) => match decode_invoice(invoice) {
+        Err(_) => match bolt12::decode_invoice(invoice) {
             Ok(invoice) => Ok(invoice.description().map(|d| d.to_string())),
             Err(e) => Err(PaymentError::InvalidInvoice {
                 err: format!("Could not parse invoice: {e:?}"),
@@ -128,7 +127,7 @@ pub(crate) fn verify_payment_hash(
 
     let invoice_payment_hash = match Bolt11Invoice::from_str(invoice) {
         Ok(invoice) => Ok(invoice.payment_hash().to_string()),
-        Err(_) => match decode_invoice(invoice) {
+        Err(_) => match bolt12::decode_invoice(invoice) {
             Ok(invoice) => Ok(invoice.payment_hash().to_string()),
             Err(e) => Err(PaymentError::InvalidInvoice {
                 err: format!("Could not parse invoice: {e:?}"),

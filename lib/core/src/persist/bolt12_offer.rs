@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rusqlite::{named_params, params, Connection, Params, Row};
+use rusqlite::{params, Connection, Params, Row};
 
 use crate::model::*;
 use crate::persist::Persister;
@@ -21,7 +21,8 @@ impl Persister {
                 created_at
             )
             VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT DO NOTHING
+            ON CONFLICT (id)
+            DO UPDATE SET webhook_url = excluded.webhook_url
             ",
             (
                 &bolt12_offer.id,
@@ -145,24 +146,6 @@ impl Persister {
         let where_clause = vec!["webhook_url = ?".to_string()];
         self.list_bolt12_offers_where(&con, where_clause, params![webhook_url])
     }
-
-    pub(crate) fn set_bolt12_offer_webhook_url(
-        &self,
-        offer_id: &str,
-        webhook_url: Option<String>,
-    ) -> Result<()> {
-        let con = self.get_connection()?;
-        con.execute(
-            "UPDATE bolt12_offers
-            SET webhook_url = :webhook_url
-            WHERE id = :id",
-            named_params! {
-                        ":id": offer_id,
-                        ":webhook_url": webhook_url,
-            },
-        )?;
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -220,16 +203,15 @@ mod tests {
     fn test_update_bolt12_offer() -> Result<()> {
         create_persister!(storage);
 
-        let bolt12_offer = new_bolt12_offer(None, Some("http://localhost:4004/notify".to_string()));
+        let mut bolt12_offer =
+            new_bolt12_offer(None, Some("http://localhost:4004/notify".to_string()));
         storage.insert_or_update_bolt12_offer(&bolt12_offer)?;
 
         let offers = storage.list_bolt12_offers_by_webhook_url("http://localhost:4004/notify")?;
         assert_eq!(offers.len(), 1);
 
-        storage.set_bolt12_offer_webhook_url(
-            &bolt12_offer.id,
-            Some("http://other.local:4004/notify".to_string()),
-        )?;
+        bolt12_offer.webhook_url = Some("http://other.local:4004/notify".to_string());
+        storage.insert_or_update_bolt12_offer(&bolt12_offer)?;
 
         let offers = storage.list_bolt12_offers_by_webhook_url("http://localhost:4004/notify")?;
         assert_eq!(offers.len(), 0);
@@ -237,7 +219,7 @@ mod tests {
         let offers = storage.list_bolt12_offers_by_webhook_url("http://other.local:4004/notify")?;
         assert_eq!(offers.len(), 1);
 
-        let offer = storage
+        let mut offer = storage
             .fetch_bolt12_offer_by_id(&bolt12_offer.id)?
             .ok_or(anyhow!("Could not find BOLT12 offer in database"))?;
 
@@ -247,7 +229,8 @@ mod tests {
             Some("http://other.local:4004/notify".to_string())
         );
 
-        storage.set_bolt12_offer_webhook_url(&bolt12_offer.id, None)?;
+        offer.webhook_url = None;
+        storage.insert_or_update_bolt12_offer(&offer)?;
 
         let offers = storage.list_bolt12_offers_by_webhook_url("http://other.local:4004/notify")?;
         assert_eq!(offers.len(), 0);
