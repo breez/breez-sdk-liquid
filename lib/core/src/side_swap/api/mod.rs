@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use futures_util::{SinkExt as _, StreamExt};
 use log::{error, info, warn};
 use maybe_sync::{MaybeSend, MaybeSync};
@@ -6,8 +6,11 @@ use notifications::SideSwapNotificationsHandler;
 use request_handler::SideSwapRequestHandler;
 use response_handler::SideSwapResponseHandler;
 use sdk_common::utils::Arc;
-use sideswap_api::Request;
-use sideswap_api::{RequestId, RequestMessage, ResponseMessage};
+use sideswap_api::mkt::{
+    AssetPair, AssetType, StartQuotesRequest, StartQuotesResponse, StopQuotesRequest, TradeDir,
+};
+use sideswap_api::{mkt::Request as MarketRequest, mkt::Response as MarketResponse, Request};
+use sideswap_api::{RequestId, RequestMessage, Response, ResponseMessage};
 use std::time::Duration;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 use tokio::sync::watch;
@@ -27,6 +30,11 @@ pub const SIDESWAP_TESTNET_URL: &str = "wss://api-testnet.sideswap.io/json-rpc-w
 #[sdk_macros::async_trait]
 pub trait SideSwapStream: MaybeSend + MaybeSync {
     fn start(self: Arc<Self>, shutdown: watch::Receiver<()>);
+    async fn start_fetching_quotes(
+        &self,
+        asset_pair: AssetPair,
+        amount: u64,
+    ) -> Result<StartQuotesResponse>;
 }
 
 pub(crate) struct SideSwapService {
@@ -66,6 +74,13 @@ impl SideSwapService {
             Ok(ResponseMessage::Notification(_notif)) => todo!(),
             // Either an invalid response, or an error
             Err(e) => error!("Failed to parse websocket response: {e:?} - response: {msg}"),
+        }
+    }
+
+    fn invalid_response(res: Result<Response, sideswap_api::Error>) -> anyhow::Error {
+        match res {
+            Ok(res) => anyhow!("Received invalid response from the server: {res:?}"),
+            Err(err) => anyhow!("Received error response from the server: {err:?}"),
         }
     }
 }
@@ -144,5 +159,35 @@ impl SideSwapStream for SideSwapService {
                 }
             }
         });
+    }
+
+    async fn start_fetching_quotes(
+        &self,
+        asset_pair: AssetPair,
+        amount: u64,
+    ) -> Result<StartQuotesResponse> {
+        let receive_address = self.onchain_wallet.next_unused_address().await?;
+        let change_address = self.onchain_wallet.next_unused_change_address().await?;
+
+        let req = Request::Market(MarketRequest::StartQuotes(StartQuotesRequest {
+            asset_pair,
+            asset_type: AssetType::Base,
+            amount,
+            trade_dir: TradeDir::Buy,
+            utxos: vec![],
+            receive_address,
+            change_address,
+            order_id: None,
+            private_id: None,
+            instant_swap: false,
+        }));
+
+        let request_id = self.request_handler.send(req).await?;
+        match self.response_handler.recv(request_id).await? {
+            Ok(Response::Market(MarketResponse::StartQuotes(res))) => Ok(res),
+            res => Err(Self::invalid_response(res)),
+        }
+    }
+        }
     }
 }
