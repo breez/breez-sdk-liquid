@@ -35,6 +35,7 @@ pub trait SideSwapStream: MaybeSend + MaybeSync {
         asset_pair: AssetPair,
         amount: u64,
     ) -> Result<StartQuotesResponse>;
+    async fn stop_fetching_quotes(&self) -> Result<()>;
 }
 
 pub(crate) struct SideSwapService {
@@ -188,6 +189,13 @@ impl SideSwapStream for SideSwapService {
             res => Err(Self::invalid_response(res)),
         }
     }
+
+    async fn stop_fetching_quotes(&self) -> Result<()> {
+        let req = Request::Market(MarketRequest::StopQuotes(StopQuotesRequest {}));
+        let request_id = self.request_handler.send(req).await?;
+        match self.response_handler.recv(request_id).await? {
+            Ok(Response::Market(MarketResponse::StopQuotes(_))) => Ok(()),
+            res => Err(Self::invalid_response(res)),
         }
     }
 }
