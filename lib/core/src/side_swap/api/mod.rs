@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context as _, Result};
 use futures_util::{SinkExt as _, StreamExt};
 use log::{error, info, warn};
 use maybe_sync::{MaybeSend, MaybeSync};
@@ -7,7 +7,8 @@ use request_handler::SideSwapRequestHandler;
 use response_handler::SideSwapResponseHandler;
 use sdk_common::utils::Arc;
 use sideswap_api::mkt::{
-    AssetPair, AssetType, StartQuotesRequest, StartQuotesResponse, StopQuotesRequest, TradeDir,
+    AssetPair, AssetType, QuoteNotif, QuoteSubId, StartQuotesRequest, StartQuotesResponse,
+    StopQuotesRequest, TradeDir,
 };
 use sideswap_api::{mkt::Request as MarketRequest, mkt::Response as MarketResponse, Request};
 use sideswap_api::{RequestId, RequestMessage, Response, ResponseMessage};
@@ -36,6 +37,7 @@ pub trait SideSwapStream: MaybeSend + MaybeSync {
         amount: u64,
     ) -> Result<StartQuotesResponse>;
     async fn stop_fetching_quotes(&self) -> Result<()>;
+    async fn get_quote(&self, quote_sub_id: QuoteSubId) -> Result<QuoteNotif>;
 }
 
 pub(crate) struct SideSwapService {
@@ -61,7 +63,7 @@ impl SideSwapService {
         connect(&self.url).await
     }
 
-    pub(crate) async fn handle_message(&self, msg: &str, resp_sender: &UnboundedSender<i64>) {
+    async fn handle_message(&self, msg: &str, resp_sender: &UnboundedSender<i64>) {
         info!("Received text message: {msg:?}");
         match serde_json::from_str::<ResponseMessage>(msg) {
             Ok(ResponseMessage::Response(req_id, res)) => {
@@ -72,7 +74,9 @@ impl SideSwapService {
                     resp_sender.send(req_id);
                 }
             }
-            Ok(ResponseMessage::Notification(_notif)) => todo!(),
+            Ok(ResponseMessage::Notification(notif)) => {
+                self.notifications_handler.handle_notification(notif).await;
+            }
             // Either an invalid response, or an error
             Err(e) => error!("Failed to parse websocket response: {e:?} - response: {msg}"),
         }
@@ -197,5 +201,13 @@ impl SideSwapStream for SideSwapService {
             Ok(Response::Market(MarketResponse::StopQuotes(_))) => Ok(()),
             res => Err(Self::invalid_response(res)),
         }
+    }
+
+    async fn get_quote(&self, quote_sub_id: QuoteSubId) -> Result<QuoteNotif> {
+        let maybe_quote = self
+            .notifications_handler
+            .wait_for_quote(quote_sub_id, Duration::from_millis(500), 10)
+            .await;
+        maybe_quote.context("Did not receive any quotes from server")
     }
 }
