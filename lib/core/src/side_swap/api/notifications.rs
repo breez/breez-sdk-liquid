@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Duration};
 
 use log::debug;
 use sideswap_api::{
-    mkt::{Notification as MarketNotification, QuoteNotif, QuoteSubId},
+    mkt::{Notification as MarketNotification, QuoteNotif, QuoteStatus, QuoteSubId},
     Notification,
 };
 use tokio::sync::RwLock;
@@ -33,10 +33,13 @@ impl SideSwapNotificationsHandler {
         quote_sub_id: QuoteSubId,
         interval: Duration,
         mut max_retries: u64,
+        successful_only: bool,
     ) -> Option<QuoteNotif> {
         while max_retries > 0 {
             if let Some(quote) = self.quotes.read().await.get(&quote_sub_id) {
-                return Some(quote.clone());
+                if matches!(quote.status, QuoteStatus::Success { .. }) || !successful_only {
+                    return Some(quote.clone());
+                }
             }
             tokio::time::sleep(interval).await;
             max_retries -= 1;

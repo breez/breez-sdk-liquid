@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context as _, Result};
+use base64::Engine;
 use futures_util::{SinkExt as _, StreamExt};
 use log::{error, info, warn};
 use maybe_sync::{MaybeSend, MaybeSync};
@@ -7,11 +8,12 @@ use request_handler::SideSwapRequestHandler;
 use response_handler::SideSwapResponseHandler;
 use sdk_common::utils::Arc;
 use sideswap_api::mkt::{
-    AssetPair, AssetType, QuoteNotif, QuoteSubId, StartQuotesRequest, StartQuotesResponse,
-    StopQuotesRequest, TradeDir,
+    AssetPair, AssetType, GetQuoteRequest, QuoteNotif, QuoteStatus, QuoteSubId, StartQuotesRequest,
+    StartQuotesResponse, StopQuotesRequest, TakerSignRequest, TradeDir,
 };
 use sideswap_api::{mkt::Request as MarketRequest, mkt::Response as MarketResponse, Request};
 use sideswap_api::{RequestId, RequestMessage, Response, ResponseMessage};
+use std::str::FromStr;
 use std::time::Duration;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
 use tokio::sync::watch;
@@ -19,6 +21,8 @@ use tokio::sync::watch;
 use boltz_client::boltz::tokio_tungstenite_wasm;
 use tokio_tungstenite_wasm::{connect, Message, WebSocketStream};
 
+use crate::bitcoin::base64;
+use crate::elements::{self, pset::PartiallySignedTransaction, Txid};
 use crate::wallet::OnchainWallet;
 
 mod notifications;
@@ -37,7 +41,12 @@ pub trait SideSwapStream: MaybeSend + MaybeSync {
         amount: u64,
     ) -> Result<StartQuotesResponse>;
     async fn stop_fetching_quotes(&self) -> Result<()>;
-    async fn get_quote(&self, quote_sub_id: QuoteSubId) -> Result<QuoteNotif>;
+    async fn get_quote(
+        &self,
+        quote_sub_id: QuoteSubId,
+        successful_only: bool,
+    ) -> Result<QuoteNotif>;
+    async fn sign_quote_pset(&self, quote_sub_id: QuoteSubId) -> Result<Txid>;
 }
 
 pub(crate) struct SideSwapService {
@@ -203,11 +212,50 @@ impl SideSwapStream for SideSwapService {
         }
     }
 
-    async fn get_quote(&self, quote_sub_id: QuoteSubId) -> Result<QuoteNotif> {
+    async fn get_quote(
+        &self,
+        quote_sub_id: QuoteSubId,
+        successful_only: bool,
+    ) -> Result<QuoteNotif> {
         let maybe_quote = self
             .notifications_handler
-            .wait_for_quote(quote_sub_id, Duration::from_millis(500), 10)
+            .wait_for_quote(
+                quote_sub_id,
+                Duration::from_millis(500),
+                10,
+                successful_only,
+            )
             .await;
         maybe_quote.context("Did not receive any quotes from server")
+    }
+
+    async fn sign_quote_pset(&self, quote_sub_id: QuoteSubId) -> Result<Txid> {
+        let quote = self.get_quote(quote_sub_id, true).await?;
+        let quote_id = match quote.status {
+            QuoteStatus::Success { quote_id, .. } => quote_id,
+            _ => anyhow::bail!("Expected quote with success status, got: {quote:?}"),
+        };
+
+        let req = Request::Market(MarketRequest::GetQuote(GetQuoteRequest { quote_id }));
+        let request_id = self.request_handler.send(req).await?;
+        let get_quote_res = match self.response_handler.recv(request_id).await? {
+            Ok(Response::Market(MarketResponse::GetQuote(res))) => res,
+            res => return Err(Self::invalid_response(res)),
+        };
+
+        let pset = PartiallySignedTransaction::from_str(&get_quote_res.pset)?;
+        // TODO verify pset amounts match
+
+        let tx = self.onchain_wallet.sign_pset(pset).await?;
+        let tx = elements::encode::serialize(&tx);
+        let req = Request::Market(MarketRequest::TakerSign(TakerSignRequest {
+            quote_id,
+            pset: base64::engine::general_purpose::STANDARD.encode(&tx),
+        }));
+        let request_id = self.request_handler.send(req).await?;
+        match self.response_handler.recv(request_id).await? {
+            Ok(Response::Market(MarketResponse::TakerSign(res))) => Ok(res.txid),
+            res => Err(Self::invalid_response(res)),
+        }
     }
 }
