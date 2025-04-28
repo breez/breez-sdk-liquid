@@ -15,11 +15,11 @@ use sideswap_api::{mkt::Request as MarketRequest, mkt::Response as MarketRespons
 use sideswap_api::{RequestId, RequestMessage, Response, ResponseMessage};
 use std::str::FromStr;
 use std::time::Duration;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedSender};
-use tokio::sync::watch;
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::Mutex;
 
 use boltz_client::boltz::tokio_tungstenite_wasm;
-use tokio_tungstenite_wasm::{connect, Message, WebSocketStream};
+use tokio_tungstenite_wasm::{connect, Message};
 
 use crate::bitcoin::base64;
 use crate::elements::{self, pset::PartiallySignedTransaction, Txid};
@@ -34,7 +34,6 @@ pub const SIDESWAP_TESTNET_URL: &str = "wss://api-testnet.sideswap.io/json-rpc-w
 
 #[sdk_macros::async_trait]
 pub trait SideSwapStream: MaybeSend + MaybeSync {
-    fn start(self: Arc<Self>, shutdown: watch::Receiver<()>);
     async fn start_fetching_quotes(
         &self,
         asset_pair: AssetPair,
@@ -49,8 +48,24 @@ pub trait SideSwapStream: MaybeSend + MaybeSync {
     async fn sign_quote_pset(&self, quote_sub_id: QuoteSubId) -> Result<Txid>;
 }
 
+struct ShutdownChannel {
+    pub(crate) sender: Sender<()>,
+    pub(crate) receiver: Mutex<Receiver<()>>,
+}
+
+impl ShutdownChannel {
+    pub(crate) fn new((sender, receiver): (Sender<()>, Receiver<()>)) -> Self {
+        Self {
+            sender,
+            receiver: Mutex::new(receiver),
+        }
+    }
+}
+
 pub(crate) struct SideSwapService {
     url: String,
+    is_started: Mutex<bool>,
+    shutdown: ShutdownChannel,
     onchain_wallet: Arc<dyn OnchainWallet>,
     request_handler: SideSwapRequestHandler,
     response_handler: SideSwapResponseHandler,
@@ -61,6 +76,8 @@ impl SideSwapService {
     pub(crate) fn new(url: String, onchain_wallet: Arc<dyn OnchainWallet>) -> Self {
         Self {
             url,
+            is_started: Mutex::new(false),
+            shutdown: ShutdownChannel::new(tokio::sync::mpsc::channel::<()>(10)),
             request_handler: SideSwapRequestHandler::new(),
             response_handler: SideSwapResponseHandler::new(),
             notifications_handler: SideSwapNotificationsHandler::new(),
@@ -68,20 +85,82 @@ impl SideSwapService {
         }
     }
 
-    async fn connect_ws(&self) -> Result<WebSocketStream, tokio_tungstenite_wasm::Error> {
-        connect(&self.url).await
+    async fn set_started(&self, is_started: bool) {
+        let mut lock = self.is_started.lock().await;
+        *lock = is_started;
     }
 
-    async fn handle_message(&self, msg: &str, resp_sender: &UnboundedSender<i64>) {
+    async fn start(self: Arc<Self>) -> Result<()> {
+        let ws = connect(&self.url).await?;
+        self.set_started(true).await;
+
+        let (mut ws_sender, mut ws_receiver) = ws.split();
+        let keep_alive_ping_interval = Duration::from_secs(15);
+
+        let cloned = Arc::clone(&self);
+        tokio::spawn(async move {
+            let mut shutdown = cloned.shutdown.receiver.lock().await;
+            loop {
+                tokio::select! {
+                    _ = shutdown.recv() => {
+                        info!("Received shutdown signal, exiting SideSwap service loop");
+                        cloned.set_started(false).await;
+                        return;
+                    }
+
+                    _ = tokio::time::sleep(keep_alive_ping_interval) => cloned.request_handler.send_ws(
+                        &mut ws_sender,
+                        RequestMessage::Request(RequestId::String("ping".to_string()), Request::Ping(None))
+                    ).await,
+
+                    maybe_req_msg = self.request_handler.recv() => match maybe_req_msg {
+                        Some(req_msg) => cloned.request_handler.send_ws(&mut ws_sender, req_msg).await,
+                        None => {
+                            warn!("Request channel has been closed, exiting socket loop");
+                            break;
+                        }
+                    },
+
+                    maybe_next = ws_receiver.next() => match maybe_next {
+                        Some(msg) => match msg {
+                            Ok(Message::Close(_)) => {
+                                warn!("Received close msg, exiting socket loop");
+                                cloned.set_started(false).await;
+                                break;
+                            },
+                            Ok(Message::Text(payload)) => cloned.handle_message(payload.as_str()).await,
+                            Ok(msg) => warn!("Unhandled msg: {msg:?}"),
+                            Err(e) => {
+                                error!("Received stream error: {e:?}");
+                                let _ = ws_sender.close().await;
+                                cloned.set_started(false).await;
+                                break;
+                            }
+                        }
+                        None => {
+                            warn!("Received nothing from the stream");
+                            let _ = ws_sender.close().await;
+                            cloned.set_started(false).await;
+                            break;
+                        },
+                    }
+                }
+            }
+        });
+        Ok(())
+    }
+
+    pub(crate) async fn stop(&self) {
+        let _ = self.shutdown.sender.send(()).await;
+    }
+
+    async fn handle_message(&self, msg: &str) {
         info!("Received text message: {msg:?}");
         match serde_json::from_str::<ResponseMessage>(msg) {
             Ok(ResponseMessage::Response(req_id, res)) => {
                 self.response_handler
                     .handle_response(req_id.clone(), res)
                     .await;
-                if let Some(RequestId::Int(req_id)) = req_id {
-                    resp_sender.send(req_id);
-                }
             }
             Ok(ResponseMessage::Notification(notif)) => {
                 self.notifications_handler.handle_notification(notif).await;
@@ -101,80 +180,6 @@ impl SideSwapService {
 
 #[sdk_macros::async_trait]
 impl SideSwapStream for SideSwapService {
-    fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
-        let keep_alive_ping_interval = Duration::from_secs(15);
-        let reconnect_delay = Duration::from_secs(2);
-
-        let (resp_sender, resp_receiver) = unbounded_channel::<i64>();
-        let (req_sender, mut req_receiver) = unbounded_channel::<RequestMessage>();
-
-        self.response_handler.start(resp_receiver);
-        if let Err(err) = self.request_handler.start(req_sender) {
-            error!("Could not start SideSwap service: {err}");
-            return;
-        };
-
-        let cloned = Arc::clone(&self);
-        tokio::spawn(async move {
-            loop {
-                let ws = match cloned.connect_ws().await {
-                    Ok(ws) => ws,
-                    Err(err) => {
-                        warn!("Could not connect to SideSwap API: {err:?}");
-                        tokio::time::sleep(reconnect_delay).await;
-                        continue;
-                    }
-                };
-
-                let (mut ws_sender, mut ws_receiver) = ws.split();
-                loop {
-                    tokio::select! {
-                        _ = shutdown.changed() => {
-                            info!("Received shutdown signal, exiting Status Stream loop");
-                            return;
-                        },
-
-                        _ = tokio::time::sleep(keep_alive_ping_interval) => cloned.request_handler.send_ws(
-                            &mut ws_sender,
-                            RequestMessage::Request(RequestId::String("ping".to_string()), Request::Ping(None))
-                        ).await,
-
-                        maybe_req_msg = req_receiver.recv() => match maybe_req_msg {
-                            Some(req_msg) => cloned.request_handler.send_ws(&mut ws_sender, req_msg).await,
-                            None => {
-                                warn!("Request channel has been closed, exiting socket loop");
-                                break;
-                            }
-                        },
-
-                        maybe_next = ws_receiver.next() => match maybe_next {
-                            Some(msg) => match msg {
-                                Ok(Message::Close(_)) => {
-                                    warn!("Received close msg, exiting socket loop");
-                                    tokio::time::sleep(reconnect_delay).await;
-                                    break;
-                                },
-                                Ok(Message::Text(payload)) => cloned.handle_message(payload.as_str(), &resp_sender).await,
-                                Ok(msg) => warn!("Unhandled msg: {msg:?}"),
-                                Err(e) => {
-                                    error!("Received stream error: {e:?}");
-                                    let _ = ws_sender.close().await;
-                                    break;
-                                }
-                            }
-                            None => {
-                                warn!("Received nothing from the stream");
-                                let _ = ws_sender.close().await;
-                                tokio::time::sleep(reconnect_delay).await;
-                                break;
-                            },
-                        }
-                    }
-                }
-            }
-        });
-    }
-
     async fn start_fetching_quotes(
         &self,
         asset_pair: AssetPair,

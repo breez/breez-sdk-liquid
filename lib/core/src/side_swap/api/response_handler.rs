@@ -3,28 +3,29 @@ use std::{collections::HashMap, time::Duration};
 use anyhow::{bail, Result};
 use log::info;
 use sideswap_api::{RequestId, Response};
-use tokio::sync::{mpsc::UnboundedReceiver, Mutex};
+use tokio::sync::{
+    mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    Mutex,
+};
 
 type MaybeResponse = Result<Response, sideswap_api::Error>;
 
 const RECV_TIMEOUT_SECS: u64 = 10;
 
 pub(crate) struct SideSwapResponseHandler {
-    resp_receiver: Mutex<Option<UnboundedReceiver<i64>>>,
+    sender: UnboundedSender<i64>,
+    receiver: Mutex<UnboundedReceiver<i64>>,
     received: Mutex<HashMap<i64, MaybeResponse>>,
 }
 
 impl SideSwapResponseHandler {
     pub(crate) fn new() -> Self {
+        let (sender, receiver) = unbounded_channel::<i64>();
         Self {
-            resp_receiver: Mutex::new(None),
+            sender,
+            receiver: Mutex::new(receiver),
             received: Mutex::new(HashMap::new()),
         }
-    }
-
-    pub(crate) async fn start(&self, resp_receiver: UnboundedReceiver<i64>) {
-        let mut receiver = self.resp_receiver.lock().await;
-        *receiver = Some(resp_receiver);
     }
 
     pub(crate) async fn handle_response(
@@ -37,6 +38,7 @@ impl SideSwapResponseHandler {
             return;
         };
         self.received.lock().await.insert(res_id, res);
+        let _ = self.sender.send(res_id);
     }
 
     pub(crate) async fn recv(&self, res_id: i64) -> Result<MaybeResponse> {
@@ -46,11 +48,8 @@ impl SideSwapResponseHandler {
         }
         drop(received);
 
-        let Some(ref mut receiver) = *self.resp_receiver.lock().await else {
-            bail!("Could not receive response: handler is not active.");
-        };
-
         tokio::time::timeout(Duration::from_secs(RECV_TIMEOUT_SECS), async {
+            let mut receiver = self.receiver.lock().await;
             while let Some(new_id) = receiver.recv().await {
                 if new_id != res_id {
                     continue;
