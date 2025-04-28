@@ -5043,6 +5043,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sideswap_api"
 version = "0.1.2"
+source = "git+https://github.com/hydra-yse/sideswap_rust?rev=83313c970825#83313c970825faf5b77e702a307f344d4f5e667f"
 dependencies = [
  "elements",
  "hex",
@@ -5056,6 +5057,7 @@ dependencies = [
 [[package]]
 name = "sideswap_types"
 version = "0.1.2"
+source = "git+https://github.com/hydra-yse/sideswap_rust?rev=83313c970825#83313c970825faf5b77e702a307f344d4f5e667f"
 dependencies = [
  "elements",
  "serde",
