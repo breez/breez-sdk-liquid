@@ -2452,7 +2452,8 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         match req.payment_method.clone() {
-            PaymentMethod::Lightning => {
+            #[allow(deprecated)]
+            PaymentMethod::Bolt11Invoice | PaymentMethod::Lightning => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(
@@ -2612,7 +2613,8 @@ impl LiquidSdk {
         } = req.prepare_response.clone();
 
         match payment_method {
-            PaymentMethod::Lightning => {
+            #[allow(deprecated)]
+            PaymentMethod::Bolt11Invoice | PaymentMethod::Lightning => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(
@@ -4284,7 +4286,7 @@ impl LiquidSdk {
         let prepare_response = self
             .prepare_receive_payment(&{
                 PrepareReceiveRequest {
-                    payment_method: PaymentMethod::Lightning,
+                    payment_method: PaymentMethod::Bolt11Invoice,
                     amount: Some(ReceiveAmount::Bitcoin {
                         payer_amount_sat: req.amount_msat / 1_000,
                     }),
@@ -4364,20 +4366,9 @@ impl LiquidSdk {
         self.persister.set_webhook_url(webhook_url.clone())?;
 
         // If the webhook URL has changed, update all bolt12 offers
-        // that were created with the old webhook URL or without a webhook URL
         if let Some(old_webhook_url) = maybe_old_webhook_url {
             if old_webhook_url != webhook_url {
-                let bolt12_offers = self
-                    .persister
-                    .list_bolt12_offers()?
-                    .into_iter()
-                    .filter(|bolt12_offer| {
-                        bolt12_offer
-                            .webhook_url
-                            .clone()
-                            .is_none_or(|url| url == old_webhook_url)
-                    })
-                    .collect::<Vec<_>>();
+                let bolt12_offers = self.persister.list_bolt12_offers()?;
 
                 for mut bolt12_offer in bolt12_offers {
                     let keypair = bolt12_offer.get_keypair()?;
