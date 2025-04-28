@@ -2234,9 +2234,10 @@ impl CstDecode<crate::model::PaymentMethod> for i32 {
     fn cst_decode(self) -> crate::model::PaymentMethod {
         match self {
             0 => crate::model::PaymentMethod::Lightning,
-            1 => crate::model::PaymentMethod::Bolt12Offer,
-            2 => crate::model::PaymentMethod::BitcoinAddress,
-            3 => crate::model::PaymentMethod::LiquidAddress,
+            1 => crate::model::PaymentMethod::Bolt11Invoice,
+            2 => crate::model::PaymentMethod::Bolt12Offer,
+            3 => crate::model::PaymentMethod::BitcoinAddress,
+            4 => crate::model::PaymentMethod::LiquidAddress,
             _ => unreachable!("Invalid variant for PaymentMethod: {}", self),
         }
     }
@@ -4194,9 +4195,10 @@ impl SseDecode for crate::model::PaymentMethod {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
             0 => crate::model::PaymentMethod::Lightning,
-            1 => crate::model::PaymentMethod::Bolt12Offer,
-            2 => crate::model::PaymentMethod::BitcoinAddress,
-            3 => crate::model::PaymentMethod::LiquidAddress,
+            1 => crate::model::PaymentMethod::Bolt11Invoice,
+            2 => crate::model::PaymentMethod::Bolt12Offer,
+            3 => crate::model::PaymentMethod::BitcoinAddress,
+            4 => crate::model::PaymentMethod::LiquidAddress,
             _ => unreachable!("Invalid variant for PaymentMethod: {}", inner),
         };
     }
@@ -6590,9 +6592,10 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentMethod {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
             Self::Lightning => 0.into_dart(),
-            Self::Bolt12Offer => 1.into_dart(),
-            Self::BitcoinAddress => 2.into_dart(),
-            Self::LiquidAddress => 3.into_dart(),
+            Self::Bolt11Invoice => 1.into_dart(),
+            Self::Bolt12Offer => 2.into_dart(),
+            Self::BitcoinAddress => 3.into_dart(),
+            Self::LiquidAddress => 4.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -8966,9 +8969,10 @@ impl SseEncode for crate::model::PaymentMethod {
         <i32>::sse_encode(
             match self {
                 crate::model::PaymentMethod::Lightning => 0,
-                crate::model::PaymentMethod::Bolt12Offer => 1,
-                crate::model::PaymentMethod::BitcoinAddress => 2,
-                crate::model::PaymentMethod::LiquidAddress => 3,
+                crate::model::PaymentMethod::Bolt11Invoice => 1,
+                crate::model::PaymentMethod::Bolt12Offer => 2,
+                crate::model::PaymentMethod::BitcoinAddress => 3,
+                crate::model::PaymentMethod::LiquidAddress => 4,
                 _ => {
                     unimplemented!("");
                 }

@@ -11,13 +11,13 @@ init:
 clippy: clippy-default clippy-browser clippy-node
 
 clippy-default:
-	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown -- -D warnings
+	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown -- -A deprecated -D warnings
 
 clippy-browser:
-	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown --features browser -- -D warnings
+	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown --features browser -- -A deprecated -D warnings
 
 clippy-node: 
-	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown --features node-js -- -D warnings
+	$(CLANG_PREFIX) cargo clippy --all-targets --target=wasm32-unknown-unknown --features node-js -- -A deprecated -D warnings
 
 build: build-bundle build-deno build-node build-web
 

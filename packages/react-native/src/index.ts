@@ -744,6 +744,7 @@ export type PaymentDetails = {
 
 export enum PaymentMethod {
     LIGHTNING = "lightning",
+    BOLT11_INVOICE = "bolt11Invoice",
     BOLT12_OFFER = "bolt12Offer",
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress"

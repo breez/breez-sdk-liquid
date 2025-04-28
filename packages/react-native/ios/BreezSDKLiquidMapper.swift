@@ -4516,6 +4516,9 @@ enum BreezSDKLiquidMapper {
         case "lightning":
             return PaymentMethod.lightning
 
+        case "bolt11Invoice":
+            return PaymentMethod.bolt11Invoice
+
         case "bolt12Offer":
             return PaymentMethod.bolt12Offer
 
@@ -4533,6 +4536,9 @@ enum BreezSDKLiquidMapper {
         switch paymentMethod {
         case .lightning:
             return "lightning"
+
+        case .bolt11Invoice:
+            return "bolt11Invoice"
 
         case .bolt12Offer:
             return "bolt12Offer"

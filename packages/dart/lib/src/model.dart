@@ -1002,7 +1002,7 @@ sealed class PaymentDetails with _$PaymentDetails {
 }
 
 /// The send/receive methods supported by the SDK
-enum PaymentMethod { lightning, bolt12Offer, bitcoinAddress, liquidAddress }
+enum PaymentMethod { lightning, bolt11Invoice, bolt12Offer, bitcoinAddress, liquidAddress }
 
 /// The payment state of an individual payment.
 enum PaymentState {

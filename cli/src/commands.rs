@@ -83,7 +83,7 @@ pub(crate) enum Command {
     },
     /// Receive a payment directly or via a swap
     ReceivePayment {
-        /// The method to use when receiving. Either "lightning", "offer", "bitcoin" or "liquid"
+        /// The method to use when receiving. Either "invoice", "offer", "bitcoin" or "liquid"
         #[arg(short = 'm', long = "method")]
         payment_method: Option<String>,
 
@@ -314,15 +314,16 @@ pub(crate) async fn handle_command(
             description,
             use_description_hash,
         } => {
-            let payment_method = payment_method.map_or(Ok(PaymentMethod::Lightning), |method| {
-                match method.as_str() {
-                    "lightning" => Ok(PaymentMethod::Lightning),
-                    "offer" => Ok(PaymentMethod::Bolt12Offer),
-                    "bitcoin" => Ok(PaymentMethod::BitcoinAddress),
-                    "liquid" => Ok(PaymentMethod::LiquidAddress),
-                    _ => Err(anyhow!("Invalid payment method")),
-                }
-            })?;
+            let payment_method =
+                payment_method.map_or(Ok(PaymentMethod::Bolt11Invoice), |method| {
+                    match method.as_str() {
+                        "invoice" => Ok(PaymentMethod::Bolt11Invoice),
+                        "offer" => Ok(PaymentMethod::Bolt12Offer),
+                        "bitcoin" => Ok(PaymentMethod::BitcoinAddress),
+                        "liquid" => Ok(PaymentMethod::LiquidAddress),
+                        _ => Err(anyhow!("Invalid payment method")),
+                    }
+                })?;
             let amount = match asset_id {
                 Some(asset_id) => Some(ReceiveAmount::Asset {
                     asset_id,

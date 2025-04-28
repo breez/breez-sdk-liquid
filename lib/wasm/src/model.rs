@@ -356,6 +356,7 @@ pub struct ConnectWithSignerRequest {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PaymentMethod)]
 pub enum PaymentMethod {
     Lightning,
+    Bolt11Invoice,
     Bolt12Offer,
     BitcoinAddress,
     LiquidAddress,
