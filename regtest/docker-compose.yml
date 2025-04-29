@@ -2,7 +2,8 @@ services:
   rt-sync:
     environment:
       SQLITE_DIR_PATH: /app/db
-    image: ${RT_SYNC_IMAGE}
+    build:
+      context: https://github.com/breez/data-sync.git
     user: "0:0"
     restart: on-failure
     ports:
