@@ -21,6 +21,7 @@ interface Job : EventListener {
     fun replyServer(
         payload: String,
         replyURL: String,
+        maxAge: Int = 0,
     ): Boolean {
         val url = URL(replyURL)
         val response = payload.toByteArray()
@@ -31,6 +32,9 @@ interface Job : EventListener {
             useCaches = false
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Content-Length", response.size.toString())
+            if (maxAge > 0) {
+                setRequestProperty("Cache-Control", "max-age=$maxAge")
+            }
             DataOutputStream(outputStream).use { it.write(response, 0, response.size) }
 
             return responseCode == 200
