@@ -74,7 +74,7 @@ class LnurlPayInfoJob(
                     "[[\"text/plain\",\"$plainTextMetadata\"]]",
                     "payRequest",
                 )
-            val success = replyServer(Json.encodeToString(response), request.replyURL)
+            val success = replyServer(Json.encodeToString(response), request.replyURL, 86400)
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_REPLACEABLE,
