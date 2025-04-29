@@ -1,9 +1,10 @@
 use anyhow::Result;
 use boltz_client::{
     boltz::{
-        ChainPair, CreateChainRequest, CreateChainResponse, CreateReverseRequest,
-        CreateReverseResponse, CreateSubmarineRequest, CreateSubmarineResponse, ReversePair,
-        SubmarineClaimTxResponse, SubmarinePair,
+        ChainPair, CreateBolt12OfferRequest, CreateChainRequest, CreateChainResponse,
+        CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
+        CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
+        SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest,
     },
     network::Chain,
     Amount,
@@ -129,6 +130,16 @@ pub trait Swapper: MaybeSend + MaybeSync {
         offer: &str,
         amount_sat: u64,
     ) -> Result<String, PaymentError>;
+
+    async fn create_bolt12_offer(&self, req: CreateBolt12OfferRequest) -> Result<(), SdkError>;
+
+    async fn update_bolt12_offer(&self, req: UpdateBolt12OfferRequest) -> Result<(), SdkError>;
+
+    async fn delete_bolt12_offer(&self, offer: &str, signature: &str) -> Result<(), SdkError>;
+
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError>;
+
+    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError>;
 }
 
 pub trait SwapperStatusStream: MaybeSend + MaybeSync {
@@ -137,8 +148,16 @@ pub trait SwapperStatusStream: MaybeSend + MaybeSync {
         callback: Box<dyn SubscriptionHandler>,
         shutdown: watch::Receiver<()>,
     );
+
     fn track_swap_id(&self, swap_id: &str) -> Result<()>;
+    fn track_offer(&self, offer: &str, signature: &str) -> Result<()>;
+
+    fn send_invoice_created(&self, id: &str, invoice: &str) -> Result<()>;
+
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::SwapStatus>;
+    fn subscribe_invoice_requests(
+        &self,
+    ) -> broadcast::Receiver<boltz_client::boltz::InvoiceRequest>;
 }
 
 #[sdk_macros::async_trait]

@@ -2,6 +2,7 @@
 
 mod bitcoin;
 mod bolt11;
+mod bolt12;
 mod liquid;
 mod utils;
 

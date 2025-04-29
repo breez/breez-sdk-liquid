@@ -8,7 +8,7 @@ use anyhow::Result;
 use boltz_client::boltz::{
     self,
     tokio_tungstenite_wasm::{Message, WebSocketStream},
-    WsRequest, WsResponse,
+    InvoiceRequestParams, WsRequest, WsResponse,
 };
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
@@ -17,20 +17,17 @@ use tokio::sync::{broadcast, watch};
 use tokio_with_wasm::alias as tokio;
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
-    async fn send_subscription(
+    async fn send_request(
         &self,
-        swap_id: String,
+        ws_request: WsRequest,
         sender: &mut SplitSink<WebSocketStream, Message>,
     ) {
-        info!("Subscribing to status updates for swap ID {swap_id}");
-
-        let subscription = WsRequest::subscribe_swap_request(&swap_id);
-        match serde_json::to_string(&subscription) {
-            Ok(subscribe_json) => match sender.send(Message::Text(subscribe_json.into())).await {
-                Ok(_) => info!("Subscribed"),
-                Err(e) => error!("Failed to subscribe to {swap_id}: {e:?}"),
+        match serde_json::to_string(&ws_request) {
+            Ok(ref req_json) => match sender.send(Message::Text(req_json.into())).await {
+                Ok(_) => debug!("Sent request: {req_json}"),
+                Err(e) => error!("Failed to send {req_json}: {e:?}"),
             },
-            Err(e) => error!("Invalid subscription msg: {e:?}"),
+            Err(e) => error!("Error encoding request: {e:?}"),
         }
     }
 }
@@ -60,10 +57,10 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                     Ok(ws_stream) => {
                         let (mut sender, mut receiver) = ws_stream.split();
 
-                        let mut tracked_swap_ids: HashSet<String> = HashSet::new();
-                        let mut subscription_stream = self.subscription_notifier.subscribe();
+                        let mut tracked_ids: HashSet<String> = HashSet::new();
+                        let mut request_stream = self.request_notifier.subscribe();
 
-                        callback.subscribe_swaps().await;
+                        callback.track_subscriptions().await;
 
                         loop {
                             tokio::select! {
@@ -84,15 +81,21 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                                     }
                                 },
 
-
-                                swap_res = subscription_stream.recv() => match swap_res {
-                                    Ok(swap_id) => {
-                                      if !tracked_swap_ids.contains(&swap_id) {
-                                        self.send_subscription(swap_id.clone(), &mut sender).await;
-                                        tracked_swap_ids.insert(swap_id.clone());
-                                      }
+                                ws_request_res = request_stream.recv() => match ws_request_res {
+                                    Ok(WsRequest::Subscribe(subscribe)) => {
+                                        let id = match subscribe.clone() {
+                                            boltz::SubscribeRequest::SwapUpdate { args } => args.first().cloned(),
+                                            boltz::SubscribeRequest::InvoiceRequest { args } => args.first().map(|p| p.offer.clone()),
+                                        };
+                                        if let Some(id) = id {
+                                            if !tracked_ids.contains(&id) {
+                                                self.send_request(WsRequest::Subscribe(subscribe), &mut sender).await;
+                                                tracked_ids.insert(id);
+                                            }
+                                        }
                                     },
-                                    Err(e) => error!("Received error on subscription stream: {e:?}"),
+                                    Ok(ws_request) => self.send_request(ws_request, &mut sender).await,
+                                    Err(e) => error!("Received error on request stream: {e:?}"),
                                 },
 
                                 maybe_next = receiver.next() => match maybe_next {
@@ -104,16 +107,28 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                                         },
                                         Ok(Message::Text(payload)) => {
                                             let payload = payload.as_str();
-                                            info!("Received text msg: {payload:?}");
+                                            debug!("Received text msg: {payload:?}");
                                             match serde_json::from_str::<WsResponse>(payload) {
                                                 // Subscribing/unsubscribing confirmation
                                                 Ok(WsResponse::Subscribe { .. }) | Ok(WsResponse::Unsubscribe { .. }) => {}
 
-                                                // Status update(s)
+                                                // Swap status update(s)
                                                 Ok(WsResponse::Update(update)) => {
                                                     for update in update.args {
                                                         let _ = self.update_notifier.send(update);
                                                     }
+                                                }
+
+                                                // Invoice requests(s)
+                                                Ok(WsResponse::InvoiceRequest(invoice_request)) => {
+                                                    for invoice_request in invoice_request.args {
+                                                        let _ = self.invoice_request_notifier.send(invoice_request);
+                                                    }
+                                                }
+
+                                                // Error response
+                                                Ok(WsResponse::Error(error)) => {
+                                                    error!("Received error msg: {error:?}");
                                                 }
 
                                                 // A response to one of our pings
@@ -150,11 +165,41 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
     }
 
     fn track_swap_id(&self, swap_id: &str) -> Result<()> {
-        let _ = self.subscription_notifier.send(swap_id.to_string());
+        let _ =
+            self.request_notifier
+                .send(WsRequest::Subscribe(boltz::SubscribeRequest::SwapUpdate {
+                    args: vec![swap_id.to_string()],
+                }));
+        Ok(())
+    }
+
+    fn track_offer(&self, offer: &str, signature: &str) -> Result<()> {
+        let _ = self.request_notifier.send(WsRequest::Subscribe(
+            boltz::SubscribeRequest::InvoiceRequest {
+                args: vec![InvoiceRequestParams {
+                    offer: offer.to_string(),
+                    signature: signature.to_string(),
+                }],
+            },
+        ));
+        Ok(())
+    }
+
+    fn send_invoice_created(&self, id: &str, invoice: &str) -> Result<()> {
+        let _ = self
+            .request_notifier
+            .send(WsRequest::Invoice(boltz::InvoiceCreated {
+                id: id.to_string(),
+                invoice: invoice.to_string(),
+            }));
         Ok(())
     }
 
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::SwapStatus> {
         self.update_notifier.subscribe()
+    }
+
+    fn subscribe_invoice_requests(&self) -> broadcast::Receiver<boltz::InvoiceRequest> {
+        self.invoice_request_notifier.subscribe()
     }
 }

@@ -594,6 +594,69 @@ fun asConnectWithSignerRequestList(arr: ReadableArray): List<ConnectWithSignerRe
     return list
 }
 
+fun asCreateBolt12InvoiceRequest(createBolt12InvoiceRequest: ReadableMap): CreateBolt12InvoiceRequest? {
+    if (!validateMandatoryFields(
+            createBolt12InvoiceRequest,
+            arrayOf(
+                "offer",
+                "invoiceRequest",
+            ),
+        )
+    ) {
+        return null
+    }
+    val offer = createBolt12InvoiceRequest.getString("offer")!!
+    val invoiceRequest = createBolt12InvoiceRequest.getString("invoiceRequest")!!
+    return CreateBolt12InvoiceRequest(offer, invoiceRequest)
+}
+
+fun readableMapOf(createBolt12InvoiceRequest: CreateBolt12InvoiceRequest): ReadableMap =
+    readableMapOf(
+        "offer" to createBolt12InvoiceRequest.offer,
+        "invoiceRequest" to createBolt12InvoiceRequest.invoiceRequest,
+    )
+
+fun asCreateBolt12InvoiceRequestList(arr: ReadableArray): List<CreateBolt12InvoiceRequest> {
+    val list = ArrayList<CreateBolt12InvoiceRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCreateBolt12InvoiceRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asCreateBolt12InvoiceResponse(createBolt12InvoiceResponse: ReadableMap): CreateBolt12InvoiceResponse? {
+    if (!validateMandatoryFields(
+            createBolt12InvoiceResponse,
+            arrayOf(
+                "invoice",
+            ),
+        )
+    ) {
+        return null
+    }
+    val invoice = createBolt12InvoiceResponse.getString("invoice")!!
+    return CreateBolt12InvoiceResponse(invoice)
+}
+
+fun readableMapOf(createBolt12InvoiceResponse: CreateBolt12InvoiceResponse): ReadableMap =
+    readableMapOf(
+        "invoice" to createBolt12InvoiceResponse.invoice,
+    )
+
+fun asCreateBolt12InvoiceResponseList(arr: ReadableArray): List<CreateBolt12InvoiceResponse> {
+    val list = ArrayList<CreateBolt12InvoiceResponse>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asCreateBolt12InvoiceResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asCurrencyInfo(currencyInfo: ReadableMap): CurrencyInfo? {
     if (!validateMandatoryFields(
             currencyInfo,

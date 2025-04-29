@@ -1,16 +1,18 @@
 use anyhow::Result;
 use boltz_client::{
     boltz::{
-        ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateChainResponse,
-        CreateReverseResponse, CreateSubmarineResponse, Leaf, PairLimits, PairMinerFees,
-        ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse, SubmarineFees,
-        SubmarinePair, SubmarinePairLimits, SwapTree,
+        ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateBolt12OfferRequest,
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse,
+        GetBolt12ParamsResponse, GetNodesResponse, Leaf, MagicRoutingHint, Node, PairLimits,
+        PairMinerFees, ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse,
+        SubmarineFees, SubmarinePair, SubmarinePairLimits, SwapTree, UpdateBolt12OfferRequest,
     },
     util::secrets::Preimage,
     Amount, PublicKey,
 };
+use lwk_wollet::secp256k1;
 use sdk_common::invoice::parse_invoice;
-use std::sync::Mutex;
+use std::{collections::HashMap, str::FromStr, sync::Mutex};
 
 use crate::{
     ensure_sdk,
@@ -126,7 +128,7 @@ impl Swapper for MockSwapper {
         req: boltz_client::swaps::boltz::CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
         let invoice = parse_invoice(&req.invoice)
-            .map_err(|err| PaymentError::invalid_invoice(&err.to_string()))?;
+            .map_err(|err| PaymentError::invalid_invoice(err.to_string()))?;
         let Some(amount_msat) = invoice.amount_msat else {
             return Err(PaymentError::invalid_invoice(
                 "Invoice does not contain an amount",
@@ -294,11 +296,11 @@ impl Swapper for MockSwapper {
 
     async fn create_receive_swap(
         &self,
-        _req: boltz_client::swaps::boltz::CreateReverseRequest,
+        req: boltz_client::swaps::boltz::CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
         Ok(CreateReverseResponse {
             id: generate_random_string(4),
-            invoice: "".to_string(),
+            invoice: req.invoice.map_or(Some("".to_string()), |_| None),
             swap_tree: Self::mock_swap_tree(),
             lockup_address: "".to_string(),
             refund_public_key: Self::mock_public_key(),
@@ -349,6 +351,44 @@ impl Swapper for MockSwapper {
         _amount_sat: u64,
     ) -> Result<String, PaymentError> {
         unimplemented!()
+    }
+
+    async fn create_bolt12_offer(&self, _req: CreateBolt12OfferRequest) -> Result<(), SdkError> {
+        Ok(())
+    }
+
+    async fn update_bolt12_offer(&self, _req: UpdateBolt12OfferRequest) -> Result<(), SdkError> {
+        Ok(())
+    }
+
+    async fn delete_bolt12_offer(&self, _offer: &str, _signature: &str) -> Result<(), SdkError> {
+        Ok(())
+    }
+
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {
+        Ok(GetBolt12ParamsResponse {
+            min_cltv: 180,
+            magic_routing_hint: MagicRoutingHint {
+                channel_id: "596385002596073472".to_string(),
+            },
+        })
+    }
+
+    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError> {
+        Ok(GetNodesResponse {
+            btc: HashMap::from([(
+                "CLN".to_string(),
+                Node {
+                    public_key: secp256k1::PublicKey::from_str(
+                        "02d96eadea3d780104449aca5c93461ce67c1564e2e1d73225fa67dd3b997a6018",
+                    )
+                    .unwrap(),
+                    uris: vec![
+                        "02d96eadea3d780104449aca5c93461ce67c1564e2e1d73225fa67dd3b997a6018@143.202.162.204:9736".to_string(),
+                        "02d96eadea3d780104449aca5c93461ce67c1564e2e1d73225fa67dd3b997a6018@2803:6900:581::1:c175:f0ad:9736".to_string()],
+                },
+            )]),
+        })
     }
 
     async fn get_zero_amount_chain_swap_quote(&self, _swap_id: &str) -> Result<Amount, SdkError> {

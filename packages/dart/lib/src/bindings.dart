@@ -39,6 +39,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   CheckMessageResponse checkMessage({required CheckMessageRequest req});
 
+  Future<CreateBolt12InvoiceResponse> createBolt12Invoice({required CreateBolt12InvoiceRequest req});
+
   Future<void> disconnect();
 
   void emptyWalletCache();

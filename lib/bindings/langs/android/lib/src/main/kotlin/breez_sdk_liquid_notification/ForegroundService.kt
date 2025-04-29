@@ -11,6 +11,7 @@ import breez_sdk_liquid.EventListener
 import breez_sdk_liquid.Logger
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.connectSDK
+import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_INVOICE_REQUEST
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INFO
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INVOICE
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
@@ -21,6 +22,7 @@ import breez_sdk_liquid_notification.Constants.SHUTDOWN_DELAY_MS
 import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyForegroundService
 import breez_sdk_liquid_notification.NotificationHelper.Companion.cancelNotification
 import breez_sdk_liquid_notification.job.Job
+import breez_sdk_liquid_notification.job.InvoiceRequestJob
 import breez_sdk_liquid_notification.job.LnurlPayInfoJob
 import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
 import breez_sdk_liquid_notification.job.SwapUpdatedJob
@@ -151,6 +153,14 @@ abstract class ForegroundService :
         Message.createFromIntent(intent)?.let { message ->
             message.payload?.let { payload ->
                 when (message.type) {
+                    MESSAGE_TYPE_INVOICE_REQUEST ->
+                        InvoiceRequestJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
+
                     MESSAGE_TYPE_SWAP_UPDATED ->
                         SwapUpdatedJob(
                             applicationContext,

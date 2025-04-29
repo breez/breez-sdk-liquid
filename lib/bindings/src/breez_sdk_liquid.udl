@@ -459,6 +459,8 @@ dictionary SendPaymentResponse {
 
 enum PaymentMethod {
     "Lightning",
+    "Bolt11Invoice",
+    "Bolt12Offer",
     "BitcoinAddress",
     "LiquidAddress",
 };
@@ -491,6 +493,15 @@ dictionary ReceivePaymentRequest {
 
 dictionary ReceivePaymentResponse {
     string destination;
+};
+
+dictionary CreateBolt12InvoiceRequest {
+    string offer;
+    string invoice_request;
+};
+
+dictionary CreateBolt12InvoiceResponse {
+    string invoice;
 };
 
 dictionary Limits {
@@ -807,6 +818,9 @@ interface BindingLiquidSdk {
 
     [Throws=PaymentError]
     ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
+
+    [Throws=PaymentError]
+    CreateBolt12InvoiceResponse create_bolt12_invoice(CreateBolt12InvoiceRequest req);
 
     [Throws=PaymentError]
     LightningPaymentLimitsResponse fetch_lightning_limits();

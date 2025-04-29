@@ -117,6 +117,15 @@ export interface ConnectWithSignerRequest {
     config: Config
 }
 
+export interface CreateBolt12InvoiceRequest {
+    offer: string
+    invoiceRequest: string
+}
+
+export interface CreateBolt12InvoiceResponse {
+    invoice: string
+}
+
 export interface CurrencyInfo {
     name: string
     fractionSize: number
@@ -735,6 +744,8 @@ export type PaymentDetails = {
 
 export enum PaymentMethod {
     LIGHTNING = "lightning",
+    BOLT11_INVOICE = "bolt11Invoice",
+    BOLT12_OFFER = "bolt12Offer",
     BITCOIN_ADDRESS = "bitcoinAddress",
     LIQUID_ADDRESS = "liquidAddress"
 }
@@ -946,6 +957,11 @@ export const prepareReceivePayment = async (req: PrepareReceiveRequest): Promise
 
 export const receivePayment = async (req: ReceivePaymentRequest): Promise<ReceivePaymentResponse> => {
     const response = await BreezSDKLiquid.receivePayment(req)
+    return response
+}
+
+export const createBolt12Invoice = async (req: CreateBolt12InvoiceRequest): Promise<CreateBolt12InvoiceResponse> => {
+    const response = await BreezSDKLiquid.createBolt12Invoice(req)
     return response
 }
 

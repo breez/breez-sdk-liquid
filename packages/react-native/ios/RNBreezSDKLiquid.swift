@@ -231,6 +231,17 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(createBolt12Invoice:resolve:reject:)
+    func createBolt12Invoice(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let createBolt12InvoiceRequest = try BreezSDKLiquidMapper.asCreateBolt12InvoiceRequest(createBolt12InvoiceRequest: req)
+            var res = try getBindingLiquidSdk().createBolt12Invoice(req: createBolt12InvoiceRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(createBolt12InvoiceResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     @objc(fetchLightningLimits:reject:)
     func fetchLightningLimits(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {

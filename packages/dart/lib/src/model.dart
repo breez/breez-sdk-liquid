@@ -391,6 +391,44 @@ class ConnectRequest {
           seed == other.seed;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
+class CreateBolt12InvoiceRequest {
+  /// The BOLT12 offer
+  final String offer;
+
+  /// The invoice request created from the offer
+  final String invoiceRequest;
+
+  const CreateBolt12InvoiceRequest({required this.offer, required this.invoiceRequest});
+
+  @override
+  int get hashCode => offer.hashCode ^ invoiceRequest.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateBolt12InvoiceRequest &&
+          runtimeType == other.runtimeType &&
+          offer == other.offer &&
+          invoiceRequest == other.invoiceRequest;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
+class CreateBolt12InvoiceResponse {
+  /// The BOLT12 invoice
+  final String invoice;
+
+  const CreateBolt12InvoiceResponse({required this.invoice});
+
+  @override
+  int get hashCode => invoice.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CreateBolt12InvoiceResponse && runtimeType == other.runtimeType && invoice == other.invoice;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
 class FetchPaymentProposedFeesRequest {
   final String swapId;
@@ -964,7 +1002,7 @@ sealed class PaymentDetails with _$PaymentDetails {
 }
 
 /// The send/receive methods supported by the SDK
-enum PaymentMethod { lightning, bitcoinAddress, liquidAddress }
+enum PaymentMethod { lightning, bolt11Invoice, bolt12Offer, bitcoinAddress, liquidAddress }
 
 /// The payment state of an individual payment.
 enum PaymentState {
@@ -1248,7 +1286,6 @@ class PrepareReceiveRequest {
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_receive_payment].
 class PrepareReceiveResponse {
   final PaymentMethod paymentMethod;
-  final ReceiveAmount? amount;
 
   /// Generally represents the total fees that would be paid to send or receive this payment.
   ///
@@ -1259,6 +1296,9 @@ class PrepareReceiveResponse {
   ///
   /// In all other types of swaps, the swapper service fee is included in `fees_sat`.
   final BigInt feesSat;
+
+  /// The amount to be paid in either Bitcoin or another asset
+  final ReceiveAmount? amount;
 
   /// The minimum amount the payer can send for this swap to succeed.
   ///
@@ -1277,8 +1317,8 @@ class PrepareReceiveResponse {
 
   const PrepareReceiveResponse({
     required this.paymentMethod,
-    this.amount,
     required this.feesSat,
+    this.amount,
     this.minPayerAmountSat,
     this.maxPayerAmountSat,
     this.swapperFeerate,
@@ -1287,8 +1327,8 @@ class PrepareReceiveResponse {
   @override
   int get hashCode =>
       paymentMethod.hashCode ^
-      amount.hashCode ^
       feesSat.hashCode ^
+      amount.hashCode ^
       minPayerAmountSat.hashCode ^
       maxPayerAmountSat.hashCode ^
       swapperFeerate.hashCode;
@@ -1299,8 +1339,8 @@ class PrepareReceiveResponse {
       other is PrepareReceiveResponse &&
           runtimeType == other.runtimeType &&
           paymentMethod == other.paymentMethod &&
-          amount == other.amount &&
           feesSat == other.feesSat &&
+          amount == other.amount &&
           minPayerAmountSat == other.minPayerAmountSat &&
           maxPayerAmountSat == other.maxPayerAmountSat &&
           swapperFeerate == other.swapperFeerate;

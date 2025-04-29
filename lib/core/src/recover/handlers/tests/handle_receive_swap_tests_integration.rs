@@ -272,6 +272,7 @@ mod test {
             create_response_json: r#"{"swap_tree":{"claim_leaf":{"output":"82012088a91460bac83421a184c3cf912ae231df8e3f0ce6ac5488204c9f9e348b27b1257c51f3ad2a05589ac8f3af72246ff3094950441cdf826b47ac","version":196},"refund_leaf":{"output":"209916729fe59068c8544b8070a32f653ed9cb550e76a5caaeda557aadf9e2cc2fad03e48c31b1","version":196}},"lockup_address":"lq1pqw632yu95t23pa7jr4s746g68nwl0ukkfvncs3q7t66f9gjqj7ccj2nwx8verw57l2zn029vlnwjuvrpm4yxnz3tccfks9e8rdy2r9tu586g8fya887j","refund_public_key":"029916729fe59068c8544b8070a32f653ed9cb550e76a5caaeda557aadf9e2cc2f","timeout_block_height":3247332,"onchain_amount":1071,"blinding_key":"605f50d0c0516c800594e1d44b9ceaeb7fa7a4258d6357043cc2daaa13e48895"}"#.to_string(),
             claim_private_key: "2f23dbb3c13e30ac8df594369b62ef1eb34a50197d7acc15db413961d90810e5".to_string(),
             invoice: "lnbc11u1pn65lr9sp5xfmwgmaddn2acwc7rr4xhj3k5dy4tyfhma57tpfp0z7eyp90fdjspp5a48w03jc5dtzqnyyqw727naffpcdvhj7s9hen45zh9m3auhfmx2qdpz2djkuepqw3hjqnpdgf2yxgrpv3j8yetnwvxqyp2xqcqz95rzjqfxfl8353vnmzftu28e662s9tzdv3ua0wgjxlucff9gyg8xlsf45wzzxeyqq28qqqqqqqqqqqqqqq9gq2y9qyysgq37h36xnz7khazpus03846hml4q8y8qekrzwh5ql36fy6l7dmgyuq3d9jyvnmm3h8tmxn7ae20wgte2elq4akpu3mqnyj626zy69drmqq95tqch".to_string(),
+            bolt12_offer: None,
             payment_hash: Some("ed4ee7c658a356204c8403bcaf4fa94870d65e5e816f99d682b9771ef2e9d994".to_string()),
             destination_pubkey: Some("03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f".to_string()),
             description: Some("Test payment".to_string()),

@@ -8,9 +8,10 @@ use crate::{
 use anyhow::{anyhow, Result};
 use boltz_client::{
     boltz::{
-        self, BoltzApiClientV2, ChainPair, Cooperative, CreateChainRequest, CreateChainResponse,
-        CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
-        CreateSubmarineResponse, ReversePair, SubmarineClaimTxResponse, SubmarinePair,
+        self, BoltzApiClientV2, ChainPair, Cooperative, CreateBolt12OfferRequest,
+        CreateChainRequest, CreateChainResponse, CreateReverseRequest, CreateReverseResponse,
+        CreateSubmarineRequest, CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse,
+        ReversePair, SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::Chain,
@@ -43,14 +44,16 @@ pub struct BoltzSwapper<P: ProxyUrlFetcher> {
     liquid_client: OnceLock<LiquidClient>,
     bitcoin_client: OnceLock<BitcoinClient>,
     proxy_url: Arc<P>,
-    subscription_notifier: broadcast::Sender<String>,
+    request_notifier: broadcast::Sender<WsRequest>,
     update_notifier: broadcast::Sender<boltz::SwapStatus>,
+    invoice_request_notifier: broadcast::Sender<boltz::InvoiceRequest>,
 }
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     pub fn new(config: Config, proxy_url: Arc<P>) -> Result<Self, SdkError> {
-        let (subscription_notifier, _) = broadcast::channel::<String>(30);
+        let (request_notifier, _) = broadcast::channel::<WsRequest>(30);
         let (update_notifier, _) = broadcast::channel::<boltz::SwapStatus>(30);
+        let (invoice_request_notifier, _) = broadcast::channel::<boltz::InvoiceRequest>(30);
 
         Ok(Self {
             proxy_url,
@@ -58,8 +61,9 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             boltz_client: OnceLock::new(),
             liquid_client: OnceLock::new(),
             bitcoin_client: OnceLock::new(),
-            subscription_notifier,
+            request_notifier,
             update_notifier,
+            invoice_request_notifier,
         })
     }
 
@@ -442,7 +446,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             Swap::Chain(chain_swap) => match chain_swap.direction {
                 Direction::Incoming => {
                     let Some(broadcast_fee_rate_sat_per_vb) = broadcast_fee_rate_sat_per_vb else {
-                        return Err(PaymentError::generic(&format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")));
+                        return Err(PaymentError::generic(format!("No broadcast fee rate provided when refunding incoming Chain Swap {swap_id}")));
                     };
 
                     Transaction::Bitcoin(
@@ -519,5 +523,47 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             .await?;
         info!("Received BOLT12 invoice response: {invoice_res:?}");
         Ok(invoice_res.invoice)
+    }
+
+    async fn create_bolt12_offer(&self, req: CreateBolt12OfferRequest) -> Result<(), SdkError> {
+        self.get_boltz_client()
+            .await?
+            .inner
+            .post_bolt12_offer(req)
+            .await?;
+        Ok(())
+    }
+
+    async fn update_bolt12_offer(&self, req: UpdateBolt12OfferRequest) -> Result<(), SdkError> {
+        self.get_boltz_client()
+            .await?
+            .inner
+            .patch_bolt12_offer(req)
+            .await?;
+        Ok(())
+    }
+
+    async fn delete_bolt12_offer(&self, offer: &str, signature: &str) -> Result<(), SdkError> {
+        self.get_boltz_client()
+            .await?
+            .inner
+            .delete_bolt12_offer(offer, signature)
+            .await?;
+        Ok(())
+    }
+
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {
+        let res = self
+            .get_boltz_client()
+            .await?
+            .inner
+            .get_bolt12_params()
+            .await?;
+        Ok(res)
+    }
+
+    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError> {
+        let res = self.get_boltz_client().await?.inner.get_nodes().await?;
+        Ok(res)
     }
 }

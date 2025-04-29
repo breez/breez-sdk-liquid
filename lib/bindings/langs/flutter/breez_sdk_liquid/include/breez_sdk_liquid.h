@@ -79,6 +79,11 @@ typedef struct wire_cst_check_message_request {
   struct wire_cst_list_prim_u_8_strict *signature;
 } wire_cst_check_message_request;
 
+typedef struct wire_cst_create_bolt_12_invoice_request {
+  struct wire_cst_list_prim_u_8_strict *offer;
+  struct wire_cst_list_prim_u_8_strict *invoice_request;
+} wire_cst_create_bolt_12_invoice_request;
+
 typedef struct wire_cst_fetch_payment_proposed_fees_request {
   struct wire_cst_list_prim_u_8_strict *swap_id;
 } wire_cst_fetch_payment_proposed_fees_request;
@@ -431,8 +436,8 @@ typedef struct wire_cst_prepare_send_request {
 
 typedef struct wire_cst_prepare_receive_response {
   int32_t payment_method;
-  struct wire_cst_receive_amount *amount;
   uint64_t fees_sat;
+  struct wire_cst_receive_amount *amount;
   uint64_t *min_payer_amount_sat;
   uint64_t *max_payer_amount_sat;
   double *swapper_feerate;
@@ -839,6 +844,10 @@ typedef struct wire_cst_check_message_response {
   bool is_valid;
 } wire_cst_check_message_response;
 
+typedef struct wire_cst_create_bolt_12_invoice_response {
+  struct wire_cst_list_prim_u_8_strict *invoice;
+} wire_cst_create_bolt_12_invoice_response;
+
 typedef struct wire_cst_wallet_info {
   uint64_t balance_sat;
   uint64_t pending_send_sat;
@@ -1242,6 +1251,10 @@ void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin(int
 WireSyncRust2DartDco frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message(uintptr_t that,
                                                                                                struct wire_cst_check_message_request *req);
 
+void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice(int64_t port_,
+                                                                                       uintptr_t that,
+                                                                                       struct wire_cst_create_bolt_12_invoice_request *req);
+
 void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect(int64_t port_,
                                                                             uintptr_t that);
 
@@ -1400,6 +1413,8 @@ struct wire_cst_check_message_request *frbgen_breez_liquid_cst_new_box_autoadd_c
 
 struct wire_cst_connect_request *frbgen_breez_liquid_cst_new_box_autoadd_connect_request(void);
 
+struct wire_cst_create_bolt_12_invoice_request *frbgen_breez_liquid_cst_new_box_autoadd_create_bolt_12_invoice_request(void);
+
 double *frbgen_breez_liquid_cst_new_box_autoadd_f_64(double value);
 
 struct wire_cst_fetch_payment_proposed_fees_request *frbgen_breez_liquid_cst_new_box_autoadd_fetch_payment_proposed_fees_request(void);
@@ -1530,6 +1545,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_buy_bitcoin_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_check_message_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_connect_request);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_create_bolt_12_invoice_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_f_64);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_fetch_payment_proposed_fees_request);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_cst_new_box_autoadd_get_payment_request);
@@ -1595,6 +1611,7 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_buy_bitcoin);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_check_message);
+    dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_disconnect);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache);
     dummy_var ^= ((int64_t) (void*) frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates);

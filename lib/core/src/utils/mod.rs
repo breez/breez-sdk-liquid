@@ -1,14 +1,18 @@
+pub(crate) mod bolt12;
+
 use std::str::FromStr;
 use std::time::Duration;
 
 use crate::ensure_sdk;
 use crate::error::{PaymentError, SdkResult};
 use crate::prelude::LiquidNetwork;
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, Result};
+use bip39::rand::{self, RngCore};
 use boltz_client::boltz::SubmarinePair;
 use boltz_client::util::secrets::Preimage;
-use boltz_client::ToHex;
+use boltz_client::{Keypair, ToHex};
 use lazy_static::lazy_static;
+use lwk_wollet::bitcoin::secp256k1::Message;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
 use lwk_wollet::elements::AssetId;
@@ -16,10 +20,9 @@ use lwk_wollet::elements::{
     LockTime::{self, *},
     Transaction,
 };
-use sdk_common::bitcoin::bech32;
-use sdk_common::bitcoin::bech32::FromBase32;
-use sdk_common::lightning_invoice::Bolt11Invoice;
-use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
+use lwk_wollet::hashes::{sha256, Hash};
+use lwk_wollet::secp256k1::schnorr::Signature;
+use sdk_common::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use web_time::{SystemTime, UNIX_EPOCH};
 
 lazy_static! {
@@ -51,6 +54,13 @@ pub(crate) fn generate_keypair() -> boltz_client::Keypair {
     boltz_client::Keypair::from_secret_key(&secp, &secret_key)
 }
 
+pub(crate) fn generate_entropy() -> [u8; 32] {
+    let mut entropy_bytes = [0u8; 32];
+    let mut rng = rand::thread_rng();
+    rng.fill_bytes(&mut entropy_bytes);
+    entropy_bytes
+}
+
 pub(crate) fn decode_keypair(secret_key: &str) -> SdkResult<boltz_client::Keypair> {
     let secp = boltz_client::Secp256k1::new();
     let secret_key = lwk_wollet::secp256k1::SecretKey::from_str(secret_key)?;
@@ -71,30 +81,39 @@ pub(crate) fn deserialize_tx_hex(tx_hex: &str) -> Result<Transaction> {
     )?)?)
 }
 
-/// Parsing logic that decodes a string into a [Bolt12Invoice].
-///
-/// It matches the encoding logic on Boltz side.
-pub(crate) fn parse_bolt12_invoice(invoice: &str) -> Result<Bolt12Invoice> {
-    let (hrp, data) = bech32::decode_without_checksum(invoice)?;
-    ensure!(hrp.as_str() == "lni", "Invalid HRP");
-
-    let data = Vec::<u8>::from_base32(&data)?;
-
-    sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice::try_from(data)
-        .map_err(|e| anyhow!("Failed to parse BOLT12: {e:?}"))
+pub(crate) fn sign_message_hash<S: AsRef<str>>(msg: S, keypair: &Keypair) -> Result<Signature> {
+    let msg_hash = sha256::Hash::hash(msg.as_ref().as_bytes());
+    Ok(keypair.sign_schnorr(Message::from_digest_slice(msg_hash.as_byte_array())?))
 }
 
 /// Parse and extract the destination pubkey from the invoice.
 /// The payee pubkey for Bolt11 and signing pubkey for Bolt12.
 pub(crate) fn get_invoice_destination_pubkey(invoice: &str, is_bolt12: bool) -> Result<String> {
     if is_bolt12 {
-        parse_bolt12_invoice(invoice).map(|i| i.signing_pubkey().to_hex())
+        bolt12::decode_invoice(invoice).map(|i| i.signing_pubkey().to_hex())
     } else {
         invoice
             .trim()
             .parse::<Bolt11Invoice>()
             .map(|i| sdk_common::prelude::invoice_pubkey(&i))
             .map_err(Into::into)
+    }
+}
+
+/// Parse and extract the description from the BOLT11/12 invoice
+pub(crate) fn get_invoice_description(invoice: &str) -> Result<Option<String>, PaymentError> {
+    let invoice = invoice.trim();
+    match Bolt11Invoice::from_str(invoice) {
+        Ok(invoice) => match invoice.description() {
+            Bolt11InvoiceDescription::Direct(d) => Ok(Some(d.to_string())),
+            Bolt11InvoiceDescription::Hash(_) => Ok(None),
+        },
+        Err(_) => match bolt12::decode_invoice(invoice) {
+            Ok(invoice) => Ok(invoice.description().map(|d| d.to_string())),
+            Err(e) => Err(PaymentError::InvalidInvoice {
+                err: format!("Could not parse invoice: {e:?}"),
+            }),
+        },
     }
 }
 
@@ -108,7 +127,7 @@ pub(crate) fn verify_payment_hash(
 
     let invoice_payment_hash = match Bolt11Invoice::from_str(invoice) {
         Ok(invoice) => Ok(invoice.payment_hash().to_string()),
-        Err(_) => match parse_bolt12_invoice(invoice) {
+        Err(_) => match bolt12::decode_invoice(invoice) {
             Ok(invoice) => Ok(invoice.payment_hash().to_string()),
             Err(e) => Err(PaymentError::InvalidInvoice {
                 err: format!("Could not parse invoice: {e:?}"),

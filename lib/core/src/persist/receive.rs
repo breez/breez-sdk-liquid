@@ -63,6 +63,7 @@ impl Persister {
         let rows_affected = con.execute(
             "UPDATE receive_swaps
             SET
+                bolt12_offer = :bolt12_offer,
                 description = :description,
                 claim_address = :claim_address,
                 claim_tx_id = :claim_tx_id,
@@ -76,6 +77,7 @@ impl Persister {
                 version = :version",
             named_params! {
                 ":id": &receive_swap.id,
+                ":bolt12_offer": &receive_swap.bolt12_offer,
                 ":description": &receive_swap.description,
                 ":claim_address": &receive_swap.claim_address,
                 ":claim_tx_id": &receive_swap.claim_tx_id,
@@ -140,6 +142,7 @@ impl Persister {
                 rs.create_response_json,
                 rs.claim_private_key,
                 rs.invoice,
+                rs.bolt12_offer,
                 rs.payment_hash,
                 rs.destination_pubkey,
                 rs.timeout_block_height,
@@ -193,25 +196,26 @@ impl Persister {
             create_response_json: row.get(2)?,
             claim_private_key: row.get(3)?,
             invoice: row.get(4)?,
-            payment_hash: row.get(5)?,
-            destination_pubkey: row.get(6)?,
-            timeout_block_height: row.get(7)?,
-            description: row.get(8)?,
-            payer_amount_sat: row.get(9)?,
-            receiver_amount_sat: row.get(10)?,
-            claim_fees_sat: row.get(11)?,
-            claim_address: row.get(12)?,
-            claim_tx_id: row.get(13)?,
-            lockup_tx_id: row.get(14)?,
-            mrh_address: row.get(15)?,
-            mrh_tx_id: row.get(16)?,
-            created_at: row.get(17)?,
-            state: row.get(18)?,
-            pair_fees_json: row.get(19)?,
+            bolt12_offer: row.get(5)?,
+            payment_hash: row.get(6)?,
+            destination_pubkey: row.get(7)?,
+            timeout_block_height: row.get(8)?,
+            description: row.get(9)?,
+            payer_amount_sat: row.get(10)?,
+            receiver_amount_sat: row.get(11)?,
+            claim_fees_sat: row.get(12)?,
+            claim_address: row.get(13)?,
+            claim_tx_id: row.get(14)?,
+            lockup_tx_id: row.get(15)?,
+            mrh_address: row.get(16)?,
+            mrh_tx_id: row.get(17)?,
+            created_at: row.get(18)?,
+            state: row.get(19)?,
+            pair_fees_json: row.get(20)?,
             metadata: SwapMetadata {
-                version: row.get(20)?,
-                last_updated_at: row.get(21)?,
-                is_local: row.get::<usize, Option<bool>>(22)?.unwrap_or(true),
+                version: row.get(21)?,
+                last_updated_at: row.get(22)?,
+                is_local: row.get::<usize, Option<bool>>(23)?.unwrap_or(true),
             },
         })
     }
@@ -385,7 +389,7 @@ impl InternalCreateReverseResponse {
     pub(crate) fn try_convert_from_boltz(
         boltz_create_response: &CreateReverseResponse,
         expected_swap_id: &str,
-        expected_invoice: &str,
+        expected_invoice: Option<&str>,
     ) -> Result<Self, PaymentError> {
         // Do not store the CreateResponse fields that are already stored separately
         // Before skipping them, ensure they match the separately stored ones
@@ -393,10 +397,15 @@ impl InternalCreateReverseResponse {
             boltz_create_response.id == expected_swap_id,
             PaymentError::PersistError
         );
-        ensure_sdk!(
-            boltz_create_response.invoice == expected_invoice,
-            PaymentError::PersistError
-        );
+        match (&boltz_create_response.invoice, expected_invoice) {
+            (Some(invoice), Some(expected_invoice)) => {
+                ensure_sdk!(invoice == expected_invoice, PaymentError::PersistError);
+            }
+            (None, None) => {}
+            _ => {
+                return Err(PaymentError::PersistError);
+            }
+        }
 
         let res = InternalCreateReverseResponse {
             swap_tree: boltz_create_response.swap_tree.clone().into(),

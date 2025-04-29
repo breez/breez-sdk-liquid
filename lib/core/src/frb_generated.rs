@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1264782025;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 464449310;
 
 // Section: executor
 
@@ -268,6 +268,55 @@ fn wire__crate__bindings__BindingLiquidSdk_check_message_impl(
                     crate::bindings::BindingLiquidSdk::check_message(&*api_that_guard, api_req)?;
                 Ok(output_ok)
             })())
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::CreateBolt12InvoiceRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_create_bolt12_invoice",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::create_bolt12_invoice(
+                            &*api_that_guard,
+                            api_req,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
         },
     )
 }
@@ -2185,8 +2234,10 @@ impl CstDecode<crate::model::PaymentMethod> for i32 {
     fn cst_decode(self) -> crate::model::PaymentMethod {
         match self {
             0 => crate::model::PaymentMethod::Lightning,
-            1 => crate::model::PaymentMethod::BitcoinAddress,
-            2 => crate::model::PaymentMethod::LiquidAddress,
+            1 => crate::model::PaymentMethod::Bolt11Invoice,
+            2 => crate::model::PaymentMethod::Bolt12Offer,
+            3 => crate::model::PaymentMethod::BitcoinAddress,
+            4 => crate::model::PaymentMethod::LiquidAddress,
             _ => unreachable!("Invalid variant for PaymentMethod: {}", self),
         }
     }
@@ -2621,6 +2672,28 @@ impl SseDecode for crate::model::ConnectRequest {
             mnemonic: var_mnemonic,
             passphrase: var_passphrase,
             seed: var_seed,
+        };
+    }
+}
+
+impl SseDecode for crate::model::CreateBolt12InvoiceRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_offer = <String>::sse_decode(deserializer);
+        let mut var_invoiceRequest = <String>::sse_decode(deserializer);
+        return crate::model::CreateBolt12InvoiceRequest {
+            offer: var_offer,
+            invoice_request: var_invoiceRequest,
+        };
+    }
+}
+
+impl SseDecode for crate::model::CreateBolt12InvoiceResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_invoice = <String>::sse_decode(deserializer);
+        return crate::model::CreateBolt12InvoiceResponse {
+            invoice: var_invoice,
         };
     }
 }
@@ -4122,8 +4195,10 @@ impl SseDecode for crate::model::PaymentMethod {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
             0 => crate::model::PaymentMethod::Lightning,
-            1 => crate::model::PaymentMethod::BitcoinAddress,
-            2 => crate::model::PaymentMethod::LiquidAddress,
+            1 => crate::model::PaymentMethod::Bolt11Invoice,
+            2 => crate::model::PaymentMethod::Bolt12Offer,
+            3 => crate::model::PaymentMethod::BitcoinAddress,
+            4 => crate::model::PaymentMethod::LiquidAddress,
             _ => unreachable!("Invalid variant for PaymentMethod: {}", inner),
         };
     }
@@ -4264,15 +4339,15 @@ impl SseDecode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_paymentMethod = <crate::model::PaymentMethod>::sse_decode(deserializer);
-        let mut var_amount = <Option<crate::model::ReceiveAmount>>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_amount = <Option<crate::model::ReceiveAmount>>::sse_decode(deserializer);
         let mut var_minPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_maxPayerAmountSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_swapperFeerate = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareReceiveResponse {
             payment_method: var_paymentMethod,
-            amount: var_amount,
             fees_sat: var_feesSat,
+            amount: var_amount,
             min_payer_amount_sat: var_minPayerAmountSat,
             max_payer_amount_sat: var_maxPayerAmountSat,
             swapper_feerate: var_swapperFeerate,
@@ -5270,6 +5345,44 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::ConnectRequest>
     for crate::model::ConnectRequest
 {
     fn into_into_dart(self) -> crate::model::ConnectRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::CreateBolt12InvoiceRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.offer.into_into_dart().into_dart(),
+            self.invoice_request.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::CreateBolt12InvoiceRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::CreateBolt12InvoiceRequest>
+    for crate::model::CreateBolt12InvoiceRequest
+{
+    fn into_into_dart(self) -> crate::model::CreateBolt12InvoiceRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::CreateBolt12InvoiceResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.invoice.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::CreateBolt12InvoiceResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::CreateBolt12InvoiceResponse>
+    for crate::model::CreateBolt12InvoiceResponse
+{
+    fn into_into_dart(self) -> crate::model::CreateBolt12InvoiceResponse {
         self
     }
 }
@@ -6479,8 +6592,10 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentMethod {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
             Self::Lightning => 0.into_dart(),
-            Self::BitcoinAddress => 1.into_dart(),
-            Self::LiquidAddress => 2.into_dart(),
+            Self::Bolt11Invoice => 1.into_dart(),
+            Self::Bolt12Offer => 2.into_dart(),
+            Self::BitcoinAddress => 3.into_dart(),
+            Self::LiquidAddress => 4.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -6693,8 +6808,8 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareReceiveResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.payment_method.into_into_dart().into_dart(),
-            self.amount.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.min_payer_amount_sat.into_into_dart().into_dart(),
             self.max_payer_amount_sat.into_into_dart().into_dart(),
             self.swapper_feerate.into_into_dart().into_dart(),
@@ -7621,6 +7736,21 @@ impl SseEncode for crate::model::ConnectRequest {
         <Option<String>>::sse_encode(self.mnemonic, serializer);
         <Option<String>>::sse_encode(self.passphrase, serializer);
         <Option<Vec<u8>>>::sse_encode(self.seed, serializer);
+    }
+}
+
+impl SseEncode for crate::model::CreateBolt12InvoiceRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.offer, serializer);
+        <String>::sse_encode(self.invoice_request, serializer);
+    }
+}
+
+impl SseEncode for crate::model::CreateBolt12InvoiceResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.invoice, serializer);
     }
 }
 
@@ -8839,8 +8969,10 @@ impl SseEncode for crate::model::PaymentMethod {
         <i32>::sse_encode(
             match self {
                 crate::model::PaymentMethod::Lightning => 0,
-                crate::model::PaymentMethod::BitcoinAddress => 1,
-                crate::model::PaymentMethod::LiquidAddress => 2,
+                crate::model::PaymentMethod::Bolt11Invoice => 1,
+                crate::model::PaymentMethod::Bolt12Offer => 2,
+                crate::model::PaymentMethod::BitcoinAddress => 3,
+                crate::model::PaymentMethod::LiquidAddress => 4,
                 _ => {
                     unimplemented!("");
                 }
@@ -8956,8 +9088,8 @@ impl SseEncode for crate::model::PrepareReceiveResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::PaymentMethod>::sse_encode(self.payment_method, serializer);
-        <Option<crate::model::ReceiveAmount>>::sse_encode(self.amount, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
+        <Option<crate::model::ReceiveAmount>>::sse_encode(self.amount, serializer);
         <Option<u64>>::sse_encode(self.min_payer_amount_sat, serializer);
         <Option<u64>>::sse_encode(self.max_payer_amount_sat, serializer);
         <Option<f64>>::sse_encode(self.swapper_feerate, serializer);
@@ -9724,6 +9856,15 @@ mod io {
             CstDecode::<crate::model::ConnectRequest>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::CreateBolt12InvoiceRequest>
+        for *mut wire_cst_create_bolt_12_invoice_request
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::CreateBolt12InvoiceRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::CreateBolt12InvoiceRequest>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<f64> for *mut f64 {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> f64 {
@@ -10087,6 +10228,27 @@ mod io {
                 mnemonic: self.mnemonic.cst_decode(),
                 passphrase: self.passphrase.cst_decode(),
                 seed: self.seed.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::CreateBolt12InvoiceRequest>
+        for wire_cst_create_bolt_12_invoice_request
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::CreateBolt12InvoiceRequest {
+            crate::model::CreateBolt12InvoiceRequest {
+                offer: self.offer.cst_decode(),
+                invoice_request: self.invoice_request.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::CreateBolt12InvoiceResponse>
+        for wire_cst_create_bolt_12_invoice_response
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::CreateBolt12InvoiceResponse {
+            crate::model::CreateBolt12InvoiceResponse {
+                invoice: self.invoice.cst_decode(),
             }
         }
     }
@@ -11156,8 +11318,8 @@ mod io {
         fn cst_decode(self) -> crate::model::PrepareReceiveResponse {
             crate::model::PrepareReceiveResponse {
                 payment_method: self.payment_method.cst_decode(),
-                amount: self.amount.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
+                amount: self.amount.cst_decode(),
                 min_payer_amount_sat: self.min_payer_amount_sat.cst_decode(),
                 max_payer_amount_sat: self.max_payer_amount_sat.cst_decode(),
                 swapper_feerate: self.swapper_feerate.cst_decode(),
@@ -11809,6 +11971,31 @@ mod io {
         }
     }
     impl Default for wire_cst_connect_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_create_bolt_12_invoice_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                offer: core::ptr::null_mut(),
+                invoice_request: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_create_bolt_12_invoice_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_create_bolt_12_invoice_response {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                invoice: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_create_bolt_12_invoice_response {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -12519,8 +12706,8 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 payment_method: Default::default(),
-                amount: core::ptr::null_mut(),
                 fees_sat: Default::default(),
+                amount: core::ptr::null_mut(),
                 min_payer_amount_sat: core::ptr::null_mut(),
                 max_payer_amount_sat: core::ptr::null_mut(),
                 swapper_feerate: core::ptr::null_mut(),
@@ -12940,6 +13127,15 @@ mod io {
         req: *mut wire_cst_check_message_request,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__bindings__BindingLiquidSdk_check_message_impl(that, req)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice(
+        port_: i64,
+        that: usize,
+        req: *mut wire_cst_create_bolt_12_invoice_request,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_create_bolt12_invoice_impl(port_, that, req)
     }
 
     #[unsafe(no_mangle)]
@@ -13368,6 +13564,14 @@ mod io {
     ) -> *mut wire_cst_connect_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_connect_request::new_with_null_ptr(),
+        )
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_create_bolt_12_invoice_request(
+    ) -> *mut wire_cst_create_bolt_12_invoice_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_create_bolt_12_invoice_request::new_with_null_ptr(),
         )
     }
 
@@ -14080,6 +14284,17 @@ mod io {
         mnemonic: *mut wire_cst_list_prim_u_8_strict,
         passphrase: *mut wire_cst_list_prim_u_8_strict,
         seed: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_create_bolt_12_invoice_request {
+        offer: *mut wire_cst_list_prim_u_8_strict,
+        invoice_request: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_create_bolt_12_invoice_response {
+        invoice: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14966,8 +15181,8 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_receive_response {
         payment_method: i32,
-        amount: *mut wire_cst_receive_amount,
         fees_sat: u64,
+        amount: *mut wire_cst_receive_amount,
         min_payer_amount_sat: *mut u64,
         max_payer_amount_sat: *mut u64,
         swapper_feerate: *mut f64,

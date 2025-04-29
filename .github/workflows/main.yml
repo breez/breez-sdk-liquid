@@ -48,7 +48,7 @@ jobs:
 
       - name: Clippy bindings
         working-directory: lib/bindings 
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --all-targets -- -A deprecated -D warnings
 
       - name: Clippy core
         working-directory: lib/core 
@@ -216,7 +216,7 @@ jobs:
         with:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Start regtest environment
         working-directory: regtest
         run: sh start.sh

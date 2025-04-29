@@ -328,5 +328,15 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         ALTER TABLE send_swaps ADD COLUMN refund_address TEXT;
         ALTER TABLE chain_swaps ADD COLUMN refund_address TEXT;
         ",
+        "
+        CREATE TABLE IF NOT EXISTS bolt12_offers(
+            id TEXT NOT NULL PRIMARY KEY,
+            description TEXT NOT NULL,
+            private_key TEXT NOT NULL,
+            webhook_url TEXT,
+            created_at INTEGER NOT NULL
+        ) STRICT;
+        ",
+        "ALTER TABLE receive_swaps ADD COLUMN bolt12_offer TEXT;",
     ]
 }

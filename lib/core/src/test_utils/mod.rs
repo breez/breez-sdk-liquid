@@ -2,6 +2,7 @@
 
 use bip39::rand::{self, distributions::Alphanumeric, Rng};
 
+pub(crate) mod bolt12_offer;
 pub(crate) mod chain;
 pub(crate) mod chain_swap;
 pub mod persist;

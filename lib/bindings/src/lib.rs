@@ -136,6 +136,13 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.receive_payment(&req))
     }
 
+    pub fn create_bolt12_invoice(
+        &self,
+        req: CreateBolt12InvoiceRequest,
+    ) -> Result<CreateBolt12InvoiceResponse, PaymentError> {
+        rt().block_on(self.sdk.create_bolt12_invoice(&req))
+    }
+
     pub fn fetch_lightning_limits(&self) -> Result<LightningPaymentLimitsResponse, PaymentError> {
         rt().block_on(self.sdk.fetch_lightning_limits())
     }
