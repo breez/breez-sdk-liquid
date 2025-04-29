@@ -81,7 +81,7 @@ jobs:
           path: lib/bindings/langs/python/dist/*.whl
 
   build-linux-wheels:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         arch: [x86_64, aarch64]

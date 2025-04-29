@@ -44,7 +44,7 @@ jobs:
 
   build:
     if: ${{ !inputs.use-dummy-binaries }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: build ${{ matrix.target }}${{ matrix.uniffi }}
     needs: setup
     strategy:
