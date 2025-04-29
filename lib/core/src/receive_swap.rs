@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::str::FromStr;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use boltz_client::swaps::boltz::RevSwapStates;
 use boltz_client::{boltz, Serialize, ToHex};
 use log::{debug, error, info, warn};
@@ -120,19 +120,28 @@ impl ReceiveSwapHandler {
                 let tx_hex = transaction.hex.ok_or(anyhow!(
                     "Missing lockup transaction hex in swap status update"
                 ))?;
-                let lockup_tx = match self
-                    .verify_lockup_tx(&receive_swap, &transaction.id, &tx_hex, false)
-                    .await
-                {
-                    Ok(lockup_tx) => lockup_tx,
-                    Err(e) => {
+                let lockup_tx = utils::deserialize_tx_hex(&tx_hex)
+                    .context("Failed to deserialize tx hex in swap status update")?;
+                debug!(
+                    "Broadcasting lockup tx received in swap status update for receive swap {id}"
+                );
+                if let Err(e) = self.liquid_chain_service.broadcast(&lockup_tx).await {
+                    warn!(
+                        "Failed to broadcast lockup tx in swap status update: {e:?} - maybe the \
+                    tx depends on inputs that haven't been seen yet, falling back to waiting for \
+                    it to appear in the mempool"
+                    );
+                    if let Err(e) = self
+                        .verify_lockup_tx_status(&receive_swap, &transaction.id, &tx_hex, false)
+                        .await
+                    {
                         return Err(anyhow!(
-                        "Swapper mempool reported lockup could not be verified. txid: {}, err: {}",
-                        transaction.id,
-                        e
-                    ));
+                            "Swapper mempool reported lockup could not be verified. txid: {}, err: {}",
+                            transaction.id,
+                            e
+                        ));
                     }
-                };
+                }
 
                 if let Err(e) = self
                     .verify_lockup_tx_amount(&receive_swap, &lockup_tx)
@@ -203,7 +212,7 @@ impl ReceiveSwapHandler {
                     "Missing lockup transaction hex in swap status update"
                 ))?;
                 let lockup_tx = match self
-                    .verify_lockup_tx(&receive_swap, &transaction.id, &tx_hex, true)
+                    .verify_lockup_tx_status(&receive_swap, &transaction.id, &tx_hex, true)
                     .await
                 {
                     Ok(lockup_tx) => lockup_tx,
@@ -463,7 +472,7 @@ impl ReceiveSwapHandler {
             .serialize()
             .to_lower_hex_string();
         let lockup_tx = self
-            .verify_lockup_tx(receive_swap, &tx_id, &tx_hex, true)
+            .verify_lockup_tx_status(receive_swap, &tx_id, &tx_hex, true)
             .await?;
         if let Err(e) = self.verify_lockup_tx_amount(receive_swap, &lockup_tx).await {
             self.update_swap_info(swap_id, Failed, None, None, None, None)?;
@@ -518,7 +527,7 @@ impl ReceiveSwapHandler {
         }
     }
 
-    async fn verify_lockup_tx(
+    async fn verify_lockup_tx_status(
         &self,
         receive_swap: &ReceiveSwap,
         tx_id: &str,
