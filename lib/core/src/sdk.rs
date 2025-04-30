@@ -3995,9 +3995,9 @@ impl LiquidSdk {
         breez_api_key: Option<String>,
     ) -> Result<Config, SdkError> {
         let config = match network {
-            LiquidNetwork::Mainnet => Config::mainnet(breez_api_key),
-            LiquidNetwork::Testnet => Config::testnet(breez_api_key),
-            LiquidNetwork::Regtest => Config::regtest(),
+            LiquidNetwork::Mainnet => Config::mainnet_esplora(breez_api_key),
+            LiquidNetwork::Testnet => Config::testnet_esplora(breez_api_key),
+            LiquidNetwork::Regtest => Config::regtest_esplora(),
         };
 
         Ok(config)
