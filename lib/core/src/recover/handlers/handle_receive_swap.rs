@@ -45,14 +45,28 @@ impl ReceiveSwapHandler {
         let swap_id = &receive_swap.id.clone();
         debug!("[Recover Receive] Recovering data for swap {swap_id}");
 
-        let mrh_script = ElementsAddress::from_str(&receive_swap.mrh_address)
-            .map_err(|_| anyhow::anyhow!("Invalid MRH address for swap {swap_id}"))?
-            .script_pubkey();
+        let mrh_script = if !receive_swap.mrh_address.is_empty() {
+            match ElementsAddress::from_str(&receive_swap.mrh_address) {
+                Ok(addr) => Some(addr.script_pubkey()),
+                Err(e) => {
+                    warn!(
+                        "Invalid MRH address format for swap {}: ({:?}). Skipping MRH recovery. Address: {}",
+                        swap_id,
+                        e,
+                        receive_swap.mrh_address
+                    );
+                    None
+                }
+            }
+        } else {
+            warn!("Swap {swap_id} has empty MRH address. Continuing recovery with swap data only.");
+            None
+        };
+
         let claim_script = receive_swap.claim_script()?;
         let history = ReceiveSwapHistory {
-            lbtc_mrh_script_history: context
-                .lbtc_script_to_history_map
-                .get(&mrh_script)
+            lbtc_mrh_script_history: mrh_script
+                .and_then(|script| context.lbtc_script_to_history_map.get(&script))
                 .cloned()
                 .unwrap_or_default()
                 .iter()
