@@ -973,6 +973,10 @@ typedef struct wire_cst_LnUrlPayError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LnUrlPayError_Generic;
 
+typedef struct wire_cst_LnUrlPayError_InsufficientBalance {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InsufficientBalance;
+
 typedef struct wire_cst_LnUrlPayError_InvalidAmount {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LnUrlPayError_InvalidAmount;
@@ -1015,6 +1019,7 @@ typedef struct wire_cst_LnUrlPayError_ServiceConnectivity {
 
 typedef union LnUrlPayErrorKind {
   struct wire_cst_LnUrlPayError_Generic Generic;
+  struct wire_cst_LnUrlPayError_InsufficientBalance InsufficientBalance;
   struct wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
   struct wire_cst_LnUrlPayError_InvalidInvoice InvalidInvoice;
   struct wire_cst_LnUrlPayError_InvalidNetwork InvalidNetwork;

@@ -3,8 +3,8 @@ use boltz_client::{
     boltz::{
         ChainPair, CreateBolt12OfferRequest, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
-        CreateSubmarineResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
-        SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest,
+        CreateSubmarineResponse, GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse,
+        ReversePair, SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest,
     },
     network::Chain,
     Amount,
@@ -129,7 +129,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
         &self,
         offer: &str,
         amount_sat: u64,
-    ) -> Result<String, PaymentError>;
+    ) -> Result<GetBolt12FetchResponse, PaymentError>;
 
     async fn create_bolt12_offer(&self, req: CreateBolt12OfferRequest) -> Result<(), SdkError>;
 

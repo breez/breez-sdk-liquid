@@ -3,6 +3,7 @@ use std::ops::Not as _;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
+use boltz_client::swaps::magic_routing::verify_mrh_signature;
 use boltz_client::Secp256k1;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
@@ -27,7 +28,6 @@ use sdk_common::lightning_with_bolt12::blinded_path::payment::{
     BlindedPaymentPath, Bolt12OfferContext, PaymentConstraints, PaymentContext,
     UnauthenticatedReceiveTlvs,
 };
-use sdk_common::lightning_with_bolt12::blinded_path::{self, IntroductionNode};
 use sdk_common::lightning_with_bolt12::bolt11_invoice::PaymentSecret;
 use sdk_common::lightning_with_bolt12::ln::inbound_payment::ExpandedKey;
 use sdk_common::lightning_with_bolt12::offers::invoice_request::InvoiceRequestFields;
@@ -1615,12 +1615,12 @@ impl LiquidSdk {
                 bip353_address,
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
-                let bolt12_invoice = self
+                let bolt12_info = self
                     .swapper
                     .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
                     .await?;
                 let mut response = self
-                    .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, fees_sat)
+                    .pay_bolt12_invoice(offer, *receiver_amount_sat, bolt12_info, fees_sat)
                     .await?;
                 self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
@@ -1720,11 +1720,14 @@ impl LiquidSdk {
         &self,
         offer: &LNOffer,
         user_specified_receiver_amount_sat: u64,
-        invoice_str: &str,
+        bolt12_info: GetBolt12FetchResponse,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let invoice =
-            self.validate_bolt12_invoice(offer, user_specified_receiver_amount_sat, invoice_str)?;
+        let invoice = self.validate_bolt12_invoice(
+            offer,
+            user_specified_receiver_amount_sat,
+            &bolt12_info.invoice,
+        )?;
 
         let receiver_amount_sat = invoice.amount_msats() / 1_000;
         let payer_amount_sat = receiver_amount_sat + fees_sat;
@@ -1733,13 +1736,18 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        match self.swapper.check_for_mrh(invoice_str).await? {
+        match bolt12_info.magic_routing_hint {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
-            Some((address, _)) => {
-                info!("Found MRH for L-BTC address {address}, invoice amount_sat {receiver_amount_sat}");
+            Some(MagicRoutingHint { bip21, signature }) => {
+                info!(
+                    "Found MRH for L-BTC address {bip21}, invoice amount_sat {receiver_amount_sat}"
+                );
+                let signing_pubkey = invoice.signing_pubkey().to_string();
+                verify_mrh_signature(&bip21, &signing_pubkey, &signature)?;
+
                 self.pay_liquid(
                     LiquidAddressData {
-                        address,
+                        address: bip21,
                         network: self.config.network.into(),
                         asset_id: None,
                         amount: None,
@@ -1757,7 +1765,7 @@ impl LiquidSdk {
             // If no MRH found, perform usual swap
             None => {
                 self.send_payment_via_swap(
-                    invoice_str,
+                    &bolt12_info.invoice,
                     Some(offer.offer.clone()),
                     &invoice.payment_hash().to_string(),
                     invoice.description().map(|desc| desc.to_string()),
@@ -2933,8 +2941,8 @@ impl LiquidSdk {
         }
         .authenticate(nonce, &expanded_key);
 
-        // Configure the blinded payment paths to include the MRH address
-        let default_payment_path = BlindedPaymentPath::one_hop(
+        // Configure the blinded payment path
+        let payment_path = BlindedPaymentPath::one_hop(
             cln_node.public_key,
             payee_tlvs.clone(),
             params.min_cltv as u16,
@@ -2946,39 +2954,11 @@ impl LiquidSdk {
                 "Failed to create BOLT12 invoice: Error creating blinded payment path",
             )
         })?;
-        let mrh_payment_path = {
-            let channel_id = params
-                .magic_routing_hint
-                .channel_id
-                .parse::<u64>()
-                .map_err(|e| {
-                    PaymentError::generic(format!("Failed to create BOLT12 invoice: {e}"))
-                })?;
-            BlindedPaymentPath::new(
-                &[],
-                Some(IntroductionNode::DirectedShortChannelId(
-                    blinded_path::Direction::NodeOne,
-                    channel_id,
-                )),
-                cln_node.public_key,
-                payee_tlvs.clone(),
-                u64::MAX,
-                params.min_cltv as u16,
-                &entropy_source,
-                &secp,
-            )
-            .map_err(|_| {
-                PaymentError::generic(
-                    "Failed to create BOLT12 invoice: Error creating blinded MRH payment path",
-                )
-            })?
-        };
-        let payment_paths = vec![default_payment_path, mrh_payment_path];
 
         // Create the invoice
         let invoice = invoice_request
             .respond_with_no_std(
-                payment_paths,
+                vec![payment_path],
                 PaymentHash(preimage_hash),
                 SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| {
                     PaymentError::generic(format!("Failed to create BOLT12 invoice: {e:?}"))

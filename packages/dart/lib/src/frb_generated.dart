@@ -2449,24 +2449,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 1:
         return LnUrlPayError_Generic(err: dco_decode_String(raw[1]));
       case 2:
-        return LnUrlPayError_InvalidAmount(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_InsufficientBalance(err: dco_decode_String(raw[1]));
       case 3:
-        return LnUrlPayError_InvalidInvoice(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_InvalidAmount(err: dco_decode_String(raw[1]));
       case 4:
-        return LnUrlPayError_InvalidNetwork(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_InvalidInvoice(err: dco_decode_String(raw[1]));
       case 5:
-        return LnUrlPayError_InvalidUri(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_InvalidNetwork(err: dco_decode_String(raw[1]));
       case 6:
-        return LnUrlPayError_InvoiceExpired(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_InvalidUri(err: dco_decode_String(raw[1]));
       case 7:
-        return LnUrlPayError_PaymentFailed(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_InvoiceExpired(err: dco_decode_String(raw[1]));
       case 8:
-        return LnUrlPayError_PaymentTimeout(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_PaymentFailed(err: dco_decode_String(raw[1]));
       case 9:
-        return LnUrlPayError_RouteNotFound(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_PaymentTimeout(err: dco_decode_String(raw[1]));
       case 10:
-        return LnUrlPayError_RouteTooExpensive(err: dco_decode_String(raw[1]));
+        return LnUrlPayError_RouteNotFound(err: dco_decode_String(raw[1]));
       case 11:
+        return LnUrlPayError_RouteTooExpensive(err: dco_decode_String(raw[1]));
+      case 12:
         return LnUrlPayError_ServiceConnectivity(err: dco_decode_String(raw[1]));
       default:
         throw Exception("unreachable");
@@ -4674,32 +4676,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return LnUrlPayError_Generic(err: var_err);
       case 2:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_InvalidAmount(err: var_err);
+        return LnUrlPayError_InsufficientBalance(err: var_err);
       case 3:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_InvalidInvoice(err: var_err);
+        return LnUrlPayError_InvalidAmount(err: var_err);
       case 4:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_InvalidNetwork(err: var_err);
+        return LnUrlPayError_InvalidInvoice(err: var_err);
       case 5:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_InvalidUri(err: var_err);
+        return LnUrlPayError_InvalidNetwork(err: var_err);
       case 6:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_InvoiceExpired(err: var_err);
+        return LnUrlPayError_InvalidUri(err: var_err);
       case 7:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_PaymentFailed(err: var_err);
+        return LnUrlPayError_InvoiceExpired(err: var_err);
       case 8:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_PaymentTimeout(err: var_err);
+        return LnUrlPayError_PaymentFailed(err: var_err);
       case 9:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_RouteNotFound(err: var_err);
+        return LnUrlPayError_PaymentTimeout(err: var_err);
       case 10:
         var var_err = sse_decode_String(deserializer);
-        return LnUrlPayError_RouteTooExpensive(err: var_err);
+        return LnUrlPayError_RouteNotFound(err: var_err);
       case 11:
+        var var_err = sse_decode_String(deserializer);
+        return LnUrlPayError_RouteTooExpensive(err: var_err);
+      case 12:
         var var_err = sse_decode_String(deserializer);
         return LnUrlPayError_ServiceConnectivity(err: var_err);
       default:
@@ -7041,35 +7046,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case LnUrlPayError_Generic(err: final err):
         sse_encode_i_32(1, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_InvalidAmount(err: final err):
+      case LnUrlPayError_InsufficientBalance(err: final err):
         sse_encode_i_32(2, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_InvalidInvoice(err: final err):
+      case LnUrlPayError_InvalidAmount(err: final err):
         sse_encode_i_32(3, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_InvalidNetwork(err: final err):
+      case LnUrlPayError_InvalidInvoice(err: final err):
         sse_encode_i_32(4, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_InvalidUri(err: final err):
+      case LnUrlPayError_InvalidNetwork(err: final err):
         sse_encode_i_32(5, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_InvoiceExpired(err: final err):
+      case LnUrlPayError_InvalidUri(err: final err):
         sse_encode_i_32(6, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_PaymentFailed(err: final err):
+      case LnUrlPayError_InvoiceExpired(err: final err):
         sse_encode_i_32(7, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_PaymentTimeout(err: final err):
+      case LnUrlPayError_PaymentFailed(err: final err):
         sse_encode_i_32(8, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_RouteNotFound(err: final err):
+      case LnUrlPayError_PaymentTimeout(err: final err):
         sse_encode_i_32(9, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_RouteTooExpensive(err: final err):
+      case LnUrlPayError_RouteNotFound(err: final err):
         sse_encode_i_32(10, serializer);
         sse_encode_String(err, serializer);
-      case LnUrlPayError_ServiceConnectivity(err: final err):
+      case LnUrlPayError_RouteTooExpensive(err: final err):
         sse_encode_i_32(11, serializer);
+        sse_encode_String(err, serializer);
+      case LnUrlPayError_ServiceConnectivity(err: final err):
+        sse_encode_i_32(12, serializer);
         sse_encode_String(err, serializer);
     }
   }

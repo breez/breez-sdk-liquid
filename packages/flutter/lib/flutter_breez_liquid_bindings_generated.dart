@@ -5501,6 +5501,10 @@ final class wire_cst_LnUrlPayError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_LnUrlPayError_InsufficientBalance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_LnUrlPayError_InvalidAmount extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -5543,6 +5547,8 @@ final class wire_cst_LnUrlPayError_ServiceConnectivity extends ffi.Struct {
 
 final class LnUrlPayErrorKind extends ffi.Union {
   external wire_cst_LnUrlPayError_Generic Generic;
+
+  external wire_cst_LnUrlPayError_InsufficientBalance InsufficientBalance;
 
   external wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
 
