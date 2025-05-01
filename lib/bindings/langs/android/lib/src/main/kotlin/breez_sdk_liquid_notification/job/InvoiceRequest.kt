@@ -2,6 +2,7 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.CreateBolt12InvoiceRequest
+import breez_sdk_liquid.PaymentException
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid_notification.Constants.DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE
@@ -28,6 +29,11 @@ data class InvoiceRequestRequest(
 @Serializable
 data class InvoiceRequestResponse(
     val invoice: String,
+)
+
+@Serializable
+data class InvoiceErrorResponse(
+    val error: String,
 )
 
 class InvoiceRequestJob(
@@ -61,6 +67,15 @@ class InvoiceRequestJob(
             )
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process invoice request: ${e.message}", "WARN")
+            if (request != null) {
+                val error = when (e) {
+                    is PaymentException.AmountOutOfRange -> e.message ?: "Amount out of range"
+                    is PaymentException.AmountMissing -> "Amount missing in invoice request"
+                    else -> "Failed to create invoice"
+                }
+                val response = InvoiceErrorResponse(error)
+                replyServer(Json.encodeToString(response), request.replyURL)
+            }
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_REPLACEABLE,

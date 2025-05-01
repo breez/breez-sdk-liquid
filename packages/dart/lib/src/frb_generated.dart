@@ -2884,7 +2884,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return PaymentError_PaymentInProgress();
       case 3:
-        return PaymentError_AmountOutOfRange();
+        return PaymentError_AmountOutOfRange(min: dco_decode_u_64(raw[1]), max: dco_decode_u_64(raw[2]));
       case 4:
         return PaymentError_AmountMissing(err: dco_decode_String(raw[1]));
       case 5:
@@ -5282,7 +5282,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return PaymentError_PaymentInProgress();
       case 3:
-        return PaymentError_AmountOutOfRange();
+        var var_min = sse_decode_u_64(deserializer);
+        var var_max = sse_decode_u_64(deserializer);
+        return PaymentError_AmountOutOfRange(min: var_min, max: var_max);
       case 4:
         var var_err = sse_decode_String(deserializer);
         return PaymentError_AmountMissing(err: var_err);
@@ -7567,8 +7569,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(1, serializer);
       case PaymentError_PaymentInProgress():
         sse_encode_i_32(2, serializer);
-      case PaymentError_AmountOutOfRange():
+      case PaymentError_AmountOutOfRange(min: final min, max: final max):
         sse_encode_i_32(3, serializer);
+        sse_encode_u_64(min, serializer);
+        sse_encode_u_64(max, serializer);
       case PaymentError_AmountMissing(err: final err):
         sse_encode_i_32(4, serializer);
         sse_encode_String(err, serializer);

@@ -4115,7 +4115,12 @@ impl SseDecode for crate::error::PaymentError {
                 return crate::error::PaymentError::PaymentInProgress;
             }
             3 => {
-                return crate::error::PaymentError::AmountOutOfRange;
+                let mut var_min = <u64>::sse_decode(deserializer);
+                let mut var_max = <u64>::sse_decode(deserializer);
+                return crate::error::PaymentError::AmountOutOfRange {
+                    min: var_min,
+                    max: var_max,
+                };
             }
             4 => {
                 let mut var_err = <String>::sse_decode(deserializer);
@@ -6534,7 +6539,12 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             crate::error::PaymentError::AlreadyClaimed => [0.into_dart()].into_dart(),
             crate::error::PaymentError::AlreadyPaid => [1.into_dart()].into_dart(),
             crate::error::PaymentError::PaymentInProgress => [2.into_dart()].into_dart(),
-            crate::error::PaymentError::AmountOutOfRange => [3.into_dart()].into_dart(),
+            crate::error::PaymentError::AmountOutOfRange { min, max } => [
+                3.into_dart(),
+                min.into_into_dart().into_dart(),
+                max.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::error::PaymentError::AmountMissing { err } => {
                 [4.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
@@ -8891,8 +8901,10 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::PaymentInProgress => {
                 <i32>::sse_encode(2, serializer);
             }
-            crate::error::PaymentError::AmountOutOfRange => {
+            crate::error::PaymentError::AmountOutOfRange { min, max } => {
                 <i32>::sse_encode(3, serializer);
+                <u64>::sse_encode(min, serializer);
+                <u64>::sse_encode(max, serializer);
             }
             crate::error::PaymentError::AmountMissing { err } => {
                 <i32>::sse_encode(4, serializer);
@@ -11169,7 +11181,13 @@ mod io {
                 0 => crate::error::PaymentError::AlreadyClaimed,
                 1 => crate::error::PaymentError::AlreadyPaid,
                 2 => crate::error::PaymentError::PaymentInProgress,
-                3 => crate::error::PaymentError::AmountOutOfRange,
+                3 => {
+                    let ans = unsafe { self.kind.AmountOutOfRange };
+                    crate::error::PaymentError::AmountOutOfRange {
+                        min: ans.min.cst_decode(),
+                        max: ans.max.cst_decode(),
+                    }
+                }
                 4 => {
                     let ans = unsafe { self.kind.AmountMissing };
                     crate::error::PaymentError::AmountMissing {
@@ -15064,6 +15082,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub union PaymentErrorKind {
+        AmountOutOfRange: wire_cst_PaymentError_AmountOutOfRange,
         AmountMissing: wire_cst_PaymentError_AmountMissing,
         AssetError: wire_cst_PaymentError_AssetError,
         InvalidNetwork: wire_cst_PaymentError_InvalidNetwork,
@@ -15075,6 +15094,12 @@ mod io {
         SendError: wire_cst_PaymentError_SendError,
         SignerError: wire_cst_PaymentError_SignerError,
         nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentError_AmountOutOfRange {
+        min: u64,
+        max: u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

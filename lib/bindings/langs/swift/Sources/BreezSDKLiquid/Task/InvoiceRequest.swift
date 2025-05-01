@@ -15,6 +15,14 @@ struct InvoiceRequestResponse: Decodable, Encodable {
     }
 }
 
+struct InvoiceErrorResponse: Decodable, Encodable {
+    let error: String
+    
+    init(error: String) {
+        self.error = error
+    }
+}
+
 class InvoiceRequestTask : ReplyableTask {
     fileprivate let TAG = "InvoiceRequestTask"
     
@@ -39,6 +47,16 @@ class InvoiceRequestTask : ReplyableTask {
             self.replyServer(encodable: InvoiceRequestResponse(invoice: createBolt12InvoiceRes.invoice), replyURL: request!.reply_url)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process invoice request: \(e)", level: "ERROR")
+            let error: String
+            switch e {
+                case PaymentError.AmountOutOfRange(let message):
+                    error = message
+                case PaymentError.AmountMissing(let message):
+                    error = "Amount missing in invoice request"
+                default:
+                    error = "Failed to create invoice"
+            }
+            self.replyServer(encodable: InvoiceErrorResponse(error: error), replyURL: request!.reply_url)
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
         }
     }

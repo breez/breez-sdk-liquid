@@ -52,6 +52,10 @@ impl SwapperStatusStream for MockStatusStream {
         Ok(())
     }
 
+    fn send_invoice_error(&self, _id: &str, _error: &str) -> Result<()> {
+        Ok(())
+    }
+
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::SwapStatus> {
         self.update_notifier.subscribe()
     }

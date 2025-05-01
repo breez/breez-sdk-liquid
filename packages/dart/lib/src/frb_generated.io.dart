@@ -3508,7 +3508,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       return;
     }
     if (apiObj is PaymentError_AmountOutOfRange) {
+      var pre_min = cst_encode_u_64(apiObj.min);
+      var pre_max = cst_encode_u_64(apiObj.max);
       wireObj.tag = 3;
+      wireObj.kind.AmountOutOfRange.min = pre_min;
+      wireObj.kind.AmountOutOfRange.max = pre_max;
       return;
     }
     if (apiObj is PaymentError_AmountMissing) {
@@ -7822,6 +7826,14 @@ final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
   external wire_cst_limits receive;
 }
 
+final class wire_cst_PaymentError_AmountOutOfRange extends ffi.Struct {
+  @ffi.Uint64()
+  external int min;
+
+  @ffi.Uint64()
+  external int max;
+}
+
 final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -7865,6 +7877,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 }
 
 final class PaymentErrorKind extends ffi.Union {
+  external wire_cst_PaymentError_AmountOutOfRange AmountOutOfRange;
+
   external wire_cst_PaymentError_AmountMissing AmountMissing;
 
   external wire_cst_PaymentError_AssetError AssetError;

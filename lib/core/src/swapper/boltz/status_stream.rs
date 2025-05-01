@@ -195,6 +195,16 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         Ok(())
     }
 
+    fn send_invoice_error(&self, id: &str, error: &str) -> Result<()> {
+        let _ = self
+            .request_notifier
+            .send(WsRequest::InvoiceError(boltz::InvoiceError {
+                id: id.to_string(),
+                error: error.to_string(),
+            }));
+        Ok(())
+    }
+
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::SwapStatus> {
         self.update_notifier.subscribe()
     }

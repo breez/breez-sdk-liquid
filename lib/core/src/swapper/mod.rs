@@ -153,6 +153,7 @@ pub trait SwapperStatusStream: MaybeSend + MaybeSync {
     fn track_offer(&self, offer: &str, signature: &str) -> Result<()>;
 
     fn send_invoice_created(&self, id: &str, invoice: &str) -> Result<()>;
+    fn send_invoice_error(&self, id: &str, error: &str) -> Result<()>;
 
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz_client::boltz::SwapStatus>;
     fn subscribe_invoice_requests(

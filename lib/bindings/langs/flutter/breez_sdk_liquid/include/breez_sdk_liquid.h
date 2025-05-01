@@ -1126,6 +1126,11 @@ typedef struct wire_cst_onchain_payment_limits_response {
   struct wire_cst_limits receive;
 } wire_cst_onchain_payment_limits_response;
 
+typedef struct wire_cst_PaymentError_AmountOutOfRange {
+  uint64_t min;
+  uint64_t max;
+} wire_cst_PaymentError_AmountOutOfRange;
+
 typedef struct wire_cst_PaymentError_AmountMissing {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_AmountMissing;
@@ -1168,6 +1173,7 @@ typedef struct wire_cst_PaymentError_SignerError {
 } wire_cst_PaymentError_SignerError;
 
 typedef union PaymentErrorKind {
+  struct wire_cst_PaymentError_AmountOutOfRange AmountOutOfRange;
   struct wire_cst_PaymentError_AmountMissing AmountMissing;
   struct wire_cst_PaymentError_AssetError AssetError;
   struct wire_cst_PaymentError_InvalidNetwork InvalidNetwork;

@@ -142,33 +142,69 @@ String toString() {
 
 
 class PaymentError_AmountOutOfRange extends PaymentError {
-  const PaymentError_AmountOutOfRange(): super._();
+  const PaymentError_AmountOutOfRange({required this.min, required this.max}): super._();
   
 
+ final  BigInt min;
+ final  BigInt max;
 
-
+/// Create a copy of PaymentError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PaymentError_AmountOutOfRangeCopyWith<PaymentError_AmountOutOfRange> get copyWith => _$PaymentError_AmountOutOfRangeCopyWithImpl<PaymentError_AmountOutOfRange>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentError_AmountOutOfRange);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentError_AmountOutOfRange&&(identical(other.min, min) || other.min == min)&&(identical(other.max, max) || other.max == max));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,min,max);
 
 @override
 String toString() {
-  return 'PaymentError.amountOutOfRange()';
+  return 'PaymentError.amountOutOfRange(min: $min, max: $max)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $PaymentError_AmountOutOfRangeCopyWith<$Res> implements $PaymentErrorCopyWith<$Res> {
+  factory $PaymentError_AmountOutOfRangeCopyWith(PaymentError_AmountOutOfRange value, $Res Function(PaymentError_AmountOutOfRange) _then) = _$PaymentError_AmountOutOfRangeCopyWithImpl;
+@useResult
+$Res call({
+ BigInt min, BigInt max
+});
 
 
+
+
+}
+/// @nodoc
+class _$PaymentError_AmountOutOfRangeCopyWithImpl<$Res>
+    implements $PaymentError_AmountOutOfRangeCopyWith<$Res> {
+  _$PaymentError_AmountOutOfRangeCopyWithImpl(this._self, this._then);
+
+  final PaymentError_AmountOutOfRange _self;
+  final $Res Function(PaymentError_AmountOutOfRange) _then;
+
+/// Create a copy of PaymentError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? min = null,Object? max = null,}) {
+  return _then(PaymentError_AmountOutOfRange(
+min: null == min ? _self.min : min // ignore: cast_nullable_to_non_nullable
+as BigInt,max: null == max ? _self.max : max // ignore: cast_nullable_to_non_nullable
+as BigInt,
+  ));
+}
+
+
+}
 
 /// @nodoc
 

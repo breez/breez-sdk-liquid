@@ -756,8 +756,15 @@ impl LiquidSdk {
                                     }
                                 },
                                 Err(e) => {
-                                    error!("Failed to create invoice from request {id}: {e:?}");
-                                    continue;
+                                    let error = match e {
+                                        PaymentError::AmountOutOfRange { .. } => e.to_string(),
+                                        PaymentError::AmountMissing { .. } => "Amount missing in invoice request".to_string(),
+                                        _ => "Failed to create invoice".to_string(),
+                                    };
+                                    match cloned.status_stream.send_invoice_error(&id, &error) {
+                                        Ok(_) => info!("Failed to create invoice from request {id}: {e:?}"),
+                                        Err(_) => error!("Failed to create invoice from request {id} and return error: {error}"),
+                                    }
                                 },
                             };
                         },
@@ -1061,13 +1068,6 @@ impl LiquidSdk {
 
         lbtc_pair.limits.within(receiver_amount_sat)?;
 
-        let fees_sat = lbtc_pair.fees.total(receiver_amount_sat);
-
-        ensure_sdk!(
-            receiver_amount_sat > fees_sat,
-            PaymentError::AmountOutOfRange
-        );
-
         Ok(lbtc_pair)
     }
 
@@ -1085,12 +1085,6 @@ impl LiquidSdk {
         user_lockup_amount_sat: u64,
     ) -> Result<(), PaymentError> {
         pair.limits.within(user_lockup_amount_sat)?;
-
-        let fees_sat = pair.fees.total(user_lockup_amount_sat);
-        ensure_sdk!(
-            user_lockup_amount_sat > fees_sat,
-            PaymentError::AmountOutOfRange
-        );
 
         Ok(())
     }
@@ -2475,12 +2469,12 @@ impl LiquidSdk {
 
                 let fees_sat = reverse_pair.fees.total(payer_amount_sat);
 
-                ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
-
-                reverse_pair
-                    .limits
-                    .within(payer_amount_sat)
-                    .map_err(|_| PaymentError::AmountOutOfRange)?;
+                reverse_pair.limits.within(payer_amount_sat).map_err(|_| {
+                    PaymentError::AmountOutOfRange {
+                        min: reverse_pair.limits.minimal,
+                        max: reverse_pair.limits.maximal,
+                    }
+                })?;
 
                 let min_payer_amount_sat = Some(reverse_pair.limits.minimal);
                 let max_payer_amount_sat = Some(reverse_pair.limits.maximal);
@@ -2894,10 +2888,12 @@ impl LiquidSdk {
             .get_reverse_swap_pairs()
             .await?
             .ok_or(PaymentError::PairsNotFound)?;
-        reverse_pair
-            .limits
-            .within(payer_amount_sat)
-            .map_err(|_| PaymentError::AmountOutOfRange)?;
+        reverse_pair.limits.within(payer_amount_sat).map_err(|_| {
+            PaymentError::AmountOutOfRange {
+                min: reverse_pair.limits.minimal,
+                max: reverse_pair.limits.maximal,
+            }
+        })?;
         let fees_sat = reverse_pair.fees.total(payer_amount_sat);
         debug!("Creating BOLT12 Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 

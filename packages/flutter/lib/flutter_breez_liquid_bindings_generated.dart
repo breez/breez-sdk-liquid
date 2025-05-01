@@ -5683,6 +5683,14 @@ final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
   external wire_cst_limits receive;
 }
 
+final class wire_cst_PaymentError_AmountOutOfRange extends ffi.Struct {
+  @ffi.Uint64()
+  external int min;
+
+  @ffi.Uint64()
+  external int max;
+}
+
 final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -5726,6 +5734,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 }
 
 final class PaymentErrorKind extends ffi.Union {
+  external wire_cst_PaymentError_AmountOutOfRange AmountOutOfRange;
+
   external wire_cst_PaymentError_AmountMissing AmountMissing;
 
   external wire_cst_PaymentError_AssetError AssetError;
