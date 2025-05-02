@@ -318,7 +318,7 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
             .get_client()?
             .batch_estimate_fee([1, 3, 6, 25, 1008])?
             .into_iter()
-            .map(|v| v.ceil() as u64)
+            .map(|v| (v * 100_000.0).ceil() as u64)
             .collect();
         Ok(RecommendedFees {
             fastest_fee: fees[0],
