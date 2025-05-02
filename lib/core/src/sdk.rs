@@ -4337,29 +4337,28 @@ impl LiquidSdk {
     /// the new correct `webhook_url`. To unregister a webhook call [LiquidSdk::unregister_webhook].
     pub async fn register_webhook(&self, webhook_url: String) -> SdkResult<()> {
         info!("Registering for webhook notifications");
-        let maybe_old_webhook_url = self.persister.get_webhook_url()?;
-
         self.persister.set_webhook_url(webhook_url.clone())?;
 
-        // If the webhook URL has changed, update all bolt12 offers
-        if let Some(old_webhook_url) = maybe_old_webhook_url {
-            if old_webhook_url != webhook_url {
-                let bolt12_offers = self.persister.list_bolt12_offers()?;
-
-                for mut bolt12_offer in bolt12_offers {
-                    let keypair = bolt12_offer.get_keypair()?;
-                    let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
-                    self.swapper
-                        .update_bolt12_offer(UpdateBolt12OfferRequest {
-                            offer: bolt12_offer.id.clone(),
-                            url: Some(webhook_url.clone()),
-                            signature: webhook_url_hash_sig.to_hex(),
-                        })
-                        .await?;
-                    bolt12_offer.webhook_url = Some(webhook_url.clone());
-                    self.persister
-                        .insert_or_update_bolt12_offer(&bolt12_offer)?;
-                }
+        // Update all BOLT12 offers where the webhook URL is different
+        let bolt12_offers = self.persister.list_bolt12_offers()?;
+        for mut bolt12_offer in bolt12_offers {
+            if bolt12_offer
+                .webhook_url
+                .clone()
+                .is_none_or(|url| url != webhook_url)
+            {
+                let keypair = bolt12_offer.get_keypair()?;
+                let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
+                self.swapper
+                    .update_bolt12_offer(UpdateBolt12OfferRequest {
+                        offer: bolt12_offer.id.clone(),
+                        url: Some(webhook_url.clone()),
+                        signature: webhook_url_hash_sig.to_hex(),
+                    })
+                    .await?;
+                bolt12_offer.webhook_url = Some(webhook_url.clone());
+                self.persister
+                    .insert_or_update_bolt12_offer(&bolt12_offer)?;
             }
         }
 
