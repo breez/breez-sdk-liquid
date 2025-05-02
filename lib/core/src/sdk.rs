@@ -1743,11 +1743,11 @@ impl LiquidSdk {
                     "Found MRH for L-BTC address {bip21}, invoice amount_sat {receiver_amount_sat}"
                 );
                 let signing_pubkey = invoice.signing_pubkey().to_string();
-                verify_mrh_signature(&bip21, &signing_pubkey, &signature)?;
+                let (_, address, _, _) = verify_mrh_signature(&bip21, &signing_pubkey, &signature)?;
 
                 self.pay_liquid(
                     LiquidAddressData {
-                        address: bip21,
+                        address,
                         network: self.config.network.into(),
                         asset_id: None,
                         amount: None,
