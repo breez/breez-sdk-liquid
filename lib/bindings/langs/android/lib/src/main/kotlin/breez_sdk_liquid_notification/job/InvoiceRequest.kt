@@ -65,30 +65,33 @@ class InvoiceRequestJob(
                     if (success) DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE else DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
                 ),
             )
+        } catch (e: PaymentException) {
+            logger.log(TAG, "Failed to process invoice request: ${e.message}", "WARN")
+            notifyError(request, e.message ?: "Failed to create invoice")
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process invoice request: ${e.message}", "WARN")
-            if (request != null) {
-                val error = when (e) {
-                    is PaymentException.AmountOutOfRange -> e.message ?: "Amount out of range"
-                    is PaymentException.AmountMissing -> "Amount missing in invoice request"
-                    else -> "Failed to create invoice"
-                }
-                val response = InvoiceErrorResponse(error)
-                replyServer(Json.encodeToString(response), request.replyURL)
-            }
-            notifyChannel(
-                context,
-                NOTIFICATION_CHANNEL_REPLACEABLE,
-                getString(
-                    context,
-                    INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
-                    DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
-                ),
-            )
+            notifyError(request, "Failed to create invoice")
         }
 
         fgService.onFinished(this)
     }
+
+    private fun notifyError(request: InvoiceRequestRequest?, error: String) {
+        if (request != null) {
+            val errorResponse = InvoiceErrorResponse(error)
+            replyServer(Json.encodeToString(errorResponse), request.replyURL)
+        }
+        notifyChannel(
+            context,
+            NOTIFICATION_CHANNEL_REPLACEABLE,
+            getString(
+                context,
+                INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
+                DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
+            ),
+        )
+    }
+
 
     override fun onEvent(e: SdkEvent) {}
 
