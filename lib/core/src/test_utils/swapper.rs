@@ -369,7 +369,7 @@ impl Swapper for MockSwapper {
         Ok(GetBolt12ParamsResponse { min_cltv: 180 })
     }
 
-    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError> {
+    async fn get_nodes(&self) -> Result<GetNodesResponse, PaymentError> {
         Ok(GetNodesResponse {
             btc: HashMap::from([(
                 "CLN".to_string(),

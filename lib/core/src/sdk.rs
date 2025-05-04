@@ -2650,15 +2650,15 @@ impl LiquidSdk {
                     .await
             }
             PaymentMethod::Bolt12Offer => {
-                let default_description = "default".to_string();
+                let description = req.description.clone().unwrap_or("".to_string());
                 match self
                     .persister
-                    .fetch_bolt12_offer_by_description(&default_description)?
+                    .fetch_bolt12_offer_by_description(&description)?
                 {
                     Some(bolt12_offer) => Ok(ReceivePaymentResponse {
                         destination: bolt12_offer.id,
                     }),
-                    None => self.create_bolt12_offer(default_description).await,
+                    None => self.create_bolt12_offer(description).await,
                 }
             }
             PaymentMethod::BitcoinAddress => {
@@ -3069,13 +3069,17 @@ impl LiquidSdk {
         description: String,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         let webhook_url = self.persister.get_webhook_url()?;
-        let cln_node = self
-            .swapper
-            .get_nodes()
-            .await?
+        // Parallelize the calls to get_nodes and get_reverse_swap_pairs
+        let (nodes, maybe_reverse_pair) = tokio::try_join!(
+            self.swapper.get_nodes(),
+            self.swapper.get_reverse_swap_pairs()
+        )?;
+        let cln_node = nodes
             .get_btc_cln_node()
             .ok_or(PaymentError::generic("No BTC CLN node found"))?;
         debug!("Creating BOLT12 offer for description: {description}");
+        let reverse_pair = maybe_reverse_pair.ok_or(PaymentError::PairsNotFound)?;
+        let min_amount_sat = reverse_pair.limits.minimal;
         let keypair = utils::generate_keypair();
         let entropy_source = RandomBytes::new(utils::generate_entropy());
         let secp = Secp256k1::new();
@@ -3086,6 +3090,8 @@ impl LiquidSdk {
         // Build the offer with a one-hop blinded path to the swapper CLN node
         let offer = OfferBuilder::new(keypair.public_key())
             .chain(self.config.network.into())
+            .amount_msats(min_amount_sat * 1_000)
+            .description(description.clone())
             .path(
                 BlindedMessagePath::one_hop(
                     cln_node.public_key,
