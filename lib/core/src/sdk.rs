@@ -28,6 +28,7 @@ use sdk_common::lightning_with_bolt12::blinded_path::payment::{
     BlindedPaymentPath, Bolt12OfferContext, PaymentConstraints, PaymentContext,
     UnauthenticatedReceiveTlvs,
 };
+use sdk_common::lightning_with_bolt12::blinded_path::IntroductionNode;
 use sdk_common::lightning_with_bolt12::bolt11_invoice::PaymentSecret;
 use sdk_common::lightning_with_bolt12::ln::inbound_payment::ExpandedKey;
 use sdk_common::lightning_with_bolt12::offers::invoice_request::InvoiceRequestFields;
@@ -2877,6 +2878,19 @@ impl LiquidSdk {
                     "Bolt12 offer not found: {}",
                     req.offer
                 )))?;
+        // Get the CLN node public key from the offer
+        let offer = Offer::try_from(bolt12_offer.clone())?;
+        let cln_node_public_key = offer
+            .paths()
+            .iter()
+            .find_map(|path| match path.introduction_node().clone() {
+                IntroductionNode::NodeId(node_id) => Some(node_id),
+                IntroductionNode::DirectedShortChannelId(_, _) => None,
+            })
+            .ok_or(PaymentError::generic(format!(
+                "No BTC CLN node found: {}",
+                req.offer
+            )))?;
         let invoice_request = utils::bolt12::decode_invoice_request(&req.invoice_request)?;
         let payer_amount_sat = invoice_request
             .amount_msats()
@@ -2884,18 +2898,12 @@ impl LiquidSdk {
             .ok_or(PaymentError::amount_missing(
                 "Invoice request must contain an amount",
             ))?;
-        let cln_node = self
-            .swapper
-            .get_nodes()
-            .await?
-            .get_btc_cln_node()
-            .ok_or(PaymentError::generic("No BTC CLN node found"))?;
-        let params = self.swapper.get_bolt12_params().await?;
-        let reverse_pair = self
-            .swapper
-            .get_reverse_swap_pairs()
-            .await?
-            .ok_or(PaymentError::PairsNotFound)?;
+        // Parellelize the calls to get_bolt12_params and get_reverse_swap_pairs
+        let (params, maybe_reverse_pair) = tokio::try_join!(
+            self.swapper.get_bolt12_params(),
+            self.swapper.get_reverse_swap_pairs()
+        )?;
+        let reverse_pair = maybe_reverse_pair.ok_or(PaymentError::PairsNotFound)?;
         reverse_pair.limits.within(payer_amount_sat).map_err(|_| {
             PaymentError::AmountOutOfRange {
                 min: reverse_pair.limits.minimal,
@@ -2943,7 +2951,7 @@ impl LiquidSdk {
 
         // Configure the blinded payment path
         let payment_path = BlindedPaymentPath::one_hop(
-            cln_node.public_key,
+            cln_node_public_key,
             payee_tlvs.clone(),
             params.min_cltv as u16,
             &entropy_source,
@@ -3012,7 +3020,7 @@ impl LiquidSdk {
         )?;
 
         let swap_id = create_response.id.clone();
-        let destination_pubkey = cln_node.public_key.to_hex();
+        let destination_pubkey = cln_node_public_key.to_hex();
 
         let create_response_json =
             ReceiveSwap::from_boltz_struct_to_json(&create_response, &swap_id, None)?;

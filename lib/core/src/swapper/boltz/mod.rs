@@ -553,7 +553,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         Ok(())
     }
 
-    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, PaymentError> {
         let res = self
             .get_boltz_client()
             .await?

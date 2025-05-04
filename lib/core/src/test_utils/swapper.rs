@@ -365,7 +365,7 @@ impl Swapper for MockSwapper {
         Ok(())
     }
 
-    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, PaymentError> {
         Ok(GetBolt12ParamsResponse { min_cltv: 180 })
     }
 

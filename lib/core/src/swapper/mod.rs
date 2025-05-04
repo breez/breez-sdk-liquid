@@ -137,7 +137,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
 
     async fn delete_bolt12_offer(&self, offer: &str, signature: &str) -> Result<(), SdkError>;
 
-    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError>;
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, PaymentError>;
 
     async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError>;
 }
