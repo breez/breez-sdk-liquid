@@ -563,7 +563,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         Ok(res)
     }
 
-    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError> {
+    async fn get_nodes(&self) -> Result<GetNodesResponse, PaymentError> {
         let res = self.get_boltz_client().await?.inner.get_nodes().await?;
         Ok(res)
     }
