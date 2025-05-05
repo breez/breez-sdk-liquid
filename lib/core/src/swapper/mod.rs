@@ -125,7 +125,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
         invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError>;
 
-    async fn get_bolt12_invoice(
+    async fn get_bolt12_info(
         &self,
         offer: &str,
         amount_sat: u64,

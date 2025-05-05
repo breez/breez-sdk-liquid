@@ -345,7 +345,7 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
-    async fn get_bolt12_invoice(
+    async fn get_bolt12_info(
         &self,
         _offer: &str,
         _amount_sat: u64,

@@ -511,7 +511,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         .map_err(Into::into)
     }
 
-    async fn get_bolt12_invoice(
+    async fn get_bolt12_info(
         &self,
         offer: &str,
         amount_sat: u64,

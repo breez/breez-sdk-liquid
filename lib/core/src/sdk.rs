@@ -1618,7 +1618,7 @@ impl LiquidSdk {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let bolt12_info = self
                     .swapper
-                    .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
+                    .get_bolt12_info(&offer.offer, *receiver_amount_sat)
                     .await?;
                 let mut response = self
                     .pay_bolt12_invoice(offer, *receiver_amount_sat, bolt12_info, fees_sat)
@@ -2871,6 +2871,7 @@ impl LiquidSdk {
         &self,
         req: &CreateBolt12InvoiceRequest,
     ) -> Result<CreateBolt12InvoiceResponse, PaymentError> {
+        debug!("Started create BOLT12 invoice");
         let bolt12_offer =
             self.persister
                 .fetch_bolt12_offer_by_id(&req.offer)?
@@ -3021,6 +3022,7 @@ impl LiquidSdk {
 
         let swap_id = create_response.id.clone();
         let destination_pubkey = cln_node_public_key.to_hex();
+        debug!("Created receive swap: {swap_id}");
 
         let create_response_json =
             ReceiveSwap::from_boltz_struct_to_json(&create_response, &swap_id, None)?;
@@ -3055,6 +3057,7 @@ impl LiquidSdk {
             })
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
+        debug!("Finished create BOLT12 invoice");
 
         Ok(CreateBolt12InvoiceResponse {
             invoice: invoice_str,
