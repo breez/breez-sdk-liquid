@@ -3944,9 +3944,10 @@ impl LiquidSdk {
 
         let t0 = Instant::now();
 
-        if let Err(err) = self.onchain_wallet.full_scan().await {
+        self.onchain_wallet.full_scan().await.map_err(|err| {
             error!("Failed to scan wallet: {err:?}");
-        }
+            SdkError::generic(err.to_string())
+        })?;
 
         let chain_tips = match maybe_chain_tips {
             None => ChainTips {
