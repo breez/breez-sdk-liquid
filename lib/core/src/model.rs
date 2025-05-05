@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context as _, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
@@ -2406,6 +2406,51 @@ impl From<&lwk_wollet::History> for LBtcHistory {
 }
 pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
+
+/// The current state of a swap via the SideSwap service
+#[derive(Debug, Clone, Serialize)]
+pub struct AssetSwap {
+    /// The identifier of the asset we are currently trading for
+    pub asset_id: String,
+    /// The exchange rate of the asset, or the total price for one L-BTC
+    pub exchange_rate: f64,
+    /// The asset amount which will be received after swapping
+    pub receiver_amount: u64,
+    /// The service fees for the swap
+    pub fees_sat: u64,
+    /// The amount of L-BTC (in satoshis) to execute the swap
+    pub payer_amount_sat: u64,
+}
+
+impl TryFrom<&sideswap_api::SubscribePriceStreamResponse> for AssetSwap {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &sideswap_api::SubscribePriceStreamResponse) -> Result<Self, Self::Error> {
+        if let Some(err) = &value.error_msg {
+            anyhow::bail!(
+                "Could not convert SideSwap price - received error message from stream: {err}"
+            );
+        }
+
+        Ok(Self {
+            asset_id: value.asset.to_string(),
+            payer_amount_sat: value
+                .send_amount
+                .context("Expected send amount when creating side swap")?
+                as u64,
+            receiver_amount: value
+                .recv_amount
+                .context("Expected receive amount when creating side swap")?
+                as u64,
+            fees_sat: value
+                .fixed_fee
+                .context("Expected fees when creating side swap")? as u64,
+            exchange_rate: value
+                .price
+                .context("Expected price when creating side swap")?,
+        })
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct BtcScriptBalance {

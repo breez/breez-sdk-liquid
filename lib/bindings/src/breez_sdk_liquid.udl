@@ -729,6 +729,14 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
+dictionary AssetSwap {
+    string asset_id;
+    u64 exchange_rate;
+    u64 receiver_amount;
+    u64 fees_sat;
+    u64 payer_amount_sat;
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);
