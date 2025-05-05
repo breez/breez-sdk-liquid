@@ -86,7 +86,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
     "https://cryptoqr.net/.well-known/lnurlp/<input>",
 )];
 
-pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(30);
+pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(60);
 
 pub struct LiquidSdkBuilder {
     config: Config,
@@ -3944,9 +3944,10 @@ impl LiquidSdk {
 
         let t0 = Instant::now();
 
-        if let Err(err) = self.onchain_wallet.full_scan().await {
+        self.onchain_wallet.full_scan().await.map_err(|err| {
             error!("Failed to scan wallet: {err:?}");
-        }
+            SdkError::generic(err.to_string())
+        })?;
 
         let chain_tips = match maybe_chain_tips {
             None => ChainTips {
