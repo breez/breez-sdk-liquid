@@ -46,6 +46,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
+                let mut request_stream = self.request_notifier.subscribe();
                 let client = match swapper.get_boltz_client().await {
                     Ok(client) => client,
                     Err(e) => {
@@ -57,9 +58,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                 match client.inner.connect_ws().await {
                     Ok(ws_stream) => {
                         let (mut sender, mut receiver) = ws_stream.split();
-
                         let mut tracked_ids: HashSet<String> = HashSet::new();
-                        let mut request_stream = self.request_notifier.subscribe();
 
                         callback.track_subscriptions().await;
 
