@@ -3,7 +3,7 @@ use boltz_client::{
     boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateBolt12OfferRequest,
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse,
-        GetBolt12ParamsResponse, GetNodesResponse, Leaf, MagicRoutingHint, Node, PairLimits,
+        GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse, Leaf, Node, PairLimits,
         PairMinerFees, ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse,
         SubmarineFees, SubmarinePair, SubmarinePairLimits, SwapTree, UpdateBolt12OfferRequest,
     },
@@ -345,11 +345,11 @@ impl Swapper for MockSwapper {
         unimplemented!()
     }
 
-    async fn get_bolt12_invoice(
+    async fn get_bolt12_info(
         &self,
         _offer: &str,
         _amount_sat: u64,
-    ) -> Result<String, PaymentError> {
+    ) -> Result<GetBolt12FetchResponse, PaymentError> {
         unimplemented!()
     }
 
@@ -365,13 +365,8 @@ impl Swapper for MockSwapper {
         Ok(())
     }
 
-    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, SdkError> {
-        Ok(GetBolt12ParamsResponse {
-            min_cltv: 180,
-            magic_routing_hint: MagicRoutingHint {
-                channel_id: "596385002596073472".to_string(),
-            },
-        })
+    async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, PaymentError> {
+        Ok(GetBolt12ParamsResponse { min_cltv: 180 })
     }
 
     async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError> {

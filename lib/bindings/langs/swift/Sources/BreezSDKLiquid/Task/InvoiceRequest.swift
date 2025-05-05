@@ -15,6 +15,14 @@ struct InvoiceRequestResponse: Decodable, Encodable {
     }
 }
 
+struct InvoiceErrorResponse: Decodable, Encodable {
+    let error: String
+    
+    init(error: String) {
+        self.error = error
+    }
+}
+
 class InvoiceRequestTask : ReplyableTask {
     fileprivate let TAG = "InvoiceRequestTask"
     
@@ -37,9 +45,20 @@ class InvoiceRequestTask : ReplyableTask {
         do {
             let createBolt12InvoiceRes = try liquidSDK.createBolt12Invoice(req: CreateBolt12InvoiceRequest(offer: request!.offer, invoiceRequest: request!.invoice_request))
             self.replyServer(encodable: InvoiceRequestResponse(invoice: createBolt12InvoiceRes.invoice), replyURL: request!.reply_url)
+        } catch let e as PaymentError {
+            self.logger.log(tag: TAG, line: "failed to process invoice request: \(e)", level: "ERROR")
+            let error = e.localizedDescription
+            self.notifyError(request: request, error: error)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process invoice request: \(e)", level: "ERROR")
-            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+            self.notifyError(request: request, error: "Failed to process invoice request")
+        } 
+    }
+
+    func notifyError(request: InvoiceRequestRequest?, error: String) {
+        if request != nil {
+            self.replyServer(encodable: InvoiceErrorResponse(error: error), replyURL: request!.reply_url)
         }
+        self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
 }

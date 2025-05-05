@@ -973,6 +973,10 @@ typedef struct wire_cst_LnUrlPayError_Generic {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LnUrlPayError_Generic;
 
+typedef struct wire_cst_LnUrlPayError_InsufficientBalance {
+  struct wire_cst_list_prim_u_8_strict *err;
+} wire_cst_LnUrlPayError_InsufficientBalance;
+
 typedef struct wire_cst_LnUrlPayError_InvalidAmount {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_LnUrlPayError_InvalidAmount;
@@ -1015,6 +1019,7 @@ typedef struct wire_cst_LnUrlPayError_ServiceConnectivity {
 
 typedef union LnUrlPayErrorKind {
   struct wire_cst_LnUrlPayError_Generic Generic;
+  struct wire_cst_LnUrlPayError_InsufficientBalance InsufficientBalance;
   struct wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
   struct wire_cst_LnUrlPayError_InvalidInvoice InvalidInvoice;
   struct wire_cst_LnUrlPayError_InvalidNetwork InvalidNetwork;
@@ -1126,6 +1131,11 @@ typedef struct wire_cst_onchain_payment_limits_response {
   struct wire_cst_limits receive;
 } wire_cst_onchain_payment_limits_response;
 
+typedef struct wire_cst_PaymentError_AmountOutOfRange {
+  uint64_t min;
+  uint64_t max;
+} wire_cst_PaymentError_AmountOutOfRange;
+
 typedef struct wire_cst_PaymentError_AmountMissing {
   struct wire_cst_list_prim_u_8_strict *err;
 } wire_cst_PaymentError_AmountMissing;
@@ -1168,6 +1178,7 @@ typedef struct wire_cst_PaymentError_SignerError {
 } wire_cst_PaymentError_SignerError;
 
 typedef union PaymentErrorKind {
+  struct wire_cst_PaymentError_AmountOutOfRange AmountOutOfRange;
   struct wire_cst_PaymentError_AmountMissing AmountMissing;
   struct wire_cst_PaymentError_AssetError AssetError;
   struct wire_cst_PaymentError_InvalidNetwork InvalidNetwork;

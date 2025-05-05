@@ -177,7 +177,7 @@ jobs:
     - setup
     - build-dummies
     runs-on: ubuntu-latest
-    name: build jniLibs dummy ${{ matrix.target }}${{ matrix.uniffi }}
+    name: build jniLibs dummy ${{ matrix.uniffi }}
     strategy:
       matrix:
         uniffi: ${{ fromJson(needs.setup.outputs.uniffi-matrix) }}

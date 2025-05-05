@@ -3384,43 +3384,49 @@ impl SseDecode for crate::bindings::duplicates::LnUrlPayError {
             }
             2 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InsufficientBalance {
+                    err: var_err,
+                };
             }
             3 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err: var_err };
             }
             4 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err: var_err };
             }
             5 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::InvalidUri { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err: var_err };
             }
             6 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvalidUri { err: var_err };
             }
             7 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err: var_err };
             }
             8 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err: var_err };
             }
             9 => {
                 let mut var_err = <String>::sse_decode(deserializer);
-                return crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err: var_err };
+                return crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err: var_err };
             }
             10 => {
+                let mut var_err = <String>::sse_decode(deserializer);
+                return crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err: var_err };
+            }
+            11 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive {
                     err: var_err,
                 };
             }
-            11 => {
+            12 => {
                 let mut var_err = <String>::sse_decode(deserializer);
                 return crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity {
                     err: var_err,
@@ -4115,7 +4121,12 @@ impl SseDecode for crate::error::PaymentError {
                 return crate::error::PaymentError::PaymentInProgress;
             }
             3 => {
-                return crate::error::PaymentError::AmountOutOfRange;
+                let mut var_min = <u64>::sse_decode(deserializer);
+                let mut var_max = <u64>::sse_decode(deserializer);
+                return crate::error::PaymentError::AmountOutOfRange {
+                    min: var_min,
+                    max: var_max,
+                };
             }
             4 => {
                 let mut var_err = <String>::sse_decode(deserializer);
@@ -5950,35 +5961,38 @@ impl flutter_rust_bridge::IntoDart for crate::bindings::duplicates::LnUrlPayErro
             crate::bindings::duplicates::LnUrlPayError::Generic { err } => {
                 [1.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InsufficientBalance { err } => {
                 [2.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err } => {
                 [3.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err } => {
                 [4.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidUri { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err } => {
                 [5.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidUri { err } => {
                 [6.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err } => {
                 [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err } => {
                 [8.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err } => {
                 [9.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err } => {
                 [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
-            crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive { err } => {
                 [11.into_dart(), err.into_into_dart().into_dart()].into_dart()
+            }
+            crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity { err } => {
+                [12.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             _ => {
                 unimplemented!("");
@@ -6534,7 +6548,12 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
             crate::error::PaymentError::AlreadyClaimed => [0.into_dart()].into_dart(),
             crate::error::PaymentError::AlreadyPaid => [1.into_dart()].into_dart(),
             crate::error::PaymentError::PaymentInProgress => [2.into_dart()].into_dart(),
-            crate::error::PaymentError::AmountOutOfRange => [3.into_dart()].into_dart(),
+            crate::error::PaymentError::AmountOutOfRange { min, max } => [
+                3.into_dart(),
+                min.into_into_dart().into_dart(),
+                max.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::error::PaymentError::AmountMissing { err } => {
                 [4.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
@@ -8279,44 +8298,48 @@ impl SseEncode for crate::bindings::duplicates::LnUrlPayError {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InsufficientBalance { err } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidAmount { err } => {
                 <i32>::sse_encode(3, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidInvoice { err } => {
                 <i32>::sse_encode(4, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::InvalidUri { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidNetwork { err } => {
                 <i32>::sse_encode(5, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvalidUri { err } => {
                 <i32>::sse_encode(6, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err } => {
+            crate::bindings::duplicates::LnUrlPayError::InvoiceExpired { err } => {
                 <i32>::sse_encode(7, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentFailed { err } => {
                 <i32>::sse_encode(8, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err } => {
+            crate::bindings::duplicates::LnUrlPayError::PaymentTimeout { err } => {
                 <i32>::sse_encode(9, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteNotFound { err } => {
                 <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(err, serializer);
             }
-            crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity { err } => {
+            crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive { err } => {
                 <i32>::sse_encode(11, serializer);
+                <String>::sse_encode(err, serializer);
+            }
+            crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity { err } => {
+                <i32>::sse_encode(12, serializer);
                 <String>::sse_encode(err, serializer);
             }
             _ => {
@@ -8891,8 +8914,10 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::PaymentInProgress => {
                 <i32>::sse_encode(2, serializer);
             }
-            crate::error::PaymentError::AmountOutOfRange => {
+            crate::error::PaymentError::AmountOutOfRange { min, max } => {
                 <i32>::sse_encode(3, serializer);
+                <u64>::sse_encode(min, serializer);
+                <u64>::sse_encode(max, serializer);
             }
             crate::error::PaymentError::AmountMissing { err } => {
                 <i32>::sse_encode(4, serializer);
@@ -10773,60 +10798,66 @@ mod io {
                     }
                 }
                 2 => {
+                    let ans = unsafe { self.kind.InsufficientBalance };
+                    crate::bindings::duplicates::LnUrlPayError::InsufficientBalance {
+                        err: ans.err.cst_decode(),
+                    }
+                }
+                3 => {
                     let ans = unsafe { self.kind.InvalidAmount };
                     crate::bindings::duplicates::LnUrlPayError::InvalidAmount {
                         err: ans.err.cst_decode(),
                     }
                 }
-                3 => {
+                4 => {
                     let ans = unsafe { self.kind.InvalidInvoice };
                     crate::bindings::duplicates::LnUrlPayError::InvalidInvoice {
                         err: ans.err.cst_decode(),
                     }
                 }
-                4 => {
+                5 => {
                     let ans = unsafe { self.kind.InvalidNetwork };
                     crate::bindings::duplicates::LnUrlPayError::InvalidNetwork {
                         err: ans.err.cst_decode(),
                     }
                 }
-                5 => {
+                6 => {
                     let ans = unsafe { self.kind.InvalidUri };
                     crate::bindings::duplicates::LnUrlPayError::InvalidUri {
                         err: ans.err.cst_decode(),
                     }
                 }
-                6 => {
+                7 => {
                     let ans = unsafe { self.kind.InvoiceExpired };
                     crate::bindings::duplicates::LnUrlPayError::InvoiceExpired {
                         err: ans.err.cst_decode(),
                     }
                 }
-                7 => {
+                8 => {
                     let ans = unsafe { self.kind.PaymentFailed };
                     crate::bindings::duplicates::LnUrlPayError::PaymentFailed {
                         err: ans.err.cst_decode(),
                     }
                 }
-                8 => {
+                9 => {
                     let ans = unsafe { self.kind.PaymentTimeout };
                     crate::bindings::duplicates::LnUrlPayError::PaymentTimeout {
                         err: ans.err.cst_decode(),
                     }
                 }
-                9 => {
+                10 => {
                     let ans = unsafe { self.kind.RouteNotFound };
                     crate::bindings::duplicates::LnUrlPayError::RouteNotFound {
                         err: ans.err.cst_decode(),
                     }
                 }
-                10 => {
+                11 => {
                     let ans = unsafe { self.kind.RouteTooExpensive };
                     crate::bindings::duplicates::LnUrlPayError::RouteTooExpensive {
                         err: ans.err.cst_decode(),
                     }
                 }
-                11 => {
+                12 => {
                     let ans = unsafe { self.kind.ServiceConnectivity };
                     crate::bindings::duplicates::LnUrlPayError::ServiceConnectivity {
                         err: ans.err.cst_decode(),
@@ -11169,7 +11200,13 @@ mod io {
                 0 => crate::error::PaymentError::AlreadyClaimed,
                 1 => crate::error::PaymentError::AlreadyPaid,
                 2 => crate::error::PaymentError::PaymentInProgress,
-                3 => crate::error::PaymentError::AmountOutOfRange,
+                3 => {
+                    let ans = unsafe { self.kind.AmountOutOfRange };
+                    crate::error::PaymentError::AmountOutOfRange {
+                        min: ans.min.cst_decode(),
+                        max: ans.max.cst_decode(),
+                    }
+                }
                 4 => {
                     let ans = unsafe { self.kind.AmountMissing };
                     crate::error::PaymentError::AmountMissing {
@@ -14704,6 +14741,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub union LnUrlPayErrorKind {
         Generic: wire_cst_LnUrlPayError_Generic,
+        InsufficientBalance: wire_cst_LnUrlPayError_InsufficientBalance,
         InvalidAmount: wire_cst_LnUrlPayError_InvalidAmount,
         InvalidInvoice: wire_cst_LnUrlPayError_InvalidInvoice,
         InvalidNetwork: wire_cst_LnUrlPayError_InvalidNetwork,
@@ -14719,6 +14757,11 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_LnUrlPayError_Generic {
+        err: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_LnUrlPayError_InsufficientBalance {
         err: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
@@ -15064,6 +15107,7 @@ mod io {
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub union PaymentErrorKind {
+        AmountOutOfRange: wire_cst_PaymentError_AmountOutOfRange,
         AmountMissing: wire_cst_PaymentError_AmountMissing,
         AssetError: wire_cst_PaymentError_AssetError,
         InvalidNetwork: wire_cst_PaymentError_InvalidNetwork,
@@ -15075,6 +15119,12 @@ mod io {
         SendError: wire_cst_PaymentError_SendError,
         SignerError: wire_cst_PaymentError_SignerError,
         nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_PaymentError_AmountOutOfRange {
+        min: u64,
+        max: u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

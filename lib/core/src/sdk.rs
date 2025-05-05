@@ -3,6 +3,7 @@ use std::ops::Not as _;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Result};
+use boltz_client::swaps::magic_routing::verify_mrh_signature;
 use boltz_client::Secp256k1;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
 use buy::{BuyBitcoinApi, BuyBitcoinService};
@@ -27,7 +28,7 @@ use sdk_common::lightning_with_bolt12::blinded_path::payment::{
     BlindedPaymentPath, Bolt12OfferContext, PaymentConstraints, PaymentContext,
     UnauthenticatedReceiveTlvs,
 };
-use sdk_common::lightning_with_bolt12::blinded_path::{self, IntroductionNode};
+use sdk_common::lightning_with_bolt12::blinded_path::IntroductionNode;
 use sdk_common::lightning_with_bolt12::bolt11_invoice::PaymentSecret;
 use sdk_common::lightning_with_bolt12::ln::inbound_payment::ExpandedKey;
 use sdk_common::lightning_with_bolt12::offers::invoice_request::InvoiceRequestFields;
@@ -756,8 +757,15 @@ impl LiquidSdk {
                                     }
                                 },
                                 Err(e) => {
-                                    error!("Failed to create invoice from request {id}: {e:?}");
-                                    continue;
+                                    let error = match e {
+                                        PaymentError::AmountOutOfRange { .. } => e.to_string(),
+                                        PaymentError::AmountMissing { .. } => "Amount missing in invoice request".to_string(),
+                                        _ => "Failed to create invoice".to_string(),
+                                    };
+                                    match cloned.status_stream.send_invoice_error(&id, &error) {
+                                        Ok(_) => info!("Failed to create invoice from request {id}: {e:?}"),
+                                        Err(_) => error!("Failed to create invoice from request {id} and return error: {error}"),
+                                    }
                                 },
                             };
                         },
@@ -1061,13 +1069,6 @@ impl LiquidSdk {
 
         lbtc_pair.limits.within(receiver_amount_sat)?;
 
-        let fees_sat = lbtc_pair.fees.total(receiver_amount_sat);
-
-        ensure_sdk!(
-            receiver_amount_sat > fees_sat,
-            PaymentError::AmountOutOfRange
-        );
-
         Ok(lbtc_pair)
     }
 
@@ -1085,12 +1086,6 @@ impl LiquidSdk {
         user_lockup_amount_sat: u64,
     ) -> Result<(), PaymentError> {
         pair.limits.within(user_lockup_amount_sat)?;
-
-        let fees_sat = pair.fees.total(user_lockup_amount_sat);
-        ensure_sdk!(
-            user_lockup_amount_sat > fees_sat,
-            PaymentError::AmountOutOfRange
-        );
 
         Ok(())
     }
@@ -1621,12 +1616,12 @@ impl LiquidSdk {
                 bip353_address,
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
-                let bolt12_invoice = self
+                let bolt12_info = self
                     .swapper
-                    .get_bolt12_invoice(&offer.offer, *receiver_amount_sat)
+                    .get_bolt12_info(&offer.offer, *receiver_amount_sat)
                     .await?;
                 let mut response = self
-                    .pay_bolt12_invoice(offer, *receiver_amount_sat, &bolt12_invoice, fees_sat)
+                    .pay_bolt12_invoice(offer, *receiver_amount_sat, bolt12_info, fees_sat)
                     .await?;
                 self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
@@ -1726,11 +1721,14 @@ impl LiquidSdk {
         &self,
         offer: &LNOffer,
         user_specified_receiver_amount_sat: u64,
-        invoice_str: &str,
+        bolt12_info: GetBolt12FetchResponse,
         fees_sat: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
-        let invoice =
-            self.validate_bolt12_invoice(offer, user_specified_receiver_amount_sat, invoice_str)?;
+        let invoice = self.validate_bolt12_invoice(
+            offer,
+            user_specified_receiver_amount_sat,
+            &bolt12_info.invoice,
+        )?;
 
         let receiver_amount_sat = invoice.amount_msats() / 1_000;
         let payer_amount_sat = receiver_amount_sat + fees_sat;
@@ -1739,10 +1737,15 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        match self.swapper.check_for_mrh(invoice_str).await? {
+        match bolt12_info.magic_routing_hint {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
-            Some((address, _)) => {
-                info!("Found MRH for L-BTC address {address}, invoice amount_sat {receiver_amount_sat}");
+            Some(MagicRoutingHint { bip21, signature }) => {
+                info!(
+                    "Found MRH for L-BTC address {bip21}, invoice amount_sat {receiver_amount_sat}"
+                );
+                let signing_pubkey = invoice.signing_pubkey().to_string();
+                let (_, address, _, _) = verify_mrh_signature(&bip21, &signing_pubkey, &signature)?;
+
                 self.pay_liquid(
                     LiquidAddressData {
                         address,
@@ -1763,7 +1766,7 @@ impl LiquidSdk {
             // If no MRH found, perform usual swap
             None => {
                 self.send_payment_via_swap(
-                    invoice_str,
+                    &bolt12_info.invoice,
                     Some(offer.offer.clone()),
                     &invoice.payment_hash().to_string(),
                     invoice.description().map(|desc| desc.to_string()),
@@ -2475,12 +2478,12 @@ impl LiquidSdk {
 
                 let fees_sat = reverse_pair.fees.total(payer_amount_sat);
 
-                ensure_sdk!(payer_amount_sat > fees_sat, PaymentError::AmountOutOfRange);
-
-                reverse_pair
-                    .limits
-                    .within(payer_amount_sat)
-                    .map_err(|_| PaymentError::AmountOutOfRange)?;
+                reverse_pair.limits.within(payer_amount_sat).map_err(|_| {
+                    PaymentError::AmountOutOfRange {
+                        min: reverse_pair.limits.minimal,
+                        max: reverse_pair.limits.maximal,
+                    }
+                })?;
 
                 let min_payer_amount_sat = Some(reverse_pair.limits.minimal);
                 let max_payer_amount_sat = Some(reverse_pair.limits.maximal);
@@ -2868,6 +2871,7 @@ impl LiquidSdk {
         &self,
         req: &CreateBolt12InvoiceRequest,
     ) -> Result<CreateBolt12InvoiceResponse, PaymentError> {
+        debug!("Started create BOLT12 invoice");
         let bolt12_offer =
             self.persister
                 .fetch_bolt12_offer_by_id(&req.offer)?
@@ -2875,6 +2879,19 @@ impl LiquidSdk {
                     "Bolt12 offer not found: {}",
                     req.offer
                 )))?;
+        // Get the CLN node public key from the offer
+        let offer = Offer::try_from(bolt12_offer.clone())?;
+        let cln_node_public_key = offer
+            .paths()
+            .iter()
+            .find_map(|path| match path.introduction_node().clone() {
+                IntroductionNode::NodeId(node_id) => Some(node_id),
+                IntroductionNode::DirectedShortChannelId(_, _) => None,
+            })
+            .ok_or(PaymentError::generic(format!(
+                "No BTC CLN node found: {}",
+                req.offer
+            )))?;
         let invoice_request = utils::bolt12::decode_invoice_request(&req.invoice_request)?;
         let payer_amount_sat = invoice_request
             .amount_msats()
@@ -2882,22 +2899,18 @@ impl LiquidSdk {
             .ok_or(PaymentError::amount_missing(
                 "Invoice request must contain an amount",
             ))?;
-        let cln_node = self
-            .swapper
-            .get_nodes()
-            .await?
-            .get_btc_cln_node()
-            .ok_or(PaymentError::generic("No BTC CLN node found"))?;
-        let params = self.swapper.get_bolt12_params().await?;
-        let reverse_pair = self
-            .swapper
-            .get_reverse_swap_pairs()
-            .await?
-            .ok_or(PaymentError::PairsNotFound)?;
-        reverse_pair
-            .limits
-            .within(payer_amount_sat)
-            .map_err(|_| PaymentError::AmountOutOfRange)?;
+        // Parellelize the calls to get_bolt12_params and get_reverse_swap_pairs
+        let (params, maybe_reverse_pair) = tokio::try_join!(
+            self.swapper.get_bolt12_params(),
+            self.swapper.get_reverse_swap_pairs()
+        )?;
+        let reverse_pair = maybe_reverse_pair.ok_or(PaymentError::PairsNotFound)?;
+        reverse_pair.limits.within(payer_amount_sat).map_err(|_| {
+            PaymentError::AmountOutOfRange {
+                min: reverse_pair.limits.minimal,
+                max: reverse_pair.limits.maximal,
+            }
+        })?;
         let fees_sat = reverse_pair.fees.total(payer_amount_sat);
         debug!("Creating BOLT12 Receive Swap with: payer_amount_sat {payer_amount_sat} sat, fees_sat {fees_sat} sat");
 
@@ -2937,9 +2950,9 @@ impl LiquidSdk {
         }
         .authenticate(nonce, &expanded_key);
 
-        // Configure the blinded payment paths to include the MRH address
-        let default_payment_path = BlindedPaymentPath::one_hop(
-            cln_node.public_key,
+        // Configure the blinded payment path
+        let payment_path = BlindedPaymentPath::one_hop(
+            cln_node_public_key,
             payee_tlvs.clone(),
             params.min_cltv as u16,
             &entropy_source,
@@ -2950,39 +2963,11 @@ impl LiquidSdk {
                 "Failed to create BOLT12 invoice: Error creating blinded payment path",
             )
         })?;
-        let mrh_payment_path = {
-            let channel_id = params
-                .magic_routing_hint
-                .channel_id
-                .parse::<u64>()
-                .map_err(|e| {
-                    PaymentError::generic(format!("Failed to create BOLT12 invoice: {e}"))
-                })?;
-            BlindedPaymentPath::new(
-                &[],
-                Some(IntroductionNode::DirectedShortChannelId(
-                    blinded_path::Direction::NodeOne,
-                    channel_id,
-                )),
-                cln_node.public_key,
-                payee_tlvs.clone(),
-                u64::MAX,
-                params.min_cltv as u16,
-                &entropy_source,
-                &secp,
-            )
-            .map_err(|_| {
-                PaymentError::generic(
-                    "Failed to create BOLT12 invoice: Error creating blinded MRH payment path",
-                )
-            })?
-        };
-        let payment_paths = vec![default_payment_path, mrh_payment_path];
 
         // Create the invoice
         let invoice = invoice_request
             .respond_with_no_std(
-                payment_paths,
+                vec![payment_path],
                 PaymentHash(preimage_hash),
                 SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| {
                     PaymentError::generic(format!("Failed to create BOLT12 invoice: {e:?}"))
@@ -3036,7 +3021,8 @@ impl LiquidSdk {
         )?;
 
         let swap_id = create_response.id.clone();
-        let destination_pubkey = cln_node.public_key.to_hex();
+        let destination_pubkey = cln_node_public_key.to_hex();
+        debug!("Created receive swap: {swap_id}");
 
         let create_response_json =
             ReceiveSwap::from_boltz_struct_to_json(&create_response, &swap_id, None)?;
@@ -3071,6 +3057,7 @@ impl LiquidSdk {
             })
             .map_err(|_| PaymentError::PersistError)?;
         self.status_stream.track_swap_id(&swap_id)?;
+        debug!("Finished create BOLT12 invoice");
 
         Ok(CreateBolt12InvoiceResponse {
             invoice: invoice_str,
@@ -4362,29 +4349,28 @@ impl LiquidSdk {
     /// the new correct `webhook_url`. To unregister a webhook call [LiquidSdk::unregister_webhook].
     pub async fn register_webhook(&self, webhook_url: String) -> SdkResult<()> {
         info!("Registering for webhook notifications");
-        let maybe_old_webhook_url = self.persister.get_webhook_url()?;
-
         self.persister.set_webhook_url(webhook_url.clone())?;
 
-        // If the webhook URL has changed, update all bolt12 offers
-        if let Some(old_webhook_url) = maybe_old_webhook_url {
-            if old_webhook_url != webhook_url {
-                let bolt12_offers = self.persister.list_bolt12_offers()?;
-
-                for mut bolt12_offer in bolt12_offers {
-                    let keypair = bolt12_offer.get_keypair()?;
-                    let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
-                    self.swapper
-                        .update_bolt12_offer(UpdateBolt12OfferRequest {
-                            offer: bolt12_offer.id.clone(),
-                            url: Some(webhook_url.clone()),
-                            signature: webhook_url_hash_sig.to_hex(),
-                        })
-                        .await?;
-                    bolt12_offer.webhook_url = Some(webhook_url.clone());
-                    self.persister
-                        .insert_or_update_bolt12_offer(&bolt12_offer)?;
-                }
+        // Update all BOLT12 offers where the webhook URL is different
+        let bolt12_offers = self.persister.list_bolt12_offers()?;
+        for mut bolt12_offer in bolt12_offers {
+            if bolt12_offer
+                .webhook_url
+                .clone()
+                .is_none_or(|url| url != webhook_url)
+            {
+                let keypair = bolt12_offer.get_keypair()?;
+                let webhook_url_hash_sig = utils::sign_message_hash(&webhook_url, &keypair)?;
+                self.swapper
+                    .update_bolt12_offer(UpdateBolt12OfferRequest {
+                        offer: bolt12_offer.id.clone(),
+                        url: Some(webhook_url.clone()),
+                        signature: webhook_url_hash_sig.to_hex(),
+                    })
+                    .await?;
+                bolt12_offer.webhook_url = Some(webhook_url.clone());
+                self.persister
+                    .insert_or_update_bolt12_offer(&bolt12_offer)?;
             }
         }
 

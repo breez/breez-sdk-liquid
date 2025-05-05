@@ -595,6 +595,10 @@ pub mod duplicates {
         #[error("Generic: {err}")]
         Generic { err: String },
 
+        /// This error is raised when the node does not have enough funds to make the payment.
+        #[error("Insufficient balance: {err}")]
+        InsufficientBalance { err: String },
+
         /// This error is raised when the amount from the parsed invoice is not set.
         #[error("Invalid amount: {err}")]
         InvalidAmount { err: String },
@@ -642,6 +646,9 @@ pub mod duplicates {
             match value {
                 sdk_common::prelude::LnUrlPayError::AlreadyPaid => Self::AlreadyPaid,
                 sdk_common::prelude::LnUrlPayError::Generic { err } => Self::Generic { err },
+                sdk_common::prelude::LnUrlPayError::InsufficientBalance { err } => {
+                    Self::InsufficientBalance { err }
+                }
                 sdk_common::prelude::LnUrlPayError::InvalidAmount { err } => {
                     Self::InvalidAmount { err }
                 }

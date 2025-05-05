@@ -15,7 +15,8 @@ sealed class PaymentError with _$PaymentError implements FrbException {
   const factory PaymentError.alreadyClaimed() = PaymentError_AlreadyClaimed;
   const factory PaymentError.alreadyPaid() = PaymentError_AlreadyPaid;
   const factory PaymentError.paymentInProgress() = PaymentError_PaymentInProgress;
-  const factory PaymentError.amountOutOfRange() = PaymentError_AmountOutOfRange;
+  const factory PaymentError.amountOutOfRange({required BigInt min, required BigInt max}) =
+      PaymentError_AmountOutOfRange;
   const factory PaymentError.amountMissing({required String err}) = PaymentError_AmountMissing;
   const factory PaymentError.assetError({required String err}) = PaymentError_AssetError;
   const factory PaymentError.invalidNetwork({required String err}) = PaymentError_InvalidNetwork;

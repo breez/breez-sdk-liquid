@@ -172,6 +172,7 @@ dictionary LnUrlPayErrorData {
 interface LnUrlPayError {
     AlreadyPaid();
     Generic(string err);
+    InsufficientBalance(string err);
     InvalidAmount(string err);
     InvalidInvoice(string err);
     InvalidNetwork(string err);

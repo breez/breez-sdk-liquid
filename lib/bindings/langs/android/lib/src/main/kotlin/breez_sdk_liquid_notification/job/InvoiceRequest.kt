@@ -2,6 +2,7 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.CreateBolt12InvoiceRequest
+import breez_sdk_liquid.PaymentException
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid_notification.Constants.DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE
@@ -28,6 +29,11 @@ data class InvoiceRequestRequest(
 @Serializable
 data class InvoiceRequestResponse(
     val invoice: String,
+)
+
+@Serializable
+data class InvoiceErrorResponse(
+    val error: String,
 )
 
 class InvoiceRequestJob(
@@ -59,21 +65,33 @@ class InvoiceRequestJob(
                     if (success) DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE else DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
                 ),
             )
+        } catch (e: PaymentException) {
+            logger.log(TAG, "Failed to process invoice request: ${e.message}", "WARN")
+            notifyError(request, e.message ?: "Failed to create invoice")
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process invoice request: ${e.message}", "WARN")
-            notifyChannel(
-                context,
-                NOTIFICATION_CHANNEL_REPLACEABLE,
-                getString(
-                    context,
-                    INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
-                    DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
-                ),
-            )
+            notifyError(request, "Failed to create invoice")
         }
 
         fgService.onFinished(this)
     }
+
+    private fun notifyError(request: InvoiceRequestRequest?, error: String) {
+        if (request != null) {
+            val errorResponse = InvoiceErrorResponse(error)
+            replyServer(Json.encodeToString(errorResponse), request.replyURL)
+        }
+        notifyChannel(
+            context,
+            NOTIFICATION_CHANNEL_REPLACEABLE,
+            getString(
+                context,
+                INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
+                DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE,
+            ),
+        )
+    }
+
 
     override fun onEvent(e: SdkEvent) {}
 

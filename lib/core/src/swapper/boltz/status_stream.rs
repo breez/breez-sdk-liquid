@@ -4,7 +4,7 @@ use std::time::Duration;
 use crate::swapper::{
     boltz::BoltzSwapper, ProxyUrlFetcher, SubscriptionHandler, SwapperStatusStream,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use boltz_client::boltz::{
     self,
     tokio_tungstenite_wasm::{Message, WebSocketStream},
@@ -22,6 +22,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         ws_request: WsRequest,
         sender: &mut SplitSink<WebSocketStream, Message>,
     ) {
+        debug!("Sending request: {ws_request:?}");
         match serde_json::to_string(&ws_request) {
             Ok(ref req_json) => match sender.send(Message::Text(req_json.into())).await {
                 Ok(_) => debug!("Sent request: {req_json}"),
@@ -45,6 +46,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
+                let mut request_stream = self.request_notifier.subscribe();
                 let client = match swapper.get_boltz_client().await {
                     Ok(client) => client,
                     Err(e) => {
@@ -56,9 +58,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                 match client.inner.connect_ws().await {
                     Ok(ws_stream) => {
                         let (mut sender, mut receiver) = ws_stream.split();
-
                         let mut tracked_ids: HashSet<String> = HashSet::new();
-                        let mut request_stream = self.request_notifier.subscribe();
 
                         callback.track_subscriptions().await;
 
@@ -165,34 +165,65 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
     }
 
     fn track_swap_id(&self, swap_id: &str) -> Result<()> {
-        let _ =
-            self.request_notifier
-                .send(WsRequest::Subscribe(boltz::SubscribeRequest::SwapUpdate {
-                    args: vec![swap_id.to_string()],
-                }));
-        Ok(())
+        match self.request_notifier.send(WsRequest::Subscribe(
+            boltz::SubscribeRequest::SwapUpdate {
+                args: vec![swap_id.to_string()],
+            },
+        )) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("Failed to send subscribe swap: {e:?}");
+                Err(anyhow!("Failed to send subscribe swap: {e:?}"))
+            }
+        }
     }
 
     fn track_offer(&self, offer: &str, signature: &str) -> Result<()> {
-        let _ = self.request_notifier.send(WsRequest::Subscribe(
+        match self.request_notifier.send(WsRequest::Subscribe(
             boltz::SubscribeRequest::InvoiceRequest {
                 args: vec![InvoiceRequestParams {
                     offer: offer.to_string(),
                     signature: signature.to_string(),
                 }],
             },
-        ));
-        Ok(())
+        )) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("Failed to send subscribe offer: {e:?}");
+                Err(anyhow!("Failed to send subscribe offer: {e:?}"))
+            }
+        }
     }
 
     fn send_invoice_created(&self, id: &str, invoice: &str) -> Result<()> {
-        let _ = self
+        debug!("Sending invoice created: id: {id}");
+        match self
             .request_notifier
             .send(WsRequest::Invoice(boltz::InvoiceCreated {
                 id: id.to_string(),
                 invoice: invoice.to_string(),
-            }));
-        Ok(())
+            })) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("Failed to send invoice created: {e:?}");
+                Err(anyhow!("Failed to send invoice created: {e:?}"))
+            }
+        }
+    }
+
+    fn send_invoice_error(&self, id: &str, error: &str) -> Result<()> {
+        match self
+            .request_notifier
+            .send(WsRequest::InvoiceError(boltz::InvoiceError {
+                id: id.to_string(),
+                error: error.to_string(),
+            })) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                error!("Failed to send invoice error: {e:?}");
+                Err(anyhow!("Failed to send invoice error: {e:?}"))
+            }
+        }
     }
 
     fn subscribe_swap_updates(&self) -> broadcast::Receiver<boltz::SwapStatus> {

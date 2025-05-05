@@ -530,6 +530,72 @@ as String,
 /// @nodoc
 
 
+class LnUrlPayError_InsufficientBalance extends LnUrlPayError {
+  const LnUrlPayError_InsufficientBalance({required this.err}): super._();
+  
+
+ final  String err;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LnUrlPayError_InsufficientBalanceCopyWith<LnUrlPayError_InsufficientBalance> get copyWith => _$LnUrlPayError_InsufficientBalanceCopyWithImpl<LnUrlPayError_InsufficientBalance>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LnUrlPayError_InsufficientBalance&&(identical(other.err, err) || other.err == err));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,err);
+
+@override
+String toString() {
+  return 'LnUrlPayError.insufficientBalance(err: $err)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LnUrlPayError_InsufficientBalanceCopyWith<$Res> implements $LnUrlPayErrorCopyWith<$Res> {
+  factory $LnUrlPayError_InsufficientBalanceCopyWith(LnUrlPayError_InsufficientBalance value, $Res Function(LnUrlPayError_InsufficientBalance) _then) = _$LnUrlPayError_InsufficientBalanceCopyWithImpl;
+@useResult
+$Res call({
+ String err
+});
+
+
+
+
+}
+/// @nodoc
+class _$LnUrlPayError_InsufficientBalanceCopyWithImpl<$Res>
+    implements $LnUrlPayError_InsufficientBalanceCopyWith<$Res> {
+  _$LnUrlPayError_InsufficientBalanceCopyWithImpl(this._self, this._then);
+
+  final LnUrlPayError_InsufficientBalance _self;
+  final $Res Function(LnUrlPayError_InsufficientBalance) _then;
+
+/// Create a copy of LnUrlPayError
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? err = null,}) {
+  return _then(LnUrlPayError_InsufficientBalance(
+err: null == err ? _self.err : err // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
 class LnUrlPayError_InvalidAmount extends LnUrlPayError {
   const LnUrlPayError_InvalidAmount({required this.err}): super._();
   
