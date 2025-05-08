@@ -26,6 +26,7 @@ object Constants {
     const val MESSAGE_TYPE_INVOICE_REQUEST = "invoice_request"
     const val MESSAGE_TYPE_LNURL_PAY_INFO = "lnurlpay_info"
     const val MESSAGE_TYPE_LNURL_PAY_INVOICE = "lnurlpay_invoice"
+    const val MESSAGE_TYPE_LNURL_PAY_VERIFY = "lnurlpay_verify"
     const val MESSAGE_TYPE_SWAP_UPDATED = "swap_updated"
 
     // Resource Identifiers
@@ -51,6 +52,10 @@ object Constants {
         "lnurl_pay_info_notification_title"
     const val LNURL_PAY_INVOICE_NOTIFICATION_TITLE =
         "lnurl_pay_invoice_notification_title"
+    const val LNURL_PAY_VERIFY_NOTIFICATION_TITLE =
+        "lnurl_pay_verify_notification_title"
+    const val LNURL_PAY_VERIFY_NOTIFICATION_FAILURE_TITLE =
+        "lnurl_pay_verify_notification_failure_title"
     const val LNURL_PAY_METADATA_PLAIN_TEXT =
         "lnurl_pay_metadata_plain_text"
     const val LNURL_PAY_NOTIFICATION_FAILURE_TITLE =
@@ -104,6 +109,10 @@ object Constants {
         "Invoice Request Failed"
     const val DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE =
         "Fetching Invoice"
+    const val DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_TITLE =
+        "Verifying Payment"
+    const val DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_FAILURE_TITLE =
+        "Payment Verification Failed"
     const val DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT =
         "Pay with LNURL"
     const val DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE =

@@ -28,17 +28,20 @@ class LnurlPayTask : ReplyableTask {
 }
 
 enum InvalidLnurlPayError: Error {
-    case minSendable
     case amount(amount: UInt64)
+    case minSendable
+    case notFound
 }
 
 extension InvalidLnurlPayError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .minSendable:
-            return NSLocalizedString("Minimum sendable amount is invalid", comment: "InvalidLnurlPayError")
         case .amount(amount: let amount):
             return NSLocalizedString("Invalid amount requested \(amount)", comment: "InvalidLnurlPayError")
+        case .minSendable:
+            return NSLocalizedString("Minimum sendable amount is invalid", comment: "InvalidLnurlPayError")
+        case .notFound:
+            return NSLocalizedString("Not found", comment: "InvalidLnurlPayError")
         }
     }
 }
