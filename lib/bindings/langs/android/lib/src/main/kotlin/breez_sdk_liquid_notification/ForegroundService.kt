@@ -14,6 +14,7 @@ import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.connectSD
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_INVOICE_REQUEST
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INFO
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INVOICE
+import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_VERIFY
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_FOREGROUND_SERVICE
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_REPLACEABLE
@@ -25,6 +26,7 @@ import breez_sdk_liquid_notification.job.Job
 import breez_sdk_liquid_notification.job.InvoiceRequestJob
 import breez_sdk_liquid_notification.job.LnurlPayInfoJob
 import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
+import breez_sdk_liquid_notification.job.LnurlPayVerifyJob
 import breez_sdk_liquid_notification.job.SwapUpdatedJob
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -179,6 +181,14 @@ abstract class ForegroundService :
 
                     MESSAGE_TYPE_LNURL_PAY_INVOICE ->
                         LnurlPayInvoiceJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
+
+                    MESSAGE_TYPE_LNURL_PAY_VERIFY ->
+                        LnurlPayVerifyJob(
                             applicationContext,
                             this,
                             payload,
