@@ -2,17 +2,23 @@ import UserNotifications
 import Foundation
 
 struct LnurlInvoiceRequest: Codable {
-    let reply_url: String
     let amount: UInt64
+    let reply_url: String
+    let verify_url: String?
 }
 
+// Serialize the response according to:
+// - LUD-06: https://github.com/lnurl/luds/blob/luds/06.md
+// - LUD-21: https://github.com/lnurl/luds/blob/luds/21.md
 struct LnurlInvoiceResponse: Decodable, Encodable {
     let pr: String
     let routes: [String]
+    let verify: String?
     
-    init(pr: String, routes: [String]) {
+    init(pr: String, routes: [String], verify: String?) {
         self.pr = pr
         self.routes = routes
+        self.verify = verify
     }
 }
 
@@ -48,7 +54,19 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             let amount = ReceiveAmount.bitcoin(payerAmountSat: amountSat)
             let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.lightning, amount: amount))
             let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true))
-            self.replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: []), replyURL: request!.reply_url)
+            // Add the verify URL
+            var verify: String?
+            if let verifyUrl = request!.verify_url {
+                do {
+                    let inputType = try liquidSDK.parse(input: receivePaymentRes.destination)
+                    if case .bolt11(let invoice) = inputType {
+                        verify = verifyUrl.replacingOccurrences(of: "{payment_hash}", with: invoice.paymentHash)
+                    }
+                } catch let e {
+                    self.logger.log(tag: TAG, line: "Failed to parse destination: \(e)", level: "ERROR")
+                }
+            }
+            self.replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: [], verify: verify), replyURL: request!.reply_url)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process lnurl: \(e)", level: "ERROR")
             self.fail(withError: e.localizedDescription, replyURL: request!.reply_url)

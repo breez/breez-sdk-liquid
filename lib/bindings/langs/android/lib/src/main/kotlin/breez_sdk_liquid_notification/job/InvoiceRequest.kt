@@ -41,7 +41,7 @@ class InvoiceRequestJob(
     }
 
     override fun start(liquidSDK: BindingLiquidSdk) {
-        var request: InvoiceRequestRequest? = null
+        var request: InvoiceRequestRequest?
         try {
             request = Json.decodeFromString(InvoiceRequestRequest.serializer(), payload)
             val createBolt12InvoiceResponse =
