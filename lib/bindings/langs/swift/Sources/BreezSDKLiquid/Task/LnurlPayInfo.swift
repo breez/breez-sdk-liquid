@@ -55,7 +55,7 @@ class LnurlPayInfoTask : LnurlPayTask {
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
             replyServer(encodable: LnurlInfoResponse(callback: request!.callback_url, maxSendable: maxSendableMsat, minSendable: minSendableMsat, metadata: metadata, tag: "payRequest"),
-                        replyURL: request!.reply_url)
+                        replyURL: request!.reply_url, maxAge: 86400)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process lnurl: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)
