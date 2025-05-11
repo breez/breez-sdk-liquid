@@ -58,7 +58,9 @@ class LnurlPayVerifyJob(
                     // In the case of a Lightning payment, if it's paid via Lightning or MRH,
                     // we can release the preimage
                     val settled = when (payment.status) {
-                        PaymentState.COMPLETE, PaymentState.PENDING -> details.claimTxId != null
+                        // If the payment is pending, we need to check if it's paid via Lightning or MRH
+                        PaymentState.PENDING -> details.claimTxId != null
+                        PaymentState.COMPLETE -> true
                         else -> false
                     }
                     LnurlPayVerifyResponse(

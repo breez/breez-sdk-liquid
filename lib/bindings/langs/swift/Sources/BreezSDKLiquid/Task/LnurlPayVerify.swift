@@ -49,8 +49,11 @@ class LnurlPayVerifyTask : LnurlPayTask {
                     // In the case of a Lightning payment, if it's paid via Lightning or MRH,
                     // we can release the preimage
                     let settled = switch payment.status {
-                        case .complete, .pending:
+                        case .pending:
+                            // If the payment is pending, we need to check if it's paid via Lightning or MRH
                             claimTxId != nil
+                        case .complete:
+                            true
                         default:
                             false
                     }
