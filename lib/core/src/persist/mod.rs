@@ -9,6 +9,7 @@ pub(crate) mod model;
 pub(crate) mod receive;
 pub(crate) mod send;
 pub(crate) mod sync;
+pub(crate) mod wallet_updates;
 
 use std::collections::{HashMap, HashSet};
 use std::ops::Not;

@@ -11,7 +11,7 @@ pub(crate) fn new_recoverer(
     signer: Arc<Box<dyn Signer>>,
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
 ) -> Result<Recoverer> {
     let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());

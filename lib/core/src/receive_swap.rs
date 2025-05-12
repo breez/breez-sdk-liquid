@@ -28,7 +28,7 @@ pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
 pub(crate) struct ReceiveSwapHandler {
     config: Config,
     onchain_wallet: Arc<dyn OnchainWallet>,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     swapper: Arc<dyn Swapper>,
     subscription_notifier: broadcast::Sender<String>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
@@ -50,7 +50,7 @@ impl ReceiveSwapHandler {
     pub(crate) fn new(
         config: Config,
         onchain_wallet: Arc<dyn OnchainWallet>,
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         swapper: Arc<dyn Swapper>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
     ) -> Self {

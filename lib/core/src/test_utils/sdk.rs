@@ -18,7 +18,7 @@ use super::{
 };
 
 pub(crate) async fn new_liquid_sdk(
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
 ) -> Result<Arc<LiquidSdk>> {
@@ -37,7 +37,7 @@ pub(crate) async fn new_liquid_sdk(
 }
 
 pub(crate) async fn new_liquid_sdk_with_chain_services(
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     swapper: Arc<MockSwapper>,
     status_stream: Arc<MockStatusStream>,
     liquid_chain_service: Arc<MockLiquidChainService>,
