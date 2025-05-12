@@ -75,8 +75,8 @@ pub enum PaymentError {
     #[error("The payment is already in progress")]
     PaymentInProgress,
 
-    #[error("Amount is out of range")]
-    AmountOutOfRange,
+    #[error("Amount must be between {min} and {max}")]
+    AmountOutOfRange { min: u64, max: u64 },
 
     #[error("Amount is missing: {err}")]
     AmountMissing { err: String },

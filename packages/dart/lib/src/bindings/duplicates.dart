@@ -50,6 +50,9 @@ sealed class LnUrlPayError with _$LnUrlPayError implements FrbException {
   /// in this enum.
   const factory LnUrlPayError.generic({required String err}) = LnUrlPayError_Generic;
 
+  /// This error is raised when the node does not have enough funds to make the payment.
+  const factory LnUrlPayError.insufficientBalance({required String err}) = LnUrlPayError_InsufficientBalance;
+
   /// This error is raised when the amount from the parsed invoice is not set.
   const factory LnUrlPayError.invalidAmount({required String err}) = LnUrlPayError_InvalidAmount;
 

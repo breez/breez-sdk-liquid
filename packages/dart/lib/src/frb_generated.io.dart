@@ -3115,63 +3115,69 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Generic.err = pre_err;
       return;
     }
-    if (apiObj is LnUrlPayError_InvalidAmount) {
+    if (apiObj is LnUrlPayError_InsufficientBalance) {
       var pre_err = cst_encode_String(apiObj.err);
       wireObj.tag = 2;
+      wireObj.kind.InsufficientBalance.err = pre_err;
+      return;
+    }
+    if (apiObj is LnUrlPayError_InvalidAmount) {
+      var pre_err = cst_encode_String(apiObj.err);
+      wireObj.tag = 3;
       wireObj.kind.InvalidAmount.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_InvalidInvoice) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 3;
+      wireObj.tag = 4;
       wireObj.kind.InvalidInvoice.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_InvalidNetwork) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 4;
+      wireObj.tag = 5;
       wireObj.kind.InvalidNetwork.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_InvalidUri) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 5;
+      wireObj.tag = 6;
       wireObj.kind.InvalidUri.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_InvoiceExpired) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 6;
+      wireObj.tag = 7;
       wireObj.kind.InvoiceExpired.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_PaymentFailed) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 7;
+      wireObj.tag = 8;
       wireObj.kind.PaymentFailed.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_PaymentTimeout) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 8;
+      wireObj.tag = 9;
       wireObj.kind.PaymentTimeout.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_RouteNotFound) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 9;
+      wireObj.tag = 10;
       wireObj.kind.RouteNotFound.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_RouteTooExpensive) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 10;
+      wireObj.tag = 11;
       wireObj.kind.RouteTooExpensive.err = pre_err;
       return;
     }
     if (apiObj is LnUrlPayError_ServiceConnectivity) {
       var pre_err = cst_encode_String(apiObj.err);
-      wireObj.tag = 11;
+      wireObj.tag = 12;
       wireObj.kind.ServiceConnectivity.err = pre_err;
       return;
     }
@@ -3508,7 +3514,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       return;
     }
     if (apiObj is PaymentError_AmountOutOfRange) {
+      var pre_min = cst_encode_u_64(apiObj.min);
+      var pre_max = cst_encode_u_64(apiObj.max);
       wireObj.tag = 3;
+      wireObj.kind.AmountOutOfRange.min = pre_min;
+      wireObj.kind.AmountOutOfRange.max = pre_max;
       return;
     }
     if (apiObj is PaymentError_AmountMissing) {
@@ -7640,6 +7650,10 @@ final class wire_cst_LnUrlPayError_Generic extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
 
+final class wire_cst_LnUrlPayError_InsufficientBalance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
+}
+
 final class wire_cst_LnUrlPayError_InvalidAmount extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -7682,6 +7696,8 @@ final class wire_cst_LnUrlPayError_ServiceConnectivity extends ffi.Struct {
 
 final class LnUrlPayErrorKind extends ffi.Union {
   external wire_cst_LnUrlPayError_Generic Generic;
+
+  external wire_cst_LnUrlPayError_InsufficientBalance InsufficientBalance;
 
   external wire_cst_LnUrlPayError_InvalidAmount InvalidAmount;
 
@@ -7822,6 +7838,14 @@ final class wire_cst_onchain_payment_limits_response extends ffi.Struct {
   external wire_cst_limits receive;
 }
 
+final class wire_cst_PaymentError_AmountOutOfRange extends ffi.Struct {
+  @ffi.Uint64()
+  external int min;
+
+  @ffi.Uint64()
+  external int max;
+}
+
 final class wire_cst_PaymentError_AmountMissing extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> err;
 }
@@ -7865,6 +7889,8 @@ final class wire_cst_PaymentError_SignerError extends ffi.Struct {
 }
 
 final class PaymentErrorKind extends ffi.Union {
+  external wire_cst_PaymentError_AmountOutOfRange AmountOutOfRange;
+
   external wire_cst_PaymentError_AmountMissing AmountMissing;
 
   external wire_cst_PaymentError_AssetError AssetError;
