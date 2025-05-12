@@ -23,6 +23,7 @@ use sdk_common::input_parser::InputType;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use sdk_common::utils::Arc;
+use side_swap::api::{HybridSideSwapService, SideSwapService};
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
@@ -79,6 +80,7 @@ pub struct LiquidSdkBuilder {
     liquid_chain_service: Option<Arc<dyn LiquidChainService>>,
     onchain_wallet: Option<Arc<dyn OnchainWallet>>,
     payjoin_service: Option<Arc<dyn PayjoinService>>,
+    sideswap_service: Option<Arc<dyn SideSwapService>>,
     persister: Option<Arc<Persister>>,
     recoverer: Option<Arc<Recoverer>>,
     rest_client: Option<Arc<dyn RestClient>>,
@@ -103,6 +105,7 @@ impl LiquidSdkBuilder {
             liquid_chain_service: None,
             onchain_wallet: None,
             payjoin_service: None,
+            sideswap_service: None,
             persister: None,
             recoverer: None,
             rest_client: None,
@@ -140,6 +143,11 @@ impl LiquidSdkBuilder {
 
     pub fn payjoin_service(&mut self, payjoin_service: Arc<dyn PayjoinService>) -> &mut Self {
         self.payjoin_service = Some(payjoin_service.clone());
+        self
+    }
+
+    pub fn sideswap_service(&mut self, sideswap_service: Arc<dyn SideSwapService>) -> &mut Self {
+        self.sideswap_service = Some(sideswap_service.clone());
         self
     }
 
@@ -329,6 +337,15 @@ impl LiquidSdkBuilder {
             )),
         };
 
+        let sideswap_service = match self.sideswap_service.clone() {
+            Some(sideswap_service) => sideswap_service,
+            None => Arc::new(HybridSideSwapService::new(
+                self.config.sideswap_url().to_string(),
+                rest_client.clone(),
+                onchain_wallet.clone(),
+            )),
+        };
+
         let buy_bitcoin_service = Arc::new(BuyBitcoinService::new(
             self.config.clone(),
             self.breez_server.clone(),
@@ -357,6 +374,7 @@ impl LiquidSdkBuilder {
             sync_service,
             chain_swap_handler,
             payjoin_service,
+            sideswap_service,
             buy_bitcoin_service,
             external_input_parsers,
         });
@@ -385,6 +403,7 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) payjoin_service: Arc<dyn PayjoinService>,
+    pub(crate) sideswap_service: Arc<dyn SideSwapService>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
 }
@@ -4030,6 +4049,27 @@ impl LiquidSdk {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
+    }
+
+    pub async fn prepare_asset_swap(
+        &self,
+        req: &PrepareAssetSwapRequest,
+    ) -> Result<PrepareAssetSwapResponse, PaymentError> {
+        self.sideswap_service.clone().start().await?;
+
+        let asset_id = AssetId::from_str(&req.asset_id)
+            .map_err(|err| PaymentError::generic(&format!("Invalid asset: {err}")))?;
+        let asset_swap = self
+            .sideswap_service
+            .subscribe_price_stream(asset_id, req.payer_amount_sat)
+            .await?;
+
+        if self.get_info().await?.wallet_info.balance_sat < req.payer_amount_sat + asset_swap.fees_sat {
+            self.sideswap_service.unsubscribe_price_stream().await?;
+            return Err(PaymentError::InsufficientFunds);
+        }
+
+        Ok(PrepareAssetSwapResponse { asset_swap })
     }
 }
 
