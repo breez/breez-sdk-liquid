@@ -45,7 +45,7 @@ pub(crate) struct SyncCompletedData {
 pub struct SyncService {
     remote_url: String,
     client_id: String,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
     client: Box<dyn SyncerClient>,
@@ -55,7 +55,7 @@ pub struct SyncService {
 impl SyncService {
     pub(crate) fn new(
         remote_url: String,
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         recoverer: Arc<Recoverer>,
         signer: Arc<Box<dyn Signer>>,
         client: Box<dyn SyncerClient>,
@@ -762,7 +762,7 @@ mod tests {
     }
 
     fn get_outgoing_record<'a>(
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         outgoing: &'a HashMap<String, Record>,
         data_id: &str,
         record_type: RecordType,

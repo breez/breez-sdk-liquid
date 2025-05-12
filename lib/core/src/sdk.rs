@@ -97,7 +97,7 @@ pub struct LiquidSdkBuilder {
     liquid_chain_service: Option<Arc<dyn LiquidChainService>>,
     onchain_wallet: Option<Arc<dyn OnchainWallet>>,
     payjoin_service: Option<Arc<dyn PayjoinService>>,
-    persister: Option<Arc<Persister>>,
+    persister: Option<std::sync::Arc<Persister>>,
     recoverer: Option<Arc<Recoverer>>,
     rest_client: Option<Arc<dyn RestClient>>,
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
@@ -161,7 +161,7 @@ impl LiquidSdkBuilder {
         self
     }
 
-    pub fn persister(&mut self, persister: Arc<Persister>) -> &mut Self {
+    pub fn persister(&mut self, persister: std::sync::Arc<Persister>) -> &mut Self {
         self.persister = Some(persister.clone());
         self
     }
@@ -198,16 +198,6 @@ impl LiquidSdkBuilder {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
 
-        let fingerprint_hex: String =
-            Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
-        let cache_dir = self.config.get_wallet_dir(
-            self.config
-                .cache_dir
-                .as_ref()
-                .unwrap_or(&self.config.working_dir),
-            &fingerprint_hex,
-        )?;
-
         let persister = match self.persister.clone() {
             Some(persister) => persister,
             None => {
@@ -216,7 +206,7 @@ impl LiquidSdkBuilder {
                     "Must provide a Wasm-compatible persister on Wasm builds"
                 ));
                 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-                Arc::new(Persister::new_using_fs(
+                std::sync::Arc::new(Persister::new_using_fs(
                     &self.get_working_dir()?,
                     self.config.network,
                     self.config.sync_enabled(),
@@ -247,7 +237,6 @@ impl LiquidSdkBuilder {
             None => Arc::new(
                 LiquidOnchainWallet::new(
                     self.config.clone(),
-                    cache_dir,
                     persister.clone(),
                     self.signer.clone(),
                 )
@@ -386,7 +375,7 @@ pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
     pub(crate) signer: Arc<Box<dyn Signer>>,
-    pub(crate) persister: Arc<Persister>,
+    pub(crate) persister: std::sync::Arc<Persister>,
     pub(crate) rest_client: Arc<dyn RestClient>,
     pub(crate) event_manager: Arc<EventManager>,
     pub(crate) status_stream: Arc<dyn SwapperStatusStream>,

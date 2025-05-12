@@ -16,6 +16,7 @@ use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid}
 use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{ElementsNetwork, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use maybe_sync::{MaybeSend, MaybeSync};
+use persister::SqliteWalletCachePersister;
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
@@ -32,9 +33,7 @@ use crate::{
 };
 use sdk_common::utils::Arc;
 
-use crate::wallet::persister::{
-    FsWalletCachePersister, NoWalletCachePersister, WalletCachePersister,
-};
+use crate::wallet::persister::WalletCachePersister;
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 use lwk_wollet::blocking::BlockchainBackend;
 
@@ -182,7 +181,7 @@ impl WalletClient {
 
 pub struct LiquidOnchainWallet {
     config: Config,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
     client: Mutex<Option<WalletClient>>,
     pub(crate) signer: SdkLwkSigner,
@@ -193,62 +192,17 @@ impl LiquidOnchainWallet {
     /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
     pub(crate) async fn new(
         config: Config,
-        working_dir: String,
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
 
         let wallet_cache_persister: Arc<dyn WalletCachePersister> =
-            Arc::new(FsWalletCachePersister::new(
-                working_dir.clone(),
+            Arc::new(SqliteWalletCachePersister::new(
+                std::sync::Arc::clone(&persister),
                 get_descriptor(&signer, config.network)?,
-                config.network.into(),
             )?);
 
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
-
-        Ok(Self {
-            config,
-            persister,
-            wallet: Arc::new(Mutex::new(wollet)),
-            client: Mutex::new(None),
-            signer,
-            wallet_cache_persister,
-        })
-    }
-
-    /// Creates a new LiquidOnchainWallet that caches data in memory
-    pub async fn new_in_memory(
-        config: Config,
-        persister: Arc<Persister>,
-        user_signer: Arc<Box<dyn Signer>>,
-    ) -> Result<Self> {
-        let signer = SdkLwkSigner::new(user_signer.clone())?;
-
-        let wallet_cache_persister: Arc<dyn WalletCachePersister> =
-            Arc::new(NoWalletCachePersister {});
-
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
-
-        Ok(Self {
-            config,
-            persister,
-            wallet: Arc::new(Mutex::new(wollet)),
-            client: Mutex::new(None),
-            signer,
-            wallet_cache_persister,
-        })
-    }
-
-    /// Creates a new LiquidOnchainWallet with a custom cache persister implementation
-    pub async fn new_with_cache_persister(
-        config: Config,
-        persister: Arc<Persister>,
-        user_signer: Arc<Box<dyn Signer>>,
-        wallet_cache_persister: Arc<dyn WalletCachePersister>,
-    ) -> Result<Self> {
-        let signer = SdkLwkSigner::new(user_signer.clone())?;
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
         Ok(Self {
@@ -646,29 +600,11 @@ mod tests {
 
         create_persister!(storage);
 
-        let wallet: Arc<dyn OnchainWallet> = {
-            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-            {
-                // Create a temporary directory for working_dir
-                let working_dir = tempdir::TempDir::new("")
-                    .unwrap()
-                    .path()
-                    .to_str()
-                    .unwrap()
-                    .to_string();
-                Arc::new(
-                    LiquidOnchainWallet::new(config, working_dir, storage, sdk_signer.clone())
-                        .await
-                        .unwrap(),
-                )
-            }
-            #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-            Arc::new(
-                LiquidOnchainWallet::new_in_memory(config, storage, sdk_signer.clone())
-                    .await
-                    .unwrap(),
-            )
-        };
+        let wallet: Arc<dyn OnchainWallet> = Arc::new(
+            LiquidOnchainWallet::new(config, storage, sdk_signer.clone())
+                .await
+                .unwrap(),
+        );
 
         // Test message
         let message = "Hello, Liquid!";

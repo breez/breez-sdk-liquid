@@ -51,7 +51,7 @@ const SIDESWAP_BASE_USD_FEE_SAT: f64 = 4_000_000.0;
 pub(crate) struct SideSwapPayjoinService {
     config: Config,
     fiat_api: Arc<dyn FiatAPI>,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     rest_client: Arc<dyn RestClient>,
     accepted_assets: OnceCell<AcceptedAssetsResponse>,
@@ -61,7 +61,7 @@ impl SideSwapPayjoinService {
     pub fn new(
         config: Config,
         fiat_api: Arc<dyn FiatAPI>,
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         rest_client: Arc<dyn RestClient>,
     ) -> Self {
@@ -491,7 +491,7 @@ mod tests {
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     fn create_sideswap_payjoin_service(
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
     ) -> Result<(Arc<MockWallet>, Arc<MockRestClient>, SideSwapPayjoinService)> {
         let config = Config::testnet_esplora(None);
         let breez_server = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.to_string(), None)?);

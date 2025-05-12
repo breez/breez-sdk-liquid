@@ -36,7 +36,7 @@ pub struct Recoverer {
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
 }
 
 impl Recoverer {
@@ -46,7 +46,7 @@ impl Recoverer {
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<dyn BitcoinChainService>,
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
     ) -> Result<Self> {
         Ok(Self {
             master_blinding_key: MasterBlindingKey::from_hex(

@@ -2,6 +2,7 @@ use anyhow::Result;
 use breez_sdk_liquid::model::{EventListener, SdkEvent};
 use breez_sdk_liquid::persist::Persister;
 use std::rc::Rc;
+use std::sync::Arc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 pub(crate) struct ForwardingEventListener {
@@ -40,7 +41,7 @@ impl BackupPersister {
 
     pub(crate) fn start_backup_task(
         &self,
-        persister: Rc<Persister>,
+        persister: Arc<Persister>,
         mut receiver: Receiver<SdkEvent>,
     ) {
         let storage = self.storage.clone();
