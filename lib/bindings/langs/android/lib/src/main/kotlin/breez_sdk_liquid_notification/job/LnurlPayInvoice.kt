@@ -27,7 +27,7 @@ import kotlinx.serialization.json.Json
 data class LnurlInvoiceRequest(
     @SerialName("amount") val amount: ULong,
     @SerialName("reply_url") val replyURL: String,
-    @SerialName("verify_url") val verifyURL: String?,
+    @SerialName("verify_url") val verifyURL: String? = null,
 )
 
 // Serialize the response according to:
@@ -53,7 +53,8 @@ class LnurlPayInvoiceJob(
     override fun start(liquidSDK: BindingLiquidSdk) {
         var request: LnurlInvoiceRequest? = null
         try {
-            request = Json.decodeFromString(LnurlInvoiceRequest.serializer(), payload)
+            val decoder = Json { ignoreUnknownKeys = true }
+            request = decoder.decodeFromString(LnurlInvoiceRequest.serializer(), payload)
             // Get the lightning limits
             val limits = liquidSDK.fetchLightningLimits()
             // Check amount is within limits

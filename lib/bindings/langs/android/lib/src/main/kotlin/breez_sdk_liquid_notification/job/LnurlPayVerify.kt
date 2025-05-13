@@ -47,7 +47,8 @@ class LnurlPayVerifyJob(
     override fun start(liquidSDK: BindingLiquidSdk) {
         var request: LnurlVerifyRequest? = null
         try {
-            request = Json.decodeFromString(LnurlVerifyRequest.serializer(), payload)
+            val decoder = Json { ignoreUnknownKeys = true }
+            request = decoder.decodeFromString(LnurlVerifyRequest.serializer(), payload)
             // Get the payment by payment hash
             val getPaymentReq = GetPaymentRequest.PaymentHash(request.paymentHash)
             val payment = liquidSDK.getPayment(getPaymentReq) ?: run {

@@ -48,7 +48,8 @@ class LnurlPayInfoJob(
     override fun start(liquidSDK: BindingLiquidSdk) {
         var request: LnurlInfoRequest? = null
         try {
-            request = Json.decodeFromString(LnurlInfoRequest.serializer(), payload)
+            val decoder = Json { ignoreUnknownKeys = true }
+            request = decoder.decodeFromString(LnurlInfoRequest.serializer(), payload)
             // Get the lightning limits
             val limits = liquidSDK.fetchLightningLimits()
             // Max millisatoshi amount LN SERVICE is willing to receive
