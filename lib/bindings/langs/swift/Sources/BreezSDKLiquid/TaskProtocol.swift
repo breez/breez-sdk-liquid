@@ -92,7 +92,9 @@ class ReplyableTask : TaskProtocol {
         }
         var request = URLRequest(url: serverReplyURL)
         request.httpMethod = "POST"
-        request.httpBody = try! JSONEncoder().encode(encodable)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        request.httpBody = try! encoder.encode(encodable)
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             let statusCode = (response as! HTTPURLResponse).statusCode
             
