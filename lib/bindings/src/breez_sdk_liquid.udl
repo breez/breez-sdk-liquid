@@ -746,6 +746,14 @@ dictionary PrepareAssetSwapResponse {
     AssetSwap asset_swap;
 };
 
+dictionary ExecuteAssetSwapRequest {
+    PrepareAssetSwapResponse prepare_response;
+};
+
+dictionary ExecuteAssetSwapResponse {
+    Payment payment;
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);
