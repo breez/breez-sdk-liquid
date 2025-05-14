@@ -88,7 +88,7 @@ class LnurlPayVerifyJob(
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process lnurl verify: ${e.message}", "WARN")
             if (request != null) {
-                fail(e.message, request.replyURL)
+                fail(e.message, request.replyURL, logger)
             }
             notifyChannel(
                 context,
