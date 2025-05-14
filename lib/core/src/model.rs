@@ -2476,6 +2476,18 @@ pub struct PrepareAssetSwapResponse {
     pub asset_swap: AssetSwap,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+#[derive(Debug, Clone, Serialize)]
+pub struct ExecuteAssetSwapRequest {
+    pub prepare_response: PrepareAssetSwapResponse,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+#[derive(Debug, Clone, Serialize)]
+pub struct ExecuteAssetSwapResponse {
+    pub payment: Payment,
+}
+
 #[derive(Clone, Debug)]
 pub struct BtcScriptBalance {
     /// Confirmed balance in Satoshis for the address.
