@@ -2,6 +2,7 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
+import breez_sdk_liquid_notification.Constants.CACHE_CONTROL_MAX_AGE_DAY
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INFO_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
@@ -74,7 +75,7 @@ class LnurlPayInfoJob(
                     "[[\"text/plain\",\"$plainTextMetadata\"]]",
                     "payRequest",
                 )
-            val success = replyServer(Json.encodeToString(response), request.replyURL, 86400)
+            val success = replyServer(Json.encodeToString(response), request.replyURL, CACHE_CONTROL_MAX_AGE_DAY)
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_REPLACEABLE,
