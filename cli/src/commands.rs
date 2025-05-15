@@ -258,6 +258,11 @@ pub(crate) enum Command {
     ListFiat {},
     /// Fetch available fiat rates
     FetchFiatRates {},
+    /// Swap L-BTC for any SideSwap asset
+    SwapAsset {
+        asset_id: String,
+        send_amount_sat: u64,
+    },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -811,6 +816,29 @@ pub(crate) async fn handle_command(
         }
         Command::ListFiat {} => {
             let res = sdk.list_fiat_currencies().await?;
+            command_result!(res)
+        }
+        Command::SwapAsset {
+            asset_id,
+            send_amount_sat,
+        } => {
+            let prepare_response = sdk
+                .prepare_asset_swap(&PrepareAssetSwapRequest {
+                    asset_id,
+                    send_amount_sat,
+                })
+                .await?;
+
+            let asset_swap = &prepare_response.asset_swap;
+            let confirmation_msg = format!(
+                "Fees: approx {} sat. Recv amount: {}. Is this acceptable? (y/N) ",
+                asset_swap.fees_sat, asset_swap.recv_amount
+            );
+            wait_confirmation!(confirmation_msg, "Asset swap halted");
+
+            let res = sdk
+                .execute_asset_swap(&ExecuteAssetSwapRequest { prepare_response })
+                .await?;
             command_result!(res)
         }
     })
