@@ -75,7 +75,8 @@ class LnurlPayVerifyJob(
                 throw InvalidLnurlPayException("Not found")
             }
 
-            val success = replyServer(Json.encodeToString(response), request.replyURL)
+            val maxAge = if (response.settled) 604800 else 0
+            val success = replyServer(Json.encodeToString(response), request.replyURL, maxAge)
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_REPLACEABLE,
