@@ -37,7 +37,7 @@ pub const ESTIMATED_BTC_LOCKUP_TX_VSIZE: u64 = 154;
 pub(crate) struct ChainSwapHandler {
     config: Config,
     onchain_wallet: Arc<dyn OnchainWallet>,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     swapper: Arc<dyn Swapper>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
     bitcoin_chain_service: Arc<dyn BitcoinChainService>,
@@ -67,7 +67,7 @@ impl ChainSwapHandler {
     pub(crate) fn new(
         config: Config,
         onchain_wallet: Arc<dyn OnchainWallet>,
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         swapper: Arc<dyn Swapper>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
         bitcoin_chain_service: Arc<dyn BitcoinChainService>,
