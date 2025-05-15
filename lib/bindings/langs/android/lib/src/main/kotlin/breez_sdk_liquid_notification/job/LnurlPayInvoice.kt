@@ -2,6 +2,7 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
+import breez_sdk_liquid.InputType
 import breez_sdk_liquid.PaymentMethod
 import breez_sdk_liquid.PrepareReceiveRequest
 import breez_sdk_liquid.ReceiveAmount
@@ -26,14 +27,17 @@ import kotlinx.serialization.json.Json
 data class LnurlInvoiceRequest(
     @SerialName("amount") val amount: ULong,
     @SerialName("reply_url") val replyURL: String,
+    @SerialName("verify_url") val verifyURL: String? = null,
 )
 
-// Serialize the response according to to LUD-06 payRequest base specification:
-// https://github.com/lnurl/luds/blob/luds/06.md
+// Serialize the response according to:
+// - LUD-06: https://github.com/lnurl/luds/blob/luds/06.md
+// - LUD-21: https://github.com/lnurl/luds/blob/luds/21.md
 @Serializable
 data class LnurlPayInvoiceResponse(
     val pr: String,
     val routes: List<String>,
+    val verify: String?,
 )
 
 class LnurlPayInvoiceJob(
@@ -49,7 +53,8 @@ class LnurlPayInvoiceJob(
     override fun start(liquidSDK: BindingLiquidSdk) {
         var request: LnurlInvoiceRequest? = null
         try {
-            request = Json.decodeFromString(LnurlInvoiceRequest.serializer(), payload)
+            val decoder = Json { ignoreUnknownKeys = true }
+            request = decoder.decodeFromString(LnurlInvoiceRequest.serializer(), payload)
             // Get the lightning limits
             val limits = liquidSDK.fetchLightningLimits()
             // Check amount is within limits
@@ -75,10 +80,23 @@ class LnurlPayInvoiceJob(
                         useDescriptionHash = true,
                     ),
                 )
+            // Add the verify URL
+            var verify: String? = null
+            if (request.verifyURL != null) {
+                try {
+                    val inputType = liquidSDK.parse(receivePaymentResponse.destination)
+                    if (inputType is InputType.Bolt11) {
+                        verify = request.verifyURL?.replace("{payment_hash}", inputType.invoice.paymentHash)
+                    }
+                } catch (e: Exception) {
+                    logger.log(TAG, "Failed to parse destination: ${e.message}", "WARN")
+                }
+            }
             val response =
                 LnurlPayInvoiceResponse(
                     receivePaymentResponse.destination,
                     listOf(),
+                    verify,
                 )
             val success = replyServer(Json.encodeToString(response), request.replyURL)
             notifyChannel(
@@ -93,7 +111,7 @@ class LnurlPayInvoiceJob(
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process lnurl: ${e.message}", "WARN")
             if (request != null) {
-                fail(e.message, request.replyURL)
+                fail(e.message, request.replyURL, logger)
             }
             notifyChannel(
                 context,

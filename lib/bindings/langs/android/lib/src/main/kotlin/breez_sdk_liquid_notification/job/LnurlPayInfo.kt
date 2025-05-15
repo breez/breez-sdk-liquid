@@ -48,7 +48,8 @@ class LnurlPayInfoJob(
     override fun start(liquidSDK: BindingLiquidSdk) {
         var request: LnurlInfoRequest? = null
         try {
-            request = Json.decodeFromString(LnurlInfoRequest.serializer(), payload)
+            val decoder = Json { ignoreUnknownKeys = true }
+            request = decoder.decodeFromString(LnurlInfoRequest.serializer(), payload)
             // Get the lightning limits
             val limits = liquidSDK.fetchLightningLimits()
             // Max millisatoshi amount LN SERVICE is willing to receive
@@ -86,7 +87,7 @@ class LnurlPayInfoJob(
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process lnurl: ${e.message}", "WARN")
             if (request != null) {
-                fail(e.message, request.replyURL)
+                fail(e.message, request.replyURL, logger)
             }
             notifyChannel(
                 context,

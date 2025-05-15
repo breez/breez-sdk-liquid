@@ -62,7 +62,8 @@ class SwapUpdatedJob(
 
     override fun start(liquidSDK: BindingLiquidSdk) {
         try {
-            val request = Json.decodeFromString(SwapUpdatedRequest.serializer(), payload)
+            val decoder = Json { ignoreUnknownKeys = true }
+            val request = decoder.decodeFromString(SwapUpdatedRequest.serializer(), payload)
             this.swapIdHash = request.id
             startPolling(liquidSDK)
         } catch (e: Exception) {
