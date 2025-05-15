@@ -139,7 +139,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
 
     async fn get_bolt12_params(&self) -> Result<GetBolt12ParamsResponse, PaymentError>;
 
-    async fn get_nodes(&self) -> Result<GetNodesResponse, SdkError>;
+    async fn get_nodes(&self) -> Result<GetNodesResponse, PaymentError>;
 }
 
 pub trait SwapperStatusStream: MaybeSend + MaybeSync {
