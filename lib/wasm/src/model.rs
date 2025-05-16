@@ -715,6 +715,7 @@ pub enum PaymentDetails {
         auto_accepted_fees: bool,
         liquid_expiration_blockheight: Option<u32>,
         bitcoin_expiration_blockheight: Option<u32>,
+        lockup_tx_id: Option<String>,
         claim_tx_id: Option<String>,
         refund_tx_id: Option<String>,
         refund_tx_amount_sat: Option<u64>,
