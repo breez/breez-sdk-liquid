@@ -1214,7 +1214,7 @@ as String?,
 
 
 class PaymentDetails_Bitcoin extends PaymentDetails {
-  const PaymentDetails_Bitcoin({required this.swapId, required this.description, required this.autoAcceptedFees, this.liquidExpirationBlockheight, this.bitcoinExpirationBlockheight, this.claimTxId, this.refundTxId, this.refundTxAmountSat}): super._();
+  const PaymentDetails_Bitcoin({required this.swapId, required this.description, required this.autoAcceptedFees, this.liquidExpirationBlockheight, this.bitcoinExpirationBlockheight, this.lockupTxId, this.claimTxId, this.refundTxId, this.refundTxAmountSat}): super._();
   
 
  final  String swapId;
@@ -1230,7 +1230,9 @@ class PaymentDetails_Bitcoin extends PaymentDetails {
 /// The height of the Bitcoin block at which the swap will no longer be valid
 /// It should always be populated in case of an incoming chain swap
  final  int? bitcoinExpirationBlockheight;
-/// The claim tx id in case it has already been broadcast
+/// The lockup tx id that initiates the swap
+ final  String? lockupTxId;
+/// The claim tx id that claims the server lockup tx
  final  String? claimTxId;
 /// For a Send swap which was refunded, this is the refund tx id
  final  String? refundTxId;
@@ -1247,16 +1249,16 @@ $PaymentDetails_BitcoinCopyWith<PaymentDetails_Bitcoin> get copyWith => _$Paymen
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentDetails_Bitcoin&&(identical(other.swapId, swapId) || other.swapId == swapId)&&(identical(other.description, description) || other.description == description)&&(identical(other.autoAcceptedFees, autoAcceptedFees) || other.autoAcceptedFees == autoAcceptedFees)&&(identical(other.liquidExpirationBlockheight, liquidExpirationBlockheight) || other.liquidExpirationBlockheight == liquidExpirationBlockheight)&&(identical(other.bitcoinExpirationBlockheight, bitcoinExpirationBlockheight) || other.bitcoinExpirationBlockheight == bitcoinExpirationBlockheight)&&(identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId)&&(identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId)&&(identical(other.refundTxAmountSat, refundTxAmountSat) || other.refundTxAmountSat == refundTxAmountSat));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentDetails_Bitcoin&&(identical(other.swapId, swapId) || other.swapId == swapId)&&(identical(other.description, description) || other.description == description)&&(identical(other.autoAcceptedFees, autoAcceptedFees) || other.autoAcceptedFees == autoAcceptedFees)&&(identical(other.liquidExpirationBlockheight, liquidExpirationBlockheight) || other.liquidExpirationBlockheight == liquidExpirationBlockheight)&&(identical(other.bitcoinExpirationBlockheight, bitcoinExpirationBlockheight) || other.bitcoinExpirationBlockheight == bitcoinExpirationBlockheight)&&(identical(other.lockupTxId, lockupTxId) || other.lockupTxId == lockupTxId)&&(identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId)&&(identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId)&&(identical(other.refundTxAmountSat, refundTxAmountSat) || other.refundTxAmountSat == refundTxAmountSat));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,swapId,description,autoAcceptedFees,liquidExpirationBlockheight,bitcoinExpirationBlockheight,claimTxId,refundTxId,refundTxAmountSat);
+int get hashCode => Object.hash(runtimeType,swapId,description,autoAcceptedFees,liquidExpirationBlockheight,bitcoinExpirationBlockheight,lockupTxId,claimTxId,refundTxId,refundTxAmountSat);
 
 @override
 String toString() {
-  return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+  return 'PaymentDetails.bitcoin(swapId: $swapId, description: $description, autoAcceptedFees: $autoAcceptedFees, liquidExpirationBlockheight: $liquidExpirationBlockheight, bitcoinExpirationBlockheight: $bitcoinExpirationBlockheight, lockupTxId: $lockupTxId, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
 }
 
 
@@ -1267,7 +1269,7 @@ abstract mixin class $PaymentDetails_BitcoinCopyWith<$Res> implements $PaymentDe
   factory $PaymentDetails_BitcoinCopyWith(PaymentDetails_Bitcoin value, $Res Function(PaymentDetails_Bitcoin) _then) = _$PaymentDetails_BitcoinCopyWithImpl;
 @override @useResult
 $Res call({
- String swapId, String description, bool autoAcceptedFees, int? liquidExpirationBlockheight, int? bitcoinExpirationBlockheight, String? claimTxId, String? refundTxId, BigInt? refundTxAmountSat
+ String swapId, String description, bool autoAcceptedFees, int? liquidExpirationBlockheight, int? bitcoinExpirationBlockheight, String? lockupTxId, String? claimTxId, String? refundTxId, BigInt? refundTxAmountSat
 });
 
 
@@ -1284,14 +1286,15 @@ class _$PaymentDetails_BitcoinCopyWithImpl<$Res>
 
 /// Create a copy of PaymentDetails
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? swapId = null,Object? description = null,Object? autoAcceptedFees = null,Object? liquidExpirationBlockheight = freezed,Object? bitcoinExpirationBlockheight = freezed,Object? claimTxId = freezed,Object? refundTxId = freezed,Object? refundTxAmountSat = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? swapId = null,Object? description = null,Object? autoAcceptedFees = null,Object? liquidExpirationBlockheight = freezed,Object? bitcoinExpirationBlockheight = freezed,Object? lockupTxId = freezed,Object? claimTxId = freezed,Object? refundTxId = freezed,Object? refundTxAmountSat = freezed,}) {
   return _then(PaymentDetails_Bitcoin(
 swapId: null == swapId ? _self.swapId : swapId // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,autoAcceptedFees: null == autoAcceptedFees ? _self.autoAcceptedFees : autoAcceptedFees // ignore: cast_nullable_to_non_nullable
 as bool,liquidExpirationBlockheight: freezed == liquidExpirationBlockheight ? _self.liquidExpirationBlockheight : liquidExpirationBlockheight // ignore: cast_nullable_to_non_nullable
 as int?,bitcoinExpirationBlockheight: freezed == bitcoinExpirationBlockheight ? _self.bitcoinExpirationBlockheight : bitcoinExpirationBlockheight // ignore: cast_nullable_to_non_nullable
-as int?,claimTxId: freezed == claimTxId ? _self.claimTxId : claimTxId // ignore: cast_nullable_to_non_nullable
+as int?,lockupTxId: freezed == lockupTxId ? _self.lockupTxId : lockupTxId // ignore: cast_nullable_to_non_nullable
+as String?,claimTxId: freezed == claimTxId ? _self.claimTxId : claimTxId // ignore: cast_nullable_to_non_nullable
 as String?,refundTxId: freezed == refundTxId ? _self.refundTxId : refundTxId // ignore: cast_nullable_to_non_nullable
 as String?,refundTxAmountSat: freezed == refundTxAmountSat ? _self.refundTxAmountSat : refundTxAmountSat // ignore: cast_nullable_to_non_nullable
 as BigInt?,

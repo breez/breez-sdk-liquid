@@ -990,7 +990,10 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// It should always be populated in case of an incoming chain swap
     int? bitcoinExpirationBlockheight,
 
-    /// The claim tx id in case it has already been broadcast
+    /// The lockup tx id that initiates the swap
+    String? lockupTxId,
+
+    /// The claim tx id that claims the server lockup tx
     String? claimTxId,
 
     /// For a Send swap which was refunded, this is the refund tx id

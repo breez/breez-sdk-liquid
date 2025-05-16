@@ -737,6 +737,7 @@ export type PaymentDetails = {
     autoAcceptedFees: boolean
     bitcoinExpirationBlockheight?: number
     liquidExpirationBlockheight?: number
+    lockupTxId?: string
     claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number

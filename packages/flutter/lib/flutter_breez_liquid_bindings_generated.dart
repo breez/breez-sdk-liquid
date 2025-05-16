@@ -4949,6 +4949,8 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
 
   external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lockup_tx_id;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;

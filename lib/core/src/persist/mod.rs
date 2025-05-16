@@ -540,6 +540,7 @@ impl Persister {
                 cs.actual_payer_amount_sat,
                 cs.accepted_receiver_amount_sat,
                 cs.auto_accepted_fees,
+                cs.user_lockup_tx_id,
                 cs.claim_tx_id,
                 rtx.amount,
                 pd.destination,
@@ -660,21 +661,22 @@ impl Persister {
         let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(48)?;
         let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(49)?;
         let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(50)?;
-        let maybe_chain_swap_claim_tx_id: Option<String> = row.get(51)?;
+        let maybe_chain_swap_user_lockup_tx_id: Option<String> = row.get(51)?;
+        let maybe_chain_swap_claim_tx_id: Option<String> = row.get(52)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(52)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(53)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(53)?;
-        let maybe_payment_details_description: Option<String> = row.get(54)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(55)?;
+        let maybe_payment_details_destination: Option<String> = row.get(54)?;
+        let maybe_payment_details_description: Option<String> = row.get(55)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(56)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
-        let maybe_payment_details_bip353_address: Option<String> = row.get(56)?;
-        let maybe_payment_details_asset_fees: Option<u64> = row.get(57)?;
+        let maybe_payment_details_bip353_address: Option<String> = row.get(57)?;
+        let maybe_payment_details_asset_fees: Option<u64> = row.get(58)?;
 
-        let maybe_asset_metadata_name: Option<String> = row.get(58)?;
-        let maybe_asset_metadata_ticker: Option<String> = row.get(59)?;
-        let maybe_asset_metadata_precision: Option<u8> = row.get(60)?;
+        let maybe_asset_metadata_name: Option<String> = row.get(59)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(60)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(61)?;
 
         let (swap, payment_type) = match maybe_receive_swap_id {
             Some(receive_swap_id) => {
@@ -869,6 +871,7 @@ impl Persister {
 
                 PaymentDetails::Bitcoin {
                     swap_id,
+                    lockup_tx_id: maybe_chain_swap_user_lockup_tx_id,
                     claim_tx_id: maybe_claim_tx_id,
                     refund_tx_id,
                     refund_tx_amount_sat,

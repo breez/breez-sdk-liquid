@@ -572,6 +572,7 @@ typedef struct wire_cst_PaymentDetails_Bitcoin {
   bool auto_accepted_fees;
   uint32_t *liquid_expiration_blockheight;
   uint32_t *bitcoin_expiration_blockheight;
+  struct wire_cst_list_prim_u_8_strict *lockup_tx_id;
   struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;

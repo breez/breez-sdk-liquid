@@ -1943,7 +1943,10 @@ pub enum PaymentDetails {
         /// It should always be populated in case of an incoming chain swap
         bitcoin_expiration_blockheight: Option<u32>,
 
-        /// The claim tx id in case it has already been broadcast
+        /// The lockup tx id that initiates the swap
+        lockup_tx_id: Option<String>,
+
+        /// The claim tx id that claims the server lockup tx
         claim_tx_id: Option<String>,
 
         /// For a Send swap which was refunded, this is the refund tx id
