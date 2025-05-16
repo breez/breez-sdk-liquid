@@ -485,7 +485,21 @@ impl Persister {
         offset: Option<u32>,
         limit: Option<u32>,
         sort_ascending: Option<bool>,
+        include_all_states: Option<bool>,
     ) -> String {
+        let (where_receive_swap_clause, where_chain_swap_clause) = if include_all_states
+            .unwrap_or_default()
+        {
+            ("true", "true")
+        } else {
+            (
+                // Receive Swap has a tx id and state not in Created, Failed, TimedOut
+                "COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL AND state NOT IN (0, 3, 4)",
+                // Chain Swap has a tx id and state not in Created, TimedOut
+                "COALESCE(user_lockup_tx_id, claim_tx_id) IS NOT NULL AND state NOT IN (0, 4)",
+            )
+        };
+
         format!(
             "
             SELECT
@@ -552,17 +566,11 @@ impl Persister {
                 am.precision
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
             FULL JOIN (
-                SELECT * FROM receive_swaps
-                WHERE 
-                    COALESCE(claim_tx_id, lockup_tx_id, mrh_tx_id) IS NOT NULL
-                    AND state NOT IN (0, 3, 4)   -- Ignore Created, Failed and TimedOut
+                SELECT * FROM receive_swaps WHERE {}
             ) rs                                 -- Receive Swap data
                 ON ptx.tx_id in (rs.claim_tx_id, rs.mrh_tx_id)
             FULL JOIN (
-                SELECT * FROM chain_swaps
-                WHERE 
-                    COALESCE(user_lockup_tx_id, claim_tx_id) IS NOT NULL
-                    AND state NOT IN (0, 4)      -- Ignore Created and TimedOut
+                SELECT * FROM chain_swaps WHERE {}
             ) cs                                 -- Chain Swap data
                 ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN send_swaps AS ss           -- Send Swap data
@@ -583,6 +591,8 @@ impl Persister {
             LIMIT {}
             OFFSET {}
             ",
+            where_receive_swap_clause,
+            where_chain_swap_clause,
             where_clause.unwrap_or("true"),
             match sort_ascending.unwrap_or(false) {
                 true => "ASC",
@@ -949,6 +959,7 @@ impl Persister {
                     None,
                     None,
                     None,
+                    None,
                 ),
                 params![id],
                 |row| self.sql_row_to_payment(row),
@@ -971,7 +982,7 @@ impl Persister {
         Ok(self
             .get_connection()?
             .query_row(
-                &self.select_payment_query(Some(where_clause), None, None, None),
+                &self.select_payment_query(Some(where_clause), None, None, None, Some(true)),
                 params![param],
                 |row| self.sql_row_to_payment(row),
             )
@@ -992,6 +1003,7 @@ impl Persister {
             req.offset,
             req.limit,
             req.sort_ascending,
+            None,
         ))?;
         let payments: Vec<Payment> = stmt
             .query_map(params_from_iter(where_params), |row| {
