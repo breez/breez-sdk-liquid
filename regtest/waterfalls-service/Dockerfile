@@ -25,4 +25,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /usr/src/waterfalls/target/release/waterfalls /usr/local/bin/waterfalls
 
-CMD ["waterfalls"]
+CMD ["RUST_LOG=waterfalls=debug,info", "waterfalls"]
