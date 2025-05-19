@@ -405,24 +405,9 @@ pub(crate) async fn handle_command(
             drain,
             delay,
         } => {
-            let destination = match (invoice, offer, address) {
-                (Some(invoice), None, None) => Ok(invoice),
-                (None, Some(offer), None) => match amount_sat {
-                    Some(_) => Ok(offer),
-                    None => Err(anyhow!(
-                        "Must specify an amount for a BOLT12 offer."
-                    ))
-                },
-                (None, None, Some(address)) => Ok(address),
-                (Some(_), _, Some(_)) => {
-                    Err(anyhow::anyhow!(
-                        "Cannot specify both invoice and address at the same time."
-                    ))
-                }
-                _ => Err(anyhow!(
-                    "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
-                ))
-            }?;
+            let destination = invoice.or(offer.or(address)).ok_or(anyhow!(
+                "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
+            ))?;
             let amount = match (asset_id, amount, amount_sat, drain.unwrap_or(false)) {
                 (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
                     asset_id,

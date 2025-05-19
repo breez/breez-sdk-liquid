@@ -356,6 +356,7 @@ export interface PrepareLnUrlPayResponse {
     destination: SendDestination
     feesSat: number
     data: LnUrlPayRequestData
+    amount: PayAmount
     comment?: string
     successAction?: SuccessAction
 }
@@ -404,6 +405,7 @@ export interface PrepareSendRequest {
 
 export interface PrepareSendResponse {
     destination: SendDestination
+    amount?: PayAmount
     feesSat?: number
     estimatedAssetFees?: number
 }

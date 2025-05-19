@@ -4297,6 +4297,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
+        let mut var_amount = <crate::model::PayAmount>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_successAction =
             <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
@@ -4304,6 +4305,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
             data: var_data,
+            amount: var_amount,
             comment: var_comment,
             success_action: var_successAction,
         };
@@ -4412,10 +4414,12 @@ impl SseDecode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
+        let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
         let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_estimatedAssetFees = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
             destination: var_destination,
+            amount: var_amount,
             fees_sat: var_feesSat,
             estimated_asset_fees: var_estimatedAssetFees,
         };
@@ -6745,6 +6749,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayResponse {
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.data.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
             self.success_action.into_into_dart().into_dart(),
         ]
@@ -6921,6 +6926,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.destination.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.estimated_asset_fees.into_into_dart().into_dart(),
         ]
@@ -9085,6 +9091,7 @@ impl SseEncode for crate::model::PrepareLnUrlPayResponse {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
+        <crate::model::PayAmount>::sse_encode(self.amount, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<crate::bindings::SuccessAction>>::sse_encode(self.success_action, serializer);
     }
@@ -9157,6 +9164,7 @@ impl SseEncode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
+        <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
         <Option<u64>>::sse_encode(self.fees_sat, serializer);
         <Option<f64>>::sse_encode(self.estimated_asset_fees, serializer);
     }
@@ -11324,6 +11332,7 @@ mod io {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 data: self.data.cst_decode(),
+                amount: self.amount.cst_decode(),
                 comment: self.comment.cst_decode(),
                 success_action: self.success_action.cst_decode(),
             }
@@ -11404,6 +11413,7 @@ mod io {
         fn cst_decode(self) -> crate::model::PrepareSendResponse {
             crate::model::PrepareSendResponse {
                 destination: self.destination.cst_decode(),
+                amount: self.amount.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 estimated_asset_fees: self.estimated_asset_fees.cst_decode(),
             }
@@ -12696,6 +12706,7 @@ mod io {
                 destination: Default::default(),
                 fees_sat: Default::default(),
                 data: Default::default(),
+                amount: Default::default(),
                 comment: core::ptr::null_mut(),
                 success_action: core::ptr::null_mut(),
             }
@@ -12808,6 +12819,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 destination: Default::default(),
+                amount: core::ptr::null_mut(),
                 fees_sat: core::ptr::null_mut(),
                 estimated_asset_fees: core::ptr::null_mut(),
             }
@@ -15213,6 +15225,7 @@ mod io {
         destination: wire_cst_send_destination,
         fees_sat: u64,
         data: wire_cst_ln_url_pay_request_data,
+        amount: wire_cst_pay_amount,
         comment: *mut wire_cst_list_prim_u_8_strict,
         success_action: *mut wire_cst_success_action,
     }
@@ -15269,6 +15282,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_send_response {
         destination: wire_cst_send_destination,
+        amount: *mut wire_cst_pay_amount,
         fees_sat: *mut u64,
         estimated_asset_fees: *mut f64,
     }
