@@ -3638,6 +3638,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             } else {
                 null
             }
+        val lockupTxId = if (hasNonNullKey(paymentDetails, "lockupTxId")) paymentDetails.getString("lockupTxId") else null
         val claimTxId = if (hasNonNullKey(paymentDetails, "claimTxId")) paymentDetails.getString("claimTxId") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
@@ -3656,6 +3657,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             autoAcceptedFees,
             bitcoinExpirationBlockheight,
             liquidExpirationBlockheight,
+            lockupTxId,
             claimTxId,
             refundTxId,
             refundTxAmountSat,
@@ -3699,6 +3701,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "autoAcceptedFees", paymentDetails.autoAcceptedFees)
             pushToMap(map, "bitcoinExpirationBlockheight", paymentDetails.bitcoinExpirationBlockheight)
             pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
+            pushToMap(map, "lockupTxId", paymentDetails.lockupTxId)
             pushToMap(map, "claimTxId", paymentDetails.claimTxId)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)

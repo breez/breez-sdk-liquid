@@ -3483,6 +3483,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_bitcoin_expiration_blockheight = cst_encode_opt_box_autoadd_u_32(
         apiObj.bitcoinExpirationBlockheight,
       );
+      var pre_lockup_tx_id = cst_encode_opt_String(apiObj.lockupTxId);
       var pre_claim_tx_id = cst_encode_opt_String(apiObj.claimTxId);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
@@ -3492,6 +3493,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.Bitcoin.auto_accepted_fees = pre_auto_accepted_fees;
       wireObj.kind.Bitcoin.liquid_expiration_blockheight = pre_liquid_expiration_blockheight;
       wireObj.kind.Bitcoin.bitcoin_expiration_blockheight = pre_bitcoin_expiration_blockheight;
+      wireObj.kind.Bitcoin.lockup_tx_id = pre_lockup_tx_id;
       wireObj.kind.Bitcoin.claim_tx_id = pre_claim_tx_id;
       wireObj.kind.Bitcoin.refund_tx_id = pre_refund_tx_id;
       wireObj.kind.Bitcoin.refund_tx_amount_sat = pre_refund_tx_amount_sat;
@@ -7097,6 +7099,8 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
 
   external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lockup_tx_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
 
