@@ -2866,9 +2866,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           autoAcceptedFees: dco_decode_bool(raw[3]),
           liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[4]),
           bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[5]),
-          claimTxId: dco_decode_opt_String(raw[6]),
-          refundTxId: dco_decode_opt_String(raw[7]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[8]),
+          lockupTxId: dco_decode_opt_String(raw[6]),
+          claimTxId: dco_decode_opt_String(raw[7]),
+          refundTxId: dco_decode_opt_String(raw[8]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[9]),
         );
       default:
         throw Exception("unreachable");
@@ -5256,6 +5257,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_autoAcceptedFees = sse_decode_bool(deserializer);
         var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
+        var var_lockupTxId = sse_decode_opt_String(deserializer);
         var var_claimTxId = sse_decode_opt_String(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -5265,6 +5267,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           autoAcceptedFees: var_autoAcceptedFees,
           liquidExpirationBlockheight: var_liquidExpirationBlockheight,
           bitcoinExpirationBlockheight: var_bitcoinExpirationBlockheight,
+          lockupTxId: var_lockupTxId,
           claimTxId: var_claimTxId,
           refundTxId: var_refundTxId,
           refundTxAmountSat: var_refundTxAmountSat,
@@ -7551,6 +7554,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         autoAcceptedFees: final autoAcceptedFees,
         liquidExpirationBlockheight: final liquidExpirationBlockheight,
         bitcoinExpirationBlockheight: final bitcoinExpirationBlockheight,
+        lockupTxId: final lockupTxId,
         claimTxId: final claimTxId,
         refundTxId: final refundTxId,
         refundTxAmountSat: final refundTxAmountSat,
@@ -7561,6 +7565,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_bool(autoAcceptedFees, serializer);
         sse_encode_opt_box_autoadd_u_32(liquidExpirationBlockheight, serializer);
         sse_encode_opt_box_autoadd_u_32(bitcoinExpirationBlockheight, serializer);
+        sse_encode_opt_String(lockupTxId, serializer);
         sse_encode_opt_String(claimTxId, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
