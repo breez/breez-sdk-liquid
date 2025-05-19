@@ -14,24 +14,24 @@ pub struct BreezRelayService {
   relay_url: String,
   pubkey: String,
   secret_key: String,
-  incoming: mpsc::Sender<String>,
-  outgoing: mpsc::Receiver<String>,
+  handler: Arc<dyn RelayMessageHandler>,
+  outgoing_receiver: mpsc::Receiver<String>,
 }
 
 impl RelayService for BreezRelayService {
   pub fn new(
     relay_url: String, 
     pubkey: String, 
-    secret_key: String,
-    incoming: mpsc::Sender<String>,
-    outgoing: mpsc::Receiver<String>,
+    secret_key: String
   ) -> Self {
+    let (outgoing_sender, outgoing_receiver) = mpsc::channel::<String>::new();
+    let handler = BreezRelayMessageHandler::new(outgoing_sender);
     Self {
       relay_url,
       pubkey,
       secret_key,
-      incoming,
-      outgoing,
+      handler,
+      outgoing_receiver,
     }
   }
 
@@ -58,7 +58,7 @@ impl RelayService for BreezRelayService {
       match message? {
         Message::Text(text) => {
           log::debug!("Received text message: {}", text);
-          self.relay_to_sdk(text).await?;
+          self.recv(text).await?;
         }
         Message::Ping(data) => {
           // Respond to ping with pong to keep connection alive
@@ -84,9 +84,13 @@ impl RelayService for BreezRelayService {
     Ok(())
   }
 
-  pub async fn relay_to_sdk(&self, message: String) -> Result<()> {
-    // TODO: Implement channel to send message to SDK
-    Ok(())
+  async fn recv(&self, message: String) -> Result<()> {
+    // Decode and verify origin (pubkey)
+    match message {
+      PayInvoice => self.handler.pay_invoice(),
+      ListTransactions => self.handler.list_transactions(),
+      ... => // Debug unhandled messages
+    }
   }
 
   pub async fn sdk_to_relay(&self, message: String) -> Result<()> {
