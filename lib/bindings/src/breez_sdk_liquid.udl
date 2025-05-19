@@ -423,6 +423,7 @@ dictionary PrepareLnUrlPayResponse {
     SendDestination destination;
     u64 fees_sat;
     LnUrlPayRequestData data;
+    PayAmount amount;
     string? comment = null;
     SuccessAction? success_action = null;
 };
@@ -445,6 +446,7 @@ interface SendDestination {
 
 dictionary PrepareSendResponse {
     SendDestination destination;
+    PayAmount? amount;
     u64? fees_sat;
     f64? estimated_asset_fees;
 };

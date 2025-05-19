@@ -457,6 +457,7 @@ pub enum SendDestination {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareSendResponse)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
+    pub amount: Option<PayAmount>,
     pub fees_sat: Option<u64>,
     pub estimated_asset_fees: Option<f64>,
 }
@@ -789,6 +790,7 @@ pub struct PrepareLnUrlPayResponse {
     pub destination: SendDestination,
     pub fees_sat: u64,
     pub data: LnUrlPayRequestData,
+    pub amount: PayAmount,
     pub comment: Option<String>,
     pub success_action: Option<SuccessAction>,
 }
