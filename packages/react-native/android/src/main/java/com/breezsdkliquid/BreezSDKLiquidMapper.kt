@@ -2003,6 +2003,7 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
                 "destination",
                 "feesSat",
                 "data",
+                "amount",
             ),
         )
     ) {
@@ -2011,6 +2012,7 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
     val destination = prepareLnUrlPayResponse.getMap("destination")?.let { asSendDestination(it) }!!
     val feesSat = prepareLnUrlPayResponse.getDouble("feesSat").toULong()
     val data = prepareLnUrlPayResponse.getMap("data")?.let { asLnUrlPayRequestData(it) }!!
+    val amount = prepareLnUrlPayResponse.getMap("amount")?.let { asPayAmount(it) }!!
     val comment = if (hasNonNullKey(prepareLnUrlPayResponse, "comment")) prepareLnUrlPayResponse.getString("comment") else null
     val successAction =
         if (hasNonNullKey(prepareLnUrlPayResponse, "successAction")) {
@@ -2020,7 +2022,7 @@ fun asPrepareLnUrlPayResponse(prepareLnUrlPayResponse: ReadableMap): PrepareLnUr
         } else {
             null
         }
-    return PrepareLnUrlPayResponse(destination, feesSat, data, comment, successAction)
+    return PrepareLnUrlPayResponse(destination, feesSat, data, amount, comment, successAction)
 }
 
 fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap =
@@ -2028,6 +2030,7 @@ fun readableMapOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse): ReadableMap
         "destination" to readableMapOf(prepareLnUrlPayResponse.destination),
         "feesSat" to prepareLnUrlPayResponse.feesSat,
         "data" to readableMapOf(prepareLnUrlPayResponse.data),
+        "amount" to readableMapOf(prepareLnUrlPayResponse.amount),
         "comment" to prepareLnUrlPayResponse.comment,
         "successAction" to prepareLnUrlPayResponse.successAction?.let { readableMapOf(it) },
     )
@@ -2357,6 +2360,7 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
         return null
     }
     val destination = prepareSendResponse.getMap("destination")?.let { asSendDestination(it) }!!
+    val amount = if (hasNonNullKey(prepareSendResponse, "amount")) prepareSendResponse.getMap("amount")?.let { asPayAmount(it) } else null
     val feesSat = if (hasNonNullKey(prepareSendResponse, "feesSat")) prepareSendResponse.getDouble("feesSat").toULong() else null
     val estimatedAssetFees =
         if (hasNonNullKey(
@@ -2368,12 +2372,13 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
         } else {
             null
         }
-    return PrepareSendResponse(destination, feesSat, estimatedAssetFees)
+    return PrepareSendResponse(destination, amount, feesSat, estimatedAssetFees)
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
     readableMapOf(
         "destination" to readableMapOf(prepareSendResponse.destination),
+        "amount" to prepareSendResponse.amount?.let { readableMapOf(it) },
         "feesSat" to prepareSendResponse.feesSat,
         "estimatedAssetFees" to prepareSendResponse.estimatedAssetFees,
     )

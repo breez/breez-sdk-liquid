@@ -2392,6 +2392,11 @@ enum BreezSDKLiquidMapper {
         }
         let data = try asLnUrlPayRequestData(lnUrlPayRequestData: dataTmp)
 
+        guard let amountTmp = prepareLnUrlPayResponse["amount"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "amount", typeName: "PrepareLnUrlPayResponse"))
+        }
+        let amount = try asPayAmount(payAmount: amountTmp)
+
         var comment: String?
         if hasNonNilKey(data: prepareLnUrlPayResponse, key: "comment") {
             guard let commentTmp = prepareLnUrlPayResponse["comment"] as? String else {
@@ -2404,7 +2409,7 @@ enum BreezSDKLiquidMapper {
             successAction = try asSuccessAction(successAction: successActionTmp)
         }
 
-        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, data: data, comment: comment, successAction: successAction)
+        return PrepareLnUrlPayResponse(destination: destination, feesSat: feesSat, data: data, amount: amount, comment: comment, successAction: successAction)
     }
 
     static func dictionaryOf(prepareLnUrlPayResponse: PrepareLnUrlPayResponse) -> [String: Any?] {
@@ -2412,6 +2417,7 @@ enum BreezSDKLiquidMapper {
             "destination": dictionaryOf(sendDestination: prepareLnUrlPayResponse.destination),
             "feesSat": prepareLnUrlPayResponse.feesSat,
             "data": dictionaryOf(lnUrlPayRequestData: prepareLnUrlPayResponse.data),
+            "amount": dictionaryOf(payAmount: prepareLnUrlPayResponse.amount),
             "comment": prepareLnUrlPayResponse.comment == nil ? nil : prepareLnUrlPayResponse.comment,
             "successAction": prepareLnUrlPayResponse.successAction == nil ? nil : dictionaryOf(successAction: prepareLnUrlPayResponse.successAction!),
         ]
@@ -2743,6 +2749,11 @@ enum BreezSDKLiquidMapper {
         }
         let destination = try asSendDestination(sendDestination: destinationTmp)
 
+        var amount: PayAmount?
+        if let amountTmp = prepareSendResponse["amount"] as? [String: Any?] {
+            amount = try asPayAmount(payAmount: amountTmp)
+        }
+
         var feesSat: UInt64?
         if hasNonNilKey(data: prepareSendResponse, key: "feesSat") {
             guard let feesSatTmp = prepareSendResponse["feesSat"] as? UInt64 else {
@@ -2758,12 +2769,13 @@ enum BreezSDKLiquidMapper {
             estimatedAssetFees = estimatedAssetFeesTmp
         }
 
-        return PrepareSendResponse(destination: destination, feesSat: feesSat, estimatedAssetFees: estimatedAssetFees)
+        return PrepareSendResponse(destination: destination, amount: amount, feesSat: feesSat, estimatedAssetFees: estimatedAssetFees)
     }
 
     static func dictionaryOf(prepareSendResponse: PrepareSendResponse) -> [String: Any?] {
         return [
             "destination": dictionaryOf(sendDestination: prepareSendResponse.destination),
+            "amount": prepareSendResponse.amount == nil ? nil : dictionaryOf(payAmount: prepareSendResponse.amount!),
             "feesSat": prepareSendResponse.feesSat == nil ? nil : prepareSendResponse.feesSat,
             "estimatedAssetFees": prepareSendResponse.estimatedAssetFees == nil ? nil : prepareSendResponse.estimatedAssetFees,
         ]

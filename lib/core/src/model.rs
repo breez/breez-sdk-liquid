@@ -729,6 +729,8 @@ pub enum SendDestination {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
+    /// The optional amount to be sent in either Bitcoin or another asset
+    pub amount: Option<PayAmount>,
     /// The optional estimated fee in satoshi. Is set when there is Bitcoin available
     /// to pay fees. When not set, there are asset fees available to pay fees.
     pub fees_sat: Option<u64>,
@@ -2296,6 +2298,8 @@ pub struct PrepareLnUrlPayResponse {
     pub fees_sat: u64,
     /// The [LnUrlPayRequestData] returned by [parse]
     pub data: LnUrlPayRequestData,
+    /// The amount to send
+    pub amount: PayAmount,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if

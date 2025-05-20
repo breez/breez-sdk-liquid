@@ -151,23 +151,23 @@ pub(crate) fn lbtc_asset_id(network: LiquidNetwork) -> AssetId {
     }
 }
 
-/// Increments the inversely calculated invoice amount up to the maximum drainable amount,
-/// as calculating the inverse invoice amount in some cases has rounding down errors
-pub(crate) fn increment_invoice_amount_up_to_drain_amount(
-    invoice_amount_sat: u64,
+/// Increments the inversely calculated receiver amount up to the maximum drainable amount,
+/// as calculating the inverse receiver amount in some cases has rounding down errors
+pub(crate) fn increment_receiver_amount_up_to_drain_amount(
+    receiver_amount_sat: u64,
     lbtc_pair: &SubmarinePair,
     drain_amount_sat: u64,
 ) -> u64 {
-    let incremented_amount_sat = invoice_amount_sat + 1;
+    let incremented_amount_sat = receiver_amount_sat + 1;
     let fees_sat = lbtc_pair.fees.total(incremented_amount_sat);
     if incremented_amount_sat + fees_sat <= drain_amount_sat {
-        increment_invoice_amount_up_to_drain_amount(
+        increment_receiver_amount_up_to_drain_amount(
             incremented_amount_sat,
             lbtc_pair,
             drain_amount_sat,
         )
     } else {
-        invoice_amount_sat
+        receiver_amount_sat
     }
 }
 

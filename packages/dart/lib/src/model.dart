@@ -1187,6 +1187,9 @@ class PrepareLnUrlPayResponse {
   /// The [LnUrlPayRequestData] returned by [parse]
   final LnUrlPayRequestData data;
 
+  /// The amount to send
+  final PayAmount amount;
+
   /// An optional comment for this payment
   final String? comment;
 
@@ -1198,13 +1201,19 @@ class PrepareLnUrlPayResponse {
     required this.destination,
     required this.feesSat,
     required this.data,
+    required this.amount,
     this.comment,
     this.successAction,
   });
 
   @override
   int get hashCode =>
-      destination.hashCode ^ feesSat.hashCode ^ data.hashCode ^ comment.hashCode ^ successAction.hashCode;
+      destination.hashCode ^
+      feesSat.hashCode ^
+      data.hashCode ^
+      amount.hashCode ^
+      comment.hashCode ^
+      successAction.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1214,6 +1223,7 @@ class PrepareLnUrlPayResponse {
           destination == other.destination &&
           feesSat == other.feesSat &&
           data == other.data &&
+          amount == other.amount &&
           comment == other.comment &&
           successAction == other.successAction;
 }
@@ -1430,6 +1440,9 @@ class PrepareSendRequest {
 class PrepareSendResponse {
   final SendDestination destination;
 
+  /// The optional amount to be sent in either Bitcoin or another asset
+  final PayAmount? amount;
+
   /// The optional estimated fee in satoshi. Is set when there is Bitcoin available
   /// to pay fees. When not set, there are asset fees available to pay fees.
   final BigInt? feesSat;
@@ -1439,10 +1452,10 @@ class PrepareSendResponse {
   /// are funds available in this asset to pay fees.
   final double? estimatedAssetFees;
 
-  const PrepareSendResponse({required this.destination, this.feesSat, this.estimatedAssetFees});
+  const PrepareSendResponse({required this.destination, this.amount, this.feesSat, this.estimatedAssetFees});
 
   @override
-  int get hashCode => destination.hashCode ^ feesSat.hashCode ^ estimatedAssetFees.hashCode;
+  int get hashCode => destination.hashCode ^ amount.hashCode ^ feesSat.hashCode ^ estimatedAssetFees.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1450,6 +1463,7 @@ class PrepareSendResponse {
       other is PrepareSendResponse &&
           runtimeType == other.runtimeType &&
           destination == other.destination &&
+          amount == other.amount &&
           feesSat == other.feesSat &&
           estimatedAssetFees == other.estimatedAssetFees;
 }
