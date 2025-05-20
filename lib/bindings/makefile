@@ -55,26 +55,7 @@ x86_64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --release
 	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86_64/
 
-android-uniffi-25: aarch64-linux-android-uniffi-25 armv7-linux-androideabi-uniffi-25 i686-linux-android-uniffi-25 x86_64-linux-android-uniffi-25
-	cargo run --no-default-features --features=uniffi-25 --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
-
-aarch64-linux-android-uniffi-25: $(SOURCES) ndk-home
-	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release	
-	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/arm64-v8a/
-
-armv7-linux-androideabi-uniffi-25: $(SOURCES) ndk-home
-	cargo ndk -t armv7-linux-androideabi -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release
-	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so ffi/kotlin/jniLibs/armeabi-v7a/
-
-i686-linux-android-uniffi-25: $(SOURCES) ndk-home
-	cargo ndk -t i686-linux-android -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release
-	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86/
-
-x86_64-linux-android-uniffi-25: $(SOURCES) ndk-home
-	cargo ndk -t x86_64-linux-android -o ffi/kotlin/jniLibs build --no-default-features --features=uniffi-25 --release
-	cp -a $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/$(OS_NAME)-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so ffi/kotlin/jniLibs/x86_64/
-
-bindings-android: android-uniffi-25
+bindings-android: android
 	cp -r ffi/kotlin/jniLibs langs/android/lib/src/main
 	cp -r ffi/kotlin/breez_sdk_liquid langs/android/lib/src/main/kotlin/
 	cd langs/android && ./gradlew assemble
@@ -87,12 +68,22 @@ kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
 	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
 
-bindings-kotlin-multiplatform: ios-universal-uniffi-25 android-uniffi-25
-	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain
-	cp -r ffi/kotlin/jniLibs/ langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/jniLibs/
-	cp -r ffi/kmp/* langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/
+bindings-kotlin-multiplatform: ios-universal android
+	cargo install gobley-uniffi-bindgen --git https://github.com/gobley/gobley --tag v0.2.0
+	gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kmp src/breez_sdk_liquid.udl
 
-	cp -r langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/jvmMain/kotlin langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/
+	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/kotlin/breez_sdk_liquid
+	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/commonMain/kotlin/breez_sdk_liquid
+	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/jvmMain/kotlin/breez_sdk_liquid
+	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/nativeMain/kotlin/breez_sdk_liquid
+	
+	cp -r ffi/kotlin/jniLibs/ langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/jniLibs/
+	cp -r ffi/kmp/nativeInterop langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/
+
+	cp ffi/kmp/main/kotlin/breez_sdk_liquid/breez_sdk_liquid.android.kt langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/kotlin/breez_sdk_liquid/
+	cp ffi/kmp/main/kotlin/breez_sdk_liquid/breez_sdk_liquid.common.kt langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/commonMain/kotlin/breez_sdk_liquid/
+	cp ffi/kmp/main/kotlin/breez_sdk_liquid/breez_sdk_liquid.jvm.kt langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/jvmMain/kotlin/breez_sdk_liquid/
+	cp ffi/kmp/main/kotlin/breez_sdk_liquid/breez_sdk_liquid.native.kt langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/nativeMain/kotlin/breez_sdk_liquid/
 
 	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-arm64/
 	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-arm64/
@@ -115,28 +106,10 @@ ios-universal: $(SOURCES)
 	# build universal lib for arm sim and x86 sim
 	lipo -create -output ../target/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-ios-sim/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-ios/release/libbreez_sdk_liquid_bindings.a
 
-ios-universal-uniffi-25: $(SOURCES)		
-	mkdir -p ../target/ios-universal/release
-	mkdir -p ../target/ios-universal-sim/release
-	cargo build --no-default-features --features uniffi-25 --release --target aarch64-apple-ios ;\
-	cargo build --no-default-features --features uniffi-25 --release --target x86_64-apple-ios ;\
-	cargo build --no-default-features --features uniffi-25 --release --target aarch64-apple-ios-sim ;\
-	# build universal lib for arm device and x86 sim
-	lipo -create -output ../target/ios-universal/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-ios/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-ios/release/libbreez_sdk_liquid_bindings.a
-	# build universal lib for arm sim and x86 sim
-	lipo -create -output ../target/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-ios-sim/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-ios/release/libbreez_sdk_liquid_bindings.a
-
 darwin-universal: $(SOURCES)
 	mkdir -p ../target/darwin-universal/release
 	cargo lipo --release --targets aarch64-apple-darwin
 	cargo lipo --release --targets x86_64-apple-darwin
-	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib
-	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.a
-
-darwin-universal-uniffi-25: $(SOURCES)
-	mkdir -p ../target/darwin-universal/release
-	cargo lipo --no-default-features --features uniffi-25 --release --targets aarch64-apple-darwin
-	cargo lipo --no-default-features --features uniffi-25 --release --targets x86_64-apple-darwin
 	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.dylib
 	lipo -create -output ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.a ../target/aarch64-apple-darwin/release/libbreez_sdk_liquid_bindings.a ../target/x86_64-apple-darwin/release/libbreez_sdk_liquid_bindings.a
 

@@ -1,3 +1,8 @@
+# Kotlin Multi Platform https://gobley.dev/docs/bindgen#bindgen-configuration
+package_name = "breez_sdk_liquid"
+kotlin_targets = ["jvm", "android", "native"]
+use_pascal_case_enum_class = true
+
 # https://mozilla.github.io/uniffi-rs/swift/configuration.html
 [bindings.swift]
 cdylib_name = "breez_sdk_liquid_bindings"
