@@ -60,7 +60,7 @@ on:
 jobs:
   build-language-bindings:
     runs-on: ubuntu-latest
-    if: ${{ inputs.swift || inputs.python }}
+    if: ${{ inputs.swift || inputs.python || inputs.csharp || inputs.golang }}
     steps:
       - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
@@ -110,9 +110,37 @@ jobs:
           name: bindings-python
           path: lib/bindings/ffi/python/breez_sdk_liquid.py
 
+      - name: Build C# binding
+        if: ${{ inputs.csharp }}
+        working-directory: lib/bindings
+        run: |
+          cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.9.1+v0.28.3
+          uniffi-bindgen-cs src/breez_sdk_liquid.udl -o ffi/csharp -c ./uniffi.toml
+
+      - name: Archive C# binding
+        if: ${{ inputs.csharp }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-csharp
+          path: lib/bindings/ffi/csharp/breez_sdk_liquid.cs
+
+      - name: Build golang binding
+        if: ${{ inputs.golang }}
+        working-directory: lib/bindings
+        run: |
+          cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.3.0+v0.28.3
+          uniffi-bindgen-go src/breez_sdk_liquid.udl -o ffi/golang -c ./uniffi.toml
+
+      - name: Archive golang binding
+        if: ${{ inputs.golang }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-golang
+          path: lib/bindings/ffi/golang/breez_sdk_liquid/breez_sdk_liquid.*
+
   build-language-bindings-uniffi-25:
     runs-on: ubuntu-latest
-    if: ${{ inputs.kotlin || inputs.csharp || inputs.golang }}
+    if: ${{ inputs.kotlin }}
     steps:
       - name: Checkout breez-sdk-liquid repo
         uses: actions/checkout@v4
@@ -155,31 +183,3 @@ jobs:
         with:
           name: bindings-kotlin-multiplatform
           path: lib/bindings/ffi/kmp/*
-
-      - name: Build C# binding
-        if: ${{ inputs.csharp }}
-        working-directory: lib/bindings
-        run: |
-          cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.8.0+v0.25.0
-          uniffi-bindgen-cs src/breez_sdk_liquid.udl -o ffi/csharp -c ./uniffi.toml
-      
-      - name: Archive C# binding
-        if: ${{ inputs.csharp }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-csharp
-          path: lib/bindings/ffi/csharp/breez_sdk_liquid.cs
-    
-      - name: Build golang binding
-        if: ${{ inputs.golang }}
-        working-directory: lib/bindings
-        run: |
-          cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.2.1+v0.25.0
-          uniffi-bindgen-go src/breez_sdk_liquid.udl -o ffi/golang -c ./uniffi.toml
-  
-      - name: Archive golang binding
-        if: ${{ inputs.golang }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-golang
-          path: lib/bindings/ffi/golang/breez_sdk_liquid/breez_sdk_liquid.*
