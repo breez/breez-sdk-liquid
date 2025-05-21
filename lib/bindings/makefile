@@ -37,7 +37,8 @@ all: bindings-swift bindings-android python-darwin react-native
 ## Android 
 .PHONY: android
 android: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
-	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
+	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+	gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kotlin src/breez_sdk_liquid.udl
 
 aarch64-linux-android: $(SOURCES) ndk-home
 	cargo ndk -t aarch64-linux-android -o ffi/kotlin/jniLibs build --release	
@@ -57,8 +58,8 @@ x86_64-linux-android: $(SOURCES) ndk-home
 
 bindings-android: android
 	cp -r ffi/kotlin/jniLibs langs/android/lib/src/main
-	cp -r ffi/kotlin/breez_sdk_liquid langs/android/lib/src/main/kotlin/
-	cd langs/android && ./gradlew assemble
+	cp -r ffi/kotlin/main/kotlin/breez_sdk_liquid langs/android/lib/src/main/kotlin/
+	cd langs/android && ./gradlew assemble --debug
 	mkdir -p ffi/android
 	cp langs/android/lib/build/outputs/aar/lib-release.aar ffi/android
 
@@ -66,11 +67,12 @@ bindings-android: android
 .PHONY: kotlin
 kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language kotlin -o ffi/kotlin
+	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+	gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kotlin src/breez_sdk_liquid.udl
 
 bindings-kotlin-multiplatform: ios-universal android
-	cargo install gobley-uniffi-bindgen --git https://github.com/gobley/gobley --tag v0.2.0
-	gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kmp src/breez_sdk_liquid.udl
+	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+	gobley-uniffi-bindgen -c ./uniffi.kotlin-multiplatform.toml -o ffi/kmp src/breez_sdk_liquid.udl
 
 	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/kotlin/breez_sdk_liquid
 	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/commonMain/kotlin/breez_sdk_liquid

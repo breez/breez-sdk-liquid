@@ -24,7 +24,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+    namespace "com.breezsdkliquid"
     compileSdkVersion 34
+    
     defaultConfig {
         minSdkVersion 24
         targetSdkVersion 34
@@ -74,5 +76,6 @@ dependencies {
     // Therefore we ignore the version of JNA that comes with the Breez Liquid SDK from Jitpack
     // and manually add one that does include the necessary Android platform binaries.
     implementation("com.github.breez:breez-sdk-liquid:${getVersionFromNpmPackage()}") { exclude group:"net.java.dev.jna" } // remove for using locally built bindings during development
+    //implementation "org.jetbrains.kotlinx:atomicfu:0.23.1" 
     implementation("net.java.dev.jna:jna:5.14.0@aar")
 }
