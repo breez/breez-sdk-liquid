@@ -535,8 +535,14 @@ impl OnchainWallet for LiquidOnchainWallet {
             .await
         {
             Ok(()) => Ok(()),
-            Err(lwk_wollet::Error::UpdateHeightTooOld { .. }) => {
-                warn!("Full scan failed with update height too old, wiping storage and retrying");
+            Err(e)
+                if matches!(
+                    e,
+                    lwk_wollet::Error::UpdateHeightTooOld { .. }
+                        | lwk_wollet::Error::PersistError(_)
+                ) =>
+            {
+                warn!("Full scan failed due to {e}, reloading wallet and retrying");
                 let mut new_wallet = Self::create_wallet(
                     &self.config,
                     &self.signer,

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use log::{debug, warn};
+use log::debug;
 use lwk_wollet::{PersistError, Update, WolletDescriptor};
 use maybe_sync::{MaybeSend, MaybeSync};
 use std::sync::{Arc, Mutex};
@@ -46,8 +46,7 @@ impl WalletCachePersister for SqliteWalletCachePersister {
 pub(crate) struct SqliteLwkPersister {
     persister: Arc<Persister>,
     descriptor: WolletDescriptor,
-    // An empty next means that the persister is disabled
-    next: Mutex<Option<u64>>,
+    next: Mutex<u64>,
 }
 
 impl SqliteLwkPersister {
@@ -60,7 +59,7 @@ impl SqliteLwkPersister {
         Ok(Arc::new(Self {
             persister,
             descriptor,
-            next: Mutex::new(Some(next)),
+            next: Mutex::new(next),
         }))
     }
 }
@@ -85,24 +84,17 @@ impl lwk_wollet::Persister for SqliteLwkPersister {
             update.wollet_status
         );
 
-        let mut maybe_next = self.next.lock().unwrap();
-        let Some(next) = *maybe_next else {
-            // A past failure is likely to be caused by multiple competing instances of the SDK.
-            // If we see a failure, we stop persisting and let the other instance(s) take over.
-            warn!("Skipping wollet update - SqliteLwkPersister is disabled due to past failure");
-            return Ok(());
-        };
+        let mut next = self.next.lock().unwrap();
 
         let ciphertext = update
             .serialize_encrypted(&self.descriptor)
             .map_err(|e| PersistError::Other(e.to_string()))?;
 
-        if let Err(e) = self.persister.insert_wallet_update(next, &ciphertext) {
-            warn!("Failed to persist wollet update: {:?}", e);
-            *maybe_next = None;
-        } else {
-            *maybe_next = Some(next + 1);
-        }
+        self.persister
+            .insert_wallet_update(*next, &ciphertext)
+            .map_err(|e| PersistError::Other(e.to_string()))?;
+
+        *next += 1;
 
         Ok(())
     }
