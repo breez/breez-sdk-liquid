@@ -2862,14 +2862,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return PaymentDetails_Bitcoin(
           swapId: dco_decode_String(raw[1]),
-          description: dco_decode_String(raw[2]),
-          autoAcceptedFees: dco_decode_bool(raw[3]),
-          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[4]),
-          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[5]),
-          lockupTxId: dco_decode_opt_String(raw[6]),
-          claimTxId: dco_decode_opt_String(raw[7]),
-          refundTxId: dco_decode_opt_String(raw[8]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[9]),
+          destinationAddress: dco_decode_String(raw[2]),
+          description: dco_decode_String(raw[3]),
+          autoAcceptedFees: dco_decode_bool(raw[4]),
+          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[5]),
+          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[6]),
+          lockupTxId: dco_decode_opt_String(raw[7]),
+          claimTxId: dco_decode_opt_String(raw[8]),
+          refundTxId: dco_decode_opt_String(raw[9]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[10]),
         );
       default:
         throw Exception("unreachable");
@@ -5255,6 +5256,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         );
       case 2:
         var var_swapId = sse_decode_String(deserializer);
+        var var_destinationAddress = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
         var var_autoAcceptedFees = sse_decode_bool(deserializer);
         var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
@@ -5265,6 +5267,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
         return PaymentDetails_Bitcoin(
           swapId: var_swapId,
+          destinationAddress: var_destinationAddress,
           description: var_description,
           autoAcceptedFees: var_autoAcceptedFees,
           liquidExpirationBlockheight: var_liquidExpirationBlockheight,
@@ -7556,6 +7559,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(bip353Address, serializer);
       case PaymentDetails_Bitcoin(
         swapId: final swapId,
+        destinationAddress: final destinationAddress,
         description: final description,
         autoAcceptedFees: final autoAcceptedFees,
         liquidExpirationBlockheight: final liquidExpirationBlockheight,
@@ -7567,6 +7571,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ):
         sse_encode_i_32(2, serializer);
         sse_encode_String(swapId, serializer);
+        sse_encode_String(destinationAddress, serializer);
         sse_encode_String(description, serializer);
         sse_encode_bool(autoAcceptedFees, serializer);
         sse_encode_opt_box_autoadd_u_32(liquidExpirationBlockheight, serializer);

@@ -1929,6 +1929,9 @@ pub enum PaymentDetails {
     Bitcoin {
         swap_id: String,
 
+        /// The Bitcoin destination address of the swap.
+        destination_address: String,
+
         /// Represents the invoice description
         description: String,
 
