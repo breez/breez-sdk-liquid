@@ -4,24 +4,24 @@ use anyhow::Result;
 use rusqlite::{OptionalExtension, TransactionBehavior};
 
 impl Persister {
-    pub(crate) fn insert_or_update_wallet_update(&self, index: u64, update: &[u8]) -> Result<()> {
+    /// Inserts a new wallet update if the provided index matches the next index
+    pub(crate) fn insert_wallet_update(&self, index: u64, update: &[u8]) -> Result<()> {
         let mut conn = self.get_connection()?;
         let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
 
         let next_index = self.get_next_index(&tx)?;
 
-        // Only allow inserting at next_index or next_index - 1
-        if index != next_index && index != next_index.saturating_sub(1) {
+        // Only allow inserting at next_index
+        if index != next_index {
             return Err(anyhow::anyhow!(
-                "Invalid index: must be {} or {}",
-                next_index,
-                next_index.saturating_sub(1)
+                "Invalid index for insert: tried {} - must be {}",
+                index,
+                next_index
             ));
         }
 
-        // Insert or update the record
         tx.execute(
-            "INSERT OR REPLACE INTO wallet_updates (id, data) VALUES (?, ?)",
+            "INSERT INTO wallet_updates (id, data) VALUES (?, ?)",
             (index, update),
         )?;
 
@@ -77,27 +77,22 @@ mod tests {
 
         // Test inserting first update
         let update1 = b"test update 1";
-        storage.insert_or_update_wallet_update(0, update1)?;
+        storage.insert_wallet_update(0, update1)?;
         assert_eq!(storage.get_next_wallet_update_index()?, 1);
         assert_eq!(storage.get_wallet_update(0)?, Some(update1.to_vec()));
 
         // Test inserting second update
         let update2 = b"test update 2";
-        storage.insert_or_update_wallet_update(1, update2)?;
+        storage.insert_wallet_update(1, update2)?;
         assert_eq!(storage.get_next_wallet_update_index()?, 2);
         assert_eq!(storage.get_wallet_update(1)?, Some(update2.to_vec()));
-
-        // Test updating existing update
-        let update2_modified = b"test update 2 modified";
-        storage.insert_or_update_wallet_update(1, update2_modified)?;
-        assert_eq!(
-            storage.get_wallet_update(1)?,
-            Some(update2_modified.to_vec())
-        );
 
         // Test clearing updates
         storage.clear_wallet_updates()?;
         assert_eq!(storage.get_next_wallet_update_index()?, 0);
+
+        // Verify we can insert again
+        storage.insert_wallet_update(0, update1)?;
 
         Ok(())
     }
@@ -108,17 +103,13 @@ mod tests {
 
         // Test inserting with invalid index
         let update = b"test update";
-        assert!(storage.insert_or_update_wallet_update(1, update).is_err());
+        assert!(storage.insert_wallet_update(1, update).is_err());
 
         // Insert first update
-        storage.insert_or_update_wallet_update(0, update)?;
+        storage.insert_wallet_update(0, update)?;
 
         // Test inserting with index too far ahead
-        assert!(storage.insert_or_update_wallet_update(2, update).is_err());
-
-        // Test inserting with index too far behind
-        storage.insert_or_update_wallet_update(1, update)?; // Insert at next_index
-        assert!(storage.insert_or_update_wallet_update(0, update).is_err()); // Should fail as 0 is now too far behind
+        assert!(storage.insert_wallet_update(2, update).is_err());
 
         Ok(())
     }
@@ -128,7 +119,7 @@ mod tests {
         create_persister!(storage);
 
         // Test getting non-existent update
-        assert_eq!(storage.get_wallet_update(0).unwrap(), None);
+        assert_eq!(storage.get_wallet_update(0)?, None);
 
         Ok(())
     }
