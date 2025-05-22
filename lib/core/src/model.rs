@@ -64,8 +64,6 @@ pub struct Config {
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
-    /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
-    pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
     /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
     pub payment_timeout_sec: u64,
@@ -112,7 +110,6 @@ impl Config {
                 url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -137,7 +134,6 @@ impl Config {
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -161,7 +157,6 @@ impl Config {
                 url: "bitcoin-testnet.blockstream.info:50002".to_string(),
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -186,7 +181,6 @@ impl Config {
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -210,7 +204,6 @@ impl Config {
                 url: "localhost:19001".to_string(),
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
             sync_service_url: Some("http://localhost:8088".to_string()),
@@ -235,7 +228,6 @@ impl Config {
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
             sync_service_url: Some("http://localhost:8089".to_string()),

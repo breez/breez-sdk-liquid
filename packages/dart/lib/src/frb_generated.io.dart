@@ -2752,7 +2752,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     cst_api_fill_to_wire_blockchain_explorer(apiObj.liquidExplorer, wireObj.liquid_explorer);
     cst_api_fill_to_wire_blockchain_explorer(apiObj.bitcoinExplorer, wireObj.bitcoin_explorer);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
-    wireObj.cache_dir = cst_encode_opt_String(apiObj.cacheDir);
     wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.sync_service_url = cst_encode_opt_String(apiObj.syncServiceUrl);
@@ -7286,8 +7285,6 @@ final class wire_cst_config extends ffi.Struct {
   external wire_cst_blockchain_explorer bitcoin_explorer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cache_dir;
 
   @ffi.Int32()
   external int network;

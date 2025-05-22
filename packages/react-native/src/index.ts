@@ -97,7 +97,6 @@ export interface Config {
     paymentTimeoutSec: number
     syncServiceUrl?: string
     breezApiKey?: string
-    cacheDir?: string
     zeroConfMaxAmountSat?: number
     useDefaultExternalInputParsers: boolean
     externalInputParsers?: ExternalInputParser[]

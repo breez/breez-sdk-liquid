@@ -138,7 +138,7 @@ macro_rules! create_persister {
                     .collect();
                 res
             };
-            sdk_common::utils::Arc::new($crate::persist::Persister::new_in_memory(
+            std::sync::Arc::new($crate::persist::Persister::new_in_memory(
                 &db_id,
                 $crate::model::LiquidNetwork::Testnet,
                 true,
@@ -153,7 +153,7 @@ macro_rules! create_persister {
                 .to_str()
                 .ok_or(anyhow::anyhow!("Could not create temporary directory"))?
                 .to_string();
-            sdk_common::utils::Arc::new($crate::persist::Persister::new_using_fs(
+            std::sync::Arc::new($crate::persist::Persister::new_using_fs(
                 &temp_dir_path,
                 $crate::model::LiquidNetwork::Testnet,
                 true,

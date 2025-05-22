@@ -89,7 +89,7 @@ impl SyncerClient for MockSyncerClient {
 
 #[allow(clippy::type_complexity)]
 pub(crate) fn new_sync_service(
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
 ) -> Result<(

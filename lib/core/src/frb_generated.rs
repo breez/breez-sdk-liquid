@@ -2628,7 +2628,6 @@ impl SseDecode for crate::model::Config {
         let mut var_liquidExplorer = <crate::model::BlockchainExplorer>::sse_decode(deserializer);
         let mut var_bitcoinExplorer = <crate::model::BlockchainExplorer>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
-        let mut var_cacheDir = <Option<String>>::sse_decode(deserializer);
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_syncServiceUrl = <Option<String>>::sse_decode(deserializer);
@@ -2645,7 +2644,6 @@ impl SseDecode for crate::model::Config {
             liquid_explorer: var_liquidExplorer,
             bitcoin_explorer: var_bitcoinExplorer,
             working_dir: var_workingDir,
-            cache_dir: var_cacheDir,
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
             sync_service_url: var_syncServiceUrl,
@@ -5320,7 +5318,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.liquid_explorer.into_into_dart().into_dart(),
             self.bitcoin_explorer.into_into_dart().into_dart(),
             self.working_dir.into_into_dart().into_dart(),
-            self.cache_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
             self.payment_timeout_sec.into_into_dart().into_dart(),
             self.sync_service_url.into_into_dart().into_dart(),
@@ -7741,7 +7738,6 @@ impl SseEncode for crate::model::Config {
         <crate::model::BlockchainExplorer>::sse_encode(self.liquid_explorer, serializer);
         <crate::model::BlockchainExplorer>::sse_encode(self.bitcoin_explorer, serializer);
         <String>::sse_encode(self.working_dir, serializer);
-        <Option<String>>::sse_encode(self.cache_dir, serializer);
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <Option<String>>::sse_encode(self.sync_service_url, serializer);
@@ -10241,7 +10237,6 @@ mod io {
                 liquid_explorer: self.liquid_explorer.cst_decode(),
                 bitcoin_explorer: self.bitcoin_explorer.cst_decode(),
                 working_dir: self.working_dir.cst_decode(),
-                cache_dir: self.cache_dir.cst_decode(),
                 network: self.network.cst_decode(),
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 sync_service_url: self.sync_service_url.cst_decode(),
@@ -11995,7 +11990,6 @@ mod io {
                 liquid_explorer: Default::default(),
                 bitcoin_explorer: Default::default(),
                 working_dir: core::ptr::null_mut(),
-                cache_dir: core::ptr::null_mut(),
                 network: Default::default(),
                 payment_timeout_sec: Default::default(),
                 sync_service_url: core::ptr::null_mut(),
@@ -14321,7 +14315,6 @@ mod io {
         liquid_explorer: wire_cst_blockchain_explorer,
         bitcoin_explorer: wire_cst_blockchain_explorer,
         working_dir: *mut wire_cst_list_prim_u_8_strict,
-        cache_dir: *mut wire_cst_list_prim_u_8_strict,
         network: i32,
         payment_timeout_sec: u64,
         sync_service_url: *mut wire_cst_list_prim_u_8_strict,

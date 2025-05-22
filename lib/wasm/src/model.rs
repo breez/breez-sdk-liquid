@@ -304,7 +304,6 @@ pub struct Config {
     pub liquid_explorer: BlockchainExplorer,
     pub bitcoin_explorer: BlockchainExplorer,
     pub working_dir: String,
-    pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
     pub payment_timeout_sec: u64,
     pub sync_service_url: Option<String>,

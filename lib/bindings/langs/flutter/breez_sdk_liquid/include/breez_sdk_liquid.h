@@ -704,7 +704,6 @@ typedef struct wire_cst_config {
   struct wire_cst_blockchain_explorer liquid_explorer;
   struct wire_cst_blockchain_explorer bitcoin_explorer;
   struct wire_cst_list_prim_u_8_strict *working_dir;
-  struct wire_cst_list_prim_u_8_strict *cache_dir;
   int32_t network;
   uint64_t payment_timeout_sec;
   struct wire_cst_list_prim_u_8_strict *sync_service_url;

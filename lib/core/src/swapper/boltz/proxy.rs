@@ -3,14 +3,13 @@ use std::sync::OnceLock;
 use crate::PRODUCTION_BREEZSERVER_URL;
 use anyhow::Result;
 use sdk_common::prelude::BreezServer;
-use sdk_common::utils::Arc;
 use url::Url;
 
 use crate::{persist::Persister, swapper::ProxyUrlFetcher};
 
 pub(crate) struct BoltzProxyFetcher {
     url: OnceLock<Option<String>>,
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
 }
 
 pub(crate) fn split_proxy_url(url: &str) -> (Option<String>, Option<String>) {
@@ -30,7 +29,7 @@ pub(crate) fn split_proxy_url(url: &str) -> (Option<String>, Option<String>) {
 }
 
 impl BoltzProxyFetcher {
-    pub(crate) fn new(persister: Arc<Persister>) -> Self {
+    pub(crate) fn new(persister: std::sync::Arc<Persister>) -> Self {
         Self {
             url: OnceLock::new(),
             persister,
