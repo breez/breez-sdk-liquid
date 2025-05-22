@@ -173,8 +173,8 @@ impl Config {
     pub fn testnet_esplora(breez_api_key: Option<String>) -> Self {
         Config {
             liquid_explorer: BlockchainExplorer::Esplora {
-                url: "https://blockstream.info/liquidtestnet/api".to_string(),
-                use_waterfalls: false,
+                url: "https://waterfalls.liquidwebwallet.org/liquidtestnet/api".to_string(),
+                use_waterfalls: true,
             },
             bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "https://blockstream.info/testnet/api/".to_string(),
