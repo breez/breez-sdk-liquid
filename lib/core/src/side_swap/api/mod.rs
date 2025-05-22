@@ -5,6 +5,7 @@ use log::{debug, error, info, warn};
 use maybe_sync::{MaybeSend, MaybeSync};
 use request_handler::SideSwapRequestHandler;
 use response_handler::SideSwapResponseHandler;
+use sdk_common::bitcoin::hashes::hex::ToHex as _;
 use sdk_common::prelude::RestClient;
 use sdk_common::utils::Arc;
 use sideswap_api::http_rpc::{
@@ -12,8 +13,8 @@ use sideswap_api::http_rpc::{
 };
 use sideswap_api::{
     Notification, Request, RequestId, RequestMessage, Response, ResponseMessage,
-    StartSwapWebRequest, StartSwapWebResponse, SubscribePriceStreamRequest,
-    SubscribePriceStreamResponse, UnsubscribePriceStreamRequest,
+    StartSwapWebRequest, SubscribePriceStreamRequest, SubscribePriceStreamResponse,
+    UnsubscribePriceStreamRequest,
 };
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -26,7 +27,7 @@ use boltz_client::boltz::tokio_tungstenite_wasm;
 use tokio_tungstenite_wasm::{connect, Message};
 
 use crate::bitcoin::base64;
-use crate::elements::{self, pset::PartiallySignedTransaction, AssetId, Txid};
+use crate::elements::{self, pset::PartiallySignedTransaction, AssetId};
 use crate::model::AssetSwap;
 use crate::wallet::OnchainWallet;
 
@@ -47,8 +48,13 @@ pub trait SideSwapService: MaybeSend + MaybeSync {
         send_amount_sat: u64,
     ) -> Result<AssetSwap>;
     async fn unsubscribe_price_stream(&self) -> Result<()>;
-    async fn prepare_swap(&self) -> Result<StartSwapWebResponse>;
-    async fn execute_swap(&self, start_res: StartSwapWebResponse) -> Result<Txid>;
+    async fn get_current_price(&self) -> Option<AssetSwap>;
+    async fn execute_swap(&self) -> Result<ExecuteSwapResponse>;
+}
+
+pub struct ExecuteSwapResponse {
+    pub recv_address: String,
+    pub tx_id: String,
 }
 
 struct ShutdownChannel {
@@ -248,9 +254,13 @@ impl SideSwapService for HybridSideSwapService {
         Ok(())
     }
 
-    async fn prepare_swap(&self) -> Result<StartSwapWebResponse> {
+    async fn get_current_price(&self) -> Option<AssetSwap> {
+        self.ongoing_swap.lock().await.clone()
+    }
+
+    async fn execute_swap(&self) -> Result<ExecuteSwapResponse> {
         let Some(ref ongoing_swap) = *self.ongoing_swap.lock().await else {
-            bail!("Cannot start swap without subscribing to price stream first");
+            bail!("Cannot execute swap without subscribing to price stream first");
         };
 
         let req = Request::StartSwapWeb(StartSwapWebRequest {
@@ -261,21 +271,19 @@ impl SideSwapService for HybridSideSwapService {
             send_bitcoins: true,
         });
         let request_id = self.request_handler.send(req).await?;
-        match self.response_handler.recv(request_id).await? {
+        let start_res = match self.response_handler.recv(request_id).await? {
             Ok(Response::StartSwapWeb(res)) => Ok(res),
             res => Err(Self::invalid_response(res)),
-        }
-    }
+        }?;
 
-    async fn execute_swap(&self, start_res: StartSwapWebResponse) -> Result<Txid> {
         let recv_addr = self.onchain_wallet.next_unused_address().await?;
         let change_addr = self.onchain_wallet.next_unused_change_address().await?;
 
         let body = serde_json::to_string(&SwapStartRequest {
             order_id: start_res.order_id,
             inputs: vec![],
-            recv_addr,
             change_addr,
+            recv_addr: recv_addr.clone(),
             send_asset: start_res.send_asset,
             send_amount: start_res.send_amount,
             recv_asset: start_res.recv_asset,
@@ -327,6 +335,9 @@ impl SideSwapService for HybridSideSwapService {
 
         let response: SwapSignResponse = serde_json::from_str(&raw_body)?;
         self.unset_ongoing_swap().await;
-        Ok(response.txid)
+        Ok(ExecuteSwapResponse {
+            tx_id: response.txid.to_hex(),
+            recv_address: recv_addr.to_string(),
+        })
     }
 }

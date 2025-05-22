@@ -737,6 +737,23 @@ dictionary AssetSwap {
     u64 payer_amount_sat;
 };
 
+dictionary PrepareAssetSwapRequest {
+    string asset_id;
+    u64 payer_amount_sat;
+};
+
+dictionary PrepareAssetSwapResponse {
+    AssetSwap asset_swap;
+};
+
+dictionary ExecuteAssetSwapRequest {
+    PrepareAssetSwapResponse prepare_response;
+};
+
+dictionary ExecuteAssetSwapResponse {
+    Payment payment;
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);
