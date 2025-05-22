@@ -2421,8 +2421,9 @@ pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
 
 /// The currently supported assets via SideSwap
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, EnumString, Serialize, Eq, PartialEq)]
 pub enum TradeableAsset {
+    #[strum(serialize = "usdt")]
     USDt,
 }
 

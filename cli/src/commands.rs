@@ -260,8 +260,11 @@ pub(crate) enum Command {
     FetchFiatRates {},
     /// Swap L-BTC for any SideSwap asset
     SwapAsset {
-        asset_id: String,
-        send_amount_sat: u64,
+        /// The asset to swap for. Currently only supports "usdt"
+        asset: TradeableAsset,
+
+        /// The amount of L-BTC to swap
+        payer_amount_sat: u64,
     },
 }
 
@@ -819,20 +822,20 @@ pub(crate) async fn handle_command(
             command_result!(res)
         }
         Command::SwapAsset {
-            asset_id,
-            send_amount_sat,
+            asset,
+            payer_amount_sat,
         } => {
             let prepare_response = sdk
                 .prepare_asset_swap(&PrepareAssetSwapRequest {
-                    asset_id,
-                    send_amount_sat,
+                    asset,
+                    payer_amount_sat,
                 })
                 .await?;
 
             let asset_swap = &prepare_response.asset_swap;
             let confirmation_msg = format!(
-                "Fees: approx {} sat. Recv amount: {}. Is this acceptable? (y/N) ",
-                asset_swap.fees_sat, asset_swap.recv_amount
+                "Fees: approx {} sat. Received amount: {}. Is this acceptable? (y/N) ",
+                asset_swap.fees_sat, asset_swap.receiver_amount
             );
             wait_confirmation!(confirmation_msg, "Asset swap halted");
 
