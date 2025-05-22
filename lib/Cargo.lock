@@ -3105,7 +3105,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=9946a62ea8f7b5ff936f09c77ec597552c44c2bf#9946a62ea8f7b5ff936f09c77ec597552c44c2bf"
+source = "git+https://github.com/breez/lwk?rev=417405cabbebe89df758fe7990f80011808aff4e#417405cabbebe89df758fe7990f80011808aff4e"
 dependencies = [
  "aes-gcm-siv",
  "age",
@@ -3128,9 +3128,9 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "tokio",
+ "tokio_with_wasm",
  "url",
  "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
