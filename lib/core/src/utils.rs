@@ -23,10 +23,16 @@ use sdk_common::lightning_with_bolt12::offers::invoice::Bolt12Invoice;
 use web_time::{SystemTime, UNIX_EPOCH};
 
 lazy_static! {
-    static ref LBTC_TESTNET_ASSET_ID: AssetId =
+    pub(crate) static ref USDT_MAINNET_ASSET_ID: AssetId =
+        AssetId::from_str("ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2")
+            .unwrap();
+    pub(crate) static ref USDT_TESTNET_ASSET_ID: AssetId =
+        AssetId::from_str("b612eb46313a2cd6ebabd8b7a8eed5696e29898b87a43bff41c94f51acef9d73")
+            .unwrap();
+    pub(crate) static ref LBTC_TESTNET_ASSET_ID: AssetId =
         AssetId::from_str("144c654344aa716d6f3abcc1ca90e5641e4e2a7f633bc09fe3baf64585819a49")
             .unwrap();
-    static ref LBTC_REGTEST_ASSET_ID: AssetId =
+    pub(crate) static ref LBTC_REGTEST_ASSET_ID: AssetId =
         AssetId::from_str("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225")
             .unwrap();
 }

@@ -340,7 +340,7 @@ impl LiquidSdkBuilder {
         let sideswap_service = match self.sideswap_service.clone() {
             Some(sideswap_service) => sideswap_service,
             None => Arc::new(HybridSideSwapService::new(
-                self.config.sideswap_url().to_string(),
+                self.config.clone(),
                 rest_client.clone(),
                 onchain_wallet.clone(),
             )),
@@ -4057,14 +4057,22 @@ impl LiquidSdk {
     ) -> Result<PrepareAssetSwapResponse, PaymentError> {
         self.sideswap_service.clone().start().await?;
 
-        let asset_id = AssetId::from_str(&req.asset_id)
-            .map_err(|err| PaymentError::generic(&format!("Invalid asset: {err}")))?;
+        let asset_id = req.asset.try_to_asset_id(self.config.network)?;
+
+        ensure_sdk!(
+            self.persister
+                .get_asset_metadata(&asset_id.to_string())
+                .is_ok_and(|a| a.is_some()),
+            PaymentError::asset_error("Asset not found")
+        );
+
         let asset_swap = self
             .sideswap_service
             .subscribe_price_stream(asset_id, req.payer_amount_sat)
             .await?;
-
-        if self.get_info().await?.wallet_info.balance_sat < req.payer_amount_sat + asset_swap.fees_sat {
+        if self.get_info().await?.wallet_info.balance_sat
+            < req.payer_amount_sat + asset_swap.fees_sat
+        {
             self.sideswap_service.unsubscribe_price_stream().await?;
             return Err(PaymentError::InsufficientFunds);
         }
@@ -4079,6 +4087,10 @@ impl LiquidSdk {
         self.sideswap_service.clone().start().await?;
 
         let req_swap = &req.prepare_response.asset_swap;
+        let asset_id = req_swap
+            .asset
+            .try_to_asset_id(self.config.network)?
+            .to_string();
         let Some(ongoing_swap) = self.sideswap_service.get_current_price().await else {
             return Err(PaymentError::generic(
                 "Cannot execute asset swap: swap not found.",
@@ -4124,7 +4136,7 @@ impl LiquidSdk {
             payment_type: PaymentType::Send,
             is_confirmed: false,
             unblinding_data: None,
-            asset_id: req_swap.asset_id.clone(),
+            asset_id: asset_id.clone(),
         };
 
         self.persister.insert_or_update_payment(
@@ -4140,7 +4152,7 @@ impl LiquidSdk {
 
         let asset_info = self
             .persister
-            .get_asset_metadata(&req_swap.asset_id)?
+            .get_asset_metadata(&asset_id)?
             .map(|ref am| AssetInfo {
                 name: am.name.clone(),
                 ticker: am.ticker.clone(),
@@ -4148,9 +4160,9 @@ impl LiquidSdk {
                 fees: None,
             });
         let payment_details = PaymentDetails::Liquid {
-            asset_id: req_swap.asset_id.clone(),
+            asset_id,
             destination,
-            description: "Liquid transfer".to_string(),
+            description: "SideSwap transfer".to_string(),
             asset_info,
             lnurl_info: None,
             bip353_address: None,

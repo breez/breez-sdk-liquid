@@ -39,6 +39,8 @@ use crate::{
     utils,
 };
 
+use self::utils::{USDT_MAINNET_ASSET_ID, USDT_TESTNET_ASSET_ID};
+
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
@@ -2418,11 +2420,35 @@ impl From<&lwk_wollet::History> for LBtcHistory {
 pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
 
+/// The currently supported assets via SideSwap
+#[derive(Debug, Clone, Serialize)]
+pub enum TradeableAsset {
+    USDt,
+}
+
+impl TradeableAsset {
+    pub(crate) fn try_from_asset_id(network: LiquidNetwork, asset_id: AssetId) -> Result<Self> {
+        match (network, asset_id) {
+            (LiquidNetwork::Mainnet, asset) if asset == *USDT_MAINNET_ASSET_ID => Ok(Self::USDt),
+            (LiquidNetwork::Testnet, asset) if asset == *USDT_TESTNET_ASSET_ID => Ok(Self::USDt),
+            _ => anyhow::bail!("Unsupported network-asset pair"),
+        }
+    }
+
+    pub(crate) fn try_to_asset_id(&self, network: LiquidNetwork) -> Result<AssetId> {
+        match (self, network) {
+            (Self::USDt, LiquidNetwork::Mainnet) => Ok(*USDT_MAINNET_ASSET_ID),
+            (Self::USDt, LiquidNetwork::Testnet) => Ok(*USDT_TESTNET_ASSET_ID),
+            _ => anyhow::bail!("Unsupported network-asset pair"),
+        }
+    }
+}
+
 /// The current state of a swap via the SideSwap service
 #[derive(Debug, Clone, Serialize)]
 pub struct AssetSwap {
-    /// The identifier of the asset we are currently trading for
-    pub asset_id: String,
+    /// The asset we are currently trading for
+    pub asset: TradeableAsset,
     /// The exchange rate of the asset, or the total price for one L-BTC
     pub exchange_rate: f64,
     /// The asset amount which will be received after swapping
@@ -2433,30 +2459,31 @@ pub struct AssetSwap {
     pub payer_amount_sat: u64,
 }
 
-impl TryFrom<&sideswap_api::SubscribePriceStreamResponse> for AssetSwap {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &sideswap_api::SubscribePriceStreamResponse) -> Result<Self, Self::Error> {
-        if let Some(err) = &value.error_msg {
+impl AssetSwap {
+    pub(crate) fn try_from_price_stream_response(
+        network: LiquidNetwork,
+        price_stream_res: &sideswap_api::SubscribePriceStreamResponse,
+    ) -> Result<Self> {
+        if let Some(err) = &price_stream_res.error_msg {
             anyhow::bail!(
                 "Could not convert SideSwap price - received error message from stream: {err}"
             );
         }
 
         Ok(Self {
-            asset_id: value.asset.to_string(),
-            payer_amount_sat: value
+            asset: TradeableAsset::try_from_asset_id(network, price_stream_res.asset)?,
+            payer_amount_sat: price_stream_res
                 .send_amount
                 .context("Expected send amount when creating side swap")?
                 as u64,
-            receiver_amount: value
+            receiver_amount: price_stream_res
                 .recv_amount
                 .context("Expected receive amount when creating side swap")?
                 as u64,
-            fees_sat: value
+            fees_sat: price_stream_res
                 .fixed_fee
                 .context("Expected fees when creating side swap")? as u64,
-            exchange_rate: value
+            exchange_rate: price_stream_res
                 .price
                 .context("Expected price when creating side swap")?,
         })
@@ -2466,7 +2493,7 @@ impl TryFrom<&sideswap_api::SubscribePriceStreamResponse> for AssetSwap {
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
 #[derive(Debug, Clone, Serialize)]
 pub struct PrepareAssetSwapRequest {
-    pub asset_id: String,
+    pub asset: TradeableAsset,
     pub payer_amount_sat: u64,
 }
 

@@ -729,8 +729,12 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
+enum TradeableAsset {
+    "USDt",
+};
+
 dictionary AssetSwap {
-    string asset_id;
+    TradeableAsset asset;
     u64 exchange_rate;
     u64 receiver_amount;
     u64 fees_sat;
@@ -738,7 +742,7 @@ dictionary AssetSwap {
 };
 
 dictionary PrepareAssetSwapRequest {
-    string asset_id;
+    TradeableAsset asset;
     u64 payer_amount_sat;
 };
 

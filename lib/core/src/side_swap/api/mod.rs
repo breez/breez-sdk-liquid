@@ -28,7 +28,7 @@ use tokio_tungstenite_wasm::{connect, Message};
 
 use crate::bitcoin::base64;
 use crate::elements::{self, pset::PartiallySignedTransaction, AssetId};
-use crate::model::AssetSwap;
+use crate::model::{AssetSwap, Config};
 use crate::wallet::OnchainWallet;
 
 mod request_handler;
@@ -72,7 +72,7 @@ impl ShutdownChannel {
 }
 
 pub(crate) struct HybridSideSwapService {
-    url: String,
+    config: Config,
     is_started: Mutex<bool>,
     shutdown: ShutdownChannel,
     rest_client: Arc<dyn RestClient>,
@@ -84,12 +84,12 @@ pub(crate) struct HybridSideSwapService {
 
 impl HybridSideSwapService {
     pub(crate) fn new(
-        url: String,
+        config: Config,
         rest_client: Arc<dyn RestClient>,
         onchain_wallet: Arc<dyn OnchainWallet>,
     ) -> Self {
         Self {
-            url,
+            config,
             is_started: Mutex::new(false),
             shutdown: ShutdownChannel::new(tokio::sync::mpsc::channel::<()>(10)),
             request_handler: SideSwapRequestHandler::new(),
@@ -106,7 +106,7 @@ impl HybridSideSwapService {
     }
 
     async fn update_ongoing_swap(&self, res: &SubscribePriceStreamResponse) -> Result<AssetSwap> {
-        let asset_swap: AssetSwap = res.try_into()?;
+        let asset_swap = AssetSwap::try_from_price_stream_response(self.config.network, res)?;
         let mut lock = self.ongoing_swap.lock().await;
         *lock = Some(asset_swap.clone());
         Ok(asset_swap)
@@ -153,7 +153,7 @@ impl SideSwapService for HybridSideSwapService {
             return Ok(());
         }
 
-        let ws = connect(&self.url).await?;
+        let ws = connect(self.config.sideswap_url()).await?;
         self.set_started(true).await;
 
         let (mut ws_sender, mut ws_receiver) = ws.split();
@@ -264,7 +264,7 @@ impl SideSwapService for HybridSideSwapService {
         };
 
         let req = Request::StartSwapWeb(StartSwapWebRequest {
-            asset: AssetId::from_str(&ongoing_swap.asset_id)?,
+            asset: ongoing_swap.asset.try_to_asset_id(self.config.network)?,
             price: ongoing_swap.exchange_rate,
             send_amount: ongoing_swap.payer_amount_sat as i64,
             recv_amount: ongoing_swap.receiver_amount as i64,
