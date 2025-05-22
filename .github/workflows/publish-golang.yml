@@ -38,47 +38,47 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-linux-android-uniffi-25
+          name: bindings-aarch64-linux-android
           path: breez_sdk_liquid/lib/android-aarch64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-i686-linux-android-uniffi-25
+          name: bindings-i686-linux-android
           path: breez_sdk_liquid/lib/android-386
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-armv7-linux-androideabi-uniffi-25
+          name: bindings-armv7-linux-androideabi
           path: breez_sdk_liquid/lib/android-aarch
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-linux-android-uniffi-25
+          name: bindings-x86_64-linux-android
           path: breez_sdk_liquid/lib/android-amd64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-apple-darwin-uniffi-25
+          name: bindings-aarch64-apple-darwin
           path: breez_sdk_liquid/lib/darwin-aarch64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-apple-darwin-uniffi-25
+          name: bindings-x86_64-apple-darwin
           path: breez_sdk_liquid/lib/darwin-amd64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-aarch64-unknown-linux-gnu-uniffi-25
+          name: bindings-aarch64-unknown-linux-gnu
           path: breez_sdk_liquid/lib/linux-aarch64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-unknown-linux-gnu-uniffi-25
+          name: bindings-x86_64-unknown-linux-gnu
           path: breez_sdk_liquid/lib/linux-amd64
 
       - uses: actions/download-artifact@v4
         with:
-          name: bindings-x86_64-pc-windows-msvc-uniffi-25
+          name: bindings-x86_64-pc-windows-msvc
           path: breez_sdk_liquid/lib/windows-amd64
 
       - name: Archive Go release
@@ -95,7 +95,6 @@ jobs:
           git config --global user.email github-actions@github.com
           git config --global user.name github-actions
           git add breez_sdk_liquid/breez_sdk_liquid.h
-          git add breez_sdk_liquid/breez_sdk_liquid.c
           git add breez_sdk_liquid/breez_sdk_liquid.go
           git add breez_sdk_liquid/lib/android-386/libbreez_sdk_liquid_bindings.so
           git add breez_sdk_liquid/lib/android-386/libc++_shared.so
