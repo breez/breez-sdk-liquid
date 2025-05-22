@@ -4051,6 +4051,19 @@ impl LiquidSdk {
         crate::logger::init_logging(log_dir, app_logger)
     }
 
+    /// Prepares to swap funds from L-BTC to a [TradeableAsset]
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - the [PrepareAssetSwapRequest] containing:
+    ///     * `asset` - The asset we are swapping L-BTC for
+    ///     * `payer_amount_sat` - The amount of L-BTC (in satoshis) we are swapping
+    ///
+    /// # Returns
+    ///
+    /// A [PrepareAssetSwapResponse] containing:
+    ///     * `asset_swap` - the [AssetSwap] details of the ongoing swap, including the exchange
+    ///     rate, fees and the final amount you will receive
     pub async fn prepare_asset_swap(
         &self,
         req: &PrepareAssetSwapRequest,
@@ -4080,6 +4093,26 @@ impl LiquidSdk {
         Ok(PrepareAssetSwapResponse { asset_swap })
     }
 
+    /// Executes a previously prepared asset swap
+    ///
+    /// # Arguments
+    ///
+    /// * `req` - A [ExecuteAssetSwapRequest], containing:
+    ///     * `prepare_response` - the [PrepareAssetSwapResponse] returned by
+    ///         [LiquidSdk::prepare_asset_swap]
+    ///
+    /// # Returns
+    ///
+    /// A [ExecuteAssetSwapResponse] containing:
+    ///     * `payment` - the onchain [Payment] details of the swap, including the Liquid txid and
+    ///     amount
+    ///
+    /// # Errors
+    ///
+    /// * [PaymentError::InvalidOrExpiredFees] - returned if the swap fees have changed above the
+    ///     previously accepted amount
+    /// * [PaymentError::InsufficientFunds] - returned if you do not have enough funds to execute
+    ///     the payment
     pub async fn execute_asset_swap(
         &self,
         req: &ExecuteAssetSwapRequest,
