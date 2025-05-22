@@ -974,8 +974,8 @@ sealed class PaymentDetails with _$PaymentDetails {
   const factory PaymentDetails.bitcoin({
     required String swapId,
 
-    /// The Bitcoin destination address of the swap.
-    required String destinationAddress,
+    /// The Bitcoin address that receives funds.
+    required String bitcoinAddress,
 
     /// Represents the invoice description
     required String description,

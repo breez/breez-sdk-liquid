@@ -3621,7 +3621,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
     }
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
-        val destinationAddress = paymentDetails.getString("destinationAddress")!!
+        val bitcoinAddress = paymentDetails.getString("bitcoinAddress")!!
         val description = paymentDetails.getString("description")!!
         val autoAcceptedFees = paymentDetails.getBoolean("autoAcceptedFees")
         val bitcoinExpirationBlockheight =
@@ -3659,7 +3659,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             }
         return PaymentDetails.Bitcoin(
             swapId,
-            destinationAddress,
+            bitcoinAddress,
             description,
             autoAcceptedFees,
             bitcoinExpirationBlockheight,
@@ -3704,7 +3704,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
         is PaymentDetails.Bitcoin -> {
             pushToMap(map, "type", "bitcoin")
             pushToMap(map, "swapId", paymentDetails.swapId)
-            pushToMap(map, "destinationAddress", paymentDetails.destinationAddress)
+            pushToMap(map, "bitcoinAddress", paymentDetails.bitcoinAddress)
             pushToMap(map, "description", paymentDetails.description)
             pushToMap(map, "autoAcceptedFees", paymentDetails.autoAcceptedFees)
             pushToMap(map, "bitcoinExpirationBlockheight", paymentDetails.bitcoinExpirationBlockheight)

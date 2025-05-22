@@ -1796,9 +1796,8 @@ pub struct PaymentSwapData {
     pub refund_tx_amount_sat: Option<u64>,
 
     /// Present only for chain swaps.
-    /// In case of an outgoing chain swap, it's the Bitcoin address which will receive the funds
-    /// In case of an incoming chain swap, it's the Liquid address which will receive the funds
-    pub claim_address: Option<String>,
+    /// It's the Bitcoin address that receives funds.
+    pub bitcoin_address: Option<String>,
 
     /// Payment status derived from the swap status
     pub status: PaymentState,
@@ -1929,8 +1928,8 @@ pub enum PaymentDetails {
     Bitcoin {
         swap_id: String,
 
-        /// The Bitcoin destination address of the swap.
-        destination_address: String,
+        /// The Bitcoin address that receives funds.
+        bitcoin_address: String,
 
         /// Represents the invoice description
         description: String,
@@ -2127,7 +2126,7 @@ impl Payment {
             tx_id: Some(tx.tx_id),
             unblinding_data: tx.unblinding_data,
             // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
-            // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
+            // If it's a chain swap instead, we use the `bitcoin_address` field from the swap data.
             // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.
             destination: match &swap {
                 Some(PaymentSwapData {
@@ -2143,9 +2142,9 @@ impl Payment {
                 }) => bolt12_offer.clone().or(invoice.clone()),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Chain,
-                    claim_address,
+                    bitcoin_address,
                     ..
-                }) => claim_address.clone(),
+                }) => bitcoin_address.clone(),
                 _ => match &details {
                     PaymentDetails::Liquid { destination, .. } => Some(destination.clone()),
                     _ => None,

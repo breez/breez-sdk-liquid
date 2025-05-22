@@ -105,7 +105,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(payment.payment_type, PaymentType::Receive);
     assert_eq!(payment.status, PaymentState::Complete);
     assert!(
-        matches!(&payment.details, PaymentDetails::Bitcoin { destination_address, .. } if *destination_address == address)
+        matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
 
     // --------------SEND--------------
@@ -171,7 +171,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(payment.payment_type, PaymentType::Send);
     assert_eq!(payment.status, PaymentState::Complete);
     assert!(
-        matches!(&payment.details, PaymentDetails::Bitcoin { destination_address, .. } if *destination_address == address)
+        matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
 
     // ----------------REFUND--------------

@@ -4944,7 +4944,7 @@ final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination_address;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
