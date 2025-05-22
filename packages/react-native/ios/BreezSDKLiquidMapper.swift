@@ -543,13 +543,6 @@ enum BreezSDKLiquidMapper {
             }
             breezApiKey = breezApiKeyTmp
         }
-        var cacheDir: String?
-        if hasNonNilKey(data: config, key: "cacheDir") {
-            guard let cacheDirTmp = config["cacheDir"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "cacheDir"))
-            }
-            cacheDir = cacheDirTmp
-        }
         var zeroConfMaxAmountSat: UInt64?
         if hasNonNilKey(data: config, key: "zeroConfMaxAmountSat") {
             guard let zeroConfMaxAmountSatTmp = config["zeroConfMaxAmountSat"] as? UInt64 else {
@@ -585,7 +578,7 @@ enum BreezSDKLiquidMapper {
             sideswapApiKey = sideswapApiKeyTmp
         }
 
-        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, cacheDir: cacheDir, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -597,7 +590,6 @@ enum BreezSDKLiquidMapper {
             "paymentTimeoutSec": config.paymentTimeoutSec,
             "syncServiceUrl": config.syncServiceUrl == nil ? nil : config.syncServiceUrl,
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
-            "cacheDir": config.cacheDir == nil ? nil : config.cacheDir,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
             "useDefaultExternalInputParsers": config.useDefaultExternalInputParsers,
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),

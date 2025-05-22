@@ -126,10 +126,6 @@ abstract class ForegroundService :
 
         // Connect to SDK if source intent has data message with valid payload
         getConnectRequest()?.let { connectRequest ->
-            if (connectRequest.config.cacheDir == null) {
-                connectRequest.config.cacheDir = Path(connectRequest.config.workingDir, "pluginCache").toString()
-            }
-
             getJobFromIntent(intent)?.also { job ->
                 launchSdkConnection(connectRequest, job)
             } ?: run {

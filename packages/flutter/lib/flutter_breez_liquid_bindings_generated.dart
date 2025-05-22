@@ -5134,8 +5134,6 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cache_dir;
-
   @ffi.Int32()
   external int network;
 

@@ -259,9 +259,6 @@ class Config {
   ///
   /// Prefix can be a relative or absolute path to this directory.
   final String workingDir;
-
-  /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
-  final String? cacheDir;
   final LiquidNetwork network;
 
   /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
@@ -309,7 +306,6 @@ class Config {
     required this.liquidExplorer,
     required this.bitcoinExplorer,
     required this.workingDir,
-    this.cacheDir,
     required this.network,
     required this.paymentTimeoutSec,
     this.syncServiceUrl,
@@ -327,7 +323,6 @@ class Config {
       liquidExplorer.hashCode ^
       bitcoinExplorer.hashCode ^
       workingDir.hashCode ^
-      cacheDir.hashCode ^
       network.hashCode ^
       paymentTimeoutSec.hashCode ^
       syncServiceUrl.hashCode ^
@@ -347,7 +342,6 @@ class Config {
           liquidExplorer == other.liquidExplorer &&
           bitcoinExplorer == other.bitcoinExplorer &&
           workingDir == other.workingDir &&
-          cacheDir == other.cacheDir &&
           network == other.network &&
           paymentTimeoutSec == other.paymentTimeoutSec &&
           syncServiceUrl == other.syncServiceUrl &&

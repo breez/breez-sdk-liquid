@@ -440,7 +440,6 @@ fun asConfig(config: ReadableMap): Config? {
     val paymentTimeoutSec = config.getDouble("paymentTimeoutSec").toULong()
     val syncServiceUrl = if (hasNonNullKey(config, "syncServiceUrl")) config.getString("syncServiceUrl") else null
     val breezApiKey = if (hasNonNullKey(config, "breezApiKey")) config.getString("breezApiKey") else null
-    val cacheDir = if (hasNonNullKey(config, "cacheDir")) config.getString("cacheDir") else null
     val zeroConfMaxAmountSat =
         if (hasNonNullKey(
                 config,
@@ -489,7 +488,6 @@ fun asConfig(config: ReadableMap): Config? {
         paymentTimeoutSec,
         syncServiceUrl,
         breezApiKey,
-        cacheDir,
         zeroConfMaxAmountSat,
         useDefaultExternalInputParsers,
         externalInputParsers,
@@ -508,7 +506,6 @@ fun readableMapOf(config: Config): ReadableMap =
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "syncServiceUrl" to config.syncServiceUrl,
         "breezApiKey" to config.breezApiKey,
-        "cacheDir" to config.cacheDir,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
         "useDefaultExternalInputParsers" to config.useDefaultExternalInputParsers,
         "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },

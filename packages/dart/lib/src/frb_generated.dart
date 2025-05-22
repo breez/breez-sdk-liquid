@@ -1970,22 +1970,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 14) throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
+    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
     return Config(
       liquidExplorer: dco_decode_blockchain_explorer(arr[0]),
       bitcoinExplorer: dco_decode_blockchain_explorer(arr[1]),
       workingDir: dco_decode_String(arr[2]),
-      cacheDir: dco_decode_opt_String(arr[3]),
-      network: dco_decode_liquid_network(arr[4]),
-      paymentTimeoutSec: dco_decode_u_64(arr[5]),
-      syncServiceUrl: dco_decode_opt_String(arr[6]),
-      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[7]),
-      breezApiKey: dco_decode_opt_String(arr[8]),
-      externalInputParsers: dco_decode_opt_list_external_input_parser(arr[9]),
-      useDefaultExternalInputParsers: dco_decode_bool(arr[10]),
-      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[11]),
-      assetMetadata: dco_decode_opt_list_asset_metadata(arr[12]),
-      sideswapApiKey: dco_decode_opt_String(arr[13]),
+      network: dco_decode_liquid_network(arr[3]),
+      paymentTimeoutSec: dco_decode_u_64(arr[4]),
+      syncServiceUrl: dco_decode_opt_String(arr[5]),
+      zeroConfMaxAmountSat: dco_decode_opt_box_autoadd_u_64(arr[6]),
+      breezApiKey: dco_decode_opt_String(arr[7]),
+      externalInputParsers: dco_decode_opt_list_external_input_parser(arr[8]),
+      useDefaultExternalInputParsers: dco_decode_bool(arr[9]),
+      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[10]),
+      assetMetadata: dco_decode_opt_list_asset_metadata(arr[11]),
+      sideswapApiKey: dco_decode_opt_String(arr[12]),
     );
   }
 
@@ -4045,7 +4044,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_liquidExplorer = sse_decode_blockchain_explorer(deserializer);
     var var_bitcoinExplorer = sse_decode_blockchain_explorer(deserializer);
     var var_workingDir = sse_decode_String(deserializer);
-    var var_cacheDir = sse_decode_opt_String(deserializer);
     var var_network = sse_decode_liquid_network(deserializer);
     var var_paymentTimeoutSec = sse_decode_u_64(deserializer);
     var var_syncServiceUrl = sse_decode_opt_String(deserializer);
@@ -4060,7 +4058,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       liquidExplorer: var_liquidExplorer,
       bitcoinExplorer: var_bitcoinExplorer,
       workingDir: var_workingDir,
-      cacheDir: var_cacheDir,
       network: var_network,
       paymentTimeoutSec: var_paymentTimeoutSec,
       syncServiceUrl: var_syncServiceUrl,
@@ -6587,7 +6584,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_blockchain_explorer(self.liquidExplorer, serializer);
     sse_encode_blockchain_explorer(self.bitcoinExplorer, serializer);
     sse_encode_String(self.workingDir, serializer);
-    sse_encode_opt_String(self.cacheDir, serializer);
     sse_encode_liquid_network(self.network, serializer);
     sse_encode_u_64(self.paymentTimeoutSec, serializer);
     sse_encode_opt_String(self.syncServiceUrl, serializer);
