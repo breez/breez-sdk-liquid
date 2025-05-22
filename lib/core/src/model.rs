@@ -698,10 +698,11 @@ pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
     /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers and Liquid addresses
     pub destination: String,
-
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
+    /// An optional comment for this payment
+    pub comment: Option<String>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -722,6 +723,8 @@ pub enum SendDestination {
         receiver_amount_sat: u64,
         /// A BIP353 address, in case one was used to resolve this BOLT12
         bip353_address: Option<String>,
+        /// An optional comment for this payment
+        comment: Option<String>,
     },
 }
 

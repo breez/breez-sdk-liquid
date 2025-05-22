@@ -425,6 +425,7 @@ pub(crate) async fn handle_command(
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
                     amount,
+                    comment: None,
                 })
                 .await?;
 

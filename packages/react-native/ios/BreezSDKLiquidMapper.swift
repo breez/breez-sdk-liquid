@@ -2716,13 +2716,22 @@ enum BreezSDKLiquidMapper {
             amount = try asPayAmount(payAmount: amountTmp)
         }
 
-        return PrepareSendRequest(destination: destination, amount: amount)
+        var comment: String?
+        if hasNonNilKey(data: prepareSendRequest, key: "comment") {
+            guard let commentTmp = prepareSendRequest["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
+
+        return PrepareSendRequest(destination: destination, amount: amount, comment: comment)
     }
 
     static func dictionaryOf(prepareSendRequest: PrepareSendRequest) -> [String: Any?] {
         return [
             "destination": prepareSendRequest.destination,
             "amount": prepareSendRequest.amount == nil ? nil : dictionaryOf(payAmount: prepareSendRequest.amount!),
+            "comment": prepareSendRequest.comment == nil ? nil : prepareSendRequest.comment,
         ]
     }
 
@@ -4965,7 +4974,9 @@ enum BreezSDKLiquidMapper {
             }
             let _bip353Address = sendDestination["bip353Address"] as? String
 
-            return SendDestination.bolt12(offer: _offer, receiverAmountSat: _receiverAmountSat, bip353Address: _bip353Address)
+            let _comment = sendDestination["comment"] as? String
+
+            return SendDestination.bolt12(offer: _offer, receiverAmountSat: _receiverAmountSat, bip353Address: _bip353Address, comment: _comment)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SendDestination")
@@ -4992,13 +5003,14 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bolt12(
-            offer, receiverAmountSat, bip353Address
+            offer, receiverAmountSat, bip353Address, comment
         ):
             return [
                 "type": "bolt12",
                 "offer": dictionaryOf(lnOffer: offer),
                 "receiverAmountSat": receiverAmountSat,
                 "bip353Address": bip353Address == nil ? nil : bip353Address,
+                "comment": comment == nil ? nil : comment,
             ]
         }
     }

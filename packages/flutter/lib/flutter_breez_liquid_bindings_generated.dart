@@ -4509,6 +4509,8 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
   external int receiver_amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
 final class SendDestinationKind extends ffi.Union {
@@ -4754,6 +4756,8 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {

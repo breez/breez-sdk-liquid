@@ -3727,6 +3727,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.destination = cst_encode_String(apiObj.destination);
     wireObj.amount = cst_encode_opt_box_autoadd_pay_amount(apiObj.amount);
+    wireObj.comment = cst_encode_opt_String(apiObj.comment);
   }
 
   @protected
@@ -3940,10 +3941,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_offer = cst_encode_box_autoadd_ln_offer(apiObj.offer);
       var pre_receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
       var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
+      var pre_comment = cst_encode_opt_String(apiObj.comment);
       wireObj.tag = 2;
       wireObj.kind.Bolt12.offer = pre_offer;
       wireObj.kind.Bolt12.receiver_amount_sat = pre_receiver_amount_sat;
       wireObj.kind.Bolt12.bip353_address = pre_bip353_address;
+      wireObj.kind.Bolt12.comment = pre_comment;
       return;
     }
   }
@@ -6662,6 +6665,8 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
   external int receiver_amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
 final class SendDestinationKind extends ffi.Union {
@@ -6907,6 +6912,8 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {

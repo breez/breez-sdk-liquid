@@ -13,8 +13,8 @@ frb = ["dep:flutter_rust_bridge"]
 # Uniffi features required to build using cargo-lipo
 uniffi-25 = []
 uniffi-28 = []
-regtest = []        # Enable regtest tests
-browser-tests = []  # Enable browser wasm-pack tests
+regtest = []                           # Enable regtest tests
+browser-tests = []                     # Enable browser wasm-pack tests
 test-utils = ["sdk-common/test-utils"]
 
 [lints]
@@ -64,7 +64,9 @@ tempfile = "3"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
-esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = ["async-https-rustls"] }
+esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = [
+    "async-https-rustls",
+] }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
@@ -77,8 +79,9 @@ maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-boltz-client = { git = "https://github.com/breez/boltz-rust", rev = "d44295fa20da9c665a1f5580d16e387ff7245339", features = [
+boltz-client = { git = "https://github.com/breez/boltz-rust", rev = "bdef4971f10a3757297ac7a8e2a862fcadfc2312", features = [
     "electrum",
+    "ws",
 ] }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
@@ -98,11 +101,13 @@ tonic = { version = "0.12", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-boltz-client = { git = "https://github.com/breez/boltz-rust", rev = "d44295fa20da9c665a1f5580d16e387ff7245339" }
+boltz-client = { git = "https://github.com/breez/boltz-rust", rev = "bdef4971f10a3757297ac7a8e2a862fcadfc2312", features = [
+    "ws",
+] }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
     "bundled",
-    "serialize"
+    "serialize",
 ] }
 
 [dev-dependencies]

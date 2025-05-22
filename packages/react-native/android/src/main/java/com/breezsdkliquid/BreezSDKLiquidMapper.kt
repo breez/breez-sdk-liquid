@@ -2329,13 +2329,15 @@ fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
     }
     val destination = prepareSendRequest.getString("destination")!!
     val amount = if (hasNonNullKey(prepareSendRequest, "amount")) prepareSendRequest.getMap("amount")?.let { asPayAmount(it) } else null
-    return PrepareSendRequest(destination, amount)
+    val comment = if (hasNonNullKey(prepareSendRequest, "comment")) prepareSendRequest.getString("comment") else null
+    return PrepareSendRequest(destination, amount, comment)
 }
 
 fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap =
     readableMapOf(
         "destination" to prepareSendRequest.destination,
         "amount" to prepareSendRequest.amount?.let { readableMapOf(it) },
+        "comment" to prepareSendRequest.comment,
     )
 
 fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
@@ -3926,7 +3928,8 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
         val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
         val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
         val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
-        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address)
+        val comment = if (hasNonNullKey(sendDestination, "comment")) sendDestination.getString("comment") else null
+        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address, comment)
     }
     return null
 }
@@ -3949,6 +3952,7 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
             pushToMap(map, "offer", readableMapOf(sendDestination.offer))
             pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
             pushToMap(map, "bip353Address", sendDestination.bip353Address)
+            pushToMap(map, "comment", sendDestination.comment)
         }
     }
     return map

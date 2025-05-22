@@ -10,9 +10,9 @@ use boltz_client::{
     boltz::{
         self, BoltzApiClientV2, ChainPair, Cooperative, CreateBolt12OfferRequest,
         CreateChainRequest, CreateChainResponse, CreateReverseRequest, CreateReverseResponse,
-        CreateSubmarineRequest, CreateSubmarineResponse, GetBolt12FetchResponse,
-        GetBolt12ParamsResponse, GetNodesResponse, ReversePair, SubmarineClaimTxResponse,
-        SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
+        CreateSubmarineRequest, CreateSubmarineResponse, GetBolt12FetchRequest,
+        GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
+        SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::Chain,
@@ -513,14 +513,13 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
 
     async fn get_bolt12_info(
         &self,
-        offer: &str,
-        amount_sat: u64,
+        req: GetBolt12FetchRequest,
     ) -> Result<GetBolt12FetchResponse, PaymentError> {
         let invoice_res = self
             .get_boltz_client()
             .await?
             .inner
-            .get_bolt12_invoice(offer, amount_sat)
+            .get_bolt12_invoice(req)
             .await?;
         info!("Received BOLT12 invoice response: {invoice_res:?}");
         Ok(invoice_res)

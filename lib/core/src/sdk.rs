@@ -1215,6 +1215,7 @@ impl LiquidSdk {
     ///        - [PayAmount::Drain] which uses all Bitcoin funds
     ///        - [PayAmount::Bitcoin] which sets the amount in satoshi that will be received
     ///        - [PayAmount::Asset] which sets the amount of an asset that will be received
+    ///     * `comment` - The optional comment to be included in the payment
     ///
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
@@ -1516,6 +1517,7 @@ impl LiquidSdk {
                     offer,
                     receiver_amount_sat,
                     bip353_address,
+                    comment: req.comment.clone(),
                 };
             }
             _ => {
@@ -1639,11 +1641,16 @@ impl LiquidSdk {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
+                comment,
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let bolt12_info = self
                     .swapper
-                    .get_bolt12_info(&offer.offer, *receiver_amount_sat)
+                    .get_bolt12_info(GetBolt12FetchRequest {
+                        offer: offer.offer.clone(),
+                        amount: *receiver_amount_sat,
+                        note: comment.clone(),
+                    })
                     .await?;
                 let mut response = self
                     .pay_bolt12_invoice(
@@ -4166,6 +4173,7 @@ impl LiquidSdk {
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
                         amount: Some(req.amount.clone()),
+                        comment: req.comment.clone(),
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;

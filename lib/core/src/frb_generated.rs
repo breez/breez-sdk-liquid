@@ -4403,9 +4403,11 @@ impl SseDecode for crate::model::PrepareSendRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <String>::sse_decode(deserializer);
         let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
+        let mut var_comment = <Option<String>>::sse_decode(deserializer);
         return crate::model::PrepareSendRequest {
             destination: var_destination,
             amount: var_amount,
+            comment: var_comment,
         };
     }
 }
@@ -4708,10 +4710,12 @@ impl SseDecode for crate::model::SendDestination {
                 let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
                 let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
                 let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
+                let mut var_comment = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt12 {
                     offer: var_offer,
                     receiver_amount_sat: var_receiverAmountSat,
                     bip353_address: var_bip353Address,
+                    comment: var_comment,
                 };
             }
             _ => {
@@ -6906,6 +6910,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
         [
             self.destination.into_into_dart().into_dart(),
             self.amount.into_into_dart().into_dart(),
+            self.comment.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7266,11 +7271,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
+                comment,
             } => [
                 2.into_dart(),
                 offer.into_into_dart().into_dart(),
                 receiver_amount_sat.into_into_dart().into_dart(),
                 bip353_address.into_into_dart().into_dart(),
+                comment.into_into_dart().into_dart(),
             ]
             .into_dart(),
             _ => {
@@ -9157,6 +9164,7 @@ impl SseEncode for crate::model::PrepareSendRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.destination, serializer);
         <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
+        <Option<String>>::sse_encode(self.comment, serializer);
     }
 }
 
@@ -9382,11 +9390,13 @@ impl SseEncode for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
+                comment,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNOffer>::sse_encode(offer, serializer);
                 <u64>::sse_encode(receiver_amount_sat, serializer);
                 <Option<String>>::sse_encode(bip353_address, serializer);
+                <Option<String>>::sse_encode(comment, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -11405,6 +11415,7 @@ mod io {
             crate::model::PrepareSendRequest {
                 destination: self.destination.cst_decode(),
                 amount: self.amount.cst_decode(),
+                comment: self.comment.cst_decode(),
             }
         }
     }
@@ -11647,6 +11658,7 @@ mod io {
                         offer: ans.offer.cst_decode(),
                         receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
                         bip353_address: ans.bip353_address.cst_decode(),
+                        comment: ans.comment.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -12807,6 +12819,7 @@ mod io {
             Self {
                 destination: core::ptr::null_mut(),
                 amount: core::ptr::null_mut(),
+                comment: core::ptr::null_mut(),
             }
         }
     }
@@ -15277,6 +15290,7 @@ mod io {
     pub struct wire_cst_prepare_send_request {
         destination: *mut wire_cst_list_prim_u_8_strict,
         amount: *mut wire_cst_pay_amount,
+        comment: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15498,6 +15512,7 @@ mod io {
         offer: *mut wire_cst_ln_offer,
         receiver_amount_sat: u64,
         bip353_address: *mut wire_cst_list_prim_u_8_strict,
+        comment: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
