@@ -4424,6 +4424,9 @@ enum BreezSDKLiquidMapper {
             guard let _swapId = paymentDetails["swapId"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "swapId", typeName: "PaymentDetails"))
             }
+            guard let _bitcoinAddress = paymentDetails["bitcoinAddress"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinAddress", typeName: "PaymentDetails"))
+            }
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
@@ -4442,7 +4445,7 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.bitcoin(swapId: _swapId, description: _description, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, lockupTxId: _lockupTxId, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.bitcoin(swapId: _swapId, bitcoinAddress: _bitcoinAddress, description: _description, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, lockupTxId: _lockupTxId, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -4484,11 +4487,12 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bitcoin(
-            swapId, description, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, lockupTxId, claimTxId, refundTxId, refundTxAmountSat
+            swapId, bitcoinAddress, description, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, lockupTxId, claimTxId, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "bitcoin",
                 "swapId": swapId,
+                "bitcoinAddress": bitcoinAddress,
                 "description": description,
                 "autoAcceptedFees": autoAcceptedFees,
                 "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight == nil ? nil : bitcoinExpirationBlockheight,

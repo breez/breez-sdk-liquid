@@ -734,6 +734,7 @@ export type PaymentDetails = {
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string
+    bitcoinAddress: string
     description: string
     autoAcceptedFees: boolean
     bitcoinExpirationBlockheight?: number

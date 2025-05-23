@@ -711,6 +711,7 @@ pub enum PaymentDetails {
     },
     Bitcoin {
         swap_id: String,
+        bitcoin_address: String,
         description: String,
         auto_accepted_fees: bool,
         liquid_expiration_blockheight: Option<u32>,

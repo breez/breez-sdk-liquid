@@ -104,7 +104,9 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(payment.fees_sat, prepare_response.fees_sat);
     assert_eq!(payment.payment_type, PaymentType::Receive);
     assert_eq!(payment.status, PaymentState::Complete);
-    assert!(matches!(payment.details, PaymentDetails::Bitcoin { .. }));
+    assert!(
+        matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
+    );
 
     // --------------SEND--------------
 
@@ -120,7 +122,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
                 },
                 fee_rate_sat_per_vbyte: None,
             },
-            address,
+            address.clone(),
         )
         .await
         .unwrap();
@@ -168,7 +170,9 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(payment.fees_sat, fees_sat);
     assert_eq!(payment.payment_type, PaymentType::Send);
     assert_eq!(payment.status, PaymentState::Complete);
-    assert!(matches!(payment.details, PaymentDetails::Bitcoin { .. }));
+    assert!(
+        matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
+    );
 
     // ----------------REFUND--------------
 
