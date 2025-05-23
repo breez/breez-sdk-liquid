@@ -260,7 +260,7 @@ typedef struct wire_cst_SendDestination_Bolt12 {
   struct wire_cst_ln_offer *offer;
   uint64_t receiver_amount_sat;
   struct wire_cst_list_prim_u_8_strict *bip353_address;
-  struct wire_cst_list_prim_u_8_strict *comment;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_SendDestination_Bolt12;
 
 typedef union SendDestinationKind {

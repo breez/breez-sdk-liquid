@@ -701,7 +701,7 @@ pub struct PrepareSendRequest {
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
-    /// An optional comment for this payment
+    /// An optional comment when paying a BOLT12 offer
     pub comment: Option<String>,
 }
 
@@ -723,8 +723,8 @@ pub enum SendDestination {
         receiver_amount_sat: u64,
         /// A BIP353 address, in case one was used to resolve this BOLT12
         bip353_address: Option<String>,
-        /// An optional comment for this payment
-        comment: Option<String>,
+        /// An optional payer note
+        payer_note: Option<String>,
     },
 }
 

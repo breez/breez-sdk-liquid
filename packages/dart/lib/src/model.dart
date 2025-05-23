@@ -1422,7 +1422,7 @@ class PrepareSendRequest {
   /// where no amount is specified, or when the caller wishes to drain
   final PayAmount? amount;
 
-  /// An optional comment for this payment
+  /// An optional comment when paying a BOLT12 offer
   final String? comment;
 
   const PrepareSendRequest({required this.destination, this.amount, this.comment});
@@ -1702,8 +1702,8 @@ sealed class SendDestination with _$SendDestination {
     /// A BIP353 address, in case one was used to resolve this BOLT12
     String? bip353Address,
 
-    /// An optional comment for this payment
-    String? comment,
+    /// An optional payer note
+    String? payerNote,
   }) = SendDestination_Bolt12;
 }
 

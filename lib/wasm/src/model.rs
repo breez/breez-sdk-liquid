@@ -452,7 +452,7 @@ pub enum SendDestination {
         offer: LNOffer,
         receiver_amount_sat: u64,
         bip353_address: Option<String>,
-        comment: Option<String>,
+        payer_note: Option<String>,
     },
 }
 

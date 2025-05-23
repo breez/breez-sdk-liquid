@@ -1517,7 +1517,7 @@ impl LiquidSdk {
                     offer,
                     receiver_amount_sat,
                     bip353_address,
-                    comment: req.comment.clone(),
+                    payer_note: req.comment.clone(),
                 };
             }
             _ => {
@@ -1641,7 +1641,7 @@ impl LiquidSdk {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
-                comment,
+                payer_note,
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let bolt12_info = self
@@ -1649,7 +1649,7 @@ impl LiquidSdk {
                     .get_bolt12_info(GetBolt12FetchRequest {
                         offer: offer.offer.clone(),
                         amount: *receiver_amount_sat,
-                        note: comment.clone(),
+                        note: payer_note.clone(),
                     })
                     .await?;
                 let mut response = self

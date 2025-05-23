@@ -3283,7 +3283,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           offer: dco_decode_box_autoadd_ln_offer(raw[1]),
           receiverAmountSat: dco_decode_u_64(raw[2]),
           bip353Address: dco_decode_opt_String(raw[3]),
-          comment: dco_decode_opt_String(raw[4]),
+          payerNote: dco_decode_opt_String(raw[4]),
         );
       default:
         throw Exception("unreachable");
@@ -5731,12 +5731,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_offer = sse_decode_box_autoadd_ln_offer(deserializer);
         var var_receiverAmountSat = sse_decode_u_64(deserializer);
         var var_bip353Address = sse_decode_opt_String(deserializer);
-        var var_comment = sse_decode_opt_String(deserializer);
+        var var_payerNote = sse_decode_opt_String(deserializer);
         return SendDestination_Bolt12(
           offer: var_offer,
           receiverAmountSat: var_receiverAmountSat,
           bip353Address: var_bip353Address,
-          comment: var_comment,
+          payerNote: var_payerNote,
         );
       default:
         throw UnimplementedError('');
@@ -7926,13 +7926,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         offer: final offer,
         receiverAmountSat: final receiverAmountSat,
         bip353Address: final bip353Address,
-        comment: final comment,
+        payerNote: final payerNote,
       ):
         sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_offer(offer, serializer);
         sse_encode_u_64(receiverAmountSat, serializer);
         sse_encode_opt_String(bip353Address, serializer);
-        sse_encode_opt_String(comment, serializer);
+        sse_encode_opt_String(payerNote, serializer);
     }
   }
 

@@ -2329,15 +2329,15 @@ as String?,
 
 
 class SendDestination_Bolt12 extends SendDestination {
-  const SendDestination_Bolt12({required this.offer, required this.receiverAmountSat, this.bip353Address, this.comment}): super._();
+  const SendDestination_Bolt12({required this.offer, required this.receiverAmountSat, this.bip353Address, this.payerNote}): super._();
   
 
  final  LNOffer offer;
  final  BigInt receiverAmountSat;
 /// A BIP353 address, in case one was used to resolve this BOLT12
 @override final  String? bip353Address;
-/// An optional comment for this payment
- final  String? comment;
+/// An optional payer note
+ final  String? payerNote;
 
 /// Create a copy of SendDestination
 /// with the given fields replaced by the non-null parameter values.
@@ -2349,16 +2349,16 @@ $SendDestination_Bolt12CopyWith<SendDestination_Bolt12> get copyWith => _$SendDe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SendDestination_Bolt12&&(identical(other.offer, offer) || other.offer == offer)&&(identical(other.receiverAmountSat, receiverAmountSat) || other.receiverAmountSat == receiverAmountSat)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address)&&(identical(other.comment, comment) || other.comment == comment));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SendDestination_Bolt12&&(identical(other.offer, offer) || other.offer == offer)&&(identical(other.receiverAmountSat, receiverAmountSat) || other.receiverAmountSat == receiverAmountSat)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address)&&(identical(other.payerNote, payerNote) || other.payerNote == payerNote));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,offer,receiverAmountSat,bip353Address,comment);
+int get hashCode => Object.hash(runtimeType,offer,receiverAmountSat,bip353Address,payerNote);
 
 @override
 String toString() {
-  return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat, bip353Address: $bip353Address, comment: $comment)';
+  return 'SendDestination.bolt12(offer: $offer, receiverAmountSat: $receiverAmountSat, bip353Address: $bip353Address, payerNote: $payerNote)';
 }
 
 
@@ -2369,7 +2369,7 @@ abstract mixin class $SendDestination_Bolt12CopyWith<$Res> implements $SendDesti
   factory $SendDestination_Bolt12CopyWith(SendDestination_Bolt12 value, $Res Function(SendDestination_Bolt12) _then) = _$SendDestination_Bolt12CopyWithImpl;
 @override @useResult
 $Res call({
- LNOffer offer, BigInt receiverAmountSat, String? bip353Address, String? comment
+ LNOffer offer, BigInt receiverAmountSat, String? bip353Address, String? payerNote
 });
 
 
@@ -2386,12 +2386,12 @@ class _$SendDestination_Bolt12CopyWithImpl<$Res>
 
 /// Create a copy of SendDestination
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? offer = null,Object? receiverAmountSat = null,Object? bip353Address = freezed,Object? comment = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? offer = null,Object? receiverAmountSat = null,Object? bip353Address = freezed,Object? payerNote = freezed,}) {
   return _then(SendDestination_Bolt12(
 offer: null == offer ? _self.offer : offer // ignore: cast_nullable_to_non_nullable
 as LNOffer,receiverAmountSat: null == receiverAmountSat ? _self.receiverAmountSat : receiverAmountSat // ignore: cast_nullable_to_non_nullable
 as BigInt,bip353Address: freezed == bip353Address ? _self.bip353Address : bip353Address // ignore: cast_nullable_to_non_nullable
-as String?,comment: freezed == comment ? _self.comment : comment // ignore: cast_nullable_to_non_nullable
+as String?,payerNote: freezed == payerNote ? _self.payerNote : payerNote // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

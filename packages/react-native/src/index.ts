@@ -847,7 +847,7 @@ export type SendDestination = {
     offer: LnOffer
     receiverAmountSat: number
     bip353Address?: string
-    comment?: string
+    payerNote?: string
 }
 
 export enum SuccessActionVariant {

@@ -4710,12 +4710,12 @@ impl SseDecode for crate::model::SendDestination {
                 let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
                 let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
                 let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
-                let mut var_comment = <Option<String>>::sse_decode(deserializer);
+                let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt12 {
                     offer: var_offer,
                     receiver_amount_sat: var_receiverAmountSat,
                     bip353_address: var_bip353Address,
-                    comment: var_comment,
+                    payer_note: var_payerNote,
                 };
             }
             _ => {
@@ -7271,13 +7271,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
-                comment,
+                payer_note,
             } => [
                 2.into_dart(),
                 offer.into_into_dart().into_dart(),
                 receiver_amount_sat.into_into_dart().into_dart(),
                 bip353_address.into_into_dart().into_dart(),
-                comment.into_into_dart().into_dart(),
+                payer_note.into_into_dart().into_dart(),
             ]
             .into_dart(),
             _ => {
@@ -9390,13 +9390,13 @@ impl SseEncode for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
-                comment,
+                payer_note,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNOffer>::sse_encode(offer, serializer);
                 <u64>::sse_encode(receiver_amount_sat, serializer);
                 <Option<String>>::sse_encode(bip353_address, serializer);
-                <Option<String>>::sse_encode(comment, serializer);
+                <Option<String>>::sse_encode(payer_note, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -11658,7 +11658,7 @@ mod io {
                         offer: ans.offer.cst_decode(),
                         receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
                         bip353_address: ans.bip353_address.cst_decode(),
-                        comment: ans.comment.cst_decode(),
+                        payer_note: ans.payer_note.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -15512,7 +15512,7 @@ mod io {
         offer: *mut wire_cst_ln_offer,
         receiver_amount_sat: u64,
         bip353_address: *mut wire_cst_list_prim_u_8_strict,
-        comment: *mut wire_cst_list_prim_u_8_strict,
+        payer_note: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

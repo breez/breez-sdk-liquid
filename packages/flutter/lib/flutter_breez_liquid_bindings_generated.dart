@@ -4510,7 +4510,7 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
 
 final class SendDestinationKind extends ffi.Union {

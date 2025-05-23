@@ -3928,8 +3928,8 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
         val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
         val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
         val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
-        val comment = if (hasNonNullKey(sendDestination, "comment")) sendDestination.getString("comment") else null
-        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address, comment)
+        val payerNote = if (hasNonNullKey(sendDestination, "payerNote")) sendDestination.getString("payerNote") else null
+        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address, payerNote)
     }
     return null
 }
@@ -3952,7 +3952,7 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
             pushToMap(map, "offer", readableMapOf(sendDestination.offer))
             pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
             pushToMap(map, "bip353Address", sendDestination.bip353Address)
-            pushToMap(map, "comment", sendDestination.comment)
+            pushToMap(map, "payerNote", sendDestination.payerNote)
         }
     }
     return map

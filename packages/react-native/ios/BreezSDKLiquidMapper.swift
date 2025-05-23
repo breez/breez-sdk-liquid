@@ -4974,9 +4974,9 @@ enum BreezSDKLiquidMapper {
             }
             let _bip353Address = sendDestination["bip353Address"] as? String
 
-            let _comment = sendDestination["comment"] as? String
+            let _payerNote = sendDestination["payerNote"] as? String
 
-            return SendDestination.bolt12(offer: _offer, receiverAmountSat: _receiverAmountSat, bip353Address: _bip353Address, comment: _comment)
+            return SendDestination.bolt12(offer: _offer, receiverAmountSat: _receiverAmountSat, bip353Address: _bip353Address, payerNote: _payerNote)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SendDestination")
@@ -5003,14 +5003,14 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bolt12(
-            offer, receiverAmountSat, bip353Address, comment
+            offer, receiverAmountSat, bip353Address, payerNote
         ):
             return [
                 "type": "bolt12",
                 "offer": dictionaryOf(lnOffer: offer),
                 "receiverAmountSat": receiverAmountSat,
                 "bip353Address": bip353Address == nil ? nil : bip353Address,
-                "comment": comment == nil ? nil : comment,
+                "payerNote": payerNote == nil ? nil : payerNote,
             ]
         }
     }
