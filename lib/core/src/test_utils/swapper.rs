@@ -2,7 +2,7 @@ use anyhow::Result;
 use boltz_client::{
     boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateBolt12OfferRequest,
-        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse,
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, GetBolt12FetchRequest,
         GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse, Leaf, Node, PairLimits,
         PairMinerFees, ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse,
         SubmarineFees, SubmarinePair, SubmarinePairLimits, SwapTree, UpdateBolt12OfferRequest,
@@ -347,8 +347,7 @@ impl Swapper for MockSwapper {
 
     async fn get_bolt12_info(
         &self,
-        _offer: &str,
-        _amount_sat: u64,
+        _req: GetBolt12FetchRequest,
     ) -> Result<GetBolt12FetchResponse, PaymentError> {
         unimplemented!()
     }

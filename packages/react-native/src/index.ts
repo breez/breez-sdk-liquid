@@ -400,6 +400,7 @@ export interface PrepareRefundResponse {
 export interface PrepareSendRequest {
     destination: string
     amount?: PayAmount
+    comment?: string
 }
 
 export interface PrepareSendResponse {
@@ -846,6 +847,7 @@ export type SendDestination = {
     offer: LnOffer
     receiverAmountSat: number
     bip353Address?: string
+    payerNote?: string
 }
 
 export enum SuccessActionVariant {

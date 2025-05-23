@@ -13,8 +13,8 @@ frb = ["dep:flutter_rust_bridge"]
 # Uniffi features required to build using cargo-lipo
 uniffi-25 = []
 uniffi-28 = []
-regtest = []        # Enable regtest tests
-browser-tests = []  # Enable browser wasm-pack tests
+regtest = []                           # Enable regtest tests
+browser-tests = []                     # Enable browser wasm-pack tests
 test-utils = ["sdk-common/test-utils"]
 
 [lints]
@@ -34,7 +34,7 @@ lwk_common = "0.9.0"
 lwk_signer = { version = "0.9.0", default-features = false }
 mockall = "0.13.1"
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
-tokio_with_wasm = { version = "0.8.2", features = [
+tokio_with_wasm = { version = "=0.8.2", features = [
     "macros",
     "rt",
     "sync",
@@ -64,7 +64,9 @@ tempfile = "3"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
-esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = ["async-https-rustls"] }
+esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = [
+    "async-https-rustls",
+] }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
@@ -77,8 +79,9 @@ maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-boltz-client = { git = "https://github.com/breez/boltz-rust", rev = "d44295fa20da9c665a1f5580d16e387ff7245339", features = [
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f25a8c180c5f1017677bc8ea01ed934ca0f8d2e1", features = [
     "electrum",
+    "ws",
 ] }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
@@ -98,11 +101,13 @@ tonic = { version = "0.12", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-boltz-client = { git = "https://github.com/breez/boltz-rust", rev = "d44295fa20da9c665a1f5580d16e387ff7245339" }
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f25a8c180c5f1017677bc8ea01ed934ca0f8d2e1", features = [
+    "ws",
+] }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
     "backup",
     "bundled",
-    "serialize"
+    "serialize",
 ] }
 
 [dev-dependencies]

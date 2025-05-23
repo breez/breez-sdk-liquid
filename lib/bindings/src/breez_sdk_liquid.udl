@@ -434,13 +434,14 @@ dictionary LnUrlPayRequest {
 dictionary PrepareSendRequest {
     string destination;
     PayAmount? amount = null;
+    string? comment = null;
 };
 
 [Enum]
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data, string? bip353_address);
     Bolt11(LNInvoice invoice, string? bip353_address);
-    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address);
+    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address, string? payer_note);
 };
 
 dictionary PrepareSendResponse {

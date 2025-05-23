@@ -1419,10 +1419,13 @@ class PrepareSendRequest {
   /// where no amount is specified, or when the caller wishes to drain
   final PayAmount? amount;
 
-  const PrepareSendRequest({required this.destination, this.amount});
+  /// An optional comment when paying a BOLT12 offer
+  final String? comment;
+
+  const PrepareSendRequest({required this.destination, this.amount, this.comment});
 
   @override
-  int get hashCode => destination.hashCode ^ amount.hashCode;
+  int get hashCode => destination.hashCode ^ amount.hashCode ^ comment.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1430,7 +1433,8 @@ class PrepareSendRequest {
       other is PrepareSendRequest &&
           runtimeType == other.runtimeType &&
           destination == other.destination &&
-          amount == other.amount;
+          amount == other.amount &&
+          comment == other.comment;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
@@ -1694,6 +1698,9 @@ sealed class SendDestination with _$SendDestination {
 
     /// A BIP353 address, in case one was used to resolve this BOLT12
     String? bip353Address,
+
+    /// An optional payer note
+    String? payerNote,
   }) = SendDestination_Bolt12;
 }
 

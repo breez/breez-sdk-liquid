@@ -434,6 +434,7 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
+    pub comment: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendDestination)]
@@ -450,6 +451,7 @@ pub enum SendDestination {
         offer: LNOffer,
         receiver_amount_sat: u64,
         bip353_address: Option<String>,
+        payer_note: Option<String>,
     },
 }
 

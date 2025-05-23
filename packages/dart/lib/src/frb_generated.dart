@@ -3074,10 +3074,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendRequest dco_decode_prepare_send_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareSendRequest(
       destination: dco_decode_String(arr[0]),
       amount: dco_decode_opt_box_autoadd_pay_amount(arr[1]),
+      comment: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -3282,6 +3283,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           offer: dco_decode_box_autoadd_ln_offer(raw[1]),
           receiverAmountSat: dco_decode_u_64(raw[2]),
           bip353Address: dco_decode_opt_String(raw[3]),
+          payerNote: dco_decode_opt_String(raw[4]),
         );
       default:
         throw Exception("unreachable");
@@ -5498,7 +5500,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_destination = sse_decode_String(deserializer);
     var var_amount = sse_decode_opt_box_autoadd_pay_amount(deserializer);
-    return PrepareSendRequest(destination: var_destination, amount: var_amount);
+    var var_comment = sse_decode_opt_String(deserializer);
+    return PrepareSendRequest(destination: var_destination, amount: var_amount, comment: var_comment);
   }
 
   @protected
@@ -5728,10 +5731,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_offer = sse_decode_box_autoadd_ln_offer(deserializer);
         var var_receiverAmountSat = sse_decode_u_64(deserializer);
         var var_bip353Address = sse_decode_opt_String(deserializer);
+        var var_payerNote = sse_decode_opt_String(deserializer);
         return SendDestination_Bolt12(
           offer: var_offer,
           receiverAmountSat: var_receiverAmountSat,
           bip353Address: var_bip353Address,
+          payerNote: var_payerNote,
         );
       default:
         throw UnimplementedError('');
@@ -7749,6 +7754,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.destination, serializer);
     sse_encode_opt_box_autoadd_pay_amount(self.amount, serializer);
+    sse_encode_opt_String(self.comment, serializer);
   }
 
   @protected
@@ -7921,11 +7927,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         offer: final offer,
         receiverAmountSat: final receiverAmountSat,
         bip353Address: final bip353Address,
+        payerNote: final payerNote,
       ):
         sse_encode_i_32(2, serializer);
         sse_encode_box_autoadd_ln_offer(offer, serializer);
         sse_encode_u_64(receiverAmountSat, serializer);
         sse_encode_opt_String(bip353Address, serializer);
+        sse_encode_opt_String(payerNote, serializer);
     }
   }
 
