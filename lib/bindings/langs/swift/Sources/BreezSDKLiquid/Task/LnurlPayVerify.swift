@@ -64,7 +64,8 @@ class LnurlPayVerifyTask : LnurlPayTask {
             if response == nil {
                 throw InvalidLnurlPayError.notFound
             }
-            replyServer(encodable: response, replyURL: request!.reply_url)
+            let maxAge = response!.settled ? Constants.CACHE_CONTROL_MAX_AGE_WEEK : 0
+            replyServer(encodable: response, replyURL: request!.reply_url, maxAge: maxAge)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process lnurl verify: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)

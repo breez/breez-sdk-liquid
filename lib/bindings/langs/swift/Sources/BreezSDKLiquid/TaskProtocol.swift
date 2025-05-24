@@ -85,12 +85,15 @@ class ReplyableTask : TaskProtocol {
         displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
     
-    func replyServer(encodable: Encodable, replyURL: String) {
+    func replyServer(encodable: Encodable, replyURL: String, maxAge: Int = 0) {
         guard let serverReplyURL = URL(string: replyURL) else {
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             return
         }
         var request = URLRequest(url: serverReplyURL)
+        if maxAge > 0 {
+            request.setValue("max-age=\(maxAge)", forHTTPHeaderField: "Cache-Control")
+        }
         request.httpMethod = "POST"
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
