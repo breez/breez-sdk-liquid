@@ -24,7 +24,6 @@ import {
     PaymentMethod
 } from "@breeztech/react-native-breez-sdk-liquid"
 import BuildConfig from "react-native-build-config"
-import { generateMnemonic } from "@dreson4/react-native-quick-bip39"
 import { getSecureItem, setSecureItem } from "./utils/storage"
 
 const MNEMONIC_STORE = "MNEMONIC_SECURE_STORE"
@@ -62,7 +61,7 @@ const App = () => {
                 let mnemonic = await getSecureItem(MNEMONIC_STORE)
 
                 if (mnemonic == null) {
-                    mnemonic = generateMnemonic(256)
+                    mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
                     setSecureItem(MNEMONIC_STORE, mnemonic)
                 }
 

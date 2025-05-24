@@ -10,9 +10,6 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [features]
 default = ["frb"]
 frb = ["dep:flutter_rust_bridge"]
-# Uniffi features required to build using cargo-lipo
-uniffi-25 = []
-uniffi-28 = []
 regtest = []                           # Enable regtest tests
 browser-tests = []                     # Enable browser wasm-pack tests
 test-utils = ["sdk-common/test-utils"]

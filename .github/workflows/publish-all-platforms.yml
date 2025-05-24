@@ -125,7 +125,6 @@ jobs:
       wasm-package-version: ${{ needs.pre-setup.outputs.wasm-package-version || '0.0.2' }}
       publish: ${{ needs.pre-setup.outputs.publish }}
       use-dummy-binaries: ${{ needs.pre-setup.outputs.use-dummy-binaries }}
-      uniffi-25: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version }}
     steps:
       - run: echo "set setup output variables"
 
@@ -137,7 +136,6 @@ jobs:
       repository: ${{ needs.setup.outputs.repository }}
       ref: ${{ needs.setup.outputs.ref }}
       use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
-      uniffi-25: ${{ needs.setup.outputs.uniffi-25 == 'true' }}
 
   build-bindings-darwin:
     needs: setup
@@ -147,7 +145,6 @@ jobs:
       repository: ${{ needs.setup.outputs.repository }}
       ref: ${{ needs.setup.outputs.ref }}
       use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
-      uniffi-25: ${{ needs.setup.outputs.uniffi-25 == 'true' }}
 
   build-bindings-linux:
     needs: setup
@@ -157,7 +154,6 @@ jobs:
       repository: ${{ needs.setup.outputs.repository }}
       ref: ${{ needs.setup.outputs.ref }}
       use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
-      uniffi-25: ${{ needs.setup.outputs.uniffi-25 == 'true' }}
 
   build-bindings-android:
     needs: setup
@@ -167,7 +163,6 @@ jobs:
       repository: ${{ needs.setup.outputs.repository }}
       ref: ${{ needs.setup.outputs.ref }}
       use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
-      uniffi-25: ${{ needs.setup.outputs.uniffi-25 == 'true' }}
 
   build-bindings-ios:
     needs: setup
@@ -177,7 +172,6 @@ jobs:
       repository: ${{ needs.setup.outputs.repository }}
       ref: ${{ needs.setup.outputs.ref }}
       use-dummy-binaries: ${{ needs.setup.outputs.use-dummy-binaries == 'true' }}
-      uniffi-25: ${{ needs.setup.outputs.uniffi-25 == 'true' }}
 
   build-bindings-wasm:
     needs: setup
