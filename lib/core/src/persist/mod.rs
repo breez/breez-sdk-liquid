@@ -463,7 +463,7 @@ impl Persister {
             .map(Swap::Send)
             .collect();
         let ongoing_receive_swaps: Vec<Swap> = self
-            .list_ongoing_receive_swaps(None)?
+            .list_ongoing_receive_swaps()?
             .into_iter()
             .map(Swap::Receive)
             .collect();
