@@ -19,13 +19,13 @@ impl ReceiveSwapHandler {
     pub fn should_skip_recovery(
         receive_swap: &ReceiveSwap,
         recovered_data: &RecoveredOnchainDataReceive,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> bool {
         let swap_id = &receive_swap.id;
         let claim_is_cleared =
             receive_swap.claim_tx_id.is_some() && recovered_data.claim_tx_id.is_none();
 
-        if is_local_within_grace_period && claim_is_cleared {
+        if is_within_grace_period && claim_is_cleared {
             warn!(
                 "Local receive swap {swap_id} was updated recently - skipping recovery \
                 as it would clear a tx that may have been broadcasted by us (claim)"
@@ -40,7 +40,7 @@ impl ReceiveSwapHandler {
     pub(crate) async fn recover_swap(
         receive_swap: &mut ReceiveSwap,
         context: &RecoveryContext,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &receive_swap.id.clone();
         debug!("[Recover Receive] Recovering data for swap {swap_id}");
@@ -94,7 +94,7 @@ impl ReceiveSwapHandler {
             receive_swap,
             &recovered_data,
             context.liquid_tip_height,
-            is_local_within_grace_period,
+            is_within_grace_period,
         )
     }
 
@@ -103,10 +103,10 @@ impl ReceiveSwapHandler {
         receive_swap: &mut ReceiveSwap,
         recovered_data: &RecoveredOnchainDataReceive,
         current_block_height: u32,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> Result<()> {
         // Skip updating if within grace period and would clear transactions
-        if Self::should_skip_recovery(receive_swap, recovered_data, is_local_within_grace_period) {
+        if Self::should_skip_recovery(receive_swap, recovered_data, is_within_grace_period) {
             return Ok(());
         }
 

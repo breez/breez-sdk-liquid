@@ -234,22 +234,12 @@ impl Persister {
         Ok(ongoing_receive)
     }
 
-    pub(crate) fn list_ongoing_receive_swaps(
-        &self,
-        is_local: Option<bool>,
-    ) -> Result<Vec<ReceiveSwap>> {
+    pub(crate) fn list_ongoing_receive_swaps(&self) -> Result<Vec<ReceiveSwap>> {
         let con = self.get_connection()?;
-        let mut where_clauses = vec![get_where_clause_state_in(&[
+        let where_clauses = vec![get_where_clause_state_in(&[
             PaymentState::Created,
             PaymentState::Pending,
         ])];
-        if let Some(is_local) = is_local {
-            let mut where_is_local = format!("sync_state.is_local = {}", is_local as u8);
-            if is_local {
-                where_is_local = format!("({} OR sync_state.is_local IS NULL)", where_is_local);
-            }
-            where_clauses.push(where_is_local);
-        }
 
         self.list_receive_swaps_where(&con, where_clauses)
     }
@@ -464,7 +454,7 @@ mod tests {
         // List ongoing receive swaps
         storage
             .insert_or_update_receive_swap(&new_receive_swap(Some(PaymentState::Pending), None))?;
-        let ongoing_swaps = storage.list_ongoing_receive_swaps(None)?;
+        let ongoing_swaps = storage.list_ongoing_receive_swaps()?;
         assert_eq!(ongoing_swaps.len(), 4);
 
         Ok(())
