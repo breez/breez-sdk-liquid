@@ -108,33 +108,24 @@ impl Recoverer {
         // Apply recovered data to the swaps
         for swap in swaps.iter_mut() {
             let swap_id = &swap.id();
-            let is_local_within_grace_period = swap.is_local()
-                && recovery_started_at.saturating_sub(swap.last_updated_at())
-                    < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
+            let is_within_grace_period = recovery_started_at.saturating_sub(swap.last_updated_at())
+                < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
             let res = match swap {
                 Swap::Send(s) => {
-                    SendSwapHandler::recover_swap(
-                        s,
-                        &recovery_context,
-                        is_local_within_grace_period,
-                    )
-                    .await
+                    SendSwapHandler::recover_swap(s, &recovery_context, is_within_grace_period)
+                        .await
                 }
 
                 Swap::Receive(s) => {
-                    ReceiveSwapHandler::recover_swap(
-                        s,
-                        &recovery_context,
-                        is_local_within_grace_period,
-                    )
-                    .await
+                    ReceiveSwapHandler::recover_swap(s, &recovery_context, is_within_grace_period)
+                        .await
                 }
                 Swap::Chain(s) => match s.direction {
                     Direction::Outgoing => {
                         ChainSendSwapHandler::recover_swap(
                             s,
                             &recovery_context,
-                            is_local_within_grace_period,
+                            is_within_grace_period,
                         )
                         .await
                     }
@@ -142,7 +133,7 @@ impl Recoverer {
                         ChainReceiveSwapHandler::recover_swap(
                             s,
                             &recovery_context,
-                            is_local_within_grace_period,
+                            is_within_grace_period,
                         )
                         .await
                     }

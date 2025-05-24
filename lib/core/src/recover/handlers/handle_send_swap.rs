@@ -17,7 +17,7 @@ impl SendSwapHandler {
     pub fn should_skip_recovery(
         send_swap: &SendSwap,
         recovered_data: &RecoveredOnchainDataSend,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> bool {
         let swap_id = &send_swap.id;
         let lockup_is_cleared =
@@ -25,7 +25,7 @@ impl SendSwapHandler {
         let refund_is_cleared =
             send_swap.refund_tx_id.is_some() && recovered_data.refund_tx_id.is_none();
 
-        if is_local_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
+        if is_within_grace_period && (lockup_is_cleared || refund_is_cleared) {
             warn!(
                 "Local send swap {swap_id} was updated recently - skipping recovery \
                 as it would clear a tx that may have been broadcasted by us. Lockup clear: \
@@ -41,7 +41,7 @@ impl SendSwapHandler {
     pub async fn recover_swap(
         send_swap: &mut SendSwap,
         context: &RecoveryContext,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = send_swap.id.clone();
         debug!("[Recover Send] Recovering data for swap {swap_id}");
@@ -93,7 +93,7 @@ impl SendSwapHandler {
             &swap_id,
             &recovered_data,
             context.liquid_tip_height,
-            is_local_within_grace_period,
+            is_within_grace_period,
         )
     }
 
@@ -103,10 +103,10 @@ impl SendSwapHandler {
         swap_id: &str,
         recovered_data: &RecoveredOnchainDataSend,
         current_block_height: u32,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> Result<()> {
         // Skip updating if within grace period and would clear transactions
-        if Self::should_skip_recovery(send_swap, recovered_data, is_local_within_grace_period) {
+        if Self::should_skip_recovery(send_swap, recovered_data, is_within_grace_period) {
             return Ok(());
         }
 

@@ -218,6 +218,11 @@ impl Config {
     }
 
     pub fn regtest_esplora() -> Self {
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        let sync_service_url = Some("http://localhost:8088".to_string());
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        let sync_service_url = Some("http://localhost:8089".to_string());
+
         Config {
             liquid_explorer: BlockchainExplorer::Esplora {
                 url: "http://localhost:3120/api".to_string(),
@@ -230,7 +235,7 @@ impl Config {
             working_dir: ".".to_string(),
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
-            sync_service_url: Some("http://localhost:8089".to_string()),
+            sync_service_url,
             zero_conf_max_amount_sat: None,
             breez_api_key: None,
             external_input_parsers: None,
@@ -1039,14 +1044,6 @@ impl Swap {
             Swap::Receive(receive_swap) => {
                 receive_swap.metadata.version = version;
             }
-        }
-    }
-
-    pub(crate) fn is_local(&self) -> bool {
-        match self {
-            Swap::Chain(ChainSwap { metadata, .. })
-            | Swap::Send(SendSwap { metadata, .. })
-            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.is_local,
         }
     }
 
