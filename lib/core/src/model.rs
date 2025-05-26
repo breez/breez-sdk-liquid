@@ -1134,7 +1134,8 @@ pub(crate) struct SwapMetadata {
 pub struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
-    /// The Bitcoin claim address is only set for Outgoing Chain Swaps
+    /// Always set for Outgoing Chain Swaps. It's the destination Bitcoin address
+    /// Only set for Incoming Chain Swaps when a claim is broadcasted. It's a local Liquid wallet address
     pub(crate) claim_address: Option<String>,
     pub(crate) lockup_address: String,
     /// The Liquid refund address is only set for Outgoing Chain Swaps
