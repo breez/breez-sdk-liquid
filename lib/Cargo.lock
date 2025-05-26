@@ -5043,6 +5043,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sideswap_api"
 version = "0.1.2"
+source = "git+https://github.com/breez/sideswap_rust?rev=edbde3ab1077f06209b4fb4e02b697da213524d3#edbde3ab1077f06209b4fb4e02b697da213524d3"
 dependencies = [
  "elements",
  "hex",
@@ -5056,6 +5057,7 @@ dependencies = [
 [[package]]
 name = "sideswap_types"
 version = "0.1.2"
+source = "git+https://github.com/breez/sideswap_rust?rev=edbde3ab1077f06209b4fb4e02b697da213524d3#edbde3ab1077f06209b4fb4e02b697da213524d3"
 dependencies = [
  "elements",
  "serde",

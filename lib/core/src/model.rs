@@ -2463,7 +2463,7 @@ pub struct AssetSwap {
 impl AssetSwap {
     pub(crate) fn try_from_price_stream_response(
         network: LiquidNetwork,
-        price_stream_res: &sideswap_api::SubscribePriceStreamResponse,
+        price_stream_res: &crate::side_swap::api::model::SubscribePriceStreamResponse,
     ) -> Result<Self> {
         if let Some(err) = &price_stream_res.error_msg {
             anyhow::bail!(

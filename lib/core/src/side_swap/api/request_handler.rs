@@ -2,11 +2,12 @@ use anyhow::{anyhow, Result};
 use boltz_client::boltz::tokio_tungstenite_wasm::{Message, WebSocketStream};
 use futures_util::{stream::SplitSink, SinkExt as _};
 use log::{debug, error, warn};
-use sideswap_api::{Request, RequestId, WrappedRequest};
 use tokio::sync::{
     mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
     Mutex,
 };
+
+use super::model::{Request, WrappedRequest, RequestId};
 
 pub(crate) struct SideSwapRequestHandler {
     latest_request_id: Mutex<i64>,

@@ -1,7 +1,8 @@
 use std::{collections::HashMap, time::Duration};
 
+use super::model::{RequestId, Response};
 use anyhow::{bail, Result};
-use sideswap_api::Response;
+use log::warn;
 use tokio::sync::{
     mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
     Mutex,
@@ -25,7 +26,11 @@ impl SideSwapResponseHandler {
         }
     }
 
-    pub(crate) async fn handle_response(&self, res_id: i64, res: Response) {
+    pub(crate) async fn handle_response(&self, res_id: RequestId, res: Response) {
+        let RequestId::Int(res_id) = res_id else {
+            warn!("Could not handle response - invalid id received from server: {res_id:?}");
+            return;
+        };
         self.received.lock().await.insert(res_id, res);
         let _ = self.sender.send(res_id);
     }

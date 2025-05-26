@@ -65,8 +65,7 @@ ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
 esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = ["async-https-rustls"] }
-# sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "edbde3ab1077f06209b4fb4e02b697da213524d3" }
-sideswap_api = { path = "../../../sideswap_rust/sideswap_api" }
+sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "edbde3ab1077f06209b4fb4e02b697da213524d3" }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
