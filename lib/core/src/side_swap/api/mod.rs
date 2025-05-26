@@ -12,9 +12,9 @@ use sideswap_api::http_rpc::{
     SwapSignRequest, SwapSignResponse, SwapStartRequest, SwapStartResponse,
 };
 use sideswap_api::{
-    Notification, Request, RequestId, RequestMessage, Response, ResponseMessage,
-    StartSwapWebRequest, SubscribePriceStreamRequest, SubscribePriceStreamResponse,
-    UnsubscribePriceStreamRequest,
+    Notification, Request, RequestId, Response, StartSwapWebRequest,
+    SubscribePriceStreamRequest, SubscribePriceStreamResponse, UnsubscribePriceStreamRequest,
+    WrappedRequest, WrappedResponse,
 };
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -119,13 +119,11 @@ impl HybridSideSwapService {
 
     async fn handle_message(&self, msg: &str) {
         info!("Received text message: {msg:?}");
-        match serde_json::from_str::<ResponseMessage>(msg) {
-            Ok(ResponseMessage::Response(req_id, res)) => {
-                self.response_handler
-                    .handle_response(req_id.clone(), res)
-                    .await;
+        match serde_json::from_str::<WrappedResponse>(msg) {
+            Ok(WrappedResponse::Response { id, response, .. }) => {
+                self.response_handler.handle_response(id, response).await;
             }
-            Ok(ResponseMessage::Notification(notif)) => match notif {
+            Ok(WrappedResponse::Notification { notification, .. }) => match notification {
                 Notification::UpdatePriceStream(res) => {
                     if let Err(err) = self.update_ongoing_swap(&res).await {
                         warn!("Could not update ongoing swap: {err:?}");
@@ -138,11 +136,8 @@ impl HybridSideSwapService {
         }
     }
 
-    fn invalid_response(res: Result<Response, sideswap_api::Error>) -> anyhow::Error {
-        match res {
-            Ok(res) => anyhow!("Received invalid response from the server: {res:?}"),
-            Err(err) => anyhow!("Received error response from the server: {err:?}"),
-        }
+    fn invalid_response(res: Response) -> anyhow::Error {
+        anyhow!("Received invalid response from the server: {res:?}")
     }
 }
 
@@ -172,7 +167,10 @@ impl SideSwapService for HybridSideSwapService {
 
                     _ = tokio::time::sleep(keep_alive_ping_interval) => cloned.request_handler.send_ws(
                         &mut ws_sender,
-                        RequestMessage::Request(RequestId::String("ping".to_string()), Request::Ping(None))
+                        WrappedRequest {
+                            id: RequestId::String("ping".to_string()),
+                            request: Request::Ping(None),
+                        }
                     ).await,
 
                     maybe_req_msg = self.request_handler.recv() => match maybe_req_msg {
@@ -231,7 +229,7 @@ impl SideSwapService for HybridSideSwapService {
         });
         let request_id = self.request_handler.send(req).await?;
         let res = match self.response_handler.recv(request_id).await? {
-            Ok(Response::SubscribePriceStream(res)) => res,
+            Response::SubscribePriceStream(res) => res,
             res => {
                 return Err(Self::invalid_response(res));
             }
@@ -245,7 +243,7 @@ impl SideSwapService for HybridSideSwapService {
             Request::UnsubscribePriceStream(UnsubscribePriceStreamRequest { subscribe_id: None });
         let request_id = self.request_handler.send(req).await?;
         match self.response_handler.recv(request_id).await? {
-            Ok(Response::UnsubscribePriceStream(_)) => {}
+            Response::UnsubscribePriceStream(_) => {}
             res => {
                 return Err(Self::invalid_response(res));
             }
@@ -272,7 +270,7 @@ impl SideSwapService for HybridSideSwapService {
         });
         let request_id = self.request_handler.send(req).await?;
         let start_res = match self.response_handler.recv(request_id).await? {
-            Ok(Response::StartSwapWeb(res)) => Ok(res),
+            Response::StartSwapWeb(res) => Ok(res),
             res => Err(Self::invalid_response(res)),
         }?;
 
