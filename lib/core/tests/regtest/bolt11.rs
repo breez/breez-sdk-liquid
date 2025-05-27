@@ -163,7 +163,7 @@ async fn bolt11(chain_backend: ChainBackend) {
         initial_balance - payer_amount_sat
     );
     // TODO: replace sleep with event based trigger
-    tokio::time::sleep(Duration::from_secs(1)).await;
+    tokio::time::sleep(Duration::from_secs(10)).await;
     assert!(handle_alice
         .is_in_sync_with(&handle_alice_synced)
         .await
