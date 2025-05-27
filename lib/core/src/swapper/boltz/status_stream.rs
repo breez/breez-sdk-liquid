@@ -46,6 +46,18 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
         tokio::spawn(async move {
             loop {
                 debug!("Start of ws stream loop");
+                match shutdown.has_changed() {
+                    Ok(true) => {
+                        info!("Received shutdown signal, exiting Status Stream loop");
+                        return;
+                    }
+                    Ok(false) => {}
+                    Err(_) => {
+                        warn!("Shutdown channel was closed, exiting Status Stream loop");
+                        return;
+                    }
+                }
+
                 let mut request_stream = self.request_notifier.subscribe();
                 let client = match swapper.get_boltz_client().await {
                     Ok(client) => client,
