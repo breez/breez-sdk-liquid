@@ -1,5 +1,7 @@
 use std::{sync::OnceLock, time::Duration};
 
+use super::{ProxyUrlFetcher, Swapper};
+use crate::bitcoin::secp256k1::rand;
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
@@ -26,8 +28,6 @@ use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
 use tokio::time::sleep;
 use tokio_with_wasm::alias as tokio;
-
-use super::{ProxyUrlFetcher, Swapper};
 
 pub(crate) mod bitcoin;
 mod client;
@@ -421,10 +421,10 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
                     }
 
                     // Exponential backoff with jitter
-                    let jitter = rand::rng().random_range(0..=current_delay_secs);
+                    let jitter = rand::thread_rng().gen_range(0..=current_delay_secs);
                     let delay_with_jitter_secs = current_delay_secs + jitter;
 
-                    println!(
+                    warn!(
                         "Failed to create claim tx (likely due to concurrent instance attempting \
                         to claim), attempt {}/{}. Retrying in {}s. Error: {:?}",
                         attempts, MAX_RETRY_ATTEMPTS, delay_with_jitter_secs, e
