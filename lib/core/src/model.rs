@@ -832,7 +832,7 @@ pub struct RefundResponse {
 }
 
 /// An asset balance to denote the balance for each asset.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct AssetBalance {
     pub asset_id: String,
     pub balance_sat: u64,
@@ -841,7 +841,7 @@ pub struct AssetBalance {
     pub balance: Option<f64>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct BlockchainInfo {
     pub liquid_tip: u32,
     pub bitcoin_tip: u32,
@@ -853,7 +853,7 @@ pub(crate) struct ChainTips {
     pub bitcoin_tip: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct WalletInfo {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
@@ -902,7 +902,7 @@ impl WalletInfo {
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct GetInfoResponse {
     /// The wallet information, such as the balance, fingerprint and public key
     pub wallet_info: WalletInfo,
