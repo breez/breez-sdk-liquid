@@ -14,6 +14,7 @@ use lwk_wollet::hashes::hex::DisplayHex;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, Mutex};
 
+use crate::error::is_txn_mempool_conflict_error;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     elements, ensure_sdk,
@@ -874,7 +875,7 @@ impl ChainSwapHandler {
                     SdkTransaction::Liquid(tx) => {
                         match self.liquid_chain_service.broadcast(&tx).await {
                             Ok(tx_id) => Ok(tx_id.to_hex()),
-                            Err(e) if e.to_string().contains("txn-mempool-conflict") => {
+                            Err(e) if is_txn_mempool_conflict_error(&e) => {
                                 Err(PaymentError::AlreadyClaimed)
                             }
                             Err(err) => {

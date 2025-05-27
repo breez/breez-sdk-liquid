@@ -296,3 +296,7 @@ impl From<PaymentError> for LnUrlWithdrawError {
         }
     }
 }
+
+pub(crate) fn is_txn_mempool_conflict_error(err: &Error) -> bool {
+    err.to_string().contains("txn-mempool-conflict")
+}
