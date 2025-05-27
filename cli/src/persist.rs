@@ -15,8 +15,8 @@ pub(crate) struct CliPersistence {
 }
 
 impl CliPersistence {
-    pub(crate) fn get_or_create_mnemonic(&self) -> Result<Mnemonic> {
-        let filename = Path::new(&self.data_dir).join(PHRASE_FILE_NAME);
+    pub(crate) fn get_or_create_mnemonic(&self, phrase_file_name: Option<&str>) -> Result<Mnemonic> {
+        let filename = Path::new(&self.data_dir).join(phrase_file_name.unwrap_or(PHRASE_FILE_NAME));
 
         let mnemonic = match fs::read_to_string(filename.clone()) {
             Ok(phrase) => Mnemonic::from_str(&phrase).unwrap(),
