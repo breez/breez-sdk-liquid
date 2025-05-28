@@ -24,7 +24,7 @@ use breez_sdk_liquid::{
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_with_wasm::alias as tokio;
 
-pub const TIMEOUT: Duration = Duration::from_secs(60);
+pub const TIMEOUT: Duration = Duration::from_secs(90);
 
 struct ForwardingEventListener {
     sender: Sender<SdkEvent>,

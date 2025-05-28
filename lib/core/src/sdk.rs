@@ -3546,34 +3546,36 @@ impl LiquidSdk {
             .into_iter()
             .map(Into::into)
             .collect();
-        let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
-        let chain_swaps: Vec<Swap> = self
-            .persister
-            .list_chain_swaps()?
-            .into_iter()
-            .filter(|swap| match swap.direction {
-                Direction::Incoming => {
-                    chain_tips.bitcoin_tip
-                        <= swap.timeout_block_height + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
-                }
-                Direction::Outgoing => {
-                    !final_swap_states.contains(&swap.state)
-                        && chain_tips.liquid_tip <= swap.timeout_block_height
-                }
-            })
-            .map(Into::into)
-            .collect();
         match partial_sync {
             false => {
+                let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
+
                 let send_swaps = self
                     .persister
                     .list_recoverable_send_swaps()?
                     .into_iter()
                     .map(Into::into)
                     .collect();
+                let chain_swaps: Vec<Swap> = self
+                    .persister
+                    .list_chain_swaps()?
+                    .into_iter()
+                    .filter(|swap| match swap.direction {
+                        Direction::Incoming => {
+                            chain_tips.bitcoin_tip
+                                <= swap.timeout_block_height
+                                    + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                        }
+                        Direction::Outgoing => {
+                            !final_swap_states.contains(&swap.state)
+                                && chain_tips.liquid_tip <= swap.timeout_block_height
+                        }
+                    })
+                    .map(Into::into)
+                    .collect();
                 Ok([receive_swaps, send_swaps, chain_swaps].concat())
             }
-            true => Ok([receive_swaps, chain_swaps].concat()),
+            true => Ok(receive_swaps),
         }
     }
 

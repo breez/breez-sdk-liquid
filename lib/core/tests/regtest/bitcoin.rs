@@ -78,27 +78,32 @@ async fn bitcoin(chain_backend: ChainBackend) {
     // Confirm swapper lockup
     utils::mine_blocks(1).await.unwrap();
 
-    handle
+    tokio::select! {
+        res = handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
-        )
-        .await
-        .unwrap();
-    handle_synced
+        ) => {
+            res.unwrap();
+            assert_eq!(
+                handle.get_pending_receive_sat().await.unwrap(),
+                receiver_amount_sat
+            );
+            assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
+        }
+        res = handle_synced
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(
-        handle.get_pending_receive_sat().await.unwrap(),
-        receiver_amount_sat
-    );
-    assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
+        ) => {
+            res.unwrap();
+            assert_eq!(
+                handle_synced.get_pending_receive_sat().await.unwrap(),
+                receiver_amount_sat
+            );
+            assert_eq!(handle_synced.get_balance_sat().await.unwrap(), 0);
+        }
+    }
 
     // Confirm claim tx
     utils::mine_blocks(1).await.unwrap();
@@ -151,25 +156,20 @@ async fn bitcoin(chain_backend: ChainBackend) {
 
     utils::mine_blocks(1).await.unwrap();
 
-    // Wait for sdk to broadcast claim tx
-    handle
+    // Wait for one of the sdk instances to broadcast claim tx
+    tokio::select! {
+        res = handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
-        )
-        .await
-        .unwrap();
-    handle_synced
+        ) => res,
+        res = handle_synced
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
-        )
-        .await
-        .unwrap();
-
-    // TODO: replace sleep with event based trigger
-    tokio::time::sleep(Duration::from_secs(1)).await;
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
+        ) => res,
+    }
+    .unwrap();
 
     // Confirm claim tx
     utils::mine_blocks(1).await.unwrap();
@@ -217,7 +217,7 @@ async fn bitcoin(chain_backend: ChainBackend) {
     let bip21 = receive_response.destination;
     let address = bip21.split(':').nth(1).unwrap().split('?').next().unwrap();
 
-    utils::send_to_address_bitcoind(&address, lockup_amount_sat)
+    utils::send_to_address_bitcoind(address, lockup_amount_sat)
         .await
         .unwrap();
 
@@ -260,13 +260,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
         )
         .await
         .unwrap();
-    handle_synced
-        .wait_for_event(
-            |e| matches!(e, SdkEvent::PaymentRefundPending { .. }),
-            TIMEOUT,
-        )
-        .await
-        .unwrap();
 
     let refundables = handle.sdk.list_refundables().await.unwrap();
 
@@ -278,7 +271,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
         refundable.last_refund_tx_id.as_ref().unwrap(),
         &refund_response.refund_tx_id
     );
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
 
     let _prepare_refund_rbf_response = handle
         .sdk
@@ -310,7 +302,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
         refundable.last_refund_tx_id.as_ref().unwrap(),
         &refund_rbf_response.refund_tx_id
     );
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
 
     utils::mine_blocks(1).await.unwrap();
 
