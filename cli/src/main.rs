@@ -24,10 +24,10 @@ pub(crate) struct Args {
 
     #[clap(short, long, value_parser = parse_network_arg)]
     pub(crate) network: Option<LiquidNetwork>,
-    
+
     #[clap(short, long)]
-    pub(crate) phrase_file: Option<String>,
-    
+    pub(crate) phrase_path: Option<String>,
+
     #[clap(long)]
     pub(crate) passphrase: Option<String>,
 }
@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
         info!("No history found");
     }
 
-    let mnemonic = persistence.get_or_create_mnemonic(args.phrase_file.as_deref())?;
+    let mnemonic = persistence.get_or_create_mnemonic(args.phrase_path.as_deref())?;
     let passphrase = args.passphrase;
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
