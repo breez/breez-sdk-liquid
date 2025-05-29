@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::str::FromStr;
+use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
 use boltz_client::{
@@ -13,6 +14,7 @@ use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, Mutex};
+use tokio_with_wasm::alias as tokio;
 
 use crate::error::is_txn_mempool_conflict_error;
 use crate::{
@@ -266,6 +268,7 @@ impl ChainSwapHandler {
                         })?;
 
                         if swap.accept_zero_conf {
+                            maybe_delay_before_claim(swap.metadata.is_local).await;
                             self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
@@ -310,6 +313,7 @@ impl ChainSwapHandler {
                             Ok(_) => {
                                 info!("Server lockup transaction was verified for incoming Chain Swap {}", swap.id);
 
+                                maybe_delay_before_claim(swap.metadata.is_local).await;
                                 self.claim(&id).await.map_err(|e| {
                                     error!("Could not cooperate Chain Swap {id} claim: {e}");
                                     anyhow!("Could not post claim details. Err: {e:?}")
@@ -624,6 +628,7 @@ impl ChainSwapHandler {
                         })?;
 
                         if swap.accept_zero_conf {
+                            maybe_delay_before_claim(swap.metadata.is_local).await;
                             self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
@@ -674,6 +679,7 @@ impl ChainSwapHandler {
                             ..Default::default()
                         })?;
 
+                        maybe_delay_before_claim(swap.metadata.is_local).await;
                         self.claim(&id).await.map_err(|e| {
                             error!("Could not cooperate Chain Swap {id} claim: {e}");
                             anyhow!("Could not post claim details. Err: {e:?}")
@@ -1511,6 +1517,17 @@ enum ValidateAmountlessSwapResult {
     RequiresUserAction {
         user_lockup_amount_sat: u64,
     },
+}
+
+async fn maybe_delay_before_claim(is_swap_local: bool) {
+    // Chain swap claims cannot be created concurrently with other instances.
+    // This is a preventive measure to reduce the likelihood of failures.
+    // In any case, the claim implementation gracefully handles such failures
+    // using a retry mechanism
+    if !is_swap_local {
+        info!("Waiting 5 seconds before claim to reduce likelihood of concurrent claims");
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    }
 }
 
 #[cfg(test)]
