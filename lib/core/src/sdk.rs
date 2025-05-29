@@ -798,6 +798,20 @@ impl LiquidSdk {
             match self.persister.get_payment(&id)? {
                 Some(payment) => {
                     self.update_wallet_info().await?;
+                    
+                    // For Complete status, re-fetch the payment to ensure we have the most up-to-date data
+                    // after the wallet_info update, which may have updated balances
+                    let payment = match payment.status {
+                        Complete => {
+                            // Try to get the refreshed payment data
+                            match self.persister.get_payment(&id)? {
+                                Some(refreshed_payment) => refreshed_payment,
+                                None => payment // Fall back to original payment data if not found
+                            }
+                        },
+                        _ => payment
+                    };
+                    
                     match payment.status {
                         Complete => {
                             self.notify_event_listeners(SdkEvent::PaymentSucceeded {
@@ -4017,6 +4031,11 @@ impl LiquidSdk {
                     .await?;
             }
         }
+        
+        // Explicit wallet info update to ensure balance is always up-to-date after sync
+        // Adding as specifically requested, even though sync_payments_with_chain_data already calls update_wallet_info()
+        self.update_wallet_info().await?;
+        
         let duration_ms = Instant::now().duration_since(t0).as_millis();
         info!("Synchronized (partial: {partial_sync}) with mempool and onchain data ({duration_ms} ms)");
 
