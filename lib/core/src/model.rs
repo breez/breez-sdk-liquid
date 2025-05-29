@@ -218,11 +218,6 @@ impl Config {
     }
 
     pub fn regtest_esplora() -> Self {
-        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-        let sync_service_url = Some("http://localhost:8088".to_string());
-        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-        let sync_service_url = Some("http://localhost:8089".to_string());
-
         Config {
             liquid_explorer: BlockchainExplorer::Esplora {
                 url: "http://localhost:3120/api".to_string(),
@@ -235,7 +230,7 @@ impl Config {
             working_dir: ".".to_string(),
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
-            sync_service_url,
+            sync_service_url: Some("http://localhost:8089".to_string()),
             zero_conf_max_amount_sat: None,
             breez_api_key: None,
             external_input_parsers: None,
@@ -832,7 +827,7 @@ pub struct RefundResponse {
 }
 
 /// An asset balance to denote the balance for each asset.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct AssetBalance {
     pub asset_id: String,
     pub balance_sat: u64,
@@ -841,7 +836,7 @@ pub struct AssetBalance {
     pub balance: Option<f64>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct BlockchainInfo {
     pub liquid_tip: u32,
     pub bitcoin_tip: u32,
@@ -853,7 +848,7 @@ pub(crate) struct ChainTips {
     pub bitcoin_tip: u32,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WalletInfo {
     /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.
     pub balance_sat: u64,
@@ -902,7 +897,7 @@ impl WalletInfo {
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::get_info].
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetInfoResponse {
     /// The wallet information, such as the balance, fingerprint and public key
     pub wallet_info: WalletInfo,

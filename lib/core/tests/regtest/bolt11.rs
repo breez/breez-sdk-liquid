@@ -18,39 +18,34 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[serial]
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 async fn bolt11_electrum() {
-    bolt11(ChainBackend::Electrum).await;
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bolt11(handle_alice, handle_bob).await;
 }
 
 #[sdk_macros::async_test_all]
 #[serial]
 async fn bolt11_esplora() {
-    bolt11(ChainBackend::Esplora).await;
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bolt11(handle_alice, handle_bob).await;
 }
 
-async fn bolt11(chain_backend: ChainBackend) {
-    let alice_mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12).unwrap();
-    let bob_mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12).unwrap();
-
-    let mut handle_alice = SdkNodeHandle::init_node(chain_backend, &alice_mnemonic)
-        .await
-        .unwrap();
-    let mut handle_alice_synced = SdkNodeHandle::init_node(chain_backend, &alice_mnemonic)
-        .await
-        .unwrap();
-    let mut handle_bob = SdkNodeHandle::init_node(chain_backend, &bob_mnemonic)
-        .await
-        .unwrap();
-
+async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) {
     handle_alice
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
-        .await
-        .unwrap();
-    handle_alice_synced
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
         .unwrap();
     handle_bob
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
         .unwrap();
 
@@ -76,32 +71,15 @@ async fn bolt11(chain_backend: ChainBackend) {
         )
         .await
         .unwrap();
-    handle_alice_synced
-        .wait_for_event(
-            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-            TIMEOUT,
-        )
-        .await
-        .unwrap();
 
     assert_eq!(
         handle_alice.get_pending_receive_sat().await.unwrap(),
         receiver_amount_sat
     );
-    // TODO: replace sleep with event based trigger
-    tokio::time::sleep(Duration::from_secs(1)).await;
-    assert!(handle_alice
-        .is_in_sync_with(&handle_alice_synced)
-        .await
-        .unwrap());
 
     utils::mine_blocks(1).await.unwrap();
 
     handle_alice
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
-    handle_alice_synced
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
         .await
         .unwrap();
@@ -126,10 +104,6 @@ async fn bolt11(chain_backend: ChainBackend) {
     assert_eq!(payment.payment_type, PaymentType::Receive);
     assert_eq!(payment.status, PaymentState::Complete);
     assert!(matches!(payment.details, PaymentDetails::Lightning { .. }));
-    assert!(handle_alice
-        .is_in_sync_with(&handle_alice_synced)
-        .await
-        .unwrap());
 
     // -------------------SEND SWAP-------------------
     let receiver_amount_sat = 100_000;
@@ -162,12 +136,6 @@ async fn bolt11(chain_backend: ChainBackend) {
         handle_alice.get_balance_sat().await.unwrap(),
         initial_balance - payer_amount_sat
     );
-    // TODO: replace sleep with event based trigger
-    tokio::time::sleep(Duration::from_secs(10)).await;
-    assert!(handle_alice
-        .is_in_sync_with(&handle_alice_synced)
-        .await
-        .unwrap());
 
     utils::mine_blocks(1).await.unwrap();
 
@@ -196,10 +164,6 @@ async fn bolt11(chain_backend: ChainBackend) {
     assert_eq!(payment.payment_type, PaymentType::Send);
     assert_eq!(payment.status, PaymentState::Complete);
     assert!(matches!(payment.details, PaymentDetails::Lightning { .. }));
-    assert!(handle_alice
-        .is_in_sync_with(&handle_alice_synced)
-        .await
-        .unwrap());
 
     // -------------------MRH-------------------
     let receiver_amount_sat = 50_000;
@@ -271,10 +235,6 @@ async fn bolt11(chain_backend: ChainBackend) {
         alice_payment.details,
         PaymentDetails::Liquid { .. }
     ));
-    assert!(handle_alice
-        .is_in_sync_with(&handle_alice_synced)
-        .await
-        .unwrap());
 
     let bob_payments = handle_bob.get_payments().await.unwrap();
     assert_eq!(bob_payments.len(), 1);
@@ -292,6 +252,5 @@ async fn bolt11(chain_backend: ChainBackend) {
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
     handle_alice.sdk.disconnect().await.unwrap();
-    handle_alice_synced.sdk.disconnect().await.unwrap();
     handle_bob.sdk.disconnect().await.unwrap();
 }

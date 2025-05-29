@@ -16,30 +16,24 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[serial]
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 async fn bitcoin_electrum() {
-    bitcoin(ChainBackend::Electrum).await;
+    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bitcoin(handle).await;
 }
 
 #[sdk_macros::async_test_all]
 #[serial]
 async fn bitcoin_esplora() {
-    bitcoin(ChainBackend::Esplora).await;
+    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bitcoin(handle).await;
 }
 
-async fn bitcoin(chain_backend: ChainBackend) {
-    let mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12).unwrap();
-    let mut handle = SdkNodeHandle::init_node(chain_backend, &mnemonic)
-        .await
-        .unwrap();
-    let mut handle_synced = SdkNodeHandle::init_node(chain_backend, &mnemonic)
-        .await
-        .unwrap();
-
+async fn bitcoin(mut handle: SdkNodeHandle) {
     handle
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
-        .await
-        .unwrap();
-    handle_synced
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
         .unwrap();
 
@@ -65,7 +59,7 @@ async fn bitcoin(chain_backend: ChainBackend) {
     let bip21 = receive_response.destination;
     let address = bip21.split(':').nth(1).unwrap().split('?').next().unwrap();
 
-    utils::send_to_address_bitcoind(address, payer_amount_sat)
+    utils::send_to_address_bitcoind(&address, payer_amount_sat)
         .await
         .unwrap();
 
@@ -73,46 +67,29 @@ async fn bitcoin(chain_backend: ChainBackend) {
     utils::mine_blocks(1).await.unwrap();
 
     // Wait for swapper to lock up funds
-    tokio::time::sleep(Duration::from_secs(10)).await;
+    tokio::time::sleep(Duration::from_secs(5)).await;
 
     // Confirm swapper lockup
     utils::mine_blocks(1).await.unwrap();
 
-    tokio::select! {
-        res = handle
+    handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
-        ) => {
-            res.unwrap();
-            assert_eq!(
-                handle.get_pending_receive_sat().await.unwrap(),
-                receiver_amount_sat
-            );
-            assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
-        }
-        res = handle_synced
-        .wait_for_event(
-            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-            TIMEOUT,
-        ) => {
-            res.unwrap();
-            assert_eq!(
-                handle_synced.get_pending_receive_sat().await.unwrap(),
-                receiver_amount_sat
-            );
-            assert_eq!(handle_synced.get_balance_sat().await.unwrap(), 0);
-        }
-    }
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(
+        handle.get_pending_receive_sat().await.unwrap(),
+        receiver_amount_sat
+    );
+    assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
 
     // Confirm claim tx
     utils::mine_blocks(1).await.unwrap();
 
     handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
-    handle_synced
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
         .await
         .unwrap();
@@ -130,7 +107,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
     assert!(
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
 
     // --------------SEND--------------
 
@@ -154,22 +130,23 @@ async fn bitcoin(chain_backend: ChainBackend) {
     let fees_sat = prepare_response.total_fees_sat;
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
+    // Confirm user lockup
     utils::mine_blocks(1).await.unwrap();
 
-    // Wait for one of the sdk instances to broadcast claim tx
-    tokio::select! {
-        res = handle
+    // Wait for swapper to lock up funds
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    // Confirm swapper lockup
+    utils::mine_blocks(1).await.unwrap();
+
+    // Wait for sdk to broadcast claim tx
+    handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
-        ) => res,
-        res = handle_synced
-        .wait_for_event(
-            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-            TIMEOUT,
-        ) => res,
-    }
-    .unwrap();
+        )
+        .await
+        .unwrap();
 
     // Confirm claim tx
     utils::mine_blocks(1).await.unwrap();
@@ -177,9 +154,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
     let _ = handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await;
-    let _ = handle_synced
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
         .await;
     handle.sdk.sync(false).await.unwrap();
@@ -199,7 +173,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
     assert!(
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
 
     // ----------------REFUND--------------
 
@@ -217,15 +190,11 @@ async fn bitcoin(chain_backend: ChainBackend) {
     let bip21 = receive_response.destination;
     let address = bip21.split(':').nth(1).unwrap().split('?').next().unwrap();
 
-    utils::send_to_address_bitcoind(address, lockup_amount_sat)
+    utils::send_to_address_bitcoind(&address, lockup_amount_sat)
         .await
         .unwrap();
 
     handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentRefundable { .. }), TIMEOUT)
-        .await
-        .unwrap();
-    handle_synced
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentRefundable { .. }), TIMEOUT)
         .await
         .unwrap();
@@ -237,7 +206,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
     assert_eq!(refundable.amount_sat, lockup_amount_sat);
     assert_eq!(refundable.swap_address, address);
     assert!(refundable.last_refund_tx_id.is_none());
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
 
     let refund_address = utils::generate_address_bitcoind().await.unwrap();
     let refund_fee_rate = 1;
@@ -310,9 +278,6 @@ async fn bitcoin(chain_backend: ChainBackend) {
     let _ = handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentFailed { .. }), TIMEOUT)
         .await;
-    let _ = handle_synced
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentFailed { .. }), TIMEOUT)
-        .await;
     handle.sdk.sync(false).await.unwrap();
 
     let refundables = handle.sdk.list_refundables().await.unwrap();
@@ -331,9 +296,7 @@ async fn bitcoin(chain_backend: ChainBackend) {
             ..
         } if refund_tx_amount_sat == lockup_amount_sat - prepare_refund_rbf_response.tx_fee_sat
     ));*/
-    assert!(handle.is_in_sync_with(&handle_synced).await.unwrap());
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
     handle.sdk.disconnect().await.unwrap();
-    handle_synced.sdk.disconnect().await.unwrap();
 }

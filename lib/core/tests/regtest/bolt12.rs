@@ -19,32 +19,34 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[serial]
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 async fn bolt12_electrum() {
-    bolt12(ChainBackend::Electrum).await;
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bolt12(handle_alice, handle_bob).await;
 }
 
 #[sdk_macros::async_test_all]
 #[serial]
 async fn bolt12_esplora() {
-    bolt12(ChainBackend::Esplora).await;
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bolt12(handle_alice, handle_bob).await;
 }
 
-async fn bolt12(chain_backend: ChainBackend) {
-    let alice_mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12).unwrap();
-    let bob_mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12).unwrap();
-
-    let mut handle_alice = SdkNodeHandle::init_node(chain_backend, &alice_mnemonic)
-        .await
-        .unwrap();
-    let mut handle_bob = SdkNodeHandle::init_node(chain_backend, &bob_mnemonic)
-        .await
-        .unwrap();
-
+async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) {
     handle_alice
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
         .unwrap();
     handle_bob
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
         .unwrap();
 
