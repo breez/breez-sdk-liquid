@@ -12,24 +12,23 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 #[serial]
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 async fn liquid_electrum() {
-    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
-        .await
-        .unwrap();
-    liquid(handle).await;
+    liquid(ChainBackend::Electrum).await;
 }
 
 #[sdk_macros::async_test_all]
 #[serial]
 async fn liquid_esplora() {
-    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
-        .await
-        .unwrap();
-    liquid(handle).await;
+    liquid(ChainBackend::Esplora).await;
 }
 
-async fn liquid(mut handle: SdkNodeHandle) {
+async fn liquid(chain_backend: ChainBackend) {
+    let mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12).unwrap();
+    let mut handle = SdkNodeHandle::init_node(chain_backend, &mnemonic)
+        .await
+        .unwrap();
+
     handle
-        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced), TIMEOUT)
         .await
         .unwrap();
 
