@@ -18,7 +18,7 @@ impl ChainReceiveSwapHandler {
     pub fn should_skip_recovery(
         chain_swap: &ChainSwap,
         recovered_data: &RecoveredOnchainDataChainReceive,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> bool {
         let swap_id = &chain_swap.id;
 
@@ -27,7 +27,7 @@ impl ChainReceiveSwapHandler {
         let refund_is_cleared =
             chain_swap.refund_tx_id.is_some() && recovered_data.btc_refund_tx_id.is_none();
 
-        if is_local_within_grace_period && (claim_is_cleared || refund_is_cleared) {
+        if is_within_grace_period && (claim_is_cleared || refund_is_cleared) {
             warn!(
                 "Local incoming chain swap {swap_id} was updated recently - skipping recovery \
                 as it would clear a tx that may have been broadcasted by us. Claim clear: \
@@ -43,7 +43,7 @@ impl ChainReceiveSwapHandler {
     pub async fn recover_swap(
         chain_swap: &mut ChainSwap,
         context: &RecoveryContext,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();
         debug!("[Recover Chain Receive] Recovering data for swap {swap_id}");
@@ -102,7 +102,7 @@ impl ChainReceiveSwapHandler {
             chain_swap,
             &recovered_data,
             context.bitcoin_tip_height,
-            is_local_within_grace_period,
+            is_within_grace_period,
         )
     }
 
@@ -111,10 +111,10 @@ impl ChainReceiveSwapHandler {
         chain_swap: &mut ChainSwap,
         recovered_data: &RecoveredOnchainDataChainReceive,
         current_block_height: u32,
-        is_local_within_grace_period: bool,
+        is_within_grace_period: bool,
     ) -> Result<()> {
         // Skip updating if within grace period and would clear transactions
-        if Self::should_skip_recovery(chain_swap, recovered_data, is_local_within_grace_period) {
+        if Self::should_skip_recovery(chain_swap, recovered_data, is_within_grace_period) {
             return Ok(());
         }
 

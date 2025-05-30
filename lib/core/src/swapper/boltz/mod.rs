@@ -1,5 +1,7 @@
 use std::{sync::OnceLock, time::Duration};
 
+use super::{ProxyUrlFetcher, Swapper};
+use crate::bitcoin::secp256k1::rand;
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
@@ -19,12 +21,13 @@ use boltz_client::{
     Amount,
 };
 use client::{BitcoinClient, LiquidClient};
-use log::info;
+use log::{info, warn};
 use proxy::split_proxy_url;
+use rand::Rng;
 use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
-
-use super::{ProxyUrlFetcher, Swapper};
+use tokio::time::sleep;
+use tokio_with_wasm::alias as tokio;
 
 pub(crate) mod bitcoin;
 mod client;
@@ -33,6 +36,9 @@ pub(crate) mod proxy;
 pub mod status_stream;
 
 const CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
+const MAX_RETRY_ATTEMPTS: u8 = 10;
+const MIN_RETRY_DELAY_SECS: u64 = 1;
+const MAX_RETRY_DELAY_SECS: u64 = 10;
 
 pub(crate) struct BoltzClient {
     referral_id: Option<String>,
@@ -165,6 +171,56 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             pub_nonce,
             partial_sig,
         }))
+    }
+
+    async fn create_claim_tx_impl(
+        &self,
+        swap: &Swap,
+        claim_address: Option<String>,
+    ) -> Result<Transaction, PaymentError> {
+        let tx = match &swap {
+            Swap::Chain(swap) => {
+                let Some(claim_address) = claim_address else {
+                    return Err(PaymentError::Generic {
+                        err: format!(
+                            "No claim address was supplied when claiming for Chain swap {}",
+                            swap.id
+                        ),
+                    });
+                };
+                match swap.direction {
+                    Direction::Incoming => Transaction::Liquid(
+                        self.new_incoming_chain_claim_tx(swap, claim_address)
+                            .await?,
+                    ),
+                    Direction::Outgoing => Transaction::Bitcoin(
+                        self.new_outgoing_chain_claim_tx(swap, claim_address)
+                            .await?,
+                    ),
+                }
+            }
+            Swap::Receive(swap) => {
+                let Some(claim_address) = claim_address else {
+                    return Err(PaymentError::Generic {
+                        err: format!(
+                            "No claim address was supplied when claiming for Receive swap {}",
+                            swap.id
+                        ),
+                    });
+                };
+                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address).await?)
+            }
+            Swap::Send(swap) => {
+                return Err(PaymentError::Generic {
+                    err: format!(
+                        "Failed to create claim tx for Send swap {}: invalid swap type",
+                        swap.id
+                    ),
+                });
+            }
+        };
+
+        Ok(tx)
     }
 }
 
@@ -350,49 +406,36 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         swap: Swap,
         claim_address: Option<String>,
     ) -> Result<Transaction, PaymentError> {
-        let tx = match &swap {
-            Swap::Chain(swap) => {
-                let Some(claim_address) = claim_address else {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "No claim address was supplied when claiming for Chain swap {}",
-                            swap.id
-                        ),
-                    });
-                };
-                match swap.direction {
-                    Direction::Incoming => Transaction::Liquid(
-                        self.new_incoming_chain_claim_tx(swap, claim_address)
-                            .await?,
-                    ),
-                    Direction::Outgoing => Transaction::Bitcoin(
-                        self.new_outgoing_chain_claim_tx(swap, claim_address)
-                            .await?,
-                    ),
-                }
-            }
-            Swap::Receive(swap) => {
-                let Some(claim_address) = claim_address else {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "No claim address was supplied when claiming for Receive swap {}",
-                            swap.id
-                        ),
-                    });
-                };
-                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address).await?)
-            }
-            Swap::Send(swap) => {
-                return Err(PaymentError::Generic {
-                    err: format!(
-                        "Failed to create claim tx for Send swap {}: invalid swap type",
-                        swap.id
-                    ),
-                });
-            }
-        };
+        let mut attempts = 0;
+        let mut current_delay_secs = MIN_RETRY_DELAY_SECS;
+        loop {
+            match self
+                .create_claim_tx_impl(&swap, claim_address.clone())
+                .await
+            {
+                Ok(tx) => return Ok(tx),
+                Err(e) if is_concurrent_claim_error(&e) => {
+                    attempts += 1;
+                    if attempts >= MAX_RETRY_ATTEMPTS {
+                        return Err(e);
+                    }
 
-        Ok(tx)
+                    // Exponential backoff with jitter
+                    let jitter = rand::thread_rng().gen_range(0..=current_delay_secs);
+                    let delay_with_jitter_secs = current_delay_secs + jitter;
+
+                    warn!(
+                        "Failed to create claim tx (likely due to concurrent instance attempting \
+                        to claim), attempt {}/{}. Retrying in {}s. Error: {:?}",
+                        attempts, MAX_RETRY_ATTEMPTS, delay_with_jitter_secs, e
+                    );
+                    sleep(Duration::from_secs(delay_with_jitter_secs)).await;
+
+                    current_delay_secs = (current_delay_secs * 2).min(MAX_RETRY_DELAY_SECS);
+                }
+                Err(e) => return Err(e),
+            }
+        }
     }
 
     /// Estimate the refund broadcast transaction size and fees in sats for a send or chain swap
@@ -566,4 +609,10 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         let res = self.get_boltz_client().await?.inner.get_nodes().await?;
         Ok(res)
     }
+}
+
+fn is_concurrent_claim_error(e: &PaymentError) -> bool {
+    let e_string = e.to_string();
+    e_string.contains("invalid partial signature")
+        || e_string.contains("session already initialized")
 }

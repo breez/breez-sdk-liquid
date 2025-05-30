@@ -13,6 +13,7 @@ use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
+use crate::error::is_txn_mempool_conflict_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::prelude::Swap;
@@ -181,15 +182,12 @@ impl ReceiveSwapHandler {
                 }
                 debug!("[Receive Swap {id}] Lockup tx does not signal RBF. Proceeding...");
 
-                if receive_swap.metadata.is_local {
-                    // Only claim a local swap
-                    if let Err(err) = self.claim(id).await {
-                        match err {
-                            PaymentError::AlreadyClaimed => {
-                                warn!("Funds already claimed for Receive Swap {id}")
-                            }
-                            _ => error!("Claim for Receive Swap {id} failed: {err}"),
+                if let Err(err) = self.claim(id).await {
+                    match err {
+                        PaymentError::AlreadyClaimed => {
+                            warn!("Funds already claimed for Receive Swap {id}")
                         }
+                        _ => error!("Claim for Receive Swap {id} failed: {err}"),
                     }
                 }
 
@@ -246,15 +244,12 @@ impl ReceiveSwapHandler {
                     None => {
                         self.update_swap_info(&receive_swap.id, Pending, None, None, None, None)?;
 
-                        if receive_swap.metadata.is_local {
-                            // Only claim a local swap
-                            if let Err(err) = self.claim(id).await {
-                                match err {
-                                    PaymentError::AlreadyClaimed => {
-                                        warn!("Funds already claimed for Receive Swap {id}")
-                                    }
-                                    _ => error!("Claim for Receive Swap {id} failed: {err}"),
+                        if let Err(err) = self.claim(id).await {
+                            match err {
+                                PaymentError::AlreadyClaimed => {
+                                    warn!("Funds already claimed for Receive Swap {id}")
                                 }
+                                _ => error!("Claim for Receive Swap {id} failed: {err}"),
                             }
                         }
                     }
@@ -383,6 +378,9 @@ impl ReceiveSwapHandler {
                 // We attempt broadcasting via chain service, then fallback to Boltz
                 let broadcast_res = match self.liquid_chain_service.broadcast(&claim_tx).await {
                     Ok(tx_id) => Ok(tx_id.to_hex()),
+                    Err(e) if is_txn_mempool_conflict_error(&e) => {
+                        Err(PaymentError::AlreadyClaimed)
+                    }
                     Err(err) => {
                         debug!(
                             "Could not broadcast claim tx via chain service for Receive swap {swap_id}: {err:?}"
@@ -441,7 +439,7 @@ impl ReceiveSwapHandler {
     async fn claim_confirmed_lockups(&self, height: u32) -> Result<()> {
         let receive_swaps: Vec<ReceiveSwap> = self
             .persister
-            .list_ongoing_receive_swaps(Some(true))?
+            .list_ongoing_receive_swaps()?
             .into_iter()
             .filter(|s| s.lockup_tx_id.is_some() && s.claim_tx_id.is_none())
             .collect();

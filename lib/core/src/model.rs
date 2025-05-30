@@ -1042,14 +1042,6 @@ impl Swap {
         }
     }
 
-    pub(crate) fn is_local(&self) -> bool {
-        match self {
-            Swap::Chain(ChainSwap { metadata, .. })
-            | Swap::Send(SendSwap { metadata, .. })
-            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.is_local,
-        }
-    }
-
     pub(crate) fn last_updated_at(&self) -> u32 {
         match self {
             Swap::Chain(ChainSwap { metadata, .. })

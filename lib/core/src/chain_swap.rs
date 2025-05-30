@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::str::FromStr;
+use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
 use boltz_client::{
@@ -13,7 +14,9 @@ use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, Mutex};
+use tokio_with_wasm::alias as tokio;
 
+use crate::error::is_txn_mempool_conflict_error;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     elements, ensure_sdk,
@@ -94,22 +97,6 @@ impl ChainSwapHandler {
         let id = &update.id;
         let swap = self.fetch_chain_swap_by_id(id)?;
 
-        if !swap.metadata.is_local {
-            let status = &update.status;
-            let swap_state = ChainSwapStates::from_str(status)
-                .map_err(|_| anyhow!("Invalid ChainSwapState for Chain Swap {id}: {status}"))?;
-
-            match swap_state {
-                // If the swap is not local (pulled from real-time sync) we do not claim twice
-                ChainSwapStates::TransactionServerMempool
-                | ChainSwapStates::TransactionServerConfirmed => {
-                    log::debug!("Received {swap_state:?} for non-local Chain swap {id} from status stream, skipping update.");
-                    return Ok(());
-                }
-                _ => {}
-            }
-        }
-
         match swap.direction {
             Direction::Incoming => self.on_new_incoming_status(&swap, update).await,
             Direction::Outgoing => self.on_new_outgoing_status(&swap, update).await,
@@ -119,7 +106,7 @@ impl ChainSwapHandler {
     async fn claim_incoming(&self, height: u32) -> Result<()> {
         let chain_swaps: Vec<ChainSwap> = self
             .persister
-            .list_local_chain_swaps()?
+            .list_chain_swaps()?
             .into_iter()
             .filter(|s| {
                 s.direction == Direction::Incoming && s.state == Pending && s.claim_tx_id.is_none()
@@ -144,7 +131,7 @@ impl ChainSwapHandler {
     async fn claim_outgoing(&self, height: u32) -> Result<()> {
         let chain_swaps: Vec<ChainSwap> = self
             .persister
-            .list_local_chain_swaps()?
+            .list_chain_swaps()?
             .into_iter()
             .filter(|s| {
                 s.direction == Direction::Outgoing && s.state == Pending && s.claim_tx_id.is_none()
@@ -280,7 +267,8 @@ impl ChainSwapHandler {
                             ..Default::default()
                         })?;
 
-                        if swap.accept_zero_conf && swap.metadata.is_local {
+                        if swap.accept_zero_conf {
+                            maybe_delay_before_claim(swap.metadata.is_local).await;
                             self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
@@ -324,12 +312,12 @@ impl ChainSwapHandler {
                         match verify_res {
                             Ok(_) => {
                                 info!("Server lockup transaction was verified for incoming Chain Swap {}", swap.id);
-                                if swap.metadata.is_local {
-                                    self.claim(&id).await.map_err(|e| {
-                                        error!("Could not cooperate Chain Swap {id} claim: {e}");
-                                        anyhow!("Could not post claim details. Err: {e:?}")
-                                    })?;
-                                }
+
+                                maybe_delay_before_claim(swap.metadata.is_local).await;
+                                self.claim(&id).await.map_err(|e| {
+                                    error!("Could not cooperate Chain Swap {id} claim: {e}");
+                                    anyhow!("Could not post claim details. Err: {e:?}")
+                                })?;
                             }
                             Err(e) => {
                                 warn!("Server lockup transaction for incoming Chain Swap {} could not be verified. txid: {}, err: {}", swap.id, transaction.id, e);
@@ -639,7 +627,8 @@ impl ChainSwapHandler {
                             ..Default::default()
                         })?;
 
-                        if swap.accept_zero_conf && swap.metadata.is_local {
+                        if swap.accept_zero_conf {
+                            maybe_delay_before_claim(swap.metadata.is_local).await;
                             self.claim(&id).await.map_err(|e| {
                                 error!("Could not cooperate Chain Swap {id} claim: {e}");
                                 anyhow!("Could not post claim details. Err: {e:?}")
@@ -689,12 +678,12 @@ impl ChainSwapHandler {
                             server_lockup_tx_id: Some(transaction.id),
                             ..Default::default()
                         })?;
-                        if swap.metadata.is_local {
-                            self.claim(&id).await.map_err(|e| {
-                                error!("Could not cooperate Chain Swap {id} claim: {e}");
-                                anyhow!("Could not post claim details. Err: {e:?}")
-                            })?;
-                        }
+
+                        maybe_delay_before_claim(swap.metadata.is_local).await;
+                        self.claim(&id).await.map_err(|e| {
+                            error!("Could not cooperate Chain Swap {id} claim: {e}");
+                            anyhow!("Could not post claim details. Err: {e:?}")
+                        })?;
                     }
                     Some(claim_tx_id) => {
                         warn!("Claim tx for Chain Swap {id} was already broadcast: txid {claim_tx_id}")
@@ -892,6 +881,9 @@ impl ChainSwapHandler {
                     SdkTransaction::Liquid(tx) => {
                         match self.liquid_chain_service.broadcast(&tx).await {
                             Ok(tx_id) => Ok(tx_id.to_hex()),
+                            Err(e) if is_txn_mempool_conflict_error(&e) => {
+                                Err(PaymentError::AlreadyClaimed)
+                            }
                             Err(err) => {
                                 debug!(
                                         "Could not broadcast claim tx via chain service for Chain swap {swap_id}: {err:?}"
@@ -1525,6 +1517,17 @@ enum ValidateAmountlessSwapResult {
     RequiresUserAction {
         user_lockup_amount_sat: u64,
     },
+}
+
+async fn maybe_delay_before_claim(is_swap_local: bool) {
+    // Chain swap claims cannot be created concurrently with other instances.
+    // This is a preventive measure to reduce the likelihood of failures.
+    // In any case, the claim implementation gracefully handles such failures
+    // using a retry mechanism
+    if !is_swap_local {
+        info!("Waiting 5 seconds before claim to reduce likelihood of concurrent claims");
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    }
 }
 
 #[cfg(test)]
