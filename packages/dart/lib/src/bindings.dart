@@ -45,6 +45,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   void emptyWalletCache();
 
+  Future<ExecuteAssetSwapResponse> executeAssetSwap({required ExecuteAssetSwapRequest req});
+
   Future<List<Rate>> fetchFiatRates();
 
   Future<LightningPaymentLimitsResponse> fetchLightningLimits();
@@ -74,6 +76,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<InputType> parse({required String input});
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
+
+  Future<PrepareAssetSwapResponse> prepareAssetSwap({required PrepareAssetSwapRequest req});
 
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req});
 

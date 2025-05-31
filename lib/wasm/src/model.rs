@@ -833,3 +833,38 @@ pub struct FetchPaymentProposedFeesResponse {
 pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
 }
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::TradeableAsset)]
+pub enum TradeableAsset {
+    USDt,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::AssetSwap)]
+pub struct AssetSwap {
+    pub asset: TradeableAsset,
+    pub exchange_rate: f64,
+    pub receiver_amount: f64,
+    pub fees_sat: u64,
+    pub payer_amount_sat: u64,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareAssetSwapRequest)]
+pub struct PrepareAssetSwapRequest {
+    pub asset: TradeableAsset,
+    pub payer_amount_sat: u64,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareAssetSwapResponse)]
+pub struct PrepareAssetSwapResponse {
+    pub asset_swap: AssetSwap,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ExecuteAssetSwapRequest)]
+pub struct ExecuteAssetSwapRequest {
+    pub prepare_response: PrepareAssetSwapResponse,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ExecuteAssetSwapResponse)]
+pub struct ExecuteAssetSwapResponse {
+    pub payment: Payment,
+}

@@ -743,6 +743,35 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
+enum TradeableAsset {
+    "USDt",
+};
+
+dictionary AssetSwap {
+    TradeableAsset asset;
+    f64 exchange_rate;
+    f64 receiver_amount;
+    u64 fees_sat;
+    u64 payer_amount_sat;
+};
+
+dictionary PrepareAssetSwapRequest {
+    TradeableAsset asset;
+    u64 payer_amount_sat;
+};
+
+dictionary PrepareAssetSwapResponse {
+    AssetSwap asset_swap;
+};
+
+dictionary ExecuteAssetSwapRequest {
+    PrepareAssetSwapResponse prepare_response;
+};
+
+dictionary ExecuteAssetSwapResponse {
+    Payment payment;
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req);

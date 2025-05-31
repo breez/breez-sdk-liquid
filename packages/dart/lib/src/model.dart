@@ -129,6 +129,51 @@ class AssetMetadata {
           fiatId == other.fiatId;
 }
 
+/// The current state of a swap via the SideSwap service
+class AssetSwap {
+  /// The asset we are currently trading for
+  final TradeableAsset asset;
+
+  /// The exchange rate of the asset, or the total price for one L-BTC
+  final double exchangeRate;
+
+  /// The asset amount which will be received after swapping
+  final double receiverAmount;
+
+  /// The service fees for the swap (in satoshi)
+  final BigInt feesSat;
+
+  /// The amount of L-BTC (in satoshi) to execute the swap
+  final BigInt payerAmountSat;
+
+  const AssetSwap({
+    required this.asset,
+    required this.exchangeRate,
+    required this.receiverAmount,
+    required this.feesSat,
+    required this.payerAmountSat,
+  });
+
+  @override
+  int get hashCode =>
+      asset.hashCode ^
+      exchangeRate.hashCode ^
+      receiverAmount.hashCode ^
+      feesSat.hashCode ^
+      payerAmountSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AssetSwap &&
+          runtimeType == other.runtimeType &&
+          asset == other.asset &&
+          exchangeRate == other.exchangeRate &&
+          receiverAmount == other.receiverAmount &&
+          feesSat == other.feesSat &&
+          payerAmountSat == other.payerAmountSat;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::backup].
 class BackupRequest {
   /// Path to the backup.
@@ -421,6 +466,38 @@ class CreateBolt12InvoiceResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CreateBolt12InvoiceResponse && runtimeType == other.runtimeType && invoice == other.invoice;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+class ExecuteAssetSwapRequest {
+  final PrepareAssetSwapResponse prepareResponse;
+
+  const ExecuteAssetSwapRequest({required this.prepareResponse});
+
+  @override
+  int get hashCode => prepareResponse.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExecuteAssetSwapRequest &&
+          runtimeType == other.runtimeType &&
+          prepareResponse == other.prepareResponse;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+class ExecuteAssetSwapResponse {
+  final Payment payment;
+
+  const ExecuteAssetSwapResponse({required this.payment});
+
+  @override
+  int get hashCode => payment.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExecuteAssetSwapResponse && runtimeType == other.runtimeType && payment == other.payment;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
@@ -1085,6 +1162,40 @@ enum PaymentState {
 }
 
 enum PaymentType { receive, send }
+
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
+class PrepareAssetSwapRequest {
+  final TradeableAsset asset;
+  final BigInt payerAmountSat;
+
+  const PrepareAssetSwapRequest({required this.asset, required this.payerAmountSat});
+
+  @override
+  int get hashCode => asset.hashCode ^ payerAmountSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareAssetSwapRequest &&
+          runtimeType == other.runtimeType &&
+          asset == other.asset &&
+          payerAmountSat == other.payerAmountSat;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
+class PrepareAssetSwapResponse {
+  final AssetSwap assetSwap;
+
+  const PrepareAssetSwapResponse({required this.assetSwap});
+
+  @override
+  int get hashCode => assetSwap.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareAssetSwapResponse && runtimeType == other.runtimeType && assetSwap == other.assetSwap;
+}
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 class PrepareBuyBitcoinRequest {
@@ -1767,6 +1878,9 @@ class SignMessageResponse {
       identical(this, other) ||
       other is SignMessageResponse && runtimeType == other.runtimeType && signature == other.signature;
 }
+
+/// The currently supported assets via SideSwap
+enum TradeableAsset { usDt }
 
 class WalletInfo {
   /// Usable balance. This is the confirmed onchain balance minus `pending_send_sat`.

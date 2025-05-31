@@ -57,6 +57,14 @@ export interface AssetMetadata {
     fiatId?: string
 }
 
+export interface AssetSwap {
+    asset: TradeableAsset
+    exchangeRate: number
+    receiverAmount: number
+    feesSat: number
+    payerAmountSat: number
+}
+
 export interface BackupRequest {
     backupPath?: string
 }
@@ -133,6 +141,14 @@ export interface CurrencyInfo {
     uniqSymbol?: SymbolType
     localizedName: LocalizedName[]
     localeOverrides: LocaleOverrides[]
+}
+
+export interface ExecuteAssetSwapRequest {
+    prepareResponse: PrepareAssetSwapResponse
+}
+
+export interface ExecuteAssetSwapResponse {
+    payment: Payment
 }
 
 export interface ExternalInputParser {
@@ -330,6 +346,15 @@ export interface Payment {
     destination?: string
     txId?: string
     unblindingData?: string
+}
+
+export interface PrepareAssetSwapRequest {
+    asset: TradeableAsset
+    payerAmountSat: number
+}
+
+export interface PrepareAssetSwapResponse {
+    assetSwap: AssetSwap
 }
 
 export interface PrepareBuyBitcoinRequest {
@@ -882,6 +907,10 @@ export type SuccessActionProcessed = {
 } | {
     type: SuccessActionProcessedVariant.URL,
     data: UrlSuccessActionData
+}
+
+export enum TradeableAsset {
+    US_DT = "usDt"
 }
 
 export type EventListener = (e: SdkEvent) => void

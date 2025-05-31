@@ -78,6 +78,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AssetMetadata dco_decode_asset_metadata(dynamic raw);
 
   @protected
+  AssetSwap dco_decode_asset_swap(dynamic raw);
+
+  @protected
   BackupRequest dco_decode_backup_request(dynamic raw);
 
   @protected
@@ -136,6 +139,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CreateBolt12InvoiceRequest dco_decode_box_autoadd_create_bolt_12_invoice_request(dynamic raw);
+
+  @protected
+  ExecuteAssetSwapRequest dco_decode_box_autoadd_execute_asset_swap_request(dynamic raw);
 
   @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
@@ -205,6 +211,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Payment dco_decode_box_autoadd_payment(dynamic raw);
+
+  @protected
+  PrepareAssetSwapRequest dco_decode_box_autoadd_prepare_asset_swap_request(dynamic raw);
 
   @protected
   PrepareBuyBitcoinRequest dco_decode_box_autoadd_prepare_buy_bitcoin_request(dynamic raw);
@@ -289,6 +298,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CurrencyInfo dco_decode_currency_info(dynamic raw);
+
+  @protected
+  ExecuteAssetSwapRequest dco_decode_execute_asset_swap_request(dynamic raw);
+
+  @protected
+  ExecuteAssetSwapResponse dco_decode_execute_asset_swap_response(dynamic raw);
 
   @protected
   ExternalInputParser dco_decode_external_input_parser(dynamic raw);
@@ -549,6 +564,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PaymentType dco_decode_payment_type(dynamic raw);
 
   @protected
+  PrepareAssetSwapRequest dco_decode_prepare_asset_swap_request(dynamic raw);
+
+  @protected
+  PrepareAssetSwapResponse dco_decode_prepare_asset_swap_response(dynamic raw);
+
+  @protected
   PrepareBuyBitcoinRequest dco_decode_prepare_buy_bitcoin_request(dynamic raw);
 
   @protected
@@ -648,6 +669,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Symbol dco_decode_symbol(dynamic raw);
 
   @protected
+  TradeableAsset dco_decode_tradeable_asset(dynamic raw);
+
+  @protected
   int dco_decode_u_16(dynamic raw);
 
   @protected
@@ -727,6 +751,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AssetMetadata sse_decode_asset_metadata(SseDeserializer deserializer);
 
   @protected
+  AssetSwap sse_decode_asset_swap(SseDeserializer deserializer);
+
+  @protected
   BackupRequest sse_decode_backup_request(SseDeserializer deserializer);
 
   @protected
@@ -793,6 +820,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CreateBolt12InvoiceRequest sse_decode_box_autoadd_create_bolt_12_invoice_request(
     SseDeserializer deserializer,
   );
+
+  @protected
+  ExecuteAssetSwapRequest sse_decode_box_autoadd_execute_asset_swap_request(SseDeserializer deserializer);
 
   @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
@@ -864,6 +894,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Payment sse_decode_box_autoadd_payment(SseDeserializer deserializer);
+
+  @protected
+  PrepareAssetSwapRequest sse_decode_box_autoadd_prepare_asset_swap_request(SseDeserializer deserializer);
 
   @protected
   PrepareBuyBitcoinRequest sse_decode_box_autoadd_prepare_buy_bitcoin_request(SseDeserializer deserializer);
@@ -948,6 +981,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CurrencyInfo sse_decode_currency_info(SseDeserializer deserializer);
+
+  @protected
+  ExecuteAssetSwapRequest sse_decode_execute_asset_swap_request(SseDeserializer deserializer);
+
+  @protected
+  ExecuteAssetSwapResponse sse_decode_execute_asset_swap_response(SseDeserializer deserializer);
 
   @protected
   ExternalInputParser sse_decode_external_input_parser(SseDeserializer deserializer);
@@ -1212,6 +1251,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PaymentType sse_decode_payment_type(SseDeserializer deserializer);
 
   @protected
+  PrepareAssetSwapRequest sse_decode_prepare_asset_swap_request(SseDeserializer deserializer);
+
+  @protected
+  PrepareAssetSwapResponse sse_decode_prepare_asset_swap_response(SseDeserializer deserializer);
+
+  @protected
   PrepareBuyBitcoinRequest sse_decode_prepare_buy_bitcoin_request(SseDeserializer deserializer);
 
   @protected
@@ -1309,6 +1354,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Symbol sse_decode_symbol(SseDeserializer deserializer);
+
+  @protected
+  TradeableAsset sse_decode_tradeable_asset(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_16(SseDeserializer deserializer);
@@ -1493,6 +1541,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_create_bolt_12_invoice_request();
     cst_api_fill_to_wire_create_bolt_12_invoice_request(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_execute_asset_swap_request> cst_encode_box_autoadd_execute_asset_swap_request(
+    ExecuteAssetSwapRequest raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_execute_asset_swap_request();
+    cst_api_fill_to_wire_execute_asset_swap_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -1700,6 +1758,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_payment();
     cst_api_fill_to_wire_payment(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_prepare_asset_swap_request> cst_encode_box_autoadd_prepare_asset_swap_request(
+    PrepareAssetSwapRequest raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_prepare_asset_swap_request();
+    cst_api_fill_to_wire_prepare_asset_swap_request(raw, ptr.ref);
     return ptr;
   }
 
@@ -2276,6 +2344,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_asset_swap(AssetSwap apiObj, wire_cst_asset_swap wireObj) {
+    wireObj.asset = cst_encode_tradeable_asset(apiObj.asset);
+    wireObj.exchange_rate = cst_encode_f_64(apiObj.exchangeRate);
+    wireObj.receiver_amount = cst_encode_f_64(apiObj.receiverAmount);
+    wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
+    wireObj.payer_amount_sat = cst_encode_u_64(apiObj.payerAmountSat);
+  }
+
+  @protected
   void cst_api_fill_to_wire_backup_request(BackupRequest apiObj, wire_cst_backup_request wireObj) {
     wireObj.backup_path = cst_encode_opt_String(apiObj.backupPath);
   }
@@ -2426,6 +2503,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ffi.Pointer<wire_cst_create_bolt_12_invoice_request> wireObj,
   ) {
     cst_api_fill_to_wire_create_bolt_12_invoice_request(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_execute_asset_swap_request(
+    ExecuteAssetSwapRequest apiObj,
+    ffi.Pointer<wire_cst_execute_asset_swap_request> wireObj,
+  ) {
+    cst_api_fill_to_wire_execute_asset_swap_request(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2588,6 +2673,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void cst_api_fill_to_wire_box_autoadd_payment(Payment apiObj, ffi.Pointer<wire_cst_payment> wireObj) {
     cst_api_fill_to_wire_payment(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_prepare_asset_swap_request(
+    PrepareAssetSwapRequest apiObj,
+    ffi.Pointer<wire_cst_prepare_asset_swap_request> wireObj,
+  ) {
+    cst_api_fill_to_wire_prepare_asset_swap_request(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2800,6 +2893,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.uniq_symbol = cst_encode_opt_box_autoadd_symbol(apiObj.uniqSymbol);
     wireObj.localized_name = cst_encode_list_localized_name(apiObj.localizedName);
     wireObj.locale_overrides = cst_encode_list_locale_overrides(apiObj.localeOverrides);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_execute_asset_swap_request(
+    ExecuteAssetSwapRequest apiObj,
+    wire_cst_execute_asset_swap_request wireObj,
+  ) {
+    cst_api_fill_to_wire_prepare_asset_swap_response(apiObj.prepareResponse, wireObj.prepare_response);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_execute_asset_swap_response(
+    ExecuteAssetSwapResponse apiObj,
+    wire_cst_execute_asset_swap_response wireObj,
+  ) {
+    cst_api_fill_to_wire_payment(apiObj.payment, wireObj.payment);
   }
 
   @protected
@@ -3617,6 +3726,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_prepare_asset_swap_request(
+    PrepareAssetSwapRequest apiObj,
+    wire_cst_prepare_asset_swap_request wireObj,
+  ) {
+    wireObj.asset = cst_encode_tradeable_asset(apiObj.asset);
+    wireObj.payer_amount_sat = cst_encode_u_64(apiObj.payerAmountSat);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_prepare_asset_swap_response(
+    PrepareAssetSwapResponse apiObj,
+    wire_cst_prepare_asset_swap_response wireObj,
+  ) {
+    cst_api_fill_to_wire_asset_swap(apiObj.assetSwap, wireObj.asset_swap);
+  }
+
+  @protected
   void cst_api_fill_to_wire_prepare_buy_bitcoin_request(
     PrepareBuyBitcoinRequest apiObj,
     wire_cst_prepare_buy_bitcoin_request wireObj,
@@ -4103,6 +4229,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_payment_type(PaymentType raw);
 
   @protected
+  int cst_encode_tradeable_asset(TradeableAsset raw);
+
+  @protected
   int cst_encode_u_16(int raw);
 
   @protected
@@ -4175,6 +4304,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_asset_metadata(AssetMetadata self, SseSerializer serializer);
 
   @protected
+  void sse_encode_asset_swap(AssetSwap self, SseSerializer serializer);
+
+  @protected
   void sse_encode_backup_request(BackupRequest self, SseSerializer serializer);
 
   @protected
@@ -4243,6 +4375,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_create_bolt_12_invoice_request(
     CreateBolt12InvoiceRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_execute_asset_swap_request(
+    ExecuteAssetSwapRequest self,
     SseSerializer serializer,
   );
 
@@ -4326,6 +4464,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_payment(Payment self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_prepare_asset_swap_request(
+    PrepareAssetSwapRequest self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_prepare_buy_bitcoin_request(
@@ -4419,6 +4563,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_currency_info(CurrencyInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_execute_asset_swap_request(ExecuteAssetSwapRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_execute_asset_swap_response(ExecuteAssetSwapResponse self, SseSerializer serializer);
 
   @protected
   void sse_encode_external_input_parser(ExternalInputParser self, SseSerializer serializer);
@@ -4694,6 +4844,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_payment_type(PaymentType self, SseSerializer serializer);
 
   @protected
+  void sse_encode_prepare_asset_swap_request(PrepareAssetSwapRequest self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_prepare_asset_swap_response(PrepareAssetSwapResponse self, SseSerializer serializer);
+
+  @protected
   void sse_encode_prepare_buy_bitcoin_request(PrepareBuyBitcoinRequest self, SseSerializer serializer);
 
   @protected
@@ -4791,6 +4947,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_symbol(Symbol self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tradeable_asset(TradeableAsset self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_16(int self, SseSerializer serializer);
@@ -4964,6 +5123,23 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache =
       _wire__crate__bindings__BindingLiquidSdk_empty_wallet_cachePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_execute_asset_swap(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_execute_asset_swap_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_execute_asset_swap(port_, that, req);
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_execute_asset_swapPtr = _lookup<
+    ffi.NativeFunction<
+      ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_execute_asset_swap_request>)
+    >
+  >('frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_execute_asset_swap');
+  late final _wire__crate__bindings__BindingLiquidSdk_execute_asset_swap =
+      _wire__crate__bindings__BindingLiquidSdk_execute_asset_swapPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_execute_asset_swap_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(int port_, int that) {
     return _wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(port_, that);
@@ -5157,6 +5333,23 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_pay_onchain =
       _wire__crate__bindings__BindingLiquidSdk_pay_onchainPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_pay_onchain_request>)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_prepare_asset_swap_request> req,
+  ) {
+    return _wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap(port_, that, req);
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_prepare_asset_swapPtr = _lookup<
+    ffi.NativeFunction<
+      ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_asset_swap_request>)
+    >
+  >('frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap');
+  late final _wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap =
+      _wire__crate__bindings__BindingLiquidSdk_prepare_asset_swapPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_asset_swap_request>)>();
 
   void wire__crate__bindings__BindingLiquidSdk_prepare_buy_bitcoin(
     int port_,
@@ -5666,6 +5859,18 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_create_bolt_12_invoice_requestPtr
           .asFunction<ffi.Pointer<wire_cst_create_bolt_12_invoice_request> Function()>();
 
+  ffi.Pointer<wire_cst_execute_asset_swap_request> cst_new_box_autoadd_execute_asset_swap_request() {
+    return _cst_new_box_autoadd_execute_asset_swap_request();
+  }
+
+  late final _cst_new_box_autoadd_execute_asset_swap_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_execute_asset_swap_request> Function()>>(
+        'frbgen_breez_liquid_cst_new_box_autoadd_execute_asset_swap_request',
+      );
+  late final _cst_new_box_autoadd_execute_asset_swap_request =
+      _cst_new_box_autoadd_execute_asset_swap_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_execute_asset_swap_request> Function()>();
+
   ffi.Pointer<ffi.Double> cst_new_box_autoadd_f_64(double value) {
     return _cst_new_box_autoadd_f_64(value);
   }
@@ -5935,6 +6140,18 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_payment =
       _cst_new_box_autoadd_paymentPtr.asFunction<ffi.Pointer<wire_cst_payment> Function()>();
+
+  ffi.Pointer<wire_cst_prepare_asset_swap_request> cst_new_box_autoadd_prepare_asset_swap_request() {
+    return _cst_new_box_autoadd_prepare_asset_swap_request();
+  }
+
+  late final _cst_new_box_autoadd_prepare_asset_swap_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_asset_swap_request> Function()>>(
+        'frbgen_breez_liquid_cst_new_box_autoadd_prepare_asset_swap_request',
+      );
+  late final _cst_new_box_autoadd_prepare_asset_swap_request =
+      _cst_new_box_autoadd_prepare_asset_swap_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_prepare_asset_swap_request> Function()>();
 
   ffi.Pointer<wire_cst_prepare_buy_bitcoin_request> cst_new_box_autoadd_prepare_buy_bitcoin_request() {
     return _cst_new_box_autoadd_prepare_buy_bitcoin_request();
@@ -6412,6 +6629,31 @@ final class wire_cst_create_bolt_12_invoice_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice_request;
 }
 
+final class wire_cst_asset_swap extends ffi.Struct {
+  @ffi.Int32()
+  external int asset;
+
+  @ffi.Double()
+  external double exchange_rate;
+
+  @ffi.Double()
+  external double receiver_amount;
+
+  @ffi.Uint64()
+  external int fees_sat;
+
+  @ffi.Uint64()
+  external int payer_amount_sat;
+}
+
+final class wire_cst_prepare_asset_swap_response extends ffi.Struct {
+  external wire_cst_asset_swap asset_swap;
+}
+
+final class wire_cst_execute_asset_swap_request extends ffi.Struct {
+  external wire_cst_prepare_asset_swap_response prepare_response;
+}
+
 final class wire_cst_fetch_payment_proposed_fees_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
 }
@@ -6841,6 +7083,14 @@ final class wire_cst_pay_onchain_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
   external wire_cst_prepare_pay_onchain_response prepare_response;
+}
+
+final class wire_cst_prepare_asset_swap_request extends ffi.Struct {
+  @ffi.Int32()
+  external int asset;
+
+  @ffi.Uint64()
+  external int payer_amount_sat;
 }
 
 final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
@@ -7507,6 +7757,10 @@ final class wire_cst_check_message_response extends ffi.Struct {
 
 final class wire_cst_create_bolt_12_invoice_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+}
+
+final class wire_cst_execute_asset_swap_response extends ffi.Struct {
+  external wire_cst_payment payment;
 }
 
 final class wire_cst_wallet_info extends ffi.Struct {

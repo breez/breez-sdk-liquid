@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 464449310;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1917178229;
 
 // Section: executor
 
@@ -396,6 +396,55 @@ fn wire__crate__bindings__BindingLiquidSdk_empty_wallet_cache_impl(
                     crate::bindings::BindingLiquidSdk::empty_wallet_cache(&*api_that_guard)?;
                 Ok(output_ok)
             })())
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_execute_asset_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::ExecuteAssetSwapRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_execute_asset_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::execute_asset_swap(
+                            &*api_that_guard,
+                            api_req,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
         },
     )
 }
@@ -1048,6 +1097,55 @@ fn wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(
                         }
                         let api_that_guard = api_that_guard.unwrap();
                         let output_ok = crate::bindings::BindingLiquidSdk::pay_onchain(
+                            &*api_that_guard,
+                            api_req,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    req: impl CstDecode<crate::model::PrepareAssetSwapRequest>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_prepare_asset_swap",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_req = req.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::PaymentError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::prepare_asset_swap(
                             &*api_that_guard,
                             api_req,
                         )
@@ -2268,6 +2366,15 @@ impl CstDecode<crate::model::PaymentType> for i32 {
         }
     }
 }
+impl CstDecode<crate::model::TradeableAsset> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::model::TradeableAsset {
+        match self {
+            0 => crate::model::TradeableAsset::USDt,
+            _ => unreachable!("Invalid variant for TradeableAsset: {}", self),
+        }
+    }
+}
 impl CstDecode<u16> for u16 {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> u16 {
@@ -2488,6 +2595,24 @@ impl SseDecode for crate::model::AssetMetadata {
             ticker: var_ticker,
             precision: var_precision,
             fiat_id: var_fiatId,
+        };
+    }
+}
+
+impl SseDecode for crate::model::AssetSwap {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_asset = <crate::model::TradeableAsset>::sse_decode(deserializer);
+        let mut var_exchangeRate = <f64>::sse_decode(deserializer);
+        let mut var_receiverAmount = <f64>::sse_decode(deserializer);
+        let mut var_feesSat = <u64>::sse_decode(deserializer);
+        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
+        return crate::model::AssetSwap {
+            asset: var_asset,
+            exchange_rate: var_exchangeRate,
+            receiver_amount: var_receiverAmount,
+            fees_sat: var_feesSat,
+            payer_amount_sat: var_payerAmountSat,
         };
     }
 }
@@ -2715,6 +2840,27 @@ impl SseDecode for crate::bindings::CurrencyInfo {
             uniq_symbol: var_uniqSymbol,
             localized_name: var_localizedName,
             locale_overrides: var_localeOverrides,
+        };
+    }
+}
+
+impl SseDecode for crate::model::ExecuteAssetSwapRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_prepareResponse =
+            <crate::model::PrepareAssetSwapResponse>::sse_decode(deserializer);
+        return crate::model::ExecuteAssetSwapRequest {
+            prepare_response: var_prepareResponse,
+        };
+    }
+}
+
+impl SseDecode for crate::model::ExecuteAssetSwapResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_payment = <crate::model::Payment>::sse_decode(deserializer);
+        return crate::model::ExecuteAssetSwapResponse {
+            payment: var_payment,
         };
     }
 }
@@ -4247,6 +4393,28 @@ impl SseDecode for crate::model::PaymentType {
     }
 }
 
+impl SseDecode for crate::model::PrepareAssetSwapRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_asset = <crate::model::TradeableAsset>::sse_decode(deserializer);
+        let mut var_payerAmountSat = <u64>::sse_decode(deserializer);
+        return crate::model::PrepareAssetSwapRequest {
+            asset: var_asset,
+            payer_amount_sat: var_payerAmountSat,
+        };
+    }
+}
+
+impl SseDecode for crate::model::PrepareAssetSwapResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_assetSwap = <crate::model::AssetSwap>::sse_decode(deserializer);
+        return crate::model::PrepareAssetSwapResponse {
+            asset_swap: var_assetSwap,
+        };
+    }
+}
+
 impl SseDecode for crate::model::PrepareBuyBitcoinRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4837,6 +5005,17 @@ impl SseDecode for crate::bindings::Symbol {
     }
 }
 
+impl SseDecode for crate::model::TradeableAsset {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::model::TradeableAsset::USDt,
+            _ => unreachable!("Invalid variant for TradeableAsset: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for u16 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -5128,6 +5307,25 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::AssetMetadata>
     for crate::model::AssetMetadata
 {
     fn into_into_dart(self) -> crate::model::AssetMetadata {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::AssetSwap {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.asset.into_into_dart().into_dart(),
+            self.exchange_rate.into_into_dart().into_dart(),
+            self.receiver_amount.into_into_dart().into_dart(),
+            self.fees_sat.into_into_dart().into_dart(),
+            self.payer_amount_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::AssetSwap {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::AssetSwap> for crate::model::AssetSwap {
+    fn into_into_dart(self) -> crate::model::AssetSwap {
         self
     }
 }
@@ -5430,6 +5628,40 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::CurrencyInfo>
 {
     fn into_into_dart(self) -> FrbWrapper<crate::bindings::CurrencyInfo> {
         self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ExecuteAssetSwapRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.prepare_response.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::ExecuteAssetSwapRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ExecuteAssetSwapRequest>
+    for crate::model::ExecuteAssetSwapRequest
+{
+    fn into_into_dart(self) -> crate::model::ExecuteAssetSwapRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::ExecuteAssetSwapResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.payment.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::ExecuteAssetSwapResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::ExecuteAssetSwapResponse>
+    for crate::model::ExecuteAssetSwapResponse
+{
+    fn into_into_dart(self) -> crate::model::ExecuteAssetSwapResponse {
+        self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -6679,6 +6911,44 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::PaymentType> for crate::mod
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareAssetSwapRequest {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.asset.into_into_dart().into_dart(),
+            self.payer_amount_sat.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PrepareAssetSwapRequest
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareAssetSwapRequest>
+    for crate::model::PrepareAssetSwapRequest
+{
+    fn into_into_dart(self) -> crate::model::PrepareAssetSwapRequest {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::PrepareAssetSwapResponse {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.asset_swap.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::model::PrepareAssetSwapResponse
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::PrepareAssetSwapResponse>
+    for crate::model::PrepareAssetSwapResponse
+{
+    fn into_into_dart(self) -> crate::model::PrepareAssetSwapResponse {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::PrepareBuyBitcoinRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -7451,6 +7721,23 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Symbol>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::TradeableAsset {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::USDt => 0.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::TradeableAsset {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::TradeableAsset>
+    for crate::model::TradeableAsset
+{
+    fn into_into_dart(self) -> crate::model::TradeableAsset {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::bindings::UrlSuccessActionData> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -7641,6 +7928,17 @@ impl SseEncode for crate::model::AssetMetadata {
     }
 }
 
+impl SseEncode for crate::model::AssetSwap {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::TradeableAsset>::sse_encode(self.asset, serializer);
+        <f64>::sse_encode(self.exchange_rate, serializer);
+        <f64>::sse_encode(self.receiver_amount, serializer);
+        <u64>::sse_encode(self.fees_sat, serializer);
+        <u64>::sse_encode(self.payer_amount_sat, serializer);
+    }
+}
+
 impl SseEncode for crate::model::BackupRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -7800,6 +8098,20 @@ impl SseEncode for crate::bindings::CurrencyInfo {
         <Option<crate::bindings::Symbol>>::sse_encode(self.uniq_symbol, serializer);
         <Vec<crate::bindings::LocalizedName>>::sse_encode(self.localized_name, serializer);
         <Vec<crate::bindings::LocaleOverrides>>::sse_encode(self.locale_overrides, serializer);
+    }
+}
+
+impl SseEncode for crate::model::ExecuteAssetSwapRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::PrepareAssetSwapResponse>::sse_encode(self.prepare_response, serializer);
+    }
+}
+
+impl SseEncode for crate::model::ExecuteAssetSwapResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::Payment>::sse_encode(self.payment, serializer);
     }
 }
 
@@ -9066,6 +9378,21 @@ impl SseEncode for crate::model::PaymentType {
     }
 }
 
+impl SseEncode for crate::model::PrepareAssetSwapRequest {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::TradeableAsset>::sse_encode(self.asset, serializer);
+        <u64>::sse_encode(self.payer_amount_sat, serializer);
+    }
+}
+
+impl SseEncode for crate::model::PrepareAssetSwapResponse {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::model::AssetSwap>::sse_encode(self.asset_swap, serializer);
+    }
+}
+
 impl SseEncode for crate::model::PrepareBuyBitcoinRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -9492,6 +9819,21 @@ impl SseEncode for crate::bindings::Symbol {
     }
 }
 
+impl SseEncode for crate::model::TradeableAsset {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::model::TradeableAsset::USDt => 0,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for u16 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -9753,6 +10095,18 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::AssetSwap> for wire_cst_asset_swap {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::AssetSwap {
+            crate::model::AssetSwap {
+                asset: self.asset.cst_decode(),
+                exchange_rate: self.exchange_rate.cst_decode(),
+                receiver_amount: self.receiver_amount.cst_decode(),
+                fees_sat: self.fees_sat.cst_decode(),
+                payer_amount_sat: self.payer_amount_sat.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::model::BackupRequest> for wire_cst_backup_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::BackupRequest {
@@ -9914,6 +10268,13 @@ mod io {
         fn cst_decode(self) -> crate::model::CreateBolt12InvoiceRequest {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::model::CreateBolt12InvoiceRequest>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::model::ExecuteAssetSwapRequest> for *mut wire_cst_execute_asset_swap_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::ExecuteAssetSwapRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::ExecuteAssetSwapRequest>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<f64> for *mut f64 {
@@ -10082,6 +10443,13 @@ mod io {
         fn cst_decode(self) -> crate::model::Payment {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::model::Payment>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::model::PrepareAssetSwapRequest> for *mut wire_cst_prepare_asset_swap_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PrepareAssetSwapRequest {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::PrepareAssetSwapRequest>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::PrepareBuyBitcoinRequest>
@@ -10313,6 +10681,22 @@ mod io {
                 uniq_symbol: self.uniq_symbol.cst_decode(),
                 localized_name: self.localized_name.cst_decode(),
                 locale_overrides: self.locale_overrides.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::ExecuteAssetSwapRequest> for wire_cst_execute_asset_swap_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::ExecuteAssetSwapRequest {
+            crate::model::ExecuteAssetSwapRequest {
+                prepare_response: self.prepare_response.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::ExecuteAssetSwapResponse> for wire_cst_execute_asset_swap_response {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::ExecuteAssetSwapResponse {
+            crate::model::ExecuteAssetSwapResponse {
+                payment: self.payment.cst_decode(),
             }
         }
     }
@@ -11306,6 +11690,23 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::PrepareAssetSwapRequest> for wire_cst_prepare_asset_swap_request {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PrepareAssetSwapRequest {
+            crate::model::PrepareAssetSwapRequest {
+                asset: self.asset.cst_decode(),
+                payer_amount_sat: self.payer_amount_sat.cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::PrepareAssetSwapResponse> for wire_cst_prepare_asset_swap_response {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::PrepareAssetSwapResponse {
+            crate::model::PrepareAssetSwapResponse {
+                asset_swap: self.asset_swap.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::model::PrepareBuyBitcoinRequest> for wire_cst_prepare_buy_bitcoin_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PrepareBuyBitcoinRequest {
@@ -11898,6 +12299,22 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_asset_swap {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                asset: Default::default(),
+                exchange_rate: Default::default(),
+                receiver_amount: Default::default(),
+                fees_sat: Default::default(),
+                payer_amount_sat: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_asset_swap {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_backup_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -12081,6 +12498,30 @@ mod io {
         }
     }
     impl Default for wire_cst_currency_info {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_execute_asset_swap_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                prepare_response: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_execute_asset_swap_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_execute_asset_swap_response {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                payment: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_execute_asset_swap_response {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -12670,6 +13111,31 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_prepare_asset_swap_request {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                asset: Default::default(),
+                payer_amount_sat: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_prepare_asset_swap_request {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_prepare_asset_swap_response {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                asset_swap: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_prepare_asset_swap_response {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_prepare_buy_bitcoin_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -13224,6 +13690,15 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_execute_asset_swap(
+        port_: i64,
+        that: usize,
+        req: *mut wire_cst_execute_asset_swap_request,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_execute_asset_swap_impl(port_, that, req)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_fetch_fiat_rates(
         port_: i64,
         that: usize,
@@ -13341,6 +13816,15 @@ mod io {
         req: *mut wire_cst_pay_onchain_request,
     ) {
         wire__crate__bindings__BindingLiquidSdk_pay_onchain_impl(port_, that, req)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap(
+        port_: i64,
+        that: usize,
+        req: *mut wire_cst_prepare_asset_swap_request,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap_impl(port_, that, req)
     }
 
     #[unsafe(no_mangle)]
@@ -13646,6 +14130,14 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_execute_asset_swap_request(
+    ) -> *mut wire_cst_execute_asset_swap_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_execute_asset_swap_request::new_with_null_ptr(),
+        )
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_f_64(value: f64) -> *mut f64 {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
@@ -13815,6 +14307,14 @@ mod io {
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_payment() -> *mut wire_cst_payment {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_payment::new_with_null_ptr())
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_prepare_asset_swap_request(
+    ) -> *mut wire_cst_prepare_asset_swap_request {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_prepare_asset_swap_request::new_with_null_ptr(),
+        )
     }
 
     #[unsafe(no_mangle)]
@@ -14264,6 +14764,15 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_asset_swap {
+        asset: i32,
+        exchange_rate: f64,
+        receiver_amount: f64,
+        fees_sat: u64,
+        payer_amount_sat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_backup_request {
         backup_path: *mut wire_cst_list_prim_u_8_strict,
     }
@@ -14375,6 +14884,16 @@ mod io {
         uniq_symbol: *mut wire_cst_symbol,
         localized_name: *mut wire_cst_list_localized_name,
         locale_overrides: *mut wire_cst_list_locale_overrides,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_execute_asset_swap_request {
+        prepare_response: wire_cst_prepare_asset_swap_response,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_execute_asset_swap_response {
+        payment: wire_cst_payment,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15210,6 +15729,17 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_PaymentError_SignerError {
         err: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_prepare_asset_swap_request {
+        asset: i32,
+        payer_amount_sat: u64,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_prepare_asset_swap_response {
+        asset_swap: wire_cst_asset_swap,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

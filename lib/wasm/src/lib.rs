@@ -387,6 +387,22 @@ impl BindingLiquidSdk {
         Ok(())
     }
 
+    #[wasm_bindgen(js_name = "prepareAssetSwap")]
+    pub async fn prepare_asset_swap(
+        &self,
+        req: PrepareAssetSwapRequest,
+    ) -> WasmResult<PrepareAssetSwapResponse> {
+        Ok(self.sdk.prepare_asset_swap(&req.into()).await?.into())
+    }
+
+    #[wasm_bindgen(js_name = "executeAssetSwap")]
+    pub async fn execute_asset_swap(
+        &self,
+        req: ExecuteAssetSwapRequest,
+    ) -> WasmResult<ExecuteAssetSwapResponse> {
+        Ok(self.sdk.execute_asset_swap(&req.into()).await?.into())
+    }
+
     #[wasm_bindgen(js_name = "disconnect")]
     pub async fn disconnect(&self) -> WasmResult<()> {
         self.sdk.disconnect().await?;

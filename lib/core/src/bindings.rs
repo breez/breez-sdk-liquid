@@ -302,6 +302,20 @@ impl BindingLiquidSdk {
     pub async fn disconnect(&self) -> Result<(), SdkError> {
         self.sdk.disconnect().await
     }
+
+    pub async fn prepare_asset_swap(
+        &self,
+        req: PrepareAssetSwapRequest,
+    ) -> Result<PrepareAssetSwapResponse, PaymentError> {
+        self.sdk.prepare_asset_swap(&req).await
+    }
+
+    pub async fn execute_asset_swap(
+        &self,
+        req: ExecuteAssetSwapRequest,
+    ) -> Result<ExecuteAssetSwapResponse, PaymentError> {
+        self.sdk.execute_asset_swap(&req).await
+    }
 }
 
 // === FRB mirroring
