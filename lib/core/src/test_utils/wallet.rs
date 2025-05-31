@@ -92,11 +92,8 @@ impl OnchainWallet for MockWallet {
         Ok(TEST_LIQUID_TX.clone())
     }
 
-    async fn sign_pset(
-        &self,
-        _pset: PartiallySignedTransaction,
-    ) -> Result<Transaction, PaymentError> {
-        Ok(TEST_LIQUID_TX.clone())
+    async fn sign_pset(&self, _pset: &mut PartiallySignedTransaction) -> Result<(), PaymentError> {
+        Ok(())
     }
 
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
