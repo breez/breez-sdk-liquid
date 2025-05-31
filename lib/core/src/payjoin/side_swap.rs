@@ -378,12 +378,14 @@ impl PayjoinService for SideSwapPayjoinService {
         let server_signed_pset = elements::encode::deserialize::<PartiallySignedTransaction>(
             &base64::engine::general_purpose::STANDARD.decode(&sign_response.pset)?,
         )?;
-        let server_signed_blinded_pset = copy_signatures(blinded_pset, server_signed_pset)?;
+        let mut server_signed_blinded_pset = copy_signatures(blinded_pset, server_signed_pset)?;
 
-        let tx = self
-            .onchain_wallet
-            .sign_pset(server_signed_blinded_pset)
+        self.onchain_wallet
+            .sign_pset(&mut server_signed_blinded_pset)
             .await?;
+        let tx = server_signed_blinded_pset
+            .extract_tx()
+            .map_err(|e| PayjoinError::Generic(format!("Failed to extract transaction: {e:?}")))?;
         Ok((tx, server_fee.value))
     }
 }
