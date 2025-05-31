@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, ensure, Context as _, Result};
 use boltz_client::swaps::magic_routing::verify_mrh_signature;
 use boltz_client::Secp256k1;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
@@ -40,6 +40,7 @@ use sdk_common::lightning_with_bolt12::util::string::UntrustedString;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use sdk_common::utils::Arc;
+use side_swap::api::SideSwapService;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
@@ -1215,6 +1216,7 @@ impl LiquidSdk {
         let receiver_amount_sat;
         let asset_id;
         let payment_destination;
+        let mut validate_funds = true;
 
         match self.parse(&req.destination).await {
             Ok(InputType::LiquidAddress {
@@ -1313,33 +1315,75 @@ impl LiquidSdk {
                             },
                         )?;
                         let receiver_amount_sat = asset_metadata.amount_to_sat(receiver_amount);
-                        let fees_sat_res = self
-                            .estimate_onchain_tx_or_drain_tx_fee(
-                                receiver_amount_sat,
-                                &liquid_address_data.address,
-                                &asset_id,
-                            )
-                            .await;
-                        let asset_fees = if estimate_asset_fees {
-                            self.payjoin_service
-                                .estimate_payjoin_tx_fee(&asset_id, receiver_amount_sat)
-                                .await
-                                .inspect_err(|e| debug!("Error estimating payjoin tx: {e}"))
-                                .ok()
-                        } else {
-                            None
-                        };
-                        let (fees_sat, asset_fees) = match (fees_sat_res, asset_fees) {
-                            (Ok(fees_sat), _) => (Some(fees_sat), asset_fees),
-                            (Err(e), Some(asset_fees)) => {
-                                debug!(
-                                    "Error estimating onchain tx, but returning payjoin fees: {e}"
-                                );
-                                (None, Some(asset_fees))
+                        let wallet_asset_balance = get_info_res
+                            .wallet_info
+                            .asset_balances
+                            .iter()
+                            .find(|ab| ab.asset_id == asset_id)
+                            .map(|ab| ab.balance_sat)
+                            .unwrap_or_default();
+
+                        match wallet_asset_balance >= receiver_amount_sat {
+                            // If we have enough funds for that asset, try making a direct payment
+                            true => {
+                                let fees_sat_res = self
+                                    .estimate_onchain_tx_or_drain_tx_fee(
+                                        receiver_amount_sat,
+                                        &liquid_address_data.address,
+                                        &asset_id,
+                                    )
+                                    .await;
+                                let asset_fees = if estimate_asset_fees {
+                                    self.payjoin_service
+                                        .estimate_payjoin_tx_fee(&asset_id, receiver_amount_sat)
+                                        .await
+                                        .inspect_err(|e| debug!("Error estimating payjoin tx: {e}"))
+                                        .ok()
+                                } else {
+                                    None
+                                };
+                                let (fees_sat, asset_fees) = match (fees_sat_res, asset_fees) {
+                                    (Ok(fees_sat), _) => (Some(fees_sat), asset_fees),
+                                    (Err(e), Some(asset_fees)) => {
+                                        debug!(
+                                            "Error estimating onchain tx, but returning payjoin fees: {e}"
+                                        );
+                                        (None, Some(asset_fees))
+                                    }
+                                    (Err(e), None) => return Err(e),
+                                };
+                                (asset_id, receiver_amount_sat, fees_sat, asset_fees)
                             }
-                            (Err(e), None) => return Err(e),
-                        };
-                        (asset_id, receiver_amount_sat, fees_sat, asset_fees)
+                            // If not, try and prepare the payment via SideSwap
+                            false => {
+                                let asset_id = AssetId::from_str(&asset_id)?;
+                                let sideswap_service = SideSwapService::from_sdk(self);
+
+                                let swap = sideswap_service
+                                    .get_asset_swap(asset_id, receiver_amount_sat)
+                                    .map_err(|err| {
+                                        sideswap_service.stop();
+                                        err
+                                    })
+                                    .await?;
+
+                                ensure_sdk!(
+                                    get_info_res.wallet_info.balance_sat
+                                        >= swap.payer_amount_sat + swap.fees_sat,
+                                    PaymentError::InsufficientFunds
+                                );
+
+                                sideswap_service.stop();
+
+                                validate_funds = false;
+                                (
+                                    swap.asset_id,
+                                    receiver_amount_sat,
+                                    Some(swap.fees_sat),
+                                    None,
+                                )
+                            }
+                        }
                     }
                 };
 
@@ -1501,12 +1545,14 @@ impl LiquidSdk {
             }
         };
 
-        get_info_res.wallet_info.validate_sufficient_funds(
-            self.config.network,
-            receiver_amount_sat,
-            fees_sat,
-            &asset_id,
-        )?;
+        if validate_funds {
+            get_info_res.wallet_info.validate_sufficient_funds(
+                self.config.network,
+                receiver_amount_sat,
+                fees_sat,
+                &asset_id,
+            )?;
+        }
 
         Ok(PrepareSendResponse {
             destination: payment_destination,
@@ -1560,9 +1606,10 @@ impl LiquidSdk {
                 bip353_address,
             } => {
                 let asset_pay_fees = req.use_asset_fees.unwrap_or_default();
-                let Some(amount_sat) = liquid_address_data.amount_sat else {
+                let Some(receiver_amount_sat) = liquid_address_data.amount_sat else {
                     return Err(PaymentError::AmountMissing {
-                        err: "Amount must be set when paying to a Liquid address".to_string(),
+                        err: "Receiver amount must be set when paying to a Liquid address"
+                            .to_string(),
                     });
                 };
                 let Some(ref asset_id) = liquid_address_data.asset_id else {
@@ -1582,23 +1629,64 @@ impl LiquidSdk {
                     }
                 );
 
-                self.get_info()
-                    .await?
-                    .wallet_info
-                    .validate_sufficient_funds(
+                let get_info_res = self.get_info().await?;
+                let validate_sufficient_funds = || {
+                    get_info_res.wallet_info.validate_sufficient_funds(
                         self.config.network,
-                        amount_sat,
+                        receiver_amount_sat,
                         *fees_sat,
                         asset_id,
-                    )?;
+                    )
+                };
 
                 let mut response = if asset_pay_fees {
-                    self.pay_liquid_payjoin(liquid_address_data.clone(), amount_sat)
+                    validate_sufficient_funds()?;
+                    self.pay_liquid_payjoin(liquid_address_data.clone(), receiver_amount_sat)
                         .await?
                 } else {
                     let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
-                    self.pay_liquid(liquid_address_data.clone(), amount_sat, fees_sat, true)
+
+                    let is_liquid_payment = *asset_id == self.config.lbtc_asset_id();
+                    if is_liquid_payment {
+                        validate_sufficient_funds()?;
+                    }
+
+                    let wallet_lbtc_balance = get_info_res.wallet_info.balance_sat;
+                    let wallet_asset_balance = get_info_res
+                        .wallet_info
+                        .asset_balances
+                        .iter()
+                        .find(|ab| ab.asset_id == *asset_id)
+                        .map(|ab| ab.balance_sat)
+                        .unwrap_or_default();
+
+                    // If it's a Liquid payment, or we have enough funds for that asset to execute the payment directly, then do so
+                    if is_liquid_payment
+                        || (wallet_asset_balance >= receiver_amount_sat
+                            && wallet_lbtc_balance > fees_sat)
+                    {
+                        self.pay_liquid(
+                            liquid_address_data.clone(),
+                            receiver_amount_sat,
+                            fees_sat,
+                            true,
+                        )
                         .await?
+                    }
+                    // Else, try via SideSwap
+                    else {
+                        let sideswap_service = SideSwapService::from_sdk(self);
+                        let res = self
+                            .pay_sideswap(
+                                &sideswap_service,
+                                liquid_address_data.clone(),
+                                receiver_amount_sat,
+                                fees_sat,
+                            )
+                            .await;
+                        sideswap_service.stop();
+                        res?
+                    }
                 };
 
                 self.insert_payment_details(&None, bip353_address, &mut response)?;
@@ -1911,6 +1999,76 @@ impl LiquidSdk {
         Ok(SendPaymentResponse {
             payment: Payment::from_tx_data(tx_data, tx_balance, None, payment_details),
         })
+    }
+
+    /// Performs a Liquid send payment via SideSwap
+    async fn pay_sideswap(
+        &self,
+        sideswap_service: &SideSwapService,
+        address_data: LiquidAddressData,
+        receiver_amount_sat: u64,
+        fees_sat: u64,
+    ) -> Result<SendPaymentResponse, PaymentError> {
+        let receiver_address =
+            elements::Address::from_str(&address_data.address).map_err(|err| {
+                PaymentError::generic(format!("Could not convert destination address: {err}"))
+            })?;
+        let asset_id = address_data.asset_id.clone().context("Expected asset id")?;
+        let swap = sideswap_service
+            .get_asset_swap(AssetId::from_str(&asset_id)?, receiver_amount_sat)
+            .await?;
+
+        ensure_sdk!(
+            swap.fees_sat <= fees_sat,
+            PaymentError::InvalidOrExpiredFees
+        );
+
+        ensure_sdk!(
+            self.get_info().await?.wallet_info.balance_sat >= swap.payer_amount_sat,
+            PaymentError::InsufficientFunds
+        );
+
+        let tx_id = sideswap_service
+            .execute_swap(receiver_address, &swap)
+            .await?;
+
+        // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
+        // This makes the tx known to the SDK (get_info, list_payments) instantly
+        self.persister.insert_or_update_payment(
+            PaymentTxData {
+                tx_id: tx_id.clone(),
+                timestamp: Some(utils::now()),
+                fees_sat: swap.fees_sat,
+                is_confirmed: false,
+                unblinding_data: None,
+            },
+            &[
+                PaymentTxBalance {
+                    asset_id: utils::lbtc_asset_id(self.config.network).to_string(),
+                    amount: swap.payer_amount_sat,
+                    payment_type: PaymentType::Send,
+                },
+                PaymentTxBalance {
+                    asset_id: asset_id.to_string(),
+                    amount: swap.receiver_amount_sat,
+                    payment_type: PaymentType::Receive,
+                },
+            ],
+            Some(PaymentTxDetails {
+                tx_id: tx_id.clone(),
+                destination: address_data.address,
+                description: Some("SideSwap transfer".to_string()),
+                ..Default::default()
+            }),
+            false,
+        )?;
+        self.emit_payment_updated(Some(tx_id.clone())).await?; // Emit Pending event
+
+        let payment = self
+            .persister
+            .get_payment(&tx_id)?
+            .context("Expected payment to be present in the database")?;
+        Ok(SendPaymentResponse { payment })
     }
 
     /// Performs a Send Payment by doing a payjoin tx to a Liquid address
