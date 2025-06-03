@@ -15,11 +15,13 @@ pub(crate) struct CliPersistence {
 }
 
 impl CliPersistence {
-    pub(crate) fn get_or_create_mnemonic(&self) -> Result<Mnemonic> {
-        let filename = Path::new(&self.data_dir).join(PHRASE_FILE_NAME);
+    pub(crate) fn get_or_create_mnemonic(&self, phrase_path: Option<&str>) -> Result<Mnemonic> {
+        let maybe_custom_filename = phrase_path.map(PathBuf::from);
+        let filename =
+            maybe_custom_filename.unwrap_or(Path::new(&self.data_dir).join(PHRASE_FILE_NAME));
 
         let mnemonic = match fs::read_to_string(filename.clone()) {
-            Ok(phrase) => Mnemonic::from_str(&phrase).unwrap(),
+            Ok(phrase) => Mnemonic::from_str(&phrase)?,
             Err(e) => {
                 if e.kind() != io::ErrorKind::NotFound {
                     panic!("Can't read from file: {}, err {e}", filename.display());
