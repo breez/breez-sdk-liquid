@@ -34,6 +34,36 @@ services:
     network_mode: "host"
     build: ./proxy
 
+  swapproxy:
+    build: ./swapproxy-service
+    ports:
+      - 8387:8387
+    environment:
+      - BACKEND_URL=http://boltz-backend-nginx:9001
+      - WEBSOCKET_BACKEND_URL=ws://boltz-backend-nginx:9001/v2/ws
+      - PORT=8387
+      - SQLITE_DB_PATH=requests.db
+      - POSTGRES_URL=postgresql://admin:pass@swapproxy-db:5432/postgres
+      - DANGEROUS_NO_CA_CERT=YES
+    depends_on:
+      swapproxy-db:
+        condition: service_healthy
+
+  swapproxy-db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --dbname postgres --username admin"]
+      interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 5s
+
 volumes:
   bitcoin-data:
     name: boltz-bitcoind-data
