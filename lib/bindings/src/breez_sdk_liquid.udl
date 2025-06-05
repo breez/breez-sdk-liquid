@@ -755,20 +755,20 @@ dictionary AssetSwap {
     u64 payer_amount_sat;
 };
 
-dictionary PrepareAssetSwapRequest {
+dictionary PrepareSwapAssetRequest {
     TradeableAsset asset;
     u64 payer_amount_sat;
 };
 
-dictionary PrepareAssetSwapResponse {
-    AssetSwap asset_swap;
+dictionary PrepareSwapAssetResponse {
+    AssetSwap swap;
 };
 
-dictionary ExecuteAssetSwapRequest {
-    PrepareAssetSwapResponse prepare_response;
+dictionary SwapAssetRequest {
+    PrepareSwapAssetResponse prepare_response;
 };
 
-dictionary ExecuteAssetSwapResponse {
+dictionary SwapAssetResponse {
     Payment payment;
 };
 
@@ -934,4 +934,10 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
+
+    [Throws=PaymentError]
+    PrepareSwapAssetResponse prepare_swap_asset(PrepareSwapAssetRequest req);
+
+    [Throws=PaymentError]
+    SwapAssetResponse swap_asset(SwapAssetRequest req);
 };

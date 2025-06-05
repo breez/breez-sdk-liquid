@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 1917178229;
+  int get rustContentHash => 1981212511;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -90,11 +90,6 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateBindingsBindingLiquidSdkDisconnect({required BindingLiquidSdk that});
 
   void crateBindingsBindingLiquidSdkEmptyWalletCache({required BindingLiquidSdk that});
-
-  Future<ExecuteAssetSwapResponse> crateBindingsBindingLiquidSdkExecuteAssetSwap({
-    required BindingLiquidSdk that,
-    required ExecuteAssetSwapRequest req,
-  });
 
   Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that});
 
@@ -154,11 +149,6 @@ abstract class RustLibApi extends BaseApi {
     required PayOnchainRequest req,
   });
 
-  Future<PrepareAssetSwapResponse> crateBindingsBindingLiquidSdkPrepareAssetSwap({
-    required BindingLiquidSdk that,
-    required PrepareAssetSwapRequest req,
-  });
-
   Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin({
     required BindingLiquidSdk that,
     required PrepareBuyBitcoinRequest req,
@@ -187,6 +177,11 @@ abstract class RustLibApi extends BaseApi {
   Future<PrepareSendResponse> crateBindingsBindingLiquidSdkPrepareSendPayment({
     required BindingLiquidSdk that,
     required PrepareSendRequest req,
+  });
+
+  Future<PrepareSwapAssetResponse> crateBindingsBindingLiquidSdkPrepareSwapAsset({
+    required BindingLiquidSdk that,
+    required PrepareSwapAssetRequest req,
   });
 
   Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment({
@@ -218,6 +213,11 @@ abstract class RustLibApi extends BaseApi {
   SignMessageResponse crateBindingsBindingLiquidSdkSignMessage({
     required BindingLiquidSdk that,
     required SignMessageRequest req,
+  });
+
+  Future<SwapAssetResponse> crateBindingsBindingLiquidSdkSwapAsset({
+    required BindingLiquidSdk that,
+    required SwapAssetRequest req,
   });
 
   Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that});
@@ -457,35 +457,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkEmptyWalletCacheConstMeta =>
       const TaskConstMeta(debugName: "BindingLiquidSdk_empty_wallet_cache", argNames: ["that"]);
-
-  @override
-  Future<ExecuteAssetSwapResponse> crateBindingsBindingLiquidSdkExecuteAssetSwap({
-    required BindingLiquidSdk that,
-    required ExecuteAssetSwapRequest req,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
-                that,
-              );
-          var arg1 = cst_encode_box_autoadd_execute_asset_swap_request(req);
-          return wire.wire__crate__bindings__BindingLiquidSdk_execute_asset_swap(port_, arg0, arg1);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_execute_asset_swap_response,
-          decodeErrorData: dco_decode_payment_error,
-        ),
-        constMeta: kCrateBindingsBindingLiquidSdkExecuteAssetSwapConstMeta,
-        argValues: [that, req],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateBindingsBindingLiquidSdkExecuteAssetSwapConstMeta =>
-      const TaskConstMeta(debugName: "BindingLiquidSdk_execute_asset_swap", argNames: ["that", "req"]);
 
   @override
   Future<List<Rate>> crateBindingsBindingLiquidSdkFetchFiatRates({required BindingLiquidSdk that}) {
@@ -874,35 +845,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BindingLiquidSdk_pay_onchain", argNames: ["that", "req"]);
 
   @override
-  Future<PrepareAssetSwapResponse> crateBindingsBindingLiquidSdkPrepareAssetSwap({
-    required BindingLiquidSdk that,
-    required PrepareAssetSwapRequest req,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
-                that,
-              );
-          var arg1 = cst_encode_box_autoadd_prepare_asset_swap_request(req);
-          return wire.wire__crate__bindings__BindingLiquidSdk_prepare_asset_swap(port_, arg0, arg1);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_prepare_asset_swap_response,
-          decodeErrorData: dco_decode_payment_error,
-        ),
-        constMeta: kCrateBindingsBindingLiquidSdkPrepareAssetSwapConstMeta,
-        argValues: [that, req],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareAssetSwapConstMeta =>
-      const TaskConstMeta(debugName: "BindingLiquidSdk_prepare_asset_swap", argNames: ["that", "req"]);
-
-  @override
   Future<PrepareBuyBitcoinResponse> crateBindingsBindingLiquidSdkPrepareBuyBitcoin({
     required BindingLiquidSdk that,
     required PrepareBuyBitcoinRequest req,
@@ -1075,6 +1017,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareSendPaymentConstMeta =>
       const TaskConstMeta(debugName: "BindingLiquidSdk_prepare_send_payment", argNames: ["that", "req"]);
+
+  @override
+  Future<PrepareSwapAssetResponse> crateBindingsBindingLiquidSdkPrepareSwapAsset({
+    required BindingLiquidSdk that,
+    required PrepareSwapAssetRequest req,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that,
+              );
+          var arg1 = cst_encode_box_autoadd_prepare_swap_asset_request(req);
+          return wire.wire__crate__bindings__BindingLiquidSdk_prepare_swap_asset(port_, arg0, arg1);
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_prepare_swap_asset_response,
+          decodeErrorData: dco_decode_payment_error,
+        ),
+        constMeta: kCrateBindingsBindingLiquidSdkPrepareSwapAssetConstMeta,
+        argValues: [that, req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkPrepareSwapAssetConstMeta =>
+      const TaskConstMeta(debugName: "BindingLiquidSdk_prepare_swap_asset", argNames: ["that", "req"]);
 
   @override
   Future<ReceivePaymentResponse> crateBindingsBindingLiquidSdkReceivePayment({
@@ -1287,6 +1258,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateBindingsBindingLiquidSdkSignMessageConstMeta =>
       const TaskConstMeta(debugName: "BindingLiquidSdk_sign_message", argNames: ["that", "req"]);
+
+  @override
+  Future<SwapAssetResponse> crateBindingsBindingLiquidSdkSwapAsset({
+    required BindingLiquidSdk that,
+    required SwapAssetRequest req,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBindingLiquidSdk(
+                that,
+              );
+          var arg1 = cst_encode_box_autoadd_swap_asset_request(req);
+          return wire.wire__crate__bindings__BindingLiquidSdk_swap_asset(port_, arg0, arg1);
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_swap_asset_response,
+          decodeErrorData: dco_decode_payment_error,
+        ),
+        constMeta: kCrateBindingsBindingLiquidSdkSwapAssetConstMeta,
+        argValues: [that, req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBindingsBindingLiquidSdkSwapAssetConstMeta =>
+      const TaskConstMeta(debugName: "BindingLiquidSdk_swap_asset", argNames: ["that", "req"]);
 
   @override
   Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that}) {
@@ -1760,12 +1760,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ExecuteAssetSwapRequest dco_decode_box_autoadd_execute_asset_swap_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_execute_asset_swap_request(raw);
-  }
-
-  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
@@ -1904,12 +1898,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PrepareAssetSwapRequest dco_decode_box_autoadd_prepare_asset_swap_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_prepare_asset_swap_request(raw);
-  }
-
-  @protected
   PrepareBuyBitcoinRequest dco_decode_box_autoadd_prepare_buy_bitcoin_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_prepare_buy_bitcoin_request(raw);
@@ -1943,6 +1931,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendRequest dco_decode_box_autoadd_prepare_send_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_prepare_send_request(raw);
+  }
+
+  @protected
+  PrepareSwapAssetRequest dco_decode_box_autoadd_prepare_swap_asset_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_prepare_swap_asset_request(raw);
   }
 
   @protected
@@ -1997,6 +1991,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SuccessActionProcessed dco_decode_box_autoadd_success_action_processed(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_success_action_processed(raw);
+  }
+
+  @protected
+  SwapAssetRequest dco_decode_box_autoadd_swap_asset_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_swap_asset_request(raw);
   }
 
   @protected
@@ -2128,22 +2128,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       localizedName: dco_decode_list_localized_name(arr[5]),
       localeOverrides: dco_decode_list_locale_overrides(arr[6]),
     );
-  }
-
-  @protected
-  ExecuteAssetSwapRequest dco_decode_execute_asset_swap_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return ExecuteAssetSwapRequest(prepareResponse: dco_decode_prepare_asset_swap_response(arr[0]));
-  }
-
-  @protected
-  ExecuteAssetSwapResponse dco_decode_execute_asset_swap_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return ExecuteAssetSwapResponse(payment: dco_decode_payment(arr[0]));
   }
 
   @protected
@@ -3056,25 +3040,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PrepareAssetSwapRequest dco_decode_prepare_asset_swap_request(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
-    return PrepareAssetSwapRequest(
-      asset: dco_decode_tradeable_asset(arr[0]),
-      payerAmountSat: dco_decode_u_64(arr[1]),
-    );
-  }
-
-  @protected
-  PrepareAssetSwapResponse dco_decode_prepare_asset_swap_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return PrepareAssetSwapResponse(assetSwap: dco_decode_asset_swap(arr[0]));
-  }
-
-  @protected
   PrepareBuyBitcoinRequest dco_decode_prepare_buy_bitcoin_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3222,6 +3187,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       feesSat: dco_decode_opt_box_autoadd_u_64(arr[2]),
       estimatedAssetFees: dco_decode_opt_box_autoadd_f_64(arr[3]),
     );
+  }
+
+  @protected
+  PrepareSwapAssetRequest dco_decode_prepare_swap_asset_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return PrepareSwapAssetRequest(
+      asset: dco_decode_tradeable_asset(arr[0]),
+      payerAmountSat: dco_decode_u_64(arr[1]),
+    );
+  }
+
+  @protected
+  PrepareSwapAssetResponse dco_decode_prepare_swap_asset_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return PrepareSwapAssetResponse(swap: dco_decode_asset_swap(arr[0]));
   }
 
   @protected
@@ -3486,6 +3470,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw Exception("unreachable");
     }
+  }
+
+  @protected
+  SwapAssetRequest dco_decode_swap_asset_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return SwapAssetRequest(prepareResponse: dco_decode_prepare_swap_asset_response(arr[0]));
+  }
+
+  @protected
+  SwapAssetResponse dco_decode_swap_asset_response(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return SwapAssetResponse(payment: dco_decode_payment(arr[0]));
   }
 
   @protected
@@ -3909,12 +3909,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  ExecuteAssetSwapRequest sse_decode_box_autoadd_execute_asset_swap_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_execute_asset_swap_request(deserializer));
-  }
-
-  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_f_64(deserializer));
@@ -4055,12 +4049,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PrepareAssetSwapRequest sse_decode_box_autoadd_prepare_asset_swap_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_prepare_asset_swap_request(deserializer));
-  }
-
-  @protected
   PrepareBuyBitcoinRequest sse_decode_box_autoadd_prepare_buy_bitcoin_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_prepare_buy_bitcoin_request(deserializer));
@@ -4094,6 +4082,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendRequest sse_decode_box_autoadd_prepare_send_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_prepare_send_request(deserializer));
+  }
+
+  @protected
+  PrepareSwapAssetRequest sse_decode_box_autoadd_prepare_swap_asset_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_prepare_swap_asset_request(deserializer));
   }
 
   @protected
@@ -4148,6 +4142,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SuccessActionProcessed sse_decode_box_autoadd_success_action_processed(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_success_action_processed(deserializer));
+  }
+
+  @protected
+  SwapAssetRequest sse_decode_box_autoadd_swap_asset_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_swap_asset_request(deserializer));
   }
 
   @protected
@@ -4287,20 +4287,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       localizedName: var_localizedName,
       localeOverrides: var_localeOverrides,
     );
-  }
-
-  @protected
-  ExecuteAssetSwapRequest sse_decode_execute_asset_swap_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_prepareResponse = sse_decode_prepare_asset_swap_response(deserializer);
-    return ExecuteAssetSwapRequest(prepareResponse: var_prepareResponse);
-  }
-
-  @protected
-  ExecuteAssetSwapResponse sse_decode_execute_asset_swap_response(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_payment = sse_decode_payment(deserializer);
-    return ExecuteAssetSwapResponse(payment: var_payment);
   }
 
   @protected
@@ -5547,21 +5533,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  PrepareAssetSwapRequest sse_decode_prepare_asset_swap_request(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_asset = sse_decode_tradeable_asset(deserializer);
-    var var_payerAmountSat = sse_decode_u_64(deserializer);
-    return PrepareAssetSwapRequest(asset: var_asset, payerAmountSat: var_payerAmountSat);
-  }
-
-  @protected
-  PrepareAssetSwapResponse sse_decode_prepare_asset_swap_response(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_assetSwap = sse_decode_asset_swap(deserializer);
-    return PrepareAssetSwapResponse(assetSwap: var_assetSwap);
-  }
-
-  @protected
   PrepareBuyBitcoinRequest sse_decode_prepare_buy_bitcoin_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_provider = sse_decode_buy_bitcoin_provider(deserializer);
@@ -5710,6 +5681,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       feesSat: var_feesSat,
       estimatedAssetFees: var_estimatedAssetFees,
     );
+  }
+
+  @protected
+  PrepareSwapAssetRequest sse_decode_prepare_swap_asset_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_asset = sse_decode_tradeable_asset(deserializer);
+    var var_payerAmountSat = sse_decode_u_64(deserializer);
+    return PrepareSwapAssetRequest(asset: var_asset, payerAmountSat: var_payerAmountSat);
+  }
+
+  @protected
+  PrepareSwapAssetResponse sse_decode_prepare_swap_asset_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_swap = sse_decode_asset_swap(deserializer);
+    return PrepareSwapAssetResponse(swap: var_swap);
   }
 
   @protected
@@ -6003,6 +5989,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       default:
         throw UnimplementedError('');
     }
+  }
+
+  @protected
+  SwapAssetRequest sse_decode_swap_asset_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_prepareResponse = sse_decode_prepare_swap_asset_response(deserializer);
+    return SwapAssetRequest(prepareResponse: var_prepareResponse);
+  }
+
+  @protected
+  SwapAssetResponse sse_decode_swap_asset_response(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_payment = sse_decode_payment(deserializer);
+    return SwapAssetResponse(payment: var_payment);
   }
 
   @protected
@@ -6500,15 +6500,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_execute_asset_swap_request(
-    ExecuteAssetSwapRequest self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_execute_asset_swap_request(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_f_64(self, serializer);
@@ -6659,15 +6650,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_prepare_asset_swap_request(
-    PrepareAssetSwapRequest self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_prepare_asset_swap_request(self, serializer);
-  }
-
-  @protected
   void sse_encode_box_autoadd_prepare_buy_bitcoin_request(
     PrepareBuyBitcoinRequest self,
     SseSerializer serializer,
@@ -6710,6 +6692,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_prepare_send_request(PrepareSendRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_prepare_send_request(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_prepare_swap_asset_request(
+    PrepareSwapAssetRequest self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_swap_asset_request(self, serializer);
   }
 
   @protected
@@ -6767,6 +6758,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_success_action_processed(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_swap_asset_request(SwapAssetRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_swap_asset_request(self, serializer);
   }
 
   @protected
@@ -6873,18 +6870,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_symbol(self.uniqSymbol, serializer);
     sse_encode_list_localized_name(self.localizedName, serializer);
     sse_encode_list_locale_overrides(self.localeOverrides, serializer);
-  }
-
-  @protected
-  void sse_encode_execute_asset_swap_request(ExecuteAssetSwapRequest self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_prepare_asset_swap_response(self.prepareResponse, serializer);
-  }
-
-  @protected
-  void sse_encode_execute_asset_swap_response(ExecuteAssetSwapResponse self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_payment(self.payment, serializer);
   }
 
   @protected
@@ -7911,19 +7896,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_prepare_asset_swap_request(PrepareAssetSwapRequest self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_tradeable_asset(self.asset, serializer);
-    sse_encode_u_64(self.payerAmountSat, serializer);
-  }
-
-  @protected
-  void sse_encode_prepare_asset_swap_response(PrepareAssetSwapResponse self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_asset_swap(self.assetSwap, serializer);
-  }
-
-  @protected
   void sse_encode_prepare_buy_bitcoin_request(PrepareBuyBitcoinRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_buy_bitcoin_provider(self.provider, serializer);
@@ -8023,6 +7995,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_pay_amount(self.amount, serializer);
     sse_encode_opt_box_autoadd_u_64(self.feesSat, serializer);
     sse_encode_opt_box_autoadd_f_64(self.estimatedAssetFees, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_swap_asset_request(PrepareSwapAssetRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_tradeable_asset(self.asset, serializer);
+    sse_encode_u_64(self.payerAmountSat, serializer);
+  }
+
+  @protected
+  void sse_encode_prepare_swap_asset_response(PrepareSwapAssetResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_asset_swap(self.swap, serializer);
   }
 
   @protected
@@ -8254,6 +8239,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_swap_asset_request(SwapAssetRequest self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_prepare_swap_asset_response(self.prepareResponse, serializer);
+  }
+
+  @protected
+  void sse_encode_swap_asset_response(SwapAssetResponse self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_payment(self.payment, serializer);
+  }
+
+  @protected
   void sse_encode_symbol(Symbol self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_opt_String(self.grapheme, serializer);
@@ -8361,9 +8358,6 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   void emptyWalletCache() => RustLib.instance.api.crateBindingsBindingLiquidSdkEmptyWalletCache(that: this);
 
-  Future<ExecuteAssetSwapResponse> executeAssetSwap({required ExecuteAssetSwapRequest req}) =>
-      RustLib.instance.api.crateBindingsBindingLiquidSdkExecuteAssetSwap(that: this, req: req);
-
   Future<List<Rate>> fetchFiatRates() =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkFetchFiatRates(that: this);
 
@@ -8406,9 +8400,6 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPayOnchain(that: this, req: req);
 
-  Future<PrepareAssetSwapResponse> prepareAssetSwap({required PrepareAssetSwapRequest req}) =>
-      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareAssetSwap(that: this, req: req);
-
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareBuyBitcoin(that: this, req: req);
 
@@ -8426,6 +8417,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareSendPayment(that: this, req: req);
+
+  Future<PrepareSwapAssetResponse> prepareSwapAsset({required PrepareSwapAssetRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkPrepareSwapAsset(that: this, req: req);
 
   Future<ReceivePaymentResponse> receivePayment({required ReceivePaymentRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkReceivePayment(that: this, req: req);
@@ -8450,6 +8444,9 @@ class BindingLiquidSdkImpl extends RustOpaque implements BindingLiquidSdk {
 
   SignMessageResponse signMessage({required SignMessageRequest req}) =>
       RustLib.instance.api.crateBindingsBindingLiquidSdkSignMessage(that: this, req: req);
+
+  Future<SwapAssetResponse> swapAsset({required SwapAssetRequest req}) =>
+      RustLib.instance.api.crateBindingsBindingLiquidSdkSwapAsset(that: this, req: req);
 
   Future<void> sync() => RustLib.instance.api.crateBindingsBindingLiquidSdkSync(that: this);
 

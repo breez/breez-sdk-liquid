@@ -4592,19 +4592,19 @@ impl LiquidSdk {
     ///
     /// # Arguments
     ///
-    /// * `req` - the [PrepareAssetSwapRequest] containing:
+    /// * `req` - the [PrepareSwapAssetRequest] containing:
     ///     * `asset` - The asset we are swapping L-BTC for
     ///     * `payer_amount_sat` - The amount of L-BTC (in satoshis) we are swapping
     ///
     /// # Returns
     ///
-    /// A [PrepareAssetSwapResponse] containing:
-    ///     * `asset_swap` - the [AssetSwap] details of the ongoing swap, including the exchange
+    /// A [PrepareSwapAssetResponse] containing:
+    ///     * `swap` - the [AssetSwap] details of the ongoing swap, including the exchange
     ///     rate, fees and the final amount you will receive
-    pub async fn prepare_asset_swap(
+    pub async fn prepare_swap_asset(
         &self,
-        req: &PrepareAssetSwapRequest,
-    ) -> Result<PrepareAssetSwapResponse, PaymentError> {
+        req: &PrepareSwapAssetRequest,
+    ) -> Result<PrepareSwapAssetResponse, PaymentError> {
         self.sideswap_service.clone().start().await?;
 
         let asset_id = req.asset.try_to_asset_id(self.config.network)?;
@@ -4627,20 +4627,20 @@ impl LiquidSdk {
             return Err(PaymentError::InsufficientFunds);
         }
 
-        Ok(PrepareAssetSwapResponse { asset_swap })
+        Ok(PrepareSwapAssetResponse { swap: asset_swap })
     }
 
     /// Executes a previously prepared asset swap
     ///
     /// # Arguments
     ///
-    /// * `req` - A [ExecuteAssetSwapRequest], containing:
-    ///     * `prepare_response` - the [PrepareAssetSwapResponse] returned by
-    ///       [LiquidSdk::prepare_asset_swap]
+    /// * `req` - A [SwapAssetRequest], containing:
+    ///     * `prepare_response` - the [PrepareSwapAssetResponse] returned by
+    ///       [LiquidSdk::prepare_swap_asset]
     ///
     /// # Returns
     ///
-    /// A [ExecuteAssetSwapResponse] containing:
+    /// A [SwapAssetResponse] containing:
     ///     * `payment` - the onchain [Payment] details of the swap, including the Liquid txid and
     ///     amount
     ///
@@ -4650,18 +4650,18 @@ impl LiquidSdk {
     ///   previously accepted amount
     /// * [PaymentError::InsufficientFunds] - returned if you do not have enough funds to execute
     ///   the payment
-    pub async fn execute_asset_swap(
+    pub async fn swap_asset(
         &self,
-        req: &ExecuteAssetSwapRequest,
-    ) -> Result<ExecuteAssetSwapResponse, PaymentError> {
+        req: &SwapAssetRequest,
+    ) -> Result<SwapAssetResponse, PaymentError> {
         self.sideswap_service.clone().start().await?;
 
-        let req_swap = &req.prepare_response.asset_swap;
+        let req_swap = &req.prepare_response.swap;
         let asset_id = req_swap
             .asset
             .try_to_asset_id(self.config.network)?
             .to_string();
-        let Some(ongoing_swap) = self.sideswap_service.get_current_price().await else {
+        let Some(ongoing_swap) = self.sideswap_service.get_ongoing_swap().await else {
             return Err(PaymentError::generic(
                 "Cannot execute asset swap: swap not found.",
             ));
@@ -4738,7 +4738,7 @@ impl LiquidSdk {
             bip353_address: None,
         };
 
-        Ok(ExecuteAssetSwapResponse {
+        Ok(SwapAssetResponse {
             payment: Payment::from_tx_data(tx_data, None, payment_details),
         })
     }

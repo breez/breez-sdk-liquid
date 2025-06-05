@@ -303,18 +303,18 @@ impl BindingLiquidSdk {
         self.sdk.disconnect().await
     }
 
-    pub async fn prepare_asset_swap(
+    pub async fn prepare_swap_asset(
         &self,
-        req: PrepareAssetSwapRequest,
-    ) -> Result<PrepareAssetSwapResponse, PaymentError> {
-        self.sdk.prepare_asset_swap(&req).await
+        req: PrepareSwapAssetRequest,
+    ) -> Result<PrepareSwapAssetResponse, PaymentError> {
+        self.sdk.prepare_swap_asset(&req).await
     }
 
-    pub async fn execute_asset_swap(
+    pub async fn swap_asset(
         &self,
-        req: ExecuteAssetSwapRequest,
-    ) -> Result<ExecuteAssetSwapResponse, PaymentError> {
-        self.sdk.execute_asset_swap(&req).await
+        req: SwapAssetRequest,
+    ) -> Result<SwapAssetResponse, PaymentError> {
+        self.sdk.swap_asset(&req).await
     }
 }
 

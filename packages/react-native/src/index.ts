@@ -143,14 +143,6 @@ export interface CurrencyInfo {
     localeOverrides: LocaleOverrides[]
 }
 
-export interface ExecuteAssetSwapRequest {
-    prepareResponse: PrepareAssetSwapResponse
-}
-
-export interface ExecuteAssetSwapResponse {
-    payment: Payment
-}
-
 export interface ExternalInputParser {
     providerId: string
     inputRegex: string
@@ -348,15 +340,6 @@ export interface Payment {
     unblindingData?: string
 }
 
-export interface PrepareAssetSwapRequest {
-    asset: TradeableAsset
-    payerAmountSat: number
-}
-
-export interface PrepareAssetSwapResponse {
-    assetSwap: AssetSwap
-}
-
 export interface PrepareBuyBitcoinRequest {
     provider: BuyBitcoinProvider
     amountSat: number
@@ -435,6 +418,15 @@ export interface PrepareSendResponse {
     estimatedAssetFees?: number
 }
 
+export interface PrepareSwapAssetRequest {
+    asset: TradeableAsset
+    payerAmountSat: number
+}
+
+export interface PrepareSwapAssetResponse {
+    swap: AssetSwap
+}
+
 export interface Rate {
     coin: string
     value: number
@@ -508,6 +500,14 @@ export interface SignMessageRequest {
 
 export interface SignMessageResponse {
     signature: string
+}
+
+export interface SwapAssetRequest {
+    prepareResponse: PrepareSwapAssetResponse
+}
+
+export interface SwapAssetResponse {
+    payment: Payment
 }
 
 export interface SymbolType {
@@ -1123,5 +1123,15 @@ export const fetchFiatRates = async (): Promise<Rate[]> => {
 
 export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
     const response = await BreezSDKLiquid.listFiatCurrencies()
+    return response
+}
+
+export const prepareSwapAsset = async (req: PrepareSwapAssetRequest): Promise<PrepareSwapAssetResponse> => {
+    const response = await BreezSDKLiquid.prepareSwapAsset(req)
+    return response
+}
+
+export const swapAsset = async (req: SwapAssetRequest): Promise<SwapAssetResponse> => {
+    const response = await BreezSDKLiquid.swapAsset(req)
     return response
 }
