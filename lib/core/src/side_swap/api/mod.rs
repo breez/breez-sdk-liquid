@@ -38,7 +38,6 @@ mod response_handler;
 
 pub const SIDESWAP_MAINNET_URL: &str = "wss://api.sideswap.io/json-rpc-ws";
 pub const SIDESWAP_TESTNET_URL: &str = "wss://api-testnet.sideswap.io/json-rpc-ws";
-pub const SIDESWAP_REGTEST_URL: &str = "wss://api-regtest.sideswap.io/json-rpc-ws";
 
 #[sdk_macros::async_trait]
 pub trait SideSwapService: MaybeSend + MaybeSync {
@@ -50,7 +49,7 @@ pub trait SideSwapService: MaybeSend + MaybeSync {
         send_amount_sat: u64,
     ) -> Result<AssetSwap>;
     async fn unsubscribe_price_stream(&self) -> Result<()>;
-    async fn get_current_price(&self) -> Option<AssetSwap>;
+    async fn get_ongoing_swap(&self) -> Option<AssetSwap>;
     async fn execute_swap(&self) -> Result<ExecuteSwapResponse>;
 }
 
@@ -257,7 +256,7 @@ impl SideSwapService for HybridSideSwapService {
         Ok(())
     }
 
-    async fn get_current_price(&self) -> Option<AssetSwap> {
+    async fn get_ongoing_swap(&self) -> Option<AssetSwap> {
         self.ongoing_swap.lock().await.clone()
     }
 
