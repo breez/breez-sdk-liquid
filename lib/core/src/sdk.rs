@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, ensure, Context as _, Result};
 use boltz_client::swaps::magic_routing::verify_mrh_signature;
 use boltz_client::Secp256k1;
 use boltz_client::{swaps::boltz::*, util::secrets::Preimage};
@@ -4718,28 +4718,13 @@ impl LiquidSdk {
             }),
             false,
         )?;
-        self.emit_payment_updated(Some(tx_id)).await?; // Emit Pending event
+        self.emit_payment_updated(Some(tx_id.clone())).await?; // Emit Pending event
 
-        let asset_info = self
-            .persister
-            .get_asset_metadata(&asset_id)?
-            .map(|ref am| AssetInfo {
-                name: am.name.clone(),
-                ticker: am.ticker.clone(),
-                amount: req_swap.receiver_amount,
-                fees: None,
-            });
-        let payment_details = PaymentDetails::Liquid {
-            asset_id,
-            destination,
-            description: "SideSwap transfer".to_string(),
-            asset_info,
-            lnurl_info: None,
-            bip353_address: None,
-        };
-
+        let payment = self.persister
+            .get_payment(&tx_id)?
+            .context("Expected payment to be present in the database")?;
         Ok(SwapAssetResponse {
-            payment: Payment::from_tx_data(tx_data, None, payment_details),
+            payment
         })
     }
 }
