@@ -45,8 +45,6 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   void emptyWalletCache();
 
-  Future<ExecuteAssetSwapResponse> executeAssetSwap({required ExecuteAssetSwapRequest req});
-
   Future<List<Rate>> fetchFiatRates();
 
   Future<LightningPaymentLimitsResponse> fetchLightningLimits();
@@ -77,8 +75,6 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<SendPaymentResponse> payOnchain({required PayOnchainRequest req});
 
-  Future<PrepareAssetSwapResponse> prepareAssetSwap({required PrepareAssetSwapRequest req});
-
   Future<PrepareBuyBitcoinResponse> prepareBuyBitcoin({required PrepareBuyBitcoinRequest req});
 
   Future<PrepareLnUrlPayResponse> prepareLnurlPay({required PrepareLnUrlPayRequest req});
@@ -90,6 +86,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<PrepareRefundResponse> prepareRefund({required PrepareRefundRequest req});
 
   Future<PrepareSendResponse> prepareSendPayment({required PrepareSendRequest req});
+
+  Future<PrepareSwapAssetResponse> prepareSwapAsset({required PrepareSwapAssetRequest req});
 
   Future<ReceivePaymentResponse> receivePayment({required ReceivePaymentRequest req});
 
@@ -106,6 +104,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<SendPaymentResponse> sendPayment({required SendPaymentRequest req});
 
   SignMessageResponse signMessage({required SignMessageRequest req});
+
+  Future<SwapAssetResponse> swapAsset({required SwapAssetRequest req});
 
   Future<void> sync();
 

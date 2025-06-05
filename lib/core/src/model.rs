@@ -35,7 +35,7 @@ use crate::{
     chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
 };
 use crate::{
-    side_swap::api::{SIDESWAP_MAINNET_URL, SIDESWAP_REGTEST_URL, SIDESWAP_TESTNET_URL},
+    side_swap::api::{SIDESWAP_MAINNET_URL, SIDESWAP_TESTNET_URL},
     utils,
 };
 
@@ -352,7 +352,7 @@ impl Config {
         match self.network {
             LiquidNetwork::Mainnet => SIDESWAP_MAINNET_URL,
             LiquidNetwork::Testnet => SIDESWAP_TESTNET_URL,
-            LiquidNetwork::Regtest => SIDESWAP_REGTEST_URL,
+            LiquidNetwork::Regtest => unimplemented!(),
         }
     }
 }
@@ -2496,7 +2496,7 @@ impl TradeableAsset {
 pub struct AssetSwap {
     /// The asset we are currently trading for
     pub asset: TradeableAsset,
-    /// The exchange rate of the asset, or the total price for one L-BTC
+    /// The exchange rate of the asset (the amount that can be traded for one L-BTC)
     pub exchange_rate: f64,
     /// The asset amount which will be received after swapping
     pub receiver_amount: f64,
@@ -2538,28 +2538,28 @@ impl AssetSwap {
     }
 }
 
-/// An argument when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_swap_asset].
 #[derive(Debug, Clone, Serialize)]
-pub struct PrepareAssetSwapRequest {
+pub struct PrepareSwapAssetRequest {
     pub asset: TradeableAsset,
     pub payer_amount_sat: u64,
 }
 
-/// Returned when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_swap_asset].
 #[derive(Debug, Clone, Serialize)]
-pub struct PrepareAssetSwapResponse {
-    pub asset_swap: AssetSwap,
+pub struct PrepareSwapAssetResponse {
+    pub swap: AssetSwap,
 }
 
-/// An argument when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+/// An argument when calling [crate::sdk::LiquidSdk::swap_asset].
 #[derive(Debug, Clone, Serialize)]
-pub struct ExecuteAssetSwapRequest {
-    pub prepare_response: PrepareAssetSwapResponse,
+pub struct SwapAssetRequest {
+    pub prepare_response: PrepareSwapAssetResponse,
 }
 
-/// Returned when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+/// Returned when calling [crate::sdk::LiquidSdk::swap_asset].
 #[derive(Debug, Clone, Serialize)]
-pub struct ExecuteAssetSwapResponse {
+pub struct SwapAssetResponse {
     pub payment: Payment,
 }
 

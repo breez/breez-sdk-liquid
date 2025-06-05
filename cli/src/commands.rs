@@ -825,21 +825,21 @@ pub(crate) async fn handle_command(
             payer_amount_sat,
         } => {
             let prepare_response = sdk
-                .prepare_asset_swap(&PrepareAssetSwapRequest {
+                .prepare_swap_asset(&PrepareSwapAssetRequest {
                     asset,
                     payer_amount_sat,
                 })
                 .await?;
 
-            let asset_swap = &prepare_response.asset_swap;
+            let swap = &prepare_response.swap;
             let confirmation_msg = format!(
                 "Fees: approx {} sat. Received amount: {}. Is this acceptable? (y/N) ",
-                asset_swap.fees_sat, asset_swap.receiver_amount
+                swap.fees_sat, swap.receiver_amount
             );
-            wait_confirmation!(confirmation_msg, "Asset swap halted");
+            wait_confirmation!(confirmation_msg, "Swap halted");
 
             let res = sdk
-                .execute_asset_swap(&ExecuteAssetSwapRequest { prepare_response })
+                .swap_asset(&SwapAssetRequest { prepare_response })
                 .await?;
             command_result!(res)
         }

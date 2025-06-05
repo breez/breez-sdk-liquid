@@ -442,9 +442,6 @@ impl OnchainWallet for LiquidOnchainWallet {
             }
         }
 
-        // let tx = pset.extract_tx().map_err(|e| PaymentError::Generic {
-        //     err: format!("Failed to extract transaction: {e:?}"),
-        // })?;
         Ok(())
     }
 

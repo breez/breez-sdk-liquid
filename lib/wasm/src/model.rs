@@ -848,23 +848,23 @@ pub struct AssetSwap {
     pub payer_amount_sat: u64,
 }
 
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareAssetSwapRequest)]
-pub struct PrepareAssetSwapRequest {
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareSwapAssetRequest)]
+pub struct PrepareSwapAssetRequest {
     pub asset: TradeableAsset,
     pub payer_amount_sat: u64,
 }
 
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareAssetSwapResponse)]
-pub struct PrepareAssetSwapResponse {
-    pub asset_swap: AssetSwap,
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareSwapAssetResponse)]
+pub struct PrepareSwapAssetResponse {
+    pub swap: AssetSwap,
 }
 
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ExecuteAssetSwapRequest)]
-pub struct ExecuteAssetSwapRequest {
-    pub prepare_response: PrepareAssetSwapResponse,
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SwapAssetRequest)]
+pub struct SwapAssetRequest {
+    pub prepare_response: PrepareSwapAssetResponse,
 }
 
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ExecuteAssetSwapResponse)]
-pub struct ExecuteAssetSwapResponse {
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SwapAssetResponse)]
+pub struct SwapAssetResponse {
     pub payment: Payment,
 }

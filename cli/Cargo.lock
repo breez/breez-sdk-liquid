@@ -2223,7 +2223,7 @@ dependencies = [
  "proc-macro-error2",
  "proc-macro2",
  "quote",
- "strsim",
+ "strsim 0.11.1",
  "syn 2.0.101",
  "unic-langid",
 ]
@@ -2350,6 +2350,12 @@ dependencies = [
  "zerotrie",
  "zerovec",
 ]
+
+[[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
@@ -4589,7 +4595,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "sideswap_api"
 version = "0.1.2"
-source = "git+https://github.com/breez/sideswap_rust?rev=edbde3ab1077f06209b4fb4e02b697da213524d3#edbde3ab1077f06209b4fb4e02b697da213524d3"
+source = "git+https://github.com/breez/sideswap_rust?rev=2c3c4312d8fe#2c3c4312d8fe9f2766d96320994145ba7287cc28"
 dependencies = [
  "elements",
  "hex",
@@ -4603,7 +4609,7 @@ dependencies = [
 [[package]]
 name = "sideswap_types"
 version = "0.1.2"
-source = "git+https://github.com/breez/sideswap_rust?rev=edbde3ab1077f06209b4fb4e02b697da213524d3#edbde3ab1077f06209b4fb4e02b697da213524d3"
+source = "git+https://github.com/breez/sideswap_rust?rev=2c3c4312d8fe#2c3c4312d8fe9f2766d96320994145ba7287cc28"
 dependencies = [
  "elements",
  "serde",

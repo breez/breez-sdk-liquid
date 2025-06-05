@@ -134,7 +134,7 @@ class AssetSwap {
   /// The asset we are currently trading for
   final TradeableAsset asset;
 
-  /// The exchange rate of the asset, or the total price for one L-BTC
+  /// The exchange rate of the asset (the amount that can be traded for one L-BTC)
   final double exchangeRate;
 
   /// The asset amount which will be received after swapping
@@ -466,38 +466,6 @@ class CreateBolt12InvoiceResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CreateBolt12InvoiceResponse && runtimeType == other.runtimeType && invoice == other.invoice;
-}
-
-/// An argument when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
-class ExecuteAssetSwapRequest {
-  final PrepareAssetSwapResponse prepareResponse;
-
-  const ExecuteAssetSwapRequest({required this.prepareResponse});
-
-  @override
-  int get hashCode => prepareResponse.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ExecuteAssetSwapRequest &&
-          runtimeType == other.runtimeType &&
-          prepareResponse == other.prepareResponse;
-}
-
-/// Returned when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
-class ExecuteAssetSwapResponse {
-  final Payment payment;
-
-  const ExecuteAssetSwapResponse({required this.payment});
-
-  @override
-  int get hashCode => payment.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ExecuteAssetSwapResponse && runtimeType == other.runtimeType && payment == other.payment;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::fetch_payment_proposed_fees].
@@ -1163,40 +1131,6 @@ enum PaymentState {
 
 enum PaymentType { receive, send }
 
-/// An argument when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
-class PrepareAssetSwapRequest {
-  final TradeableAsset asset;
-  final BigInt payerAmountSat;
-
-  const PrepareAssetSwapRequest({required this.asset, required this.payerAmountSat});
-
-  @override
-  int get hashCode => asset.hashCode ^ payerAmountSat.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PrepareAssetSwapRequest &&
-          runtimeType == other.runtimeType &&
-          asset == other.asset &&
-          payerAmountSat == other.payerAmountSat;
-}
-
-/// Returned when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
-class PrepareAssetSwapResponse {
-  final AssetSwap assetSwap;
-
-  const PrepareAssetSwapResponse({required this.assetSwap});
-
-  @override
-  int get hashCode => assetSwap.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PrepareAssetSwapResponse && runtimeType == other.runtimeType && assetSwap == other.assetSwap;
-}
-
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_buy_bitcoin].
 class PrepareBuyBitcoinRequest {
   final BuyBitcoinProvider provider;
@@ -1580,6 +1514,40 @@ class PrepareSendResponse {
           estimatedAssetFees == other.estimatedAssetFees;
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_swap_asset].
+class PrepareSwapAssetRequest {
+  final TradeableAsset asset;
+  final BigInt payerAmountSat;
+
+  const PrepareSwapAssetRequest({required this.asset, required this.payerAmountSat});
+
+  @override
+  int get hashCode => asset.hashCode ^ payerAmountSat.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareSwapAssetRequest &&
+          runtimeType == other.runtimeType &&
+          asset == other.asset &&
+          payerAmountSat == other.payerAmountSat;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_swap_asset].
+class PrepareSwapAssetResponse {
+  final AssetSwap swap;
+
+  const PrepareSwapAssetResponse({required this.swap});
+
+  @override
+  int get hashCode => swap.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PrepareSwapAssetResponse && runtimeType == other.runtimeType && swap == other.swap;
+}
+
 @freezed
 sealed class ReceiveAmount with _$ReceiveAmount {
   const ReceiveAmount._();
@@ -1877,6 +1845,38 @@ class SignMessageResponse {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SignMessageResponse && runtimeType == other.runtimeType && signature == other.signature;
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::swap_asset].
+class SwapAssetRequest {
+  final PrepareSwapAssetResponse prepareResponse;
+
+  const SwapAssetRequest({required this.prepareResponse});
+
+  @override
+  int get hashCode => prepareResponse.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SwapAssetRequest &&
+          runtimeType == other.runtimeType &&
+          prepareResponse == other.prepareResponse;
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::swap_asset].
+class SwapAssetResponse {
+  final Payment payment;
+
+  const SwapAssetResponse({required this.payment});
+
+  @override
+  int get hashCode => payment.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SwapAssetResponse && runtimeType == other.runtimeType && payment == other.payment;
 }
 
 /// The currently supported assets via SideSwap
