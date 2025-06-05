@@ -40,7 +40,7 @@ use sdk_common::lightning_with_bolt12::util::string::UntrustedString;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
 use sdk_common::utils::Arc;
-use side_swap::api::{ExecuteSwapResponse, HybridSideSwapService, SideSwapService};
+use side_swap::api::{ExecuteSwapResponse, SideSwapService};
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
 use tokio::sync::{watch, RwLock};
@@ -98,7 +98,6 @@ pub struct LiquidSdkBuilder {
     liquid_chain_service: Option<Arc<dyn LiquidChainService>>,
     onchain_wallet: Option<Arc<dyn OnchainWallet>>,
     payjoin_service: Option<Arc<dyn PayjoinService>>,
-    sideswap_service: Option<Arc<dyn SideSwapService>>,
     persister: Option<std::sync::Arc<Persister>>,
     recoverer: Option<Arc<Recoverer>>,
     rest_client: Option<Arc<dyn RestClient>>,
@@ -123,7 +122,6 @@ impl LiquidSdkBuilder {
             liquid_chain_service: None,
             onchain_wallet: None,
             payjoin_service: None,
-            sideswap_service: None,
             persister: None,
             recoverer: None,
             rest_client: None,
@@ -161,11 +159,6 @@ impl LiquidSdkBuilder {
 
     pub fn payjoin_service(&mut self, payjoin_service: Arc<dyn PayjoinService>) -> &mut Self {
         self.payjoin_service = Some(payjoin_service.clone());
-        self
-    }
-
-    pub fn sideswap_service(&mut self, sideswap_service: Arc<dyn SideSwapService>) -> &mut Self {
-        self.sideswap_service = Some(sideswap_service.clone());
         self
     }
 
@@ -344,15 +337,6 @@ impl LiquidSdkBuilder {
             )),
         };
 
-        let sideswap_service = match self.sideswap_service.clone() {
-            Some(sideswap_service) => sideswap_service,
-            None => Arc::new(HybridSideSwapService::new(
-                self.config.clone(),
-                rest_client.clone(),
-                onchain_wallet.clone(),
-            )),
-        };
-
         let buy_bitcoin_service = Arc::new(BuyBitcoinService::new(
             self.config.clone(),
             self.breez_server.clone(),
@@ -381,7 +365,6 @@ impl LiquidSdkBuilder {
             sync_service,
             chain_swap_handler,
             payjoin_service,
-            sideswap_service,
             buy_bitcoin_service,
             external_input_parsers,
         });
@@ -410,7 +393,6 @@ pub struct LiquidSdk {
     pub(crate) receive_swap_handler: ReceiveSwapHandler,
     pub(crate) chain_swap_handler: Arc<ChainSwapHandler>,
     pub(crate) payjoin_service: Arc<dyn PayjoinService>,
-    pub(crate) sideswap_service: Arc<dyn SideSwapService>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
 }
@@ -4605,8 +4587,7 @@ impl LiquidSdk {
         &self,
         req: &PrepareSwapAssetRequest,
     ) -> Result<PrepareSwapAssetResponse, PaymentError> {
-        self.sideswap_service.clone().start().await?;
-
+        let sideswap_service = SideSwapService::from_sdk(self);
         let asset_id = req.asset.try_to_asset_id(self.config.network)?;
 
         ensure_sdk!(
@@ -4616,18 +4597,62 @@ impl LiquidSdk {
             PaymentError::asset_error("Asset not found")
         );
 
-        let asset_swap = self
-            .sideswap_service
-            .subscribe_price_stream(asset_id, req.payer_amount_sat)
-            .await?;
-        if self.get_info().await?.wallet_info.balance_sat
-            < req.payer_amount_sat + asset_swap.fees_sat
-        {
-            self.sideswap_service.unsubscribe_price_stream().await?;
-            return Err(PaymentError::InsufficientFunds);
-        }
+        let start_swap = async || {
+            let swap = sideswap_service
+                .subscribe_price_stream(asset_id, req.payer_amount_sat)
+                .await?;
+            ensure_sdk!(
+                self.get_info().await?.wallet_info.balance_sat
+                    >= req.payer_amount_sat + swap.fees_sat,
+                PaymentError::InsufficientFunds
+            );
+            Ok(swap)
+        };
 
-        Ok(PrepareSwapAssetResponse { swap: asset_swap })
+        let res = match start_swap().await {
+            Ok(swap) => Ok(PrepareSwapAssetResponse { swap }),
+            Err(err) => {
+                sideswap_service.unsubscribe_price_stream().await?;
+                Err(err)
+            }
+        };
+
+        sideswap_service.stop();
+        res
+    }
+
+    async fn swap_asset_inner(
+        &self,
+        sideswap_service: &SideSwapService,
+        prepare_response: &PrepareSwapAssetResponse,
+        ongoing_swap: &AssetSwap,
+    ) -> Result<ExecuteSwapResponse, PaymentError> {
+        let req_swap = &prepare_response.swap;
+
+        ensure_sdk!(
+            ongoing_swap.fees_sat <= req_swap.fees_sat,
+            PaymentError::InvalidOrExpiredFees
+        );
+
+        ensure_sdk!(
+            (req_swap.receiver_amount - ongoing_swap.receiver_amount <= 0.005)
+                && req_swap.payer_amount_sat == ongoing_swap.payer_amount_sat,
+            PaymentError::generic(format!(
+                "Asset swap amount mismatch: prev - send {} recv {} / new - send {} recv {}",
+                req_swap.payer_amount_sat,
+                req_swap.receiver_amount,
+                ongoing_swap.payer_amount_sat,
+                ongoing_swap.receiver_amount
+            ))
+        );
+
+        ensure_sdk!(
+            self.get_info().await?.wallet_info.balance_sat
+                >= ongoing_swap.fees_sat + req_swap.payer_amount_sat,
+            PaymentError::InsufficientFunds
+        );
+
+        sideswap_service.execute_swap().await.map_err(Into::into)
     }
 
     /// Executes a previously prepared asset swap
@@ -4654,56 +4679,35 @@ impl LiquidSdk {
         &self,
         req: &SwapAssetRequest,
     ) -> Result<SwapAssetResponse, PaymentError> {
-        self.sideswap_service.clone().start().await?;
-
-        let req_swap = &req.prepare_response.swap;
-        let asset_id = req_swap
-            .asset
-            .try_to_asset_id(self.config.network)?
-            .to_string();
-        let Some(ongoing_swap) = self.sideswap_service.get_ongoing_swap().await else {
+        let sideswap_service = SideSwapService::from_sdk(self);
+        let Some(swap) = sideswap_service.get_ongoing_swap().await else {
             return Err(PaymentError::generic(
                 "Cannot execute asset swap: swap not found.",
             ));
         };
-
-        ensure_sdk!(
-            ongoing_swap.fees_sat <= req_swap.fees_sat,
-            PaymentError::InvalidOrExpiredFees
-        );
-
-        ensure_sdk!(
-            req_swap.receiver_amount == ongoing_swap.receiver_amount
-                && req_swap.payer_amount_sat == ongoing_swap.payer_amount_sat,
-            PaymentError::generic(format!(
-                "Asset swap amount mismatch: prev - send {} recv {} / new - send {} recv {}",
-                req_swap.payer_amount_sat,
-                req_swap.receiver_amount,
-                ongoing_swap.payer_amount_sat,
-                ongoing_swap.receiver_amount
-            ))
-        );
-
-        ensure_sdk!(
-            self.get_info().await?.wallet_info.balance_sat
-                >= ongoing_swap.fees_sat + req_swap.payer_amount_sat,
-            PaymentError::InsufficientFunds
-        );
+        let res = self
+            .swap_asset_inner(&sideswap_service, &req.prepare_response, &swap)
+            .await;
+        sideswap_service.stop();
 
         let ExecuteSwapResponse {
             tx_id,
-            recv_address: destination,
-        } = self.sideswap_service.execute_swap().await?;
-        self.sideswap_service.stop().await;
-
+            recv_address,
+        } = res?;
+        let asset_id = req
+            .prepare_response
+            .swap
+            .asset
+            .try_to_asset_id(self.config.network)?
+            .to_string();
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
             timestamp: Some(utils::now()),
-            amount: req_swap.payer_amount_sat,
-            fees_sat: ongoing_swap.fees_sat,
-            payment_type: PaymentType::Send,
+            amount: (swap.receiver_amount * 1e8) as u64,
+            fees_sat: swap.fees_sat,
+            payment_type: PaymentType::Receive,
             is_confirmed: false,
             unblinding_data: None,
             asset_id: asset_id.clone(),
@@ -4713,19 +4717,19 @@ impl LiquidSdk {
             tx_data.clone(),
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
-                destination: destination.clone(),
+                destination: recv_address,
+                description: Some("SideSwap transfer".to_string()),
                 ..Default::default()
             }),
             false,
         )?;
         self.emit_payment_updated(Some(tx_id.clone())).await?; // Emit Pending event
 
-        let payment = self.persister
+        let payment = self
+            .persister
             .get_payment(&tx_id)?
             .context("Expected payment to be present in the database")?;
-        Ok(SwapAssetResponse {
-            payment
-        })
+        Ok(SwapAssetResponse { payment })
     }
 }
 
