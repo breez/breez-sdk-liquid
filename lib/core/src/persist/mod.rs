@@ -228,11 +228,17 @@ impl Persister {
                 return Ok(());
             }
         };
-        let maybe_script_pubkey = tx
+        let maybe_address = tx
             .outputs
             .iter()
             .find(|output| output.is_some())
-            .and_then(|output| output.clone().map(|o| o.script_pubkey.to_hex()));
+            .and_then(|output| {
+                output.clone().and_then(|o| {
+                    o.address.blinding_pubkey.map(|blinding_pubkey| {
+                        o.address.to_confidential(blinding_pubkey).to_string()
+                    })
+                })
+            });
         let unblinding_data = tx
             .unblinded_url("")
             .replace(&format!("tx/{}#blinded=", tx_id), "");
@@ -247,7 +253,7 @@ impl Persister {
                 is_confirmed: is_tx_confirmed,
                 unblinding_data: Some(unblinding_data),
             },
-            maybe_script_pubkey.map(|destination| PaymentTxDetails {
+            maybe_address.map(|destination| PaymentTxDetails {
                 tx_id,
                 destination,
                 ..Default::default()
