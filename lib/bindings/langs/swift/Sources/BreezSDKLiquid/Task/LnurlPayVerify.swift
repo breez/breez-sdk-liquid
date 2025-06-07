@@ -7,11 +7,13 @@ struct LnurlVerifyRequest: Codable {
 }
 
 struct LnurlVerifyResponse: Decodable, Encodable {
+    let status: String
     let settled: Bool
     let preimage: String?
     let pr: String
     
     init(settled: Bool, preimage: String?, pr: String) {
+        self.status = "OK"
         self.settled = settled
         self.preimage = preimage
         self.pr = pr
