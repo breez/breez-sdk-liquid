@@ -5,6 +5,7 @@ object Constants {
     const val SHUTDOWN_DELAY_MS = 60 * 1000L
 
     // Cache Control
+    const val CACHE_CONTROL_MAX_AGE_THREE_SEC = 3
     const val CACHE_CONTROL_MAX_AGE_DAY = 60 * 60 * 24
     const val CACHE_CONTROL_MAX_AGE_WEEK = 60 * 60 * 24 * 7
 
