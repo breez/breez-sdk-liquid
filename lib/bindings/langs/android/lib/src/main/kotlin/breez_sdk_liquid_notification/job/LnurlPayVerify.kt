@@ -5,6 +5,7 @@ import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.GetPaymentRequest
 import breez_sdk_liquid.PaymentDetails
 import breez_sdk_liquid.PaymentState
+import breez_sdk_liquid_notification.Constants.CACHE_CONTROL_MAX_AGE_THREE_SEC
 import breez_sdk_liquid_notification.Constants.CACHE_CONTROL_MAX_AGE_WEEK
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_FAILURE_TITLE
@@ -79,7 +80,7 @@ class LnurlPayVerifyJob(
                 throw InvalidLnurlPayException("Not found")
             }
 
-            val maxAge = if (response.settled) CACHE_CONTROL_MAX_AGE_WEEK else 0
+            val maxAge = if (response.settled) CACHE_CONTROL_MAX_AGE_WEEK else CACHE_CONTROL_MAX_AGE_THREE_SEC
             val success = replyServer(Json.encodeToString(response), request.replyURL, maxAge)
             notifyChannel(
                 context,
