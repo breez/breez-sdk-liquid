@@ -30,10 +30,13 @@ data class LnurlVerifyRequest(
 // https://github.com/lnurl/luds/blob/luds/21.md
 @Serializable
 data class LnurlPayVerifyResponse(
+    val status: String,
     val settled: Boolean,
     val preimage: String?,
     val pr: String,
-)
+) {
+    constructor(settled: Boolean, preimage: String?, pr: String) : this("OK", settled, preimage, pr)
+}
 
 class LnurlPayVerifyJob(
     private val context: Context,
