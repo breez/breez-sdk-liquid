@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
-    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -41,6 +41,7 @@ pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
+pub const BREEZ_SWAP_PROXY_URL: &str = "https://swap.breez.technology/v2";
 
 const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
 
@@ -285,8 +286,7 @@ impl Config {
 
     pub(crate) fn default_boltz_url(&self) -> &str {
         match self.network {
-            // TODO: set swapproxy URLs for mainnet and testnet
-            LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
+            LiquidNetwork::Mainnet => BREEZ_SWAP_PROXY_URL,
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
             // On regtest use the swapproxy instance by default
             LiquidNetwork::Regtest => "http://localhost:8387/v2",

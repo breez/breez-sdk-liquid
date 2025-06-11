@@ -76,7 +76,7 @@ maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f25a8c180c5f1017677bc8ea01ed934ca0f8d2e1", features = [
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a51930a211110623f8354842d2ea1a961c598a79", features = [
     "electrum",
     "ws",
 ] }
@@ -98,7 +98,7 @@ tonic = { version = "0.12", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "f25a8c180c5f1017677bc8ea01ed934ca0f8d2e1", features = [
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "a51930a211110623f8354842d2ea1a961c598a79", features = [
     "ws",
 ] }
 rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7ea0999b59432deb4a07f220", features = [
