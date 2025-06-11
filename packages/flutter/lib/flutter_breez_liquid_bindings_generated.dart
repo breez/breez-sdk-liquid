@@ -573,6 +573,26 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_send_paymentPtr
           .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_send_request>)>();
 
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_swap_asset(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_prepare_swap_asset_request> req,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_swap_asset(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_swap_assetPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_prepare_swap_asset_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_swap_asset');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_swap_asset =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_prepare_swap_assetPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_prepare_swap_asset_request>)>();
+
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_receive_payment(
     int port_,
     int that,
@@ -722,6 +742,26 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_message =
       _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sign_messagePtr
           .asFunction<WireSyncRust2DartDco Function(int, ffi.Pointer<wire_cst_sign_message_request>)>();
+
+  void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_swap_asset(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_swap_asset_request> req,
+  ) {
+    return _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_swap_asset(
+      port_,
+      that,
+      req,
+    );
+  }
+
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_swap_assetPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Int64, ffi.UintPtr, ffi.Pointer<wire_cst_swap_asset_request>)>>(
+      'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_swap_asset');
+  late final _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_swap_asset =
+      _frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_swap_assetPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_swap_asset_request>)>();
 
   void frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_sync(
     int port_,
@@ -1382,6 +1422,18 @@ class FlutterBreezLiquidBindings {
       _frbgen_breez_liquid_cst_new_box_autoadd_prepare_send_requestPtr
           .asFunction<ffi.Pointer<wire_cst_prepare_send_request> Function()>();
 
+  ffi.Pointer<wire_cst_prepare_swap_asset_request>
+      frbgen_breez_liquid_cst_new_box_autoadd_prepare_swap_asset_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_prepare_swap_asset_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_swap_asset_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_prepare_swap_asset_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_prepare_swap_asset_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_prepare_swap_asset_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_prepare_swap_asset_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_prepare_swap_asset_request> Function()>();
+
   ffi.Pointer<wire_cst_receive_amount> frbgen_breez_liquid_cst_new_box_autoadd_receive_amount() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_receive_amount();
   }
@@ -1482,6 +1534,17 @@ class FlutterBreezLiquidBindings {
   late final _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processed =
       _frbgen_breez_liquid_cst_new_box_autoadd_success_action_processedPtr
           .asFunction<ffi.Pointer<wire_cst_success_action_processed> Function()>();
+
+  ffi.Pointer<wire_cst_swap_asset_request> frbgen_breez_liquid_cst_new_box_autoadd_swap_asset_request() {
+    return _frbgen_breez_liquid_cst_new_box_autoadd_swap_asset_request();
+  }
+
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_swap_asset_requestPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_swap_asset_request> Function()>>(
+          'frbgen_breez_liquid_cst_new_box_autoadd_swap_asset_request');
+  late final _frbgen_breez_liquid_cst_new_box_autoadd_swap_asset_request =
+      _frbgen_breez_liquid_cst_new_box_autoadd_swap_asset_requestPtr
+          .asFunction<ffi.Pointer<wire_cst_swap_asset_request> Function()>();
 
   ffi.Pointer<wire_cst_symbol> frbgen_breez_liquid_cst_new_box_autoadd_symbol() {
     return _frbgen_breez_liquid_cst_new_box_autoadd_symbol();
@@ -4760,6 +4823,14 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
+final class wire_cst_prepare_swap_asset_request extends ffi.Struct {
+  @ffi.Int32()
+  external int asset;
+
+  @ffi.Uint64()
+  external int payer_amount_sat;
+}
+
 final class wire_cst_prepare_receive_response extends ffi.Struct {
   @ffi.Int32()
   external int payment_method;
@@ -4815,6 +4886,31 @@ final class wire_cst_send_payment_request extends ffi.Struct {
 
 final class wire_cst_sign_message_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
+final class wire_cst_asset_swap extends ffi.Struct {
+  @ffi.Int32()
+  external int asset;
+
+  @ffi.Double()
+  external double exchange_rate;
+
+  @ffi.Double()
+  external double receiver_amount;
+
+  @ffi.Uint64()
+  external int fees_sat;
+
+  @ffi.Uint64()
+  external int payer_amount_sat;
+}
+
+final class wire_cst_prepare_swap_asset_response extends ffi.Struct {
+  external wire_cst_asset_swap swap;
+}
+
+final class wire_cst_swap_asset_request extends ffi.Struct {
+  external wire_cst_prepare_swap_asset_response prepare_response;
 }
 
 final class wire_cst_binding_event_listener extends ffi.Struct {
@@ -5842,6 +5938,10 @@ final class wire_cst_send_payment_response extends ffi.Struct {
 
 final class wire_cst_sign_message_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> signature;
+}
+
+final class wire_cst_swap_asset_response extends ffi.Struct {
+  external wire_cst_payment payment;
 }
 
 /// ⚠️ Attention: If you change this #else block (ending in `#endif // def UNIFFI_SHARED_H`) you *must* ⚠️

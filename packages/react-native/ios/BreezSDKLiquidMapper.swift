@@ -265,6 +265,55 @@ enum BreezSDKLiquidMapper {
         return assetMetadataList.map { v -> [String: Any?] in return dictionaryOf(assetMetadata: v) }
     }
 
+    static func asAssetSwap(assetSwap: [String: Any?]) throws -> AssetSwap {
+        guard let assetTmp = assetSwap["asset"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "asset", typeName: "AssetSwap"))
+        }
+        let asset = try asTradeableAsset(tradeableAsset: assetTmp)
+
+        guard let exchangeRate = assetSwap["exchangeRate"] as? Double else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "exchangeRate", typeName: "AssetSwap"))
+        }
+        guard let receiverAmount = assetSwap["receiverAmount"] as? Double else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmount", typeName: "AssetSwap"))
+        }
+        guard let feesSat = assetSwap["feesSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "feesSat", typeName: "AssetSwap"))
+        }
+        guard let payerAmountSat = assetSwap["payerAmountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "AssetSwap"))
+        }
+
+        return AssetSwap(asset: asset, exchangeRate: exchangeRate, receiverAmount: receiverAmount, feesSat: feesSat, payerAmountSat: payerAmountSat)
+    }
+
+    static func dictionaryOf(assetSwap: AssetSwap) -> [String: Any?] {
+        return [
+            "asset": valueOf(tradeableAsset: assetSwap.asset),
+            "exchangeRate": assetSwap.exchangeRate,
+            "receiverAmount": assetSwap.receiverAmount,
+            "feesSat": assetSwap.feesSat,
+            "payerAmountSat": assetSwap.payerAmountSat,
+        ]
+    }
+
+    static func asAssetSwapList(arr: [Any]) throws -> [AssetSwap] {
+        var list = [AssetSwap]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var assetSwap = try asAssetSwap(assetSwap: val)
+                list.append(assetSwap)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "AssetSwap"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(assetSwapList: [AssetSwap]) -> [Any] {
+        return assetSwapList.map { v -> [String: Any?] in return dictionaryOf(assetSwap: v) }
+    }
+
     static func asBackupRequest(backupRequest: [String: Any?]) throws -> BackupRequest {
         var backupPath: String?
         if hasNonNilKey(data: backupRequest, key: "backupPath") {
@@ -2799,6 +2848,75 @@ enum BreezSDKLiquidMapper {
         return prepareSendResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareSendResponse: v) }
     }
 
+    static func asPrepareSwapAssetRequest(prepareSwapAssetRequest: [String: Any?]) throws -> PrepareSwapAssetRequest {
+        guard let assetTmp = prepareSwapAssetRequest["asset"] as? String else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "asset", typeName: "PrepareSwapAssetRequest"))
+        }
+        let asset = try asTradeableAsset(tradeableAsset: assetTmp)
+
+        guard let payerAmountSat = prepareSwapAssetRequest["payerAmountSat"] as? UInt64 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "payerAmountSat", typeName: "PrepareSwapAssetRequest"))
+        }
+
+        return PrepareSwapAssetRequest(asset: asset, payerAmountSat: payerAmountSat)
+    }
+
+    static func dictionaryOf(prepareSwapAssetRequest: PrepareSwapAssetRequest) -> [String: Any?] {
+        return [
+            "asset": valueOf(tradeableAsset: prepareSwapAssetRequest.asset),
+            "payerAmountSat": prepareSwapAssetRequest.payerAmountSat,
+        ]
+    }
+
+    static func asPrepareSwapAssetRequestList(arr: [Any]) throws -> [PrepareSwapAssetRequest] {
+        var list = [PrepareSwapAssetRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareSwapAssetRequest = try asPrepareSwapAssetRequest(prepareSwapAssetRequest: val)
+                list.append(prepareSwapAssetRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PrepareSwapAssetRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareSwapAssetRequestList: [PrepareSwapAssetRequest]) -> [Any] {
+        return prepareSwapAssetRequestList.map { v -> [String: Any?] in return dictionaryOf(prepareSwapAssetRequest: v) }
+    }
+
+    static func asPrepareSwapAssetResponse(prepareSwapAssetResponse: [String: Any?]) throws -> PrepareSwapAssetResponse {
+        guard let swapTmp = prepareSwapAssetResponse["swap"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "swap", typeName: "PrepareSwapAssetResponse"))
+        }
+        let swap = try asAssetSwap(assetSwap: swapTmp)
+
+        return PrepareSwapAssetResponse(swap: swap)
+    }
+
+    static func dictionaryOf(prepareSwapAssetResponse: PrepareSwapAssetResponse) -> [String: Any?] {
+        return [
+            "swap": dictionaryOf(assetSwap: prepareSwapAssetResponse.swap),
+        ]
+    }
+
+    static func asPrepareSwapAssetResponseList(arr: [Any]) throws -> [PrepareSwapAssetResponse] {
+        var list = [PrepareSwapAssetResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var prepareSwapAssetResponse = try asPrepareSwapAssetResponse(prepareSwapAssetResponse: val)
+                list.append(prepareSwapAssetResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "PrepareSwapAssetResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(prepareSwapAssetResponseList: [PrepareSwapAssetResponse]) -> [Any] {
+        return prepareSwapAssetResponseList.map { v -> [String: Any?] in return dictionaryOf(prepareSwapAssetResponse: v) }
+    }
+
     static func asRate(rate: [String: Any?]) throws -> Rate {
         guard let coin = rate["coin"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "coin", typeName: "Rate"))
@@ -3341,6 +3459,70 @@ enum BreezSDKLiquidMapper {
 
     static func arrayOf(signMessageResponseList: [SignMessageResponse]) -> [Any] {
         return signMessageResponseList.map { v -> [String: Any?] in return dictionaryOf(signMessageResponse: v) }
+    }
+
+    static func asSwapAssetRequest(swapAssetRequest: [String: Any?]) throws -> SwapAssetRequest {
+        guard let prepareResponseTmp = swapAssetRequest["prepareResponse"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "prepareResponse", typeName: "SwapAssetRequest"))
+        }
+        let prepareResponse = try asPrepareSwapAssetResponse(prepareSwapAssetResponse: prepareResponseTmp)
+
+        return SwapAssetRequest(prepareResponse: prepareResponse)
+    }
+
+    static func dictionaryOf(swapAssetRequest: SwapAssetRequest) -> [String: Any?] {
+        return [
+            "prepareResponse": dictionaryOf(prepareSwapAssetResponse: swapAssetRequest.prepareResponse),
+        ]
+    }
+
+    static func asSwapAssetRequestList(arr: [Any]) throws -> [SwapAssetRequest] {
+        var list = [SwapAssetRequest]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var swapAssetRequest = try asSwapAssetRequest(swapAssetRequest: val)
+                list.append(swapAssetRequest)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "SwapAssetRequest"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(swapAssetRequestList: [SwapAssetRequest]) -> [Any] {
+        return swapAssetRequestList.map { v -> [String: Any?] in return dictionaryOf(swapAssetRequest: v) }
+    }
+
+    static func asSwapAssetResponse(swapAssetResponse: [String: Any?]) throws -> SwapAssetResponse {
+        guard let paymentTmp = swapAssetResponse["payment"] as? [String: Any?] else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "payment", typeName: "SwapAssetResponse"))
+        }
+        let payment = try asPayment(payment: paymentTmp)
+
+        return SwapAssetResponse(payment: payment)
+    }
+
+    static func dictionaryOf(swapAssetResponse: SwapAssetResponse) -> [String: Any?] {
+        return [
+            "payment": dictionaryOf(payment: swapAssetResponse.payment),
+        ]
+    }
+
+    static func asSwapAssetResponseList(arr: [Any]) throws -> [SwapAssetResponse] {
+        var list = [SwapAssetResponse]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var swapAssetResponse = try asSwapAssetResponse(swapAssetResponse: val)
+                list.append(swapAssetResponse)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "SwapAssetResponse"))
+            }
+        }
+        return list
+    }
+
+    static func arrayOf(swapAssetResponseList: [SwapAssetResponse]) -> [Any] {
+        return swapAssetResponseList.map { v -> [String: Any?] in return dictionaryOf(swapAssetResponse: v) }
     }
 
     static func asSymbol(symbol: [String: Any?]) throws -> Symbol {
@@ -5173,6 +5355,39 @@ enum BreezSDKLiquidMapper {
                 list.append(successActionProcessed)
             } else {
                 throw SdkError.Generic(message: errUnexpectedType(typeName: "SuccessActionProcessed"))
+            }
+        }
+        return list
+    }
+
+    static func asTradeableAsset(tradeableAsset: String) throws -> TradeableAsset {
+        switch tradeableAsset {
+        case "usDt":
+            return TradeableAsset.usDt
+
+        default: throw SdkError.Generic(message: "Invalid variant \(tradeableAsset) for enum TradeableAsset")
+        }
+    }
+
+    static func valueOf(tradeableAsset: TradeableAsset) -> String {
+        switch tradeableAsset {
+        case .usDt:
+            return "usDt"
+        }
+    }
+
+    static func arrayOf(tradeableAssetList: [TradeableAsset]) -> [String] {
+        return tradeableAssetList.map { v -> String in return valueOf(tradeableAsset: v) }
+    }
+
+    static func asTradeableAssetList(arr: [Any]) throws -> [TradeableAsset] {
+        var list = [TradeableAsset]()
+        for value in arr {
+            if let val = value as? String {
+                var tradeableAsset = try asTradeableAsset(tradeableAsset: val)
+                list.append(tradeableAsset)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "TradeableAsset"))
             }
         }
         return list

@@ -725,4 +725,39 @@ class BreezSDKLiquidModule(
             }
         }
     }
+
+    @ReactMethod
+    fun prepareSwapAsset(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val prepareSwapAssetRequest =
+                    asPrepareSwapAssetRequest(req)
+                        ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "PrepareSwapAssetRequest")) }
+                val res = getBindingLiquidSdk().prepareSwapAsset(prepareSwapAssetRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun swapAsset(
+        req: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val swapAssetRequest =
+                    asSwapAssetRequest(req) ?: run { throw SdkException.Generic(errMissingMandatoryField("req", "SwapAssetRequest")) }
+                val res = getBindingLiquidSdk().swapAsset(swapAssetRequest)
+                promise.resolve(readableMapOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

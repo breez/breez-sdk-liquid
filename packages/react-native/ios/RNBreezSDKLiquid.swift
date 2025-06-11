@@ -533,6 +533,28 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(prepareSwapAsset:resolve:reject:)
+    func prepareSwapAsset(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let prepareSwapAssetRequest = try BreezSDKLiquidMapper.asPrepareSwapAssetRequest(prepareSwapAssetRequest: req)
+            var res = try getBindingLiquidSdk().prepareSwapAsset(req: prepareSwapAssetRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(prepareSwapAssetResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(swapAsset:resolve:reject:)
+    func swapAsset(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let swapAssetRequest = try BreezSDKLiquidMapper.asSwapAssetRequest(swapAssetRequest: req)
+            var res = try getBindingLiquidSdk().swapAsset(req: swapAssetRequest)
+            resolve(BreezSDKLiquidMapper.dictionaryOf(swapAssetResponse: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

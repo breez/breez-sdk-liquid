@@ -220,6 +220,48 @@ fun asAssetMetadataList(arr: ReadableArray): List<AssetMetadata> {
     return list
 }
 
+fun asAssetSwap(assetSwap: ReadableMap): AssetSwap? {
+    if (!validateMandatoryFields(
+            assetSwap,
+            arrayOf(
+                "asset",
+                "exchangeRate",
+                "receiverAmount",
+                "feesSat",
+                "payerAmountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val asset = assetSwap.getString("asset")?.let { asTradeableAsset(it) }!!
+    val exchangeRate = assetSwap.getDouble("exchangeRate")
+    val receiverAmount = assetSwap.getDouble("receiverAmount")
+    val feesSat = assetSwap.getDouble("feesSat").toULong()
+    val payerAmountSat = assetSwap.getDouble("payerAmountSat").toULong()
+    return AssetSwap(asset, exchangeRate, receiverAmount, feesSat, payerAmountSat)
+}
+
+fun readableMapOf(assetSwap: AssetSwap): ReadableMap =
+    readableMapOf(
+        "asset" to assetSwap.asset.name.lowercase(),
+        "exchangeRate" to assetSwap.exchangeRate,
+        "receiverAmount" to assetSwap.receiverAmount,
+        "feesSat" to assetSwap.feesSat,
+        "payerAmountSat" to assetSwap.payerAmountSat,
+    )
+
+fun asAssetSwapList(arr: ReadableArray): List<AssetSwap> {
+    val list = ArrayList<AssetSwap>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asAssetSwap(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asBackupRequest(backupRequest: ReadableMap): BackupRequest? {
     if (!validateMandatoryFields(
             backupRequest,
@@ -2393,6 +2435,69 @@ fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {
     return list
 }
 
+fun asPrepareSwapAssetRequest(prepareSwapAssetRequest: ReadableMap): PrepareSwapAssetRequest? {
+    if (!validateMandatoryFields(
+            prepareSwapAssetRequest,
+            arrayOf(
+                "asset",
+                "payerAmountSat",
+            ),
+        )
+    ) {
+        return null
+    }
+    val asset = prepareSwapAssetRequest.getString("asset")?.let { asTradeableAsset(it) }!!
+    val payerAmountSat = prepareSwapAssetRequest.getDouble("payerAmountSat").toULong()
+    return PrepareSwapAssetRequest(asset, payerAmountSat)
+}
+
+fun readableMapOf(prepareSwapAssetRequest: PrepareSwapAssetRequest): ReadableMap =
+    readableMapOf(
+        "asset" to prepareSwapAssetRequest.asset.name.lowercase(),
+        "payerAmountSat" to prepareSwapAssetRequest.payerAmountSat,
+    )
+
+fun asPrepareSwapAssetRequestList(arr: ReadableArray): List<PrepareSwapAssetRequest> {
+    val list = ArrayList<PrepareSwapAssetRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareSwapAssetRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asPrepareSwapAssetResponse(prepareSwapAssetResponse: ReadableMap): PrepareSwapAssetResponse? {
+    if (!validateMandatoryFields(
+            prepareSwapAssetResponse,
+            arrayOf(
+                "swap",
+            ),
+        )
+    ) {
+        return null
+    }
+    val swap = prepareSwapAssetResponse.getMap("swap")?.let { asAssetSwap(it) }!!
+    return PrepareSwapAssetResponse(swap)
+}
+
+fun readableMapOf(prepareSwapAssetResponse: PrepareSwapAssetResponse): ReadableMap =
+    readableMapOf(
+        "swap" to readableMapOf(prepareSwapAssetResponse.swap),
+    )
+
+fun asPrepareSwapAssetResponseList(arr: ReadableArray): List<PrepareSwapAssetResponse> {
+    val list = ArrayList<PrepareSwapAssetResponse>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asPrepareSwapAssetResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asRate(rate: ReadableMap): Rate? {
     if (!validateMandatoryFields(
             rate,
@@ -2873,6 +2978,66 @@ fun asSignMessageResponseList(arr: ReadableArray): List<SignMessageResponse> {
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSignMessageResponse(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asSwapAssetRequest(swapAssetRequest: ReadableMap): SwapAssetRequest? {
+    if (!validateMandatoryFields(
+            swapAssetRequest,
+            arrayOf(
+                "prepareResponse",
+            ),
+        )
+    ) {
+        return null
+    }
+    val prepareResponse = swapAssetRequest.getMap("prepareResponse")?.let { asPrepareSwapAssetResponse(it) }!!
+    return SwapAssetRequest(prepareResponse)
+}
+
+fun readableMapOf(swapAssetRequest: SwapAssetRequest): ReadableMap =
+    readableMapOf(
+        "prepareResponse" to readableMapOf(swapAssetRequest.prepareResponse),
+    )
+
+fun asSwapAssetRequestList(arr: ReadableArray): List<SwapAssetRequest> {
+    val list = ArrayList<SwapAssetRequest>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSwapAssetRequest(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asSwapAssetResponse(swapAssetResponse: ReadableMap): SwapAssetResponse? {
+    if (!validateMandatoryFields(
+            swapAssetResponse,
+            arrayOf(
+                "payment",
+            ),
+        )
+    ) {
+        return null
+    }
+    val payment = swapAssetResponse.getMap("payment")?.let { asPayment(it) }!!
+    return SwapAssetResponse(payment)
+}
+
+fun readableMapOf(swapAssetResponse: SwapAssetResponse): ReadableMap =
+    readableMapOf(
+        "payment" to readableMapOf(swapAssetResponse.payment),
+    )
+
+fun asSwapAssetResponseList(arr: ReadableArray): List<SwapAssetResponse> {
+    val list = ArrayList<SwapAssetResponse>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asSwapAssetResponse(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -4059,6 +4224,19 @@ fun asSuccessActionProcessedList(arr: ReadableArray): List<SuccessActionProcesse
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asSuccessActionProcessed(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asTradeableAsset(type: String): TradeableAsset = TradeableAsset.valueOf(camelToUpperSnakeCase(type))
+
+fun asTradeableAssetList(arr: ReadableArray): List<TradeableAsset> {
+    val list = ArrayList<TradeableAsset>()
+    for (value in arr.toList()) {
+        when (value) {
+            is String -> list.add(asTradeableAsset(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
