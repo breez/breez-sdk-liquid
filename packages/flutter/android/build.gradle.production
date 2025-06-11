@@ -2,24 +2,15 @@ version '0.9.1' // generated; do not edit
 group 'technology.breez.flutter_breez_liquid'
 
 buildscript {
-    ext.kotlin_version = '1.8.20'
+    ext.kotlin_version = '1.9.23'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        // The Android Gradle Plugin knows how to build native code with the NDK.
-        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-rootProject.allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url("https://mvn.breez.technology/releases") }
     }
 }
 
@@ -29,9 +20,9 @@ apply plugin: 'kotlin-android'
 android {
     namespace = "technology.breez.flutter_breez_liquid"
     
-    // Bumping the plugin compileSdkVersion requires all clients of this plugin
+    // Bumping the plugin compileSdk requires all clients of this plugin
     // to bump the version in their app.
-    compileSdkVersion 35
+    compileSdk 35
 
     // Bumping the plugin ndkVersion requires all clients of this plugin to bump
     // the version in their app and to download a newer version of the NDK.
