@@ -9,6 +9,7 @@ mod utils;
 use std::{fs, path::PathBuf, time::Duration};
 
 use anyhow::Result;
+use bip39::Mnemonic;
 use breez_sdk_liquid::model::Config;
 use breez_sdk_liquid::{
     model::{
@@ -23,7 +24,7 @@ use breez_sdk_liquid::{
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_with_wasm::alias as tokio;
 
-pub const TIMEOUT: Duration = Duration::from_secs(40);
+pub const TIMEOUT: Duration = Duration::from_secs(90);
 
 struct ForwardingEventListener {
     sender: Sender<SdkEvent>,
@@ -40,6 +41,7 @@ pub struct SdkNodeHandle {
     receiver: Receiver<SdkEvent>,
 }
 
+#[derive(Clone, Copy)]
 pub enum ChainBackend {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     Electrum,
@@ -47,7 +49,7 @@ pub enum ChainBackend {
 }
 
 impl SdkNodeHandle {
-    pub async fn init_node(backend: ChainBackend) -> Result<Self> {
+    pub async fn init_node(backend: ChainBackend, mnemonic: &Mnemonic) -> Result<Self> {
         #[cfg(all(target_family = "wasm", target_os = "unknown"))]
         let _ = console_log::init_with_level(log::Level::Debug);
 
@@ -55,8 +57,6 @@ impl SdkNodeHandle {
         if data_dir.exists() {
             fs::remove_dir_all(&data_dir)?;
         }
-
-        let mnemonic = bip39::Mnemonic::generate_in(bip39::Language::English, 12)?;
 
         let mut config = match backend {
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -190,5 +190,23 @@ impl SdkNodeHandle {
             Err(anyhow::anyhow!("Channel closed while waiting for event"))
         })
         .await?
+    }
+
+    pub async fn is_in_sync_with(&self, other: &SdkNodeHandle) -> Result<bool> {
+        self.sdk.sync(false).await?;
+        other.sdk.sync(false).await?;
+
+        let self_wallet_info = self.sdk.get_info().await?.wallet_info;
+        let other_wallet_info = other.sdk.get_info().await?.wallet_info;
+
+        let self_payments = self.get_payments().await?;
+        let other_payments = self.get_payments().await?;
+
+        let self_refunds = self.sdk.list_refundables().await?;
+        let other_refunds = self.sdk.list_refundables().await?;
+
+        Ok(self_wallet_info == other_wallet_info
+            && self_payments == other_payments
+            && self_refunds == other_refunds)
     }
 }
