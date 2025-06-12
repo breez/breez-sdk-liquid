@@ -24,7 +24,7 @@ use boltz_client::{
 };
 use client::{BitcoinClient, LiquidClient};
 use log::{info, warn};
-use proxy::split_proxy_url;
+use proxy::split_boltz_url;
 use rand::Rng;
 use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
@@ -85,7 +85,13 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
             LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
-                Ok(Some(swapper_proxy_url)) => split_proxy_url(swapper_proxy_url),
+                Ok(Some(boltz_swapper_urls)) => {
+                    if self.config.breez_api_key.is_some() {
+                        split_boltz_url(&boltz_swapper_urls.proxy_url)
+                    } else {
+                        split_boltz_url(&boltz_swapper_urls.boltz_url)
+                    }
+                }
                 _ => (None, None),
             },
         };

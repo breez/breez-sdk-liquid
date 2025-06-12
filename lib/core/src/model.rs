@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
-    boltz::{ChainPair, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -286,7 +286,13 @@ impl Config {
 
     pub(crate) fn default_boltz_url(&self) -> &str {
         match self.network {
-            LiquidNetwork::Mainnet => BREEZ_SWAP_PROXY_URL,
+            LiquidNetwork::Mainnet => {
+                if self.breez_api_key.is_some() {
+                    BREEZ_SWAP_PROXY_URL
+                } else {
+                    BOLTZ_MAINNET_URL_V2
+                }
+            }
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
             // On regtest use the swapproxy instance by default
             LiquidNetwork::Regtest => "http://localhost:8387/v2",
