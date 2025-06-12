@@ -12,6 +12,7 @@ use boltz_client::{
 };
 use lwk_wollet::secp256k1;
 use sdk_common::invoice::parse_invoice;
+use sdk_common::prelude::BoltzSwapperUrls;
 use std::{collections::HashMap, str::FromStr, sync::Mutex};
 
 use crate::{
@@ -413,7 +414,7 @@ impl MockProxyUrlFetcher {
 
 #[sdk_macros::async_trait]
 impl ProxyUrlFetcher for MockProxyUrlFetcher {
-    async fn fetch(&self) -> Result<&Option<String>> {
+    async fn fetch(&self) -> Result<&Option<BoltzSwapperUrls>> {
         Ok(&None)
     }
 }
