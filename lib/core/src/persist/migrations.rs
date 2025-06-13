@@ -349,7 +349,7 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         ALTER TABLE payment_details ADD COLUMN payer_note TEXT;
         CREATE TABLE IF NOT EXISTS payment_balance (
             tx_id TEXT NOT NULL REFERENCES payment_tx_data(tx_id),
-            asset_id TEXT NOT NULL REFERENCES asset_metadata(asset_id),
+            asset_id TEXT NOT NULL,
             amount INTEGER NOT NULL,
             payment_type INTEGER NOT NULL,
             PRIMARY KEY (tx_id, asset_id)
