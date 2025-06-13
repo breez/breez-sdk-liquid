@@ -98,8 +98,15 @@ fun errUnexpectedValue(fieldName: String): String {
 }
 
 fun camelToUpperSnakeCase(str: String): String {
-    val pattern = "(?<=.)[A-Z]".toRegex()
-    return str.replace(pattern, "_$0").uppercase()
+    return "(?<=.)[A-Z]".toRegex().replace(str) {
+        "_${it.value}"
+    }.uppercase()
+}
+
+fun snakeToLowerCamelCase(str: String): String {
+    return "_[a-zA-Z]".toRegex().replace(str.lowercase()) {
+        it.value.replace("_", "").uppercase()
+    }
 }
 
 internal fun ReadableArray.toList(): List<*> {
