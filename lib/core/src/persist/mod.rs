@@ -206,25 +206,33 @@ impl Persister {
         }
 
         let lbtc_asset_id = utils::lbtc_asset_id(self.network);
-        let payment_balances: Vec<PaymentTxBalance> = tx_balances
-            .into_iter()
-            .map(|(asset_id, balance)| {
-                let asset_id = asset_id.to_string();
-                let payment_type = match balance >= 0 {
-                    true => PaymentType::Receive,
-                    false => PaymentType::Send,
-                };
-                let mut amount = balance.unsigned_abs();
-                if payment_type == PaymentType::Send && asset_id.eq(&lbtc_asset_id.to_string()) {
-                    amount = amount.saturating_sub(tx.fee);
+
+        let mut payment_balances = vec![];
+        let mut tx_fees = tx.tx.all_fees();
+        for (asset_id, balance) in tx_balances {
+            // Exclude the fee output from the balances
+            if let Some(fee) = tx_fees.get(&asset_id) {
+                if balance.unsigned_abs() == *fee {
+                    tx_fees.remove(&asset_id);
+                    continue;
                 }
-                PaymentTxBalance {
-                    asset_id,
-                    amount,
-                    payment_type,
-                }
+            }
+
+            let asset_id = asset_id.to_string();
+            let payment_type = match balance >= 0 {
+                true => PaymentType::Receive,
+                false => PaymentType::Send,
+            };
+            let mut amount = balance.unsigned_abs();
+            if payment_type == PaymentType::Send && asset_id.eq(&lbtc_asset_id.to_string()) {
+                amount = amount.saturating_sub(tx.fee);
+            }
+            payment_balances.push(PaymentTxBalance {
+                asset_id,
+                amount,
+                payment_type,
             })
-            .collect();
+        }
 
         let maybe_address = tx
             .outputs
