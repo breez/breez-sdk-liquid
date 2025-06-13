@@ -16,7 +16,6 @@ use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, Mutex};
 use tokio_with_wasm::alias as tokio;
 
-use crate::error::is_txn_mempool_conflict_error;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     elements, ensure_sdk,
@@ -32,6 +31,7 @@ use crate::{
     utils,
     wallet::OnchainWallet,
 };
+use crate::{error::is_txn_mempool_conflict_error, persist::model::PaymentTxBalance};
 
 // Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L68
 pub const ESTIMATED_BTC_CLAIM_TX_VSIZE: u64 = 111;
@@ -551,13 +551,16 @@ impl ChainSwapHandler {
                         self.persister.insert_or_update_payment(PaymentTxData {
                             tx_id: lockup_tx_id.clone(),
                             timestamp: Some(utils::now()),
-                            asset_id: self.config.lbtc_asset_id().to_string(),
-                            amount: create_response.lockup_details.amount,
                             fees_sat: lockup_tx_fees_sat,
-                            payment_type: PaymentType::Send,
                             is_confirmed: false,
                             unblinding_data: None,
-                        }, None, false)?;
+                        },
+                        &[PaymentTxBalance {
+                            asset_id: self.config.lbtc_asset_id().to_string(),
+                            amount: create_response.lockup_details.amount,
+                            payment_type: PaymentType::Send,
+                        }],
+                        None, false)?;
 
                         self.update_swap_info(&ChainSwapUpdate {
                             swap_id: id,
@@ -915,13 +918,15 @@ impl ChainSwapHandler {
                                     PaymentTxData {
                                         tx_id: claim_tx_id.clone(),
                                         timestamp: Some(utils::now()),
-                                        asset_id: self.config.lbtc_asset_id().to_string(),
-                                        amount: swap.receiver_amount_sat,
                                         fees_sat: 0,
-                                        payment_type: PaymentType::Receive,
                                         is_confirmed: false,
                                         unblinding_data: None,
                                     },
+                                    &[PaymentTxBalance {
+                                        asset_id: self.config.lbtc_asset_id().to_string(),
+                                        amount: swap.receiver_amount_sat,
+                                        payment_type: PaymentType::Receive,
+                                    }],
                                     None,
                                     false,
                                 )?;
