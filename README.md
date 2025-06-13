@@ -100,3 +100,5 @@ Contributions are always welcome. Please read our [contribution guide](CONTRIBUT
 - [x]  WebAssembly
 - [x]  Bolt12 receive
 - [ ]  USDT <-> LBTC swaps
+- [ ]  WebLN
+- [ ]  NWC
