@@ -17,7 +17,7 @@ use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
-use persist::model::PaymentTxDetails;
+use persist::model::{PaymentTxBalance, PaymentTxDetails};
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
@@ -1875,18 +1875,21 @@ impl LiquidSdk {
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
             timestamp: Some(utils::now()),
-            amount: receiver_amount_sat,
-            fees_sat,
-            payment_type: PaymentType::Send,
             is_confirmed: false,
+            fees_sat,
             unblinding_data: None,
+        };
+        let tx_balance = PaymentTxBalance {
+            amount: receiver_amount_sat,
             asset_id: asset_id.clone(),
+            payment_type: PaymentType::Send,
         };
 
         let description = address_data.message;
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
+            &[tx_balance.clone()],
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
@@ -1917,7 +1920,7 @@ impl LiquidSdk {
         };
 
         Ok(SendPaymentResponse {
-            payment: Payment::from_tx_data(tx_data, None, payment_details),
+            payment: Payment::from_tx_data(tx_data, tx_balance, None, payment_details),
         })
     }
 
@@ -1954,19 +1957,22 @@ impl LiquidSdk {
         // This makes the tx known to the SDK (get_info, list_payments) instantly
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
-            timestamp: Some(utils::now()),
-            amount: receiver_amount_sat + asset_fees,
             fees_sat,
-            payment_type: PaymentType::Send,
+            timestamp: Some(utils::now()),
             is_confirmed: false,
             unblinding_data: None,
+        };
+        let tx_balance = PaymentTxBalance {
             asset_id: asset_id.clone(),
+            amount: receiver_amount_sat + asset_fees,
+            payment_type: PaymentType::Send,
         };
 
         let description = address_data.message;
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
+            &[tx_balance.clone()],
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
@@ -1998,7 +2004,7 @@ impl LiquidSdk {
         };
 
         Ok(SendPaymentResponse {
-            payment: Payment::from_tx_data(tx_data, None, payment_details),
+            payment: Payment::from_tx_data(tx_data, tx_balance, None, payment_details),
         })
     }
 

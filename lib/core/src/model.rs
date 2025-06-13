@@ -23,7 +23,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
-use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
 use crate::utils;
 use crate::{
     bitcoin,
@@ -35,6 +34,7 @@ use crate::{
     chain::bitcoin::esplora::EsploraBitcoinChainService,
     chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
 };
+use crate::{persist::model::PaymentTxBalance, receive_swap::DEFAULT_ZERO_CONF_MAX_SAT};
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
@@ -1744,18 +1744,8 @@ pub struct PaymentTxData {
     /// The point in time when the underlying tx was included in a block.
     pub timestamp: Option<u32>,
 
-    /// The asset id
-    pub asset_id: String,
-
-    /// The onchain tx amount.
-    ///
-    /// In case of an outbound payment (Send), this is the payer amount. Otherwise it's the receiver amount.
-    pub amount: u64,
-
     /// The onchain fees of this tx
     pub fees_sat: u64,
-
-    pub payment_type: PaymentType,
 
     /// Onchain tx status
     pub is_confirmed: bool,
@@ -2107,24 +2097,28 @@ impl Payment {
 
     pub(crate) fn from_tx_data(
         tx: PaymentTxData,
+        balance: PaymentTxBalance,
         swap: Option<PaymentSwapData>,
         details: PaymentDetails,
     ) -> Payment {
         let (amount_sat, fees_sat) = match swap.as_ref() {
-            Some(s) => match tx.payment_type {
+            Some(s) => match balance.payment_type {
                 // For receive swaps, to avoid some edge case issues related to potential past
                 // overpayments, we use the actual claim value as the final received amount
                 // for fee calculation.
-                PaymentType::Receive => (tx.amount, s.payer_amount_sat.saturating_sub(tx.amount)),
+                PaymentType::Receive => (
+                    balance.amount,
+                    s.payer_amount_sat.saturating_sub(balance.amount),
+                ),
                 PaymentType::Send => (
                     s.receiver_amount_sat,
                     s.payer_amount_sat.saturating_sub(s.receiver_amount_sat),
                 ),
             },
             None => {
-                let (amount_sat, fees_sat) = match tx.payment_type {
-                    PaymentType::Receive => (tx.amount, 0),
-                    PaymentType::Send => (tx.amount, tx.fees_sat),
+                let (amount_sat, fees_sat) = match balance.payment_type {
+                    PaymentType::Receive => (balance.amount, 0),
+                    PaymentType::Send => (balance.amount, tx.fees_sat),
                 };
                 // If the payment is a Liquid payment, we only show the amount if the asset
                 // is LBTC and only show the fees if the asset info has no set fees
@@ -2172,7 +2166,7 @@ impl Payment {
             amount_sat,
             fees_sat,
             swapper_fees_sat: swap.as_ref().map(|s| s.swapper_fees_sat),
-            payment_type: tx.payment_type,
+            payment_type: balance.payment_type,
             status: match &swap {
                 Some(swap) => swap.status,
                 None => match tx.is_confirmed {
