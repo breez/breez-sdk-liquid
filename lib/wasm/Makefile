@@ -33,6 +33,20 @@ build-node:
 build-web:
 	$(CLANG_PREFIX) wasm-pack build --target web --release --out-dir pkg/web --features browser
 
+build-dev: build-bundle-dev build-deno-dev build-node-dev build-web-dev
+
+build-bundle-dev:
+	$(CLANG_PREFIX) wasm-pack build --target bundler --dev --out-dir pkg/bundle --features browser
+
+build-deno-dev:
+	$(CLANG_PREFIX) wasm-pack build --target deno --dev --out-dir pkg/deno
+
+build-node-dev:
+	$(CLANG_PREFIX) wasm-pack build --target nodejs --dev --out-dir pkg/node --features node-js
+
+build-web-dev:
+	$(CLANG_PREFIX) wasm-pack build --target web --dev --out-dir pkg/web --features browser
+
 test: test-firefox test-node
 
 test-node:

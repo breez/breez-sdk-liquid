@@ -10,6 +10,9 @@ crate-type = ["cdylib"]
 [lints]
 workspace = true
 
+[package.metadata.wasm-pack.profile.dev.wasm-bindgen]
+dwarf-debug-info = true
+
 [dependencies]
 anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }
