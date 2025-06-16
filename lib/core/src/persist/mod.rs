@@ -292,13 +292,13 @@ impl Persister {
         Ok(payments)
     }
 
-    fn insert_or_update_payment_balance(
+    fn insert_payment_balance(
         con: &Connection,
         tx_id: &str,
         balance: &PaymentTxBalance,
     ) -> Result<()> {
         con.execute(
-            "INSERT OR REPLACE INTO payment_balance (
+            "INSERT INTO payment_balance (
                 tx_id,
                 asset_id,
                 payment_type,
@@ -348,8 +348,14 @@ impl Persister {
             ),
         )?;
 
-        for balance in balances {
-            Self::insert_or_update_payment_balance(&tx, &ptx.tx_id, balance)?;
+        if !balances.is_empty() {
+            tx.execute(
+                "DELETE FROM payment_balance WHERE tx_id = ?",
+                params![&ptx.tx_id],
+            )?;
+            for balance in balances {
+                Self::insert_payment_balance(&tx, &ptx.tx_id, balance)?;
+            }
         }
 
         let mut trigger_sync = false;
