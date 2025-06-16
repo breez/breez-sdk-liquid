@@ -19,7 +19,7 @@ use boltz_client::{
     Amount,
 };
 use client::{BitcoinClient, LiquidClient};
-use log::info;
+use log::{error, info, trace};
 use proxy::split_proxy_url;
 use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
@@ -73,6 +73,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             return Ok(client);
         }
 
+        trace!("Fetch Boltz API base URL and referral ID");
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
             LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
@@ -175,12 +176,17 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         &self,
         req: CreateChainRequest,
     ) -> Result<CreateChainResponse, PaymentError> {
+        trace!("BoltzSwapper::create_chain_swap");
         let client = self.get_boltz_client().await?;
         let modified_req = CreateChainRequest {
             referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(client.inner.post_chain_req(modified_req).await?)
+        Ok(client
+            .inner
+            .post_chain_req(modified_req)
+            .await
+            .inspect_err(|e| error!("Boltz Client error: {e:?}"))?)
     }
 
     /// Create a new send swap
@@ -188,24 +194,31 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         &self,
         req: CreateSubmarineRequest,
     ) -> Result<CreateSubmarineResponse, PaymentError> {
+        trace!("BoltzSwapper::create_send_swap");
         let client = self.get_boltz_client().await?;
         let modified_req = CreateSubmarineRequest {
             referral_id: client.referral_id.clone(),
             ..req.clone()
         };
-        Ok(client.inner.post_swap_req(&modified_req).await?)
+        Ok(client
+            .inner
+            .post_swap_req(&modified_req)
+            .await
+            .inspect_err(|e| error!("Boltz Client error: {e:?}"))?)
     }
 
     async fn get_chain_pair(
         &self,
         direction: Direction,
     ) -> Result<Option<ChainPair>, PaymentError> {
+        trace!("BoltzSwapper::get_chain_pair");
         let pairs = self
             .get_boltz_client()
             .await?
             .inner
             .get_chain_pairs()
-            .await?;
+            .await
+            .inspect_err(|e| error!("Boltz Client error: {e:?}"))?;
         let pair = match direction {
             Direction::Incoming => pairs.get_btc_to_lbtc_pair(),
             Direction::Outgoing => pairs.get_lbtc_to_btc_pair(),
@@ -216,12 +229,14 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
     async fn get_chain_pairs(
         &self,
     ) -> Result<(Option<ChainPair>, Option<ChainPair>), PaymentError> {
+        trace!("BoltzSwapper::get_chain_pairs");
         let pairs = self
             .get_boltz_client()
             .await?
             .inner
             .get_chain_pairs()
-            .await?;
+            .await
+            .inspect_err(|e| error!("Boltz Client error: {e:?}"))?;
         let pair_outgoing = pairs.get_lbtc_to_btc_pair();
         let pair_incoming = pairs.get_btc_to_lbtc_pair();
         Ok((pair_outgoing, pair_incoming))
@@ -252,12 +267,14 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
 
     /// Get a submarine pair information
     async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
+        trace!("BoltzSwapper::get_submarine_pairs");
         Ok(self
             .get_boltz_client()
             .await?
             .inner
             .get_submarine_pairs()
-            .await?
+            .await
+            .inspect_err(|e| error!("Boltz Client error: {e:?}"))?
             .get_lbtc_to_btc_pair())
     }
 
@@ -325,6 +342,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         &self,
         req: CreateReverseRequest,
     ) -> Result<CreateReverseResponse, PaymentError> {
+        trace!("BoltzSwapper::create_receive_swap");
         let client = self.get_boltz_client().await?;
         let modified_req = CreateReverseRequest {
             referral_id: client.referral_id.clone(),
@@ -335,12 +353,14 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
 
     // Get a reverse pair information
     async fn get_reverse_swap_pairs(&self) -> Result<Option<ReversePair>, PaymentError> {
+        trace!("BoltzSwapper::get_reverse_swap_pairs");
         Ok(self
             .get_boltz_client()
             .await?
             .inner
             .get_reverse_pairs()
-            .await?
+            .await
+            .inspect_err(|e| error!("Boltz Client error: {e:?}"))?
             .get_btc_to_lbtc_pair())
     }
 
@@ -502,6 +522,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
     }
 
     async fn check_for_mrh(&self, invoice: &str) -> Result<Option<(String, Amount)>, PaymentError> {
+        trace!("BoltzSwapper::check_for_mrh");
         boltz_client::swaps::magic_routing::check_for_mrh(
             &self.get_boltz_client().await?.inner,
             invoice,

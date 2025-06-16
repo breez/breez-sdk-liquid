@@ -12,7 +12,7 @@ use chain_swap::ESTIMATED_BTC_CLAIM_TX_VSIZE;
 use futures_util::stream::select_all;
 use futures_util::{StreamExt, TryFutureExt};
 use lnurl::auth::SdkLnurlAuthSigner;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
@@ -1095,6 +1095,7 @@ impl LiquidSdk {
         direction: Direction,
         user_lockup_amount_sat: Option<u64>,
     ) -> Result<ChainPair, PaymentError> {
+        trace!("LiquidSdk::get_and_validate_chain_pair: direction={direction:?}, user_lockup_amount_sat={user_lockup_amount_sat:?}");
         let pair = self.get_chain_pair(direction).await?;
         if let Some(user_lockup_amount_sat) = user_lockup_amount_sat {
             self.validate_user_lockup_amount_for_chain_pair(&pair, user_lockup_amount_sat)?;
@@ -2134,6 +2135,7 @@ impl LiquidSdk {
     pub async fn fetch_lightning_limits(
         &self,
     ) -> Result<LightningPaymentLimitsResponse, PaymentError> {
+        trace!("LiquidSdk::fetch_lightning_limits");
         self.ensure_is_started().await?;
 
         let submarine_pair = self
@@ -2506,6 +2508,7 @@ impl LiquidSdk {
         &self,
         req: &PrepareReceiveRequest,
     ) -> Result<PrepareReceiveResponse, PaymentError> {
+        trace!("LiquidSdk::prepare_receive_payment: req={req:?}");
         self.ensure_is_started().await?;
 
         match req.payment_method.clone() {
@@ -2660,6 +2663,7 @@ impl LiquidSdk {
         &self,
         req: &ReceivePaymentRequest,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
+        trace!("LiquidSdk::receive_payment: req={req:?}");
         self.ensure_is_started().await?;
 
         let PrepareReceiveResponse {
@@ -2774,6 +2778,7 @@ impl LiquidSdk {
         description: Option<String>,
         description_hash: Option<String>,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
+        trace!("LiquidSdk::create_bolt11_receive_swap: payer_amount_sat={payer_amount_sat}, fees_sat={fees_sat}, description={description:?}, description_hash={description_hash:?}");
         let reverse_pair = self
             .swapper
             .get_reverse_swap_pairs()

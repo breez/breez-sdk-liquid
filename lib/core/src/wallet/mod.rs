@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, bail, Result};
 use boltz_client::ElementsAddress;
-use log::{debug, error, info, warn};
+use log::{debug, error, info, trace, warn};
 use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
@@ -504,6 +504,7 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError> {
+        trace!("LiquidOnchainWallet::next_unused_address");
         let tip = self.tip().await;
         let address = match self.persister.next_expired_reserved_address(tip)? {
             Some(reserved_address) => {
