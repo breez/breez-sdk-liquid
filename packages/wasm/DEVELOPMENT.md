@@ -59,3 +59,26 @@ To test locally built bindings in the examples, the npm dependencies need to be 
 ```json
     "@breeztech/breez-sdk-liquid": "file:../../",
 ```
+
+## Debugging
+```bash
+make build-dev
+```
+
+Each can be built separately with `make build-bundle-dev`, `make build-deno-dev`, `make build-node-dev` or `make build-web-dev`.
+
+### Chrome - Web
+- Install [Chrome DevTools C++ DWARF debugging](https://chromewebstore.google.com/detail/cc++-devtools-support-dwa/pdcpmagijalfljmkmjngeonclgbbannb) extension
+
+1. Open Chrome DevTools
+2. Go to "Sources" tab
+3. Open "file://<your repo path to rs file>"
+4. Set a breakpoint
+5. Reload the page and verify the DevTools debugger breaks as expected.
+
+### VSCode - Node
+- Install [VSCode WebAssembly DWARF Debugging](https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-dwarf-debugging) extension
+
+https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_debugging-webassembly
+1. Enable `Debug: Toggle Auto Attach` from the command palette
+2. Run the node application with `--inspect`, e.g. `node --inspect src/cli.js`
