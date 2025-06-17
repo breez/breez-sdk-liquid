@@ -13,8 +13,15 @@ use boltz_client::boltz::{
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
 use log::{debug, error, info, warn};
 use sdk_common::utils::Arc;
+use serde::Serialize;
 use tokio::sync::{broadcast, watch};
 use tokio_with_wasm::alias as tokio;
+
+#[derive(Debug, Serialize)]
+struct ApiKeyMessage {
+    #[serde(rename = "apikey")]
+    api_key: String,
+}
 
 impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
     async fn send_request(
@@ -70,6 +77,25 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                 match client.inner.connect_ws().await {
                     Ok(ws_stream) => {
                         let (mut sender, mut receiver) = ws_stream.split();
+
+                        if let Some(api_key) = &client.ws_auth_api_key {
+                            let api_key_msg = ApiKeyMessage {
+                                api_key: api_key.clone(),
+                            };
+                            match serde_json::to_string(&api_key_msg) {
+                                Ok(api_key_json) => {
+                                    if let Err(e) =
+                                        sender.send(Message::Text(api_key_json.into())).await
+                                    {
+                                        // Just log the failure. If the api key is required, the
+                                        // server will close the connection and cause us to retry
+                                        warn!("Failed to send api-key message: {e:?}")
+                                    }
+                                }
+                                Err(e) => error!("Failed to serialize api key message: {e:?}"),
+                            }
+                        }
+
                         let mut tracked_ids: HashSet<String> = HashSet::new();
 
                         callback.track_subscriptions().await;
@@ -154,6 +180,7 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                                         Err(e) => {
                                             error!("Received stream error: {e:?}");
                                             let _ = sender.close().await;
+                                            tokio::time::sleep(reconnect_delay).await;
                                             break;
                                         }
                                     },

@@ -2,12 +2,14 @@ use std::{sync::OnceLock, time::Duration};
 
 use super::{ProxyUrlFetcher, Swapper};
 use crate::bitcoin::secp256k1::rand;
+use crate::model::BREEZ_SWAP_PROXY_URL;
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
     prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
+use boltz_client::reqwest::header::HeaderMap;
 use boltz_client::{
     boltz::{
         self, BoltzApiClientV2, ChainPair, Cooperative, CreateBolt12OfferRequest,
@@ -22,7 +24,7 @@ use boltz_client::{
 };
 use client::{BitcoinClient, LiquidClient};
 use log::{info, warn};
-use proxy::split_proxy_url;
+use proxy::split_boltz_url;
 use rand::Rng;
 use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
@@ -43,6 +45,7 @@ const MAX_RETRY_DELAY_SECS: u64 = 10;
 pub(crate) struct BoltzClient {
     referral_id: Option<String>,
     inner: BoltzApiClientV2,
+    ws_auth_api_key: Option<String>,
 }
 
 pub struct BoltzSwapper<P: ProxyUrlFetcher> {
@@ -82,18 +85,46 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
             LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
-                Ok(Some(swapper_proxy_url)) => split_proxy_url(swapper_proxy_url),
+                Ok(Some(boltz_swapper_urls)) => {
+                    if self.config.breez_api_key.is_some() {
+                        split_boltz_url(&boltz_swapper_urls.proxy_url)
+                    } else {
+                        split_boltz_url(&boltz_swapper_urls.boltz_url)
+                    }
+                }
                 _ => (None, None),
             },
         };
 
         let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
 
-        let boltz_client = self.boltz_client.get_or_init(|| BoltzClient {
-            inner: BoltzApiClientV2::new(boltz_url, Some(CONNECTION_TIMEOUT)),
+        let mut ws_auth_api_key = None;
+        let mut headers = HeaderMap::new();
+        if boltz_url == BREEZ_SWAP_PROXY_URL {
+            match &self.config.breez_api_key {
+                Some(api_key) => {
+                    ws_auth_api_key = Some(api_key.clone());
+                    headers.insert("authorization", format!("Bearer {api_key}").parse()?);
+                }
+                None => {
+                    bail!("Cannot start Boltz client: Breez API key is not set")
+                }
+            }
+        }
+
+        let inner = BoltzApiClientV2::with_client(
+            boltz_url,
+            boltz_client::reqwest::Client::builder()
+                .default_headers(headers)
+                .build()?,
+            Some(CONNECTION_TIMEOUT),
+        );
+        let client = self.boltz_client.get_or_init(|| BoltzClient {
+            inner,
             referral_id,
+            ws_auth_api_key,
         });
-        Ok(boltz_client)
+        Ok(client)
     }
 
     fn get_liquid_client(&self) -> Result<&LiquidClient> {

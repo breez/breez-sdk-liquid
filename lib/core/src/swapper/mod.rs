@@ -12,6 +12,7 @@ use boltz_client::{
 };
 use maybe_sync::{MaybeSend, MaybeSync};
 use mockall::automock;
+use sdk_common::prelude::BoltzSwapperUrls;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 
@@ -62,7 +63,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
     /// Get a submarine pair information
     async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
 
-    /// Get a submarine swap's preimage    
+    /// Get a submarine swap's preimage
     async fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError>;
 
     /// Get send swap claim tx details which includes the preimage as a proof of payment.
@@ -163,5 +164,5 @@ pub trait SwapperStatusStream: MaybeSend + MaybeSync {
 
 #[sdk_macros::async_trait]
 pub(crate) trait ProxyUrlFetcher: MaybeSend + MaybeSync + 'static {
-    async fn fetch(&self) -> Result<&Option<String>>;
+    async fn fetch(&self) -> Result<&Option<BoltzSwapperUrls>>;
 }
