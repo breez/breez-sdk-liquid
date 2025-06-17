@@ -270,7 +270,7 @@ fun asBitcoinAddressData(bitcoinAddressData: ReadableMap): BitcoinAddressData? {
 fun readableMapOf(bitcoinAddressData: BitcoinAddressData): ReadableMap =
     readableMapOf(
         "address" to bitcoinAddressData.address,
-        "network" to bitcoinAddressData.network.name.lowercase(),
+        "network" to snakeToLowerCamelCase(bitcoinAddressData.network.name),
         "amountSat" to bitcoinAddressData.amountSat,
         "label" to bitcoinAddressData.label,
         "message" to bitcoinAddressData.message,
@@ -502,7 +502,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "liquidExplorer" to readableMapOf(config.liquidExplorer),
         "bitcoinExplorer" to readableMapOf(config.bitcoinExplorer),
         "workingDir" to config.workingDir,
-        "network" to config.network.name.lowercase(),
+        "network" to snakeToLowerCamelCase(config.network.name),
         "paymentTimeoutSec" to config.paymentTimeoutSec,
         "syncServiceUrl" to config.syncServiceUrl,
         "breezApiKey" to config.breezApiKey,
@@ -919,7 +919,7 @@ fun asLnInvoice(lnInvoice: ReadableMap): LnInvoice? {
 fun readableMapOf(lnInvoice: LnInvoice): ReadableMap =
     readableMapOf(
         "bolt11" to lnInvoice.bolt11,
-        "network" to lnInvoice.network.name.lowercase(),
+        "network" to snakeToLowerCamelCase(lnInvoice.network.name),
         "payeePubkey" to lnInvoice.payeePubkey,
         "paymentHash" to lnInvoice.paymentHash,
         "description" to lnInvoice.description,
@@ -1082,7 +1082,7 @@ fun asLiquidAddressData(liquidAddressData: ReadableMap): LiquidAddressData? {
 fun readableMapOf(liquidAddressData: LiquidAddressData): ReadableMap =
     readableMapOf(
         "address" to liquidAddressData.address,
-        "network" to liquidAddressData.network.name.lowercase(),
+        "network" to snakeToLowerCamelCase(liquidAddressData.network.name),
         "assetId" to liquidAddressData.assetId,
         "amount" to liquidAddressData.amount,
         "amountSat" to liquidAddressData.amountSat,
@@ -1847,8 +1847,8 @@ fun readableMapOf(payment: Payment): ReadableMap =
         "timestamp" to payment.timestamp,
         "amountSat" to payment.amountSat,
         "feesSat" to payment.feesSat,
-        "paymentType" to payment.paymentType.name.lowercase(),
-        "status" to payment.status.name.lowercase(),
+        "paymentType" to snakeToLowerCamelCase(payment.paymentType.name),
+        "status" to snakeToLowerCamelCase(payment.status.name),
         "details" to readableMapOf(payment.details),
         "swapperFeesSat" to payment.swapperFeesSat,
         "destination" to payment.destination,
@@ -1885,7 +1885,7 @@ fun asPrepareBuyBitcoinRequest(prepareBuyBitcoinRequest: ReadableMap): PrepareBu
 
 fun readableMapOf(prepareBuyBitcoinRequest: PrepareBuyBitcoinRequest): ReadableMap =
     readableMapOf(
-        "provider" to prepareBuyBitcoinRequest.provider.name.lowercase(),
+        "provider" to snakeToLowerCamelCase(prepareBuyBitcoinRequest.provider.name),
         "amountSat" to prepareBuyBitcoinRequest.amountSat,
     )
 
@@ -1920,7 +1920,7 @@ fun asPrepareBuyBitcoinResponse(prepareBuyBitcoinResponse: ReadableMap): Prepare
 
 fun readableMapOf(prepareBuyBitcoinResponse: PrepareBuyBitcoinResponse): ReadableMap =
     readableMapOf(
-        "provider" to prepareBuyBitcoinResponse.provider.name.lowercase(),
+        "provider" to snakeToLowerCamelCase(prepareBuyBitcoinResponse.provider.name),
         "amountSat" to prepareBuyBitcoinResponse.amountSat,
         "feesSat" to prepareBuyBitcoinResponse.feesSat,
     )
@@ -2144,7 +2144,7 @@ fun asPrepareReceiveRequest(prepareReceiveRequest: ReadableMap): PrepareReceiveR
 
 fun readableMapOf(prepareReceiveRequest: PrepareReceiveRequest): ReadableMap =
     readableMapOf(
-        "paymentMethod" to prepareReceiveRequest.paymentMethod.name.lowercase(),
+        "paymentMethod" to snakeToLowerCamelCase(prepareReceiveRequest.paymentMethod.name),
         "amount" to prepareReceiveRequest.amount?.let { readableMapOf(it) },
     )
 
@@ -2215,7 +2215,7 @@ fun asPrepareReceiveResponse(prepareReceiveResponse: ReadableMap): PrepareReceiv
 
 fun readableMapOf(prepareReceiveResponse: PrepareReceiveResponse): ReadableMap =
     readableMapOf(
-        "paymentMethod" to prepareReceiveResponse.paymentMethod.name.lowercase(),
+        "paymentMethod" to snakeToLowerCamelCase(prepareReceiveResponse.paymentMethod.name),
         "feesSat" to prepareReceiveResponse.feesSat,
         "amount" to prepareReceiveResponse.amount?.let { readableMapOf(it) },
         "minPayerAmountSat" to prepareReceiveResponse.minPayerAmountSat,
@@ -4103,8 +4103,8 @@ fun pushToArray(
         is LocaleOverrides -> array.pushMap(readableMapOf(value))
         is LocalizedName -> array.pushMap(readableMapOf(value))
         is Payment -> array.pushMap(readableMapOf(value))
-        is PaymentState -> array.pushString(value.name.lowercase())
-        is PaymentType -> array.pushString(value.name.lowercase())
+        is PaymentState -> array.pushString(snakeToLowerCamelCase(value.name))
+        is PaymentType -> array.pushString(snakeToLowerCamelCase(value.name))
         is Rate -> array.pushMap(readableMapOf(value))
         is RefundableSwap -> array.pushMap(readableMapOf(value))
         is RouteHint -> array.pushMap(readableMapOf(value))
@@ -4187,10 +4187,17 @@ fun errUnexpectedType(type: Any?): String {
 
 fun errUnexpectedValue(fieldName: String): String = "Unexpected value for optional field $fieldName"
 
-fun camelToUpperSnakeCase(str: String): String {
-    val pattern = "(?<=.)[A-Z]".toRegex()
-    return str.replace(pattern, "_$0").uppercase()
-}
+fun camelToUpperSnakeCase(str: String): String =
+    "(?<=.)[A-Z]"
+        .toRegex()
+        .replace(str) {
+            "_${it.value}"
+        }.uppercase()
+
+fun snakeToLowerCamelCase(str: String): String =
+    "_[a-zA-Z]".toRegex().replace(str.lowercase()) {
+        it.value.replace("_", "").uppercase()
+    }
 
 internal fun ReadableArray.toList(): List<*> {
     val arrayList = mutableListOf<Any?>()
