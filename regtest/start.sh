@@ -9,3 +9,5 @@ cd "$SCRIPT_DIR/boltz"
 cd "$SCRIPT_DIR"
 docker compose down
 docker compose up --remove-orphans -d
+
+./swapproxy-db-tool.sh --migrate
