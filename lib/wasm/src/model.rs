@@ -304,7 +304,6 @@ pub struct Config {
     pub liquid_explorer: BlockchainExplorer,
     pub bitcoin_explorer: BlockchainExplorer,
     pub working_dir: String,
-    pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
     pub payment_timeout_sec: u64,
     pub sync_service_url: Option<String>,
@@ -435,6 +434,7 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
+    pub comment: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendDestination)]
@@ -451,12 +451,14 @@ pub enum SendDestination {
         offer: LNOffer,
         receiver_amount_sat: u64,
         bip353_address: Option<String>,
+        payer_note: Option<String>,
     },
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareSendResponse)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
+    pub amount: Option<PayAmount>,
     pub fees_sat: Option<u64>,
     pub estimated_asset_fees: Option<f64>,
 }
@@ -711,6 +713,7 @@ pub enum PaymentDetails {
     },
     Bitcoin {
         swap_id: String,
+        bitcoin_address: String,
         description: String,
         auto_accepted_fees: bool,
         liquid_expiration_blockheight: Option<u32>,
@@ -789,6 +792,7 @@ pub struct PrepareLnUrlPayResponse {
     pub destination: SendDestination,
     pub fees_sat: u64,
     pub data: LnUrlPayRequestData,
+    pub amount: PayAmount,
     pub comment: Option<String>,
     pub success_action: Option<SuccessAction>,
 }

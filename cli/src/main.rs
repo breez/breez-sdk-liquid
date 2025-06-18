@@ -20,15 +20,15 @@ pub(crate) struct Args {
     pub(crate) no_data_sync: bool,
 
     #[clap(short, long)]
-    pub(crate) cache_dir: Option<String>,
-
-    #[clap(short, long)]
     pub(crate) log_file: Option<String>,
 
     #[clap(short, long, value_parser = parse_network_arg)]
     pub(crate) network: Option<LiquidNetwork>,
 
     #[clap(short, long)]
+    pub(crate) phrase_path: Option<String>,
+
+    #[clap(long)]
     pub(crate) passphrase: Option<String>,
 }
 
@@ -82,14 +82,13 @@ async fn main() -> Result<()> {
         info!("No history found");
     }
 
-    let mnemonic = persistence.get_or_create_mnemonic()?;
+    let mnemonic = persistence.get_or_create_mnemonic(args.phrase_path.as_deref())?;
     let passphrase = args.passphrase;
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
     config.working_dir = data_dir_str;
-    config.cache_dir = args.cache_dir;
     if args.no_data_sync {
         config.sync_service_url = None;
     } else if data_sync_url.is_some() {

@@ -29,7 +29,7 @@ android-copy:
 	mkdir -p android/src/main/jniLibs/x86_64
 	mkdir -p android/src/main/jniLibs/arm64-v8a
 	mkdir -p android/src/main/jniLibs/armeabi-v7a
-	cp ../../lib/bindings/ffi/kotlin/breez_sdk_liquid/breez_sdk_liquid.kt android/src/main/java/com/breezsdkliquid/breez_sdk_liquid.kt
+	cp ../../lib/bindings/ffi/kotlin/main/kotlin/breez_sdk_liquid/breez_sdk_liquid.*.kt android/src/main/java/com/breezsdkliquid/
 	cp ../../lib/bindings/ffi/kotlin/jniLibs/x86/libbreez_sdk_liquid_bindings.so android/src/main/jniLibs/x86/libbreez_sdk_liquid_bindings.so
 	cp ../../lib/bindings/ffi/kotlin/jniLibs/x86_64/libbreez_sdk_liquid_bindings.so android/src/main/jniLibs/x86_64/libbreez_sdk_liquid_bindings.so
 	cp ../../lib/bindings/ffi/kotlin/jniLibs/arm64-v8a/libbreez_sdk_liquid_bindings.so android/src/main/jniLibs/arm64-v8a/libbreez_sdk_liquid_bindings.so

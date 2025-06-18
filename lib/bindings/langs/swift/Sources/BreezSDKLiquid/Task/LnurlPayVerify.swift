@@ -7,11 +7,13 @@ struct LnurlVerifyRequest: Codable {
 }
 
 struct LnurlVerifyResponse: Decodable, Encodable {
+    let status: String
     let settled: Bool
     let preimage: String?
     let pr: String
     
     init(settled: Bool, preimage: String?, pr: String) {
+        self.status = "OK"
         self.settled = settled
         self.preimage = preimage
         self.pr = pr
@@ -64,7 +66,8 @@ class LnurlPayVerifyTask : LnurlPayTask {
             if response == nil {
                 throw InvalidLnurlPayError.notFound
             }
-            replyServer(encodable: response, replyURL: request!.reply_url)
+            let maxAge = response!.settled ? Constants.CACHE_CONTROL_MAX_AGE_WEEK : Constants.CACHE_CONTROL_MAX_AGE_THREE_SEC
+            replyServer(encodable: response, replyURL: request!.reply_url, maxAge: maxAge)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process lnurl verify: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)

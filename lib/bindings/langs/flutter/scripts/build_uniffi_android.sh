@@ -15,4 +15,4 @@ cp ffi/kotlin/jniLibs/x86/*.so ../../packages/flutter/android/src/main/jniLibs/x
 cp ffi/kotlin/jniLibs/x86_64/*.so ../../packages/flutter/android/src/main/jniLibs/x86_64/
 # Copy library contents & files
 cp -r langs/android/lib/src/main/kotlin ../../packages/flutter/android/src/main/
-cp -r ffi/kotlin/breez_sdk_liquid ../../packages/flutter/android/src/main/kotlin
+cp -r ffi/kotlin/main/kotlin/breez_sdk_liquid ../../packages/flutter/android/src/main/kotlin

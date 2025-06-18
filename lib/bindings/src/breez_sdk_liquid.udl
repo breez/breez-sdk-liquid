@@ -340,7 +340,6 @@ dictionary Config {
     u64 payment_timeout_sec;
     string? sync_service_url;
     string? breez_api_key;
-    string? cache_dir;
     u64? zero_conf_max_amount_sat;
     boolean use_default_external_input_parsers = true;
     sequence<ExternalInputParser>? external_input_parsers = null;
@@ -423,6 +422,7 @@ dictionary PrepareLnUrlPayResponse {
     SendDestination destination;
     u64 fees_sat;
     LnUrlPayRequestData data;
+    PayAmount amount;
     string? comment = null;
     SuccessAction? success_action = null;
 };
@@ -434,17 +434,19 @@ dictionary LnUrlPayRequest {
 dictionary PrepareSendRequest {
     string destination;
     PayAmount? amount = null;
+    string? comment = null;
 };
 
 [Enum]
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data, string? bip353_address);
     Bolt11(LNInvoice invoice, string? bip353_address);
-    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address);
+    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address, string? payer_note);
 };
 
 dictionary PrepareSendResponse {
     SendDestination destination;
+    PayAmount? amount;
     u64? fees_sat;
     f64? estimated_asset_fees;
 };
@@ -631,7 +633,7 @@ dictionary AssetInfo {
 interface PaymentDetails {
     Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? bip353_address, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string asset_id, string destination, string description, AssetInfo? asset_info, LnUrlInfo? lnurl_info, string? bip353_address);
-    Bitcoin(string swap_id, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? lockup_tx_id, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Bitcoin(string swap_id, string bitcoin_address, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? lockup_tx_id, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
 dictionary Payment {

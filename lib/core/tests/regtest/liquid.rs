@@ -95,6 +95,7 @@ async fn liquid(mut handle: SdkNodeHandle) {
             amount: Some(PayAmount::Bitcoin {
                 receiver_amount_sat,
             }),
+            comment: None,
         })
         .await
         .unwrap();

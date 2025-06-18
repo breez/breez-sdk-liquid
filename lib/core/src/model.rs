@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
-    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_REGTEST, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -41,6 +41,7 @@ pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
+pub const BREEZ_SWAP_PROXY_URL: &str = "https://swap.breez.technology/v2";
 
 const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
 
@@ -64,8 +65,6 @@ pub struct Config {
     ///
     /// Prefix can be a relative or absolute path to this directory.
     pub working_dir: String,
-    /// Directory in which the Liquid wallet cache is stored. Defaults to `working_dir`
-    pub cache_dir: Option<String>,
     pub network: LiquidNetwork,
     /// Send payment timeout. See [LiquidSdk::send_payment](crate::sdk::LiquidSdk::send_payment)
     pub payment_timeout_sec: u64,
@@ -112,7 +111,6 @@ impl Config {
                 url: "bitcoin-mainnet.blockstream.info:50002".to_string(),
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -137,7 +135,6 @@ impl Config {
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Mainnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -161,7 +158,6 @@ impl Config {
                 url: "bitcoin-testnet.blockstream.info:50002".to_string(),
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -186,7 +182,6 @@ impl Config {
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Testnet,
             payment_timeout_sec: 15,
             sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
@@ -210,7 +205,6 @@ impl Config {
                 url: "localhost:19001".to_string(),
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
             sync_service_url: Some("http://localhost:8088".to_string()),
@@ -235,7 +229,6 @@ impl Config {
                 use_waterfalls: false,
             },
             working_dir: ".".to_string(),
-            cache_dir: None,
             network: LiquidNetwork::Regtest,
             payment_timeout_sec: 15,
             sync_service_url: Some("http://localhost:8089".to_string()),
@@ -293,9 +286,16 @@ impl Config {
 
     pub(crate) fn default_boltz_url(&self) -> &str {
         match self.network {
-            LiquidNetwork::Mainnet => BOLTZ_MAINNET_URL_V2,
+            LiquidNetwork::Mainnet => {
+                if self.breez_api_key.is_some() {
+                    BREEZ_SWAP_PROXY_URL
+                } else {
+                    BOLTZ_MAINNET_URL_V2
+                }
+            }
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
-            LiquidNetwork::Regtest => BOLTZ_REGTEST,
+            // On regtest use the swapproxy instance by default
+            LiquidNetwork::Regtest => "http://localhost:8387/v2",
         }
     }
 
@@ -698,10 +698,11 @@ pub struct PrepareSendRequest {
     /// The destination we intend to pay to.
     /// Supports BIP21 URIs, BOLT11 invoices, BOLT12 offers and Liquid addresses
     pub destination: String,
-
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
+    /// An optional comment when paying a BOLT12 offer
+    pub comment: Option<String>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -722,6 +723,8 @@ pub enum SendDestination {
         receiver_amount_sat: u64,
         /// A BIP353 address, in case one was used to resolve this BOLT12
         bip353_address: Option<String>,
+        /// An optional payer note
+        payer_note: Option<String>,
     },
 }
 
@@ -729,6 +732,8 @@ pub enum SendDestination {
 #[derive(Debug, Serialize, Clone)]
 pub struct PrepareSendResponse {
     pub destination: SendDestination,
+    /// The optional amount to be sent in either Bitcoin or another asset
+    pub amount: Option<PayAmount>,
     /// The optional estimated fee in satoshi. Is set when there is Bitcoin available
     /// to pay fees. When not set, there are asset fees available to pay fees.
     pub fees_sat: Option<u64>,
@@ -1045,14 +1050,6 @@ impl Swap {
         }
     }
 
-    pub(crate) fn is_local(&self) -> bool {
-        match self {
-            Swap::Chain(ChainSwap { metadata, .. })
-            | Swap::Send(SendSwap { metadata, .. })
-            | Swap::Receive(ReceiveSwap { metadata, .. }) => metadata.is_local,
-        }
-    }
-
     pub(crate) fn last_updated_at(&self) -> u32 {
         match self {
             Swap::Chain(ChainSwap { metadata, .. })
@@ -1137,7 +1134,8 @@ pub(crate) struct SwapMetadata {
 pub struct ChainSwap {
     pub(crate) id: String,
     pub(crate) direction: Direction,
-    /// The Bitcoin claim address is only set for Outgoing Chain Swaps
+    /// Always set for Outgoing Chain Swaps. It's the destination Bitcoin address
+    /// Only set for Incoming Chain Swaps when a claim is broadcasted. It's a local Liquid wallet address
     pub(crate) claim_address: Option<String>,
     pub(crate) lockup_address: String,
     /// The Liquid refund address is only set for Outgoing Chain Swaps
@@ -1794,9 +1792,8 @@ pub struct PaymentSwapData {
     pub refund_tx_amount_sat: Option<u64>,
 
     /// Present only for chain swaps.
-    /// In case of an outgoing chain swap, it's the Bitcoin address which will receive the funds
-    /// In case of an incoming chain swap, it's the Liquid address which will receive the funds
-    pub claim_address: Option<String>,
+    /// It's the Bitcoin address that receives funds.
+    pub bitcoin_address: Option<String>,
 
     /// Payment status derived from the swap status
     pub status: PaymentState,
@@ -1926,6 +1923,9 @@ pub enum PaymentDetails {
     /// Swapping to or from the Bitcoin chain
     Bitcoin {
         swap_id: String,
+
+        /// The Bitcoin address that receives funds.
+        bitcoin_address: String,
 
         /// Represents the invoice description
         description: String,
@@ -2122,7 +2122,7 @@ impl Payment {
             tx_id: Some(tx.tx_id),
             unblinding_data: tx.unblinding_data,
             // When the swap is present and of type send and receive, we retrieve the destination from the invoice.
-            // If it's a chain swap instead, we use the `claim_address` field from the swap data (either pure Bitcoin or Liquid address).
+            // If it's a chain swap instead, we use the `bitcoin_address` field from the swap data.
             // Otherwise, we specify the Liquid address (BIP21 or pure), set in `payment_details.address`.
             destination: match &swap {
                 Some(PaymentSwapData {
@@ -2138,9 +2138,9 @@ impl Payment {
                 }) => bolt12_offer.clone().or(invoice.clone()),
                 Some(PaymentSwapData {
                     swap_type: PaymentSwapType::Chain,
-                    claim_address,
+                    bitcoin_address,
                     ..
-                }) => claim_address.clone(),
+                }) => bitcoin_address.clone(),
                 _ => match &details {
                     PaymentDetails::Liquid { destination, .. } => Some(destination.clone()),
                     _ => None,
@@ -2296,6 +2296,8 @@ pub struct PrepareLnUrlPayResponse {
     pub fees_sat: u64,
     /// The [LnUrlPayRequestData] returned by [parse]
     pub data: LnUrlPayRequestData,
+    /// The amount to send
+    pub amount: PayAmount,
     /// An optional comment for this payment
     pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if

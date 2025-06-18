@@ -97,7 +97,6 @@ export interface Config {
     paymentTimeoutSec: number
     syncServiceUrl?: string
     breezApiKey?: string
-    cacheDir?: string
     zeroConfMaxAmountSat?: number
     useDefaultExternalInputParsers: boolean
     externalInputParsers?: ExternalInputParser[]
@@ -356,6 +355,7 @@ export interface PrepareLnUrlPayResponse {
     destination: SendDestination
     feesSat: number
     data: LnUrlPayRequestData
+    amount: PayAmount
     comment?: string
     successAction?: SuccessAction
 }
@@ -400,10 +400,12 @@ export interface PrepareRefundResponse {
 export interface PrepareSendRequest {
     destination: string
     amount?: PayAmount
+    comment?: string
 }
 
 export interface PrepareSendResponse {
     destination: SendDestination
+    amount?: PayAmount
     feesSat?: number
     estimatedAssetFees?: number
 }
@@ -733,6 +735,7 @@ export type PaymentDetails = {
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string
+    bitcoinAddress: string
     description: string
     autoAcceptedFees: boolean
     bitcoinExpirationBlockheight?: number
@@ -844,6 +847,7 @@ export type SendDestination = {
     offer: LnOffer
     receiverAmountSat: number
     bip353Address?: string
+    payerNote?: string
 }
 
 export enum SuccessActionVariant {

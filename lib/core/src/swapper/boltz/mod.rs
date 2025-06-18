@@ -1,30 +1,35 @@
 use std::{sync::OnceLock, time::Duration};
 
+use super::{ProxyUrlFetcher, Swapper};
+use crate::bitcoin::secp256k1::rand;
+use crate::model::BREEZ_SWAP_PROXY_URL;
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
     prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
+use boltz_client::reqwest::header::HeaderMap;
 use boltz_client::{
     boltz::{
         self, BoltzApiClientV2, ChainPair, Cooperative, CreateBolt12OfferRequest,
         CreateChainRequest, CreateChainResponse, CreateReverseRequest, CreateReverseResponse,
-        CreateSubmarineRequest, CreateSubmarineResponse, GetBolt12FetchResponse,
-        GetBolt12ParamsResponse, GetNodesResponse, ReversePair, SubmarineClaimTxResponse,
-        SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
+        CreateSubmarineRequest, CreateSubmarineResponse, GetBolt12FetchRequest,
+        GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
+        SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
     },
     elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::Chain,
     Amount,
 };
 use client::{BitcoinClient, LiquidClient};
-use log::info;
-use proxy::split_proxy_url;
+use log::{info, warn};
+use proxy::split_boltz_url;
+use rand::Rng;
 use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
-
-use super::{ProxyUrlFetcher, Swapper};
+use tokio::time::sleep;
+use tokio_with_wasm::alias as tokio;
 
 pub(crate) mod bitcoin;
 mod client;
@@ -33,10 +38,14 @@ pub(crate) mod proxy;
 pub mod status_stream;
 
 const CONNECTION_TIMEOUT: Duration = Duration::from_secs(30);
+const MAX_RETRY_ATTEMPTS: u8 = 10;
+const MIN_RETRY_DELAY_SECS: u64 = 1;
+const MAX_RETRY_DELAY_SECS: u64 = 10;
 
 pub(crate) struct BoltzClient {
     referral_id: Option<String>,
     inner: BoltzApiClientV2,
+    ws_auth_api_key: Option<String>,
 }
 
 pub struct BoltzSwapper<P: ProxyUrlFetcher> {
@@ -76,18 +85,46 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let (boltz_api_base_url, referral_id) = match &self.config.network {
             LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
             LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
-                Ok(Some(swapper_proxy_url)) => split_proxy_url(swapper_proxy_url),
+                Ok(Some(boltz_swapper_urls)) => {
+                    if self.config.breez_api_key.is_some() {
+                        split_boltz_url(&boltz_swapper_urls.proxy_url)
+                    } else {
+                        split_boltz_url(&boltz_swapper_urls.boltz_url)
+                    }
+                }
                 _ => (None, None),
             },
         };
 
         let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
 
-        let boltz_client = self.boltz_client.get_or_init(|| BoltzClient {
-            inner: BoltzApiClientV2::new(boltz_url, Some(CONNECTION_TIMEOUT)),
+        let mut ws_auth_api_key = None;
+        let mut headers = HeaderMap::new();
+        if boltz_url == BREEZ_SWAP_PROXY_URL {
+            match &self.config.breez_api_key {
+                Some(api_key) => {
+                    ws_auth_api_key = Some(api_key.clone());
+                    headers.insert("authorization", format!("Bearer {api_key}").parse()?);
+                }
+                None => {
+                    bail!("Cannot start Boltz client: Breez API key is not set")
+                }
+            }
+        }
+
+        let inner = BoltzApiClientV2::with_client(
+            boltz_url,
+            boltz_client::reqwest::Client::builder()
+                .default_headers(headers)
+                .build()?,
+            Some(CONNECTION_TIMEOUT),
+        );
+        let client = self.boltz_client.get_or_init(|| BoltzClient {
+            inner,
             referral_id,
+            ws_auth_api_key,
         });
-        Ok(boltz_client)
+        Ok(client)
     }
 
     fn get_liquid_client(&self) -> Result<&LiquidClient> {
@@ -165,6 +202,56 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             pub_nonce,
             partial_sig,
         }))
+    }
+
+    async fn create_claim_tx_impl(
+        &self,
+        swap: &Swap,
+        claim_address: Option<String>,
+    ) -> Result<Transaction, PaymentError> {
+        let tx = match &swap {
+            Swap::Chain(swap) => {
+                let Some(claim_address) = claim_address else {
+                    return Err(PaymentError::Generic {
+                        err: format!(
+                            "No claim address was supplied when claiming for Chain swap {}",
+                            swap.id
+                        ),
+                    });
+                };
+                match swap.direction {
+                    Direction::Incoming => Transaction::Liquid(
+                        self.new_incoming_chain_claim_tx(swap, claim_address)
+                            .await?,
+                    ),
+                    Direction::Outgoing => Transaction::Bitcoin(
+                        self.new_outgoing_chain_claim_tx(swap, claim_address)
+                            .await?,
+                    ),
+                }
+            }
+            Swap::Receive(swap) => {
+                let Some(claim_address) = claim_address else {
+                    return Err(PaymentError::Generic {
+                        err: format!(
+                            "No claim address was supplied when claiming for Receive swap {}",
+                            swap.id
+                        ),
+                    });
+                };
+                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address).await?)
+            }
+            Swap::Send(swap) => {
+                return Err(PaymentError::Generic {
+                    err: format!(
+                        "Failed to create claim tx for Send swap {}: invalid swap type",
+                        swap.id
+                    ),
+                });
+            }
+        };
+
+        Ok(tx)
     }
 }
 
@@ -350,49 +437,36 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         swap: Swap,
         claim_address: Option<String>,
     ) -> Result<Transaction, PaymentError> {
-        let tx = match &swap {
-            Swap::Chain(swap) => {
-                let Some(claim_address) = claim_address else {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "No claim address was supplied when claiming for Chain swap {}",
-                            swap.id
-                        ),
-                    });
-                };
-                match swap.direction {
-                    Direction::Incoming => Transaction::Liquid(
-                        self.new_incoming_chain_claim_tx(swap, claim_address)
-                            .await?,
-                    ),
-                    Direction::Outgoing => Transaction::Bitcoin(
-                        self.new_outgoing_chain_claim_tx(swap, claim_address)
-                            .await?,
-                    ),
-                }
-            }
-            Swap::Receive(swap) => {
-                let Some(claim_address) = claim_address else {
-                    return Err(PaymentError::Generic {
-                        err: format!(
-                            "No claim address was supplied when claiming for Receive swap {}",
-                            swap.id
-                        ),
-                    });
-                };
-                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address).await?)
-            }
-            Swap::Send(swap) => {
-                return Err(PaymentError::Generic {
-                    err: format!(
-                        "Failed to create claim tx for Send swap {}: invalid swap type",
-                        swap.id
-                    ),
-                });
-            }
-        };
+        let mut attempts = 0;
+        let mut current_delay_secs = MIN_RETRY_DELAY_SECS;
+        loop {
+            match self
+                .create_claim_tx_impl(&swap, claim_address.clone())
+                .await
+            {
+                Ok(tx) => return Ok(tx),
+                Err(e) if is_concurrent_claim_error(&e) => {
+                    attempts += 1;
+                    if attempts >= MAX_RETRY_ATTEMPTS {
+                        return Err(e);
+                    }
 
-        Ok(tx)
+                    // Exponential backoff with jitter
+                    let jitter = rand::thread_rng().gen_range(0..=current_delay_secs);
+                    let delay_with_jitter_secs = current_delay_secs + jitter;
+
+                    warn!(
+                        "Failed to create claim tx (likely due to concurrent instance attempting \
+                        to claim), attempt {}/{}. Retrying in {}s. Error: {:?}",
+                        attempts, MAX_RETRY_ATTEMPTS, delay_with_jitter_secs, e
+                    );
+                    sleep(Duration::from_secs(delay_with_jitter_secs)).await;
+
+                    current_delay_secs = (current_delay_secs * 2).min(MAX_RETRY_DELAY_SECS);
+                }
+                Err(e) => return Err(e),
+            }
+        }
     }
 
     /// Estimate the refund broadcast transaction size and fees in sats for a send or chain swap
@@ -513,14 +587,13 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
 
     async fn get_bolt12_info(
         &self,
-        offer: &str,
-        amount_sat: u64,
+        req: GetBolt12FetchRequest,
     ) -> Result<GetBolt12FetchResponse, PaymentError> {
         let invoice_res = self
             .get_boltz_client()
             .await?
             .inner
-            .get_bolt12_invoice(offer, amount_sat)
+            .get_bolt12_invoice(req)
             .await?;
         info!("Received BOLT12 invoice response: {invoice_res:?}");
         Ok(invoice_res)
@@ -567,4 +640,10 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         let res = self.get_boltz_client().await?.inner.get_nodes().await?;
         Ok(res)
     }
+}
+
+fn is_concurrent_claim_error(e: &PaymentError) -> bool {
+    let e_string = e.to_string();
+    e_string.contains("invalid partial signature")
+        || e_string.contains("session already initialized")
 }

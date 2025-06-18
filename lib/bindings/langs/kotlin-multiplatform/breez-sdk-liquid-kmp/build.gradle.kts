@@ -73,6 +73,7 @@ kotlin {
             dependencies {
                 implementation("net.java.dev.jna:jna:5.13.0@aar")
                 implementation("org.jetbrains.kotlinx:atomicfu:0.23.1")
+                implementation("androidx.annotation:annotation:1.7.1")
             }
         }
     }
@@ -80,7 +81,7 @@ kotlin {
 
 android {
     namespace = "technology.breez.liquid"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 24

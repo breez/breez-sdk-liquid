@@ -2,7 +2,7 @@ use anyhow::Result;
 use boltz_client::{
     boltz::{
         ChainFees, ChainMinerFees, ChainPair, ChainSwapDetails, CreateBolt12OfferRequest,
-        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse,
+        CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, GetBolt12FetchRequest,
         GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse, Leaf, Node, PairLimits,
         PairMinerFees, ReverseFees, ReverseLimits, ReversePair, SubmarineClaimTxResponse,
         SubmarineFees, SubmarinePair, SubmarinePairLimits, SwapTree, UpdateBolt12OfferRequest,
@@ -12,6 +12,7 @@ use boltz_client::{
 };
 use lwk_wollet::secp256k1;
 use sdk_common::invoice::parse_invoice;
+use sdk_common::prelude::BoltzSwapperUrls;
 use std::{collections::HashMap, str::FromStr, sync::Mutex};
 
 use crate::{
@@ -347,8 +348,7 @@ impl Swapper for MockSwapper {
 
     async fn get_bolt12_info(
         &self,
-        _offer: &str,
-        _amount_sat: u64,
+        _req: GetBolt12FetchRequest,
     ) -> Result<GetBolt12FetchResponse, PaymentError> {
         unimplemented!()
     }
@@ -414,7 +414,7 @@ impl MockProxyUrlFetcher {
 
 #[sdk_macros::async_trait]
 impl ProxyUrlFetcher for MockProxyUrlFetcher {
-    async fn fetch(&self) -> Result<&Option<String>> {
+    async fn fetch(&self) -> Result<&Option<BoltzSwapperUrls>> {
         Ok(&None)
     }
 }

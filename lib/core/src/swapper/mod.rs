@@ -3,14 +3,16 @@ use boltz_client::{
     boltz::{
         ChainPair, CreateBolt12OfferRequest, CreateChainRequest, CreateChainResponse,
         CreateReverseRequest, CreateReverseResponse, CreateSubmarineRequest,
-        CreateSubmarineResponse, GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse,
-        ReversePair, SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest,
+        CreateSubmarineResponse, GetBolt12FetchRequest, GetBolt12FetchResponse,
+        GetBolt12ParamsResponse, GetNodesResponse, ReversePair, SubmarineClaimTxResponse,
+        SubmarinePair, UpdateBolt12OfferRequest,
     },
     network::Chain,
     Amount,
 };
 use maybe_sync::{MaybeSend, MaybeSync};
 use mockall::automock;
+use sdk_common::prelude::BoltzSwapperUrls;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 
@@ -61,7 +63,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
     /// Get a submarine pair information
     async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError>;
 
-    /// Get a submarine swap's preimage    
+    /// Get a submarine swap's preimage
     async fn get_submarine_preimage(&self, swap_id: &str) -> Result<String, PaymentError>;
 
     /// Get send swap claim tx details which includes the preimage as a proof of payment.
@@ -127,8 +129,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
 
     async fn get_bolt12_info(
         &self,
-        offer: &str,
-        amount_sat: u64,
+        req: GetBolt12FetchRequest,
     ) -> Result<GetBolt12FetchResponse, PaymentError>;
 
     async fn create_bolt12_offer(&self, req: CreateBolt12OfferRequest) -> Result<(), SdkError>;
@@ -163,5 +164,5 @@ pub trait SwapperStatusStream: MaybeSend + MaybeSync {
 
 #[sdk_macros::async_trait]
 pub(crate) trait ProxyUrlFetcher: MaybeSend + MaybeSync + 'static {
-    async fn fetch(&self) -> Result<&Option<String>>;
+    async fn fetch(&self) -> Result<&Option<BoltzSwapperUrls>>;
 }

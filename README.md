@@ -16,13 +16,13 @@ To provide the best experience for their end-users, developers can choose betwee
 It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll able to:
 
 - **Send payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Pay, Lightning address, BTC address
-- **Receive payments** via various protocols such as: Bolt11, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
+- **Receive payments** via various protocols such as: Bolt11, Bolt12, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
   
 **Key Features**
 
 - [x] Send and receive Lightning payments 
 - [x] On-chain interoperability
-- [x] Complete LNURL functionality
+- [x] Complete LNURL & BOLT12 functionality
 - [x] Multi-app support
 - [x] Multi-device support
 - [x] Real-time state backup
@@ -98,6 +98,7 @@ Contributions are always welcome. Please read our [contribution guide](CONTRIBUT
 - [x]  Pay fees with USDT
 - [x]  Lower minimum payment amount
 - [x]  WebAssembly
+- [x]  Bolt12 receive
 - [ ]  USDT <-> LBTC swaps
-- [ ]  Bolt12 receive
-- [ ]  TLV support 
+- [ ]  WebLN
+- [ ]  NWC

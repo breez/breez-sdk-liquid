@@ -14,13 +14,13 @@ pub trait SubscriptionHandler: MaybeSend + MaybeSync {
 
 #[derive(Clone)]
 pub(crate) struct SwapperSubscriptionHandler {
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     status_stream: Arc<dyn SwapperStatusStream>,
 }
 
 impl SwapperSubscriptionHandler {
     pub(crate) fn new(
-        persister: Arc<Persister>,
+        persister: std::sync::Arc<Persister>,
         status_stream: Arc<dyn SwapperStatusStream>,
     ) -> Self {
         Self {

@@ -5,6 +5,8 @@ import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.GetPaymentRequest
 import breez_sdk_liquid.PaymentDetails
 import breez_sdk_liquid.PaymentState
+import breez_sdk_liquid_notification.Constants.CACHE_CONTROL_MAX_AGE_THREE_SEC
+import breez_sdk_liquid_notification.Constants.CACHE_CONTROL_MAX_AGE_WEEK
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_VERIFY_NOTIFICATION_TITLE
@@ -29,10 +31,13 @@ data class LnurlVerifyRequest(
 // https://github.com/lnurl/luds/blob/luds/21.md
 @Serializable
 data class LnurlPayVerifyResponse(
+    val status: String,
     val settled: Boolean,
     val preimage: String?,
     val pr: String,
-)
+) {
+    constructor(settled: Boolean, preimage: String?, pr: String) : this("OK", settled, preimage, pr)
+}
 
 class LnurlPayVerifyJob(
     private val context: Context,
@@ -75,7 +80,8 @@ class LnurlPayVerifyJob(
                 throw InvalidLnurlPayException("Not found")
             }
 
-            val success = replyServer(Json.encodeToString(response), request.replyURL)
+            val maxAge = if (response.settled) CACHE_CONTROL_MAX_AGE_WEEK else CACHE_CONTROL_MAX_AGE_THREE_SEC
+            val success = replyServer(Json.encodeToString(response), request.replyURL, maxAge)
             notifyChannel(
                 context,
                 NOTIFICATION_CHANNEL_REPLACEABLE,

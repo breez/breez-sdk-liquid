@@ -89,7 +89,7 @@ impl SyncerClient for MockSyncerClient {
 
 #[allow(clippy::type_complexity)]
 pub(crate) fn new_sync_service(
-    persister: Arc<Persister>,
+    persister: std::sync::Arc<Persister>,
     recoverer: Arc<Recoverer>,
     signer: Arc<Box<dyn Signer>>,
 ) -> Result<(
@@ -158,6 +158,7 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
         pair_fees_json: "".to_string(),
         create_response_json: "".to_string(),
         direction: Direction::Incoming,
+        claim_address: None,
         lockup_address: "".to_string(),
         claim_fees_sat: 0,
         claim_private_key: "".to_string(),

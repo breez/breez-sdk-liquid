@@ -2628,7 +2628,6 @@ impl SseDecode for crate::model::Config {
         let mut var_liquidExplorer = <crate::model::BlockchainExplorer>::sse_decode(deserializer);
         let mut var_bitcoinExplorer = <crate::model::BlockchainExplorer>::sse_decode(deserializer);
         let mut var_workingDir = <String>::sse_decode(deserializer);
-        let mut var_cacheDir = <Option<String>>::sse_decode(deserializer);
         let mut var_network = <crate::model::LiquidNetwork>::sse_decode(deserializer);
         let mut var_paymentTimeoutSec = <u64>::sse_decode(deserializer);
         let mut var_syncServiceUrl = <Option<String>>::sse_decode(deserializer);
@@ -2645,7 +2644,6 @@ impl SseDecode for crate::model::Config {
             liquid_explorer: var_liquidExplorer,
             bitcoin_explorer: var_bitcoinExplorer,
             working_dir: var_workingDir,
-            cache_dir: var_cacheDir,
             network: var_network,
             payment_timeout_sec: var_paymentTimeoutSec,
             sync_service_url: var_syncServiceUrl,
@@ -4081,6 +4079,7 @@ impl SseDecode for crate::model::PaymentDetails {
             }
             2 => {
                 let mut var_swapId = <String>::sse_decode(deserializer);
+                let mut var_bitcoinAddress = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_autoAcceptedFees = <bool>::sse_decode(deserializer);
                 let mut var_liquidExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
@@ -4091,6 +4090,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Bitcoin {
                     swap_id: var_swapId,
+                    bitcoin_address: var_bitcoinAddress,
                     description: var_description,
                     auto_accepted_fees: var_autoAcceptedFees,
                     liquid_expiration_blockheight: var_liquidExpirationBlockheight,
@@ -4297,6 +4297,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
         let mut var_feesSat = <u64>::sse_decode(deserializer);
         let mut var_data = <crate::bindings::LnUrlPayRequestData>::sse_decode(deserializer);
+        let mut var_amount = <crate::model::PayAmount>::sse_decode(deserializer);
         let mut var_comment = <Option<String>>::sse_decode(deserializer);
         let mut var_successAction =
             <Option<crate::bindings::SuccessAction>>::sse_decode(deserializer);
@@ -4304,6 +4305,7 @@ impl SseDecode for crate::model::PrepareLnUrlPayResponse {
             destination: var_destination,
             fees_sat: var_feesSat,
             data: var_data,
+            amount: var_amount,
             comment: var_comment,
             success_action: var_successAction,
         };
@@ -4401,9 +4403,11 @@ impl SseDecode for crate::model::PrepareSendRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <String>::sse_decode(deserializer);
         let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
+        let mut var_comment = <Option<String>>::sse_decode(deserializer);
         return crate::model::PrepareSendRequest {
             destination: var_destination,
             amount: var_amount,
+            comment: var_comment,
         };
     }
 }
@@ -4412,10 +4416,12 @@ impl SseDecode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <crate::model::SendDestination>::sse_decode(deserializer);
+        let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
         let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_estimatedAssetFees = <Option<f64>>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
             destination: var_destination,
+            amount: var_amount,
             fees_sat: var_feesSat,
             estimated_asset_fees: var_estimatedAssetFees,
         };
@@ -4704,10 +4710,12 @@ impl SseDecode for crate::model::SendDestination {
                 let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
                 let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
                 let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
+                let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt12 {
                     offer: var_offer,
                     receiver_amount_sat: var_receiverAmountSat,
                     bip353_address: var_bip353Address,
+                    payer_note: var_payerNote,
                 };
             }
             _ => {
@@ -5316,7 +5324,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.liquid_explorer.into_into_dart().into_dart(),
             self.bitcoin_explorer.into_into_dart().into_dart(),
             self.working_dir.into_into_dart().into_dart(),
-            self.cache_dir.into_into_dart().into_dart(),
             self.network.into_into_dart().into_dart(),
             self.payment_timeout_sec.into_into_dart().into_dart(),
             self.sync_service_url.into_into_dart().into_dart(),
@@ -6510,6 +6517,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             .into_dart(),
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
+                bitcoin_address,
                 description,
                 auto_accepted_fees,
                 liquid_expiration_blockheight,
@@ -6521,6 +6529,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
             } => [
                 2.into_dart(),
                 swap_id.into_into_dart().into_dart(),
+                bitcoin_address.into_into_dart().into_dart(),
                 description.into_into_dart().into_dart(),
                 auto_accepted_fees.into_into_dart().into_dart(),
                 liquid_expiration_blockheight.into_into_dart().into_dart(),
@@ -6745,6 +6754,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareLnUrlPayResponse {
             self.destination.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.data.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.comment.into_into_dart().into_dart(),
             self.success_action.into_into_dart().into_dart(),
         ]
@@ -6901,6 +6911,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
         [
             self.destination.into_into_dart().into_dart(),
             self.amount.into_into_dart().into_dart(),
+            self.comment.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6921,6 +6932,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.destination.into_into_dart().into_dart(),
+            self.amount.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.estimated_asset_fees.into_into_dart().into_dart(),
         ]
@@ -7260,11 +7272,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
+                payer_note,
             } => [
                 2.into_dart(),
                 offer.into_into_dart().into_dart(),
                 receiver_amount_sat.into_into_dart().into_dart(),
                 bip353_address.into_into_dart().into_dart(),
+                payer_note.into_into_dart().into_dart(),
             ]
             .into_dart(),
             _ => {
@@ -7735,7 +7749,6 @@ impl SseEncode for crate::model::Config {
         <crate::model::BlockchainExplorer>::sse_encode(self.liquid_explorer, serializer);
         <crate::model::BlockchainExplorer>::sse_encode(self.bitcoin_explorer, serializer);
         <String>::sse_encode(self.working_dir, serializer);
-        <Option<String>>::sse_encode(self.cache_dir, serializer);
         <crate::model::LiquidNetwork>::sse_encode(self.network, serializer);
         <u64>::sse_encode(self.payment_timeout_sec, serializer);
         <Option<String>>::sse_encode(self.sync_service_url, serializer);
@@ -8880,6 +8893,7 @@ impl SseEncode for crate::model::PaymentDetails {
             }
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
+                bitcoin_address,
                 description,
                 auto_accepted_fees,
                 liquid_expiration_blockheight,
@@ -8891,6 +8905,7 @@ impl SseEncode for crate::model::PaymentDetails {
             } => {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(swap_id, serializer);
+                <String>::sse_encode(bitcoin_address, serializer);
                 <String>::sse_encode(description, serializer);
                 <bool>::sse_encode(auto_accepted_fees, serializer);
                 <Option<u32>>::sse_encode(liquid_expiration_blockheight, serializer);
@@ -9085,6 +9100,7 @@ impl SseEncode for crate::model::PrepareLnUrlPayResponse {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
         <u64>::sse_encode(self.fees_sat, serializer);
         <crate::bindings::LnUrlPayRequestData>::sse_encode(self.data, serializer);
+        <crate::model::PayAmount>::sse_encode(self.amount, serializer);
         <Option<String>>::sse_encode(self.comment, serializer);
         <Option<crate::bindings::SuccessAction>>::sse_encode(self.success_action, serializer);
     }
@@ -9150,6 +9166,7 @@ impl SseEncode for crate::model::PrepareSendRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.destination, serializer);
         <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
+        <Option<String>>::sse_encode(self.comment, serializer);
     }
 }
 
@@ -9157,6 +9174,7 @@ impl SseEncode for crate::model::PrepareSendResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::SendDestination>::sse_encode(self.destination, serializer);
+        <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
         <Option<u64>>::sse_encode(self.fees_sat, serializer);
         <Option<f64>>::sse_encode(self.estimated_asset_fees, serializer);
     }
@@ -9374,11 +9392,13 @@ impl SseEncode for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
+                payer_note,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNOffer>::sse_encode(offer, serializer);
                 <u64>::sse_encode(receiver_amount_sat, serializer);
                 <Option<String>>::sse_encode(bip353_address, serializer);
+                <Option<String>>::sse_encode(payer_note, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -10233,7 +10253,6 @@ mod io {
                 liquid_explorer: self.liquid_explorer.cst_decode(),
                 bitcoin_explorer: self.bitcoin_explorer.cst_decode(),
                 working_dir: self.working_dir.cst_decode(),
-                cache_dir: self.cache_dir.cst_decode(),
                 network: self.network.cst_decode(),
                 payment_timeout_sec: self.payment_timeout_sec.cst_decode(),
                 sync_service_url: self.sync_service_url.cst_decode(),
@@ -11182,6 +11201,7 @@ mod io {
                     let ans = unsafe { self.kind.Bitcoin };
                     crate::model::PaymentDetails::Bitcoin {
                         swap_id: ans.swap_id.cst_decode(),
+                        bitcoin_address: ans.bitcoin_address.cst_decode(),
                         description: ans.description.cst_decode(),
                         auto_accepted_fees: ans.auto_accepted_fees.cst_decode(),
                         liquid_expiration_blockheight: ans
@@ -11324,6 +11344,7 @@ mod io {
                 destination: self.destination.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 data: self.data.cst_decode(),
+                amount: self.amount.cst_decode(),
                 comment: self.comment.cst_decode(),
                 success_action: self.success_action.cst_decode(),
             }
@@ -11396,6 +11417,7 @@ mod io {
             crate::model::PrepareSendRequest {
                 destination: self.destination.cst_decode(),
                 amount: self.amount.cst_decode(),
+                comment: self.comment.cst_decode(),
             }
         }
     }
@@ -11404,6 +11426,7 @@ mod io {
         fn cst_decode(self) -> crate::model::PrepareSendResponse {
             crate::model::PrepareSendResponse {
                 destination: self.destination.cst_decode(),
+                amount: self.amount.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 estimated_asset_fees: self.estimated_asset_fees.cst_decode(),
             }
@@ -11637,6 +11660,7 @@ mod io {
                         offer: ans.offer.cst_decode(),
                         receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
                         bip353_address: ans.bip353_address.cst_decode(),
+                        payer_note: ans.payer_note.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -11985,7 +12009,6 @@ mod io {
                 liquid_explorer: Default::default(),
                 bitcoin_explorer: Default::default(),
                 working_dir: core::ptr::null_mut(),
-                cache_dir: core::ptr::null_mut(),
                 network: Default::default(),
                 payment_timeout_sec: Default::default(),
                 sync_service_url: core::ptr::null_mut(),
@@ -12696,6 +12719,7 @@ mod io {
                 destination: Default::default(),
                 fees_sat: Default::default(),
                 data: Default::default(),
+                amount: Default::default(),
                 comment: core::ptr::null_mut(),
                 success_action: core::ptr::null_mut(),
             }
@@ -12796,6 +12820,7 @@ mod io {
             Self {
                 destination: core::ptr::null_mut(),
                 amount: core::ptr::null_mut(),
+                comment: core::ptr::null_mut(),
             }
         }
     }
@@ -12808,6 +12833,7 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 destination: Default::default(),
+                amount: core::ptr::null_mut(),
                 fees_sat: core::ptr::null_mut(),
                 estimated_asset_fees: core::ptr::null_mut(),
             }
@@ -14309,7 +14335,6 @@ mod io {
         liquid_explorer: wire_cst_blockchain_explorer,
         bitcoin_explorer: wire_cst_blockchain_explorer,
         working_dir: *mut wire_cst_list_prim_u_8_strict,
-        cache_dir: *mut wire_cst_list_prim_u_8_strict,
         network: i32,
         payment_timeout_sec: u64,
         sync_service_url: *mut wire_cst_list_prim_u_8_strict,
@@ -15097,6 +15122,7 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_PaymentDetails_Bitcoin {
         swap_id: *mut wire_cst_list_prim_u_8_strict,
+        bitcoin_address: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
         auto_accepted_fees: bool,
         liquid_expiration_blockheight: *mut u32,
@@ -15213,6 +15239,7 @@ mod io {
         destination: wire_cst_send_destination,
         fees_sat: u64,
         data: wire_cst_ln_url_pay_request_data,
+        amount: wire_cst_pay_amount,
         comment: *mut wire_cst_list_prim_u_8_strict,
         success_action: *mut wire_cst_success_action,
     }
@@ -15264,11 +15291,13 @@ mod io {
     pub struct wire_cst_prepare_send_request {
         destination: *mut wire_cst_list_prim_u_8_strict,
         amount: *mut wire_cst_pay_amount,
+        comment: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_prepare_send_response {
         destination: wire_cst_send_destination,
+        amount: *mut wire_cst_pay_amount,
         fees_sat: *mut u64,
         estimated_asset_fees: *mut f64,
     }
@@ -15484,6 +15513,7 @@ mod io {
         offer: *mut wire_cst_ln_offer,
         receiver_amount_sat: u64,
         bip353_address: *mut wire_cst_list_prim_u_8_strict,
+        payer_note: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

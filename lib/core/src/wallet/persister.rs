@@ -1,13 +1,14 @@
 use anyhow::Result;
-use log::warn;
-use lwk_wollet::{ElementsNetwork, FsPersister, NoPersist, WolletDescriptor};
+use log::debug;
+use lwk_wollet::{PersistError, Update, WolletDescriptor};
 use maybe_sync::{MaybeSend, MaybeSync};
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::sync::{Arc, Mutex};
 
 pub use lwk_wollet;
 
-pub type LwkPersister = std::sync::Arc<dyn lwk_wollet::Persister + Send + Sync>;
+use crate::persist::Persister;
+
+pub type LwkPersister = Arc<dyn lwk_wollet::Persister + Send + Sync>;
 
 #[sdk_macros::async_trait]
 pub trait WalletCachePersister: MaybeSend + MaybeSync {
@@ -17,60 +18,84 @@ pub trait WalletCachePersister: MaybeSend + MaybeSync {
 }
 
 #[derive(Clone)]
-pub struct FsWalletCachePersister {
-    working_dir: String,
+pub struct SqliteWalletCachePersister {
+    persister: Arc<Persister>,
     descriptor: WolletDescriptor,
-    elements_network: ElementsNetwork,
 }
 
-impl FsWalletCachePersister {
-    pub(crate) fn new(
-        working_dir: String,
-        descriptor: WolletDescriptor,
-        elements_network: ElementsNetwork,
-    ) -> Result<Self> {
-        let working_dir_buf = PathBuf::from_str(&working_dir)?;
-        if !working_dir_buf.exists() {
-            std::fs::create_dir_all(&working_dir_buf)?;
-        }
-
+impl SqliteWalletCachePersister {
+    pub fn new(persister: Arc<Persister>, descriptor: WolletDescriptor) -> Result<Self> {
         Ok(Self {
-            working_dir,
+            persister,
             descriptor,
-            elements_network,
         })
     }
 }
 
 #[sdk_macros::async_trait]
-impl WalletCachePersister for FsWalletCachePersister {
+impl WalletCachePersister for SqliteWalletCachePersister {
     fn get_lwk_persister(&self) -> Result<LwkPersister> {
-        Ok(FsPersister::new(
-            &self.working_dir,
-            self.elements_network,
-            &self.descriptor,
-        )?)
+        SqliteLwkPersister::new(Arc::clone(&self.persister), self.descriptor.clone())
     }
 
     async fn clear_cache(&self) -> Result<()> {
-        let mut path = std::path::PathBuf::from(&self.working_dir);
-        path.push(self.elements_network.as_str());
-        warn!("Wiping wallet in path: {:?}", path);
-        std::fs::remove_dir_all(&path)?;
-        Ok(())
+        self.persister.clear_wallet_updates()
     }
 }
 
-#[derive(Clone)]
-pub struct NoWalletCachePersister {}
+pub(crate) struct SqliteLwkPersister {
+    persister: Arc<Persister>,
+    descriptor: WolletDescriptor,
+    next: Mutex<u64>,
+}
 
-#[sdk_macros::async_trait]
-impl WalletCachePersister for NoWalletCachePersister {
-    fn get_lwk_persister(&self) -> Result<LwkPersister> {
-        Ok(NoPersist::new())
+impl SqliteLwkPersister {
+    #[allow(clippy::new_ret_no_self)]
+    pub(crate) fn new(
+        persister: Arc<Persister>,
+        descriptor: WolletDescriptor,
+    ) -> Result<LwkPersister> {
+        let next = persister.get_next_wallet_update_index()?;
+        Ok(Arc::new(Self {
+            persister,
+            descriptor,
+            next: Mutex::new(next),
+        }))
+    }
+}
+
+impl lwk_wollet::Persister for SqliteLwkPersister {
+    fn get(&self, index: usize) -> std::result::Result<Option<Update>, PersistError> {
+        let maybe_update_bytes = self
+            .persister
+            .get_wallet_update(index as u64)
+            .map_err(|e| PersistError::Other(e.to_string()))?;
+        maybe_update_bytes
+            .map(|update_bytes| {
+                Update::deserialize_decrypted(&update_bytes, &self.descriptor)
+                    .map_err(|e| PersistError::Other(e.to_string()))
+            })
+            .transpose()
     }
 
-    async fn clear_cache(&self) -> Result<()> {
+    fn push(&self, update: Update) -> std::result::Result<(), PersistError> {
+        debug!(
+            "LwkPersister starting push update with status {}",
+            update.wollet_status
+        );
+
+        let mut next = self.next.lock().unwrap();
+
+        let ciphertext = update
+            .serialize_encrypted(&self.descriptor)
+            .map_err(|e| PersistError::Other(e.to_string()))?;
+
+        self.persister
+            .insert_wallet_update(*next, &ciphertext)
+            .map_err(|e| PersistError::Other(e.to_string()))?;
+
+        *next += 1;
+
         Ok(())
     }
 }

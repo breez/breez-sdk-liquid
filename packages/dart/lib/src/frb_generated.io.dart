@@ -2752,7 +2752,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     cst_api_fill_to_wire_blockchain_explorer(apiObj.liquidExplorer, wireObj.liquid_explorer);
     cst_api_fill_to_wire_blockchain_explorer(apiObj.bitcoinExplorer, wireObj.bitcoin_explorer);
     wireObj.working_dir = cst_encode_String(apiObj.workingDir);
-    wireObj.cache_dir = cst_encode_opt_String(apiObj.cacheDir);
     wireObj.network = cst_encode_liquid_network(apiObj.network);
     wireObj.payment_timeout_sec = cst_encode_u_64(apiObj.paymentTimeoutSec);
     wireObj.sync_service_url = cst_encode_opt_String(apiObj.syncServiceUrl);
@@ -3475,6 +3474,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     }
     if (apiObj is PaymentDetails_Bitcoin) {
       var pre_swap_id = cst_encode_String(apiObj.swapId);
+      var pre_bitcoin_address = cst_encode_String(apiObj.bitcoinAddress);
       var pre_description = cst_encode_String(apiObj.description);
       var pre_auto_accepted_fees = cst_encode_bool(apiObj.autoAcceptedFees);
       var pre_liquid_expiration_blockheight = cst_encode_opt_box_autoadd_u_32(
@@ -3489,6 +3489,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_refund_tx_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.refundTxAmountSat);
       wireObj.tag = 2;
       wireObj.kind.Bitcoin.swap_id = pre_swap_id;
+      wireObj.kind.Bitcoin.bitcoin_address = pre_bitcoin_address;
       wireObj.kind.Bitcoin.description = pre_description;
       wireObj.kind.Bitcoin.auto_accepted_fees = pre_auto_accepted_fees;
       wireObj.kind.Bitcoin.liquid_expiration_blockheight = pre_liquid_expiration_blockheight;
@@ -3654,6 +3655,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     cst_api_fill_to_wire_send_destination(apiObj.destination, wireObj.destination);
     wireObj.fees_sat = cst_encode_u_64(apiObj.feesSat);
     cst_api_fill_to_wire_ln_url_pay_request_data(apiObj.data, wireObj.data);
+    cst_api_fill_to_wire_pay_amount(apiObj.amount, wireObj.amount);
     wireObj.comment = cst_encode_opt_String(apiObj.comment);
     wireObj.success_action = cst_encode_opt_box_autoadd_success_action(apiObj.successAction);
   }
@@ -3726,6 +3728,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.destination = cst_encode_String(apiObj.destination);
     wireObj.amount = cst_encode_opt_box_autoadd_pay_amount(apiObj.amount);
+    wireObj.comment = cst_encode_opt_String(apiObj.comment);
   }
 
   @protected
@@ -3734,6 +3737,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_prepare_send_response wireObj,
   ) {
     cst_api_fill_to_wire_send_destination(apiObj.destination, wireObj.destination);
+    wireObj.amount = cst_encode_opt_box_autoadd_pay_amount(apiObj.amount);
     wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
     wireObj.estimated_asset_fees = cst_encode_opt_box_autoadd_f_64(apiObj.estimatedAssetFees);
   }
@@ -3938,10 +3942,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_offer = cst_encode_box_autoadd_ln_offer(apiObj.offer);
       var pre_receiver_amount_sat = cst_encode_u_64(apiObj.receiverAmountSat);
       var pre_bip353_address = cst_encode_opt_String(apiObj.bip353Address);
+      var pre_payer_note = cst_encode_opt_String(apiObj.payerNote);
       wireObj.tag = 2;
       wireObj.kind.Bolt12.offer = pre_offer;
       wireObj.kind.Bolt12.receiver_amount_sat = pre_receiver_amount_sat;
       wireObj.kind.Bolt12.bip353_address = pre_bip353_address;
+      wireObj.kind.Bolt12.payer_note = pre_payer_note;
       return;
     }
   }
@@ -6660,6 +6666,8 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
   external int receiver_amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
 
 final class SendDestinationKind extends ffi.Union {
@@ -6699,6 +6707,33 @@ final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> nostr_pubkey;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
+}
+
+final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
+  @ffi.Uint64()
+  external int receiver_amount_sat;
+}
+
+final class wire_cst_PayAmount_Asset extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  @ffi.Double()
+  external double receiver_amount;
+
+  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
+}
+
+final class PayAmountKind extends ffi.Union {
+  external wire_cst_PayAmount_Bitcoin Bitcoin;
+
+  external wire_cst_PayAmount_Asset Asset;
+}
+
+final class wire_cst_pay_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PayAmountKind kind;
 }
 
 final class wire_cst_aes_success_action_data extends ffi.Struct {
@@ -6757,6 +6792,8 @@ final class wire_cst_prepare_ln_url_pay_response extends ffi.Struct {
 
   external wire_cst_ln_url_pay_request_data data;
 
+  external wire_cst_pay_amount amount;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_success_action> success_action;
@@ -6812,33 +6849,6 @@ final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
 
   @ffi.Uint64()
   external int amount_sat;
-}
-
-final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
-  @ffi.Uint64()
-  external int receiver_amount_sat;
-}
-
-final class wire_cst_PayAmount_Asset extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
-
-  @ffi.Double()
-  external double receiver_amount;
-
-  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
-}
-
-final class PayAmountKind extends ffi.Union {
-  external wire_cst_PayAmount_Bitcoin Bitcoin;
-
-  external wire_cst_PayAmount_Asset Asset;
-}
-
-final class wire_cst_pay_amount extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external PayAmountKind kind;
 }
 
 final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
@@ -6903,6 +6913,8 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -6944,6 +6956,8 @@ final class wire_cst_restore_request extends ffi.Struct {
 
 final class wire_cst_prepare_send_response extends ffi.Struct {
   external wire_cst_send_destination destination;
+
+  external ffi.Pointer<wire_cst_pay_amount> amount;
 
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
@@ -7090,6 +7104,8 @@ final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
@@ -7280,8 +7296,6 @@ final class wire_cst_config extends ffi.Struct {
   external wire_cst_blockchain_explorer bitcoin_explorer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cache_dir;
 
   @ffi.Int32()
   external int network;

@@ -54,6 +54,8 @@ await init()
 ```
 
 ### Node.js
+> **Note**: This package requires Node.js v22 or higher.
+
 When developing a node.js application you should require `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/node` submodule).
 ```js
 const { connect, defaultConfig, setLogger } = require('@breeztech/breez-sdk-liquid/node')
@@ -110,7 +112,3 @@ program.parse()
 
 ### Deno
 When developing a Deno application you should import `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/deno` submodule).
-
-## Troubleshooting
-
-- Node.js version 19 is the first version to add `global.crypto`. When using less than version 19 this has to be polyfilled.

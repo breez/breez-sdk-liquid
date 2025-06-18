@@ -4509,6 +4509,8 @@ final class wire_cst_SendDestination_Bolt12 extends ffi.Struct {
   external int receiver_amount_sat;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
 
 final class SendDestinationKind extends ffi.Union {
@@ -4548,6 +4550,33 @@ final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> nostr_pubkey;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
+}
+
+final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
+  @ffi.Uint64()
+  external int receiver_amount_sat;
+}
+
+final class wire_cst_PayAmount_Asset extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  @ffi.Double()
+  external double receiver_amount;
+
+  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
+}
+
+final class PayAmountKind extends ffi.Union {
+  external wire_cst_PayAmount_Bitcoin Bitcoin;
+
+  external wire_cst_PayAmount_Asset Asset;
+}
+
+final class wire_cst_pay_amount extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PayAmountKind kind;
 }
 
 final class wire_cst_aes_success_action_data extends ffi.Struct {
@@ -4606,6 +4635,8 @@ final class wire_cst_prepare_ln_url_pay_response extends ffi.Struct {
 
   external wire_cst_ln_url_pay_request_data data;
 
+  external wire_cst_pay_amount amount;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
   external ffi.Pointer<wire_cst_success_action> success_action;
@@ -4661,33 +4692,6 @@ final class wire_cst_prepare_buy_bitcoin_request extends ffi.Struct {
 
   @ffi.Uint64()
   external int amount_sat;
-}
-
-final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
-  @ffi.Uint64()
-  external int receiver_amount_sat;
-}
-
-final class wire_cst_PayAmount_Asset extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
-
-  @ffi.Double()
-  external double receiver_amount;
-
-  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
-}
-
-final class PayAmountKind extends ffi.Union {
-  external wire_cst_PayAmount_Bitcoin Bitcoin;
-
-  external wire_cst_PayAmount_Asset Asset;
-}
-
-final class wire_cst_pay_amount extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external PayAmountKind kind;
 }
 
 final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
@@ -4752,6 +4756,8 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -4793,6 +4799,8 @@ final class wire_cst_restore_request extends ffi.Struct {
 
 final class wire_cst_prepare_send_response extends ffi.Struct {
   external wire_cst_send_destination destination;
+
+  external ffi.Pointer<wire_cst_pay_amount> amount;
 
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
@@ -4939,6 +4947,8 @@ final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_address;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
@@ -5129,8 +5139,6 @@ final class wire_cst_config extends ffi.Struct {
   external wire_cst_blockchain_explorer bitcoin_explorer;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> working_dir;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cache_dir;
 
   @ffi.Int32()
   external int network;

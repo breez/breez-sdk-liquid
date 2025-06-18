@@ -37,22 +37,6 @@ pub(crate) fn ensure_dir_exists(path: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub(crate) fn remove_dir_all_sync(path: &str) -> anyhow::Result<()> {
-    if exists_sync(path) {
-        let options = js_sys::Object::new();
-        Reflect::set(&options, &"recursive".into(), &true.into())
-            .map_err(js_value_to_err)
-            .context("Failed to set recursive option")?;
-        Reflect::set(&options, &"force".into(), &true.into())
-            .map_err(js_value_to_err)
-            .context("Failed to set force option")?; // Ignore errors if path doesn't exist
-        rm_sync(path, &options)
-            .map_err(js_value_to_err)
-            .context("Failed to call rm_sync")?;
-    }
-    Ok(())
-}
-
 pub(crate) fn js_value_to_err(err: JsValue) -> anyhow::Error {
     anyhow!(err
         .as_string()

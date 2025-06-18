@@ -1,6 +1,11 @@
 import Foundation
 
 struct Constants {
+    // Cache Control
+    static let CACHE_CONTROL_MAX_AGE_THREE_SEC = 3
+    static let CACHE_CONTROL_MAX_AGE_DAY = 60 * 60 * 24
+    static let CACHE_CONTROL_MAX_AGE_WEEK = 60 * 60 * 24 * 7
+
     // Notification Threads
     static let NOTIFICATION_THREAD_DISMISSIBLE = "DISMISSIBLE"
     static let NOTIFICATION_THREAD_REPLACEABLE = "REPLACEABLE"

@@ -8,6 +8,7 @@ mod signer;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
@@ -17,7 +18,6 @@ use breez_sdk_liquid::elements::hex::ToHex;
 use breez_sdk_liquid::persist::Persister;
 use breez_sdk_liquid::sdk::{LiquidSdk, LiquidSdkBuilder};
 use breez_sdk_liquid::signer::SdkLwkSigner;
-use breez_sdk_liquid::wallet::get_descriptor;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
@@ -75,7 +75,7 @@ async fn connect_inner(
         None => None,
     };
 
-    let persister = Rc::new(Persister::new_in_memory(
+    let persister = Arc::new(Persister::new_in_memory(
         &config.working_dir,
         config.network,
         config.sync_enabled(),
@@ -83,19 +83,7 @@ async fn connect_inner(
         maybe_backup_bytes,
     )?);
 
-    let wollet_descriptor = get_descriptor(&sdk_lwk_signer, config.network)?;
-    let onchain_wallet = platform::create_onchain_wallet(
-        &wallet_dir,
-        config.clone(),
-        wollet_descriptor,
-        &fingerprint,
-        Rc::clone(&persister),
-        Rc::clone(&signer),
-    )
-    .await?;
-
     sdk_builder.persister(persister.clone());
-    sdk_builder.onchain_wallet(onchain_wallet);
 
     let sdk = sdk_builder.build().await?;
     sdk.start().await?;
