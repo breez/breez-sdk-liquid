@@ -281,7 +281,7 @@ impl LiquidSdkBuilder {
                         && self.config.breez_api_key.is_none()
                     {
                         anyhow::bail!(
-                            "Cannot start the Breez real-time sync service without providing a valid API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key",
+                            "Cannot start the Breez real-time sync service without providing an API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key",
                         );
                     }
 

@@ -319,7 +319,7 @@ impl Config {
         match &self.liquid_explorer {
             BlockchainExplorer::Esplora { url, .. } => {
                 if url == BREEZ_LIQUID_ESPLORA_URL && self.breez_api_key.is_none() {
-                    bail!("Cannot start the Breez Esplora chain service without providing a valid API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key")
+                    bail!("Cannot start the Breez Esplora chain service without providing an API key. See https://sdk-doc-liquid.breez.technology/guide/getting_started.html#api-key")
                 }
                 Ok(Arc::new(EsploraLiquidChainService::new(self.clone())))
             }
