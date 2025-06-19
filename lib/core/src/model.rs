@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context as _, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
     boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
@@ -24,7 +24,6 @@ use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
-use crate::utils;
 use crate::{
     bitcoin,
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -35,6 +34,12 @@ use crate::{
     chain::bitcoin::esplora::EsploraBitcoinChainService,
     chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
 };
+use crate::{
+    side_swap::api::{SIDESWAP_MAINNET_URL, SIDESWAP_REGTEST_URL, SIDESWAP_TESTNET_URL},
+    utils,
+};
+
+use self::utils::{USDT_MAINNET_ASSET_ID, USDT_TESTNET_ASSET_ID};
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
@@ -349,6 +354,14 @@ impl Config {
             &electrum_url,
             lwk_wollet::ElectrumOptions { timeout: Some(3) },
         )
+    }
+
+    pub(crate) fn sideswap_url(&self) -> &'static str {
+        match self.network {
+            LiquidNetwork::Mainnet => SIDESWAP_MAINNET_URL,
+            LiquidNetwork::Testnet => SIDESWAP_TESTNET_URL,
+            LiquidNetwork::Regtest => SIDESWAP_REGTEST_URL,
+        }
     }
 }
 
@@ -2460,6 +2473,103 @@ impl From<&lwk_wollet::History> for LBtcHistory {
 }
 pub(crate) type BtcScript = bitcoin::ScriptBuf;
 pub(crate) type LBtcScript = elements::Script;
+
+/// The currently supported assets via SideSwap
+#[derive(Clone, Debug, EnumString, Serialize, Eq, PartialEq)]
+pub enum TradeableAsset {
+    #[strum(serialize = "usdt")]
+    USDt,
+}
+
+impl TradeableAsset {
+    pub(crate) fn try_from_asset_id(network: LiquidNetwork, asset_id: AssetId) -> Result<Self> {
+        match (network, asset_id) {
+            (LiquidNetwork::Mainnet, asset) if asset == *USDT_MAINNET_ASSET_ID => Ok(Self::USDt),
+            (LiquidNetwork::Testnet, asset) if asset == *USDT_TESTNET_ASSET_ID => Ok(Self::USDt),
+            _ => anyhow::bail!("Unsupported network-asset pair"),
+        }
+    }
+
+    pub(crate) fn try_to_asset_id(&self, network: LiquidNetwork) -> Result<AssetId> {
+        match (self, network) {
+            (Self::USDt, LiquidNetwork::Mainnet) => Ok(*USDT_MAINNET_ASSET_ID),
+            (Self::USDt, LiquidNetwork::Testnet) => Ok(*USDT_TESTNET_ASSET_ID),
+            _ => anyhow::bail!("Unsupported network-asset pair"),
+        }
+    }
+}
+
+/// The current state of a swap via the SideSwap service
+#[derive(Debug, Clone, Serialize)]
+pub struct AssetSwap {
+    /// The asset we are currently trading for
+    pub asset: TradeableAsset,
+    /// The exchange rate of the asset, or the total price for one L-BTC
+    pub exchange_rate: f64,
+    /// The asset amount which will be received after swapping
+    pub receiver_amount: f64,
+    /// The service fees for the swap (in satoshi)
+    pub fees_sat: u64,
+    /// The amount of L-BTC (in satoshi) to execute the swap
+    pub payer_amount_sat: u64,
+}
+
+impl AssetSwap {
+    pub(crate) fn try_from_price_stream_response(
+        network: LiquidNetwork,
+        price_stream_res: &sideswap_api::SubscribePriceStreamResponse,
+    ) -> Result<Self> {
+        if let Some(err) = &price_stream_res.error_msg {
+            anyhow::bail!(
+                "Could not convert SideSwap price - received error message from stream: {err}"
+            );
+        }
+
+        Ok(Self {
+            asset: TradeableAsset::try_from_asset_id(network, price_stream_res.asset)?,
+            payer_amount_sat: price_stream_res
+                .send_amount
+                .context("Expected send amount when creating side swap")?
+                as u64,
+            receiver_amount: price_stream_res
+                .recv_amount
+                .context("Expected receive amount when creating side swap")?
+                as f64
+                / 1e8,
+            fees_sat: price_stream_res
+                .fixed_fee
+                .context("Expected fees when creating side swap")? as u64,
+            exchange_rate: price_stream_res
+                .price
+                .context("Expected price when creating side swap")?,
+        })
+    }
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
+#[derive(Debug, Clone, Serialize)]
+pub struct PrepareAssetSwapRequest {
+    pub asset: TradeableAsset,
+    pub payer_amount_sat: u64,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::prepare_asset_swap_request].
+#[derive(Debug, Clone, Serialize)]
+pub struct PrepareAssetSwapResponse {
+    pub asset_swap: AssetSwap,
+}
+
+/// An argument when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+#[derive(Debug, Clone, Serialize)]
+pub struct ExecuteAssetSwapRequest {
+    pub prepare_response: PrepareAssetSwapResponse,
+}
+
+/// Returned when calling [crate::sdk::LiquidSdk::execute_asset_swap_request].
+#[derive(Debug, Clone, Serialize)]
+pub struct ExecuteAssetSwapResponse {
+    pub payment: Payment,
+}
 
 #[derive(Clone, Debug)]
 pub struct BtcScriptBalance {
