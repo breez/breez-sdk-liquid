@@ -344,5 +344,26 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
             data BLOB NOT NULL
         ) STRICT;
         ",
+        "
+        CREATE TABLE IF NOT EXISTS payment_balance (
+            tx_id TEXT NOT NULL REFERENCES payment_tx_data(tx_id) ON DELETE CASCADE,
+            asset_id TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            payment_type INTEGER NOT NULL,
+            PRIMARY KEY (tx_id, asset_id)
+        ) STRICT;
+
+        INSERT INTO payment_balance(tx_id, asset_id, amount, payment_type)
+        SELECT
+            tx_id,
+            asset_id,
+            amount,
+            payment_type
+        FROM payment_tx_data;
+
+        ALTER TABLE payment_tx_data DROP COLUMN asset_id;
+        ALTER TABLE payment_tx_data DROP COLUMN amount;
+        ALTER TABLE payment_tx_data DROP COLUMN payment_type;
+        ",
     ]
 }
