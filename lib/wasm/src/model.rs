@@ -434,7 +434,7 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
-    pub comment: Option<String>,
+    pub payer_note: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendDestination)]
@@ -699,6 +699,7 @@ pub enum PaymentDetails {
         destination_pubkey: Option<String>,
         lnurl_info: Option<LnUrlInfo>,
         bip353_address: Option<String>,
+        payer_note: Option<String>,
         claim_tx_id: Option<String>,
         refund_tx_id: Option<String>,
         refund_tx_amount_sat: Option<u64>,
@@ -710,6 +711,7 @@ pub enum PaymentDetails {
         asset_info: Option<AssetInfo>,
         lnurl_info: Option<LnUrlInfo>,
         bip353_address: Option<String>,
+        payer_note: Option<String>,
     },
     Bitcoin {
         swap_id: String,

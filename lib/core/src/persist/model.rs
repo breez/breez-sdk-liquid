@@ -7,5 +7,6 @@ pub(crate) struct PaymentTxDetails {
     pub(crate) description: Option<String>,
     pub(crate) lnurl_info: Option<LnUrlInfo>,
     pub(crate) bip353_address: Option<String>,
+    pub(crate) payer_note: Option<String>,
     pub(crate) asset_fees: Option<u64>,
 }

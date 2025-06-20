@@ -400,7 +400,7 @@ export interface PrepareRefundResponse {
 export interface PrepareSendRequest {
     destination: string
     amount?: PayAmount
-    comment?: string
+    payerNote?: string
 }
 
 export interface PrepareSendResponse {
@@ -721,6 +721,7 @@ export type PaymentDetails = {
     destinationPubkey?: string
     lnurlInfo?: LnUrlInfo
     bip353Address?: string
+    payerNote?: string
     claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
@@ -732,6 +733,7 @@ export type PaymentDetails = {
     assetInfo?: AssetInfo
     lnurlInfo?: LnUrlInfo
     bip353Address?: string
+    payerNote?: string
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string

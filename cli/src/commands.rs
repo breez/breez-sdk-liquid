@@ -53,6 +53,10 @@ pub(crate) enum Command {
         #[arg(long)]
         amount: Option<f64>,
 
+        /// Optional payer note, which will be included in the BOLT12 invoice
+        #[clap(short, long)]
+        payer_note: Option<String>,
+
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
@@ -397,6 +401,7 @@ pub(crate) async fn handle_command(
         Command::SendPayment {
             invoice,
             offer,
+            payer_note,
             address,
             amount,
             amount_sat,
@@ -425,7 +430,7 @@ pub(crate) async fn handle_command(
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
                     amount,
-                    comment: None,
+                    payer_note,
                 })
                 .await?;
 

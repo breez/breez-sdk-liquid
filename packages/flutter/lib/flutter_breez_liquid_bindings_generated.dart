@@ -4757,7 +4757,7 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -4913,6 +4913,8 @@ final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
 
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
+
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
@@ -4943,6 +4945,8 @@ final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
   external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
 
 final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
