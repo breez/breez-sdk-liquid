@@ -1,4 +1,6 @@
+pub(crate) mod network_fee;
 pub mod persister;
+pub(crate) mod utxo_select;
 
 use std::collections::HashMap;
 use std::io::Write;
@@ -21,6 +23,7 @@ use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
 use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
+use utxo_select::{InOut, WalletUtxoSelectRequest};
 use web_time::Instant;
 
 use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
@@ -257,6 +260,59 @@ impl LiquidOnchainWallet {
             .ok_or(anyhow!("Output not found"))?;
         Ok(tx_out.clone())
     }
+
+    fn select_wallet_utxos(
+        &self,
+        wallet: &Wollet,
+        policy_asset: AssetId,
+        selection_asset: AssetId,
+        recipient_outputs: Vec<InOut>,
+        fee_rate_sats_per_kvb: Option<f32>,
+    ) -> Result<Vec<OutPoint>, PaymentError> {
+        let mut wallet_utxos = wallet.utxos()?;
+        debug!(
+            "Wallet utxos: {:?}",
+            wallet_utxos
+                .iter()
+                .map(|tx_out| format!(
+                    "{}:{}, value: {}",
+                    tx_out.outpoint.txid, tx_out.outpoint.vout, tx_out.unblinded.value
+                ))
+                .collect::<Vec<_>>()
+        );
+        let fee_rate = fee_rate_sats_per_kvb.map(|rate| rate as f64 / 1000.0);
+        let selected_in_outs = utxo_select::utxo_select(WalletUtxoSelectRequest {
+            policy_asset,
+            selection_asset,
+            wallet_utxos: wallet_utxos.iter().map(Into::into).collect(),
+            recipient_outputs,
+            fee_rate,
+        })?;
+        let selected_utxos = selected_in_outs
+            .iter()
+            .filter_map(|in_out| {
+                wallet_utxos
+                    .iter()
+                    .position(|tx_out| {
+                        tx_out.unblinded.asset == in_out.asset_id
+                            && tx_out.unblinded.value == in_out.value
+                    })
+                    .map(|index| wallet_utxos.remove(index).outpoint)
+            })
+            .collect::<Vec<_>>();
+        ensure_sdk!(
+            selected_utxos.len() == selected_in_outs.len(),
+            PaymentError::generic("Failed to select wallet utxos")
+        );
+        debug!(
+            "Selected wallet outputs: {:?}",
+            selected_utxos
+                .iter()
+                .map(|outpoint| format!("{}:{}", outpoint.txid, outpoint.vout))
+                .collect::<Vec<_>>()
+        );
+        Ok(selected_utxos)
+    }
 }
 
 pub fn get_descriptor(
@@ -325,8 +381,30 @@ impl OnchainWallet for LiquidOnchainWallet {
             .fee_rate(fee_rate_sats_per_kvb)
             .enable_ct_discount();
         if asset_id.eq(&self.config.lbtc_asset_id()) {
+            // If the asset is L-BTC, try to select wallet utxos for the recipient amount.
+            // If it fails to select utxos, the LWK wallet will select the utxos for us.
+            let policy_asset = lwk_wollet.policy_asset();
+            // TODO: LWK only supports selecting utxos for the policy asset, in the future
+            // we should be able to select utxos for any asset.
+            match self.select_wallet_utxos(
+                &lwk_wollet,
+                policy_asset,
+                policy_asset,
+                vec![InOut {
+                    asset_id: policy_asset,
+                    value: amount_sat,
+                }],
+                fee_rate_sats_per_kvb,
+            ) {
+                Ok(wallet_utxos) => {
+                    tx_builder = tx_builder.set_wallet_utxos(wallet_utxos);
+                }
+                Err(e) => warn!("Failed to select wallet utxos: {e:?}"),
+            }
+            // Add the L-BTC recipient
             tx_builder = tx_builder.add_lbtc_recipient(&address, amount_sat)?;
         } else {
+            // Add the asset recipient
             let asset = AssetId::from_str(asset_id)?;
             tx_builder = tx_builder.add_recipient(&address, amount_sat, asset)?;
         }

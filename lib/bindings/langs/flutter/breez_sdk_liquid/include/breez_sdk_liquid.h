@@ -22,16 +22,6 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define LIQUID_FEE_RATE_MSAT_PER_VBYTE (float)(LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0)
 
-#define MIN_FEE_RATE 0.1
-
-#define WEIGHT_FIXED 222
-
-#define WEIGHT_VIN_SINGLE_SIG_NATIVE 275
-
-#define WEIGHT_VIN_SINGLE_SIG_NESTED 367
-
-#define WEIGHT_VOUT_NESTED 270
-
 /**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
  */

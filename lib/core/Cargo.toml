@@ -71,7 +71,7 @@ electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
     "proxy",
 ] }
-lwk_wollet = { git = "https://github.com/breez/lwk", rev = "08edbdab622ed0aa92afa319fe35d38ee7d2dc96" }
+lwk_wollet = { git = "https://github.com/breez/lwk", rev = "663ec5531b6be617eee3836e0f2c988d56f60acb" }
 maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
@@ -88,7 +88,7 @@ rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "e36644127f31fa6e7e
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
-lwk_wollet = { git = "https://github.com/breez/lwk", rev = "08edbdab622ed0aa92afa319fe35d38ee7d2dc96", default-features = false, features = [
+lwk_wollet = { git = "https://github.com/breez/lwk", rev = "663ec5531b6be617eee3836e0f2c988d56f60acb", default-features = false, features = [
     "esplora",
 ] }
 maybe-sync = "0.1.1"

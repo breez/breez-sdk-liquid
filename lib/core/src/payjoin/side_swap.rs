@@ -30,18 +30,18 @@ use sdk_common::{
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::OnceCell;
 
+use crate::model::{Config, LiquidNetwork};
 use crate::payjoin::{
-    model::{InOut, Recipient},
-    network_fee::TxFee,
-    pset::blind::remove_explicit_values,
+    model::Recipient,
+    pset::{blind::remove_explicit_values, construct_pset, ConstructPsetRequest, PsetOutput},
     utxo_select::UtxoSelectRequest,
 };
-use crate::persist::Persister;
+use crate::wallet::utxo_select::InOut;
 use crate::{
-    model::{Config, LiquidNetwork},
-    payjoin::pset::{construct_pset, ConstructPsetRequest, PsetOutput},
+    persist::Persister,
+    utils,
+    wallet::{network_fee::TxFee, OnchainWallet},
 };
-use crate::{utils, wallet::OnchainWallet};
 
 const PRODUCTION_SIDESWAP_URL: &str = "https://api.sideswap.io/payjoin";
 const TESTNET_SIDESWAP_URL: &str = "https://api-testnet.sideswap.io/payjoin";
@@ -184,11 +184,11 @@ impl PayjoinService for SideSwapPayjoinService {
         // - 1 output for the server (asset fee)
         // - 1 output for the server (lbtc change)
         let network_fee = TxFee {
-            server_inputs: 1,
-            user_inputs: 1,
+            native_inputs: 1,
+            nested_inputs: 1,
             outputs: 4,
         }
-        .fee();
+        .fee(None);
         let fee_sat = (network_fee as f64 * asset_index_price) as u64 + fixed_fee;
         ensure_sdk!(
             wallet_asset_balance >= amount_sat + fee_sat,
