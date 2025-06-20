@@ -4303,7 +4303,7 @@ impl LiquidSdk {
                     description,
                     lnurl_info: Some(LnUrlInfo {
                         ln_address: prepare_response.data.ln_address,
-                        lnurl_pay_comment: prepare_response.comment.clone(),
+                        lnurl_pay_comment: prepare_response.comment,
                         lnurl_pay_domain,
                         lnurl_pay_metadata: Some(prepare_response.data.metadata_str),
                         lnurl_pay_success_action: maybe_sa_processed.clone(),
