@@ -693,8 +693,8 @@ pub struct PrepareSendRequest {
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
-    /// An optional comment when paying a BOLT12 offer
-    pub comment: Option<String>,
+    /// An optional payer note when paying a BOLT12 offer
+    pub payer_note: Option<String>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -1883,6 +1883,9 @@ pub enum PaymentDetails {
         /// The BIP353 address used to resolve this payment
         bip353_address: Option<String>,
 
+        /// The payer note included in a BOLT12 payment
+        payer_note: Option<String>,
+
         /// For a Receive payment, this is the claim tx id in case it has already been broadcast
         claim_tx_id: Option<String>,
 
@@ -1911,6 +1914,9 @@ pub enum PaymentDetails {
 
         /// The BIP353 address used to resolve this payment
         bip353_address: Option<String>,
+
+        /// The payer note included in a BOLT12 payment
+        payer_note: Option<String>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {

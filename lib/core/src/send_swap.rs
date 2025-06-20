@@ -317,6 +317,7 @@ impl SendSwapHandler {
                 description,
                 lnurl_info: Some(mut lnurl_info),
                 bip353_address,
+                payer_note,
                 ..
             }) = self.persister.get_payment_details(&tx_id)?
             {
@@ -344,6 +345,7 @@ impl SendSwapHandler {
                             description,
                             lnurl_info: Some(lnurl_info),
                             bip353_address,
+                            payer_note,
                             asset_fees: None,
                         })?;
                     return Ok(true);

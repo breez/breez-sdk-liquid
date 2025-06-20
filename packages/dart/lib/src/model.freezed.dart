@@ -1029,7 +1029,7 @@ as String,
 
 
 class PaymentDetails_Lightning extends PaymentDetails {
-  const PaymentDetails_Lightning({required this.swapId, required this.description, required this.liquidExpirationBlockheight, this.preimage, this.invoice, this.bolt12Offer, this.paymentHash, this.destinationPubkey, this.lnurlInfo, this.bip353Address, this.claimTxId, this.refundTxId, this.refundTxAmountSat}): super._();
+  const PaymentDetails_Lightning({required this.swapId, required this.description, required this.liquidExpirationBlockheight, this.preimage, this.invoice, this.bolt12Offer, this.paymentHash, this.destinationPubkey, this.lnurlInfo, this.bip353Address, this.payerNote, this.claimTxId, this.refundTxId, this.refundTxAmountSat}): super._();
   
 
  final  String swapId;
@@ -1052,6 +1052,8 @@ class PaymentDetails_Lightning extends PaymentDetails {
  final  LnUrlInfo? lnurlInfo;
 /// The BIP353 address used to resolve this payment
  final  String? bip353Address;
+/// The payer note included in a BOLT12 payment
+ final  String? payerNote;
 /// For a Receive payment, this is the claim tx id in case it has already been broadcast
  final  String? claimTxId;
 /// For a Send swap which was refunded, this is the refund tx id
@@ -1069,16 +1071,16 @@ $PaymentDetails_LightningCopyWith<PaymentDetails_Lightning> get copyWith => _$Pa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentDetails_Lightning&&(identical(other.swapId, swapId) || other.swapId == swapId)&&(identical(other.description, description) || other.description == description)&&(identical(other.liquidExpirationBlockheight, liquidExpirationBlockheight) || other.liquidExpirationBlockheight == liquidExpirationBlockheight)&&(identical(other.preimage, preimage) || other.preimage == preimage)&&(identical(other.invoice, invoice) || other.invoice == invoice)&&(identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer)&&(identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash)&&(identical(other.destinationPubkey, destinationPubkey) || other.destinationPubkey == destinationPubkey)&&(identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address)&&(identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId)&&(identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId)&&(identical(other.refundTxAmountSat, refundTxAmountSat) || other.refundTxAmountSat == refundTxAmountSat));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentDetails_Lightning&&(identical(other.swapId, swapId) || other.swapId == swapId)&&(identical(other.description, description) || other.description == description)&&(identical(other.liquidExpirationBlockheight, liquidExpirationBlockheight) || other.liquidExpirationBlockheight == liquidExpirationBlockheight)&&(identical(other.preimage, preimage) || other.preimage == preimage)&&(identical(other.invoice, invoice) || other.invoice == invoice)&&(identical(other.bolt12Offer, bolt12Offer) || other.bolt12Offer == bolt12Offer)&&(identical(other.paymentHash, paymentHash) || other.paymentHash == paymentHash)&&(identical(other.destinationPubkey, destinationPubkey) || other.destinationPubkey == destinationPubkey)&&(identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address)&&(identical(other.payerNote, payerNote) || other.payerNote == payerNote)&&(identical(other.claimTxId, claimTxId) || other.claimTxId == claimTxId)&&(identical(other.refundTxId, refundTxId) || other.refundTxId == refundTxId)&&(identical(other.refundTxAmountSat, refundTxAmountSat) || other.refundTxAmountSat == refundTxAmountSat));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,swapId,description,liquidExpirationBlockheight,preimage,invoice,bolt12Offer,paymentHash,destinationPubkey,lnurlInfo,bip353Address,claimTxId,refundTxId,refundTxAmountSat);
+int get hashCode => Object.hash(runtimeType,swapId,description,liquidExpirationBlockheight,preimage,invoice,bolt12Offer,paymentHash,destinationPubkey,lnurlInfo,bip353Address,payerNote,claimTxId,refundTxId,refundTxAmountSat);
 
 @override
 String toString() {
-  return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
+  return 'PaymentDetails.lightning(swapId: $swapId, description: $description, liquidExpirationBlockheight: $liquidExpirationBlockheight, preimage: $preimage, invoice: $invoice, bolt12Offer: $bolt12Offer, paymentHash: $paymentHash, destinationPubkey: $destinationPubkey, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address, payerNote: $payerNote, claimTxId: $claimTxId, refundTxId: $refundTxId, refundTxAmountSat: $refundTxAmountSat)';
 }
 
 
@@ -1089,7 +1091,7 @@ abstract mixin class $PaymentDetails_LightningCopyWith<$Res> implements $Payment
   factory $PaymentDetails_LightningCopyWith(PaymentDetails_Lightning value, $Res Function(PaymentDetails_Lightning) _then) = _$PaymentDetails_LightningCopyWithImpl;
 @override @useResult
 $Res call({
- String swapId, String description, int liquidExpirationBlockheight, String? preimage, String? invoice, String? bolt12Offer, String? paymentHash, String? destinationPubkey, LnUrlInfo? lnurlInfo, String? bip353Address, String? claimTxId, String? refundTxId, BigInt? refundTxAmountSat
+ String swapId, String description, int liquidExpirationBlockheight, String? preimage, String? invoice, String? bolt12Offer, String? paymentHash, String? destinationPubkey, LnUrlInfo? lnurlInfo, String? bip353Address, String? payerNote, String? claimTxId, String? refundTxId, BigInt? refundTxAmountSat
 });
 
 
@@ -1106,7 +1108,7 @@ class _$PaymentDetails_LightningCopyWithImpl<$Res>
 
 /// Create a copy of PaymentDetails
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? swapId = null,Object? description = null,Object? liquidExpirationBlockheight = null,Object? preimage = freezed,Object? invoice = freezed,Object? bolt12Offer = freezed,Object? paymentHash = freezed,Object? destinationPubkey = freezed,Object? lnurlInfo = freezed,Object? bip353Address = freezed,Object? claimTxId = freezed,Object? refundTxId = freezed,Object? refundTxAmountSat = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? swapId = null,Object? description = null,Object? liquidExpirationBlockheight = null,Object? preimage = freezed,Object? invoice = freezed,Object? bolt12Offer = freezed,Object? paymentHash = freezed,Object? destinationPubkey = freezed,Object? lnurlInfo = freezed,Object? bip353Address = freezed,Object? payerNote = freezed,Object? claimTxId = freezed,Object? refundTxId = freezed,Object? refundTxAmountSat = freezed,}) {
   return _then(PaymentDetails_Lightning(
 swapId: null == swapId ? _self.swapId : swapId // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
@@ -1118,6 +1120,7 @@ as String?,paymentHash: freezed == paymentHash ? _self.paymentHash : paymentHash
 as String?,destinationPubkey: freezed == destinationPubkey ? _self.destinationPubkey : destinationPubkey // ignore: cast_nullable_to_non_nullable
 as String?,lnurlInfo: freezed == lnurlInfo ? _self.lnurlInfo : lnurlInfo // ignore: cast_nullable_to_non_nullable
 as LnUrlInfo?,bip353Address: freezed == bip353Address ? _self.bip353Address : bip353Address // ignore: cast_nullable_to_non_nullable
+as String?,payerNote: freezed == payerNote ? _self.payerNote : payerNote // ignore: cast_nullable_to_non_nullable
 as String?,claimTxId: freezed == claimTxId ? _self.claimTxId : claimTxId // ignore: cast_nullable_to_non_nullable
 as String?,refundTxId: freezed == refundTxId ? _self.refundTxId : refundTxId // ignore: cast_nullable_to_non_nullable
 as String?,refundTxAmountSat: freezed == refundTxAmountSat ? _self.refundTxAmountSat : refundTxAmountSat // ignore: cast_nullable_to_non_nullable
@@ -1132,7 +1135,7 @@ as BigInt?,
 
 
 class PaymentDetails_Liquid extends PaymentDetails {
-  const PaymentDetails_Liquid({required this.destination, required this.description, required this.assetId, this.assetInfo, this.lnurlInfo, this.bip353Address}): super._();
+  const PaymentDetails_Liquid({required this.destination, required this.description, required this.assetId, this.assetInfo, this.lnurlInfo, this.bip353Address, this.payerNote}): super._();
   
 
 /// Represents either a Liquid BIP21 URI or pure address
@@ -1147,6 +1150,8 @@ class PaymentDetails_Liquid extends PaymentDetails {
  final  LnUrlInfo? lnurlInfo;
 /// The BIP353 address used to resolve this payment
  final  String? bip353Address;
+/// The payer note included in a BOLT12 payment
+ final  String? payerNote;
 
 /// Create a copy of PaymentDetails
 /// with the given fields replaced by the non-null parameter values.
@@ -1158,16 +1163,16 @@ $PaymentDetails_LiquidCopyWith<PaymentDetails_Liquid> get copyWith => _$PaymentD
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentDetails_Liquid&&(identical(other.destination, destination) || other.destination == destination)&&(identical(other.description, description) || other.description == description)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo)&&(identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentDetails_Liquid&&(identical(other.destination, destination) || other.destination == destination)&&(identical(other.description, description) || other.description == description)&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.assetInfo, assetInfo) || other.assetInfo == assetInfo)&&(identical(other.lnurlInfo, lnurlInfo) || other.lnurlInfo == lnurlInfo)&&(identical(other.bip353Address, bip353Address) || other.bip353Address == bip353Address)&&(identical(other.payerNote, payerNote) || other.payerNote == payerNote));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,destination,description,assetId,assetInfo,lnurlInfo,bip353Address);
+int get hashCode => Object.hash(runtimeType,destination,description,assetId,assetInfo,lnurlInfo,bip353Address,payerNote);
 
 @override
 String toString() {
-  return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address)';
+  return 'PaymentDetails.liquid(destination: $destination, description: $description, assetId: $assetId, assetInfo: $assetInfo, lnurlInfo: $lnurlInfo, bip353Address: $bip353Address, payerNote: $payerNote)';
 }
 
 
@@ -1178,7 +1183,7 @@ abstract mixin class $PaymentDetails_LiquidCopyWith<$Res> implements $PaymentDet
   factory $PaymentDetails_LiquidCopyWith(PaymentDetails_Liquid value, $Res Function(PaymentDetails_Liquid) _then) = _$PaymentDetails_LiquidCopyWithImpl;
 @override @useResult
 $Res call({
- String destination, String description, String assetId, AssetInfo? assetInfo, LnUrlInfo? lnurlInfo, String? bip353Address
+ String destination, String description, String assetId, AssetInfo? assetInfo, LnUrlInfo? lnurlInfo, String? bip353Address, String? payerNote
 });
 
 
@@ -1195,7 +1200,7 @@ class _$PaymentDetails_LiquidCopyWithImpl<$Res>
 
 /// Create a copy of PaymentDetails
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? destination = null,Object? description = null,Object? assetId = null,Object? assetInfo = freezed,Object? lnurlInfo = freezed,Object? bip353Address = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? destination = null,Object? description = null,Object? assetId = null,Object? assetInfo = freezed,Object? lnurlInfo = freezed,Object? bip353Address = freezed,Object? payerNote = freezed,}) {
   return _then(PaymentDetails_Liquid(
 destination: null == destination ? _self.destination : destination // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
@@ -1203,6 +1208,7 @@ as String,assetId: null == assetId ? _self.assetId : assetId // ignore: cast_nul
 as String,assetInfo: freezed == assetInfo ? _self.assetInfo : assetInfo // ignore: cast_nullable_to_non_nullable
 as AssetInfo?,lnurlInfo: freezed == lnurlInfo ? _self.lnurlInfo : lnurlInfo // ignore: cast_nullable_to_non_nullable
 as LnUrlInfo?,bip353Address: freezed == bip353Address ? _self.bip353Address : bip353Address // ignore: cast_nullable_to_non_nullable
+as String?,payerNote: freezed == payerNote ? _self.payerNote : payerNote // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

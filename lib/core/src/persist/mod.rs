@@ -389,15 +389,17 @@ impl Persister {
                     description,
                     lnurl_info_json,
                     bip353_address,
+                    payer_note,
                     asset_fees
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT (tx_id)
                 DO UPDATE SET
                     {destination_update}
                     description = COALESCE(excluded.description, description),
                     lnurl_info_json = COALESCE(excluded.lnurl_info_json, lnurl_info_json),
                     bip353_address = COALESCE(excluded.bip353_address, bip353_address),
+                    payer_note = COALESCE(excluded.payer_note, payer_note),
                     asset_fees = COALESCE(excluded.asset_fees, asset_fees)
             "
             ),
@@ -410,6 +412,7 @@ impl Persister {
                     .as_ref()
                     .map(|info| serde_json::to_string(&info).ok()),
                 &payment_tx_details.bip353_address,
+                &payment_tx_details.payer_note,
                 &payment_tx_details.asset_fees,
             ),
         )?;
@@ -439,7 +442,7 @@ impl Persister {
     pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
         let con = self.get_connection()?;
         let mut stmt = con.prepare(
-            "SELECT destination, description, lnurl_info_json, bip353_address, asset_fees
+            "SELECT destination, description, lnurl_info_json, bip353_address, payer_note, asset_fees
             FROM payment_details
             WHERE tx_id = ?",
         )?;
@@ -448,7 +451,8 @@ impl Persister {
             let description = row.get(1)?;
             let maybe_lnurl_info_json: Option<String> = row.get(2)?;
             let maybe_bip353_address = row.get(3)?;
-            let maybe_asset_fees = row.get(4)?;
+            let maybe_payer_note = row.get(4)?;
+            let maybe_asset_fees = row.get(5)?;
             Ok(PaymentTxDetails {
                 tx_id: tx_id.to_string(),
                 destination,
@@ -456,6 +460,7 @@ impl Persister {
                 lnurl_info: maybe_lnurl_info_json
                     .and_then(|info| serde_json::from_str::<LnUrlInfo>(&info).ok()),
                 bip353_address: maybe_bip353_address,
+                payer_note: maybe_payer_note,
                 asset_fees: maybe_asset_fees,
             })
         });
@@ -569,6 +574,7 @@ impl Persister {
                 pd.description,
                 pd.lnurl_info_json,
                 pd.bip353_address,
+                pd.payer_note,
                 pd.asset_fees,
                 am.name,
                 am.ticker,
@@ -691,11 +697,12 @@ impl Persister {
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
         let maybe_payment_details_bip353_address: Option<String> = row.get(58)?;
-        let maybe_payment_details_asset_fees: Option<u64> = row.get(59)?;
+        let maybe_payment_details_payer_note: Option<String> = row.get(59)?;
+        let maybe_payment_details_asset_fees: Option<u64> = row.get(60)?;
 
-        let maybe_asset_metadata_name: Option<String> = row.get(60)?;
-        let maybe_asset_metadata_ticker: Option<String> = row.get(61)?;
-        let maybe_asset_metadata_precision: Option<u8> = row.get(62)?;
+        let maybe_asset_metadata_name: Option<String> = row.get(61)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(62)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(63)?;
 
         let bitcoin_address = match maybe_chain_swap_direction {
             Some(Direction::Incoming) => maybe_chain_swap_lockup_address,
@@ -872,6 +879,7 @@ impl Persister {
                 }),
                 lnurl_info: maybe_payment_details_lnurl_info,
                 bip353_address: maybe_payment_details_bip353_address,
+                payer_note: maybe_payment_details_payer_note,
                 claim_tx_id: maybe_claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -953,6 +961,7 @@ impl Persister {
                     asset_info,
                     lnurl_info: maybe_payment_details_lnurl_info,
                     bip353_address: maybe_payment_details_bip353_address,
+                    payer_note: maybe_payment_details_payer_note,
                 }
             }
         };

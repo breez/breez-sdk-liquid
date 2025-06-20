@@ -434,7 +434,7 @@ typedef struct wire_cst_prepare_refund_request {
 typedef struct wire_cst_prepare_send_request {
   struct wire_cst_list_prim_u_8_strict *destination;
   struct wire_cst_pay_amount *amount;
-  struct wire_cst_list_prim_u_8_strict *comment;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_response {
@@ -549,6 +549,7 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *destination_pubkey;
   struct wire_cst_ln_url_info *lnurl_info;
   struct wire_cst_list_prim_u_8_strict *bip353_address;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
   struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
@@ -568,6 +569,7 @@ typedef struct wire_cst_PaymentDetails_Liquid {
   struct wire_cst_asset_info *asset_info;
   struct wire_cst_ln_url_info *lnurl_info;
   struct wire_cst_list_prim_u_8_strict *bip353_address;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_PaymentDetails_Liquid;
 
 typedef struct wire_cst_PaymentDetails_Bitcoin {

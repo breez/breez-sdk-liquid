@@ -1506,7 +1506,7 @@ impl LiquidSdk {
                     offer,
                     receiver_amount_sat,
                     bip353_address,
-                    payer_note: req.comment.clone(),
+                    payer_note: req.payer_note.clone(),
                 };
             }
             _ => {
@@ -1612,7 +1612,7 @@ impl LiquidSdk {
                         .await?
                 };
 
-                self.insert_bip353_payment_details(bip353_address, &mut response)?;
+                self.insert_payment_details(&None, bip353_address, &mut response)?;
                 Ok(response)
             }
             SendDestination::Bolt11 {
@@ -1623,7 +1623,7 @@ impl LiquidSdk {
                 let mut response = self
                     .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain)
                     .await?;
-                self.insert_bip353_payment_details(bip353_address, &mut response)?;
+                self.insert_payment_details(&None, bip353_address, &mut response)?;
                 Ok(response)
             }
             SendDestination::Bolt12 {
@@ -1650,18 +1650,19 @@ impl LiquidSdk {
                         is_drain,
                     )
                     .await?;
-                self.insert_bip353_payment_details(bip353_address, &mut response)?;
+                self.insert_payment_details(payer_note, bip353_address, &mut response)?;
                 Ok(response)
             }
         }
     }
 
-    fn insert_bip353_payment_details(
+    fn insert_payment_details(
         &self,
+        payer_note: &Option<String>,
         bip353_address: &Option<String>,
         response: &mut SendPaymentResponse,
     ) -> Result<()> {
-        if bip353_address.is_some() {
+        if payer_note.is_some() || bip353_address.is_some() {
             if let (Some(tx_id), Some(destination)) =
                 (&response.payment.tx_id, &response.payment.destination)
             {
@@ -1672,6 +1673,7 @@ impl LiquidSdk {
                         description: None,
                         lnurl_info: None,
                         bip353_address: bip353_address.clone(),
+                        payer_note: payer_note.clone(),
                         asset_fees: None,
                     })?;
                 // Get the payment with the bip353_address details
@@ -1914,6 +1916,7 @@ impl LiquidSdk {
             asset_info,
             lnurl_info: None,
             bip353_address: None,
+            payer_note: None,
         };
 
         Ok(SendPaymentResponse {
@@ -1994,6 +1997,7 @@ impl LiquidSdk {
             asset_info,
             lnurl_info: None,
             bip353_address: None,
+            payer_note: None,
         };
 
         Ok(SendPaymentResponse {
@@ -4162,7 +4166,7 @@ impl LiquidSdk {
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
                         amount: Some(req.amount.clone()),
-                        comment: req.comment.clone(),
+                        payer_note: req.comment.clone(),
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
@@ -4299,7 +4303,7 @@ impl LiquidSdk {
                     description,
                     lnurl_info: Some(LnUrlInfo {
                         ln_address: prepare_response.data.ln_address,
-                        lnurl_pay_comment: prepare_response.comment,
+                        lnurl_pay_comment: prepare_response.comment.clone(),
                         lnurl_pay_domain,
                         lnurl_pay_metadata: Some(prepare_response.data.metadata_str),
                         lnurl_pay_success_action: maybe_sa_processed.clone(),
@@ -4307,6 +4311,7 @@ impl LiquidSdk {
                         lnurl_withdraw_endpoint: None,
                     }),
                     bip353_address: None,
+                    payer_note: None,
                     asset_fees: None,
                 })?;
             // Get the payment with the lnurl_info details
@@ -4376,6 +4381,7 @@ impl LiquidSdk {
                             ..Default::default()
                         }),
                         bip353_address: None,
+                        payer_note: None,
                         asset_fees: None,
                     })?;
             }

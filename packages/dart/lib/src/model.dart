@@ -933,6 +933,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The BIP353 address used to resolve this payment
     String? bip353Address,
 
+    /// The payer note included in a BOLT12 payment
+    String? payerNote,
+
     /// For a Receive payment, this is the claim tx id in case it has already been broadcast
     String? claimTxId,
 
@@ -962,6 +965,9 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// The BIP353 address used to resolve this payment
     String? bip353Address,
+
+    /// The payer note included in a BOLT12 payment
+    String? payerNote,
   }) = PaymentDetails_Liquid;
 
   /// Swapping to or from the Bitcoin chain
@@ -1419,13 +1425,13 @@ class PrepareSendRequest {
   /// where no amount is specified, or when the caller wishes to drain
   final PayAmount? amount;
 
-  /// An optional comment when paying a BOLT12 offer
-  final String? comment;
+  /// An optional payer note when paying a BOLT12 offer
+  final String? payerNote;
 
-  const PrepareSendRequest({required this.destination, this.amount, this.comment});
+  const PrepareSendRequest({required this.destination, this.amount, this.payerNote});
 
   @override
-  int get hashCode => destination.hashCode ^ amount.hashCode ^ comment.hashCode;
+  int get hashCode => destination.hashCode ^ amount.hashCode ^ payerNote.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1434,7 +1440,7 @@ class PrepareSendRequest {
           runtimeType == other.runtimeType &&
           destination == other.destination &&
           amount == other.amount &&
-          comment == other.comment;
+          payerNote == other.payerNote;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
