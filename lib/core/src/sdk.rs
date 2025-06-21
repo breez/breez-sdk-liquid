@@ -42,7 +42,7 @@ use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawErr
 use sdk_common::utils::Arc;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
-use tokio::sync::{watch, RwLock};
+use tokio::sync::{watch, RwLock, OnceCell};
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_with_wasm::alias as tokio;
 use web_time::{Instant, SystemTime, UNIX_EPOCH};
@@ -54,6 +54,7 @@ use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::model::Signer;
+use crate::nwc::{BreezNWCService, NWCService, handler::BreezRelayMessageHandler};
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
@@ -103,6 +104,7 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
+    nwc_service: Option<Arc<dyn NWCService>>,
 }
 
 #[allow(dead_code)]
@@ -127,6 +129,7 @@ impl LiquidSdkBuilder {
             status_stream: None,
             swapper: None,
             sync_service: None,
+            nwc_service: None,
         })
     }
 
@@ -183,6 +186,11 @@ impl LiquidSdkBuilder {
 
     pub fn sync_service(&mut self, sync_service: Arc<SyncService>) -> &mut Self {
         self.sync_service = Some(sync_service.clone());
+        self
+    }
+
+    pub fn nwc_service(&mut self, nwc_service: Arc<dyn NWCService>) -> &mut Self {
+        self.nwc_service = Some(nwc_service);
         self
     }
 
@@ -343,7 +351,7 @@ impl LiquidSdkBuilder {
 
         let external_input_parsers = self.config.get_all_external_input_parsers();
 
-        let sdk = Arc::new(LiquidSdk {
+        let mut sdk = Arc::new(LiquidSdk {
             config: self.config.clone(),
             onchain_wallet,
             signer: self.signer.clone(),
@@ -366,7 +374,22 @@ impl LiquidSdkBuilder {
             payjoin_service,
             buy_bitcoin_service,
             external_input_parsers,
+            nwc_service: OnceCell::new(),
         });
+
+        let nwc_service = match self.nwc_service.clone() {
+            Some(nwc_service) => Some(nwc_service),
+            None => match self.config.enable_nwc.unwrap_or(false) {
+                false => None, 
+                true => {
+                    BreezNWCService::new(todo!(), Arc::new(BreezRelayMessageHandler::new(sdk.clone())), &self.config.nwc_relays()).await?;
+                }
+            },
+        };
+        if let Some(nwc_service) = nwc_service {
+            sdk.nwc_service.set(nwc_service);
+        }
+
         Ok(sdk)
     }
 }
@@ -394,6 +417,7 @@ pub struct LiquidSdk {
     pub(crate) payjoin_service: Arc<dyn PayjoinService>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
+    pub(crate) nwc_service: OnceCell<Arc<dyn NWCService>>,
 }
 
 impl LiquidSdk {
@@ -510,12 +534,16 @@ impl LiquidSdk {
         if let Some(sync_service) = self.sync_service.clone() {
             sync_service.start(self.shutdown_receiver.clone());
         }
+        if let Some(nwc_service) = self.nwc_service.get() {
+            nwc_service.start(self.shutdown_receiver.clone());
+        }
+        
         self.start_track_new_blocks_task();
         self.track_swap_updates();
         self.track_realtime_sync_events(subscription_handler);
 
         Ok(())
-    }
+    } //TODO: ADD NOSTR RELAY SERVICE (CALL self.nwcService.start(shutdown channel)), done.
 
     async fn ensure_is_started(&self) -> SdkResult<()> {
         let is_started = self.is_started.read().await;

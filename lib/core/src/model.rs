@@ -98,6 +98,10 @@ pub struct Config {
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     /// The SideSwap API key used for making requests to the SideSwap payjoin service
     pub sideswap_api_key: Option<String>,
+    // Whether or not to enable Nostr Wallet Connect
+    pub enable_nwc: Option<bool>,
+    /// A list of Nostr relay URLs for NWC connections. If None, default relays will be used.
+    pub nwc_relay_urls: Option<Vec<String>>,
 }
 
 impl Config {
@@ -121,6 +125,8 @@ impl Config {
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            enable_nwc: Some(false),
+            nwc_relay_urls: None,
         }
     }
 
@@ -145,6 +151,8 @@ impl Config {
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            enable_nwc: Some(false),
+            nwc_relay_urls: None,
         }
     }
 
@@ -168,6 +176,8 @@ impl Config {
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            enable_nwc: Some(false),
+            nwc_relay_urls: None,
         }
     }
 
@@ -192,6 +202,8 @@ impl Config {
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            enable_nwc: Some(false),
+            nwc_relay_urls: None,
         }
     }
 
@@ -215,6 +227,8 @@ impl Config {
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
             sideswap_api_key: None,
+            enable_nwc: Some(false),
+            nwc_relay_urls: None,
         }
     }
 
@@ -239,6 +253,8 @@ impl Config {
             onchain_fee_rate_leeway_sat_per_vbyte: None,
             asset_metadata: None,
             sideswap_api_key: None,
+            enable_nwc: Some(false),
+            nwc_relay_urls: None,
         }
     }
 
@@ -349,6 +365,16 @@ impl Config {
             &electrum_url,
             lwk_wollet::ElectrumOptions { timeout: Some(3) },
         )
+    }
+
+    pub(crate) fn nwc_relays(&self) -> Vec<String> {
+        match &self.nwc_relay_urls {
+            Some(relays) => relays.clone(),
+            None => vec![
+                "wss://relay.damus.io".to_string(),
+                "wss://nostr-pub.wellorder.net".to_string(),
+            ],
+        }
     }
 }
 
