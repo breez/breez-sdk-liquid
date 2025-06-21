@@ -64,7 +64,7 @@ lazy_static = "1.5.0"
 esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = [
     "async-https-rustls",
 ] }
-nostr-sdk = { version = "0.42.0", features = ["nip47"] }
+nostr-sdk = {git="https://github.com/ayushsaksena30/nostr.git", branch="master", features=["nip47"]}
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]

@@ -635,7 +635,7 @@ checksum = "33415e24172c1b7d6066f6d999545375ab8e1d95421d6784bdfff9496f292387"
 dependencies = [
  "bitcoin_hashes 0.13.0",
  "rand 0.8.5",
- "rand_core 0.6.4",
+ "rand_core 0.4.2",
  "serde",
  "unicode-normalization",
 ]
@@ -3357,8 +3357,7 @@ dependencies = [
 [[package]]
 name = "nostr"
 version = "0.42.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9c1891da0e58e7eb48a1d2cd704a16f39a61bac3564a1426b26621e21073594"
+source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
 dependencies = [
  "aes",
  "base64 0.22.1",
@@ -3370,7 +3369,6 @@ dependencies = [
  "chacha20poly1305",
  "getrandom 0.2.16",
  "instant",
- "regex",
  "scrypt",
  "secp256k1 0.29.1",
  "serde",
@@ -3382,8 +3380,7 @@ dependencies = [
 [[package]]
 name = "nostr-database"
 version = "0.42.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6aafe85dc7c039c399796043b76009fa744c3a45ac073a023932f7b7d91b1e7"
+source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
 dependencies = [
  "lru",
  "nostr",
@@ -3393,8 +3390,7 @@ dependencies = [
 [[package]]
 name = "nostr-relay-pool"
 version = "0.42.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df4d5628d2444349570fb185b0c2d92cfdb7e68d62b13bf3e8a4348b5de7430b"
+source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
 dependencies = [
  "async-utility",
  "async-wsocket",
@@ -3410,8 +3406,7 @@ dependencies = [
 [[package]]
 name = "nostr-sdk"
 version = "0.42.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1e928ba9ac2695fbe10b8aefda59f2abfeb23c10a0e86a0b3e0f6a27bb274a2"
+source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
 dependencies = [
  "async-utility",
  "nostr",
@@ -6527,7 +6522,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
