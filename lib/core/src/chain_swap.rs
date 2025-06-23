@@ -506,17 +506,9 @@ impl ChainSwapHandler {
             quote_server_lockup_amount_sat = {quote_server_lockup_amount_sat}",
         );
 
-        if min_auto_accept_server_lockup_amount_sat > quote_server_lockup_amount_sat {
-            Ok(ValidateAmountlessSwapResult::RequiresUserAction {
-                user_lockup_amount_sat,
-            })
-        } else {
-            let receiver_amount_sat = quote_server_lockup_amount_sat - swap.claim_fees_sat;
-            Ok(ValidateAmountlessSwapResult::ReadyForAccepting {
-                user_lockup_amount_sat,
-                receiver_amount_sat,
-            })
-        }
+        Ok(ValidateAmountlessSwapResult::RequiresUserAction {
+            user_lockup_amount_sat,
+        })
     }
 
     async fn on_new_outgoing_status(
