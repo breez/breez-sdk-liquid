@@ -47,9 +47,18 @@ This will generate the following artifacts:
  - `web/breez_sdk_liquid_wasm_bg.wasm`
  - `web/breez_sdk_liquid_wasm_bg.wasm.d.ts`
 
- Each can be build separately with `make build-bundle`, `make build-deno`, `make build-node` or `make build-web`.
+Each can be built separately with `make build-bundle`, `make build-deno`, `make build-node` or `make build-web`.
 
 ## Testing
 ```bash
 make test
 ```
+
+## Debugging
+```bash
+make build-dev
+```
+
+This will generate the same build artifacts but with DWARF debug information.
+
+Each can be built separately with `make build-bundle-dev`, `make build-deno-dev`, `make build-node-dev` or `make build-web-dev`.
