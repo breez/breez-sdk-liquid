@@ -16,7 +16,6 @@ use crate::chain::liquid::LiquidChainService;
 use crate::error::is_txn_mempool_conflict_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
-use crate::persist::model::PaymentTxDetails;
 use crate::prelude::Swap;
 use crate::{ensure_sdk, utils};
 use crate::{
@@ -394,17 +393,6 @@ impl ReceiveSwapHandler {
                 };
                 match broadcast_res {
                     Ok(claim_tx_id) => {
-                        let maybe_payment_tx_details = utils::get_invoice_payer_note(
-                            &swap.invoice,
-                            swap.bolt12_offer.is_some(),
-                        )
-                        .context("Failed to get invoice payer note")?
-                        .map(|payer_note| PaymentTxDetails {
-                            tx_id: claim_tx_id.clone(),
-                            destination: swap.invoice,
-                            payer_note: Some(payer_note),
-                            ..PaymentTxDetails::default()
-                        });
                         // We insert a pseudo-claim-tx in case LWK fails to pick up the new mempool tx for a while
                         // This makes the tx known to the SDK (get_info, list_payments) instantly
                         self.persister.insert_or_update_payment(
@@ -418,7 +406,7 @@ impl ReceiveSwapHandler {
                                 is_confirmed: false,
                                 unblinding_data: None,
                             },
-                            maybe_payment_tx_details,
+                            None,
                             false,
                         )?;
 

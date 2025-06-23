@@ -434,14 +434,13 @@ dictionary LnUrlPayRequest {
 dictionary PrepareSendRequest {
     string destination;
     PayAmount? amount = null;
-    string? payer_note = null;
 };
 
 [Enum]
 interface SendDestination {
     LiquidAddress(LiquidAddressData address_data, string? bip353_address);
     Bolt11(LNInvoice invoice, string? bip353_address);
-    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address, string? payer_note);
+    Bolt12(LNOffer offer, u64 receiver_amount_sat, string? bip353_address);
 };
 
 dictionary PrepareSendResponse {
@@ -454,6 +453,7 @@ dictionary PrepareSendResponse {
 dictionary SendPaymentRequest {
     PrepareSendResponse prepare_response;
     boolean? use_asset_fees = null;
+    string? comment = null;
 };
 
 dictionary SendPaymentResponse {
@@ -492,6 +492,7 @@ dictionary ReceivePaymentRequest {
     PrepareReceiveResponse prepare_response;
     string? description = null;
     boolean? use_description_hash = null;
+    string? comment = null;
 };
 
 dictionary ReceivePaymentResponse {
@@ -544,6 +545,7 @@ dictionary PreparePayOnchainResponse {
 dictionary PayOnchainRequest {
     string address;
     PreparePayOnchainResponse prepare_response;
+    string? comment = null;
 };
 
 enum BuyBitcoinProvider {
@@ -564,6 +566,7 @@ dictionary PrepareBuyBitcoinResponse {
 dictionary BuyBitcoinRequest {
     PrepareBuyBitcoinResponse prepare_response;
     string? redirect_url = null;
+    string? comment = null;
 };
 
 dictionary BackupRequest {
@@ -631,9 +634,9 @@ dictionary AssetInfo {
 
 [Enum]
 interface PaymentDetails {
-    Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? bip353_address, string? payer_note, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
-    Liquid(string asset_id, string destination, string description, AssetInfo? asset_info, LnUrlInfo? lnurl_info, string? bip353_address, string? payer_note);
-    Bitcoin(string swap_id, string bitcoin_address, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? lockup_tx_id, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? bip353_address, string? comment, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Liquid(string asset_id, string destination, string description, AssetInfo? asset_info, LnUrlInfo? lnurl_info, string? bip353_address, string? comment);
+    Bitcoin(string swap_id, string bitcoin_address, string description, string? comment, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? lockup_tx_id, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
 dictionary Payment {

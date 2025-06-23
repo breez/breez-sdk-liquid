@@ -9,6 +9,9 @@ object Constants {
     const val CACHE_CONTROL_MAX_AGE_DAY = 60 * 60 * 24
     const val CACHE_CONTROL_MAX_AGE_WEEK = 60 * 60 * 24 * 7
 
+    // LNURL
+    const val LNURL_PAY_COMMENT_MAX_LENGTH = 256
+
     // Notification Channels
     const val NOTIFICATION_CHANNEL_DISMISSIBLE = "DISMISSIBLE"
     const val NOTIFICATION_CHANNEL_FOREGROUND_SERVICE = "FOREGROUND_SERVICE"

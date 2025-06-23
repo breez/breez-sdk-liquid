@@ -10,6 +10,7 @@ import breez_sdk_liquid.ReceivePaymentRequest
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
+import breez_sdk_liquid_notification.Constants.LNURL_PAY_COMMENT_MAX_LENGTH
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.LNURL_PAY_NOTIFICATION_FAILURE_TITLE
@@ -26,6 +27,7 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class LnurlInvoiceRequest(
     @SerialName("amount") val amount: ULong,
+    @SerialName("comment") val comment: String? = null,
     @SerialName("reply_url") val replyURL: String,
     @SerialName("verify_url") val verifyURL: String? = null,
 )
@@ -62,6 +64,10 @@ class LnurlPayInvoiceJob(
             if (amountSat < limits.receive.minSat || amountSat > limits.receive.maxSat) {
                 throw InvalidLnurlPayException("Invalid amount requested ${request.amount}")
             }
+            // Check comment length
+            if ((request.comment?.length ?: 0) > LNURL_PAY_COMMENT_MAX_LENGTH) {
+                throw InvalidLnurlPayException("Comment is too long")
+            }
             val plainTextMetadata =
                 getString(
                     context,
@@ -78,6 +84,7 @@ class LnurlPayInvoiceJob(
                         prepareReceivePaymentRes,
                         description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
                         useDescriptionHash = true,
+                        comment = request.comment,
                     ),
                 )
             // Add the verify URL

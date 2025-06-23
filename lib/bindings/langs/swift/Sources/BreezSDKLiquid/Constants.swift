@@ -10,6 +10,9 @@ struct Constants {
     static let NOTIFICATION_THREAD_DISMISSIBLE = "DISMISSIBLE"
     static let NOTIFICATION_THREAD_REPLACEABLE = "REPLACEABLE"
 
+    // LNURL
+    static let LNURL_PAY_COMMENT_MAX_LENGTH = 256
+
     // Message Data
     static let MESSAGE_DATA_TYPE = "notification_type"
     static let MESSAGE_DATA_PAYLOAD = "notification_payload"

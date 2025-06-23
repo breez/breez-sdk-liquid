@@ -100,15 +100,6 @@ pub(crate) fn get_invoice_destination_pubkey(invoice: &str, is_bolt12: bool) -> 
     }
 }
 
-/// Parse and extract the payer note from the BOLT12 invoice
-pub(crate) fn get_invoice_payer_note(invoice: &str, is_bolt12: bool) -> Result<Option<String>> {
-    if is_bolt12 {
-        bolt12::decode_invoice(invoice).map(|i| i.payer_note().map(|note| note.to_string()))
-    } else {
-        Ok(None)
-    }
-}
-
 /// Parse and extract the description from the BOLT11/12 invoice
 pub(crate) fn get_invoice_description(invoice: &str) -> Result<Option<String>, PaymentError> {
     let invoice = invoice.trim();

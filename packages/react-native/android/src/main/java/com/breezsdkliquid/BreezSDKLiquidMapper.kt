@@ -332,13 +332,15 @@ fun asBuyBitcoinRequest(buyBitcoinRequest: ReadableMap): BuyBitcoinRequest? {
     }
     val prepareResponse = buyBitcoinRequest.getMap("prepareResponse")?.let { asPrepareBuyBitcoinResponse(it) }!!
     val redirectUrl = if (hasNonNullKey(buyBitcoinRequest, "redirectUrl")) buyBitcoinRequest.getString("redirectUrl") else null
-    return BuyBitcoinRequest(prepareResponse, redirectUrl)
+    val comment = if (hasNonNullKey(buyBitcoinRequest, "comment")) buyBitcoinRequest.getString("comment") else null
+    return BuyBitcoinRequest(prepareResponse, redirectUrl, comment)
 }
 
 fun readableMapOf(buyBitcoinRequest: BuyBitcoinRequest): ReadableMap =
     readableMapOf(
         "prepareResponse" to readableMapOf(buyBitcoinRequest.prepareResponse),
         "redirectUrl" to buyBitcoinRequest.redirectUrl,
+        "comment" to buyBitcoinRequest.comment,
     )
 
 fun asBuyBitcoinRequestList(arr: ReadableArray): List<BuyBitcoinRequest> {
@@ -1794,13 +1796,15 @@ fun asPayOnchainRequest(payOnchainRequest: ReadableMap): PayOnchainRequest? {
     }
     val address = payOnchainRequest.getString("address")!!
     val prepareResponse = payOnchainRequest.getMap("prepareResponse")?.let { asPreparePayOnchainResponse(it) }!!
-    return PayOnchainRequest(address, prepareResponse)
+    val comment = if (hasNonNullKey(payOnchainRequest, "comment")) payOnchainRequest.getString("comment") else null
+    return PayOnchainRequest(address, prepareResponse, comment)
 }
 
 fun readableMapOf(payOnchainRequest: PayOnchainRequest): ReadableMap =
     readableMapOf(
         "address" to payOnchainRequest.address,
         "prepareResponse" to readableMapOf(payOnchainRequest.prepareResponse),
+        "comment" to payOnchainRequest.comment,
     )
 
 fun asPayOnchainRequestList(arr: ReadableArray): List<PayOnchainRequest> {
@@ -2326,15 +2330,13 @@ fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
     }
     val destination = prepareSendRequest.getString("destination")!!
     val amount = if (hasNonNullKey(prepareSendRequest, "amount")) prepareSendRequest.getMap("amount")?.let { asPayAmount(it) } else null
-    val payerNote = if (hasNonNullKey(prepareSendRequest, "payerNote")) prepareSendRequest.getString("payerNote") else null
-    return PrepareSendRequest(destination, amount, payerNote)
+    return PrepareSendRequest(destination, amount)
 }
 
 fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap =
     readableMapOf(
         "destination" to prepareSendRequest.destination,
         "amount" to prepareSendRequest.amount?.let { readableMapOf(it) },
-        "payerNote" to prepareSendRequest.payerNote,
     )
 
 fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
@@ -2448,7 +2450,8 @@ fun asReceivePaymentRequest(receivePaymentRequest: ReadableMap): ReceivePaymentR
         } else {
             null
         }
-    return ReceivePaymentRequest(prepareResponse, description, useDescriptionHash)
+    val comment = if (hasNonNullKey(receivePaymentRequest, "comment")) receivePaymentRequest.getString("comment") else null
+    return ReceivePaymentRequest(prepareResponse, description, useDescriptionHash, comment)
 }
 
 fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
@@ -2456,6 +2459,7 @@ fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
         "prepareResponse" to readableMapOf(receivePaymentRequest.prepareResponse),
         "description" to receivePaymentRequest.description,
         "useDescriptionHash" to receivePaymentRequest.useDescriptionHash,
+        "comment" to receivePaymentRequest.comment,
     )
 
 fun asReceivePaymentRequestList(arr: ReadableArray): List<ReceivePaymentRequest> {
@@ -2769,13 +2773,15 @@ fun asSendPaymentRequest(sendPaymentRequest: ReadableMap): SendPaymentRequest? {
     }
     val prepareResponse = sendPaymentRequest.getMap("prepareResponse")?.let { asPrepareSendResponse(it) }!!
     val useAssetFees = if (hasNonNullKey(sendPaymentRequest, "useAssetFees")) sendPaymentRequest.getBoolean("useAssetFees") else null
-    return SendPaymentRequest(prepareResponse, useAssetFees)
+    val comment = if (hasNonNullKey(sendPaymentRequest, "comment")) sendPaymentRequest.getString("comment") else null
+    return SendPaymentRequest(prepareResponse, useAssetFees, comment)
 }
 
 fun readableMapOf(sendPaymentRequest: SendPaymentRequest): ReadableMap =
     readableMapOf(
         "prepareResponse" to readableMapOf(sendPaymentRequest.prepareResponse),
         "useAssetFees" to sendPaymentRequest.useAssetFees,
+        "comment" to sendPaymentRequest.comment,
     )
 
 fun asSendPaymentRequestList(arr: ReadableArray): List<SendPaymentRequest> {
@@ -3563,7 +3569,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
                 null
             }
         val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
-        val payerNote = if (hasNonNullKey(paymentDetails, "payerNote")) paymentDetails.getString("payerNote") else null
+        val comment = if (hasNonNullKey(paymentDetails, "comment")) paymentDetails.getString("comment") else null
         val claimTxId = if (hasNonNullKey(paymentDetails, "claimTxId")) paymentDetails.getString("claimTxId") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
@@ -3587,7 +3593,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             destinationPubkey,
             lnurlInfo,
             bip353Address,
-            payerNote,
+            comment,
             claimTxId,
             refundTxId,
             refundTxAmountSat,
@@ -3618,13 +3624,14 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
                 null
             }
         val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
-        val payerNote = if (hasNonNullKey(paymentDetails, "payerNote")) paymentDetails.getString("payerNote") else null
-        return PaymentDetails.Liquid(assetId, destination, description, assetInfo, lnurlInfo, bip353Address, payerNote)
+        val comment = if (hasNonNullKey(paymentDetails, "comment")) paymentDetails.getString("comment") else null
+        return PaymentDetails.Liquid(assetId, destination, description, assetInfo, lnurlInfo, bip353Address, comment)
     }
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
         val bitcoinAddress = paymentDetails.getString("bitcoinAddress")!!
         val description = paymentDetails.getString("description")!!
+        val comment = if (hasNonNullKey(paymentDetails, "comment")) paymentDetails.getString("comment") else null
         val autoAcceptedFees = paymentDetails.getBoolean("autoAcceptedFees")
         val bitcoinExpirationBlockheight =
             if (hasNonNullKey(
@@ -3663,6 +3670,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             swapId,
             bitcoinAddress,
             description,
+            comment,
             autoAcceptedFees,
             bitcoinExpirationBlockheight,
             liquidExpirationBlockheight,
@@ -3690,7 +3698,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "destinationPubkey", paymentDetails.destinationPubkey)
             pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "bip353Address", paymentDetails.bip353Address)
-            pushToMap(map, "payerNote", paymentDetails.payerNote)
+            pushToMap(map, "comment", paymentDetails.comment)
             pushToMap(map, "claimTxId", paymentDetails.claimTxId)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
@@ -3703,13 +3711,14 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "assetInfo", paymentDetails.assetInfo?.let { readableMapOf(it) })
             pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "bip353Address", paymentDetails.bip353Address)
-            pushToMap(map, "payerNote", paymentDetails.payerNote)
+            pushToMap(map, "comment", paymentDetails.comment)
         }
         is PaymentDetails.Bitcoin -> {
             pushToMap(map, "type", "bitcoin")
             pushToMap(map, "swapId", paymentDetails.swapId)
             pushToMap(map, "bitcoinAddress", paymentDetails.bitcoinAddress)
             pushToMap(map, "description", paymentDetails.description)
+            pushToMap(map, "comment", paymentDetails.comment)
             pushToMap(map, "autoAcceptedFees", paymentDetails.autoAcceptedFees)
             pushToMap(map, "bitcoinExpirationBlockheight", paymentDetails.bitcoinExpirationBlockheight)
             pushToMap(map, "liquidExpirationBlockheight", paymentDetails.liquidExpirationBlockheight)
@@ -3933,8 +3942,7 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
         val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
         val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
         val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
-        val payerNote = if (hasNonNullKey(sendDestination, "payerNote")) sendDestination.getString("payerNote") else null
-        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address, payerNote)
+        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address)
     }
     return null
 }
@@ -3957,7 +3965,6 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
             pushToMap(map, "offer", readableMapOf(sendDestination.offer))
             pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
             pushToMap(map, "bip353Address", sendDestination.bip353Address)
-            pushToMap(map, "payerNote", sendDestination.payerNote)
         }
     }
     return map

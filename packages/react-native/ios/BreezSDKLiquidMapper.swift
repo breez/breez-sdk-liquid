@@ -409,14 +409,22 @@ enum BreezSDKLiquidMapper {
             }
             redirectUrl = redirectUrlTmp
         }
+        var comment: String?
+        if hasNonNilKey(data: buyBitcoinRequest, key: "comment") {
+            guard let commentTmp = buyBitcoinRequest["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
 
-        return BuyBitcoinRequest(prepareResponse: prepareResponse, redirectUrl: redirectUrl)
+        return BuyBitcoinRequest(prepareResponse: prepareResponse, redirectUrl: redirectUrl, comment: comment)
     }
 
     static func dictionaryOf(buyBitcoinRequest: BuyBitcoinRequest) -> [String: Any?] {
         return [
             "prepareResponse": dictionaryOf(prepareBuyBitcoinResponse: buyBitcoinRequest.prepareResponse),
             "redirectUrl": buyBitcoinRequest.redirectUrl == nil ? nil : buyBitcoinRequest.redirectUrl,
+            "comment": buyBitcoinRequest.comment == nil ? nil : buyBitcoinRequest.comment,
         ]
     }
 
@@ -2113,13 +2121,22 @@ enum BreezSDKLiquidMapper {
         }
         let prepareResponse = try asPreparePayOnchainResponse(preparePayOnchainResponse: prepareResponseTmp)
 
-        return PayOnchainRequest(address: address, prepareResponse: prepareResponse)
+        var comment: String?
+        if hasNonNilKey(data: payOnchainRequest, key: "comment") {
+            guard let commentTmp = payOnchainRequest["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
+
+        return PayOnchainRequest(address: address, prepareResponse: prepareResponse, comment: comment)
     }
 
     static func dictionaryOf(payOnchainRequest: PayOnchainRequest) -> [String: Any?] {
         return [
             "address": payOnchainRequest.address,
             "prepareResponse": dictionaryOf(preparePayOnchainResponse: payOnchainRequest.prepareResponse),
+            "comment": payOnchainRequest.comment == nil ? nil : payOnchainRequest.comment,
         ]
     }
 
@@ -2708,22 +2725,13 @@ enum BreezSDKLiquidMapper {
             amount = try asPayAmount(payAmount: amountTmp)
         }
 
-        var payerNote: String?
-        if hasNonNilKey(data: prepareSendRequest, key: "payerNote") {
-            guard let payerNoteTmp = prepareSendRequest["payerNote"] as? String else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "payerNote"))
-            }
-            payerNote = payerNoteTmp
-        }
-
-        return PrepareSendRequest(destination: destination, amount: amount, payerNote: payerNote)
+        return PrepareSendRequest(destination: destination, amount: amount)
     }
 
     static func dictionaryOf(prepareSendRequest: PrepareSendRequest) -> [String: Any?] {
         return [
             "destination": prepareSendRequest.destination,
             "amount": prepareSendRequest.amount == nil ? nil : dictionaryOf(payAmount: prepareSendRequest.amount!),
-            "payerNote": prepareSendRequest.payerNote == nil ? nil : prepareSendRequest.payerNote,
         ]
     }
 
@@ -2854,8 +2862,15 @@ enum BreezSDKLiquidMapper {
             }
             useDescriptionHash = useDescriptionHashTmp
         }
+        var comment: String?
+        if hasNonNilKey(data: receivePaymentRequest, key: "comment") {
+            guard let commentTmp = receivePaymentRequest["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
 
-        return ReceivePaymentRequest(prepareResponse: prepareResponse, description: description, useDescriptionHash: useDescriptionHash)
+        return ReceivePaymentRequest(prepareResponse: prepareResponse, description: description, useDescriptionHash: useDescriptionHash, comment: comment)
     }
 
     static func dictionaryOf(receivePaymentRequest: ReceivePaymentRequest) -> [String: Any?] {
@@ -2863,6 +2878,7 @@ enum BreezSDKLiquidMapper {
             "prepareResponse": dictionaryOf(prepareReceiveResponse: receivePaymentRequest.prepareResponse),
             "description": receivePaymentRequest.description == nil ? nil : receivePaymentRequest.description,
             "useDescriptionHash": receivePaymentRequest.useDescriptionHash == nil ? nil : receivePaymentRequest.useDescriptionHash,
+            "comment": receivePaymentRequest.comment == nil ? nil : receivePaymentRequest.comment,
         ]
     }
 
@@ -3221,14 +3237,22 @@ enum BreezSDKLiquidMapper {
             }
             useAssetFees = useAssetFeesTmp
         }
+        var comment: String?
+        if hasNonNilKey(data: sendPaymentRequest, key: "comment") {
+            guard let commentTmp = sendPaymentRequest["comment"] as? String else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "comment"))
+            }
+            comment = commentTmp
+        }
 
-        return SendPaymentRequest(prepareResponse: prepareResponse, useAssetFees: useAssetFees)
+        return SendPaymentRequest(prepareResponse: prepareResponse, useAssetFees: useAssetFees, comment: comment)
     }
 
     static func dictionaryOf(sendPaymentRequest: SendPaymentRequest) -> [String: Any?] {
         return [
             "prepareResponse": dictionaryOf(prepareSendResponse: sendPaymentRequest.prepareResponse),
             "useAssetFees": sendPaymentRequest.useAssetFees == nil ? nil : sendPaymentRequest.useAssetFees,
+            "comment": sendPaymentRequest.comment == nil ? nil : sendPaymentRequest.comment,
         ]
     }
 
@@ -4397,7 +4421,7 @@ enum BreezSDKLiquidMapper {
 
             let _bip353Address = paymentDetails["bip353Address"] as? String
 
-            let _payerNote = paymentDetails["payerNote"] as? String
+            let _comment = paymentDetails["comment"] as? String
 
             let _claimTxId = paymentDetails["claimTxId"] as? String
 
@@ -4405,7 +4429,7 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.lightning(swapId: _swapId, description: _description, liquidExpirationBlockheight: _liquidExpirationBlockheight, preimage: _preimage, invoice: _invoice, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, destinationPubkey: _destinationPubkey, lnurlInfo: _lnurlInfo, bip353Address: _bip353Address, payerNote: _payerNote, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.lightning(swapId: _swapId, description: _description, liquidExpirationBlockheight: _liquidExpirationBlockheight, preimage: _preimage, invoice: _invoice, bolt12Offer: _bolt12Offer, paymentHash: _paymentHash, destinationPubkey: _destinationPubkey, lnurlInfo: _lnurlInfo, bip353Address: _bip353Address, comment: _comment, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
         if type == "liquid" {
             guard let _assetId = paymentDetails["assetId"] as? String else {
@@ -4429,9 +4453,9 @@ enum BreezSDKLiquidMapper {
 
             let _bip353Address = paymentDetails["bip353Address"] as? String
 
-            let _payerNote = paymentDetails["payerNote"] as? String
+            let _comment = paymentDetails["comment"] as? String
 
-            return PaymentDetails.liquid(assetId: _assetId, destination: _destination, description: _description, assetInfo: _assetInfo, lnurlInfo: _lnurlInfo, bip353Address: _bip353Address, payerNote: _payerNote)
+            return PaymentDetails.liquid(assetId: _assetId, destination: _destination, description: _description, assetInfo: _assetInfo, lnurlInfo: _lnurlInfo, bip353Address: _bip353Address, comment: _comment)
         }
         if type == "bitcoin" {
             guard let _swapId = paymentDetails["swapId"] as? String else {
@@ -4443,6 +4467,8 @@ enum BreezSDKLiquidMapper {
             guard let _description = paymentDetails["description"] as? String else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "description", typeName: "PaymentDetails"))
             }
+            let _comment = paymentDetails["comment"] as? String
+
             guard let _autoAcceptedFees = paymentDetails["autoAcceptedFees"] as? Bool else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "autoAcceptedFees", typeName: "PaymentDetails"))
             }
@@ -4458,7 +4484,7 @@ enum BreezSDKLiquidMapper {
 
             let _refundTxAmountSat = paymentDetails["refundTxAmountSat"] as? UInt64
 
-            return PaymentDetails.bitcoin(swapId: _swapId, bitcoinAddress: _bitcoinAddress, description: _description, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, lockupTxId: _lockupTxId, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
+            return PaymentDetails.bitcoin(swapId: _swapId, bitcoinAddress: _bitcoinAddress, description: _description, comment: _comment, autoAcceptedFees: _autoAcceptedFees, bitcoinExpirationBlockheight: _bitcoinExpirationBlockheight, liquidExpirationBlockheight: _liquidExpirationBlockheight, lockupTxId: _lockupTxId, claimTxId: _claimTxId, refundTxId: _refundTxId, refundTxAmountSat: _refundTxAmountSat)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum PaymentDetails")
@@ -4467,7 +4493,7 @@ enum BreezSDKLiquidMapper {
     static func dictionaryOf(paymentDetails: PaymentDetails) -> [String: Any?] {
         switch paymentDetails {
         case let .lightning(
-            swapId, description, liquidExpirationBlockheight, preimage, invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, bip353Address, payerNote, claimTxId, refundTxId, refundTxAmountSat
+            swapId, description, liquidExpirationBlockheight, preimage, invoice, bolt12Offer, paymentHash, destinationPubkey, lnurlInfo, bip353Address, comment, claimTxId, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "lightning",
@@ -4481,14 +4507,14 @@ enum BreezSDKLiquidMapper {
                 "destinationPubkey": destinationPubkey == nil ? nil : destinationPubkey,
                 "lnurlInfo": lnurlInfo == nil ? nil : dictionaryOf(lnUrlInfo: lnurlInfo!),
                 "bip353Address": bip353Address == nil ? nil : bip353Address,
-                "payerNote": payerNote == nil ? nil : payerNote,
+                "comment": comment == nil ? nil : comment,
                 "claimTxId": claimTxId == nil ? nil : claimTxId,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,
                 "refundTxAmountSat": refundTxAmountSat == nil ? nil : refundTxAmountSat,
             ]
 
         case let .liquid(
-            assetId, destination, description, assetInfo, lnurlInfo, bip353Address, payerNote
+            assetId, destination, description, assetInfo, lnurlInfo, bip353Address, comment
         ):
             return [
                 "type": "liquid",
@@ -4498,17 +4524,18 @@ enum BreezSDKLiquidMapper {
                 "assetInfo": assetInfo == nil ? nil : dictionaryOf(assetInfo: assetInfo!),
                 "lnurlInfo": lnurlInfo == nil ? nil : dictionaryOf(lnUrlInfo: lnurlInfo!),
                 "bip353Address": bip353Address == nil ? nil : bip353Address,
-                "payerNote": payerNote == nil ? nil : payerNote,
+                "comment": comment == nil ? nil : comment,
             ]
 
         case let .bitcoin(
-            swapId, bitcoinAddress, description, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, lockupTxId, claimTxId, refundTxId, refundTxAmountSat
+            swapId, bitcoinAddress, description, comment, autoAcceptedFees, bitcoinExpirationBlockheight, liquidExpirationBlockheight, lockupTxId, claimTxId, refundTxId, refundTxAmountSat
         ):
             return [
                 "type": "bitcoin",
                 "swapId": swapId,
                 "bitcoinAddress": bitcoinAddress,
                 "description": description,
+                "comment": comment == nil ? nil : comment,
                 "autoAcceptedFees": autoAcceptedFees,
                 "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight == nil ? nil : bitcoinExpirationBlockheight,
                 "liquidExpirationBlockheight": liquidExpirationBlockheight == nil ? nil : liquidExpirationBlockheight,
@@ -4976,9 +5003,7 @@ enum BreezSDKLiquidMapper {
             }
             let _bip353Address = sendDestination["bip353Address"] as? String
 
-            let _payerNote = sendDestination["payerNote"] as? String
-
-            return SendDestination.bolt12(offer: _offer, receiverAmountSat: _receiverAmountSat, bip353Address: _bip353Address, payerNote: _payerNote)
+            return SendDestination.bolt12(offer: _offer, receiverAmountSat: _receiverAmountSat, bip353Address: _bip353Address)
         }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SendDestination")
@@ -5005,14 +5030,13 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .bolt12(
-            offer, receiverAmountSat, bip353Address, payerNote
+            offer, receiverAmountSat, bip353Address
         ):
             return [
                 "type": "bolt12",
                 "offer": dictionaryOf(lnOffer: offer),
                 "receiverAmountSat": receiverAmountSat,
                 "bip353Address": bip353Address == nil ? nil : bip353Address,
-                "payerNote": payerNote == nil ? nil : payerNote,
             ]
         }
     }

@@ -303,6 +303,7 @@ mod test {
         let chain_swap = ChainSwap {
             id: "7aSRLEvFAJX3".to_string(),                     
             description: Some("Test swap".to_string()),
+            comment: None,
             payer_amount_sat: 100000,
             receiver_amount_sat: 95000,
             actual_payer_amount_sat: None,

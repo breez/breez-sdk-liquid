@@ -1204,7 +1204,6 @@ impl LiquidSdk {
     ///        - [PayAmount::Drain] which uses all Bitcoin funds
     ///        - [PayAmount::Bitcoin] which sets the amount in satoshi that will be received
     ///        - [PayAmount::Asset] which sets the amount of an asset that will be received
-    ///     * `comment` - The optional comment to be included in the payment
     ///
     /// # Returns
     /// Returns a [PrepareSendResponse] containing:
@@ -1506,7 +1505,6 @@ impl LiquidSdk {
                     offer,
                     receiver_amount_sat,
                     bip353_address,
-                    payer_note: req.payer_note.clone(),
                 };
             }
             _ => {
@@ -1547,6 +1545,9 @@ impl LiquidSdk {
     ///
     /// * `req` - A [SendPaymentRequest], containing:
     ///     * `prepare_response` - the [PrepareSendResponse] returned by [LiquidSdk::prepare_send_payment]
+    ///     * `use_asset_fees` - if set to true, the payment will be sent using the SideSwap payjoin service
+    ///     * `comment` - the optional comment to be stored with the payment. For BOLT12 this is included
+    ///       as the payer note in the invoice
     ///
     /// # Errors
     ///
@@ -1604,15 +1605,25 @@ impl LiquidSdk {
                     )?;
 
                 let mut response = if asset_pay_fees {
-                    self.pay_liquid_payjoin(liquid_address_data.clone(), amount_sat)
-                        .await?
+                    self.pay_liquid_payjoin(
+                        liquid_address_data.clone(),
+                        amount_sat,
+                        req.comment.clone(),
+                    )
+                    .await?
                 } else {
                     let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
-                    self.pay_liquid(liquid_address_data.clone(), amount_sat, fees_sat, true)
-                        .await?
+                    self.pay_liquid(
+                        liquid_address_data.clone(),
+                        amount_sat,
+                        fees_sat,
+                        req.comment.clone(),
+                        true,
+                    )
+                    .await?
                 };
 
-                self.insert_payment_details(&None, bip353_address, &mut response)?;
+                self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
             SendDestination::Bolt11 {
@@ -1621,16 +1632,15 @@ impl LiquidSdk {
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let mut response = self
-                    .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain)
+                    .pay_bolt11_invoice(&invoice.bolt11, fees_sat, req.comment.clone(), is_drain)
                     .await?;
-                self.insert_payment_details(&None, bip353_address, &mut response)?;
+                self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
             SendDestination::Bolt12 {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
-                payer_note,
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let bolt12_info = self
@@ -1638,7 +1648,7 @@ impl LiquidSdk {
                     .get_bolt12_info(GetBolt12FetchRequest {
                         offer: offer.offer.clone(),
                         amount: *receiver_amount_sat,
-                        note: payer_note.clone(),
+                        note: req.comment.clone(),
                     })
                     .await?;
                 let mut response = self
@@ -1647,22 +1657,22 @@ impl LiquidSdk {
                         *receiver_amount_sat,
                         bolt12_info,
                         fees_sat,
+                        req.comment.clone(),
                         is_drain,
                     )
                     .await?;
-                self.insert_payment_details(payer_note, bip353_address, &mut response)?;
+                self.insert_bip353_payment_details(bip353_address, &mut response)?;
                 Ok(response)
             }
         }
     }
 
-    fn insert_payment_details(
+    fn insert_bip353_payment_details(
         &self,
-        payer_note: &Option<String>,
         bip353_address: &Option<String>,
         response: &mut SendPaymentResponse,
     ) -> Result<()> {
-        if payer_note.is_some() || bip353_address.is_some() {
+        if bip353_address.is_some() {
             if let (Some(tx_id), Some(destination)) =
                 (&response.payment.tx_id, &response.payment.destination)
             {
@@ -1673,7 +1683,7 @@ impl LiquidSdk {
                         description: None,
                         lnurl_info: None,
                         bip353_address: bip353_address.clone(),
-                        payer_note: payer_note.clone(),
+                        comment: None,
                         asset_fees: None,
                     })?;
                 // Get the payment with the bip353_address details
@@ -1689,6 +1699,7 @@ impl LiquidSdk {
         &self,
         invoice: &str,
         fees_sat: u64,
+        comment: Option<String>,
         is_drain: bool,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_send_is_not_self_transfer(invoice)?;
@@ -1738,6 +1749,7 @@ impl LiquidSdk {
                     },
                     amount_sat,
                     fees_sat,
+                    comment,
                     false,
                 )
                 .await
@@ -1745,14 +1757,15 @@ impl LiquidSdk {
 
             // If no MRH found, perform usual swap
             None => {
-                self.send_payment_via_swap(
-                    invoice,
-                    None,
-                    &bolt11_invoice.payment_hash().to_string(),
+                self.send_payment_via_swap(SendPaymentViaSwapRequest {
+                    invoice: invoice.to_string(),
+                    bolt12_offer: None,
+                    payment_hash: bolt11_invoice.payment_hash().to_string(),
                     description,
-                    amount_sat,
+                    receiver_amount_sat: amount_sat,
                     fees_sat,
-                )
+                    comment,
+                })
                 .await
             }
         }
@@ -1764,6 +1777,7 @@ impl LiquidSdk {
         user_specified_receiver_amount_sat: u64,
         bolt12_info: GetBolt12FetchResponse,
         fees_sat: u64,
+        comment: Option<String>,
         is_drain: bool,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let invoice = self.validate_bolt12_invoice(
@@ -1810,6 +1824,7 @@ impl LiquidSdk {
                     },
                     receiver_amount_sat,
                     fees_sat,
+                    comment,
                     false,
                 )
                 .await
@@ -1817,14 +1832,15 @@ impl LiquidSdk {
 
             // If no MRH found, perform usual swap
             None => {
-                self.send_payment_via_swap(
-                    &bolt12_info.invoice,
-                    Some(offer.offer.clone()),
-                    &invoice.payment_hash().to_string(),
-                    invoice.description().map(|desc| desc.to_string()),
+                self.send_payment_via_swap(SendPaymentViaSwapRequest {
+                    invoice: bolt12_info.invoice,
+                    bolt12_offer: Some(offer.offer.clone()),
+                    payment_hash: invoice.payment_hash().to_string(),
+                    description: invoice.description().map(|desc| desc.to_string()),
                     receiver_amount_sat,
                     fees_sat,
-                )
+                    comment,
+                })
                 .await
             }
         }
@@ -1836,6 +1852,7 @@ impl LiquidSdk {
         address_data: LiquidAddressData,
         receiver_amount_sat: u64,
         fees_sat: u64,
+        comment: Option<String>,
         skip_already_paid_check: bool,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let destination = address_data
@@ -1894,6 +1911,7 @@ impl LiquidSdk {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
                 description: description.clone(),
+                comment: comment.clone(),
                 ..Default::default()
             }),
             false,
@@ -1916,7 +1934,7 @@ impl LiquidSdk {
             asset_info,
             lnurl_info: None,
             bip353_address: None,
-            payer_note: None,
+            comment,
         };
 
         Ok(SendPaymentResponse {
@@ -1929,6 +1947,7 @@ impl LiquidSdk {
         &self,
         address_data: LiquidAddressData,
         receiver_amount_sat: u64,
+        comment: Option<String>,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let destination = address_data
             .to_uri()
@@ -1974,6 +1993,7 @@ impl LiquidSdk {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
                 description: description.clone(),
+                comment: comment.clone(),
                 asset_fees: Some(asset_fees),
                 ..Default::default()
             }),
@@ -1997,7 +2017,7 @@ impl LiquidSdk {
             asset_info,
             lnurl_info: None,
             bip353_address: None,
-            payer_note: None,
+            comment,
         };
 
         Ok(SendPaymentResponse {
@@ -2010,13 +2030,17 @@ impl LiquidSdk {
     /// If `bolt12_offer` is set, `invoice` refers to a Bolt12 invoice, otherwise it's a Bolt11 one.
     async fn send_payment_via_swap(
         &self,
-        invoice: &str,
-        bolt12_offer: Option<String>,
-        payment_hash: &str,
-        description: Option<String>,
-        receiver_amount_sat: u64,
-        fees_sat: u64,
+        req: SendPaymentViaSwapRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
+        let SendPaymentViaSwapRequest {
+            invoice,
+            bolt12_offer,
+            payment_hash,
+            description,
+            comment,
+            receiver_amount_sat,
+            fees_sat,
+        } = req;
         let lbtc_pair = self.validate_submarine_pairs(receiver_amount_sat).await?;
         let boltz_fees_total = lbtc_pair.fees.total(receiver_amount_sat);
         let user_lockup_amount_sat = receiver_amount_sat + boltz_fees_total;
@@ -2028,7 +2052,7 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let swap = match self.persister.fetch_send_swap_by_invoice(invoice)? {
+        let swap = match self.persister.fetch_send_swap_by_invoice(&invoice)? {
             Some(swap) => match swap.state {
                 Created => swap,
                 TimedOut => {
@@ -2088,7 +2112,7 @@ impl LiquidSdk {
                 let create_response_json =
                     SendSwap::from_boltz_struct_to_json(&create_response, swap_id)?;
                 let destination_pubkey =
-                    utils::get_invoice_destination_pubkey(invoice, bolt12_offer.is_some())?;
+                    utils::get_invoice_destination_pubkey(&invoice, bolt12_offer.is_some())?;
 
                 let payer_amount_sat = fees_sat + receiver_amount_sat;
                 let swap = SendSwap {
@@ -2099,6 +2123,7 @@ impl LiquidSdk {
                     destination_pubkey: Some(destination_pubkey),
                     timeout_block_height: create_response.timeout_block_height,
                     description,
+                    comment,
                     preimage: None,
                     payer_amount_sat,
                     receiver_amount_sat,
@@ -2295,6 +2320,7 @@ impl LiquidSdk {
     /// * `req` - the [PayOnchainRequest] containing:
     ///     * `address` - the Bitcoin address to pay to
     ///     * `prepare_response` - the [PreparePayOnchainResponse] from calling [LiquidSdk::prepare_pay_onchain]
+    ///     * `comment` - the optional comment to be stored with the payment
     ///
     /// # Errors
     ///
@@ -2397,6 +2423,7 @@ impl LiquidSdk {
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
+            comment: req.comment.clone(),
             payer_amount_sat,
             actual_payer_amount_sat: None,
             receiver_amount_sat,
@@ -2647,6 +2674,7 @@ impl LiquidSdk {
     ///     * `prepare_response` - the [PrepareReceiveResponse] from calling [LiquidSdk::prepare_receive_payment]
     ///     * `description` - the optional payment description
     ///     * `use_description_hash` - optional if true uses the hash of the description
+    ///     * `comment` - the optional comment to be stored with the payment
     ///
     /// # Returns
     ///
@@ -2700,8 +2728,14 @@ impl LiquidSdk {
                         })
                     }
                 };
-                self.create_bolt11_receive_swap(amount_sat, fees_sat, description, description_hash)
-                    .await
+                self.create_bolt11_receive_swap(
+                    amount_sat,
+                    fees_sat,
+                    description,
+                    description_hash,
+                    req.comment.clone(),
+                )
+                .await
             }
             PaymentMethod::Bolt12Offer => {
                 let description = req.description.clone().unwrap_or("".to_string());
@@ -2725,7 +2759,8 @@ impl LiquidSdk {
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
                     None => None,
                 };
-                self.receive_onchain(amount_sat, fees_sat).await
+                self.receive_onchain(amount_sat, fees_sat, req.comment.clone())
+                    .await
             }
             PaymentMethod::LiquidAddress => {
                 let lbtc_asset_id = self.config.lbtc_asset_id();
@@ -2773,6 +2808,7 @@ impl LiquidSdk {
         fees_sat: u64,
         description: Option<String>,
         description_hash: Option<String>,
+        comment: Option<String>,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         let reverse_pair = self
             .swapper
@@ -2886,6 +2922,7 @@ impl LiquidSdk {
                 destination_pubkey: Some(destination_pubkey),
                 timeout_block_height: create_response.timeout_block_height,
                 description: invoice_description,
+                comment,
                 payer_amount_sat,
                 receiver_amount_sat,
                 pair_fees_json: serde_json::to_string(&reverse_pair).map_err(|e| {
@@ -2982,14 +3019,13 @@ impl LiquidSdk {
 
         let entropy_source = RandomBytes::new(utils::generate_entropy());
         let nonce = Nonce::from_entropy_source(&entropy_source);
+        let payer_note = invoice_request.payer_note().map(|s| s.to_string());
         let payment_context = PaymentContext::Bolt12Offer(Bolt12OfferContext {
             offer_id: Offer::try_from(bolt12_offer)?.id(),
             invoice_request: InvoiceRequestFields {
                 payer_signing_pubkey: invoice_request.payer_signing_pubkey(),
                 quantity: invoice_request.quantity(),
-                payer_note_truncated: invoice_request
-                    .payer_note()
-                    .map(|s| UntrustedString(s.to_string())),
+                payer_note_truncated: payer_note.clone().map(UntrustedString),
                 human_readable_name: invoice_request.offer_from_hrn().clone(),
             },
         });
@@ -3094,6 +3130,7 @@ impl LiquidSdk {
                 destination_pubkey: Some(destination_pubkey),
                 timeout_block_height: create_response.timeout_block_height,
                 description: invoice_description,
+                comment: payer_note,
                 payer_amount_sat,
                 receiver_amount_sat,
                 pair_fees_json: serde_json::to_string(&reverse_pair).map_err(|e| {
@@ -3190,6 +3227,7 @@ impl LiquidSdk {
         &self,
         user_lockup_amount_sat: Option<u64>,
         fees_sat: u64,
+        comment: Option<String>,
     ) -> Result<ChainSwap, PaymentError> {
         let pair = self
             .get_and_validate_chain_pair(Direction::Incoming, user_lockup_amount_sat)
@@ -3264,6 +3302,7 @@ impl LiquidSdk {
             timeout_block_height: create_response.lockup_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
+            comment,
             payer_amount_sat: user_lockup_amount_sat.unwrap_or(0),
             actual_payer_amount_sat: None,
             receiver_amount_sat,
@@ -3298,11 +3337,12 @@ impl LiquidSdk {
         &self,
         user_lockup_amount_sat: Option<u64>,
         fees_sat: u64,
+        comment: Option<String>,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
         let swap = self
-            .create_receive_chain_swap(user_lockup_amount_sat, fees_sat)
+            .create_receive_chain_swap(user_lockup_amount_sat, fees_sat, comment)
             .await?;
         let create_response = swap.get_boltz_create_response()?;
         let address = create_response.lockup_details.lockup_address;
@@ -3526,6 +3566,7 @@ impl LiquidSdk {
             .create_receive_chain_swap(
                 Some(req.prepare_response.amount_sat),
                 req.prepare_response.fees_sat,
+                req.comment.clone(),
             )
             .await?;
 
@@ -4079,9 +4120,10 @@ impl LiquidSdk {
     ///        - [PayAmount::Bitcoin] which sets the amount in satoshi that will be received
     ///     * `bip353_address` - a BIP353 address, in case one was used in order to fetch the LNURL
     ///       Pay request data. Returned by [parse].
-    ///     * `comment` - an optional comment for this payment
+    ///     * `comment` - an optional comment LUD-12 to be stored with the payment. The comment is included in the
+    ///       invoice request sent to the LNURL endpoint.
     ///     * `validate_success_action_url` - validates that, if there is a URL success action, the URL domain matches
-    ///       the LNURL callback domain. Defaults to 'true'
+    ///       the LNURL callback domain. Defaults to 'true'.
     ///
     /// # Returns
     /// Returns a [PrepareLnUrlPayResponse] containing:
@@ -4166,7 +4208,6 @@ impl LiquidSdk {
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
                         amount: Some(req.amount.clone()),
-                        payer_note: req.comment.clone(),
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
@@ -4226,6 +4267,7 @@ impl LiquidSdk {
                     amount: Some(prepare_response.amount),
                 },
                 use_asset_fees: None,
+                comment: prepare_response.comment.clone(),
             })
             .await
             .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?
@@ -4310,9 +4352,7 @@ impl LiquidSdk {
                         lnurl_pay_unprocessed_success_action: prepare_response.success_action,
                         lnurl_withdraw_endpoint: None,
                     }),
-                    bip353_address: None,
-                    payer_note: None,
-                    asset_fees: None,
+                    ..Default::default()
                 })?;
             // Get the payment with the lnurl_info details
             payment = self.persister.get_payment(&tx_id)?.unwrap_or(payment);
@@ -4351,6 +4391,7 @@ impl LiquidSdk {
                 prepare_response,
                 description: req.description.clone(),
                 use_description_hash: Some(false),
+                comment: None,
             })
             .await?;
 
@@ -4380,9 +4421,7 @@ impl LiquidSdk {
                             lnurl_withdraw_endpoint: Some(req.data.callback),
                             ..Default::default()
                         }),
-                        bip353_address: None,
-                        payer_note: None,
-                        asset_fees: None,
+                        ..Default::default()
                     })?;
             }
         }

@@ -344,6 +344,11 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
             data BLOB NOT NULL
         ) STRICT;
         ",
-        "ALTER TABLE payment_details ADD COLUMN payer_note TEXT;",
+        "
+        ALTER TABLE receive_swaps ADD COLUMN comment TEXT;
+        ALTER TABLE send_swaps ADD COLUMN comment TEXT;
+        ALTER TABLE chain_swaps ADD COLUMN comment TEXT;
+        ALTER TABLE payment_details ADD COLUMN comment TEXT;
+        ",
     ]
 }
