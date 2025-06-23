@@ -916,7 +916,9 @@ impl ChainSwapHandler {
                                         tx_id: claim_tx_id.clone(),
                                         timestamp: Some(utils::now()),
                                         asset_id: self.config.lbtc_asset_id().to_string(),
-                                        amount: swap.receiver_amount_sat,
+                                        amount: swap
+                                            .accepted_receiver_amount_sat
+                                            .unwrap_or(swap.receiver_amount_sat),
                                         fees_sat: 0,
                                         payment_type: PaymentType::Receive,
                                         is_confirmed: false,
