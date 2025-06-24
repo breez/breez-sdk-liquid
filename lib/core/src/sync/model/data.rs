@@ -145,7 +145,6 @@ pub(crate) struct SendSyncData {
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
-    pub(crate) payer_note: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
 }
 
@@ -188,7 +187,6 @@ impl From<SendSwap> for SendSyncData {
             created_at: value.created_at,
             preimage: value.preimage,
             description: value.description,
-            payer_note: value.payer_note,
             bolt12_offer: value.bolt12_offer,
             destination_pubkey: value.destination_pubkey,
         }
@@ -203,7 +201,6 @@ impl From<SendSyncData> for SendSwap {
             payment_hash: val.payment_hash,
             destination_pubkey: val.destination_pubkey,
             description: val.description,
-            payer_note: val.payer_note,
             preimage: val.preimage,
             payer_amount_sat: val.payer_amount_sat,
             receiver_amount_sat: val.receiver_amount_sat,

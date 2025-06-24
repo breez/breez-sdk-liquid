@@ -756,7 +756,6 @@ pub(crate) struct SendPaymentViaSwapRequest {
     pub(crate) description: Option<String>,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) fees_sat: u64,
-    pub(crate) payer_note: Option<String>,
 }
 
 /// Used to specify the amount to sent or to send all funds.
@@ -1313,7 +1312,6 @@ pub struct SendSwap {
     pub(crate) payment_hash: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
-    pub(crate) payer_note: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,

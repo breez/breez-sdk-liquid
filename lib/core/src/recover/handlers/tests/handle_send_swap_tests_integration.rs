@@ -327,7 +327,6 @@ mod test {
             payment_hash: Some("40853466aa96fa4080a7377ebca8b741f6d683d4f7b8667d9eefc0be414640a4".to_string()),
             destination_pubkey: Some("03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f".to_string()),
             description: Some("Test payment".to_string()),
-            payer_note: None,
             preimage: None,
             payer_amount_sat: 100000,
             receiver_amount_sat: 95000,

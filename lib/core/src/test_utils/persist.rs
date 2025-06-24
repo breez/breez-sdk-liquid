@@ -48,7 +48,6 @@ pub fn new_send_swap(
         destination_pubkey: Some(destination_pubkey),
         timeout_block_height: 1459611,
         description: Some("Send to BTC lightning".to_string()),
-        payer_note: None,
         preimage: None,
         payer_amount_sat: 1149,
         receiver_amount_sat: receiver_amount_sat.unwrap_or(1000),

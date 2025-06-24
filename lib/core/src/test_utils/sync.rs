@@ -147,7 +147,6 @@ pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
         preimage,
         payment_hash: None,
         description: None,
-        payer_note: None,
         bolt12_offer: None,
         destination_pubkey: None,
     }
