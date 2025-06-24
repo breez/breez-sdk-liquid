@@ -174,7 +174,6 @@ impl SdkNodeHandle {
             .pay_onchain(&PayOnchainRequest {
                 address,
                 prepare_response: prepare_response.clone(),
-                payer_note: None,
             })
             .await?;
         Ok((prepare_response, send_response))
