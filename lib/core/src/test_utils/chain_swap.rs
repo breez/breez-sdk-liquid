@@ -73,7 +73,6 @@ pub(crate) fn new_chain_swap(
             preimage: "bbce422d96c0386c3a6c1b1fe11fc7be3fdd871c6855db6ab2e319e96ec19c78"
                 .to_string(),
             description: Some("Bitcoin transfer".to_string()),
-            comment: None,
             create_response_json: r#"{
               "claim_details": {
                 "swapTree": {
@@ -163,7 +162,6 @@ pub(crate) fn new_chain_swap(
             timeout_block_height: 879692,
             preimage: "7b9c67470e18c2cb6eadb8c78a9d4e64905ad780245d5a7015c55d378fdea782".to_string(),
             description: Some("Bitcoin transfer".to_string()),
-            comment: None,
             create_response_json: r#"{
               "claim_details": {
                 "swapTree": {
@@ -248,7 +246,6 @@ pub(crate) fn new_chain_swap(
             timeout_block_height: 3211648,
             preimage: "22e45767b017782b4d9e72dcc22031b01059b3d76338132ac877f87877930230".to_string(),
             description: Some("Bitcoin transfer".to_string()),
-            comment: None,
             create_response_json: r#"{
               "claim_details": {
                 "swapTree": {

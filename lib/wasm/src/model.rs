@@ -393,7 +393,7 @@ pub struct ReceivePaymentRequest {
     pub prepare_response: PrepareReceiveResponse,
     pub description: Option<String>,
     pub use_description_hash: Option<bool>,
-    pub comment: Option<String>,
+    pub payer_note: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ReceivePaymentResponse)]
@@ -466,7 +466,7 @@ pub struct PrepareSendResponse {
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
     pub use_asset_fees: Option<bool>,
-    pub comment: Option<String>,
+    pub payer_note: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentResponse)]
@@ -504,7 +504,6 @@ pub struct PreparePayOnchainResponse {
 pub struct PayOnchainRequest {
     pub address: String,
     pub prepare_response: PreparePayOnchainResponse,
-    pub comment: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::PrepareRefundRequest)]
@@ -700,7 +699,7 @@ pub enum PaymentDetails {
         destination_pubkey: Option<String>,
         lnurl_info: Option<LnUrlInfo>,
         bip353_address: Option<String>,
-        comment: Option<String>,
+        payer_note: Option<String>,
         claim_tx_id: Option<String>,
         refund_tx_id: Option<String>,
         refund_tx_amount_sat: Option<u64>,
@@ -712,13 +711,12 @@ pub enum PaymentDetails {
         asset_info: Option<AssetInfo>,
         lnurl_info: Option<LnUrlInfo>,
         bip353_address: Option<String>,
-        comment: Option<String>,
+        payer_note: Option<String>,
     },
     Bitcoin {
         swap_id: String,
         bitcoin_address: String,
         description: String,
-        comment: Option<String>,
         auto_accepted_fees: bool,
         liquid_expiration_blockheight: Option<u32>,
         bitcoin_expiration_blockheight: Option<u32>,
@@ -774,7 +772,6 @@ pub struct PrepareBuyBitcoinResponse {
 pub struct BuyBitcoinRequest {
     pub prepare_response: PrepareBuyBitcoinResponse,
     pub redirect_url: Option<String>,
-    pub comment: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::LogEntry)]

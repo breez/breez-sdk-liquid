@@ -193,13 +193,10 @@ class BuyBitcoinRequest {
   /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
   final String? redirectUrl;
 
-  /// An optional comment to be stored with the payment
-  final String? comment;
-
-  const BuyBitcoinRequest({required this.prepareResponse, this.redirectUrl, this.comment});
+  const BuyBitcoinRequest({required this.prepareResponse, this.redirectUrl});
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ redirectUrl.hashCode ^ comment.hashCode;
+  int get hashCode => prepareResponse.hashCode ^ redirectUrl.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -207,8 +204,7 @@ class BuyBitcoinRequest {
       other is BuyBitcoinRequest &&
           runtimeType == other.runtimeType &&
           prepareResponse == other.prepareResponse &&
-          redirectUrl == other.redirectUrl &&
-          comment == other.comment;
+          redirectUrl == other.redirectUrl;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::check_message].
@@ -787,13 +783,10 @@ class PayOnchainRequest {
   final String address;
   final PreparePayOnchainResponse prepareResponse;
 
-  /// An optional comment to be stored with the payment
-  final String? comment;
-
-  const PayOnchainRequest({required this.address, required this.prepareResponse, this.comment});
+  const PayOnchainRequest({required this.address, required this.prepareResponse});
 
   @override
-  int get hashCode => address.hashCode ^ prepareResponse.hashCode ^ comment.hashCode;
+  int get hashCode => address.hashCode ^ prepareResponse.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -801,8 +794,7 @@ class PayOnchainRequest {
       other is PayOnchainRequest &&
           runtimeType == other.runtimeType &&
           address == other.address &&
-          prepareResponse == other.prepareResponse &&
-          comment == other.comment;
+          prepareResponse == other.prepareResponse;
 }
 
 /// Represents an SDK payment.
@@ -941,8 +933,8 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The BIP353 address used to resolve this payment
     String? bip353Address,
 
-    /// The payment comment
-    String? comment,
+    /// The payer note
+    String? payerNote,
 
     /// For a Receive payment, this is the claim tx id in case it has already been broadcast
     String? claimTxId,
@@ -974,8 +966,8 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The BIP353 address used to resolve this payment
     String? bip353Address,
 
-    /// The payment comment
-    String? comment,
+    /// The payer note
+    String? payerNote,
   }) = PaymentDetails_Liquid;
 
   /// Swapping to or from the Bitcoin chain
@@ -987,9 +979,6 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// Represents the invoice description
     required String description,
-
-    /// The payment comment
-    String? comment,
 
     /// For an amountless receive swap, this indicates if fees were automatically accepted.
     /// Fees are auto accepted when the swapper proposes fees that are within the initial
@@ -1505,19 +1494,19 @@ class ReceivePaymentRequest {
   /// If set to true, then the hash of the description will be used
   final bool? useDescriptionHash;
 
-  /// An optional comment to be stored with the payment
-  final String? comment;
+  /// An optional payer note, typically included in a LNURL-Pay request
+  final String? payerNote;
 
   const ReceivePaymentRequest({
     required this.prepareResponse,
     this.description,
     this.useDescriptionHash,
-    this.comment,
+    this.payerNote,
   });
 
   @override
   int get hashCode =>
-      prepareResponse.hashCode ^ description.hashCode ^ useDescriptionHash.hashCode ^ comment.hashCode;
+      prepareResponse.hashCode ^ description.hashCode ^ useDescriptionHash.hashCode ^ payerNote.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1527,7 +1516,7 @@ class ReceivePaymentRequest {
           prepareResponse == other.prepareResponse &&
           description == other.description &&
           useDescriptionHash == other.useDescriptionHash &&
-          comment == other.comment;
+          payerNote == other.payerNote;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -1733,14 +1722,13 @@ class SendPaymentRequest {
   /// If set to true, the payment will be sent using the SideSwap payjoin service
   final bool? useAssetFees;
 
-  /// An optional comment to be stored with the payment. For BOLT12 this is included
-  /// as the payer note in the invoice.
-  final String? comment;
+  /// An optional payer note, which is to be included in a BOLT12 invoice request
+  final String? payerNote;
 
-  const SendPaymentRequest({required this.prepareResponse, this.useAssetFees, this.comment});
+  const SendPaymentRequest({required this.prepareResponse, this.useAssetFees, this.payerNote});
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ useAssetFees.hashCode ^ comment.hashCode;
+  int get hashCode => prepareResponse.hashCode ^ useAssetFees.hashCode ^ payerNote.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1749,7 +1737,7 @@ class SendPaymentRequest {
           runtimeType == other.runtimeType &&
           prepareResponse == other.prepareResponse &&
           useAssetFees == other.useAssetFees &&
-          comment == other.comment;
+          payerNote == other.payerNote;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

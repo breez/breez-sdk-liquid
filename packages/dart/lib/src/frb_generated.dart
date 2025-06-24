@@ -1939,11 +1939,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BuyBitcoinRequest dco_decode_buy_bitcoin_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return BuyBitcoinRequest(
       prepareResponse: dco_decode_prepare_buy_bitcoin_response(arr[0]),
       redirectUrl: dco_decode_opt_String(arr[1]),
-      comment: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -2804,11 +2803,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PayOnchainRequest dco_decode_pay_onchain_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return PayOnchainRequest(
       address: dco_decode_String(arr[0]),
       prepareResponse: dco_decode_prepare_pay_onchain_response(arr[1]),
-      comment: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -2847,7 +2845,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           destinationPubkey: dco_decode_opt_String(raw[8]),
           lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[9]),
           bip353Address: dco_decode_opt_String(raw[10]),
-          comment: dco_decode_opt_String(raw[11]),
+          payerNote: dco_decode_opt_String(raw[11]),
           claimTxId: dco_decode_opt_String(raw[12]),
           refundTxId: dco_decode_opt_String(raw[13]),
           refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[14]),
@@ -2860,21 +2858,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           assetInfo: dco_decode_opt_box_autoadd_asset_info(raw[4]),
           lnurlInfo: dco_decode_opt_box_autoadd_ln_url_info(raw[5]),
           bip353Address: dco_decode_opt_String(raw[6]),
-          comment: dco_decode_opt_String(raw[7]),
+          payerNote: dco_decode_opt_String(raw[7]),
         );
       case 2:
         return PaymentDetails_Bitcoin(
           swapId: dco_decode_String(raw[1]),
           bitcoinAddress: dco_decode_String(raw[2]),
           description: dco_decode_String(raw[3]),
-          comment: dco_decode_opt_String(raw[4]),
-          autoAcceptedFees: dco_decode_bool(raw[5]),
-          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[6]),
-          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[7]),
-          lockupTxId: dco_decode_opt_String(raw[8]),
-          claimTxId: dco_decode_opt_String(raw[9]),
-          refundTxId: dco_decode_opt_String(raw[10]),
-          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[11]),
+          autoAcceptedFees: dco_decode_bool(raw[4]),
+          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[5]),
+          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[6]),
+          lockupTxId: dco_decode_opt_String(raw[7]),
+          claimTxId: dco_decode_opt_String(raw[8]),
+          refundTxId: dco_decode_opt_String(raw[9]),
+          refundTxAmountSat: dco_decode_opt_box_autoadd_u_64(raw[10]),
         );
       default:
         throw Exception("unreachable");
@@ -3132,7 +3129,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       prepareResponse: dco_decode_prepare_receive_response(arr[0]),
       description: dco_decode_opt_String(arr[1]),
       useDescriptionHash: dco_decode_opt_box_autoadd_bool(arr[2]),
-      comment: dco_decode_opt_String(arr[3]),
+      payerNote: dco_decode_opt_String(arr[3]),
     );
   }
 
@@ -3302,7 +3299,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return SendPaymentRequest(
       prepareResponse: dco_decode_prepare_send_response(arr[0]),
       useAssetFees: dco_decode_opt_box_autoadd_bool(arr[1]),
-      comment: dco_decode_opt_String(arr[2]),
+      payerNote: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -4027,12 +4024,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_prepareResponse = sse_decode_prepare_buy_bitcoin_response(deserializer);
     var var_redirectUrl = sse_decode_opt_String(deserializer);
-    var var_comment = sse_decode_opt_String(deserializer);
-    return BuyBitcoinRequest(
-      prepareResponse: var_prepareResponse,
-      redirectUrl: var_redirectUrl,
-      comment: var_comment,
-    );
+    return BuyBitcoinRequest(prepareResponse: var_prepareResponse, redirectUrl: var_redirectUrl);
   }
 
   @protected
@@ -5183,12 +5175,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_address = sse_decode_String(deserializer);
     var var_prepareResponse = sse_decode_prepare_pay_onchain_response(deserializer);
-    var var_comment = sse_decode_opt_String(deserializer);
-    return PayOnchainRequest(
-      address: var_address,
-      prepareResponse: var_prepareResponse,
-      comment: var_comment,
-    );
+    return PayOnchainRequest(address: var_address, prepareResponse: var_prepareResponse);
   }
 
   @protected
@@ -5235,7 +5222,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_destinationPubkey = sse_decode_opt_String(deserializer);
         var var_lnurlInfo = sse_decode_opt_box_autoadd_ln_url_info(deserializer);
         var var_bip353Address = sse_decode_opt_String(deserializer);
-        var var_comment = sse_decode_opt_String(deserializer);
+        var var_payerNote = sse_decode_opt_String(deserializer);
         var var_claimTxId = sse_decode_opt_String(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
         var var_refundTxAmountSat = sse_decode_opt_box_autoadd_u_64(deserializer);
@@ -5250,7 +5237,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           destinationPubkey: var_destinationPubkey,
           lnurlInfo: var_lnurlInfo,
           bip353Address: var_bip353Address,
-          comment: var_comment,
+          payerNote: var_payerNote,
           claimTxId: var_claimTxId,
           refundTxId: var_refundTxId,
           refundTxAmountSat: var_refundTxAmountSat,
@@ -5262,7 +5249,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_assetInfo = sse_decode_opt_box_autoadd_asset_info(deserializer);
         var var_lnurlInfo = sse_decode_opt_box_autoadd_ln_url_info(deserializer);
         var var_bip353Address = sse_decode_opt_String(deserializer);
-        var var_comment = sse_decode_opt_String(deserializer);
+        var var_payerNote = sse_decode_opt_String(deserializer);
         return PaymentDetails_Liquid(
           destination: var_destination,
           description: var_description,
@@ -5270,13 +5257,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           assetInfo: var_assetInfo,
           lnurlInfo: var_lnurlInfo,
           bip353Address: var_bip353Address,
-          comment: var_comment,
+          payerNote: var_payerNote,
         );
       case 2:
         var var_swapId = sse_decode_String(deserializer);
         var var_bitcoinAddress = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
-        var var_comment = sse_decode_opt_String(deserializer);
         var var_autoAcceptedFees = sse_decode_bool(deserializer);
         var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
         var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
@@ -5288,7 +5274,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           swapId: var_swapId,
           bitcoinAddress: var_bitcoinAddress,
           description: var_description,
-          comment: var_comment,
           autoAcceptedFees: var_autoAcceptedFees,
           liquidExpirationBlockheight: var_liquidExpirationBlockheight,
           bitcoinExpirationBlockheight: var_bitcoinExpirationBlockheight,
@@ -5571,12 +5556,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_prepareResponse = sse_decode_prepare_receive_response(deserializer);
     var var_description = sse_decode_opt_String(deserializer);
     var var_useDescriptionHash = sse_decode_opt_box_autoadd_bool(deserializer);
-    var var_comment = sse_decode_opt_String(deserializer);
+    var var_payerNote = sse_decode_opt_String(deserializer);
     return ReceivePaymentRequest(
       prepareResponse: var_prepareResponse,
       description: var_description,
       useDescriptionHash: var_useDescriptionHash,
-      comment: var_comment,
+      payerNote: var_payerNote,
     );
   }
 
@@ -5768,11 +5753,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_prepareResponse = sse_decode_prepare_send_response(deserializer);
     var var_useAssetFees = sse_decode_opt_box_autoadd_bool(deserializer);
-    var var_comment = sse_decode_opt_String(deserializer);
+    var var_payerNote = sse_decode_opt_String(deserializer);
     return SendPaymentRequest(
       prepareResponse: var_prepareResponse,
       useAssetFees: var_useAssetFees,
-      comment: var_comment,
+      payerNote: var_payerNote,
     );
   }
 
@@ -6595,7 +6580,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_prepare_buy_bitcoin_response(self.prepareResponse, serializer);
     sse_encode_opt_String(self.redirectUrl, serializer);
-    sse_encode_opt_String(self.comment, serializer);
   }
 
   @protected
@@ -7519,7 +7503,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.address, serializer);
     sse_encode_prepare_pay_onchain_response(self.prepareResponse, serializer);
-    sse_encode_opt_String(self.comment, serializer);
   }
 
   @protected
@@ -7552,7 +7535,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         destinationPubkey: final destinationPubkey,
         lnurlInfo: final lnurlInfo,
         bip353Address: final bip353Address,
-        comment: final comment,
+        payerNote: final payerNote,
         claimTxId: final claimTxId,
         refundTxId: final refundTxId,
         refundTxAmountSat: final refundTxAmountSat,
@@ -7568,7 +7551,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_String(destinationPubkey, serializer);
         sse_encode_opt_box_autoadd_ln_url_info(lnurlInfo, serializer);
         sse_encode_opt_String(bip353Address, serializer);
-        sse_encode_opt_String(comment, serializer);
+        sse_encode_opt_String(payerNote, serializer);
         sse_encode_opt_String(claimTxId, serializer);
         sse_encode_opt_String(refundTxId, serializer);
         sse_encode_opt_box_autoadd_u_64(refundTxAmountSat, serializer);
@@ -7579,7 +7562,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         assetInfo: final assetInfo,
         lnurlInfo: final lnurlInfo,
         bip353Address: final bip353Address,
-        comment: final comment,
+        payerNote: final payerNote,
       ):
         sse_encode_i_32(1, serializer);
         sse_encode_String(destination, serializer);
@@ -7588,12 +7571,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_opt_box_autoadd_asset_info(assetInfo, serializer);
         sse_encode_opt_box_autoadd_ln_url_info(lnurlInfo, serializer);
         sse_encode_opt_String(bip353Address, serializer);
-        sse_encode_opt_String(comment, serializer);
+        sse_encode_opt_String(payerNote, serializer);
       case PaymentDetails_Bitcoin(
         swapId: final swapId,
         bitcoinAddress: final bitcoinAddress,
         description: final description,
-        comment: final comment,
         autoAcceptedFees: final autoAcceptedFees,
         liquidExpirationBlockheight: final liquidExpirationBlockheight,
         bitcoinExpirationBlockheight: final bitcoinExpirationBlockheight,
@@ -7606,7 +7588,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(swapId, serializer);
         sse_encode_String(bitcoinAddress, serializer);
         sse_encode_String(description, serializer);
-        sse_encode_opt_String(comment, serializer);
         sse_encode_bool(autoAcceptedFees, serializer);
         sse_encode_opt_box_autoadd_u_32(liquidExpirationBlockheight, serializer);
         sse_encode_opt_box_autoadd_u_32(bitcoinExpirationBlockheight, serializer);
@@ -7825,7 +7806,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_prepare_receive_response(self.prepareResponse, serializer);
     sse_encode_opt_String(self.description, serializer);
     sse_encode_opt_box_autoadd_bool(self.useDescriptionHash, serializer);
-    sse_encode_opt_String(self.comment, serializer);
+    sse_encode_opt_String(self.payerNote, serializer);
   }
 
   @protected
@@ -7973,7 +7954,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_prepare_send_response(self.prepareResponse, serializer);
     sse_encode_opt_box_autoadd_bool(self.useAssetFees, serializer);
-    sse_encode_opt_String(self.comment, serializer);
+    sse_encode_opt_String(self.payerNote, serializer);
   }
 
   @protected

@@ -28,7 +28,6 @@ pub(crate) struct ChainSyncData {
     pub(crate) accept_zero_conf: bool,
     pub(crate) created_at: u32,
     pub(crate) description: Option<String>,
-    pub(crate) comment: Option<String>,
     #[serde(default)]
     pub(crate) auto_accepted_fees: bool,
 }
@@ -92,7 +91,6 @@ impl From<ChainSwap> for ChainSyncData {
             accept_zero_conf: value.accept_zero_conf,
             created_at: value.created_at,
             description: value.description,
-            comment: value.comment,
             auto_accepted_fees: value.auto_accepted_fees,
         }
     }
@@ -107,7 +105,6 @@ impl From<ChainSyncData> for ChainSwap {
             timeout_block_height: val.timeout_block_height,
             preimage: val.preimage,
             description: val.description,
-            comment: val.comment,
             payer_amount_sat: val.payer_amount_sat,
             actual_payer_amount_sat: None,
             receiver_amount_sat: val.receiver_amount_sat,
@@ -148,7 +145,7 @@ pub(crate) struct SendSyncData {
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
-    pub(crate) comment: Option<String>,
+    pub(crate) payer_note: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
 }
 
@@ -191,7 +188,7 @@ impl From<SendSwap> for SendSyncData {
             created_at: value.created_at,
             preimage: value.preimage,
             description: value.description,
-            comment: value.comment,
+            payer_note: value.payer_note,
             bolt12_offer: value.bolt12_offer,
             destination_pubkey: value.destination_pubkey,
         }
@@ -206,7 +203,7 @@ impl From<SendSyncData> for SendSwap {
             payment_hash: val.payment_hash,
             destination_pubkey: val.destination_pubkey,
             description: val.description,
-            comment: val.comment,
+            payer_note: val.payer_note,
             preimage: val.preimage,
             payer_amount_sat: val.payer_amount_sat,
             receiver_amount_sat: val.receiver_amount_sat,
@@ -243,7 +240,7 @@ pub(crate) struct ReceiveSyncData {
     pub(crate) bolt12_offer: Option<String>,
     pub(crate) payment_hash: Option<String>,
     pub(crate) description: Option<String>,
-    pub(crate) comment: Option<String>,
+    pub(crate) payer_note: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
 }
 
@@ -280,7 +277,7 @@ impl From<ReceiveSwap> for ReceiveSyncData {
             timeout_block_height: value.timeout_block_height,
             created_at: value.created_at,
             description: value.description,
-            comment: value.comment,
+            payer_note: value.payer_note,
             destination_pubkey: value.destination_pubkey,
         }
     }
@@ -299,7 +296,7 @@ impl From<ReceiveSyncData> for ReceiveSwap {
             payment_hash: val.payment_hash,
             destination_pubkey: val.destination_pubkey,
             description: val.description,
-            comment: val.comment,
+            payer_note: val.payer_note,
             payer_amount_sat: val.payer_amount_sat,
             receiver_amount_sat: val.receiver_amount_sat,
             claim_fees_sat: val.claim_fees_sat,
@@ -323,7 +320,7 @@ pub(crate) struct PaymentDetailsSyncData {
     pub(crate) description: Option<String>,
     pub(crate) lnurl_info: Option<LnUrlInfo>,
     pub(crate) bip353_address: Option<String>,
-    pub(crate) comment: Option<String>,
+    pub(crate) payer_note: Option<String>,
     pub(crate) asset_fees: Option<u64>,
 }
 
@@ -335,7 +332,7 @@ impl PaymentDetailsSyncData {
                 "description" => clone_if_set(&mut self.description, &other.description),
                 "lnurl_info" => clone_if_set(&mut self.lnurl_info, &other.lnurl_info),
                 "bip353_address" => clone_if_set(&mut self.bip353_address, &other.bip353_address),
-                "comment" => clone_if_set(&mut self.comment, &other.comment),
+                "payer_note" => clone_if_set(&mut self.payer_note, &other.payer_note),
                 "asset_fees" => self.asset_fees = other.asset_fees,
                 _ => continue,
             }
@@ -351,7 +348,7 @@ impl From<PaymentTxDetails> for PaymentDetailsSyncData {
             description: value.description,
             lnurl_info: value.lnurl_info,
             bip353_address: value.bip353_address,
-            comment: value.comment,
+            payer_note: value.payer_note,
             asset_fees: value.asset_fees,
         }
     }
@@ -365,7 +362,7 @@ impl From<PaymentDetailsSyncData> for PaymentTxDetails {
             description: val.description,
             lnurl_info: val.lnurl_info,
             bip353_address: val.bip353_address,
-            comment: val.comment,
+            payer_note: val.payer_note,
             asset_fees: val.asset_fees,
         }
     }

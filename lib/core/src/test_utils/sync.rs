@@ -128,7 +128,7 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
         bolt12_offer: None,
         payment_hash: None,
         description: None,
-        comment: None,
+        payer_note: None,
         destination_pubkey: None,
     }
 }
@@ -147,7 +147,7 @@ pub(crate) fn new_send_sync_data(preimage: Option<String>) -> SendSyncData {
         preimage,
         payment_hash: None,
         description: None,
-        comment: None,
+        payer_note: None,
         bolt12_offer: None,
         destination_pubkey: None,
     }
@@ -172,7 +172,6 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
         accept_zero_conf: accept_zero_conf.unwrap_or(true),
         created_at: 0,
         description: None,
-        comment: None,
         auto_accepted_fees: false,
     }
 }

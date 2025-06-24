@@ -276,7 +276,7 @@ mod test {
             payment_hash: Some("ed4ee7c658a356204c8403bcaf4fa94870d65e5e816f99d682b9771ef2e9d994".to_string()),
             destination_pubkey: Some("03864ef025fde8fb587d989186ce6a4a186895ee44a926bfc370e2c366597a3f8f".to_string()),
             description: Some("Test payment".to_string()),
-            comment: None,
+            payer_note: None,
             payer_amount_sat: 100000,
             receiver_amount_sat: 95000,
             pair_fees_json: r#"{"id":"BTC/BTC","rate":0.997,"limits":{"maximal":2000000,"minimal":10000,"maximalZeroConf":50000},"fees":{"percentage":0.5,"miner":200}}"#.to_string(),

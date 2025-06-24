@@ -389,7 +389,7 @@ impl Persister {
                     description,
                     lnurl_info_json,
                     bip353_address,
-                    comment,
+                    payer_note,
                     asset_fees
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -399,7 +399,7 @@ impl Persister {
                     description = COALESCE(excluded.description, description),
                     lnurl_info_json = COALESCE(excluded.lnurl_info_json, lnurl_info_json),
                     bip353_address = COALESCE(excluded.bip353_address, bip353_address),
-                    comment = COALESCE(excluded.comment, comment),
+                    payer_note = COALESCE(excluded.payer_note, payer_note),
                     asset_fees = COALESCE(excluded.asset_fees, asset_fees)
             "
             ),
@@ -412,7 +412,7 @@ impl Persister {
                     .as_ref()
                     .map(|info| serde_json::to_string(&info).ok()),
                 &payment_tx_details.bip353_address,
-                &payment_tx_details.comment,
+                &payment_tx_details.payer_note,
                 &payment_tx_details.asset_fees,
             ),
         )?;
@@ -442,7 +442,7 @@ impl Persister {
     pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
         let con = self.get_connection()?;
         let mut stmt = con.prepare(
-            "SELECT destination, description, lnurl_info_json, bip353_address, comment, asset_fees
+            "SELECT destination, description, lnurl_info_json, bip353_address, payer_note, asset_fees
             FROM payment_details
             WHERE tx_id = ?",
         )?;
@@ -451,7 +451,7 @@ impl Persister {
             let description = row.get(1)?;
             let maybe_lnurl_info_json: Option<String> = row.get(2)?;
             let maybe_bip353_address = row.get(3)?;
-            let maybe_comment = row.get(4)?;
+            let maybe_payer_note = row.get(4)?;
             let maybe_asset_fees = row.get(5)?;
             Ok(PaymentTxDetails {
                 tx_id: tx_id.to_string(),
@@ -460,7 +460,7 @@ impl Persister {
                 lnurl_info: maybe_lnurl_info_json
                     .and_then(|info| serde_json::from_str::<LnUrlInfo>(&info).ok()),
                 bip353_address: maybe_bip353_address,
-                comment: maybe_comment,
+                payer_note: maybe_payer_note,
                 asset_fees: maybe_asset_fees,
             })
         });
@@ -531,7 +531,7 @@ impl Persister {
                 rs.payment_hash,
                 rs.destination_pubkey,
                 rs.description,
-                rs.comment,
+                rs.payer_note,
                 rs.preimage,
                 rs.payer_amount_sat,
                 rs.receiver_amount_sat,
@@ -546,7 +546,7 @@ impl Persister {
                 ss.payment_hash,
                 ss.destination_pubkey,
                 ss.description,
-                ss.comment,
+                ss.payer_note,
                 ss.preimage,
                 ss.refund_tx_id,
                 ss.payer_amount_sat,
@@ -559,7 +559,6 @@ impl Persister {
                 cs.direction,
                 cs.preimage,
                 cs.description,
-                cs.comment,
                 cs.refund_tx_id,
                 cs.payer_amount_sat,
                 cs.receiver_amount_sat,
@@ -577,7 +576,7 @@ impl Persister {
                 pd.description,
                 pd.lnurl_info_json,
                 pd.bip353_address,
-                pd.comment,
+                pd.payer_note,
                 pd.asset_fees,
                 am.name,
                 am.ticker,
@@ -645,7 +644,7 @@ impl Persister {
         let maybe_receive_swap_payment_hash: Option<String> = row.get(13)?;
         let maybe_receive_swap_destination_pubkey: Option<String> = row.get(14)?;
         let maybe_receive_swap_description: Option<String> = row.get(15)?;
-        let maybe_receive_swap_comment: Option<String> = row.get(16)?;
+        let maybe_receive_swap_payer_note: Option<String> = row.get(16)?;
         let maybe_receive_swap_preimage: Option<String> = row.get(17)?;
         let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(18)?;
         let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(19)?;
@@ -663,7 +662,7 @@ impl Persister {
         let maybe_send_swap_payment_hash: Option<String> = row.get(28)?;
         let maybe_send_swap_destination_pubkey: Option<String> = row.get(29)?;
         let maybe_send_swap_description: Option<String> = row.get(30)?;
-        let maybe_send_swap_comment: Option<String> = row.get(31)?;
+        let maybe_send_swap_payer_note: Option<String> = row.get(31)?;
         let maybe_send_swap_preimage: Option<String> = row.get(32)?;
         let maybe_send_swap_refund_tx_id: Option<String> = row.get(33)?;
         let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(34)?;
@@ -679,36 +678,35 @@ impl Persister {
         let maybe_chain_swap_direction: Option<Direction> = row.get(41)?;
         let maybe_chain_swap_preimage: Option<String> = row.get(42)?;
         let maybe_chain_swap_description: Option<String> = row.get(43)?;
-        let maybe_chain_swap_comment: Option<String> = row.get(44)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(45)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(46)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(47)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(48)?;
-        let maybe_chain_swap_lockup_address: Option<String> = row.get(49)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(50)?;
-        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(51)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(44)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(45)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(46)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(47)?;
+        let maybe_chain_swap_lockup_address: Option<String> = row.get(48)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(49)?;
+        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(50)?;
         let maybe_chain_swap_pair_fees: Option<ChainPair> =
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
-        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(52)?;
-        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(53)?;
-        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(54)?;
-        let maybe_chain_swap_user_lockup_tx_id: Option<String> = row.get(55)?;
-        let maybe_chain_swap_claim_tx_id: Option<String> = row.get(56)?;
+        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(51)?;
+        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(52)?;
+        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(53)?;
+        let maybe_chain_swap_user_lockup_tx_id: Option<String> = row.get(54)?;
+        let maybe_chain_swap_claim_tx_id: Option<String> = row.get(55)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(57)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(56)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(58)?;
-        let maybe_payment_details_description: Option<String> = row.get(59)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(60)?;
+        let maybe_payment_details_destination: Option<String> = row.get(57)?;
+        let maybe_payment_details_description: Option<String> = row.get(58)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(59)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
-        let maybe_payment_details_bip353_address: Option<String> = row.get(61)?;
-        let maybe_payment_details_comment: Option<String> = row.get(62)?;
-        let maybe_payment_details_asset_fees: Option<u64> = row.get(63)?;
+        let maybe_payment_details_bip353_address: Option<String> = row.get(60)?;
+        let maybe_payment_details_payer_note: Option<String> = row.get(61)?;
+        let maybe_payment_details_asset_fees: Option<u64> = row.get(62)?;
 
-        let maybe_asset_metadata_name: Option<String> = row.get(64)?;
-        let maybe_asset_metadata_ticker: Option<String> = row.get(65)?;
-        let maybe_asset_metadata_precision: Option<u8> = row.get(66)?;
+        let maybe_asset_metadata_name: Option<String> = row.get(63)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(64)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(65)?;
 
         let bitcoin_address = match maybe_chain_swap_direction {
             Some(Direction::Incoming) => maybe_chain_swap_lockup_address,
@@ -739,7 +737,7 @@ impl Persister {
                                 })
                                 .unwrap_or("Lightning payment".to_string())
                         }),
-                        comment: maybe_receive_swap_comment,
+                        payer_note: maybe_receive_swap_payer_note,
                         payer_amount_sat,
                         receiver_amount_sat: maybe_receive_swap_receiver_amount_sat.unwrap_or(0),
                         swapper_fees_sat: maybe_receive_swap_pair_fees
@@ -770,7 +768,7 @@ impl Persister {
                             destination_pubkey: maybe_send_swap_destination_pubkey,
                             description: maybe_send_swap_description
                                 .unwrap_or("Lightning payment".to_string()),
-                            comment: maybe_send_swap_comment,
+                            payer_note: maybe_send_swap_payer_note,
                             payer_amount_sat: maybe_send_swap_payer_amount_sat.unwrap_or(0),
                             receiver_amount_sat,
                             swapper_fees_sat: maybe_send_swap_pair_fees
@@ -826,7 +824,7 @@ impl Persister {
                                 destination_pubkey: None,
                                 description: maybe_chain_swap_description
                                     .unwrap_or("Bitcoin transfer".to_string()),
-                                comment: maybe_chain_swap_comment,
+                                payer_note: None,
                                 payer_amount_sat,
                                 receiver_amount_sat,
                                 swapper_fees_sat,
@@ -856,7 +854,7 @@ impl Persister {
                     bolt12_offer,
                     payment_hash,
                     destination_pubkey,
-                    comment,
+                    payer_note,
                     refund_tx_id,
                     preimage,
                     refund_tx_amount_sat,
@@ -870,7 +868,7 @@ impl Persister {
                     bolt12_offer,
                     payment_hash,
                     destination_pubkey,
-                    comment,
+                    payer_note,
                     preimage,
                     refund_tx_id,
                     refund_tx_amount_sat,
@@ -890,7 +888,7 @@ impl Persister {
                 }),
                 lnurl_info: maybe_payment_details_lnurl_info,
                 bip353_address: maybe_payment_details_bip353_address,
-                comment,
+                payer_note,
                 claim_tx_id: maybe_claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -901,7 +899,6 @@ impl Persister {
             Some(PaymentSwapData {
                 swap_type: PaymentSwapType::Chain,
                 swap_id,
-                comment,
                 refund_tx_id,
                 refund_tx_amount_sat,
                 expiration_blockheight,
@@ -922,7 +919,6 @@ impl Persister {
                     refund_tx_id,
                     refund_tx_amount_sat,
                     description: description.unwrap_or("Bitcoin transfer".to_string()),
-                    comment,
                     liquid_expiration_blockheight,
                     bitcoin_expiration_blockheight,
                     auto_accepted_fees,
@@ -974,7 +970,7 @@ impl Persister {
                     asset_info,
                     lnurl_info: maybe_payment_details_lnurl_info,
                     bip353_address: maybe_payment_details_bip353_address,
-                    comment: maybe_payment_details_comment,
+                    payer_note: maybe_payment_details_payer_note,
                 }
             }
         };

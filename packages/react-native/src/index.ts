@@ -77,7 +77,6 @@ export interface BlockchainInfo {
 export interface BuyBitcoinRequest {
     prepareResponse: PrepareBuyBitcoinResponse
     redirectUrl?: string
-    comment?: string
 }
 
 export interface CheckMessageRequest {
@@ -318,7 +317,6 @@ export interface OnchainPaymentLimitsResponse {
 export interface PayOnchainRequest {
     address: string
     prepareResponse: PreparePayOnchainResponse
-    comment?: string
 }
 
 export interface Payment {
@@ -420,7 +418,7 @@ export interface ReceivePaymentRequest {
     prepareResponse: PrepareReceiveResponse
     description?: string
     useDescriptionHash?: boolean
-    comment?: string
+    payerNote?: string
 }
 
 export interface ReceivePaymentResponse {
@@ -473,7 +471,7 @@ export interface RouteHintHop {
 export interface SendPaymentRequest {
     prepareResponse: PrepareSendResponse
     useAssetFees?: boolean
-    comment?: string
+    payerNote?: string
 }
 
 export interface SendPaymentResponse {
@@ -724,7 +722,7 @@ export type PaymentDetails = {
     destinationPubkey?: string
     lnurlInfo?: LnUrlInfo
     bip353Address?: string
-    comment?: string
+    payerNote?: string
     claimTxId?: string
     refundTxId?: string
     refundTxAmountSat?: number
@@ -736,13 +734,12 @@ export type PaymentDetails = {
     assetInfo?: AssetInfo
     lnurlInfo?: LnUrlInfo
     bip353Address?: string
-    comment?: string
+    payerNote?: string
 } | {
     type: PaymentDetailsVariant.BITCOIN,
     swapId: string
     bitcoinAddress: string
     description: string
-    comment?: string
     autoAcceptedFees: boolean
     bitcoinExpirationBlockheight?: number
     liquidExpirationBlockheight?: number

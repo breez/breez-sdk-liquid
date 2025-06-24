@@ -84,7 +84,7 @@ class LnurlPayInvoiceJob(
                         prepareReceivePaymentRes,
                         description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
                         useDescriptionHash = true,
-                        comment = request.comment,
+                        payerNote = request.comment,
                     ),
                 )
             // Add the verify URL

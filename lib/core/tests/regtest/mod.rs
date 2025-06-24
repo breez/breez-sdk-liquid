@@ -141,7 +141,7 @@ impl SdkNodeHandle {
                 prepare_response: prepare_response.clone(),
                 description: None,
                 use_description_hash: None,
-                comment: None,
+                payer_note: None,
             })
             .await?;
         Ok((prepare_response, receive_response))
@@ -157,7 +157,7 @@ impl SdkNodeHandle {
             .send_payment(&SendPaymentRequest {
                 prepare_response: prepare_response.clone(),
                 use_asset_fees: None,
-                comment: None,
+                payer_note: None,
             })
             .await?;
         Ok((prepare_response, send_response))
@@ -174,7 +174,7 @@ impl SdkNodeHandle {
             .pay_onchain(&PayOnchainRequest {
                 address,
                 prepare_response: prepare_response.clone(),
-                comment: None,
+                payer_note: None,
             })
             .await?;
         Ok((prepare_response, send_response))

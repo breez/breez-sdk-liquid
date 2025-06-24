@@ -632,8 +632,8 @@ pub struct ReceivePaymentRequest {
     pub description: Option<String>,
     /// If set to true, then the hash of the description will be used
     pub use_description_hash: Option<bool>,
-    /// An optional comment to be stored with the payment
-    pub comment: Option<String>,
+    /// An optional payer note, typically included in a LNURL-Pay request
+    pub payer_note: Option<String>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -739,9 +739,8 @@ pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
     /// If set to true, the payment will be sent using the SideSwap payjoin service
     pub use_asset_fees: Option<bool>,
-    /// An optional comment to be stored with the payment. For BOLT12 this is included
-    /// as the payer note in the invoice.
-    pub comment: Option<String>,
+    /// An optional payer note, which is to be included in a BOLT12 invoice request
+    pub payer_note: Option<String>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].
@@ -757,7 +756,7 @@ pub(crate) struct SendPaymentViaSwapRequest {
     pub(crate) description: Option<String>,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) fees_sat: u64,
-    pub(crate) comment: Option<String>,
+    pub(crate) payer_note: Option<String>,
 }
 
 /// Used to specify the amount to sent or to send all funds.
@@ -799,8 +798,6 @@ pub struct PreparePayOnchainResponse {
 pub struct PayOnchainRequest {
     pub address: String,
     pub prepare_response: PreparePayOnchainResponse,
-    /// An optional comment to be stored with the payment
-    pub comment: Option<String>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_refund].
@@ -1149,7 +1146,6 @@ pub struct ChainSwap {
     pub(crate) timeout_block_height: u32,
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
-    pub(crate) comment: Option<String>,
     /// Payer amount defined at swap creation
     pub(crate) payer_amount_sat: u64,
     /// The actual payer amount as seen on the user lockup tx. Might differ from `payer_amount_sat`
@@ -1317,7 +1313,7 @@ pub struct SendSwap {
     pub(crate) payment_hash: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
-    pub(crate) comment: Option<String>,
+    pub(crate) payer_note: Option<String>,
     pub(crate) preimage: Option<String>,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -1416,7 +1412,7 @@ pub struct ReceiveSwap {
     pub(crate) payment_hash: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
-    pub(crate) comment: Option<String>,
+    pub(crate) payer_note: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -1787,7 +1783,7 @@ pub struct PaymentSwapData {
     pub payment_hash: Option<String>,
     pub destination_pubkey: Option<String>,
     pub description: String,
-    pub comment: Option<String>,
+    pub payer_note: Option<String>,
 
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
@@ -1901,8 +1897,8 @@ pub enum PaymentDetails {
         /// The BIP353 address used to resolve this payment
         bip353_address: Option<String>,
 
-        /// The payment comment
-        comment: Option<String>,
+        /// The payer note
+        payer_note: Option<String>,
 
         /// For a Receive payment, this is the claim tx id in case it has already been broadcast
         claim_tx_id: Option<String>,
@@ -1933,8 +1929,8 @@ pub enum PaymentDetails {
         /// The BIP353 address used to resolve this payment
         bip353_address: Option<String>,
 
-        /// The payment comment
-        comment: Option<String>,
+        /// The payer note
+        payer_note: Option<String>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {
@@ -1945,9 +1941,6 @@ pub enum PaymentDetails {
 
         /// Represents the invoice description
         description: String,
-
-        /// The payment comment
-        comment: Option<String>,
 
         /// For an amountless receive swap, this indicates if fees were automatically accepted.
         /// Fees are auto accepted when the swapper proposes fees that are within the initial
@@ -2235,8 +2228,6 @@ pub struct BuyBitcoinRequest {
     ///
     /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
     pub redirect_url: Option<String>,
-    /// An optional comment to be stored with the payment
-    pub comment: Option<String>,
 }
 
 /// Internal SDK log entry used in the Uniffi and Dart bindings

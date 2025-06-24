@@ -62,7 +62,7 @@ impl Persister {
             "UPDATE send_swaps 
             SET
                 description = :description,
-                comment = :comment,
+                payer_note = :payer_note,
                 preimage = :preimage,
                 lockup_tx_id = :lockup_tx_id,
                 refund_address = :refund_address,
@@ -74,7 +74,7 @@ impl Persister {
             named_params! {
                 ":id": &send_swap.id,
                 ":description": &send_swap.description,
-                ":comment": &send_swap.comment,
+                ":payer_note": &send_swap.payer_note,
                 ":preimage": &send_swap.preimage,
                 ":lockup_tx_id": &send_swap.lockup_tx_id,
                 ":refund_address": &send_swap.refund_address,
@@ -177,7 +177,7 @@ impl Persister {
                 destination_pubkey,
                 timeout_block_height,
                 description,
-                comment,
+                payer_note,
                 preimage,
                 payer_amount_sat,
                 receiver_amount_sat,
@@ -226,7 +226,7 @@ impl Persister {
             destination_pubkey: row.get(4)?,
             timeout_block_height: row.get(5)?,
             description: row.get(6)?,
-            comment: row.get(7)?,
+            payer_note: row.get(7)?,
             preimage: row.get(8)?,
             payer_amount_sat: row.get(9)?,
             receiver_amount_sat: row.get(10)?,

@@ -53,10 +53,9 @@ pub(crate) enum Command {
         #[arg(long)]
         amount: Option<f64>,
 
-        /// Optional comment to be stored with the payment. For BOLT12 this is included
-        /// as the payer note in the invoice.
+        /// Optional payer note, which is to be included in the BOLT12 invoice request
         #[clap(short, long)]
-        comment: Option<String>,
+        payer_note: Option<String>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[clap(short, long, action = ArgAction::SetTrue)]
@@ -77,10 +76,6 @@ pub(crate) enum Command {
 
         /// Amount that will be received, in satoshi. Must be set if `drain` is false or unset.
         receiver_amount_sat: Option<u64>,
-
-        /// Optional comment to be stored with the payment
-        #[clap(short, long)]
-        comment: Option<String>,
 
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[clap(short, long, action = ArgAction::SetTrue)]
@@ -104,9 +99,9 @@ pub(crate) enum Command {
         #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
         use_description_hash: Option<bool>,
 
-        /// Optional comment to be stored with the payment
+        /// Optional payer note, typically included in a LNURL-Pay request
         #[clap(short, long)]
-        comment: Option<String>,
+        payer_note: Option<String>,
 
         /// The amount the payer should send, in satoshi. If not specified, it will generate a
         /// BIP21 URI/address with no amount.
@@ -129,10 +124,6 @@ pub(crate) enum Command {
 
         /// Amount to buy, in satoshi
         amount_sat: u64,
-
-        /// Optional comment to be stored with the payment
-        #[clap(short, long)]
-        comment: Option<String>,
     },
     /// List incoming and outgoing payments
     ListPayments {
@@ -251,8 +242,7 @@ pub(crate) enum Command {
         /// LN Address or LNURL-pay endpoint
         lnurl: String,
 
-        /// Optional comment to be stored with the payment. The comment is included in the
-        /// invoice request sent to the LNURL endpoint.
+        /// Optional comment, which is to be included in the invoice request sent to the LNURL endpoint
         #[clap(short, long)]
         comment: Option<String>,
 
@@ -335,7 +325,7 @@ pub(crate) async fn handle_command(
             asset_id,
             description,
             use_description_hash,
-            comment,
+            payer_note,
         } => {
             let payment_method =
                 payment_method.map_or(Ok(PaymentMethod::Bolt11Invoice), |method| {
@@ -384,7 +374,7 @@ pub(crate) async fn handle_command(
                     prepare_response,
                     description,
                     use_description_hash,
-                    comment,
+                    payer_note,
                 })
                 .await?;
 
@@ -421,7 +411,7 @@ pub(crate) async fn handle_command(
         Command::SendPayment {
             invoice,
             offer,
-            comment,
+            payer_note,
             address,
             amount,
             amount_sat,
@@ -477,7 +467,7 @@ pub(crate) async fn handle_command(
             let send_payment_req = SendPaymentRequest {
                 prepare_response: prepare_response.clone(),
                 use_asset_fees,
-                comment,
+                payer_note,
             };
 
             if let Some(delay) = delay {
@@ -496,7 +486,6 @@ pub(crate) async fn handle_command(
         Command::SendOnchainPayment {
             address,
             receiver_amount_sat,
-            comment,
             drain,
             fee_rate_sat_per_vbyte,
         } => {
@@ -527,7 +516,6 @@ pub(crate) async fn handle_command(
                 .pay_onchain(&PayOnchainRequest {
                     address,
                     prepare_response,
-                    comment,
                 })
                 .await?;
             command_result!(response)
@@ -535,7 +523,6 @@ pub(crate) async fn handle_command(
         Command::BuyBitcoin {
             provider,
             amount_sat,
-            comment,
         } => {
             let prepare_response = sdk
                 .prepare_buy_bitcoin(&PrepareBuyBitcoinRequest {
@@ -556,7 +543,6 @@ pub(crate) async fn handle_command(
                 .buy_bitcoin(&BuyBitcoinRequest {
                     prepare_response,
                     redirect_url: None,
-                    comment,
                 })
                 .await?;
 
