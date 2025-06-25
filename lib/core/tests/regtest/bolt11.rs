@@ -117,7 +117,6 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .send_payment(&PrepareSendRequest {
             destination: invoice,
             amount: None,
-            comment: None,
         })
         .await
         .unwrap();
@@ -183,7 +182,6 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .send_payment(&PrepareSendRequest {
             destination: invoice,
             amount: None,
-            comment: None,
         })
         .await
         .unwrap();

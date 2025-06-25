@@ -4042,6 +4042,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_destinationPubkey = <Option<String>>::sse_decode(deserializer);
                 let mut var_lnurlInfo = <Option<crate::model::LnUrlInfo>>::sse_decode(deserializer);
                 let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
+                let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
                 let mut var_claimTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxAmountSat = <Option<u64>>::sse_decode(deserializer);
@@ -4056,6 +4057,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     destination_pubkey: var_destinationPubkey,
                     lnurl_info: var_lnurlInfo,
                     bip353_address: var_bip353Address,
+                    payer_note: var_payerNote,
                     claim_tx_id: var_claimTxId,
                     refund_tx_id: var_refundTxId,
                     refund_tx_amount_sat: var_refundTxAmountSat,
@@ -4068,6 +4070,7 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_assetInfo = <Option<crate::model::AssetInfo>>::sse_decode(deserializer);
                 let mut var_lnurlInfo = <Option<crate::model::LnUrlInfo>>::sse_decode(deserializer);
                 let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
+                let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
                 return crate::model::PaymentDetails::Liquid {
                     destination: var_destination,
                     description: var_description,
@@ -4075,6 +4078,7 @@ impl SseDecode for crate::model::PaymentDetails {
                     asset_info: var_assetInfo,
                     lnurl_info: var_lnurlInfo,
                     bip353_address: var_bip353Address,
+                    payer_note: var_payerNote,
                 };
             }
             2 => {
@@ -4403,11 +4407,9 @@ impl SseDecode for crate::model::PrepareSendRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <String>::sse_decode(deserializer);
         let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
-        let mut var_comment = <Option<String>>::sse_decode(deserializer);
         return crate::model::PrepareSendRequest {
             destination: var_destination,
             amount: var_amount,
-            comment: var_comment,
         };
     }
 }
@@ -4473,10 +4475,12 @@ impl SseDecode for crate::model::ReceivePaymentRequest {
             <crate::model::PrepareReceiveResponse>::sse_decode(deserializer);
         let mut var_description = <Option<String>>::sse_decode(deserializer);
         let mut var_useDescriptionHash = <Option<bool>>::sse_decode(deserializer);
+        let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
         return crate::model::ReceivePaymentRequest {
             prepare_response: var_prepareResponse,
             description: var_description,
             use_description_hash: var_useDescriptionHash,
+            payer_note: var_payerNote,
         };
     }
 }
@@ -4710,12 +4714,10 @@ impl SseDecode for crate::model::SendDestination {
                 let mut var_offer = <crate::bindings::LNOffer>::sse_decode(deserializer);
                 let mut var_receiverAmountSat = <u64>::sse_decode(deserializer);
                 let mut var_bip353Address = <Option<String>>::sse_decode(deserializer);
-                let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
                 return crate::model::SendDestination::Bolt12 {
                     offer: var_offer,
                     receiver_amount_sat: var_receiverAmountSat,
                     bip353_address: var_bip353Address,
-                    payer_note: var_payerNote,
                 };
             }
             _ => {
@@ -4730,9 +4732,11 @@ impl SseDecode for crate::model::SendPaymentRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_prepareResponse = <crate::model::PrepareSendResponse>::sse_decode(deserializer);
         let mut var_useAssetFees = <Option<bool>>::sse_decode(deserializer);
+        let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
         return crate::model::SendPaymentRequest {
             prepare_response: var_prepareResponse,
             use_asset_fees: var_useAssetFees,
+            payer_note: var_payerNote,
         };
     }
 }
@@ -6478,6 +6482,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 destination_pubkey,
                 lnurl_info,
                 bip353_address,
+                payer_note,
                 claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -6493,6 +6498,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 destination_pubkey.into_into_dart().into_dart(),
                 lnurl_info.into_into_dart().into_dart(),
                 bip353_address.into_into_dart().into_dart(),
+                payer_note.into_into_dart().into_dart(),
                 claim_tx_id.into_into_dart().into_dart(),
                 refund_tx_id.into_into_dart().into_dart(),
                 refund_tx_amount_sat.into_into_dart().into_dart(),
@@ -6505,6 +6511,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 asset_info,
                 lnurl_info,
                 bip353_address,
+                payer_note,
             } => [
                 1.into_dart(),
                 destination.into_into_dart().into_dart(),
@@ -6513,6 +6520,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PaymentDetails {
                 asset_info.into_into_dart().into_dart(),
                 lnurl_info.into_into_dart().into_dart(),
                 bip353_address.into_into_dart().into_dart(),
+                payer_note.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::model::PaymentDetails::Bitcoin {
@@ -6911,7 +6919,6 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
         [
             self.destination.into_into_dart().into_dart(),
             self.amount.into_into_dart().into_dart(),
-            self.comment.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7008,6 +7015,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::ReceivePaymentRequest {
             self.prepare_response.into_into_dart().into_dart(),
             self.description.into_into_dart().into_dart(),
             self.use_description_hash.into_into_dart().into_dart(),
+            self.payer_note.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7272,13 +7280,11 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
-                payer_note,
             } => [
                 2.into_dart(),
                 offer.into_into_dart().into_dart(),
                 receiver_amount_sat.into_into_dart().into_dart(),
                 bip353_address.into_into_dart().into_dart(),
-                payer_note.into_into_dart().into_dart(),
             ]
             .into_dart(),
             _ => {
@@ -7301,6 +7307,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentRequest {
         [
             self.prepare_response.into_into_dart().into_dart(),
             self.use_asset_fees.into_into_dart().into_dart(),
+            self.payer_note.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -8856,6 +8863,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 destination_pubkey,
                 lnurl_info,
                 bip353_address,
+                payer_note,
                 claim_tx_id,
                 refund_tx_id,
                 refund_tx_amount_sat,
@@ -8871,6 +8879,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <Option<String>>::sse_encode(destination_pubkey, serializer);
                 <Option<crate::model::LnUrlInfo>>::sse_encode(lnurl_info, serializer);
                 <Option<String>>::sse_encode(bip353_address, serializer);
+                <Option<String>>::sse_encode(payer_note, serializer);
                 <Option<String>>::sse_encode(claim_tx_id, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
                 <Option<u64>>::sse_encode(refund_tx_amount_sat, serializer);
@@ -8882,6 +8891,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 asset_info,
                 lnurl_info,
                 bip353_address,
+                payer_note,
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(destination, serializer);
@@ -8890,6 +8900,7 @@ impl SseEncode for crate::model::PaymentDetails {
                 <Option<crate::model::AssetInfo>>::sse_encode(asset_info, serializer);
                 <Option<crate::model::LnUrlInfo>>::sse_encode(lnurl_info, serializer);
                 <Option<String>>::sse_encode(bip353_address, serializer);
+                <Option<String>>::sse_encode(payer_note, serializer);
             }
             crate::model::PaymentDetails::Bitcoin {
                 swap_id,
@@ -9166,7 +9177,6 @@ impl SseEncode for crate::model::PrepareSendRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.destination, serializer);
         <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
-        <Option<String>>::sse_encode(self.comment, serializer);
     }
 }
 
@@ -9217,6 +9227,7 @@ impl SseEncode for crate::model::ReceivePaymentRequest {
         <crate::model::PrepareReceiveResponse>::sse_encode(self.prepare_response, serializer);
         <Option<String>>::sse_encode(self.description, serializer);
         <Option<bool>>::sse_encode(self.use_description_hash, serializer);
+        <Option<String>>::sse_encode(self.payer_note, serializer);
     }
 }
 
@@ -9392,13 +9403,11 @@ impl SseEncode for crate::model::SendDestination {
                 offer,
                 receiver_amount_sat,
                 bip353_address,
-                payer_note,
             } => {
                 <i32>::sse_encode(2, serializer);
                 <crate::bindings::LNOffer>::sse_encode(offer, serializer);
                 <u64>::sse_encode(receiver_amount_sat, serializer);
                 <Option<String>>::sse_encode(bip353_address, serializer);
-                <Option<String>>::sse_encode(payer_note, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9412,6 +9421,7 @@ impl SseEncode for crate::model::SendPaymentRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::model::PrepareSendResponse>::sse_encode(self.prepare_response, serializer);
         <Option<bool>>::sse_encode(self.use_asset_fees, serializer);
+        <Option<String>>::sse_encode(self.payer_note, serializer);
     }
 }
 
@@ -11181,6 +11191,7 @@ mod io {
                         destination_pubkey: ans.destination_pubkey.cst_decode(),
                         lnurl_info: ans.lnurl_info.cst_decode(),
                         bip353_address: ans.bip353_address.cst_decode(),
+                        payer_note: ans.payer_note.cst_decode(),
                         claim_tx_id: ans.claim_tx_id.cst_decode(),
                         refund_tx_id: ans.refund_tx_id.cst_decode(),
                         refund_tx_amount_sat: ans.refund_tx_amount_sat.cst_decode(),
@@ -11195,6 +11206,7 @@ mod io {
                         asset_info: ans.asset_info.cst_decode(),
                         lnurl_info: ans.lnurl_info.cst_decode(),
                         bip353_address: ans.bip353_address.cst_decode(),
+                        payer_note: ans.payer_note.cst_decode(),
                     }
                 }
                 2 => {
@@ -11417,7 +11429,6 @@ mod io {
             crate::model::PrepareSendRequest {
                 destination: self.destination.cst_decode(),
                 amount: self.amount.cst_decode(),
-                comment: self.comment.cst_decode(),
             }
         }
     }
@@ -11469,6 +11480,7 @@ mod io {
                 prepare_response: self.prepare_response.cst_decode(),
                 description: self.description.cst_decode(),
                 use_description_hash: self.use_description_hash.cst_decode(),
+                payer_note: self.payer_note.cst_decode(),
             }
         }
     }
@@ -11660,7 +11672,6 @@ mod io {
                         offer: ans.offer.cst_decode(),
                         receiver_amount_sat: ans.receiver_amount_sat.cst_decode(),
                         bip353_address: ans.bip353_address.cst_decode(),
-                        payer_note: ans.payer_note.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -11673,6 +11684,7 @@ mod io {
             crate::model::SendPaymentRequest {
                 prepare_response: self.prepare_response.cst_decode(),
                 use_asset_fees: self.use_asset_fees.cst_decode(),
+                payer_note: self.payer_note.cst_decode(),
             }
         }
     }
@@ -12820,7 +12832,6 @@ mod io {
             Self {
                 destination: core::ptr::null_mut(),
                 amount: core::ptr::null_mut(),
-                comment: core::ptr::null_mut(),
             }
         }
     }
@@ -12876,6 +12887,7 @@ mod io {
                 prepare_response: Default::default(),
                 description: core::ptr::null_mut(),
                 use_description_hash: core::ptr::null_mut(),
+                payer_note: core::ptr::null_mut(),
             }
         }
     }
@@ -13039,6 +13051,7 @@ mod io {
             Self {
                 prepare_response: Default::default(),
                 use_asset_fees: core::ptr::null_mut(),
+                payer_note: core::ptr::null_mut(),
             }
         }
     }
@@ -15104,6 +15117,7 @@ mod io {
         destination_pubkey: *mut wire_cst_list_prim_u_8_strict,
         lnurl_info: *mut wire_cst_ln_url_info,
         bip353_address: *mut wire_cst_list_prim_u_8_strict,
+        payer_note: *mut wire_cst_list_prim_u_8_strict,
         claim_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_amount_sat: *mut u64,
@@ -15117,6 +15131,7 @@ mod io {
         asset_info: *mut wire_cst_asset_info,
         lnurl_info: *mut wire_cst_ln_url_info,
         bip353_address: *mut wire_cst_list_prim_u_8_strict,
+        payer_note: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15291,7 +15306,6 @@ mod io {
     pub struct wire_cst_prepare_send_request {
         destination: *mut wire_cst_list_prim_u_8_strict,
         amount: *mut wire_cst_pay_amount,
-        comment: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15337,6 +15351,7 @@ mod io {
         prepare_response: wire_cst_prepare_receive_response,
         description: *mut wire_cst_list_prim_u_8_strict,
         use_description_hash: *mut bool,
+        payer_note: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15513,13 +15528,13 @@ mod io {
         offer: *mut wire_cst_ln_offer,
         receiver_amount_sat: u64,
         bip353_address: *mut wire_cst_list_prim_u_8_strict,
-        payer_note: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_send_payment_request {
         prepare_response: wire_cst_prepare_send_response,
         use_asset_fees: *mut bool,
+        payer_note: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

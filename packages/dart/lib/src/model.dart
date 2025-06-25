@@ -933,6 +933,9 @@ sealed class PaymentDetails with _$PaymentDetails {
     /// The BIP353 address used to resolve this payment
     String? bip353Address,
 
+    /// The payer note
+    String? payerNote,
+
     /// For a Receive payment, this is the claim tx id in case it has already been broadcast
     String? claimTxId,
 
@@ -962,6 +965,9 @@ sealed class PaymentDetails with _$PaymentDetails {
 
     /// The BIP353 address used to resolve this payment
     String? bip353Address,
+
+    /// The payer note
+    String? payerNote,
   }) = PaymentDetails_Liquid;
 
   /// Swapping to or from the Bitcoin chain
@@ -1138,7 +1144,8 @@ class PrepareLnUrlPayRequest {
   /// Returned by [parse].
   final String? bip353Address;
 
-  /// An optional comment for this payment
+  /// An optional comment LUD-12 to be stored with the payment. The comment is included in the
+  /// invoice request sent to the LNURL endpoint.
   final String? comment;
 
   /// Validates that, if there is a URL success action, the URL domain matches
@@ -1187,7 +1194,8 @@ class PrepareLnUrlPayResponse {
   /// The amount to send
   final PayAmount amount;
 
-  /// An optional comment for this payment
+  /// An optional comment LUD-12 to be stored with the payment. The comment is included in the
+  /// invoice request sent to the LNURL endpoint.
   final String? comment;
 
   /// The unprocessed LUD-09 success action. This will be processed and decrypted if
@@ -1419,13 +1427,10 @@ class PrepareSendRequest {
   /// where no amount is specified, or when the caller wishes to drain
   final PayAmount? amount;
 
-  /// An optional comment when paying a BOLT12 offer
-  final String? comment;
-
-  const PrepareSendRequest({required this.destination, this.amount, this.comment});
+  const PrepareSendRequest({required this.destination, this.amount});
 
   @override
-  int get hashCode => destination.hashCode ^ amount.hashCode ^ comment.hashCode;
+  int get hashCode => destination.hashCode ^ amount.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1433,8 +1438,7 @@ class PrepareSendRequest {
       other is PrepareSendRequest &&
           runtimeType == other.runtimeType &&
           destination == other.destination &&
-          amount == other.amount &&
-          comment == other.comment;
+          amount == other.amount;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
@@ -1484,16 +1488,25 @@ sealed class ReceiveAmount with _$ReceiveAmount {
 class ReceivePaymentRequest {
   final PrepareReceiveResponse prepareResponse;
 
-  /// The description for this payment request.
+  /// The description for this payment request
   final String? description;
 
-  /// If set to true, then the hash of the description will be used.
+  /// If set to true, then the hash of the description will be used
   final bool? useDescriptionHash;
 
-  const ReceivePaymentRequest({required this.prepareResponse, this.description, this.useDescriptionHash});
+  /// An optional payer note, typically included in a LNURL-Pay request
+  final String? payerNote;
+
+  const ReceivePaymentRequest({
+    required this.prepareResponse,
+    this.description,
+    this.useDescriptionHash,
+    this.payerNote,
+  });
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ description.hashCode ^ useDescriptionHash.hashCode;
+  int get hashCode =>
+      prepareResponse.hashCode ^ description.hashCode ^ useDescriptionHash.hashCode ^ payerNote.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1502,7 +1515,8 @@ class ReceivePaymentRequest {
           runtimeType == other.runtimeType &&
           prepareResponse == other.prepareResponse &&
           description == other.description &&
-          useDescriptionHash == other.useDescriptionHash;
+          useDescriptionHash == other.useDescriptionHash &&
+          payerNote == other.payerNote;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -1698,21 +1712,23 @@ sealed class SendDestination with _$SendDestination {
 
     /// A BIP353 address, in case one was used to resolve this BOLT12
     String? bip353Address,
-
-    /// An optional payer note
-    String? payerNote,
   }) = SendDestination_Bolt12;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].
 class SendPaymentRequest {
   final PrepareSendResponse prepareResponse;
+
+  /// If set to true, the payment will be sent using the SideSwap payjoin service
   final bool? useAssetFees;
 
-  const SendPaymentRequest({required this.prepareResponse, this.useAssetFees});
+  /// An optional payer note, which is to be included in a BOLT12 invoice request
+  final String? payerNote;
+
+  const SendPaymentRequest({required this.prepareResponse, this.useAssetFees, this.payerNote});
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ useAssetFees.hashCode;
+  int get hashCode => prepareResponse.hashCode ^ useAssetFees.hashCode ^ payerNote.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1720,7 +1736,8 @@ class SendPaymentRequest {
       other is SendPaymentRequest &&
           runtimeType == other.runtimeType &&
           prepareResponse == other.prepareResponse &&
-          useAssetFees == other.useAssetFees;
+          useAssetFees == other.useAssetFees &&
+          payerNote == other.payerNote;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

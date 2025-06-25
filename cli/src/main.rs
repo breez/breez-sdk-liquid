@@ -116,8 +116,9 @@ async fn main() -> Result<()> {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str())?;
-                let mut vec: Vec<&str> = line.as_str().split_whitespace().collect();
-                vec.insert(0, "");
+                let mut vec = shellwords::split(&line)
+                    .map_err(|e| anyhow!("Failed to parse command line: {}", e))?;
+                vec.insert(0, "".to_string());
                 let cli_res = Command::try_parse_from(vec);
                 if cli_res.is_err() {
                     println!("{}", cli_res.unwrap_err());

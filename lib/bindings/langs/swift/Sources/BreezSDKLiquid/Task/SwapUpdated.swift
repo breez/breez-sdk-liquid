@@ -110,7 +110,7 @@ class SwapUpdatedTask : TaskProtocol {
             switch details {
             case let .bitcoin(swapId, _, _, _, _, _, _, _, _, _):
                 return swapId
-            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _, _, _):
+            case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _, _, _, _):
                 return swapId
             default:
                 break
@@ -123,7 +123,7 @@ class SwapUpdatedTask : TaskProtocol {
         switch details {
         case let .bitcoin(_, _, _, _, _, _, _, claimTxId, _, _):
             return claimTxId != nil
-        case let .lightning(_, _, _, _, _, _, _, _, _, _, claimTxId, _, _):
+        case let .lightning(_, _, _, _, _, _, _, _, _, _, _, claimTxId, _, _):
             return claimTxId != nil
         default:
             return false

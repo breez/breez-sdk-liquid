@@ -128,6 +128,7 @@ pub(crate) fn new_receive_sync_data() -> ReceiveSyncData {
         bolt12_offer: None,
         payment_hash: None,
         description: None,
+        payer_note: None,
         destination_pubkey: None,
     }
 }

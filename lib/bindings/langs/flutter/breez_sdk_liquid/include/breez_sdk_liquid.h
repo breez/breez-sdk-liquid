@@ -260,7 +260,6 @@ typedef struct wire_cst_SendDestination_Bolt12 {
   struct wire_cst_ln_offer *offer;
   uint64_t receiver_amount_sat;
   struct wire_cst_list_prim_u_8_strict *bip353_address;
-  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_SendDestination_Bolt12;
 
 typedef union SendDestinationKind {
@@ -434,7 +433,6 @@ typedef struct wire_cst_prepare_refund_request {
 typedef struct wire_cst_prepare_send_request {
   struct wire_cst_list_prim_u_8_strict *destination;
   struct wire_cst_pay_amount *amount;
-  struct wire_cst_list_prim_u_8_strict *comment;
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_response {
@@ -450,6 +448,7 @@ typedef struct wire_cst_receive_payment_request {
   struct wire_cst_prepare_receive_response prepare_response;
   struct wire_cst_list_prim_u_8_strict *description;
   bool *use_description_hash;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_receive_payment_request;
 
 typedef struct wire_cst_refund_request {
@@ -472,6 +471,7 @@ typedef struct wire_cst_prepare_send_response {
 typedef struct wire_cst_send_payment_request {
   struct wire_cst_prepare_send_response prepare_response;
   bool *use_asset_fees;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_send_payment_request;
 
 typedef struct wire_cst_sign_message_request {
@@ -549,6 +549,7 @@ typedef struct wire_cst_PaymentDetails_Lightning {
   struct wire_cst_list_prim_u_8_strict *destination_pubkey;
   struct wire_cst_ln_url_info *lnurl_info;
   struct wire_cst_list_prim_u_8_strict *bip353_address;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
   struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
   uint64_t *refund_tx_amount_sat;
@@ -568,6 +569,7 @@ typedef struct wire_cst_PaymentDetails_Liquid {
   struct wire_cst_asset_info *asset_info;
   struct wire_cst_ln_url_info *lnurl_info;
   struct wire_cst_list_prim_u_8_strict *bip353_address;
+  struct wire_cst_list_prim_u_8_strict *payer_note;
 } wire_cst_PaymentDetails_Liquid;
 
 typedef struct wire_cst_PaymentDetails_Bitcoin {

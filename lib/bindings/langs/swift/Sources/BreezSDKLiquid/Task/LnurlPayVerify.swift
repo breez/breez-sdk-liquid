@@ -47,7 +47,7 @@ class LnurlPayVerifyTask : LnurlPayTask {
             }
             var response: LnurlVerifyResponse? = nil
             switch payment.details {
-                case let .lightning(_, _, _, preimage, invoice, _, _, _, _, _, claimTxId, _, _):
+                case let .lightning(_, _, _, preimage, invoice, _, _, _, _, _, _, claimTxId, _, _):
                     // In the case of a Lightning payment, if it's paid via Lightning or MRH,
                     // we can release the preimage
                     let settled = switch payment.status {

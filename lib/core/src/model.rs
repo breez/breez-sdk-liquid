@@ -636,10 +636,12 @@ pub struct PrepareReceiveResponse {
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentRequest {
     pub prepare_response: PrepareReceiveResponse,
-    /// The description for this payment request.
+    /// The description for this payment request
     pub description: Option<String>,
-    /// If set to true, then the hash of the description will be used.
+    /// If set to true, then the hash of the description will be used
     pub use_description_hash: Option<bool>,
+    /// An optional payer note, typically included in a LNURL-Pay request
+    pub payer_note: Option<String>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::receive_payment].
@@ -701,8 +703,6 @@ pub struct PrepareSendRequest {
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
-    /// An optional comment when paying a BOLT12 offer
-    pub comment: Option<String>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -723,8 +723,6 @@ pub enum SendDestination {
         receiver_amount_sat: u64,
         /// A BIP353 address, in case one was used to resolve this BOLT12
         bip353_address: Option<String>,
-        /// An optional payer note
-        payer_note: Option<String>,
     },
 }
 
@@ -747,13 +745,25 @@ pub struct PrepareSendResponse {
 #[derive(Debug, Serialize)]
 pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
+    /// If set to true, the payment will be sent using the SideSwap payjoin service
     pub use_asset_fees: Option<bool>,
+    /// An optional payer note, which is to be included in a BOLT12 invoice request
+    pub payer_note: Option<String>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].
 #[derive(Debug, Serialize)]
 pub struct SendPaymentResponse {
     pub payment: Payment,
+}
+
+pub(crate) struct SendPaymentViaSwapRequest {
+    pub(crate) invoice: String,
+    pub(crate) bolt12_offer: Option<String>,
+    pub(crate) payment_hash: String,
+    pub(crate) description: Option<String>,
+    pub(crate) receiver_amount_sat: u64,
+    pub(crate) fees_sat: u64,
 }
 
 /// Used to specify the amount to sent or to send all funds.
@@ -1408,6 +1418,7 @@ pub struct ReceiveSwap {
     pub(crate) payment_hash: Option<String>,
     pub(crate) destination_pubkey: Option<String>,
     pub(crate) description: Option<String>,
+    pub(crate) payer_note: Option<String>,
     /// The amount of the invoice
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
@@ -1778,6 +1789,7 @@ pub struct PaymentSwapData {
     pub payment_hash: Option<String>,
     pub destination_pubkey: Option<String>,
     pub description: String,
+    pub payer_note: Option<String>,
 
     /// Amount sent by the swap payer
     pub payer_amount_sat: u64,
@@ -1891,6 +1903,9 @@ pub enum PaymentDetails {
         /// The BIP353 address used to resolve this payment
         bip353_address: Option<String>,
 
+        /// The payer note
+        payer_note: Option<String>,
+
         /// For a Receive payment, this is the claim tx id in case it has already been broadcast
         claim_tx_id: Option<String>,
 
@@ -1919,6 +1934,9 @@ pub enum PaymentDetails {
 
         /// The BIP353 address used to resolve this payment
         bip353_address: Option<String>,
+
+        /// The payer note
+        payer_note: Option<String>,
     },
     /// Swapping to or from the Bitcoin chain
     Bitcoin {
@@ -2212,7 +2230,6 @@ pub struct PrepareBuyBitcoinResponse {
 #[derive(Clone, Debug, Serialize)]
 pub struct BuyBitcoinRequest {
     pub prepare_response: PrepareBuyBitcoinResponse,
-
     /// The optional URL to redirect to after completing the buy.
     ///
     /// For Moonpay, see <https://dev.moonpay.com/docs/on-ramp-configure-user-journey-params>
@@ -2280,7 +2297,8 @@ pub struct PrepareLnUrlPayRequest {
     /// A BIP353 address, in case one was used in order to fetch the LNURL Pay request data.
     /// Returned by [parse].
     pub bip353_address: Option<String>,
-    /// An optional comment for this payment
+    /// An optional comment LUD-12 to be stored with the payment. The comment is included in the
+    /// invoice request sent to the LNURL endpoint.
     pub comment: Option<String>,
     /// Validates that, if there is a URL success action, the URL domain matches
     /// the LNURL callback domain. Defaults to `true`
@@ -2298,7 +2316,8 @@ pub struct PrepareLnUrlPayResponse {
     pub data: LnUrlPayRequestData,
     /// The amount to send
     pub amount: PayAmount,
-    /// An optional comment for this payment
+    /// An optional comment LUD-12 to be stored with the payment. The comment is included in the
+    /// invoice request sent to the LNURL endpoint.
     pub comment: Option<String>,
     /// The unprocessed LUD-09 success action. This will be processed and decrypted if
     /// needed after calling [crate::sdk::LiquidSdk::lnurl_pay]
