@@ -716,19 +716,19 @@ interface SdkEvent {
     PaymentWaitingFeeAcceptance(Payment details);
     Synced();
     DataSynced(boolean did_pull_new_records);
-    NWC(SdkNwcEvent event);
+    NWC(NwcEvent details);
 };
 
 [Enum]
-interface SdkNwcEvent {
+interface NwcEvent {
     Connected();
     Disconnected();
     PayInvoice(boolean success, string? destination, string? tx_id, u64? amount_sat, u64? fees_sat, u32? timestamp, string? error);
-    ListTransactions(boolean? fetching_transactions, boolean? empty_list);
+    ListTransactions();
     GetBalance();
-};
+}
 
-callback interface EventListener {    
+callback interface EventListener {
     void on_event(SdkEvent e);
 };
 

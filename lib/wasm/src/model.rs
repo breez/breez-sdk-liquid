@@ -339,7 +339,7 @@ pub enum SdkEvent {
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
     DataSynced { did_pull_new_records: bool },
-    NWC { details: SdkNwcEvent },
+    NWC { details: NwcEvent },
 }
 
 #[derive(Clone)]
@@ -838,12 +838,12 @@ pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
 }
 
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SdkNwcEvent)]
-pub enum SdkNwcEvent {
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NwcEvent)]
+pub enum NwcEvent {
     Connected,
     Disconnected,
     PayInvoice {
-        success: bool, //todo: amount_msat, fees_paid, done
+        success: bool,
         destination: Option<String>,
         tx_id: Option<String>,
         amount_sat: Option<u64>,
@@ -851,9 +851,6 @@ pub enum SdkNwcEvent {
         timestamp: Option<u32>,
         error: Option<String>,
     },
-    ListTransactions {
-        fetching_transactions: Option<bool>,
-        empty_list: Option<bool>,
-    },
+    ListTransactions,
     GetBalance,
 }
