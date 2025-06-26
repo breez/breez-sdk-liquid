@@ -19,7 +19,7 @@ pub(crate) mod handler;
 #[sdk_macros::async_trait]
 pub trait NWCService: MaybeSend+MaybeSync {
     async fn create_connection_string(&self) -> Result<String>;
-    fn start(&self, shutdown_receiver: watch::Receiver<()>) -> Result<()>;
+    fn start(&self, shutdown_receiver: watch::Receiver<()>);
     async fn stop(self);
 }
 
@@ -82,7 +82,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
         Ok(connection_uri.to_string())
     }
 
-    fn start(&self, mut shutdown_receiver: watch::Receiver<()>) -> Result<()> {
+    fn start(&self, mut shutdown_receiver: watch::Receiver<()>) {
         let client = self.client.clone();
         let handler = self.handler.clone();
         let keys = self.keys.clone();
@@ -206,7 +206,6 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
         });
 
         let _ = self.event_loop_handle.set(handle);
-        Ok(())
     }
 
     async fn stop(self) {
