@@ -535,9 +535,12 @@ impl LiquidSdk {
             sync_service.start(self.shutdown_receiver.clone());
         }
         if let Some(nwc_service) = self.nwc_service.get() {
-            nwc_service.start(self.shutdown_receiver.clone());
+            nwc_service.start(
+                self.shutdown_receiver.clone(),
+                self.event_manager.notifier(),
+            );
         }
-        
+
         self.start_track_new_blocks_task();
         self.track_swap_updates();
         self.track_realtime_sync_events(subscription_handler);

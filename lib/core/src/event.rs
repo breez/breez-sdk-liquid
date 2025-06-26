@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::Sender;
 
 use anyhow::Result;
 use log::{debug, info};
@@ -61,5 +62,9 @@ impl EventManager {
     pub(crate) fn resume_notifications(&self) {
         info!("Resuming event notifications");
         self.is_paused.store(false, Ordering::SeqCst);
+    }
+
+    pub(crate) fn notifier(&self) -> broadcast::Sender<SdkEvent> {
+        self.notifier.clone()
     }
 }

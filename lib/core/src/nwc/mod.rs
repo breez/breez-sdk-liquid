@@ -5,21 +5,23 @@ use log::{info, warn};
 use nostr_sdk::{
     nips::nip04::decrypt,
     nips::nip47::{
-        Method, NostrWalletConnectURI, Request, RequestParams, Response, ResponseResult,
+        Method, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response, ResponseResult,
     },
     Client as NostrClient, EventBuilder, Keys, Kind, RelayPoolNotification, SecretKey,
 };
 use maybe_sync::{MaybeSend, MaybeSync};
 use std::sync::Arc;
-use tokio::sync::watch;
+use tokio::sync::{broadcast, watch};
 use tokio::{sync::OnceCell, task::JoinHandle};
+
+use crate::model::SdkEvent;
 
 pub(crate) mod handler;
 
 #[sdk_macros::async_trait]
 pub trait NWCService: MaybeSend+MaybeSync {
     async fn create_connection_string(&self) -> Result<String>;
-    fn start(&self, shutdown_receiver: watch::Receiver<()>);
+    fn start(&self, shutdown_receiver: watch::Receiver<()>, notifier: broadcast::Sender<SdkEvent>);
     async fn stop(self);
 }
 
@@ -60,6 +62,18 @@ impl BreezNWCService<BreezRelayMessageHandler> {
     ) -> Result<(), nostr_sdk::client::Error> {
         let evt = eb.sign_with_keys(&keys)?;
         client.send_event(&evt).await?;
+        Ok(())
+    }
+
+    fn handle_notification(
+        notifier: &broadcast::Sender<SdkEvent>,
+        result: &Option<ResponseResult>,
+        error: &Option<NIP47Error>,
+    ) -> Result<()> {
+        let event: SdkEvent = match (result, error) {
+            _ => todo!(),
+        };
+        notifier.send(event);
         Ok(())
     }
 }
@@ -185,6 +199,9 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                                 continue;
                             }
                         };
+
+                        Self::handle_notification(&notifier, &result, &error);
+
                         let content = match serde_json::to_string(&Response {
                             result_type: req.method,
                             result,
