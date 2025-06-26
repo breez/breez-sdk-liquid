@@ -346,6 +346,8 @@ dictionary Config {
     u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
     sequence<AssetMetadata>? asset_metadata = null;
     string? sideswap_api_key = null;
+    boolean enable_nwc = false;
+    sequence<string>? nwc_relay_urls = null;
 };
 
 enum LiquidNetwork {
@@ -714,9 +716,19 @@ interface SdkEvent {
     PaymentWaitingFeeAcceptance(Payment details);
     Synced();
     DataSynced(boolean did_pull_new_records);
+    NWC(NwcEvent details);
 };
 
-callback interface EventListener {    
+[Enum]
+interface NwcEvent {
+    Connected();
+    Disconnected();
+    PayInvoice(boolean success, string? destination, string? tx_id, u64? amount_sat, u64? fees_sat, u32? timestamp, string? error);
+    ListTransactions();
+    GetBalance();
+}
+
+callback interface EventListener {
     void on_event(SdkEvent e);
 };
 
@@ -905,4 +917,7 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
+
+    [Throws=SdkError]
+    string get_nwc_uri();
 };

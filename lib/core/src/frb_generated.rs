@@ -2640,6 +2640,7 @@ impl SseDecode for crate::model::Config {
         let mut var_assetMetadata =
             <Option<Vec<crate::model::AssetMetadata>>>::sse_decode(deserializer);
         let mut var_sideswapApiKey = <Option<String>>::sse_decode(deserializer);
+        let mut var_enableNwc = <Option<bool>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_explorer: var_liquidExplorer,
             bitcoin_explorer: var_bitcoinExplorer,
@@ -2654,6 +2655,8 @@ impl SseDecode for crate::model::Config {
             onchain_fee_rate_leeway_sat_per_vbyte: var_onchainFeeRateLeewaySatPerVbyte,
             asset_metadata: var_assetMetadata,
             sideswap_api_key: var_sideswapApiKey,
+            enable_nwc: var_enableNwc,
+            nwc_relay_urls: None,
         };
     }
 }
@@ -10267,6 +10270,8 @@ mod io {
                     .cst_decode(),
                 asset_metadata: self.asset_metadata.cst_decode(),
                 sideswap_api_key: self.sideswap_api_key.cst_decode(),
+                enable_nwc: self.enable_nwc.cst_decode(),
+                nwc_relay_urls: None,
             }
         }
     }
@@ -12019,6 +12024,7 @@ mod io {
                 onchain_fee_rate_leeway_sat_per_vbyte: core::ptr::null_mut(),
                 asset_metadata: core::ptr::null_mut(),
                 sideswap_api_key: core::ptr::null_mut(),
+                enable_nwc: core::ptr::null_mut(),
             }
         }
     }
@@ -14345,6 +14351,7 @@ mod io {
         onchain_fee_rate_leeway_sat_per_vbyte: *mut u32,
         asset_metadata: *mut wire_cst_list_asset_metadata,
         sideswap_api_key: *mut wire_cst_list_prim_u_8_strict,
+        enable_nwc: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
