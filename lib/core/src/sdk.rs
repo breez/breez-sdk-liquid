@@ -4596,6 +4596,34 @@ impl LiquidSdk {
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
     }
+
+    /// Returns the Nostr Wallet Connect (NWC) connection URI.
+    /// 
+    /// ### Returns
+    /// 
+    /// Returns the NWC connection URI as a string if NWC is enabled and initialized,
+    /// otherwise returns an error.
+    /// 
+    /// ### Errors
+    /// Error is thrown when:
+    /// - NWC service is not enabled in the configuration
+    /// - There's an error generating the connection string
+
+    pub async fn get_nwc_uri(&self) -> SdkResult<String> {
+        match self.nwc_service.get() {
+            Some(nwc_service) => {
+                nwc_service
+                    .create_connection_string()
+                    .await
+                    .map_err(|e| SdkError::Generic { 
+                        err: format!("Failed to create NWC connection string: {}", e) 
+                    })
+            }
+            None => Err(SdkError::Generic { 
+                err: "NWC service is not enabled. Set 'enable_nwc' to true in the Config to use NWC functionality".to_string() 
+            }),
+        }
+    }
 }
 
 /// Extracts `description` from `metadata_str`
