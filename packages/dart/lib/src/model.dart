@@ -286,12 +286,12 @@ class Config {
   final bool useDefaultExternalInputParsers;
 
   /// For payments where the onchain fees can only be estimated on creation, this can be used
-  /// in order to automatically allow slightly more expensive fees. If the actual fee rate ends up
+  /// in order to automatically allow slightly more expensive fees. If the actual fee ends up
   /// being above the sum of the initial estimate and this leeway, the payment will require
   /// user fee acceptance. See [WaitingFeeAcceptance](PaymentState::WaitingFeeAcceptance).
   ///
-  /// Defaults to zero.
-  final int? onchainFeeRateLeewaySatPerVbyte;
+  /// Defaults to [DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT].
+  final BigInt? onchainFeeRateLeewaySat;
 
   /// A set of asset metadata used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input is a
   /// [LiquidAddressData] and the [asset_id](LiquidAddressData::asset_id) differs from the Liquid Bitcoin asset.
@@ -313,7 +313,7 @@ class Config {
     this.breezApiKey,
     this.externalInputParsers,
     required this.useDefaultExternalInputParsers,
-    this.onchainFeeRateLeewaySatPerVbyte,
+    this.onchainFeeRateLeewaySat,
     this.assetMetadata,
     this.sideswapApiKey,
   });
@@ -330,7 +330,7 @@ class Config {
       breezApiKey.hashCode ^
       externalInputParsers.hashCode ^
       useDefaultExternalInputParsers.hashCode ^
-      onchainFeeRateLeewaySatPerVbyte.hashCode ^
+      onchainFeeRateLeewaySat.hashCode ^
       assetMetadata.hashCode ^
       sideswapApiKey.hashCode;
 
@@ -349,7 +349,7 @@ class Config {
           breezApiKey == other.breezApiKey &&
           externalInputParsers == other.externalInputParsers &&
           useDefaultExternalInputParsers == other.useDefaultExternalInputParsers &&
-          onchainFeeRateLeewaySatPerVbyte == other.onchainFeeRateLeewaySatPerVbyte &&
+          onchainFeeRateLeewaySat == other.onchainFeeRateLeewaySat &&
           assetMetadata == other.assetMetadata &&
           sideswapApiKey == other.sideswapApiKey;
 }

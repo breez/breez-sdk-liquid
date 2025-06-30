@@ -4608,6 +4608,7 @@ mod tests {
 
     use crate::test_utils::swapper::ZeroAmountSwapMockConfig;
     use crate::test_utils::wallet::TEST_LIQUID_RECEIVE_LOCKUP_TX;
+    use crate::utils;
     use crate::{
         bitcoin, elements,
         model::{BtcHistory, Direction, LBtcHistory, PaymentState, Swap},
@@ -4621,7 +4622,6 @@ mod tests {
             swapper::MockSwapper,
         },
     };
-    use crate::{chain_swap::ESTIMATED_BTC_LOCKUP_TX_VSIZE, utils};
     use crate::{
         model::CreateBolt12InvoiceRequest,
         test_utils::chain_swap::{
@@ -5171,7 +5171,7 @@ mod tests {
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
-            None,
+            Some(0),
         )
         .await?;
 
@@ -5219,7 +5219,7 @@ mod tests {
     #[sdk_macros::async_test_all]
     async fn test_zero_amount_chain_swap_with_leeway() -> Result<()> {
         let user_lockup_sat = 50_000;
-        let onchain_fee_rate_leeway_sat_per_vbyte = 5;
+        let onchain_fee_rate_leeway_sat = 500;
 
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::new());
@@ -5233,24 +5233,18 @@ mod tests {
             status_stream.clone(),
             liquid_chain_service.clone(),
             bitcoin_chain_service.clone(),
-            Some(onchain_fee_rate_leeway_sat_per_vbyte),
+            Some(onchain_fee_rate_leeway_sat),
         )
         .await?;
 
         LiquidSdk::track_swap_updates(&sdk);
-
-        let max_fee_increase_for_auto_accept_sat =
-            onchain_fee_rate_leeway_sat_per_vbyte as u64 * ESTIMATED_BTC_LOCKUP_TX_VSIZE;
 
         // We spawn a new thread since updates can only be sent when called via async runtimes
         tokio::spawn(async move {
             // Verify that `TransactionLockupFailed` correctly:
             // 1. does not affect state when swapper increases fee by up to sat/vbyte leeway * tx size
             // 2. triggers a change to WaitingFeeAcceptance when it is any higher
-            for fee_increase in [
-                max_fee_increase_for_auto_accept_sat,
-                max_fee_increase_for_auto_accept_sat + 1,
-            ] {
+            for fee_increase in [onchain_fee_rate_leeway_sat, onchain_fee_rate_leeway_sat + 1] {
                 swapper.set_zero_amount_swap_mock_config(ZeroAmountSwapMockConfig {
                     user_lockup_sat,
                     onchain_fee_increase_sat: fee_increase,
@@ -5269,10 +5263,10 @@ mod tests {
                     None
                 );
                 match fee_increase {
-                    val if val == max_fee_increase_for_auto_accept_sat => {
+                    val if val == onchain_fee_rate_leeway_sat => {
                         assert_eq!(persisted_swap.state, PaymentState::Created);
                     }
-                    val if val == (max_fee_increase_for_auto_accept_sat + 1) => {
+                    val if val == (onchain_fee_rate_leeway_sat + 1) => {
                         assert_eq!(persisted_swap.state, PaymentState::WaitingFeeAcceptance);
                     }
                     _ => panic!("Unexpected fee_increase"),

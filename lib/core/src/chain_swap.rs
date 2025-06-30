@@ -17,6 +17,7 @@ use tokio::sync::{broadcast, Mutex};
 use tokio_with_wasm::alias as tokio;
 
 use crate::error::is_txn_mempool_conflict_error;
+use crate::model::DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT;
 use crate::{
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     elements, ensure_sdk,
@@ -35,7 +36,6 @@ use crate::{
 
 // Estimates based on https://github.com/BoltzExchange/boltz-backend/blob/ee4c77be1fcb9bb2b45703c542ad67f7efbf218d/lib/rates/FeeProvider.ts#L68
 pub const ESTIMATED_BTC_CLAIM_TX_VSIZE: u64 = 111;
-pub const ESTIMATED_BTC_LOCKUP_TX_VSIZE: u64 = 154;
 
 pub(crate) struct ChainSwapHandler {
     config: Config,
@@ -492,9 +492,8 @@ impl ChainSwapHandler {
         // Min auto accept server lockup quote
         let server_fees_leeway_sat = self
             .config
-            .onchain_fee_rate_leeway_sat_per_vbyte
-            .unwrap_or(0) as u64
-            * ESTIMATED_BTC_LOCKUP_TX_VSIZE;
+            .onchain_fee_rate_leeway_sat
+            .unwrap_or(DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT);
         let min_auto_accept_server_lockup_amount_sat =
             server_lockup_amount_estimate_sat.saturating_sub(server_fees_leeway_sat);
 

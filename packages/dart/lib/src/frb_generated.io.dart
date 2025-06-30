@@ -2759,9 +2759,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.breez_api_key = cst_encode_opt_String(apiObj.breezApiKey);
     wireObj.external_input_parsers = cst_encode_opt_list_external_input_parser(apiObj.externalInputParsers);
     wireObj.use_default_external_input_parsers = cst_encode_bool(apiObj.useDefaultExternalInputParsers);
-    wireObj.onchain_fee_rate_leeway_sat_per_vbyte = cst_encode_opt_box_autoadd_u_32(
-      apiObj.onchainFeeRateLeewaySatPerVbyte,
-    );
+    wireObj.onchain_fee_rate_leeway_sat = cst_encode_opt_box_autoadd_u_64(apiObj.onchainFeeRateLeewaySat);
     wireObj.asset_metadata = cst_encode_opt_list_asset_metadata(apiObj.assetMetadata);
     wireObj.sideswap_api_key = cst_encode_opt_String(apiObj.sideswapApiKey);
   }
@@ -7314,7 +7312,7 @@ final class wire_cst_config extends ffi.Struct {
   @ffi.Bool()
   external bool use_default_external_input_parsers;
 
-  external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
+  external ffi.Pointer<ffi.Uint64> onchain_fee_rate_leeway_sat;
 
   external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
 
@@ -8003,11 +8001,11 @@ final class wire_cst_sign_message_response extends ffi.Struct {
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
-const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
-
 const double LIQUID_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LIQUID_FEE_RATE_MSAT_PER_VBYTE = 100.0;
+
+const int DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT = 500;
 
 const double MIN_FEE_RATE = 0.1;
 

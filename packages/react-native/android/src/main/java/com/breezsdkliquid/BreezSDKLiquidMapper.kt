@@ -459,13 +459,13 @@ fun asConfig(config: ReadableMap): Config? {
         } else {
             null
         }
-    val onchainFeeRateLeewaySatPerVbyte =
+    val onchainFeeRateLeewaySat =
         if (hasNonNullKey(
                 config,
-                "onchainFeeRateLeewaySatPerVbyte",
+                "onchainFeeRateLeewaySat",
             )
         ) {
-            config.getInt("onchainFeeRateLeewaySatPerVbyte").toUInt()
+            config.getDouble("onchainFeeRateLeewaySat").toULong()
         } else {
             null
         }
@@ -491,7 +491,7 @@ fun asConfig(config: ReadableMap): Config? {
         zeroConfMaxAmountSat,
         useDefaultExternalInputParsers,
         externalInputParsers,
-        onchainFeeRateLeewaySatPerVbyte,
+        onchainFeeRateLeewaySat,
         assetMetadata,
         sideswapApiKey,
     )
@@ -509,7 +509,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
         "useDefaultExternalInputParsers" to config.useDefaultExternalInputParsers,
         "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },
-        "onchainFeeRateLeewaySatPerVbyte" to config.onchainFeeRateLeewaySatPerVbyte,
+        "onchainFeeRateLeewaySat" to config.onchainFeeRateLeewaySat,
         "assetMetadata" to config.assetMetadata?.let { readableArrayOf(it) },
         "sideswapApiKey" to config.sideswapApiKey,
     )

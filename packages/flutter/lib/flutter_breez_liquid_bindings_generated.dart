@@ -5157,7 +5157,7 @@ final class wire_cst_config extends ffi.Struct {
   @ffi.Bool()
   external bool use_default_external_input_parsers;
 
-  external ffi.Pointer<ffi.Uint32> onchain_fee_rate_leeway_sat_per_vbyte;
+  external ffi.Pointer<ffi.Uint64> onchain_fee_rate_leeway_sat;
 
   external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
 
@@ -6138,11 +6138,11 @@ final class UniffiVTableCallbackInterfaceSigner extends ffi.Struct {
 
 const int ESTIMATED_BTC_CLAIM_TX_VSIZE = 111;
 
-const int ESTIMATED_BTC_LOCKUP_TX_VSIZE = 154;
-
 const double LIQUID_FEE_RATE_SAT_PER_VBYTE = 0.1;
 
 const double LIQUID_FEE_RATE_MSAT_PER_VBYTE = 100.0;
+
+const int DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT = 500;
 
 const double MIN_FEE_RATE = 0.1;
 

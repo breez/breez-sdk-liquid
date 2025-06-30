@@ -1982,7 +1982,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       breezApiKey: dco_decode_opt_String(arr[7]),
       externalInputParsers: dco_decode_opt_list_external_input_parser(arr[8]),
       useDefaultExternalInputParsers: dco_decode_bool(arr[9]),
-      onchainFeeRateLeewaySatPerVbyte: dco_decode_opt_box_autoadd_u_32(arr[10]),
+      onchainFeeRateLeewaySat: dco_decode_opt_box_autoadd_u_64(arr[10]),
       assetMetadata: dco_decode_opt_list_asset_metadata(arr[11]),
       sideswapApiKey: dco_decode_opt_String(arr[12]),
     );
@@ -4054,7 +4054,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_breezApiKey = sse_decode_opt_String(deserializer);
     var var_externalInputParsers = sse_decode_opt_list_external_input_parser(deserializer);
     var var_useDefaultExternalInputParsers = sse_decode_bool(deserializer);
-    var var_onchainFeeRateLeewaySatPerVbyte = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_onchainFeeRateLeewaySat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_assetMetadata = sse_decode_opt_list_asset_metadata(deserializer);
     var var_sideswapApiKey = sse_decode_opt_String(deserializer);
     return Config(
@@ -4068,7 +4068,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       breezApiKey: var_breezApiKey,
       externalInputParsers: var_externalInputParsers,
       useDefaultExternalInputParsers: var_useDefaultExternalInputParsers,
-      onchainFeeRateLeewaySatPerVbyte: var_onchainFeeRateLeewaySatPerVbyte,
+      onchainFeeRateLeewaySat: var_onchainFeeRateLeewaySat,
       assetMetadata: var_assetMetadata,
       sideswapApiKey: var_sideswapApiKey,
     );
@@ -6599,7 +6599,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.breezApiKey, serializer);
     sse_encode_opt_list_external_input_parser(self.externalInputParsers, serializer);
     sse_encode_bool(self.useDefaultExternalInputParsers, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.onchainFeeRateLeewaySatPerVbyte, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.onchainFeeRateLeewaySat, serializer);
     sse_encode_opt_list_asset_metadata(self.assetMetadata, serializer);
     sse_encode_opt_String(self.sideswapApiKey, serializer);
   }

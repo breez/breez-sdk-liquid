@@ -100,7 +100,7 @@ export interface Config {
     zeroConfMaxAmountSat?: number
     useDefaultExternalInputParsers: boolean
     externalInputParsers?: ExternalInputParser[]
-    onchainFeeRateLeewaySatPerVbyte?: number
+    onchainFeeRateLeewaySat?: number
     assetMetadata?: AssetMetadata[]
     sideswapApiKey?: string
 }

@@ -343,7 +343,7 @@ dictionary Config {
     u64? zero_conf_max_amount_sat;
     boolean use_default_external_input_parsers = true;
     sequence<ExternalInputParser>? external_input_parsers = null;
-    u32? onchain_fee_rate_leeway_sat_per_vbyte = null;
+    u64? onchain_fee_rate_leeway_sat = null;
     sequence<AssetMetadata>? asset_metadata = null;
     string? sideswap_api_key = null;
 };
@@ -355,14 +355,14 @@ enum LiquidNetwork {
 };
 
 dictionary ConnectRequest {
-    Config config;    
+    Config config;
     string? mnemonic = null;
     string? passphrase = null;
     sequence<u8>? seed = null;
 };
 
 dictionary ConnectWithSignerRequest {
-  Config config;  
+  Config config;
 };
 
 dictionary AssetBalance {
@@ -716,7 +716,7 @@ interface SdkEvent {
     DataSynced(boolean did_pull_new_records);
 };
 
-callback interface EventListener {    
+callback interface EventListener {
     void on_event(SdkEvent e);
 };
 
@@ -752,7 +752,7 @@ namespace breez_sdk_liquid {
 
     [Throws=SdkError]
     void set_logger(Logger logger);
-    
+
     [Throws=SdkError]
     Config default_config(LiquidNetwork network, string? breez_api_key);
 
@@ -761,7 +761,7 @@ namespace breez_sdk_liquid {
 };
 
 [Error]
-interface SignerError { 
+interface SignerError {
     Generic(string err);
 };
 
