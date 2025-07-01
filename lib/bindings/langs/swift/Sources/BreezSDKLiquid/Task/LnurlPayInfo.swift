@@ -11,13 +11,15 @@ struct LnurlInfoResponse: Decodable, Encodable {
     let maxSendable: UInt64
     let minSendable: UInt64
     let metadata: String
+    let commentAllowed: Int
     let tag: String
     
-    init(callback: String, maxSendable: UInt64, minSendable: UInt64, metadata: String, tag: String) {
+    init(callback: String, maxSendable: UInt64, minSendable: UInt64, metadata: String, commentAllowed: Int, tag: String) {
         self.callback = callback
         self.maxSendable = maxSendable
         self.minSendable = minSendable
         self.metadata = metadata
+        self.commentAllowed = commentAllowed
         self.tag = tag
     }
 }
@@ -54,8 +56,14 @@ class LnurlPayInfoTask : LnurlPayTask {
             // Format the response
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
-            replyServer(encodable: LnurlInfoResponse(callback: request!.callback_url, maxSendable: maxSendableMsat, minSendable: minSendableMsat, metadata: metadata, tag: "payRequest"),
-                        replyURL: request!.reply_url, maxAge: Constants.CACHE_CONTROL_MAX_AGE_DAY)
+            replyServer(encodable: LnurlInfoResponse(callback: request!.callback_url,
+                                                     maxSendable: maxSendableMsat,
+                                                     minSendable: minSendableMsat,
+                                                     metadata: metadata,
+                                                     commentAllowed: Constants.LNURL_PAY_COMMENT_MAX_LENGTH,
+                                                     tag: "payRequest"),
+                        replyURL: request!.reply_url,
+                        maxAge: Constants.CACHE_CONTROL_MAX_AGE_DAY)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to process lnurl: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)

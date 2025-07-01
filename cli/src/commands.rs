@@ -53,6 +53,10 @@ pub(crate) enum Command {
         #[arg(long)]
         amount: Option<f64>,
 
+        /// Optional payer note, which is to be included in the BOLT12 invoice request
+        #[clap(short, long)]
+        payer_note: Option<String>,
+
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
@@ -94,6 +98,10 @@ pub(crate) enum Command {
         /// Optional if true uses the hash of the description
         #[clap(name = "use_description_hash", short = 's', long = "desc_hash")]
         use_description_hash: Option<bool>,
+
+        /// Optional payer note, typically included in a LNURL-Pay request
+        #[clap(short, long)]
+        payer_note: Option<String>,
 
         /// The amount the payer should send, in satoshi. If not specified, it will generate a
         /// BIP21 URI/address with no amount.
@@ -234,6 +242,10 @@ pub(crate) enum Command {
         /// LN Address or LNURL-pay endpoint
         lnurl: String,
 
+        /// Optional comment, which is to be included in the invoice request sent to the LNURL endpoint
+        #[clap(short, long)]
+        comment: Option<String>,
+
         /// Whether or not this is a drain operation. If true, all available funds will be used.
         #[clap(short, long, action = ArgAction::SetTrue)]
         drain: Option<bool>,
@@ -313,6 +325,7 @@ pub(crate) async fn handle_command(
             asset_id,
             description,
             use_description_hash,
+            payer_note,
         } => {
             let payment_method =
                 payment_method.map_or(Ok(PaymentMethod::Bolt11Invoice), |method| {
@@ -361,6 +374,7 @@ pub(crate) async fn handle_command(
                     prepare_response,
                     description,
                     use_description_hash,
+                    payer_note,
                 })
                 .await?;
 
@@ -397,6 +411,7 @@ pub(crate) async fn handle_command(
         Command::SendPayment {
             invoice,
             offer,
+            payer_note,
             address,
             amount,
             amount_sat,
@@ -425,7 +440,6 @@ pub(crate) async fn handle_command(
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
                     amount,
-                    comment: None,
                 })
                 .await?;
 
@@ -453,6 +467,7 @@ pub(crate) async fn handle_command(
             let send_payment_req = SendPaymentRequest {
                 prepare_response: prepare_response.clone(),
                 use_asset_fees,
+                payer_note,
             };
 
             if let Some(delay) = delay {
@@ -706,6 +721,7 @@ pub(crate) async fn handle_command(
         }
         Command::LnurlPay {
             lnurl,
+            comment,
             drain,
             validate_success_url,
         } => {
@@ -736,7 +752,7 @@ pub(crate) async fn handle_command(
                             data: pd,
                             amount,
                             bip353_address,
-                            comment: None,
+                            comment,
                             validate_success_action_url: validate_success_url,
                         })
                         .await?;

@@ -3,6 +3,7 @@ import Foundation
 
 struct LnurlInvoiceRequest: Codable {
     let amount: UInt64
+    let comment: String?
     let reply_url: String
     let verify_url: String?
 }
@@ -49,11 +50,15 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             if amountSat < limits.receive.minSat || amountSat > limits.receive.maxSat {
                 throw InvalidLnurlPayError.amount(amount: request!.amount)
             }
+            // Check comment length
+            if request!.comment?.count ?? 0 > Constants.LNURL_PAY_COMMENT_MAX_LENGTH {
+                throw InvalidLnurlPayError.comment
+            }
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
             let amount = ReceiveAmount.bitcoin(payerAmountSat: amountSat)
             let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.lightning, amount: amount))
-            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true))
+            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true, payerNote: request!.comment))
             // Add the verify URL
             var verify: String?
             if let verifyUrl = request!.verify_url {

@@ -104,7 +104,6 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
             amount: Some(PayAmount::Bitcoin {
                 receiver_amount_sat,
             }),
-            comment: None,
         })
         .await
         .unwrap();

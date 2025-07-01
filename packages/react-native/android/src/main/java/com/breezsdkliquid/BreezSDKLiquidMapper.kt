@@ -2326,15 +2326,13 @@ fun asPrepareSendRequest(prepareSendRequest: ReadableMap): PrepareSendRequest? {
     }
     val destination = prepareSendRequest.getString("destination")!!
     val amount = if (hasNonNullKey(prepareSendRequest, "amount")) prepareSendRequest.getMap("amount")?.let { asPayAmount(it) } else null
-    val comment = if (hasNonNullKey(prepareSendRequest, "comment")) prepareSendRequest.getString("comment") else null
-    return PrepareSendRequest(destination, amount, comment)
+    return PrepareSendRequest(destination, amount)
 }
 
 fun readableMapOf(prepareSendRequest: PrepareSendRequest): ReadableMap =
     readableMapOf(
         "destination" to prepareSendRequest.destination,
         "amount" to prepareSendRequest.amount?.let { readableMapOf(it) },
-        "comment" to prepareSendRequest.comment,
     )
 
 fun asPrepareSendRequestList(arr: ReadableArray): List<PrepareSendRequest> {
@@ -2448,7 +2446,8 @@ fun asReceivePaymentRequest(receivePaymentRequest: ReadableMap): ReceivePaymentR
         } else {
             null
         }
-    return ReceivePaymentRequest(prepareResponse, description, useDescriptionHash)
+    val payerNote = if (hasNonNullKey(receivePaymentRequest, "payerNote")) receivePaymentRequest.getString("payerNote") else null
+    return ReceivePaymentRequest(prepareResponse, description, useDescriptionHash, payerNote)
 }
 
 fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
@@ -2456,6 +2455,7 @@ fun readableMapOf(receivePaymentRequest: ReceivePaymentRequest): ReadableMap =
         "prepareResponse" to readableMapOf(receivePaymentRequest.prepareResponse),
         "description" to receivePaymentRequest.description,
         "useDescriptionHash" to receivePaymentRequest.useDescriptionHash,
+        "payerNote" to receivePaymentRequest.payerNote,
     )
 
 fun asReceivePaymentRequestList(arr: ReadableArray): List<ReceivePaymentRequest> {
@@ -2769,13 +2769,15 @@ fun asSendPaymentRequest(sendPaymentRequest: ReadableMap): SendPaymentRequest? {
     }
     val prepareResponse = sendPaymentRequest.getMap("prepareResponse")?.let { asPrepareSendResponse(it) }!!
     val useAssetFees = if (hasNonNullKey(sendPaymentRequest, "useAssetFees")) sendPaymentRequest.getBoolean("useAssetFees") else null
-    return SendPaymentRequest(prepareResponse, useAssetFees)
+    val payerNote = if (hasNonNullKey(sendPaymentRequest, "payerNote")) sendPaymentRequest.getString("payerNote") else null
+    return SendPaymentRequest(prepareResponse, useAssetFees, payerNote)
 }
 
 fun readableMapOf(sendPaymentRequest: SendPaymentRequest): ReadableMap =
     readableMapOf(
         "prepareResponse" to readableMapOf(sendPaymentRequest.prepareResponse),
         "useAssetFees" to sendPaymentRequest.useAssetFees,
+        "payerNote" to sendPaymentRequest.payerNote,
     )
 
 fun asSendPaymentRequestList(arr: ReadableArray): List<SendPaymentRequest> {
@@ -3563,6 +3565,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
                 null
             }
         val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
+        val payerNote = if (hasNonNullKey(paymentDetails, "payerNote")) paymentDetails.getString("payerNote") else null
         val claimTxId = if (hasNonNullKey(paymentDetails, "claimTxId")) paymentDetails.getString("claimTxId") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null
         val refundTxAmountSat =
@@ -3586,6 +3589,7 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
             destinationPubkey,
             lnurlInfo,
             bip353Address,
+            payerNote,
             claimTxId,
             refundTxId,
             refundTxAmountSat,
@@ -3616,7 +3620,8 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
                 null
             }
         val bip353Address = if (hasNonNullKey(paymentDetails, "bip353Address")) paymentDetails.getString("bip353Address") else null
-        return PaymentDetails.Liquid(assetId, destination, description, assetInfo, lnurlInfo, bip353Address)
+        val payerNote = if (hasNonNullKey(paymentDetails, "payerNote")) paymentDetails.getString("payerNote") else null
+        return PaymentDetails.Liquid(assetId, destination, description, assetInfo, lnurlInfo, bip353Address, payerNote)
     }
     if (type == "bitcoin") {
         val swapId = paymentDetails.getString("swapId")!!
@@ -3687,6 +3692,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "destinationPubkey", paymentDetails.destinationPubkey)
             pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "bip353Address", paymentDetails.bip353Address)
+            pushToMap(map, "payerNote", paymentDetails.payerNote)
             pushToMap(map, "claimTxId", paymentDetails.claimTxId)
             pushToMap(map, "refundTxId", paymentDetails.refundTxId)
             pushToMap(map, "refundTxAmountSat", paymentDetails.refundTxAmountSat)
@@ -3699,6 +3705,7 @@ fun readableMapOf(paymentDetails: PaymentDetails): ReadableMap? {
             pushToMap(map, "assetInfo", paymentDetails.assetInfo?.let { readableMapOf(it) })
             pushToMap(map, "lnurlInfo", paymentDetails.lnurlInfo?.let { readableMapOf(it) })
             pushToMap(map, "bip353Address", paymentDetails.bip353Address)
+            pushToMap(map, "payerNote", paymentDetails.payerNote)
         }
         is PaymentDetails.Bitcoin -> {
             pushToMap(map, "type", "bitcoin")
@@ -3928,8 +3935,7 @@ fun asSendDestination(sendDestination: ReadableMap): SendDestination? {
         val offer = sendDestination.getMap("offer")?.let { asLnOffer(it) }!!
         val receiverAmountSat = sendDestination.getDouble("receiverAmountSat").toULong()
         val bip353Address = if (hasNonNullKey(sendDestination, "bip353Address")) sendDestination.getString("bip353Address") else null
-        val payerNote = if (hasNonNullKey(sendDestination, "payerNote")) sendDestination.getString("payerNote") else null
-        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address, payerNote)
+        return SendDestination.Bolt12(offer, receiverAmountSat, bip353Address)
     }
     return null
 }
@@ -3952,7 +3958,6 @@ fun readableMapOf(sendDestination: SendDestination): ReadableMap? {
             pushToMap(map, "offer", readableMapOf(sendDestination.offer))
             pushToMap(map, "receiverAmountSat", sendDestination.receiverAmountSat)
             pushToMap(map, "bip353Address", sendDestination.bip353Address)
-            pushToMap(map, "payerNote", sendDestination.payerNote)
         }
     }
     return map
