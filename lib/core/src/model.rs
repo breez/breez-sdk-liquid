@@ -42,6 +42,7 @@ pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE *
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
 pub const BREEZ_SWAP_PROXY_URL: &str = "https://swap.breez.technology/v2";
+pub const DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT: u64 = 500;
 
 const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
 
@@ -85,12 +86,12 @@ pub struct Config {
     /// Set this to false in order to prevent their use.
     pub use_default_external_input_parsers: bool,
     /// For payments where the onchain fees can only be estimated on creation, this can be used
-    /// in order to automatically allow slightly more expensive fees. If the actual fee rate ends up
+    /// in order to automatically allow slightly more expensive fees. If the actual fee ends up
     /// being above the sum of the initial estimate and this leeway, the payment will require
     /// user fee acceptance. See [WaitingFeeAcceptance](PaymentState::WaitingFeeAcceptance).
     ///
-    /// Defaults to zero.
-    pub onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
+    /// Defaults to [DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT].
+    pub onchain_fee_rate_leeway_sat: Option<u64>,
     /// A set of asset metadata used by [LiquidSdk::parse](crate::sdk::LiquidSdk::parse) when the input is a
     /// [LiquidAddressData] and the [asset_id](LiquidAddressData::asset_id) differs from the Liquid Bitcoin asset.
     /// See [AssetMetadata] for more details on how define asset metadata.
@@ -118,7 +119,7 @@ impl Config {
             breez_api_key,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
@@ -142,7 +143,7 @@ impl Config {
             breez_api_key,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
@@ -165,7 +166,7 @@ impl Config {
             breez_api_key,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
@@ -189,7 +190,7 @@ impl Config {
             breez_api_key,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
         }
@@ -212,7 +213,7 @@ impl Config {
             breez_api_key: None,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: None,
         }
@@ -236,7 +237,7 @@ impl Config {
             breez_api_key: None,
             external_input_parsers: None,
             use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat_per_vbyte: None,
+            onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: None,
         }

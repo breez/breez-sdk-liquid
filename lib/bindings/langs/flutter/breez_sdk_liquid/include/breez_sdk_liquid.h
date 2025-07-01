@@ -16,11 +16,11 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define ESTIMATED_BTC_CLAIM_TX_VSIZE 111
 
-#define ESTIMATED_BTC_LOCKUP_TX_VSIZE 154
-
 #define LIQUID_FEE_RATE_SAT_PER_VBYTE 0.1
 
 #define LIQUID_FEE_RATE_MSAT_PER_VBYTE (float)(LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0)
+
+#define DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT 500
 
 #define MIN_FEE_RATE 0.1
 
@@ -716,7 +716,7 @@ typedef struct wire_cst_config {
   struct wire_cst_list_prim_u_8_strict *breez_api_key;
   struct wire_cst_list_external_input_parser *external_input_parsers;
   bool use_default_external_input_parsers;
-  uint32_t *onchain_fee_rate_leeway_sat_per_vbyte;
+  uint64_t *onchain_fee_rate_leeway_sat;
   struct wire_cst_list_asset_metadata *asset_metadata;
   struct wire_cst_list_prim_u_8_strict *sideswap_api_key;
 } wire_cst_config;

@@ -558,12 +558,12 @@ enum BreezSDKLiquidMapper {
             externalInputParsers = try asExternalInputParserList(arr: externalInputParsersTmp)
         }
 
-        var onchainFeeRateLeewaySatPerVbyte: UInt32?
-        if hasNonNilKey(data: config, key: "onchainFeeRateLeewaySatPerVbyte") {
-            guard let onchainFeeRateLeewaySatPerVbyteTmp = config["onchainFeeRateLeewaySatPerVbyte"] as? UInt32 else {
-                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "onchainFeeRateLeewaySatPerVbyte"))
+        var onchainFeeRateLeewaySat: UInt64?
+        if hasNonNilKey(data: config, key: "onchainFeeRateLeewaySat") {
+            guard let onchainFeeRateLeewaySatTmp = config["onchainFeeRateLeewaySat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "onchainFeeRateLeewaySat"))
             }
-            onchainFeeRateLeewaySatPerVbyte = onchainFeeRateLeewaySatPerVbyteTmp
+            onchainFeeRateLeewaySat = onchainFeeRateLeewaySatTmp
         }
         var assetMetadata: [AssetMetadata]?
         if let assetMetadataTmp = config["assetMetadata"] as? [[String: Any?]] {
@@ -578,7 +578,7 @@ enum BreezSDKLiquidMapper {
             sideswapApiKey = sideswapApiKeyTmp
         }
 
-        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySatPerVbyte: onchainFeeRateLeewaySatPerVbyte, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -593,7 +593,7 @@ enum BreezSDKLiquidMapper {
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
             "useDefaultExternalInputParsers": config.useDefaultExternalInputParsers,
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
-            "onchainFeeRateLeewaySatPerVbyte": config.onchainFeeRateLeewaySatPerVbyte == nil ? nil : config.onchainFeeRateLeewaySatPerVbyte,
+            "onchainFeeRateLeewaySat": config.onchainFeeRateLeewaySat == nil ? nil : config.onchainFeeRateLeewaySat,
             "assetMetadata": config.assetMetadata == nil ? nil : arrayOf(assetMetadataList: config.assetMetadata!),
             "sideswapApiKey": config.sideswapApiKey == nil ? nil : config.sideswapApiKey,
         ]

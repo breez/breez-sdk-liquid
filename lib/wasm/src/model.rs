@@ -311,7 +311,7 @@ pub struct Config {
     pub breez_api_key: Option<String>,
     pub external_input_parsers: Option<Vec<ExternalInputParser>>,
     pub use_default_external_input_parsers: bool,
-    pub onchain_fee_rate_leeway_sat_per_vbyte: Option<u32>,
+    pub onchain_fee_rate_leeway_sat: Option<u64>,
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     pub sideswap_api_key: Option<String>,
 }
