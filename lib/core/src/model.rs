@@ -24,7 +24,6 @@ use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
 use crate::receive_swap::DEFAULT_ZERO_CONF_MAX_SAT;
-use crate::utils;
 use crate::{
     bitcoin,
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
@@ -34,6 +33,10 @@ use crate::{
 use crate::{
     chain::bitcoin::esplora::EsploraBitcoinChainService,
     chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
+};
+use crate::{
+    side_swap::api::{SIDESWAP_MAINNET_URL, SIDESWAP_TESTNET_URL},
+    utils,
 };
 
 // Uses f64 for the maximum precision when converting between units
@@ -350,6 +353,14 @@ impl Config {
             &electrum_url,
             lwk_wollet::ElectrumOptions { timeout: Some(3) },
         )
+    }
+
+    pub(crate) fn sideswap_url(&self) -> &'static str {
+        match self.network {
+            LiquidNetwork::Mainnet => SIDESWAP_MAINNET_URL,
+            LiquidNetwork::Testnet => SIDESWAP_TESTNET_URL,
+            LiquidNetwork::Regtest => unimplemented!(),
+        }
     }
 }
 
