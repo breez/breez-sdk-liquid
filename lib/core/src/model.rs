@@ -524,11 +524,8 @@ pub enum NwcEvent {
     Disconnected,
     PayInvoice {
         success: bool,
-        destination: Option<String>,
-        tx_id: Option<String>,
-        amount_sat: Option<u64>,
+        preimage: Option<String>,
         fees_sat: Option<u64>,
-        timestamp: Option<u32>,
         error: Option<String>,
     },
     ListTransactions,
@@ -592,7 +589,7 @@ pub trait Signer: MaybeSend + MaybeSync {
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
-/// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
+/// The request takes either a `mnemonic` and `passphrase`, or a `seed`.
 pub struct ConnectRequest {
     /// The SDK [Config]
     pub config: Config,

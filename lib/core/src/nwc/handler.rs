@@ -22,11 +22,11 @@ pub trait RelayMessageHandler {
 }
 
 pub struct BreezRelayMessageHandler {
-    sdk: Arc<LiquidSdk>,
+    sdk: sdk_common::utils::Arc<LiquidSdk>,
 }
 
 impl BreezRelayMessageHandler {
-    pub fn new(sdk: Arc<LiquidSdk>) -> Self {
+    pub fn new(sdk: sdk_common::utils::Arc<LiquidSdk>) -> Self {
         Self { sdk }
     }
 }
@@ -50,6 +50,20 @@ impl Into<TransactionType> for PaymentType {
 }
 
 impl RelayMessageHandler for BreezRelayMessageHandler {
+  
+    /// Processes a Lightning invoice payment request.
+    /// 
+    /// This method handles the complete payment flow:
+    /// 1. Prepares the payment using the SDK
+    /// 2. Executes the payment
+    /// 3. Extracts the preimage and fees from the completed payment
+    /// 
+    /// # Arguments
+    /// * `req` - Payment request containing invoice and optional amount override
+    /// 
+    /// # Returns
+    /// * `Ok(PayInvoiceResponse)` - Contains payment preimage and fees paid
+    /// * `Err(NIP47Error)` - Payment preparation or execution error
     async fn pay_invoice(&self, req: PayInvoiceRequest) -> Result<PayInvoiceResponse> {
         // Create prepare request
         let prepare_req = PrepareSendRequest {
@@ -93,7 +107,7 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
         } = response.payment.details
         else {
             return Err(NIP47Error {
-                code: ErrorCode::Internal,
+                code: ErrorCode::PaymentFailed,
                 message: "Payment did not return any preimage".to_string(),
             });
         };
@@ -103,6 +117,17 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
         Ok(PayInvoiceResponse { preimage, fees_paid: Some(fees_paid) })
     }
 
+    /// Retrieves a filtered list of wallet transactions.
+    /// 
+    /// This method converts NIP-47 transaction filters to Breez payment filters
+    /// and returns transactions in the expected NIP-47 format.
+    /// 
+    /// # Arguments
+    /// * `req` - Filter criteria including transaction type, unpaid status, time range, and pagination
+    /// 
+    /// # Returns
+    /// * `Ok(Vec<LookupInvoiceResponse>)` - List of transactions matching the filters
+    /// * `Err(NIP47Error)` - Error retrieving payments from the SDK
     async fn list_transactions(
         &self,
         req: ListTransactionsRequest,
@@ -173,6 +198,11 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
         Ok(txs)
     }
 
+    /// Retrieves the current wallet balance.
+    /// 
+    /// # Returns
+    /// * `Ok(GetBalanceResponse)` - Balance in millisatoshis
+    /// * `Err(NIP47Error)` - Error getting wallet info from the SDK
     async fn get_balance(&self) -> Result<GetBalanceResponse> {
         let info = self.sdk.get_info().await.map_err(|e| NIP47Error {
             code: ErrorCode::Internal,

@@ -382,12 +382,13 @@ impl LiquidSdkBuilder {
             None => match self.config.enable_nwc.unwrap_or(false) {
                 false => None, 
                 true => {
-                    BreezNWCService::new(todo!(), Arc::new(BreezRelayMessageHandler::new(sdk.clone())), &self.config.nwc_relays()).await?;
+                    let nwc_service: Arc<dyn NWCService> = sdk_common::utils::Arc::new(BreezNWCService::new(sdk_common::utils::Arc::new(BreezRelayMessageHandler::new(sdk.clone())), &self.config.nwc_relays()).await?);
+                    Some(nwc_service)
                 }
             },
         };
         if let Some(nwc_service) = nwc_service {
-            sdk.nwc_service.set(nwc_service);
+            sdk.nwc_service.set(nwc_service).map_err(|e| anyhow!("Failed to set NWC Service: {e}"))?;
         }
 
         Ok(sdk)

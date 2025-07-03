@@ -723,7 +723,7 @@ interface SdkEvent {
 interface NwcEvent {
     Connected();
     Disconnected();
-    PayInvoice(boolean success, string? destination, string? tx_id, u64? amount_sat, u64? fees_sat, u32? timestamp, string? error);
+    PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
     ListTransactions();
     GetBalance();
 }

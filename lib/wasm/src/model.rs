@@ -295,7 +295,6 @@ pub struct Symbol {
 #[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::BlockchainExplorer)]
 pub enum BlockchainExplorer {
-    Electrum { url: String },
     Esplora { url: String, use_waterfalls: bool },
 }
 
@@ -844,11 +843,8 @@ pub enum NwcEvent {
     Disconnected,
     PayInvoice {
         success: bool,
-        destination: Option<String>,
-        tx_id: Option<String>,
-        amount_sat: Option<u64>,
+        preimage: Option<String>,
         fees_sat: Option<u64>,
-        timestamp: Option<u32>,
         error: Option<String>,
     },
     ListTransactions,
