@@ -23,13 +23,12 @@ use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use log::{error, warn};
 use lwk_wollet::WalletTx;
 use migrations::current_migrations;
-use model::PaymentTxDetails;
+use model::{PaymentTxBalance, PaymentTxDetails};
 use rusqlite::backup::Backup;
 use rusqlite::{
     params, params_from_iter, Connection, OptionalExtension, Row, ToSql, TransactionBehavior,
 };
 use rusqlite_migration::{Migrations, M};
-use sdk_common::bitcoin::hashes::hex::ToHex;
 use tokio::sync::broadcast::{self, Sender};
 
 const DEFAULT_DB_FILENAME: &str = "storage.sql";
@@ -200,34 +199,43 @@ impl Persister {
         let tx_id = tx.txid.to_string();
         let is_tx_confirmed = tx.height.is_some();
         let mut tx_balances = tx.balance.clone();
-        // Remove the Liquid Bitcoin asset balance
-        let lbtc_asset_id = utils::lbtc_asset_id(self.network);
-        let mut balance = tx_balances
-            .remove(&lbtc_asset_id)
-            .map(|balance| (lbtc_asset_id.to_string(), balance));
-        // If the balances are still not empty pop the asset balance
-        if tx_balances.is_empty().not() {
-            balance = tx_balances
-                .pop_first()
-                .map(|(asset_id, balance)| (asset_id.to_hex(), balance));
+
+        if tx_balances.is_empty() {
+            warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
+            return Ok(());
         }
-        let (asset_id, payment_type, amount) = match balance {
-            Some((asset_id, asset_amount)) => {
-                let payment_type = match asset_amount >= 0 {
+
+        let lbtc_asset_id = utils::lbtc_asset_id(self.network);
+        tx_balances
+            .entry(lbtc_asset_id)
+            .and_modify(|b| *b += tx.fee as i64);
+
+        let num_assets = tx_balances.len();
+        let payment_balances: Vec<PaymentTxBalance> = tx_balances
+            .into_iter()
+            .filter_map(|(asset_id, balance)| {
+                // Ignore the fee balance only if there is more than one asset
+                if balance == 0 && num_assets >= 2 {
+                    return None;
+                }
+
+                let asset_id = asset_id.to_string();
+                let payment_type = match balance >= 0 {
                     true => PaymentType::Receive,
                     false => PaymentType::Send,
                 };
-                let mut amount = asset_amount.unsigned_abs();
+                let mut amount = balance.unsigned_abs();
                 if payment_type == PaymentType::Send && asset_id.eq(&lbtc_asset_id.to_string()) {
                     amount = amount.saturating_sub(tx.fee);
                 }
-                (asset_id, payment_type, amount)
-            }
-            None => {
-                warn!("Attempted to persist a payment with no balance: tx_id {tx_id}");
-                return Ok(());
-            }
-        };
+                Some(PaymentTxBalance {
+                    asset_id,
+                    amount,
+                    payment_type,
+                })
+            })
+            .collect();
+
         let maybe_address = tx
             .outputs
             .iter()
@@ -246,13 +254,11 @@ impl Persister {
             PaymentTxData {
                 tx_id: tx_id.clone(),
                 timestamp: tx.timestamp,
-                asset_id,
-                amount,
                 fees_sat: tx.fee,
-                payment_type,
                 is_confirmed: is_tx_confirmed,
                 unblinding_data: Some(unblinding_data),
             },
+            &payment_balances,
             maybe_address.map(|destination| PaymentTxDetails {
                 tx_id,
                 destination,
@@ -267,10 +273,7 @@ impl Persister {
         let mut stmt = con.prepare(
             "SELECT tx_id, 
                         timestamp, 
-                        asset_id, 
-                        amount, 
                         fees_sat, 
-                        payment_type, 
                         is_confirmed,
                         unblinding_data
             FROM payment_tx_data
@@ -281,12 +284,9 @@ impl Persister {
                 Ok(PaymentTxData {
                     tx_id: row.get(0)?,
                     timestamp: row.get(1)?,
-                    asset_id: row.get(2)?,
-                    amount: row.get(3)?,
-                    fees_sat: row.get(4)?,
-                    payment_type: row.get(5)?,
-                    is_confirmed: row.get(6)?,
-                    unblinding_data: row.get(7)?,
+                    fees_sat: row.get(2)?,
+                    is_confirmed: row.get(3)?,
+                    unblinding_data: row.get(4)?,
                 })
             })?
             .map(|i| i.unwrap())
@@ -294,9 +294,33 @@ impl Persister {
         Ok(payments)
     }
 
+    fn insert_or_update_payment_balance(
+        con: &Connection,
+        tx_id: &str,
+        balance: &PaymentTxBalance,
+    ) -> Result<()> {
+        con.execute(
+            "INSERT OR REPLACE INTO payment_balance (
+                tx_id,
+                asset_id,
+                payment_type,
+                amount
+            )
+            VALUES (?, ?, ?, ?)",
+            (
+                tx_id,
+                &balance.asset_id,
+                balance.payment_type,
+                balance.amount,
+            ),
+        )?;
+        Ok(())
+    }
+
     pub(crate) fn insert_or_update_payment(
         &self,
         ptx: PaymentTxData,
+        balances: &[PaymentTxBalance],
         payment_tx_details: Option<PaymentTxDetails>,
         from_wallet_tx_data: bool,
     ) -> Result<()> {
@@ -306,34 +330,29 @@ impl Persister {
             "INSERT INTO payment_tx_data (
            tx_id,
            timestamp,
-           asset_id,
-           amount,
            fees_sat,
-           payment_type,
            is_confirmed,
            unblinding_data
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?)
         ON CONFLICT (tx_id)
         DO UPDATE SET timestamp = CASE WHEN excluded.is_confirmed = 1 THEN excluded.timestamp ELSE timestamp END,
-                      asset_id = excluded.asset_id,
-                      amount = excluded.amount,
                       fees_sat = excluded.fees_sat,
-                      payment_type = excluded.payment_type,
                       is_confirmed = excluded.is_confirmed,
                       unblinding_data = excluded.unblinding_data
         ",
             (
                 &ptx.tx_id,
                 ptx.timestamp.or(Some(utils::now())),
-                ptx.asset_id,
-                ptx.amount,
                 ptx.fees_sat,
-                ptx.payment_type,
                 ptx.is_confirmed,
                 ptx.unblinding_data,
             ),
         )?;
+
+        for balance in balances {
+            Self::insert_or_update_payment_balance(&tx, &ptx.tx_id, balance)?;
+        }
 
         let mut trigger_sync = false;
         if let Some(ref payment_tx_details) = payment_tx_details {
@@ -517,12 +536,12 @@ impl Persister {
             SELECT
                 ptx.tx_id,
                 ptx.timestamp,
-                ptx.asset_id,
-                ptx.amount,
                 ptx.fees_sat,
-                ptx.payment_type,
                 ptx.is_confirmed,
                 ptx.unblinding_data,
+                pb.amount,
+                pb.asset_id,
+                pb.payment_type,
                 rs.id,
                 rs.created_at,
                 rs.timeout_block_height,
@@ -570,7 +589,7 @@ impl Persister {
                 cs.auto_accepted_fees,
                 cs.user_lockup_tx_id,
                 cs.claim_tx_id,
-                rtx.amount,
+                rb.amount,
                 pd.destination,
                 pd.description,
                 pd.lnurl_info_json,
@@ -581,6 +600,8 @@ impl Persister {
                 am.ticker,
                 am.precision
             FROM payment_tx_data AS ptx          -- Payment tx (each tx results in a Payment)
+            LEFT JOIN payment_balance AS pb
+                ON pb.tx_id = ptx.tx_id          -- Payment tx balances, split by asset
             FULL JOIN (
                 SELECT * FROM receive_swaps WHERE {}
             ) rs                                 -- Receive Swap data
@@ -591,12 +612,12 @@ impl Persister {
                 ON ptx.tx_id in (cs.user_lockup_tx_id, cs.claim_tx_id)
             LEFT JOIN send_swaps AS ss           -- Send Swap data
                 ON ptx.tx_id = ss.lockup_tx_id
-            LEFT JOIN payment_tx_data AS rtx     -- Refund tx data
-                ON rtx.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
+            LEFT JOIN payment_balance AS rb      -- Refund tx balance
+                ON rb.tx_id in (ss.refund_tx_id, cs.refund_tx_id)
             LEFT JOIN payment_details AS pd      -- Payment details
                 ON pd.tx_id = ptx.tx_id
             LEFT JOIN asset_metadata AS am       -- Asset metadata
-                ON am.asset_id = ptx.asset_id
+                ON am.asset_id = pb.asset_id
             WHERE                                
                 (ptx.tx_id IS NULL               -- Filter out refund txs from Chain/Send Swaps
                     OR ptx.tx_id NOT IN (SELECT refund_tx_id FROM send_swaps WHERE refund_tx_id NOT NULL)
@@ -621,17 +642,21 @@ impl Persister {
 
     fn sql_row_to_payment(&self, row: &Row) -> Result<Payment, rusqlite::Error> {
         let maybe_tx_tx_id: Result<String, rusqlite::Error> = row.get(0);
-        let tx = match maybe_tx_tx_id {
-            Ok(ref tx_id) => Some(PaymentTxData {
-                tx_id: tx_id.to_string(),
-                timestamp: row.get(1)?,
-                asset_id: row.get(2)?,
-                amount: row.get(3)?,
-                fees_sat: row.get(4)?,
-                payment_type: row.get(5)?,
-                is_confirmed: row.get(6)?,
-                unblinding_data: row.get(7)?,
-            }),
+        let tx_with_balance = match maybe_tx_tx_id {
+            Ok(ref tx_id) => Some((
+                PaymentTxData {
+                    tx_id: tx_id.to_string(),
+                    timestamp: row.get(1)?,
+                    fees_sat: row.get(2)?,
+                    is_confirmed: row.get(3)?,
+                    unblinding_data: row.get(4)?,
+                },
+                PaymentTxBalance {
+                    amount: row.get(5)?,
+                    asset_id: row.get(6)?,
+                    payment_type: row.get(7)?,
+                },
+            )),
             _ => None,
         };
 
@@ -923,11 +948,10 @@ impl Persister {
                 }
             }
             _ => {
-                let (amount, asset_id) = tx
-                    .clone()
-                    .map_or((0, utils::lbtc_asset_id(self.network).to_string()), |ptd| {
-                        (ptd.amount, ptd.asset_id)
-                    });
+                let (amount, asset_id) = tx_with_balance.clone().map_or(
+                    (0, utils::lbtc_asset_id(self.network).to_string()),
+                    |(_, b)| (b.amount, b.asset_id),
+                );
                 let asset_info = match (
                     maybe_asset_metadata_name,
                     maybe_asset_metadata_ticker,
@@ -973,15 +997,22 @@ impl Persister {
             }
         };
 
-        match (tx, swap.clone()) {
+        match (tx_with_balance, swap.clone()) {
             (None, None) => Err(maybe_tx_tx_id.err().unwrap()),
             (None, Some(swap)) => Ok(Payment::from_pending_swap(
                 swap,
                 payment_type,
                 payment_details,
             )),
-            (Some(tx), None) => Ok(Payment::from_tx_data(tx, None, payment_details)),
-            (Some(tx), Some(swap)) => Ok(Payment::from_tx_data(tx, Some(swap), payment_details)),
+            (Some((tx, balance)), None) => {
+                Ok(Payment::from_tx_data(tx, balance, None, payment_details))
+            }
+            (Some((tx, balance)), Some(swap)) => Ok(Payment::from_tx_data(
+                tx,
+                balance,
+                Some(swap),
+                payment_details,
+            )),
         }
     }
 
@@ -1094,7 +1125,7 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
             }
 
             where_clause.push(format!(
-                "ptx.payment_type in ({})",
+                "pb.payment_type in ({})",
                 type_filter_clause
                     .iter()
                     .map(|t| format!("{}", t))
@@ -1155,7 +1186,7 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
             } => {
                 where_clause.push("COALESCE(rs.id, ss.id, cs.id) IS NULL".to_string());
                 if let Some(asset_id) = asset_id {
-                    where_clause.push("ptx.asset_id = ?".to_string());
+                    where_clause.push("pb.asset_id = ?".to_string());
                     where_params.push(Box::new(asset_id));
                 }
                 if let Some(destination) = destination {
@@ -1191,9 +1222,11 @@ mod tests {
     fn test_get_payments() -> Result<()> {
         create_persister!(storage);
 
-        let payment_tx_data = new_payment_tx_data(LiquidNetwork::Testnet, PaymentType::Send);
+        let (payment_tx_data, payment_tx_balance) =
+            new_payment_tx_data(LiquidNetwork::Testnet, PaymentType::Send);
         storage.insert_or_update_payment(
             payment_tx_data.clone(),
+            &[payment_tx_balance],
             Some(PaymentTxDetails {
                 destination: "mock-address".to_string(),
                 ..Default::default()
