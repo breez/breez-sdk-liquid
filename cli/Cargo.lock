@@ -2767,8 +2767,7 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 [[package]]
 name = "lwk_common"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e055bce03c8a966bbdf11b1de04b2973d8c8854d7cc5877a37c5bb0c492a2909"
+source = "git+https://github.com/breez/lwk?rev=b694b6331c23#b694b6331c23a09fd6b5405ccb59d4df717359be"
 dependencies = [
  "base64 0.21.7",
  "elements",
@@ -2776,6 +2775,7 @@ dependencies = [
  "getrandom 0.2.16",
  "qr_code",
  "rand 0.8.5",
+ "serde",
  "thiserror 1.0.69",
 ]
 
@@ -2795,7 +2795,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=08edbdab622ed0aa92afa319fe35d38ee7d2dc96#08edbdab622ed0aa92afa319fe35d38ee7d2dc96"
+source = "git+https://github.com/breez/lwk?rev=b694b6331c23#b694b6331c23a09fd6b5405ccb59d4df717359be"
 dependencies = [
  "aes-gcm-siv",
  "age",
@@ -2805,6 +2805,7 @@ dependencies = [
  "electrum-client",
  "elements",
  "elements-miniscript",
+ "futures",
  "fxhash",
  "idna",
  "js-sys",

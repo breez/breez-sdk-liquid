@@ -7,7 +7,10 @@ use rusqlite::{
 };
 use tokio::sync::broadcast;
 
-use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentTxDetails, Persister, Swap};
+use super::{
+    cache::{KEY_ENQUEUE_REUNBLIND, KEY_LAST_DERIVATION_INDEX},
+    PaymentTxDetails, Persister, Swap,
+};
 use crate::{
     model::Bolt12Offer,
     persist::where_clauses_to_string,
@@ -24,7 +27,7 @@ impl Persister {
 
         format!(
             "
-            SELECT 
+            SELECT
                 data_id,
                 record_id,
                 record_revision,
@@ -181,7 +184,7 @@ impl Persister {
 
         let mut stmt = con.prepare(
             "
-            SELECT 
+            SELECT
                 record_id,
                 revision,
                 schema_version,
@@ -273,12 +276,12 @@ impl Persister {
         tx.execute(&format!("
             INSERT OR REPLACE INTO sync_outgoing(record_id, data_id, record_type, commit_time, updated_fields_json)
             VALUES(
-                :record_id, 
-                :data_id, 
-                :record_type, 
-                :commit_time, 
+                :record_id,
+                :data_id,
+                :record_type,
+                :commit_time,
                 {updated_fields}
-            ) 
+            )
         "),
             named_params! {
                 ":record_id": record_id,
@@ -296,7 +299,7 @@ impl Persister {
 
         format!(
             "
-            SELECT 
+            SELECT
                 record_id,
                 data_id,
                 record_type,
@@ -457,6 +460,7 @@ impl Persister {
             KEY_LAST_DERIVATION_INDEX,
             new_address_index.to_string(),
         )?;
+        Self::update_cached_item_inner(&tx, KEY_ENQUEUE_REUNBLIND, true.to_string())?;
 
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": sync_state.data_id,
