@@ -166,17 +166,12 @@ impl Recoverer {
         if tips_too_far_apart || has_unscanned_derivation_indices {
             if tips_too_far_apart {
                 debug!(
-                    "Starting manual wallet sync due to tips difference {} exceeding leeway {} (wallet: {}, liquid: {})",
-                    tip_difference,
-                    LIQUID_TIP_LEEWAY,
-                    wallet_tip,
-                    liquid_tip
+                    "Starting manual wallet sync due to tips difference {tip_difference} exceeding leeway {LIQUID_TIP_LEEWAY} (wallet: {wallet_tip}, liquid: {liquid_tip})"
                 );
             }
             if has_unscanned_derivation_indices {
                 debug!(
-                    "Starting manual wallet sync due to unscanned derivation indices {} to {}",
-                    last_scanned_derivation_index, last_used_derivation_index
+                    "Starting manual wallet sync due to unscanned derivation indices {last_scanned_derivation_index} to {last_used_derivation_index}"
                 );
             }
             self.onchain_wallet.full_scan().await?;

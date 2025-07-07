@@ -17,7 +17,7 @@ use lwk_wollet::bitcoin::base64::Engine as _;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
-use persist::model::PaymentTxDetails;
+use persist::model::{PaymentTxBalance, PaymentTxDetails};
 use recover::recoverer::Recoverer;
 use sdk_common::bitcoin::hashes::hex::ToHex;
 use sdk_common::input_parser::InputType;
@@ -414,7 +414,7 @@ impl LiquidSdk {
             ConnectWithSignerRequest { config: req.config },
             Box::new(signer),
         )
-        .inspect_err(|e| error!("Failed to connect: {:?}", e))
+        .inspect_err(|e| error!("Failed to connect: {e:?}"))
         .await
     }
 
@@ -487,10 +487,10 @@ impl LiquidSdk {
         let mut is_started = self.is_started.write().await;
         self.persister
             .update_send_swaps_by_state(Created, TimedOut, Some(true))
-            .inspect_err(|e| error!("Failed to update send swaps by state: {:?}", e))?;
+            .inspect_err(|e| error!("Failed to update send swaps by state: {e:?}"))?;
 
         self.start_background_tasks()
-            .inspect_err(|e| error!("Failed to start background tasks: {:?}", e))
+            .inspect_err(|e| error!("Failed to start background tasks: {e:?}"))
             .await?;
         *is_started = true;
         Ok(())
@@ -1875,18 +1875,21 @@ impl LiquidSdk {
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
             timestamp: Some(utils::now()),
-            amount: receiver_amount_sat,
-            fees_sat,
-            payment_type: PaymentType::Send,
             is_confirmed: false,
+            fees_sat,
             unblinding_data: None,
+        };
+        let tx_balance = PaymentTxBalance {
+            amount: receiver_amount_sat,
             asset_id: asset_id.clone(),
+            payment_type: PaymentType::Send,
         };
 
         let description = address_data.message;
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
+            &[tx_balance.clone()],
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
@@ -1917,7 +1920,7 @@ impl LiquidSdk {
         };
 
         Ok(SendPaymentResponse {
-            payment: Payment::from_tx_data(tx_data, None, payment_details),
+            payment: Payment::from_tx_data(tx_data, tx_balance, None, payment_details),
         })
     }
 
@@ -1954,19 +1957,22 @@ impl LiquidSdk {
         // This makes the tx known to the SDK (get_info, list_payments) instantly
         let tx_data = PaymentTxData {
             tx_id: tx_id.clone(),
-            timestamp: Some(utils::now()),
-            amount: receiver_amount_sat + asset_fees,
             fees_sat,
-            payment_type: PaymentType::Send,
+            timestamp: Some(utils::now()),
             is_confirmed: false,
             unblinding_data: None,
+        };
+        let tx_balance = PaymentTxBalance {
             asset_id: asset_id.clone(),
+            amount: receiver_amount_sat + asset_fees,
+            payment_type: PaymentType::Send,
         };
 
         let description = address_data.message;
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
+            &[tx_balance.clone()],
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
@@ -1998,7 +2004,7 @@ impl LiquidSdk {
         };
 
         Ok(SendPaymentResponse {
-            payment: Payment::from_tx_data(tx_data, None, payment_details),
+            payment: Payment::from_tx_data(tx_data, tx_balance, None, payment_details),
         })
     }
 
@@ -3936,7 +3942,7 @@ impl LiquidSdk {
             self.persister
                 .fetch_chain_swap_by_id(&swap_id)?
                 .ok_or(SdkError::Generic {
-                    err: format!("Could not find Swap {}", swap_id),
+                    err: format!("Could not find Swap {swap_id}"),
                 })?;
 
         ensure_sdk!(
@@ -4261,8 +4267,7 @@ impl LiquidSdk {
                         match preimage {
                             Some(preimage_str) => {
                                 debug!(
-                                    "Decrypting AES success action with preimage for Send Swap {}",
-                                    swap_id
+                                    "Decrypting AES success action with preimage for Send Swap {swap_id}"
                                 );
                                 let preimage =
                                     sha256::Hash::from_str(preimage_str).map_err(|_| {
@@ -4280,7 +4285,7 @@ impl LiquidSdk {
                                 Some(SuccessActionProcessed::Aes { result })
                             }
                             None => {
-                                debug!("Preimage not yet available to decrypt AES success action for Send Swap {}", swap_id);
+                                debug!("Preimage not yet available to decrypt AES success action for Send Swap {swap_id}");
                                 None
                             }
                         }

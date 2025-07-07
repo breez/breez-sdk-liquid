@@ -16,6 +16,7 @@ use crate::chain::liquid::LiquidChainService;
 use crate::error::is_txn_mempool_conflict_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
+use crate::persist::model::PaymentTxBalance;
 use crate::prelude::Swap;
 use crate::{ensure_sdk, utils};
 use crate::{
@@ -299,8 +300,7 @@ impl ReceiveSwapHandler {
         mrh_amount_sat: Option<u64>,
     ) -> Result<(), PaymentError> {
         info!(
-            "Transitioning Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
-            swap_id, to_state, claim_tx_id, lockup_tx_id, mrh_tx_id
+            "Transitioning Receive swap {swap_id} to {to_state:?} (claim_tx_id = {claim_tx_id:?}, lockup_tx_id = {lockup_tx_id:?}, mrh_tx_id = {mrh_tx_id:?})"
         );
         let swap = self.fetch_receive_swap_by_id(swap_id)?;
         Self::validate_state_transition(swap.state, to_state)?;
@@ -399,13 +399,15 @@ impl ReceiveSwapHandler {
                             PaymentTxData {
                                 tx_id: claim_tx_id.clone(),
                                 timestamp: Some(utils::now()),
-                                asset_id: self.config.lbtc_asset_id(),
-                                amount: swap.receiver_amount_sat,
                                 fees_sat: 0,
-                                payment_type: PaymentType::Receive,
                                 is_confirmed: false,
                                 unblinding_data: None,
                             },
+                            &[PaymentTxBalance {
+                                amount: swap.receiver_amount_sat,
+                                payment_type: PaymentType::Receive,
+                                asset_id: self.config.lbtc_asset_id(),
+                            }],
                             None,
                             false,
                         )?;
