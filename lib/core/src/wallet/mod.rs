@@ -466,8 +466,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                 let address = address_result.address().clone();
                 let index = address_result.index();
                 debug!(
-                    "Got unused address {} with derivation index {}",
-                    address, index
+                    "Got unused address {address} with derivation index {index}"
                 );
                 if next_index.is_none() {
                     self.persister.set_last_derivation_index(index)?;

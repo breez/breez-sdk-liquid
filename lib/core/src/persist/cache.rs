@@ -206,8 +206,7 @@ impl Persister {
         self.get_cached_item(KEY_ENQUEUE_REUNBLIND)
             .map(|maybe_str| {
                 maybe_str
-                    .map(|str| str.as_str().parse::<bool>().ok())
-                    .flatten()
+                    .and_then(|str| str.as_str().parse::<bool>().ok())
                     .unwrap_or(false)
             })
     }
