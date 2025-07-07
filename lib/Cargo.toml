@@ -44,3 +44,4 @@ thiserror = "1.0"
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits and rebased on secp256k1-zkp 0.11.0
 secp256k1-zkp = { git = "https://github.com/breez/rust-secp256k1-zkp.git", rev = "eac2e479255a6e32b5588bc25ee53c642fdd8395" }
+lwk_common = { git = "https://github.com/breez/lwk", rev = "b694b6331c23" }
