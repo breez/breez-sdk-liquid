@@ -201,9 +201,11 @@ impl Persister {
         let mut tx_balances = tx.balance.clone();
 
         let lbtc_asset_id = utils::lbtc_asset_id(self.network);
-        tx_balances
-            .entry(lbtc_asset_id)
-            .and_modify(|b| *b += tx.fee as i64);
+        tx_balances.entry(lbtc_asset_id).and_modify(|b| {
+            if *b < 0 {
+                *b += tx.fee as i64;
+            }
+        });
 
         let num_assets = tx_balances.len();
         let payment_balances: Vec<PaymentTxBalance> = tx_balances
@@ -396,8 +398,11 @@ impl Persister {
         payment_tx_details: &PaymentTxDetails,
         skip_destination_update: bool,
     ) -> Result<()> {
-        let destination_update = if skip_destination_update
-            .not() { "destination = excluded.destination," } else { Default::default() };
+        let destination_update = if skip_destination_update.not() {
+            "destination = excluded.destination,"
+        } else {
+            Default::default()
+        };
         con.execute(
             &format!(
                 "INSERT INTO payment_details (
