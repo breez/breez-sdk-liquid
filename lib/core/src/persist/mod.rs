@@ -198,20 +198,22 @@ impl Persister {
     pub(crate) fn insert_or_update_payment_with_wallet_tx(&self, tx: &WalletTx) -> Result<()> {
         let tx_id = tx.txid.to_string();
         let is_tx_confirmed = tx.height.is_some();
-        let mut tx_balances = tx.balance.clone();
+        let tx_balances = tx.balance.clone();
 
         let lbtc_asset_id = utils::lbtc_asset_id(self.network);
-        tx_balances
-            .entry(lbtc_asset_id)
-            .and_modify(|b| *b += tx.fee as i64);
+        let num_outputs = tx.outputs.iter().filter(|out| out.is_some()).count();
 
-        let num_assets = tx_balances.len();
         let payment_balances: Vec<PaymentTxBalance> = tx_balances
             .into_iter()
-            .filter_map(|(asset_id, balance)| {
-                // Ignore the fee balance only if there is more than one asset
-                if balance == 0 && num_assets >= 2 {
-                    return None;
+            .filter_map(|(asset_id, mut balance)| {
+                // Only account for fee changes in case of outbound L-BTC payments
+                if asset_id == lbtc_asset_id && balance < 0 {
+                    balance += tx.fee as i64;
+
+                    // If we only have a fee output w.r.t. our wallet, we want to exclude it from the list
+                    if num_outputs == 1 {
+                        return None;
+                    }
                 }
 
                 let asset_id = asset_id.to_string();
