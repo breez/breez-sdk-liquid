@@ -241,7 +241,7 @@ impl Persister {
             });
         let unblinding_data = tx
             .unblinded_url("")
-            .replace(&format!("tx/{}#blinded=", tx_id), "");
+            .replace(&format!("tx/{tx_id}#blinded="), "");
         self.insert_or_update_payment(
             PaymentTxData {
                 tx_id: tx_id.clone(),
@@ -377,10 +377,11 @@ impl Persister {
         payment_tx_details: &PaymentTxDetails,
         skip_destination_update: bool,
     ) -> Result<()> {
-        let destination_update = skip_destination_update
-            .not()
-            .then_some("destination = excluded.destination,")
-            .unwrap_or_default();
+        let destination_update = if skip_destination_update.not() {
+            "destination = excluded.destination,"
+        } else {
+            Default::default()
+        };
         con.execute(
             &format!(
                 "INSERT INTO payment_details (
@@ -1097,7 +1098,7 @@ fn filter_to_where_clause(req: &ListPaymentsRequest) -> (String, Vec<Box<dyn ToS
                 "ptx.payment_type in ({})",
                 type_filter_clause
                     .iter()
-                    .map(|t| format!("{}", t))
+                    .map(|t| format!("{t}"))
                     .collect::<Vec<_>>()
                     .join(", ")
             ));

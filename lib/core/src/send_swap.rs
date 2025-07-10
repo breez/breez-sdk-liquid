@@ -363,8 +363,7 @@ impl SendSwapHandler {
         refund_tx_id: Option<&str>,
     ) -> Result<(), PaymentError> {
         info!(
-            "Transitioning Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
-            swap_id, to_state, lockup_tx_id, refund_tx_id
+            "Transitioning Send swap {swap_id} to {to_state:?} (lockup_tx_id = {lockup_tx_id:?}, refund_tx_id = {refund_tx_id:?})"
         );
         let swap = self.fetch_send_swap_by_id(swap_id)?;
         Self::validate_state_transition(swap.state, to_state)?;

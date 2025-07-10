@@ -414,7 +414,7 @@ impl LiquidSdk {
             ConnectWithSignerRequest { config: req.config },
             Box::new(signer),
         )
-        .inspect_err(|e| error!("Failed to connect: {:?}", e))
+        .inspect_err(|e| error!("Failed to connect: {e:?}"))
         .await
     }
 
@@ -487,10 +487,10 @@ impl LiquidSdk {
         let mut is_started = self.is_started.write().await;
         self.persister
             .update_send_swaps_by_state(Created, TimedOut, Some(true))
-            .inspect_err(|e| error!("Failed to update send swaps by state: {:?}", e))?;
+            .inspect_err(|e| error!("Failed to update send swaps by state: {e:?}"))?;
 
         self.start_background_tasks()
-            .inspect_err(|e| error!("Failed to start background tasks: {:?}", e))
+            .inspect_err(|e| error!("Failed to start background tasks: {e:?}"))
             .await?;
         *is_started = true;
         Ok(())
@@ -3936,7 +3936,7 @@ impl LiquidSdk {
             self.persister
                 .fetch_chain_swap_by_id(&swap_id)?
                 .ok_or(SdkError::Generic {
-                    err: format!("Could not find Swap {}", swap_id),
+                    err: format!("Could not find Swap {swap_id}"),
                 })?;
 
         ensure_sdk!(
@@ -4261,8 +4261,7 @@ impl LiquidSdk {
                         match preimage {
                             Some(preimage_str) => {
                                 debug!(
-                                    "Decrypting AES success action with preimage for Send Swap {}",
-                                    swap_id
+                                    "Decrypting AES success action with preimage for Send Swap {swap_id}"
                                 );
                                 let preimage =
                                     sha256::Hash::from_str(preimage_str).map_err(|_| {
@@ -4280,7 +4279,7 @@ impl LiquidSdk {
                                 Some(SuccessActionProcessed::Aes { result })
                             }
                             None => {
-                                debug!("Preimage not yet available to decrypt AES success action for Send Swap {}", swap_id);
+                                debug!("Preimage not yet available to decrypt AES success action for Send Swap {swap_id}");
                                 None
                             }
                         }
