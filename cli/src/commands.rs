@@ -17,6 +17,8 @@ use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
+use crate::Args;
+
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
     /// Send a payment directly or via a swap
@@ -315,6 +317,7 @@ macro_rules! wait_confirmation {
 pub(crate) async fn handle_command(
     rl: &mut Editor<CliHelper, DefaultHistory>,
     sdk: &Arc<LiquidSdk>,
+    args: &Args,
     command: Command,
 ) -> Result<String> {
     Ok(match command {
@@ -381,22 +384,26 @@ pub(crate) async fn handle_command(
             let mut result = command_result!(&response);
             result.push('\n');
 
-            match sdk.parse(&response.destination).await? {
-                InputType::Bolt11 { invoice } => result.push_str(&build_qr_text(&invoice.bolt11)),
-                InputType::Bolt12Offer { offer, .. } => {
-                    result.push_str(&build_qr_text(&offer.offer))
+            if !args.no_qrs {
+                match sdk.parse(&response.destination).await? {
+                    InputType::Bolt11 { invoice } => {
+                        result.push_str(&build_qr_text(&invoice.bolt11))
+                    }
+                    InputType::Bolt12Offer { offer, .. } => {
+                        result.push_str(&build_qr_text(&offer.offer))
+                    }
+                    InputType::LiquidAddress { address } => {
+                        result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
+                            anyhow!("Could not build BIP21 from address data: {e:?}")
+                        })?))
+                    }
+                    InputType::BitcoinAddress { address } => {
+                        result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
+                            anyhow!("Could not build BIP21 from address data: {e:?}")
+                        })?))
+                    }
+                    _ => {}
                 }
-                InputType::LiquidAddress { address } => {
-                    result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow!("Could not build BIP21 from address data: {e:?}")
-                    })?))
-                }
-                InputType::BitcoinAddress { address } => {
-                    result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                        anyhow!("Could not build BIP21 from address data: {e:?}")
-                    })?))
-                }
-                _ => {}
             }
             result
         }
@@ -547,8 +554,10 @@ pub(crate) async fn handle_command(
                 .await?;
 
             let mut result = command_result!(url.clone());
-            result.push('\n');
-            result.push_str(&build_qr_text(&url));
+            if !args.no_qrs {
+                result.push('\n');
+                result.push_str(&build_qr_text(&url));
+            }
             result
         }
         Command::GetInfo => {

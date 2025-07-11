@@ -30,6 +30,9 @@ pub(crate) struct Args {
 
     #[clap(long)]
     pub(crate) passphrase: Option<String>,
+
+    #[clap(long, default_value = "false")]
+    pub(crate) no_qrs: bool,
 }
 
 fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
@@ -61,7 +64,10 @@ impl EventListener for CliEventListener {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    let data_dir_str = args.data_dir.unwrap_or(DEFAULT_DATA_DIR.to_string());
+    let data_dir_str = args
+        .data_dir
+        .clone()
+        .unwrap_or(DEFAULT_DATA_DIR.to_string());
     let data_dir = PathBuf::from(&data_dir_str);
     fs::create_dir_all(&data_dir)?;
 
@@ -83,7 +89,7 @@ async fn main() -> Result<()> {
     }
 
     let mnemonic = persistence.get_or_create_mnemonic(args.phrase_path.as_deref())?;
-    let passphrase = args.passphrase;
+    let passphrase = args.passphrase.clone();
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
@@ -124,7 +130,7 @@ async fn main() -> Result<()> {
                     println!("{}", cli_res.unwrap_err());
                     continue;
                 }
-                let res = handle_command(rl, &sdk, cli_res.unwrap()).await;
+                let res = handle_command(rl, &sdk, &args, cli_res.unwrap()).await;
                 show_results(res)?;
             }
             Err(ReadlineError::Interrupted) => {
