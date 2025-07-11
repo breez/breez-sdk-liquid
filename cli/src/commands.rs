@@ -270,6 +270,8 @@ pub(crate) enum Command {
     ListFiat {},
     /// Fetch available fiat rates
     FetchFiatRates {},
+    /// Gets the Nostr Wallet Connect URI
+    GetNWCUri {},
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -827,6 +829,9 @@ pub(crate) async fn handle_command(
         Command::ListFiat {} => {
             let res = sdk.list_fiat_currencies().await?;
             command_result!(res)
+        }
+        Command::GetNWCUri {} => {
+            command_result!(sdk.get_nwc_uri().await?)
         }
     })
 }
