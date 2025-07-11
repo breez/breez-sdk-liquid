@@ -56,7 +56,7 @@ struct CliEventListener {}
 
 impl EventListener for CliEventListener {
     fn on_event(&self, e: SdkEvent) {
-        info!("Received event: {:?}", e);
+        info!("Received event: {e:?}");
     }
 }
 
@@ -144,7 +144,7 @@ async fn main() -> Result<()> {
                 break;
             }
             Err(err) => {
-                error!("Error: {:?}", err);
+                error!("Error: {err:?}");
                 break;
             }
         }

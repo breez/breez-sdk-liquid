@@ -59,10 +59,7 @@ impl Persister {
         ",
             (&address, expiry_block_height),
         )?;
-        debug!(
-            "Reserved address {} until block height {}",
-            address, expiry_block_height
-        );
+        debug!("Reserved address {address} until block height {expiry_block_height}");
 
         Ok(())
     }
