@@ -3329,32 +3329,45 @@ impl LiquidSdk {
     pub async fn list_refundables(&self) -> SdkResult<Vec<RefundableSwap>> {
         let chain_swaps = self.persister.list_refundable_chain_swaps()?;
 
-        let mut lockup_script_pubkeys = vec![];
+        let mut chain_swaps_with_scripts = vec![];
         for swap in &chain_swaps {
             let script_pubkey = swap.get_receive_lockup_swap_script_pubkey(self.config.network)?;
-            lockup_script_pubkeys.push(script_pubkey);
+            chain_swaps_with_scripts.push((swap, script_pubkey));
         }
-        let lockup_scripts: Vec<&boltz_client::bitcoin::Script> = lockup_script_pubkeys
+
+        let lockup_scripts: Vec<&boltz_client::bitcoin::Script> = chain_swaps_with_scripts
             .iter()
-            .map(|s| s.as_script())
+            .map(|(_, script_pubkey)| script_pubkey.as_script())
             .collect();
         let scripts_utxos = self
             .bitcoin_chain_service
             .get_scripts_utxos(&lockup_scripts)
             .await?;
 
-        let mut refundables = vec![];
-        for (chain_swap, script_utxos) in chain_swaps.into_iter().zip(scripts_utxos) {
-            let swap_id = &chain_swap.id;
-            let amount_sat = script_utxos
-                .iter()
-                .filter_map(|utxo| utxo.as_bitcoin().cloned())
-                .map(|(_, txo)| txo.value.to_sat())
-                .sum();
-            info!("Incoming Chain Swap {swap_id} is refundable with {amount_sat} sats");
+        let mut script_to_utxos_map = std::collections::HashMap::new();
+        for script_utxos in scripts_utxos {
+            if let Some(first_utxo) = script_utxos.first() {
+                if let Some((_, txo)) = first_utxo.as_bitcoin() {
+                    let script_pubkey: boltz_client::bitcoin::ScriptBuf = txo.script_pubkey.clone();
+                    script_to_utxos_map.insert(script_pubkey, script_utxos);
+                }
+            }
+        }
 
-            let refundable: RefundableSwap = chain_swap.to_refundable(amount_sat);
-            refundables.push(refundable);
+        let mut refundables = vec![];
+
+        for (chain_swap, script_pubkey) in chain_swaps_with_scripts {
+            if let Some(script_utxos) = script_to_utxos_map.get(&script_pubkey) {
+                let swap_id = &chain_swap.id;
+                let amount_sat: u64 = script_utxos
+                    .iter()
+                    .filter_map(|utxo| utxo.as_bitcoin().cloned())
+                    .map(|(_, txo)| txo.value.to_sat())
+                    .sum();
+                info!("Incoming Chain Swap {swap_id} is refundable with {amount_sat} sats");
+
+                refundables.push(chain_swap.to_refundable(amount_sat));
+            }
         }
 
         Ok(refundables)
