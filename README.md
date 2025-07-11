@@ -99,6 +99,7 @@ Contributions are always welcome. Please read our [contribution guide](CONTRIBUT
 - [x]  Lower minimum payment amount
 - [x]  WebAssembly
 - [x]  Bolt12 receive
+- [x]  Add fees via a dedicated portal
 - [ ]  USDT <-> LBTC swaps
 - [ ]  WebLN
 - [ ]  NWC
