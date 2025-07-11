@@ -11,7 +11,7 @@ pub struct WasmError(JsValue);
 
 impl WasmError {
     pub fn new<T: Display>(val: T) -> Self {
-        WasmError(JsValue::from(format!("{}", val)))
+        WasmError(JsValue::from(format!("{val}")))
     }
 }
 

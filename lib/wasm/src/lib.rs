@@ -69,7 +69,7 @@ async fn connect_inner(
     let maybe_db_backup_persister = platform::create_db_backup_persister(&wallet_dir).ok();
     let maybe_backup_bytes = match &maybe_db_backup_persister {
         Some(p) => p.load_backup().await.unwrap_or_else(|e| {
-            log::error!("Failed to load db backup: {:?}", e);
+            log::error!("Failed to load db backup: {e:?}");
             None
         }),
         None => None,

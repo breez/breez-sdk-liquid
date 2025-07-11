@@ -171,6 +171,7 @@ pub(crate) mod chain_swap;
 pub mod error;
 pub(crate) mod event;
 #[allow(deprecated)]
+#[allow(clippy::all)]
 #[cfg(feature = "frb")]
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub(crate) mod frb_generated;

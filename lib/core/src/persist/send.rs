@@ -127,7 +127,7 @@ impl Persister {
         if let Some(is_local) = is_local {
             let mut where_is_local = format!("sync_state.is_local = {}", is_local as u8);
             if is_local {
-                where_is_local = format!("({} OR sync_state.is_local IS NULL)", where_is_local);
+                where_is_local = format!("({where_is_local} OR sync_state.is_local IS NULL)");
             }
             where_clauses.push(where_is_local);
         }
