@@ -3969,10 +3969,12 @@ impl SseDecode for crate::model::PayAmount {
                 let mut var_assetId = <String>::sse_decode(deserializer);
                 let mut var_receiverAmount = <f64>::sse_decode(deserializer);
                 let mut var_estimateAssetFees = <Option<bool>>::sse_decode(deserializer);
+                let mut var_useWalletAssets = <Option<bool>>::sse_decode(deserializer);
                 return crate::model::PayAmount::Asset {
                     asset_id: var_assetId,
                     receiver_amount: var_receiverAmount,
                     estimate_asset_fees: var_estimateAssetFees,
+                    use_wallet_assets: var_useWalletAssets,
                 };
             }
             2 => {
@@ -6402,11 +6404,13 @@ impl flutter_rust_bridge::IntoDart for crate::model::PayAmount {
                 asset_id,
                 receiver_amount,
                 estimate_asset_fees,
+                use_wallet_assets,
             } => [
                 1.into_dart(),
                 asset_id.into_into_dart().into_dart(),
                 receiver_amount.into_into_dart().into_dart(),
                 estimate_asset_fees.into_into_dart().into_dart(),
+                use_wallet_assets.into_into_dart().into_dart(),
             ]
             .into_dart(),
             crate::model::PayAmount::Drain => [2.into_dart()].into_dart(),
@@ -8808,11 +8812,13 @@ impl SseEncode for crate::model::PayAmount {
                 asset_id,
                 receiver_amount,
                 estimate_asset_fees,
+                use_wallet_assets,
             } => {
                 <i32>::sse_encode(1, serializer);
                 <String>::sse_encode(asset_id, serializer);
                 <f64>::sse_encode(receiver_amount, serializer);
                 <Option<bool>>::sse_encode(estimate_asset_fees, serializer);
+                <Option<bool>>::sse_encode(use_wallet_assets, serializer);
             }
             crate::model::PayAmount::Drain => {
                 <i32>::sse_encode(2, serializer);
@@ -11137,6 +11143,7 @@ mod io {
                         asset_id: ans.asset_id.cst_decode(),
                         receiver_amount: ans.receiver_amount.cst_decode(),
                         estimate_asset_fees: ans.estimate_asset_fees.cst_decode(),
+                        use_wallet_assets: ans.use_wallet_assets.cst_decode(),
                     }
                 }
                 2 => crate::model::PayAmount::Drain,
@@ -15067,6 +15074,7 @@ mod io {
         asset_id: *mut wire_cst_list_prim_u_8_strict,
         receiver_amount: f64,
         estimate_asset_fees: *mut bool,
+        use_wallet_assets: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

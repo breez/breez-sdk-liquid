@@ -4322,7 +4322,9 @@ enum BreezSDKLiquidMapper {
             }
             let _estimateAssetFees = payAmount["estimateAssetFees"] as? Bool
 
-            return PayAmount.asset(assetId: _assetId, receiverAmount: _receiverAmount, estimateAssetFees: _estimateAssetFees)
+            let _useWalletAssets = payAmount["useWalletAssets"] as? Bool
+
+            return PayAmount.asset(assetId: _assetId, receiverAmount: _receiverAmount, estimateAssetFees: _estimateAssetFees, useWalletAssets: _useWalletAssets)
         }
         if type == "drain" {
             return PayAmount.drain
@@ -4342,13 +4344,14 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .asset(
-            assetId, receiverAmount, estimateAssetFees
+            assetId, receiverAmount, estimateAssetFees, useWalletAssets
         ):
             return [
                 "type": "asset",
                 "assetId": assetId,
                 "receiverAmount": receiverAmount,
                 "estimateAssetFees": estimateAssetFees == nil ? nil : estimateAssetFees,
+                "useWalletAssets": useWalletAssets == nil ? nil : useWalletAssets,
             ]
 
         case .drain:

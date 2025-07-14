@@ -869,12 +869,15 @@ as BigInt,
 
 
 class PayAmount_Asset extends PayAmount {
-  const PayAmount_Asset({required this.assetId, required this.receiverAmount, this.estimateAssetFees}): super._();
+  const PayAmount_Asset({required this.assetId, required this.receiverAmount, this.estimateAssetFees, this.useWalletAssets}): super._();
   
 
  final  String assetId;
  final  double receiverAmount;
  final  bool? estimateAssetFees;
+/// Specifies whether or not to use the wallet's funds to execute the payment. Defaults to true.
+/// If false, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
+ final  bool? useWalletAssets;
 
 /// Create a copy of PayAmount
 /// with the given fields replaced by the non-null parameter values.
@@ -886,16 +889,16 @@ $PayAmount_AssetCopyWith<PayAmount_Asset> get copyWith => _$PayAmount_AssetCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PayAmount_Asset&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.receiverAmount, receiverAmount) || other.receiverAmount == receiverAmount)&&(identical(other.estimateAssetFees, estimateAssetFees) || other.estimateAssetFees == estimateAssetFees));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PayAmount_Asset&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.receiverAmount, receiverAmount) || other.receiverAmount == receiverAmount)&&(identical(other.estimateAssetFees, estimateAssetFees) || other.estimateAssetFees == estimateAssetFees)&&(identical(other.useWalletAssets, useWalletAssets) || other.useWalletAssets == useWalletAssets));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,assetId,receiverAmount,estimateAssetFees);
+int get hashCode => Object.hash(runtimeType,assetId,receiverAmount,estimateAssetFees,useWalletAssets);
 
 @override
 String toString() {
-  return 'PayAmount.asset(assetId: $assetId, receiverAmount: $receiverAmount, estimateAssetFees: $estimateAssetFees)';
+  return 'PayAmount.asset(assetId: $assetId, receiverAmount: $receiverAmount, estimateAssetFees: $estimateAssetFees, useWalletAssets: $useWalletAssets)';
 }
 
 
@@ -906,7 +909,7 @@ abstract mixin class $PayAmount_AssetCopyWith<$Res> implements $PayAmountCopyWit
   factory $PayAmount_AssetCopyWith(PayAmount_Asset value, $Res Function(PayAmount_Asset) _then) = _$PayAmount_AssetCopyWithImpl;
 @useResult
 $Res call({
- String assetId, double receiverAmount, bool? estimateAssetFees
+ String assetId, double receiverAmount, bool? estimateAssetFees, bool? useWalletAssets
 });
 
 
@@ -923,11 +926,12 @@ class _$PayAmount_AssetCopyWithImpl<$Res>
 
 /// Create a copy of PayAmount
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? assetId = null,Object? receiverAmount = null,Object? estimateAssetFees = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? assetId = null,Object? receiverAmount = null,Object? estimateAssetFees = freezed,Object? useWalletAssets = freezed,}) {
   return _then(PayAmount_Asset(
 assetId: null == assetId ? _self.assetId : assetId // ignore: cast_nullable_to_non_nullable
 as String,receiverAmount: null == receiverAmount ? _self.receiverAmount : receiverAmount // ignore: cast_nullable_to_non_nullable
 as double,estimateAssetFees: freezed == estimateAssetFees ? _self.estimateAssetFees : estimateAssetFees // ignore: cast_nullable_to_non_nullable
+as bool?,useWalletAssets: freezed == useWalletAssets ? _self.useWalletAssets : useWalletAssets // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));
 }
