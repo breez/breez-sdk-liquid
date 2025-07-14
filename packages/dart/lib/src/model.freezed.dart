@@ -1,6 +1,5 @@
-// dart format width=80
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -71,6 +70,7 @@ as String,
 }
 
 }
+
 
 
 /// @nodoc
@@ -238,6 +238,7 @@ $GetPaymentRequestCopyWith(GetPaymentRequest _, $Res Function(GetPaymentRequest)
 }
 
 
+
 /// @nodoc
 
 
@@ -398,6 +399,7 @@ String toString() {
 class $ListPaymentDetailsCopyWith<$Res>  {
 $ListPaymentDetailsCopyWith(ListPaymentDetails _, $Res Function(ListPaymentDetails) __);
 }
+
 
 
 /// @nodoc
@@ -565,6 +567,7 @@ String toString() {
 class $LnUrlPayResultCopyWith<$Res>  {
 $LnUrlPayResultCopyWith(LnUrlPayResult _, $Res Function(LnUrlPayResult) __);
 }
+
 
 
 /// @nodoc
@@ -795,6 +798,7 @@ $PayAmountCopyWith(PayAmount _, $Res Function(PayAmount) __);
 }
 
 
+
 /// @nodoc
 
 
@@ -1023,6 +1027,7 @@ as String,
 }
 
 }
+
 
 
 /// @nodoc
@@ -1343,6 +1348,7 @@ $ReceiveAmountCopyWith(ReceiveAmount _, $Res Function(ReceiveAmount) __);
 }
 
 
+
 /// @nodoc
 
 
@@ -1505,6 +1511,7 @@ String toString() {
 class $SdkEventCopyWith<$Res>  {
 $SdkEventCopyWith(SdkEvent _, $Res Function(SdkEvent) __);
 }
+
 
 
 /// @nodoc
@@ -2194,6 +2201,7 @@ as String?,
 }
 
 }
+
 
 
 /// @nodoc
