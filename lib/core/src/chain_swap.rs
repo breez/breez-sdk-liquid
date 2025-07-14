@@ -1004,7 +1004,7 @@ impl ChainSwapHandler {
             .persister
             .fetch_chain_swap_by_lockup_address(lockup_address)?
             .ok_or(PaymentError::Generic {
-                err: format!("Swap for lockup address {} not found", lockup_address),
+                err: format!("Swap for lockup address {lockup_address} not found"),
             })?;
         let id = &swap.id;
 

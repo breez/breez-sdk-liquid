@@ -126,7 +126,7 @@ impl SyncService {
                 pushed_records_count,
             },
         }) {
-            warn!("realtime-sync: Could not send sync completed event {:?}", e);
+            warn!("realtime-sync: Could not send sync completed event {e:?}");
         }
 
         *failed_push_counter = 0;
@@ -162,8 +162,7 @@ impl SyncService {
                     Ok(trigger) => trigger,
                     Err(e) => {
                         warn!(
-                            "realtime-sync: new_listener returned error: {:?} waiting 3 seconds",
-                            e
+                            "realtime-sync: new_listener returned error: {e:?} waiting 3 seconds"
                         );
                         sleep(Duration::from_secs(3)).await;
                         continue;
@@ -554,9 +553,9 @@ impl SyncService {
             .as_ref()
             .map(|s| s.record_revision)
             .unwrap_or(0);
-        trace!("realtime-sync: Got revision: {}", record_revision);
+        trace!("realtime-sync: Got revision: {record_revision}");
         let is_local = maybe_sync_state.map(|s| s.is_local).unwrap_or(true);
-        trace!("realtime-sync: Got is local: {}", is_local);
+        trace!("realtime-sync: Got is local: {is_local}");
 
         // Step 2: Fetch the sync data
         let sync_data = self

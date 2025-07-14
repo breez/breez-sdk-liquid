@@ -737,8 +737,7 @@ pub(crate) async fn handle_command(
                             let min_sendable = (pd.min_sendable as f64 / 1000.0).ceil() as u64;
                             let max_sendable = pd.max_sendable / 1000;
                             let prompt = format!(
-                                "Amount to pay (min {} sat, max {} sat): ",
-                                min_sendable, max_sendable
+                                "Amount to pay (min {min_sendable} sat, max {max_sendable} sat): "
                             );
                             let amount_sat = rl.readline(&prompt)?;
                             PayAmount::Bitcoin {

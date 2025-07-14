@@ -138,8 +138,7 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
                 true => {
                     retry += 1;
                     info!(
-                        "Script history for {} got zero transactions, retrying in {} seconds...",
-                        script_hash, retry
+                        "Script history for {script_hash} got zero transactions, retrying in {retry} seconds..."
                     );
                     tokio::time::sleep(Duration::from_secs(retry)).await;
                 }
@@ -263,8 +262,7 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
                 } => {
                     retry += 1;
                     info!(
-                        "Got zero balance for script {}, retrying in {} seconds...",
-                        script_hash, retry
+                        "Got zero balance for script {script_hash}, retrying in {retry} seconds..."
                     );
                     tokio::time::sleep(Duration::from_secs(retry)).await;
                 }

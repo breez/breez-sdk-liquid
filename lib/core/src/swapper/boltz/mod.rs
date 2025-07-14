@@ -457,8 +457,8 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
 
                     warn!(
                         "Failed to create claim tx (likely due to concurrent instance attempting \
-                        to claim), attempt {}/{}. Retrying in {}s. Error: {:?}",
-                        attempts, MAX_RETRY_ATTEMPTS, delay_with_jitter_secs, e
+                        to claim), attempt {attempts}/{MAX_RETRY_ATTEMPTS}. Retrying in \
+                        {delay_with_jitter_secs}s. Error: {e:?}"
                     );
                     sleep(Duration::from_secs(delay_with_jitter_secs)).await;
 

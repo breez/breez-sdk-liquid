@@ -18,7 +18,7 @@ use elements::{AssetId, Transaction, TxIn, TxInWitness, Txid};
 use lwk_wollet::{hashes::Hash, WalletTx};
 
 pub(crate) fn create_lbtc_history_txid(hex_id: &str, height: i32) -> LBtcHistory {
-    let txid_bytes = hex::decode(format!("{:0>64}", hex_id)).unwrap();
+    let txid_bytes = hex::decode(format!("{hex_id:0>64}")).unwrap();
     let mut txid_array = [0u8; 32];
     txid_array.copy_from_slice(&txid_bytes);
 
@@ -29,7 +29,7 @@ pub(crate) fn create_lbtc_history_txid(hex_id: &str, height: i32) -> LBtcHistory
 }
 
 pub(crate) fn create_btc_history_txid(hex_id: &str, height: i32) -> BtcHistory {
-    let txid_bytes = hex::decode(format!("{:0>64}", hex_id)).unwrap();
+    let txid_bytes = hex::decode(format!("{hex_id:0>64}")).unwrap();
     let mut txid_array = [0u8; 32];
     txid_array.copy_from_slice(&txid_bytes);
 

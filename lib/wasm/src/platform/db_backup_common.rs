@@ -18,7 +18,7 @@ impl ForwardingEventListener {
 impl EventListener for ForwardingEventListener {
     fn on_event(&self, e: SdkEvent) {
         if let Err(e) = self.sender.try_send(e) {
-            log::error!("Failed to forward event: {:?}", e);
+            log::error!("Failed to forward event: {e:?}");
         }
     }
 }
@@ -52,7 +52,7 @@ impl BackupPersister {
                 let bytes = match persister.serialize() {
                     Ok(bytes) => bytes,
                     Err(e) => {
-                        log::error!("Failed to serialize persister: {:?}", e);
+                        log::error!("Failed to serialize persister: {e:?}");
                         continue;
                     }
                 };
@@ -65,7 +65,7 @@ impl BackupPersister {
                     _ => continue,
                 };
                 if let Err(e) = res {
-                    log::error!("Failed to backup to IndexedDB: {:?}", e);
+                    log::error!("Failed to backup to IndexedDB: {e:?}");
                 };
 
                 let backup_duration_ms = start.elapsed().as_millis();

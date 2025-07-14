@@ -12,7 +12,7 @@ pub(crate) struct IndexedDbBackupStorage {
 
 impl IndexedDbBackupStorage {
     pub fn new(backup_dir_path: &str) -> Self {
-        let db_name = format!("{}-db-backup", backup_dir_path);
+        let db_name = format!("{backup_dir_path}-db-backup");
         Self { db_name }
     }
 }

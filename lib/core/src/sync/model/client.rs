@@ -29,7 +29,7 @@ impl ListChangesRequest {
         signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self, SignerError> {
         let request_time = utils::now();
-        let msg = format!("{}-{}", since_revision, request_time);
+        let msg = format!("{since_revision}-{request_time}");
         let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
             since_revision,
@@ -53,9 +53,9 @@ impl SetRecordRequest {
             *CURRENT_SCHEMA_VERSION,
             request_time,
         );
-        trace!("About to sign message: {}", msg);
+        trace!("About to sign message: {msg}");
         let signature = sign_message(msg.as_bytes(), signer)?;
-        trace!("Got signature: {}", signature);
+        trace!("Got signature: {signature}");
         Ok(Self {
             record: Some(record),
             request_time,
@@ -67,7 +67,7 @@ impl SetRecordRequest {
 impl ListenChangesRequest {
     pub(crate) fn new(signer: Arc<Box<dyn Signer>>) -> Result<Self, SignerError> {
         let request_time = utils::now();
-        let msg = format!("{}", request_time);
+        let msg = format!("{request_time}");
         let signature = sign_message(msg.as_bytes(), signer)?;
         Ok(Self {
             request_time,
