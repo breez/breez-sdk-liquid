@@ -1249,6 +1249,7 @@ impl LiquidSdk {
                                 asset_id,
                                 receiver_amount: amount,
                                 estimate_asset_fees: None,
+                                use_wallet_funds: None,
                             }
                         }
                     }
@@ -1318,6 +1319,7 @@ impl LiquidSdk {
                         asset_id,
                         receiver_amount,
                         estimate_asset_fees,
+                        use_wallet_funds,
                     } => {
                         let estimate_asset_fees = estimate_asset_fees.unwrap_or(false);
                         let asset_metadata = self.persister.get_asset_metadata(&asset_id)?.ok_or(
@@ -1326,16 +1328,8 @@ impl LiquidSdk {
                             },
                         )?;
                         let receiver_amount_sat = asset_metadata.amount_to_sat(receiver_amount);
-                        let wallet_asset_balance = get_info_res
-                            .wallet_info
-                            .asset_balances
-                            .iter()
-                            .find(|ab| ab.asset_id == asset_id)
-                            .map(|ab| ab.balance_sat)
-                            .unwrap_or_default();
 
-                        match wallet_asset_balance >= receiver_amount_sat {
-                            // If we have enough funds for that asset, try making a direct payment
+                        match use_wallet_funds.unwrap_or(true) {
                             true => {
                                 let fees_sat_res = self
                                     .estimate_onchain_tx_or_drain_tx_fee(
@@ -1365,7 +1359,6 @@ impl LiquidSdk {
                                 };
                                 (asset_id, receiver_amount_sat, fees_sat, asset_fees)
                             }
-                            // If not, try and prepare the payment via SideSwap
                             false => {
                                 let asset_id = AssetId::from_str(&asset_id)?;
                                 let sideswap_service = SideSwapService::from_sdk(self);
@@ -1662,20 +1655,14 @@ impl LiquidSdk {
                         validate_sufficient_funds()?;
                     }
 
-                    let wallet_lbtc_balance = get_info_res.wallet_info.balance_sat;
-                    let wallet_asset_balance = get_info_res
-                        .wallet_info
-                        .asset_balances
-                        .iter()
-                        .find(|ab| ab.asset_id == *asset_id)
-                        .map(|ab| ab.balance_sat)
-                        .unwrap_or_default();
+                    let use_wallet_funds = match req.prepare_response.amount {
+                        Some(PayAmount::Asset {
+                            use_wallet_funds, ..
+                        }) => use_wallet_funds.unwrap_or(true),
+                        _ => true,
+                    };
 
-                    // If it's a Liquid payment, or we have enough funds for that asset to execute the payment directly, then do so
-                    if is_liquid_payment
-                        || (wallet_asset_balance >= receiver_amount_sat
-                            && wallet_lbtc_balance > fees_sat)
-                    {
+                    if is_liquid_payment || use_wallet_funds {
                         self.pay_liquid(
                             liquid_address_data.clone(),
                             receiver_amount_sat,
@@ -1683,9 +1670,7 @@ impl LiquidSdk {
                             true,
                         )
                         .await?
-                    }
-                    // Else, try via SideSwap
-                    else {
+                    } else {
                         let sideswap_service = SideSwapService::from_sdk(self);
                         let res = self
                             .pay_sideswap(
