@@ -23,7 +23,7 @@ clean:
 frb:
 	# This is locked plist PR https://github.com/ebarnard/rust-plist/pull/152 is merged/released
 	cargo install cargo-expand --locked
-	cargo install flutter_rust_bridge_codegen --version 2.9.0
+	cargo install flutter_rust_bridge_codegen --version 2.11.1
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
