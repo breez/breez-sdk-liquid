@@ -66,6 +66,12 @@ pub(crate) enum Command {
         /// Delay for the send, in seconds
         #[arg(long)]
         delay: Option<u64>,
+
+        /// Can only be used when a non-LBTC asset is provided, along with an amount and destination
+        /// Specifies whether or not to swap bitcoin for the provided asset, or use the wallet's
+        /// assets (if present)
+        #[clap(long, action = ArgAction::SetTrue)]
+        use_bitcoin: Option<bool>,
     },
     /// Fetch the current limits for Send and Receive payments
     FetchLightningLimits,
@@ -420,21 +426,39 @@ pub(crate) async fn handle_command(
             offer,
             payer_note,
             address,
-            amount,
+            mut amount,
             amount_sat,
-            asset_id,
+            mut asset_id,
             use_asset_fees,
             drain,
             delay,
+            use_bitcoin: pay_with_bitcoin,
         } => {
-            let destination = invoice.or(offer.or(address)).ok_or(anyhow!(
+            let destination = invoice.or(offer.or(address.clone())).ok_or(anyhow!(
                 "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
             ))?;
+
+            if let Some(address) = &address {
+                if let Ok(InputType::LiquidAddress {
+                    address:
+                        LiquidAddressData {
+                            asset_id: address_asset_id,
+                            amount: address_amount,
+                            ..
+                        },
+                }) = parse(address, None).await
+                {
+                    asset_id = asset_id.or(address_asset_id);
+                    amount = amount.or(address_amount);
+                };
+            }
+
             let amount = match (asset_id, amount, amount_sat, drain.unwrap_or(false)) {
                 (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
                     asset_id,
                     receiver_amount,
                     estimate_asset_fees: use_asset_fees,
+                    pay_with_bitcoin,
                 }),
                 (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
                     receiver_amount_sat,

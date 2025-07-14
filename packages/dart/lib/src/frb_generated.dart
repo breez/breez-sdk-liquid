@@ -2791,6 +2791,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           assetId: dco_decode_String(raw[1]),
           receiverAmount: dco_decode_f_64(raw[2]),
           estimateAssetFees: dco_decode_opt_box_autoadd_bool(raw[3]),
+          payWithBitcoin: dco_decode_opt_box_autoadd_bool(raw[4]),
         );
       case 2:
         return PayAmount_Drain();
@@ -5158,10 +5159,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_assetId = sse_decode_String(deserializer);
         var var_receiverAmount = sse_decode_f_64(deserializer);
         var var_estimateAssetFees = sse_decode_opt_box_autoadd_bool(deserializer);
+        var var_payWithBitcoin = sse_decode_opt_box_autoadd_bool(deserializer);
         return PayAmount_Asset(
           assetId: var_assetId,
           receiverAmount: var_receiverAmount,
           estimateAssetFees: var_estimateAssetFees,
+          payWithBitcoin: var_payWithBitcoin,
         );
       case 2:
         return PayAmount_Drain();
@@ -7488,11 +7491,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         assetId: final assetId,
         receiverAmount: final receiverAmount,
         estimateAssetFees: final estimateAssetFees,
+        payWithBitcoin: final payWithBitcoin,
       ):
         sse_encode_i_32(1, serializer);
         sse_encode_String(assetId, serializer);
         sse_encode_f_64(receiverAmount, serializer);
         sse_encode_opt_box_autoadd_bool(estimateAssetFees, serializer);
+        sse_encode_opt_box_autoadd_bool(payWithBitcoin, serializer);
       case PayAmount_Drain():
         sse_encode_i_32(2, serializer);
     }

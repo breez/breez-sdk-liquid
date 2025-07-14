@@ -787,6 +787,9 @@ pub enum PayAmount {
         asset_id: String,
         receiver_amount: f64,
         estimate_asset_fees: Option<bool>,
+        /// Specifies whether or not to always use the wallet's L-BTC to execute the payment.
+        /// If true, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
+        pay_with_bitcoin: Option<bool>,
     },
 
     /// Indicates that all available Bitcoin funds should be sent
