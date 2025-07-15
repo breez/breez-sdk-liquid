@@ -227,10 +227,9 @@ impl Persister {
     }
 
     pub(crate) fn has_chain_swaps(&self) -> Result<bool> {
-        // The following may be optimized to not fetch all chain swaps
         let con: Connection = self.get_connection()?;
-        let chain_swaps = self.list_chain_swaps_where(&con, vec![])?;
-        Ok(!chain_swaps.is_empty())
+        let result = con.query_row("SELECT 1 FROM chain_swaps LIMIT 1", [], |_| Ok(()));
+        Ok(result.is_ok())
     }
 
     pub(crate) fn list_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
