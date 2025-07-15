@@ -226,12 +226,6 @@ impl Persister {
         })
     }
 
-    pub(crate) fn has_chain_swaps(&self) -> Result<bool> {
-        let con: Connection = self.get_connection()?;
-        let result = con.query_row("SELECT 1 FROM chain_swaps LIMIT 1", [], |_| Ok(()));
-        Ok(result.is_ok())
-    }
-
     pub(crate) fn list_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
         let con: Connection = self.get_connection()?;
         self.list_chain_swaps_where(&con, vec![])
