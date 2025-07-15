@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, ensure, Result};
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 
 use super::handlers::{
     ChainReceiveSwapHandler, ChainSendSwapHandler, ReceiveSwapHandler, SendSwapHandler,
@@ -133,7 +133,7 @@ impl Recoverer {
                 }
                 Swap::Chain(s) => {
                     let Some(recovery_context) = &chain_swap_recovery_context else {
-                        warn!("Skipping recovery for chain swap {swap_id} because chain swaps recovery context is not available");
+                        error!("Skipping recovery for chain swap {swap_id} because chain swaps recovery context is not available");
                         continue;
                     };
                     match s.direction {
