@@ -39,7 +39,7 @@ impl ChainSendSwapHandler {
     /// Recover and update a chain send swap with data from the chain
     pub async fn recover_swap(
         chain_swap: &mut ChainSwap,
-        context: &RecoveryContext,
+        context: &ChainSwapRecoveryContext,
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();

@@ -595,43 +595,46 @@ impl LiquidSdk {
                 is_new_liquid_block
             }
             Err(e) => {
-                error!("Failed to fetch Liquid tip {e}");
+                error!("Failed to fetch Liquid tip: {e}");
                 false
             }
         };
-        // Get the Bitcoin tip and process a new block
-        let t0 = Instant::now();
-        let bitcoin_tip_res = self.bitcoin_chain_service.tip().await;
-        let duration_ms = Instant::now().duration_since(t0).as_millis();
-        info!("Fetched bitcoin tip at ({duration_ms} ms)");
-        let is_new_bitcoin_block = match &bitcoin_tip_res {
-            Ok(height) => {
-                debug!("Got Bitcoin tip: {height}");
-                let is_new_bitcoin_block = *height > *current_bitcoin_block;
-                *current_bitcoin_block = *height;
-                is_new_bitcoin_block
-            }
-            Err(e) => {
-                error!("Failed to fetch Bitcoin tip {e}");
-                false
-            }
-        };
-
-        let maybe_chain_tips =
-            if let (Ok(liquid_tip), Ok(bitcoin_tip)) = (liquid_tip_res, bitcoin_tip_res) {
-                self.persister
-                    .set_blockchain_info(&BlockchainInfo {
-                        liquid_tip,
-                        bitcoin_tip,
-                    })
-                    .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
-                Some(ChainTips {
-                    liquid_tip,
-                    bitcoin_tip,
-                })
+        // Get the Bitcoin tip and process a new block (only if chain swaps are used)
+        let (maybe_bitcoin_tip, is_new_bitcoin_block) =
+            if self.persister.has_chain_swaps().unwrap_or_default().not() {
+                info!("No known chain swaps, skipping bitcoin tip fetch");
+                (None, false)
             } else {
-                None
+                let t0 = Instant::now();
+                let bitcoin_tip_res = self.bitcoin_chain_service.tip().await;
+                let duration_ms = Instant::now().duration_since(t0).as_millis();
+                info!("Fetched bitcoin tip at ({duration_ms} ms)");
+                let is_new_bitcoin_block = match &bitcoin_tip_res {
+                    Ok(height) => {
+                        debug!("Got Bitcoin tip: {height}");
+                        let is_new_bitcoin_block = *height > *current_bitcoin_block;
+                        *current_bitcoin_block = *height;
+                        is_new_bitcoin_block
+                    }
+                    Err(e) => {
+                        error!("Failed to fetch Bitcoin tip: {e}");
+                        false
+                    }
+                };
+                (bitcoin_tip_res.ok(), is_new_bitcoin_block)
             };
+
+        let maybe_chain_tips = if let Ok(liquid_tip) = liquid_tip_res {
+            self.persister
+                .update_blockchain_info(liquid_tip, maybe_bitcoin_tip)
+                .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
+            Some(ChainTips {
+                liquid_tip,
+                bitcoin_tip: maybe_bitcoin_tip,
+            })
+        } else {
+            None
+        };
 
         // Only partial sync when there are no new Liquid or Bitcoin blocks
         let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
@@ -3582,13 +3585,20 @@ impl LiquidSdk {
                     .into_iter()
                     .map(Into::into)
                     .collect();
-                let chain_swaps: Vec<Swap> = self
-                    .persister
-                    .list_chain_swaps()?
+                let all_chain_swaps: Vec<ChainSwap> = self.persister.list_chain_swaps()?;
+                if all_chain_swaps.is_empty() {
+                    return Ok([receive_swaps, send_swaps].concat());
+                }
+                // There are some chain swaps, so we need to filter them out based on the bitcoin tip, which may not be available
+                let Some(bitcoin_tip) = chain_tips.bitcoin_tip else {
+                    warn!("Skipping tracking of chain swaps because bitcoin tip is not available");
+                    return Ok([receive_swaps, send_swaps].concat());
+                };
+                let chain_swaps: Vec<Swap> = all_chain_swaps
                     .into_iter()
                     .filter(|swap| match swap.direction {
                         Direction::Incoming => {
-                            chain_tips.bitcoin_tip
+                            bitcoin_tip
                                 <= swap.timeout_block_height
                                     + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
                         }
@@ -4021,7 +4031,14 @@ impl LiquidSdk {
         let chain_tips = match maybe_chain_tips {
             None => ChainTips {
                 liquid_tip: self.liquid_chain_service.tip().await?,
-                bitcoin_tip: self.bitcoin_chain_service.tip().await?,
+                bitcoin_tip: {
+                    if self.persister.has_chain_swaps()?.not() {
+                        info!("No known chain swaps, skipping bitcoin tip fetch");
+                        None
+                    } else {
+                        self.bitcoin_chain_service.tip().await.ok()
+                    }
+                },
             },
             Some(tips) => tips,
         };

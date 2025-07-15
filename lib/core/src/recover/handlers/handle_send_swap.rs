@@ -40,7 +40,7 @@ impl SendSwapHandler {
     /// Recover and update a send swap with data from the chain
     pub async fn recover_swap(
         send_swap: &mut SendSwap,
-        context: &RecoveryContext,
+        context: &ReceiveOrSendSwapRecoveryContext,
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = send_swap.id.clone();
@@ -188,7 +188,7 @@ impl SendSwapHandler {
 
     /// Tries to recover the preimage for a send swap
     async fn recover_preimage(
-        context: &RecoveryContext,
+        context: &ReceiveOrSendSwapRecoveryContext,
         claim_tx_id: Option<LBtcHistory>,
         swap_id: &str,
         swapper: Arc<dyn Swapper>,

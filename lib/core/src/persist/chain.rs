@@ -226,6 +226,13 @@ impl Persister {
         })
     }
 
+    pub(crate) fn has_chain_swaps(&self) -> Result<bool> {
+        // The following may be optimized to not fetch all chain swaps
+        let con: Connection = self.get_connection()?;
+        let chain_swaps = self.list_chain_swaps_where(&con, vec![])?;
+        Ok(!chain_swaps.is_empty())
+    }
+
     pub(crate) fn list_chain_swaps(&self) -> Result<Vec<ChainSwap>> {
         let con: Connection = self.get_connection()?;
         self.list_chain_swaps_where(&con, vec![])

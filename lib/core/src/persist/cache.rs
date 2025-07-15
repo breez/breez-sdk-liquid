@@ -71,8 +71,26 @@ impl Persister {
         self.update_cached_item(KEY_WALLET_INFO, serialized_info)
     }
 
-    pub fn set_blockchain_info(&self, info: &BlockchainInfo) -> Result<()> {
-        let serialized_info = serde_json::to_string(info)?;
+    pub fn update_blockchain_info(&self, liquid_tip: u32, bitcoin_tip: Option<u32>) -> Result<()> {
+        let info = match bitcoin_tip {
+            Some(bitcoin_tip) => BlockchainInfo {
+                liquid_tip,
+                bitcoin_tip,
+            },
+            None => {
+                let current_tip = self
+                    .get_cached_item(KEY_BLOCKCHAIN_INFO)?
+                    .and_then(|info| serde_json::from_str::<BlockchainInfo>(&info).ok())
+                    .map(|info| info.bitcoin_tip)
+                    .unwrap_or(0);
+                BlockchainInfo {
+                    liquid_tip,
+                    bitcoin_tip: current_tip,
+                }
+            }
+        };
+
+        let serialized_info = serde_json::to_string(&info)?;
         self.update_cached_item(KEY_BLOCKCHAIN_INFO, serialized_info)
     }
 

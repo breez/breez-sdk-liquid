@@ -10,6 +10,7 @@ use crate::prelude::*;
 use crate::swapper::Swapper;
 
 /// A map of all our known LWK onchain txs, indexed by tx ID. Essentially our own cache of the LWK txs.
+#[derive(Clone)]
 pub(crate) struct TxMap {
     pub(crate) outgoing_tx_map: HashMap<elements::Txid, WalletTx>,
     pub(crate) incoming_tx_map: HashMap<elements::Txid, WalletTx>,
@@ -141,13 +142,19 @@ impl SwapsList {
     }
 }
 
-pub(crate) struct RecoveryContext {
+pub(crate) struct ReceiveOrSendSwapRecoveryContext {
+    pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, Vec<LBtcHistory>>,
+    pub(crate) liquid_chain_service: Arc<dyn LiquidChainService>,
+    pub(crate) swapper: Arc<dyn Swapper>,
+    pub(crate) tx_map: TxMap,
+    pub(crate) liquid_tip_height: u32,
+}
+
+pub(crate) struct ChainSwapRecoveryContext {
     pub(crate) lbtc_script_to_history_map: HashMap<LBtcScript, Vec<LBtcHistory>>,
     pub(crate) btc_script_to_history_map: HashMap<BtcScript, Vec<BtcHistory>>,
     pub(crate) btc_script_to_txs_map: HashMap<BtcScript, Vec<bitcoin::Transaction>>,
     pub(crate) btc_script_to_balance_map: HashMap<BtcScript, BtcScriptBalance>,
-    pub(crate) liquid_chain_service: Arc<dyn LiquidChainService>,
-    pub(crate) swapper: Arc<dyn Swapper>,
     pub(crate) tx_map: TxMap,
     pub(crate) master_blinding_key: MasterBlindingKey,
     pub(crate) liquid_tip_height: u32,

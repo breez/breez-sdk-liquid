@@ -864,7 +864,7 @@ pub struct BlockchainInfo {
 #[derive(Copy, Clone)]
 pub(crate) struct ChainTips {
     pub liquid_tip: u32,
-    pub bitcoin_tip: u32,
+    pub bitcoin_tip: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,21 +1,17 @@
 #[cfg(test)]
 mod test {
     use crate::{
-        bitcoin,
-        chain::liquid::MockLiquidChainService,
-        elements,
+        bitcoin, elements,
         model::{BtcHistory, ChainSwap, LBtcHistory, PaymentState, SwapMetadata},
         recover::{
             handlers::{tests::create_mock_lbtc_wallet_tx, ChainSendSwapHandler},
-            model::{RecoveryContext, TxMap},
+            model::{ChainSwapRecoveryContext, TxMap},
         },
-        swapper::MockSwapper,
     };
     use bitcoin::OutPoint;
     use bitcoin::{transaction::Version, ScriptBuf, Sequence};
     use boltz_client::{Amount, LockTime};
     use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
-    use sdk_common::utils::Arc;
 
     use std::{collections::HashMap, str::FromStr};
 
@@ -298,7 +294,7 @@ mod test {
     }
 
     // Helper function to setup test data
-    fn setup_test_data() -> (ChainSwap, RecoveryContext) {
+    fn setup_test_data() -> (ChainSwap, ChainSwapRecoveryContext) {
         // Create a test chain swap
         let chain_swap = ChainSwap {
             id: "7aSRLEvFAJX3".to_string(),                     
@@ -334,7 +330,7 @@ mod test {
         };
 
         // Create empty recovery context
-        let recovery_context = RecoveryContext {
+        let recovery_context = ChainSwapRecoveryContext {
             lbtc_script_to_history_map: HashMap::new(),
             btc_script_to_history_map: HashMap::new(),
             btc_script_to_txs_map: HashMap::new(),
@@ -346,8 +342,6 @@ mod test {
             liquid_tip_height: 900, // Below timeout height
             bitcoin_tip_height: 900,
             master_blinding_key: MasterBlindingKey::from_seed(&[]),
-            swapper: Arc::new(MockSwapper::new()),
-            liquid_chain_service: Arc::new(MockLiquidChainService::new()),
         };
 
         (chain_swap, recovery_context)
@@ -355,11 +349,11 @@ mod test {
 
     // Helper to add an LBTC outgoing transaction (lockup) to the recovery context
     fn add_lbtc_outgoing_tx_to_context(
-        mut context: RecoveryContext,
+        mut context: ChainSwapRecoveryContext,
         script: &elements::Script,
         tx_id_hex: &str,
         height: u32,
-    ) -> RecoveryContext {
+    ) -> ChainSwapRecoveryContext {
         let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
@@ -390,12 +384,12 @@ mod test {
 
     // Helper to add an LBTC incoming transaction (refund) to the recovery context
     fn add_lbtc_incoming_tx_to_context(
-        mut context: RecoveryContext,
+        mut context: ChainSwapRecoveryContext,
         script: &elements::Script,
         tx_id_hex: &str,
         height: u32,
         amount: u64,
-    ) -> RecoveryContext {
+    ) -> ChainSwapRecoveryContext {
         let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
@@ -426,11 +420,11 @@ mod test {
 
     // Helper to add BTC transactions and history to the recovery context
     fn add_btc_history_to_context(
-        mut context: RecoveryContext,
+        mut context: ChainSwapRecoveryContext,
         script: &bitcoin::ScriptBuf,
         tx_ids: &[(/*tx_id*/ &str, /*height*/ u32)],
         txs: &[bitcoin::Transaction],
-    ) -> RecoveryContext {
+    ) -> ChainSwapRecoveryContext {
         // Add history txs
         let mut history = Vec::new();
         for (tx_id_hex, height) in tx_ids {

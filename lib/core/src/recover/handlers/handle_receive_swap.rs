@@ -39,7 +39,7 @@ impl ReceiveSwapHandler {
     /// Recover and update a receive swap with data from the chain
     pub(crate) async fn recover_swap(
         receive_swap: &mut ReceiveSwap,
-        context: &RecoveryContext,
+        context: &ReceiveOrSendSwapRecoveryContext,
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &receive_swap.id.clone();
