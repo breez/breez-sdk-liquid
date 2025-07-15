@@ -631,21 +631,21 @@ impl LiquidSdk {
             (bitcoin_tip_res.ok(), is_new_bitcoin_block)
         };
 
-        let maybe_chain_tips = if let Ok(liquid_tip) = liquid_tip_res {
+        if let Ok(liquid_tip) = liquid_tip_res {
             self.persister
                 .update_blockchain_info(liquid_tip, maybe_bitcoin_tip)
                 .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
-            Some(ChainTips {
+            let chain_tips = ChainTips {
                 liquid_tip,
                 bitcoin_tip: maybe_bitcoin_tip,
-            })
-        } else {
-            None
-        };
+            };
 
-        // Only partial sync when there are no new Liquid or Bitcoin blocks
-        let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
-        _ = self.sync_inner(partial_sync, maybe_chain_tips).await;
+            // Only partial sync when there are no new Liquid or Bitcoin blocks
+            let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
+            if let Err(e) = self.sync_inner(partial_sync, chain_tips).await {
+                error!("Failed to sync while tracking new blocks: {e}");
+            }
+        }
 
         // Update swap handlers
         if is_new_liquid_block {
@@ -4018,14 +4018,31 @@ impl LiquidSdk {
 
     /// Synchronizes the local state with the mempool and onchain data.
     pub async fn sync(&self, partial_sync: bool) -> SdkResult<()> {
-        self.sync_inner(partial_sync, None).await
+        let chain_tips = ChainTips {
+            liquid_tip: self.liquid_chain_service.tip().await?,
+            bitcoin_tip: {
+                if self
+                    .persister
+                    .has_chain_swaps()
+                    .unwrap_or_else(|e| {
+                        error!(
+                            "Failed to check if there are chain swaps: {e} - proceeding as if not"
+                        );
+                        false
+                    })
+                    .not()
+                {
+                    info!("No known chain swaps, skipping bitcoin tip fetch");
+                    None
+                } else {
+                    self.bitcoin_chain_service.tip().await.ok()
+                }
+            },
+        };
+        self.sync_inner(partial_sync, chain_tips).await
     }
 
-    async fn sync_inner(
-        &self,
-        partial_sync: bool,
-        maybe_chain_tips: Option<ChainTips>,
-    ) -> SdkResult<()> {
+    async fn sync_inner(&self, partial_sync: bool, chain_tips: ChainTips) -> SdkResult<()> {
         self.ensure_is_started().await?;
 
         let t0 = Instant::now();
@@ -4034,29 +4051,6 @@ impl LiquidSdk {
             error!("Failed to scan wallet: {err:?}");
             SdkError::generic(err.to_string())
         })?;
-
-        let chain_tips = match maybe_chain_tips {
-            None => ChainTips {
-                liquid_tip: self.liquid_chain_service.tip().await?,
-                bitcoin_tip: {
-                    if self
-                        .persister
-                        .has_chain_swaps()
-                        .unwrap_or_else(|e| {
-                            error!("Failed to check if there are chain swaps: {e} - proceeding as if not");
-                            false
-                        })
-                        .not()
-                    {
-                        info!("No known chain swaps, skipping bitcoin tip fetch");
-                        None
-                    } else {
-                        self.bitcoin_chain_service.tip().await.ok()
-                    }
-                },
-            },
-            Some(tips) => tips,
-        };
 
         let is_first_sync = !self
             .persister
