@@ -221,10 +221,7 @@ impl Persister {
                     true => PaymentType::Receive,
                     false => PaymentType::Send,
                 };
-                let mut amount = balance.unsigned_abs();
-                if payment_type == PaymentType::Send && asset_id.eq(&lbtc_asset_id.to_string()) {
-                    amount = amount.saturating_sub(tx.fee);
-                }
+                let amount = balance.unsigned_abs();
                 Some(PaymentTxBalance {
                     asset_id,
                     amount,
