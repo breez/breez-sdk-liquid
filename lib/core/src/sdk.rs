@@ -600,29 +600,36 @@ impl LiquidSdk {
             }
         };
         // Get the Bitcoin tip and process a new block (only if chain swaps are used)
-        let (maybe_bitcoin_tip, is_new_bitcoin_block) =
-            if self.persister.has_chain_swaps().unwrap_or_default().not() {
-                info!("No known chain swaps, skipping bitcoin tip fetch");
-                (None, false)
-            } else {
-                let t0 = Instant::now();
-                let bitcoin_tip_res = self.bitcoin_chain_service.tip().await;
-                let duration_ms = Instant::now().duration_since(t0).as_millis();
-                info!("Fetched bitcoin tip at ({duration_ms} ms)");
-                let is_new_bitcoin_block = match &bitcoin_tip_res {
-                    Ok(height) => {
-                        debug!("Got Bitcoin tip: {height}");
-                        let is_new_bitcoin_block = *height > *current_bitcoin_block;
-                        *current_bitcoin_block = *height;
-                        is_new_bitcoin_block
-                    }
-                    Err(e) => {
-                        error!("Failed to fetch Bitcoin tip: {e}");
-                        false
-                    }
-                };
-                (bitcoin_tip_res.ok(), is_new_bitcoin_block)
+        let (maybe_bitcoin_tip, is_new_bitcoin_block) = if self
+            .persister
+            .has_chain_swaps()
+            .unwrap_or_else(|e| {
+                error!("Failed to check if there are chain swaps: {e} - proceeding as if not");
+                false
+            })
+            .not()
+        {
+            info!("No known chain swaps, skipping bitcoin tip fetch");
+            (None, false)
+        } else {
+            let t0 = Instant::now();
+            let bitcoin_tip_res = self.bitcoin_chain_service.tip().await;
+            let duration_ms = Instant::now().duration_since(t0).as_millis();
+            info!("Fetched bitcoin tip at ({duration_ms} ms)");
+            let is_new_bitcoin_block = match &bitcoin_tip_res {
+                Ok(height) => {
+                    debug!("Got Bitcoin tip: {height}");
+                    let is_new_bitcoin_block = *height > *current_bitcoin_block;
+                    *current_bitcoin_block = *height;
+                    is_new_bitcoin_block
+                }
+                Err(e) => {
+                    error!("Failed to fetch Bitcoin tip: {e}");
+                    false
+                }
             };
+            (bitcoin_tip_res.ok(), is_new_bitcoin_block)
+        };
 
         let maybe_chain_tips = if let Ok(liquid_tip) = liquid_tip_res {
             self.persister
@@ -4032,7 +4039,15 @@ impl LiquidSdk {
             None => ChainTips {
                 liquid_tip: self.liquid_chain_service.tip().await?,
                 bitcoin_tip: {
-                    if self.persister.has_chain_swaps()?.not() {
+                    if self
+                        .persister
+                        .has_chain_swaps()
+                        .unwrap_or_else(|e| {
+                            error!("Failed to check if there are chain swaps: {e} - proceeding as if not");
+                            false
+                        })
+                        .not()
+                    {
                         info!("No known chain swaps, skipping bitcoin tip fetch");
                         None
                     } else {
