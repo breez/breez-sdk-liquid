@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, ensure, Result};
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 
 use super::handlers::{
     ChainReceiveSwapHandler, ChainSendSwapHandler, ReceiveSwapHandler, SendSwapHandler,
@@ -81,7 +81,14 @@ impl Recoverer {
         let chain_tips = match maybe_chain_tips {
             None => ChainTips {
                 liquid_tip: self.liquid_chain_service.tip().await?,
-                bitcoin_tip: self.bitcoin_chain_service.tip().await?,
+                bitcoin_tip: {
+                    if swaps.iter().any(|s| matches!(s, Swap::Chain(_))) {
+                        self.bitcoin_chain_service.tip().await.ok()
+                    } else {
+                        info!("No chain swaps to recover, skipping bitcoin tip fetch");
+                        None
+                    }
+                },
             },
             Some(tips) => tips,
         };
@@ -95,8 +102,8 @@ impl Recoverer {
 
         // Convert swaps to SwapsList and fetch history data
         let swaps_list = swaps.to_vec().try_into()?;
-        let recovery_context = self
-            .create_recovery_context(
+        let (swap_recovery_context, chain_swap_recovery_context) = self
+            .create_recovery_contexts(
                 &swaps_list,
                 TxMap::from_raw_tx_map(raw_tx_map.clone()),
                 chain_tips.liquid_tip,
@@ -112,32 +119,42 @@ impl Recoverer {
                 < NETWORK_PROPAGATION_GRACE_PERIOD.as_secs() as u32;
             let res = match swap {
                 Swap::Send(s) => {
-                    SendSwapHandler::recover_swap(s, &recovery_context, is_within_grace_period)
+                    SendSwapHandler::recover_swap(s, &swap_recovery_context, is_within_grace_period)
                         .await
                 }
 
                 Swap::Receive(s) => {
-                    ReceiveSwapHandler::recover_swap(s, &recovery_context, is_within_grace_period)
-                        .await
+                    ReceiveSwapHandler::recover_swap(
+                        s,
+                        &swap_recovery_context,
+                        is_within_grace_period,
+                    )
+                    .await
                 }
-                Swap::Chain(s) => match s.direction {
-                    Direction::Outgoing => {
-                        ChainSendSwapHandler::recover_swap(
-                            s,
-                            &recovery_context,
-                            is_within_grace_period,
-                        )
-                        .await
+                Swap::Chain(s) => {
+                    let Some(recovery_context) = &chain_swap_recovery_context else {
+                        error!("Skipping recovery for chain swap {swap_id} because chain swaps recovery context is not available");
+                        continue;
+                    };
+                    match s.direction {
+                        Direction::Outgoing => {
+                            ChainSendSwapHandler::recover_swap(
+                                s,
+                                recovery_context,
+                                is_within_grace_period,
+                            )
+                            .await
+                        }
+                        Direction::Incoming => {
+                            ChainReceiveSwapHandler::recover_swap(
+                                s,
+                                recovery_context,
+                                is_within_grace_period,
+                            )
+                            .await
+                        }
                     }
-                    Direction::Incoming => {
-                        ChainReceiveSwapHandler::recover_swap(
-                            s,
-                            &recovery_context,
-                            is_within_grace_period,
-                        )
-                        .await
-                    }
-                },
+                }
             };
             if let Err(err) = res {
                 warn!("Error recovering data for swap {swap_id}: {err}");
@@ -180,36 +197,59 @@ impl Recoverer {
     }
 
     /// For a given [SwapList], this fetches the script histories from the chain services
-    async fn create_recovery_context(
+    async fn create_recovery_contexts(
         &self,
         swaps_list: &SwapsList,
         tx_map: TxMap,
         liquid_tip_height: u32,
-        bitcoin_tip_height: u32,
+        bitcoin_tip_height: Option<u32>,
         master_blinding_key: MasterBlindingKey,
-    ) -> Result<RecoveryContext> {
+    ) -> Result<(
+        ReceiveOrSendSwapRecoveryContext,
+        Option<ChainSwapRecoveryContext>,
+    )> {
         // Fetch history data for each lbtc swap script
         let lbtc_script_to_history_map = self
             .fetch_lbtc_history_map(swaps_list.get_swap_lbtc_scripts())
             .await?;
 
-        // Fetch history data for each btc swap script
-        let (btc_script_to_history_map, btc_script_to_txs_map, btc_script_to_balance_map) = self
-            .fetch_btc_script_maps(swaps_list.get_swap_btc_scripts())
-            .await?;
+        let chain_swap_recovery_context = if let Some(bitcoin_tip_height) = bitcoin_tip_height {
+            // Fetch history data for each btc swap script
+            let (btc_script_to_history_map, btc_script_to_txs_map, btc_script_to_balance_map) =
+                self.fetch_btc_script_maps(swaps_list.get_swap_btc_scripts())
+                    .await?;
 
-        Ok(RecoveryContext {
-            lbtc_script_to_history_map,
-            btc_script_to_history_map,
-            btc_script_to_txs_map,
-            btc_script_to_balance_map,
-            tx_map,
-            liquid_tip_height,
-            bitcoin_tip_height,
-            master_blinding_key,
-            liquid_chain_service: self.liquid_chain_service.clone(),
-            swapper: self.swapper.clone(),
-        })
+            Some(ChainSwapRecoveryContext {
+                lbtc_script_to_history_map: lbtc_script_to_history_map.clone(),
+                btc_script_to_history_map,
+                btc_script_to_txs_map,
+                btc_script_to_balance_map,
+                tx_map: tx_map.clone(),
+                liquid_tip_height,
+                bitcoin_tip_height,
+                master_blinding_key,
+            })
+        } else {
+            if swaps_list
+                .swaps_by_id
+                .values()
+                .any(|s| matches!(s, Swap::Chain(_)))
+            {
+                warn!("Not creating chain swaps recovery context because bitcoin tip is not available");
+            }
+            None
+        };
+
+        Ok((
+            ReceiveOrSendSwapRecoveryContext {
+                lbtc_script_to_history_map,
+                tx_map,
+                liquid_tip_height,
+                liquid_chain_service: self.liquid_chain_service.clone(),
+                swapper: self.swapper.clone(),
+            },
+            chain_swap_recovery_context,
+        ))
     }
 
     async fn fetch_lbtc_history_map(

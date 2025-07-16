@@ -11,7 +11,6 @@ mod test {
     use crate::swapper::MockSwapper;
     use lwk_wollet::elements::script::Script;
     use lwk_wollet::elements::Txid;
-    use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
     use lwk_wollet::WalletTx;
     use mockall::predicate::*;
     use sdk_common::utils::Arc;
@@ -318,7 +317,7 @@ mod test {
     }
 
     // Helper function to setup test data
-    fn setup_test_data() -> (SendSwap, RecoveryContext) {
+    fn setup_test_data() -> (SendSwap, ReceiveOrSendSwapRecoveryContext) {
         // Create a test send swap
         let send_swap = SendSwap {
             id: "test-swap-id".to_string(),
@@ -347,18 +346,13 @@ mod test {
         };
 
         // Create empty recovery context
-        let recovery_context = RecoveryContext {
+        let recovery_context = ReceiveOrSendSwapRecoveryContext {
             lbtc_script_to_history_map: HashMap::new(),
-            btc_script_to_history_map: HashMap::new(),
-            btc_script_to_txs_map: HashMap::new(),
-            btc_script_to_balance_map: HashMap::new(),
             tx_map: TxMap {
                 outgoing_tx_map: HashMap::new(),
                 incoming_tx_map: HashMap::new(),
             },
             liquid_tip_height: 900, // Below timeout height
-            bitcoin_tip_height: 900,
-            master_blinding_key: MasterBlindingKey::from_seed(&[]),
             swapper: Arc::new(MockSwapper::new()),
             liquid_chain_service: Arc::new(MockLiquidChainService::new()),
         };
@@ -368,11 +362,11 @@ mod test {
 
     // Helper to add an outgoing transaction (lockup) to the recovery context
     fn add_outgoing_tx_to_context(
-        mut context: RecoveryContext,
+        mut context: ReceiveOrSendSwapRecoveryContext,
         script: &Script,
         tx_id_hex: &str,
         height: u32,
-    ) -> RecoveryContext {
+    ) -> ReceiveOrSendSwapRecoveryContext {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
@@ -403,11 +397,11 @@ mod test {
 
     // Helper to add a claim tx to the history without adding it to the wallet tx map
     fn add_claim_tx_to_context(
-        mut context: RecoveryContext,
+        mut context: ReceiveOrSendSwapRecoveryContext,
         script: &Script,
         tx_id_hex: &str,
         height: u32,
-    ) -> RecoveryContext {
+    ) -> ReceiveOrSendSwapRecoveryContext {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
@@ -432,12 +426,12 @@ mod test {
 
     // Helper to add an incoming transaction (refund) to the recovery context
     fn add_incoming_tx_to_context(
-        mut context: RecoveryContext,
+        mut context: ReceiveOrSendSwapRecoveryContext,
         script: &Script,
         tx_id_hex: &str,
         height: u32,
         amount: u64,
-    ) -> (RecoveryContext, WalletTx) {
+    ) -> (ReceiveOrSendSwapRecoveryContext, WalletTx) {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
         // Create history tx
