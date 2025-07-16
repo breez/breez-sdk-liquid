@@ -1,4 +1,4 @@
-version '0.10.1' // generated; do not edit
+version '0.10.2' // generated; do not edit
 group 'technology.breez.flutter_breez_liquid'
 
 buildscript {
