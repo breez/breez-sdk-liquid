@@ -2500,6 +2500,20 @@ impl From<electrum_client::GetBalanceRes> for BtcScriptBalance {
     }
 }
 
+pub(crate) struct GetSyncContextRequest {
+    pub partial_sync: Option<bool>,
+    pub last_liquid_tip: u32,
+    pub last_bitcoin_tip: u32,
+}
+
+pub(crate) struct SyncContext {
+    pub maybe_liquid_tip: Option<u32>,
+    pub maybe_bitcoin_tip: Option<u32>,
+    pub recoverable_swaps: Vec<Swap>,
+    pub is_new_liquid_block: bool,
+    pub is_new_bitcoin_block: bool,
+}
+
 #[macro_export]
 macro_rules! get_updated_fields {
     ($($var:ident),* $(,)?) => {{
