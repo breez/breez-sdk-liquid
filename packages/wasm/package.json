@@ -1,6 +1,6 @@
 {
   "name": "@breeztech/breez-sdk-liquid",
-  "version": "0.9.1",
+  "version": "0.10.1",
   "description": "Breez Liquid SDK",
   "repository": "https://github.com/breez/breez-sdk-liquid",
   "author": "Breez <contact@breez.technology> (https://github.com/breez)",
