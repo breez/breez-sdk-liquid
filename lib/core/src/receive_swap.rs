@@ -16,6 +16,7 @@ use crate::chain::liquid::LiquidChainService;
 use crate::error::is_txn_mempool_conflict_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
+use crate::persist::model::PaymentTxBalance;
 use crate::prelude::Swap;
 use crate::{ensure_sdk, utils};
 use crate::{
@@ -398,13 +399,15 @@ impl ReceiveSwapHandler {
                             PaymentTxData {
                                 tx_id: claim_tx_id.clone(),
                                 timestamp: Some(utils::now()),
-                                asset_id: self.config.lbtc_asset_id(),
-                                amount: swap.receiver_amount_sat,
                                 fees_sat: 0,
-                                payment_type: PaymentType::Receive,
                                 is_confirmed: false,
                                 unblinding_data: None,
                             },
+                            &[PaymentTxBalance {
+                                amount: swap.receiver_amount_sat,
+                                payment_type: PaymentType::Receive,
+                                asset_id: self.config.lbtc_asset_id(),
+                            }],
                             None,
                             false,
                         )?;

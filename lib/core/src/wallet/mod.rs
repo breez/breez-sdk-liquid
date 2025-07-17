@@ -24,13 +24,10 @@ use tokio::sync::Mutex;
 use web_time::Instant;
 
 use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
+use crate::persist::cache::KEY_ENQUEUE_REUNBLIND;
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
-use crate::{
-    ensure_sdk,
-    error::PaymentError,
-    model::{Config, LiquidNetwork},
-};
+use crate::{ensure_sdk, error::PaymentError, model::Config};
 use sdk_common::utils::Arc;
 
 use crate::wallet::persister::WalletCachePersister;
@@ -200,7 +197,7 @@ impl LiquidOnchainWallet {
         let wallet_cache_persister: Arc<dyn WalletCachePersister> =
             Arc::new(SqliteWalletCachePersister::new(
                 std::sync::Arc::clone(&persister),
-                get_descriptor(&signer, config.network)?,
+                get_descriptor(&signer)?,
             )?);
 
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
@@ -221,7 +218,7 @@ impl LiquidOnchainWallet {
         wallet_cache_persister: Arc<dyn WalletCachePersister>,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
-        let descriptor = get_descriptor(signer, config.network)?;
+        let descriptor = get_descriptor(signer)?;
         let wollet_res = Wollet::new(
             elements_network,
             wallet_cache_persister.get_lwk_persister()?,
@@ -259,16 +256,11 @@ impl LiquidOnchainWallet {
     }
 }
 
-pub fn get_descriptor(
-    signer: &SdkLwkSigner,
-    network: LiquidNetwork,
-) -> Result<WolletDescriptor, PaymentError> {
-    let is_mainnet = network == LiquidNetwork::Mainnet;
+pub fn get_descriptor(signer: &SdkLwkSigner) -> Result<WolletDescriptor, PaymentError> {
     let descriptor_str = singlesig_desc(
         signer,
         Singlesig::Wpkh,
         lwk_common::DescriptorBlindingKey::Slip77,
-        is_mainnet,
     )
     .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
     Ok(descriptor_str.parse()?)
@@ -526,6 +518,12 @@ impl OnchainWallet for LiquidOnchainWallet {
             .unwrap_or_default();
         let index_with_buffer = last_derivation_index + 5;
         let mut wallet = self.wallet.lock().await;
+
+        if self.persister.should_reunblind().unwrap_or(false) {
+            wallet.reunblind()?;
+            self.persister
+                .update_cached_item(KEY_ENQUEUE_REUNBLIND, false.to_string())?;
+        }
 
         let res = match client
             .full_scan_to_index(&mut wallet, index_with_buffer)

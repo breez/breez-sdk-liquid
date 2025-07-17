@@ -301,15 +301,11 @@ mod tests {
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    fn get_descriptor<S: LwkSigner>(
-        signer: &S,
-        is_mainnet: bool,
-    ) -> Result<WolletDescriptor, anyhow::Error> {
+    fn get_descriptor<S: LwkSigner>(signer: &S) -> Result<WolletDescriptor, anyhow::Error> {
         let descriptor_str = singlesig_desc(
             signer,
             Singlesig::Wpkh,
             lwk_common::DescriptorBlindingKey::Slip77,
-            is_mainnet,
         )
         .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?;
         Ok(descriptor_str.parse()?)
@@ -482,7 +478,7 @@ mod tests {
         let sw_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sw_signer, false).unwrap(),
+            get_descriptor(&sw_signer).unwrap(),
         )
         .unwrap();
 
@@ -492,7 +488,7 @@ mod tests {
         let sdk_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sdk_signer, false).unwrap(),
+            get_descriptor(&sdk_signer).unwrap(),
         )
         .unwrap();
 
