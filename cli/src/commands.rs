@@ -64,6 +64,12 @@ pub(crate) enum Command {
         /// Delay for the send, in seconds
         #[arg(long)]
         delay: Option<u64>,
+
+        /// Can only be used when a BIP21 address with an amount is provided
+        /// Specifies whether or not to swap to the provided asset (via SideSwap)
+        /// or use the wallet's funds (if present)
+        #[clap(long, action = ArgAction::SetTrue)]
+        use_sideswap: Option<bool>,
     },
     /// Fetch the current limits for Send and Receive payments
     FetchLightningLimits,
@@ -419,6 +425,7 @@ pub(crate) async fn handle_command(
             use_asset_fees,
             drain,
             delay,
+            use_sideswap,
         } => {
             let destination = invoice.or(offer.or(address)).ok_or(anyhow!(
                 "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
@@ -428,6 +435,7 @@ pub(crate) async fn handle_command(
                     asset_id,
                     receiver_amount,
                     estimate_asset_fees: use_asset_fees,
+                    use_wallet_funds: use_sideswap.map(|p| !p),
                 }),
                 (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
                     receiver_amount_sat,
