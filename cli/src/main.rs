@@ -88,6 +88,7 @@ async fn main() -> Result<()> {
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
+    config.enable_nwc = Some(true);
     config.working_dir = data_dir_str;
     if args.no_data_sync {
         config.sync_service_url = None;
