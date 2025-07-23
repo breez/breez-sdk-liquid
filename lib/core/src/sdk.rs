@@ -1354,10 +1354,6 @@ impl LiquidSdk {
 
                                 let swap = sideswap_service
                                     .get_asset_swap(asset_id, receiver_amount_sat)
-                                    .map_err(|err| {
-                                        sideswap_service.stop();
-                                        err
-                                    })
                                     .await?;
 
                                 ensure_sdk!(
@@ -1365,8 +1361,6 @@ impl LiquidSdk {
                                         >= swap.payer_amount_sat + swap.fees_sat,
                                     PaymentError::InsufficientFunds
                                 );
-
-                                sideswap_service.stop();
 
                                 validate_funds = false;
                                 (
@@ -1666,7 +1660,6 @@ impl LiquidSdk {
                                 fees_sat,
                             )
                             .await;
-                        sideswap_service.stop();
                         res?
                     }
                 };
