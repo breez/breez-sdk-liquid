@@ -3357,7 +3357,7 @@ dependencies = [
 [[package]]
 name = "nostr"
 version = "0.42.1"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#baeba7bbffe99d2d48a2f79390db089f491b2a86"
 dependencies = [
  "aes",
  "base64 0.22.1",
@@ -3380,7 +3380,7 @@ dependencies = [
 [[package]]
 name = "nostr-database"
 version = "0.42.0"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#baeba7bbffe99d2d48a2f79390db089f491b2a86"
 dependencies = [
  "lru",
  "nostr",
@@ -3390,7 +3390,7 @@ dependencies = [
 [[package]]
 name = "nostr-relay-pool"
 version = "0.42.0"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#baeba7bbffe99d2d48a2f79390db089f491b2a86"
 dependencies = [
  "async-utility",
  "async-wsocket",
@@ -3406,14 +3406,13 @@ dependencies = [
 [[package]]
 name = "nostr-sdk"
 version = "0.42.0"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#baeba7bbffe99d2d48a2f79390db089f491b2a86"
 dependencies = [
  "async-utility",
  "nostr",
  "nostr-database",
  "nostr-relay-pool",
  "tokio",
- "tracing",
 ]
 
 [[package]]

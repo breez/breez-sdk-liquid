@@ -245,9 +245,6 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                     }
 
                     Ok(SdkEvent::PaymentSucceeded { details }) = listener.recv() => {
-                        if details.payment_type != crate::model::PaymentType::Send {
-                            continue;
-                        }
                         let (invoice, description, preimage, payment_hash) = match &details.details {
                             crate::model::PaymentDetails::Lightning {
                                 invoice,
@@ -268,7 +265,13 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                         };
 
                         let payment_notification = PaymentNotification {
-                            transaction_type: Some(TransactionType::Outgoing),
+                            transaction_type: Some(
+                                if details.payment_type == crate::model::PaymentType::Send {
+                                    TransactionType::Outgoing
+                                } else {
+                                    TransactionType::Incoming
+                                }
+                            ),
                             invoice,
                             description: Some(description),
                             description_hash: None,
@@ -282,9 +285,16 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                             metadata: None,
                         };
 
-                        let notification = Notification {
-                            notification_type: NotificationType::PaymentSent,
-                            notification: NotificationResult::PaymentSent(payment_notification),
+                        let notification = if details.payment_type == crate::model::PaymentType::Send {
+                            Notification {
+                                notification_type: NotificationType::PaymentSent,
+                                notification: NotificationResult::PaymentSent(payment_notification),
+                            }
+                        } else {
+                            Notification {
+                                notification_type: NotificationType::PaymentReceived,
+                                notification: NotificationResult::PaymentReceived(payment_notification),
+                            }
                         };
                         
                         let notification_content = match serde_json::to_string(&notification) {
