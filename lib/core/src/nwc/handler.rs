@@ -2,8 +2,8 @@ use crate::model::{
     ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
     PrepareSendRequest, SendPaymentRequest,
 };
-use log::{info, warn};
 use crate::sdk::LiquidSdk;
+use log::info;
 use nostr_sdk::nips::nip47::{
     ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse, NIP47Error,
     PayInvoiceRequest, PayInvoiceResponse, TransactionType,
