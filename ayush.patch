@@ -1,0 +1,94 @@
+From dea1995a07539d6de15c21a3c81bb29f7dee4b59 Mon Sep 17 00:00:00 2001
+From: yse <hydra_yse@proton.me>
+Date: Sat, 19 Jul 2025 11:17:41 +0200
+Subject: [PATCH] patch
+
+---
+ lib/core/src/nwc/handler.rs |  2 +-
+ lib/core/src/nwc/mod.rs     | 16 ++++++++++++++--
+ lib/core/src/sdk.rs         |  1 +
+ 3 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/lib/core/src/nwc/handler.rs b/lib/core/src/nwc/handler.rs
+index 7b00ab21..885a8591 100644
+--- a/lib/core/src/nwc/handler.rs
++++ b/lib/core/src/nwc/handler.rs
+@@ -2,8 +2,8 @@ use crate::model::{
+     ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
+     PrepareSendRequest, SendPaymentRequest,
+ };
+-use log::{info, warn};
+ use crate::sdk::LiquidSdk;
++use log::info;
+ use nostr_sdk::nips::nip47::{
+     ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse, NIP47Error,
+     PayInvoiceRequest, PayInvoiceResponse, TransactionType,
+diff --git a/lib/core/src/nwc/mod.rs b/lib/core/src/nwc/mod.rs
+index 03ae6ce4..ee7dda29 100644
+--- a/lib/core/src/nwc/mod.rs
++++ b/lib/core/src/nwc/mod.rs
+@@ -50,7 +50,12 @@ pub trait NWCService: MaybeSend + MaybeSync {
+     /// # Arguments
+     /// * `shutdown_receiver` - Channel for receiving shutdown signals
+     /// * `notifier` - Broadcast sender for emitting SDK events
+-    fn start(&self, shutdown_receiver: watch::Receiver<()>, notifier: broadcast::Sender<SdkEvent>);
++    fn start(
++        &self,
++        shutdown_receiver: watch::Receiver<()>,
++        listener: broadcast::Receiver<SdkEvent>,
++        notifier: broadcast::Sender<SdkEvent>,
++    );
+ 
+     /// Stops the NWC service and performs cleanup.
+     ///
+@@ -179,6 +184,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
+     fn start(
+         &self,
+         mut shutdown_receiver: watch::Receiver<()>,
++        mut listener: broadcast::Receiver<SdkEvent>,
+         notifier: broadcast::Sender<SdkEvent>,
+     ) {
+         let client = self.client.clone();
+@@ -192,13 +198,15 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
+             info!("Successfully connected NWC client");
+ 
+             // Broadcast info event
+-            let content = &[
++            let mut content: String = [
+                 Method::PayInvoice,
+                 Method::ListTransactions,
+                 Method::GetBalance,
+             ]
+             .map(|m| m.to_string())
+             .join(" ");
++            content.push_str(" notifications");
++
+             if let Err(err) = Self::send_event(
+                 EventBuilder::new(Kind::WalletConnectInfo, content),
+                 &our_keys,
+@@ -236,6 +244,10 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
+                         return;
+                     }
+ 
++                    Ok(SdkEvent::PaymentSucceeded { details }) = listener.recv() => {
++                        // ... Nostr code
++                    }
++
+                     Ok(notification) = notifications_listener.recv() => {
+                         let RelayPoolNotification::Event { event, subscription_id, .. } = notification else {
+                             continue;
+diff --git a/lib/core/src/sdk.rs b/lib/core/src/sdk.rs
+index 2b55d98b..7df32039 100644
+--- a/lib/core/src/sdk.rs
++++ b/lib/core/src/sdk.rs
+@@ -546,6 +546,7 @@ impl LiquidSdk {
+         if let Some(nwc_service) = self.nwc_service.get() {
+             nwc_service.start(
+                 self.shutdown_receiver.clone(),
++                self.event_manager.subscribe(),
+                 self.event_manager.notifier(),
+             );
+         }
+-- 
+2.50.1
+
