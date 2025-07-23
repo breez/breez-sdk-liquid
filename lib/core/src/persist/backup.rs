@@ -17,7 +17,7 @@ impl Persister {
 
     pub(crate) fn backup(&self, backup_path: PathBuf) -> Result<()> {
         let con = self.get_connection()?;
-        con.backup(rusqlite::DatabaseName::Main, backup_path, None)?;
+        con.backup(rusqlite::MAIN_DB, backup_path, None)?;
         Ok(())
     }
 
