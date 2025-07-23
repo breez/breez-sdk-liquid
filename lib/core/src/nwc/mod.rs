@@ -9,9 +9,9 @@ use nostr_sdk::{
     nips::nip04::{decrypt, encrypt},
     nips::nip47::{
         ErrorCode, Method, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
-        ResponseResult,
+        ResponseResult, Notification, NotificationType, NotificationResult, PaymentNotification, TransactionType
     },
-    Client as NostrClient, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, RelayUrl, Tag,
+    Client as NostrClient, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, RelayUrl, Tag, Timestamp,
 };
 // use std::sync::Arc;
 use sdk_common::utils::Arc;
@@ -50,7 +50,12 @@ pub trait NWCService: MaybeSend + MaybeSync {
     /// # Arguments
     /// * `shutdown_receiver` - Channel for receiving shutdown signals
     /// * `notifier` - Broadcast sender for emitting SDK events
-    fn start(&self, shutdown_receiver: watch::Receiver<()>, notifier: broadcast::Sender<SdkEvent>);
+    fn start(
+        &self,
+        shutdown_receiver: watch::Receiver<()>,
+        listener: broadcast::Receiver<SdkEvent>,
+        notifier: broadcast::Sender<SdkEvent>,
+    );
 
     /// Stops the NWC service and performs cleanup.
     ///
@@ -179,6 +184,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
     fn start(
         &self,
         mut shutdown_receiver: watch::Receiver<()>,
+        mut listener: broadcast::Receiver<SdkEvent>,
         notifier: broadcast::Sender<SdkEvent>,
     ) {
         let client = self.client.clone();
@@ -192,13 +198,15 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
             info!("Successfully connected NWC client");
 
             // Broadcast info event
-            let content = &[
+            let mut content: String = [
                 Method::PayInvoice,
                 Method::ListTransactions,
                 Method::GetBalance,
             ]
             .map(|m| m.to_string())
             .join(" ");
+            content.push_str("notifications");
+
             if let Err(err) = Self::send_event(
                 EventBuilder::new(Kind::WalletConnectInfo, content),
                 &our_keys,
@@ -234,6 +242,81 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                         info!("Received shutdown signal, exiting NWC service loop");
                         client.disconnect().await;
                         return;
+                    }
+
+                    Ok(SdkEvent::PaymentSucceeded { details }) = listener.recv() => {
+                        if details.payment_type != crate::model::PaymentType::Send {
+                            continue;
+                        }
+                        let (invoice, description, preimage, payment_hash) = match &details.details {
+                            crate::model::PaymentDetails::Lightning {
+                                invoice,
+                                description,
+                                preimage,
+                                payment_hash,
+                                ..
+                            } => (
+                                invoice.clone().unwrap_or_default(),
+                                description.clone(),
+                                preimage.clone().unwrap_or_default(),
+                                payment_hash.clone().unwrap_or_default(),
+                            ),
+                            _ => {
+                                warn!("Payment details not available for NWC notification");
+                                continue;
+                            }
+                        };
+
+                        let payment_notification = PaymentNotification {
+                            transaction_type: Some(TransactionType::Outgoing),
+                            invoice,
+                            description: Some(description),
+                            description_hash: None,
+                            preimage,
+                            payment_hash,
+                            amount: details.amount_sat * 1000, 
+                            fees_paid: details.fees_sat * 1000, 
+                            created_at: Timestamp::from_secs(details.timestamp as u64),
+                            expires_at: None,
+                            settled_at: Timestamp::from_secs(details.timestamp as u64),
+                            metadata: None,
+                        };
+
+                        let notification = Notification {
+                            notification_type: NotificationType::PaymentSent,
+                            notification: NotificationResult::PaymentSent(payment_notification),
+                        };
+                        
+                        let notification_content = match serde_json::to_string(&notification) {
+                            Ok(content) => content,
+                            Err(e) => {
+                                warn!("Could not serialize notification: {e:?}");
+                                continue;
+                            }
+                        };
+
+                        let encrypted_content = match encrypt(
+                            &our_keys.secret_key(),
+                            &client_keys.public_key(),
+                            &notification_content,
+                        ){
+                            Ok(encrypted) => encrypted,
+                            Err(e) => {
+                                warn!("Could not encrypt notification content: {e:?}");
+                                continue;
+                            }
+                        };
+
+                        let eb = EventBuilder::new(Kind::Custom(23196), encrypted_content)
+                            .tags([
+                                Tag::public_key(client_keys.public_key())
+                            ]);
+
+                        if let Err(e) = Self::send_event(eb, &our_keys, client.clone()).await {
+                            warn!("Could not send notification event to relay: {e:?}");
+                        }else {
+                            info!("Sent payment notification to relay");
+                        }
                     }
 
                     Ok(notification) = notifications_listener.recv() => {
