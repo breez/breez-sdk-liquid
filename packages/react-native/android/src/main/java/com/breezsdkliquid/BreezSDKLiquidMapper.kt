@@ -3494,7 +3494,8 @@ fun asPayAmount(payAmount: ReadableMap): PayAmount? {
         val assetId = payAmount.getString("assetId")!!
         val receiverAmount = payAmount.getDouble("receiverAmount")
         val estimateAssetFees = if (hasNonNullKey(payAmount, "estimateAssetFees")) payAmount.getBoolean("estimateAssetFees") else null
-        return PayAmount.Asset(assetId, receiverAmount, estimateAssetFees)
+        val useWalletAssets = if (hasNonNullKey(payAmount, "useWalletAssets")) payAmount.getBoolean("useWalletAssets") else null
+        return PayAmount.Asset(assetId, receiverAmount, estimateAssetFees, useWalletAssets)
     }
     if (type == "drain") {
         return PayAmount.Drain
@@ -3514,6 +3515,7 @@ fun readableMapOf(payAmount: PayAmount): ReadableMap? {
             pushToMap(map, "assetId", payAmount.assetId)
             pushToMap(map, "receiverAmount", payAmount.receiverAmount)
             pushToMap(map, "estimateAssetFees", payAmount.estimateAssetFees)
+            pushToMap(map, "useWalletAssets", payAmount.useWalletAssets)
         }
         is PayAmount.Drain -> {
             pushToMap(map, "type", "drain")

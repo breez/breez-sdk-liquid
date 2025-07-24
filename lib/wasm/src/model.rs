@@ -483,6 +483,7 @@ pub enum PayAmount {
         asset_id: String,
         receiver_amount: f64,
         estimate_asset_fees: Option<bool>,
+        use_wallet_assets: Option<bool>,
     },
     Drain,
 }

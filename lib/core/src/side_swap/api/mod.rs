@@ -42,13 +42,13 @@ pub(crate) struct SideSwapService {
     config: Config,
     rest_client: Arc<dyn RestClient>,
     onchain_wallet: Arc<dyn OnchainWallet>,
-    request_handler: SideSwapRequestHandler,
-    response_handler: SideSwapResponseHandler,
+    request_handler: Arc<SideSwapRequestHandler>,
+    response_handler: Arc<SideSwapResponseHandler>,
     event_loop_handle: OnceCell<JoinHandle<()>>,
 }
 
 impl SideSwapService {
-    pub(crate) fn from_sdk(sdk: &crate::sdk::LiquidSdk) -> Arc<Self> {
+    pub(crate) fn from_sdk(sdk: &crate::sdk::LiquidSdk) -> Self {
         Self::new(
             sdk.config.clone(),
             sdk.rest_client.clone(),
@@ -62,16 +62,17 @@ impl SideSwapService {
         rest_client: Arc<dyn RestClient>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         mut shutdown_rx: watch::Receiver<()>,
-    ) -> Arc<Self> {
-        let service = Arc::new(Self {
-            config,
-            request_handler: SideSwapRequestHandler::new(),
-            response_handler: SideSwapResponseHandler::new(),
-            rest_client,
-            onchain_wallet,
+    ) -> Self {
+        let request_handler = Arc::new(SideSwapRequestHandler::new());
+        let response_handler = Arc::new(SideSwapResponseHandler::new());
+        let service = Self {
+            config: config.clone(),
+            request_handler: request_handler.clone(),
+            response_handler: response_handler.clone(),
+            rest_client: rest_client.clone(),
+            onchain_wallet: onchain_wallet.clone(),
             event_loop_handle: OnceCell::new(),
-        });
-        let cloned = service.clone();
+        };
 
         let handle = tokio::spawn(async move {
             info!("Starting SideSwap service event loop");
@@ -80,7 +81,7 @@ impl SideSwapService {
                     return;
                 }
 
-                let ws = match connect(cloned.config.sideswap_url()).await {
+                let ws = match connect(config.sideswap_url()).await {
                     Ok(ws) => ws,
                     Err(err) => {
                         error!("Could not connect to SideSwap websocket: {err}");
@@ -99,13 +100,13 @@ impl SideSwapService {
                         }
 
                         _ = tokio::time::sleep(keep_alive_ping_interval) => {
-                            if let Err(err) = cloned.request_handler.send(Request::Ping(None)).await {
+                            if let Err(err) = request_handler.send(Request::Ping(None)).await {
                                 warn!("Could not send ping message to SideSwap server: {err:?}");
                             };
                         },
 
-                        maybe_req_msg = cloned.request_handler.recv() => match maybe_req_msg {
-                            Some(req_msg) => cloned.request_handler.send_ws(&mut ws_sender, req_msg).await,
+                        maybe_req_msg = request_handler.recv() => match maybe_req_msg {
+                            Some(req_msg) => request_handler.send_ws(&mut ws_sender, req_msg).await,
                             None => {
                                 warn!("Request channel has been closed, exiting socket loop");
                                 break;
@@ -118,7 +119,7 @@ impl SideSwapService {
                                     warn!("Received close msg, exiting socket loop");
                                     break; // break the inner loop which will start the main loop by reconnecting
                                 },
-                                Ok(Message::Text(payload)) => cloned.handle_message(payload.as_str()).await,
+                                Ok(Message::Text(payload)) => Self::handle_message(&response_handler, payload.as_str()).await,
                                 Ok(msg) => warn!("Unhandled msg: {msg:?}"),
                                 Err(e) => {
                                     error!("Received stream error: {e:?}");
@@ -166,11 +167,11 @@ impl SideSwapService {
         }
     }
 
-    async fn handle_message(&self, msg: &str) {
+    async fn handle_message(response_handler: &SideSwapResponseHandler, msg: &str) {
         info!("Received text message: {msg}");
         match serde_json::from_str::<WrappedResponse>(msg) {
             Ok(WrappedResponse::Response { id, response, .. }) => {
-                self.response_handler.handle_response(id, response).await;
+                response_handler.handle_response(id, response).await;
             }
             Ok(WrappedResponse::Notification { notification, .. }) => {
                 debug!("Received unhandled notification from SideSwap service: {notification:?}");
@@ -334,5 +335,11 @@ impl SideSwapService {
         };
 
         Ok(response.txid.to_hex())
+    }
+}
+
+impl Drop for SideSwapService {
+    fn drop(&mut self) {
+        self.stop();
     }
 }
