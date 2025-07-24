@@ -95,7 +95,7 @@ impl Persister {
                 let size = data.len();
                 let cursor = std::io::Cursor::new(data);
                 let mut conn = Connection::open_in_memory()?;
-                conn.deserialize_read_exact(rusqlite::DatabaseName::Main, cursor, size, false)?;
+                conn.deserialize_read_exact(rusqlite::MAIN_DB, cursor, size, false)?;
                 Ok::<Connection, anyhow::Error>(conn)
             })
             .transpose()
@@ -148,10 +148,26 @@ impl Persister {
         Ok(persister)
     }
 
+    fn get_db_path(&self) -> PathBuf {
+        self.main_db_dir.join(DEFAULT_DB_FILENAME)
+    }
+
+    /// Clears the in-memory database.
+    ///
+    /// The in-memory database is kept in memory even when not being used.
+    /// Calling this method will clear the database and free up memory.
+    #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+    pub fn clear_in_memory_db(&self) -> Result<()> {
+        rusqlite::ffi::mem_vfs::MemVfsUtil::new().delete_db(
+            self.get_db_path()
+                .to_str()
+                .ok_or(anyhow!("Failed to get db path str"))?,
+        );
+        Ok(())
+    }
+
     pub(crate) fn get_connection(&self) -> Result<Connection> {
-        Ok(Connection::open(
-            self.main_db_dir.join(DEFAULT_DB_FILENAME),
-        )?)
+        Ok(Connection::open(self.get_db_path())?)
     }
 
     pub fn init(&self) -> Result<()> {
@@ -162,7 +178,7 @@ impl Persister {
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let con = self.get_connection()?;
-        let db_bytes = con.serialize(rusqlite::DatabaseName::Main)?;
+        let db_bytes = con.serialize(rusqlite::MAIN_DB)?;
         Ok(db_bytes.to_vec())
     }
 
