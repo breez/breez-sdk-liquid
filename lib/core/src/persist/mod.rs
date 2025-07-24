@@ -210,8 +210,8 @@ impl Persister {
                 if asset_id == lbtc_asset_id && balance < 0 {
                     balance += tx.fee as i64;
 
-                    // If we only have a fee output w.r.t. our wallet, we want to exclude it from the list
-                    if num_outputs == 1 {
+                    // If we have send with no outputs w.r.t. our wallet, we want to exclude it from the list
+                    if num_outputs == 0 {
                         return None;
                     }
                 }
