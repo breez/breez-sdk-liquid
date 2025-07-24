@@ -29,6 +29,7 @@ pub const BREEZ_WASM_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
     sdk: Rc<LiquidSdk>,
+    persister: Arc<Persister>,
 }
 
 #[wasm_bindgen(js_name = "connect")]
@@ -93,10 +94,10 @@ async fn connect_inner(
         let listener = platform::db_backup_common::ForwardingEventListener::new(sender);
         sdk.add_event_listener(Box::new(listener)).await?;
 
-        db_backup_persister.start_backup_task(persister, receiver);
+        db_backup_persister.start_backup_task(persister.clone(), receiver);
     }
 
-    Ok(BindingLiquidSdk { sdk })
+    Ok(BindingLiquidSdk { sdk, persister })
 }
 
 #[wasm_bindgen(js_name = "defaultConfig")]
@@ -390,6 +391,8 @@ impl BindingLiquidSdk {
     #[wasm_bindgen(js_name = "disconnect")]
     pub async fn disconnect(&self) -> WasmResult<()> {
         self.sdk.disconnect().await?;
+
+        self.persister.clear_in_memory_db()?;
         Ok(())
     }
 }

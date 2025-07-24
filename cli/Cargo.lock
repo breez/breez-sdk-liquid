@@ -3,18 +3,6 @@
 version = 4
 
 [[package]]
-name = "accessory"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28e416a3ab45838bac2ab2d81b1088d738d7b2d2c5272a54d39366565a29bd80"
-dependencies = [
- "macroific",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -782,9 +770,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.23"
+version = "1.2.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f4ac86a9e5bc1e2b3449ab9d7d3a6a405e3d1bb28d7b9be8614f55846ae3766"
+checksum = "deec109607ca693028562ed836a5f1c4b8bd77755c4e132fc5ce11b0b6211ae7"
 dependencies = [
  "shlex",
 ]
@@ -1069,20 +1057,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "delegate-display"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9926686c832494164c33a36bf65118f4bd6e704000b58c94681bf62e9ad67a74"
-dependencies = [
- "impartial-ord",
- "itoa",
- "macroific",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
 name = "der-parser"
 version = "9.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1114,27 +1088,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "derive_more"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
-dependencies = [
- "derive_more-impl",
-]
-
-[[package]]
-name = "derive_more-impl"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
- "unicode-xid",
 ]
 
 [[package]]
@@ -1376,18 +1329,6 @@ name = "fallible-streaming-iterator"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
-
-[[package]]
-name = "fancy_constructor"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28a27643a5d05f3a22f5afd6e0d0e6e354f92d37907006f97b84b9cb79082198"
-dependencies = [
- "macroific",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
 
 [[package]]
 name = "fastrand"
@@ -2343,51 +2284,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "impartial-ord"
-version = "1.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ab604ee7085efba6efc65e4ebca0e9533e3aff6cb501d7d77b211e3a781c6d5"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "indexed_db_futures"
-version = "0.6.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69ff41758cbd104e91033bb53bc449bec7eea65652960c81eddf3fc146ecea19"
-dependencies = [
- "accessory",
- "cfg-if 1.0.0",
- "delegate-display",
- "derive_more",
- "fancy_constructor",
- "indexed_db_futures_macros_internal",
- "js-sys",
- "sealed",
- "smallvec",
- "thiserror 2.0.12",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "indexed_db_futures_macros_internal"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "caeba94923b68f254abef921cea7e7698bf4675fdd89d7c58bf1ed885b49a27d"
-dependencies = [
- "macroific",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
 name = "indexmap"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2434,6 +2330,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "078ea7b7c29a2b4df841a7f6ac8775ff6074020c6776d48491ce2268e068f972"
 dependencies = [
  "unic-langid",
+]
+
+[[package]]
+name = "io-uring"
+version = "0.7.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d93587f37623a1a17d94ef2bc9ada592f5465fe7732084ab7beefabe5c77c0c4"
+dependencies = [
+ "bitflags 2.9.1",
+ "cfg-if 1.0.0",
+ "libc",
 ]
 
 [[package]]
@@ -2611,8 +2518,8 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.31.0"
-source = "git+https://github.com/Spxg/rusqlite?rev=e36644127f31fa6e7ea0999b59432deb4a07f220#e36644127f31fa6e7ea0999b59432deb4a07f220"
+version = "0.35.0"
+source = "git+https://github.com/Spxg/rusqlite?rev=8e53118a3e1807dc9a9f59c5969fdff7e0416400#8e53118a3e1807dc9a9f59c5969fdff7e0416400"
 dependencies = [
  "cc",
  "pkg-config",
@@ -2821,54 +2728,6 @@ dependencies = [
  "url",
  "wasm-bindgen-futures",
  "web-sys",
-]
-
-[[package]]
-name = "macroific"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89f276537b4b8f981bf1c13d79470980f71134b7bdcc5e6e911e910e556b0285"
-dependencies = [
- "macroific_attr_parse",
- "macroific_core",
- "macroific_macro",
-]
-
-[[package]]
-name = "macroific_attr_parse"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad4023761b45fcd36abed8fb7ae6a80456b0a38102d55e89a57d9a594a236be9"
-dependencies = [
- "proc-macro2",
- "quote",
- "sealed",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "macroific_core"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0a7594d3c14916fa55bef7e9d18c5daa9ed410dd37504251e4b75bbdeec33e3"
-dependencies = [
- "proc-macro2",
- "quote",
- "sealed",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "macroific_macro"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4da6f2ed796261b0a74e2b52b42c693bb6dee1effba3a482c49592659f824b3b"
-dependencies = [
- "macroific_attr_parse",
- "macroific_core",
- "proc-macro2",
- "quote",
- "syn 2.0.101",
 ]
 
 [[package]]
@@ -3973,8 +3832,8 @@ dependencies = [
 
 [[package]]
 name = "rusqlite"
-version = "0.33.0"
-source = "git+https://github.com/Spxg/rusqlite?rev=e36644127f31fa6e7ea0999b59432deb4a07f220#e36644127f31fa6e7ea0999b59432deb4a07f220"
+version = "0.37.0"
+source = "git+https://github.com/Spxg/rusqlite?rev=8e53118a3e1807dc9a9f59c5969fdff7e0416400#8e53118a3e1807dc9a9f59c5969fdff7e0416400"
 dependencies = [
  "bitflags 2.9.1",
  "fallible-iterator",
@@ -3987,8 +3846,8 @@ dependencies = [
 
 [[package]]
 name = "rusqlite_migration"
-version = "1.3.1"
-source = "git+https://github.com/hydra-yse/rusqlite_migration?branch=rusqlite-v0.33.0#b18181b61b4c26549dff9f309e04915b6d2c39a7"
+version = "2.3.0"
+source = "git+https://github.com/breez/rusqlite_migration?branch=spxg-rusqlite#b3368027ca342d782d6d199fbcaf49d728b84195"
 dependencies = [
  "log",
  "rusqlite",
@@ -4346,17 +4205,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sealed"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22f968c5ea23d555e670b449c1c5e7b2fc399fdaec1d304a17cd48e288abc107"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
 name = "secp256k1"
 version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4585,17 +4433,18 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "sqlite-wasm-rs"
-version = "0.3.6"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0c6fdb636283dad1283b20bc62157ac68a7124fde269723467689c4fd6d356c"
+checksum = "0e2e56f9a1fce250ea2dea7b034b624ef7e22fe14870fc55b3b3b1c25d4eef79"
 dependencies = [
+ "cc",
  "fragile",
- "indexed_db_futures",
  "js-sys",
  "once_cell",
  "parking_lot 0.12.3",
  "thiserror 2.0.12",
  "tokio",
+ "wasm-array-cp",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -4863,15 +4712,17 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.45.0"
+version = "1.46.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2513ca694ef9ede0fb23fe71a4ee4107cb102b9dc1930f6d0fd77aae068ae165"
+checksum = "0cc3a2344dafbe23a245241fe8b09735b521110d30fcefbbd5feb1797ca35d17"
 dependencies = [
  "backtrace",
  "bytes",
+ "io-uring",
  "libc",
  "mio",
  "pin-project-lite",
+ "slab",
  "socket2",
  "tokio-macros",
  "windows-sys 0.52.0",
@@ -5344,12 +5195,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7dd6e30e90baa6f72411720665d41d89b9a3d039dc45b8faea1ddd07f617f6af"
 
 [[package]]
-name = "unicode-xid"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
-
-[[package]]
 name = "universal-hash"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5461,6 +5306,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3"
 dependencies = [
  "wit-bindgen-rt",
+]
+
+[[package]]
+name = "wasm-array-cp"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb633b3e235f0ebe0a35162adc1e0293fc4b7e3f3a6fc7b5374d80464267ff84"
+dependencies = [
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -5650,7 +5505,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
