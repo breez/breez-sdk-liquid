@@ -9,6 +9,7 @@ use nostr_sdk::nips::nip47::{
     PayInvoiceRequest, PayInvoiceResponse, TransactionType,
 };
 use nostr_sdk::Timestamp;
+use sdk_common::utils::Arc;
 
 type Result<T> = std::result::Result<T, NIP47Error>;
 
@@ -22,7 +23,7 @@ pub trait RelayMessageHandler {
 }
 
 pub struct BreezRelayMessageHandler {
-    sdk: sdk_common::utils::Arc<LiquidSdk>,
+    sdk: Arc<LiquidSdk>,
 }
 
 impl BreezRelayMessageHandler {
@@ -40,11 +41,11 @@ impl From<TransactionType> for PaymentType {
     }
 }
 
-impl Into<TransactionType> for PaymentType {
-    fn into(self) -> TransactionType {
-        match self {
-            Self::Receive => TransactionType::Incoming,
-            Self::Send => TransactionType::Outgoing,
+impl From<PaymentType> for TransactionType {
+    fn from(val: PaymentType) -> Self {
+        match val {
+            PaymentType::Receive => TransactionType::Incoming,
+            PaymentType::Send => TransactionType::Outgoing,
         }
     }
 }
@@ -80,7 +81,7 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
             .await
             .map_err(|e| NIP47Error {
                 code: ErrorCode::PaymentFailed,
-                message: format!("Failed to prepare payment: {}", e),
+                message: format!("Failed to prepare payment: {e}"),
             })?;
 
         // Create send request
@@ -97,7 +98,7 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
             .await
             .map_err(|e| NIP47Error {
                 code: ErrorCode::PaymentFailed,
-                message: format!("Failed to send payment: {}", e),
+                message: format!("Failed to send payment: {e}"),
             })?;
 
         // Extract preimage and fees from payment
@@ -137,15 +138,12 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
     ) -> Result<Vec<LookupInvoiceResponse>> {
         let filters = req.transaction_type.map(|p| vec![p.into()]);
         info!("NWC List transactions is called");
-        let states = req
-            .unpaid
-            .map(|unpaid| {
-                if unpaid {
-                    return Some(vec![PaymentState::Pending]);
-                }
-                None
-            })
-            .flatten();
+        let states = req.unpaid.and_then(|unpaid| {
+            if unpaid {
+                return Some(vec![PaymentState::Pending]);
+            }
+            None
+        });
 
         // Get payments from SDK
         let payments: Vec<Payment> = self
@@ -163,7 +161,7 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
             .await
             .map_err(|e| NIP47Error {
                 code: ErrorCode::Internal,
-                message: format!("Failed to list payments: {}", e),
+                message: format!("Failed to list payments: {e}"),
             })?;
 
         // Convert payments to NIP-47 transactions
@@ -210,7 +208,7 @@ impl RelayMessageHandler for BreezRelayMessageHandler {
         info!("NWC Get balance is called");
         let info = self.sdk.get_info().await.map_err(|e| NIP47Error {
             code: ErrorCode::Internal,
-            message: format!("Failed to get wallet info: {}", e),
+            message: format!("Failed to get wallet info: {e}"),
         })?;
 
         let balance_msats = info.wallet_info.balance_sat * 1000;
@@ -265,7 +263,7 @@ mod tests {
         // Test the pay_invoice function
         let result = handler.pay_invoice(request).await;
         if let Err(e) = &result {
-            println!("pay_invoice failed with error: {:?}", e);
+            println!("pay_invoice failed with error: {e:?}");
         }
         assert!(result.is_ok());
 
@@ -306,16 +304,16 @@ mod tests {
                     println!("Type: {:?}", transaction.transaction_type);
                     println!("Created at: {}", transaction.created_at);
                     if let Some(settled_at) = transaction.settled_at {
-                        println!("Settled at: {}", settled_at);
+                        println!("Settled at: {settled_at}");
                     }
                 }
 
                 assert!(!response.is_empty());
                 let transaction = &response[0];
-                assert!(!transaction.invoice.as_ref().map_or(false, |s| s.is_empty()));
+                assert!(!transaction.invoice.as_ref().is_some_and(|s| s.is_empty()));
                 assert!(transaction.amount > 0);
             }
-            Err(e) => panic!("list_transactions failed: {:?}", e),
+            Err(e) => panic!("list_transactions failed: {e:?}"),
         }
         Ok(())
     }
@@ -357,12 +355,12 @@ mod tests {
                         );
                     }
                     Err(e) => {
-                        println!("Failed to send payment: {}", e);
+                        println!("Failed to send payment: {e}");
                     }
                 }
             }
             Err(e) => {
-                println!("Failed to prepare payment: {}", e);
+                println!("Failed to prepare payment: {e}");
             }
         }
     }

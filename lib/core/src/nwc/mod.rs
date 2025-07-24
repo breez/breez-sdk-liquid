@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, str::FromStr as _};
 
 use anyhow::Result;
 use bip39::rand::{self, RngCore};
@@ -8,20 +8,22 @@ use maybe_sync::{MaybeSend, MaybeSync};
 use nostr_sdk::{
     nips::nip04::{decrypt, encrypt},
     nips::nip47::{
-        ErrorCode, Method, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
-        ResponseResult, Notification, NotificationType, NotificationResult, PaymentNotification, TransactionType
+        ErrorCode, Method, NIP47Error, NostrWalletConnectURI, Notification, NotificationResult,
+        NotificationType, PaymentNotification, Request, RequestParams, Response, ResponseResult,
+        TransactionType,
     },
-    Client as NostrClient, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, RelayUrl, Tag, Timestamp,
+    Client as NostrClient, EventBuilder, Filter, Keys, Kind, RelayPoolNotification, RelayUrl, Tag,
+    Timestamp,
 };
-// use std::sync::Arc;
 use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch, OnceCell};
 use tokio::task::JoinHandle;
 
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 use tokio::task::spawn as platform_spawn;
+
 #[cfg(all(target_family = "wasm", target_os = "unknown"))]
-use tokio::task::spawn_local as platform_spawn;
+use wasm_bindgen_futures::spawn_local as platform_spawn;
 
 use crate::model::{NwcEvent, SdkEvent};
 
@@ -68,9 +70,9 @@ pub trait NWCService: MaybeSend + MaybeSync {
 
 pub struct BreezNWCService<Handler: RelayMessageHandler> {
     keys: Keys,
-    client: Arc<NostrClient>,
     handler: Arc<Handler>,
     nwc_uri: NostrWalletConnectURI,
+    client: std::sync::Arc<NostrClient>,
     event_loop_handle: OnceCell<JoinHandle<()>>,
 }
 
@@ -89,13 +91,18 @@ impl<Handler: RelayMessageHandler> BreezNWCService<Handler> {
     /// * `Ok(BreezNWCService)` - Successfully initialized service
     /// * `Err(anyhow::Error)` - Error adding relays or initializing
     pub(crate) async fn new(handler: Arc<Handler>, relays: &[String]) -> Result<Self> {
-        let client = Arc::new(NostrClient::default());
+        let client = std::sync::Arc::new(NostrClient::default());
         for relay in relays {
             client.add_relay(relay).await?;
         }
-        let keys = Keys::generate();
-        let nwc_uri =
-            Self::new_connection_uri(&keys, client.relays().await.keys().cloned().collect())?;
+        let mut rng = rand::thread_rng();
+        let keys = Keys::generate_with_rng(&mut rng);
+
+        let relays = relays
+            .iter()
+            .filter_map(|r| RelayUrl::from_str(r).ok())
+            .collect();
+        let nwc_uri = Self::new_connection_uri(&keys, relays)?;
 
         Ok(Self {
             client,
@@ -124,9 +131,9 @@ impl BreezNWCService<BreezRelayMessageHandler> {
     async fn send_event(
         eb: EventBuilder,
         keys: &Keys,
-        client: Arc<NostrClient>,
+        client: std::sync::Arc<NostrClient>,
     ) -> Result<(), nostr_sdk::client::Error> {
-        let evt = eb.sign_with_keys(&keys)?;
+        let evt = eb.sign_with_keys(keys)?;
         client.send_event(&evt).await?;
         Ok(())
     }
@@ -277,8 +284,8 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                             description_hash: None,
                             preimage,
                             payment_hash,
-                            amount: details.amount_sat * 1000, 
-                            fees_paid: details.fees_sat * 1000, 
+                            amount: details.amount_sat * 1000,
+                            fees_paid: details.fees_sat * 1000,
                             created_at: Timestamp::from_secs(details.timestamp as u64),
                             expires_at: None,
                             settled_at: Timestamp::from_secs(details.timestamp as u64),
@@ -296,7 +303,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                                 notification: NotificationResult::PaymentReceived(payment_notification),
                             }
                         };
-                        
+
                         let notification_content = match serde_json::to_string(&notification) {
                             Ok(content) => content,
                             Err(e) => {
@@ -306,7 +313,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                         };
 
                         let encrypted_content = match encrypt(
-                            &our_keys.secret_key(),
+                            our_keys.secret_key(),
                             &client_keys.public_key(),
                             &notification_content,
                         ){
@@ -337,7 +344,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                             continue;
                         }
 
-                        info!("Received NWC notification: {:?}", event);
+                        info!("Received NWC notification: {event:?}");
                         // Verify event pubkey matches expected pubkey
                         if event.pubkey != client_keys.public_key() {
                             warn!("Event pubkey mismatch: expected {}, got {}",
@@ -353,7 +360,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
 
                         // Decrypt the event content
                         let decrypted_content = match decrypt(
-                            &our_keys.secret_key(),
+                            our_keys.secret_key(),
                             &client_keys.public_key(),
                             &event.content
                         ) {
@@ -364,7 +371,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                             }
                         };
 
-                        info!("Decrypted NWC notification: {}", decrypted_content);
+                        info!("Decrypted NWC notification: {decrypted_content}");
 
                         let req = match serde_json::from_str::<Request>(&decrypted_content) {
                             Ok(r) => r,
@@ -406,10 +413,10 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                                 continue;
                             }
                         };
-                        info!("NWC Response content: {}", content);
+                        info!("NWC Response content: {content}");
                         info!("encrypting NWC response");
                         let encrypted_content = match encrypt(
-                            &our_keys.secret_key(),
+                            our_keys.secret_key(),
                             &client_keys.public_key(),
                             &content
                         ) {
@@ -434,6 +441,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
             }
         });
 
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         let _ = self.event_loop_handle.set(handle);
     }
 

@@ -727,7 +727,7 @@ interface NwcEvent {
     PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
     ListTransactions();
     GetBalance();
-}
+};
 
 callback interface EventListener {
     void on_event(SdkEvent e);
