@@ -18,7 +18,7 @@ use crate::chain::liquid::LiquidChainService;
 use crate::model::{
     BlockListener, Config, PaymentState::*, SendSwap, LIQUID_FEE_RATE_MSAT_PER_VBYTE,
 };
-use crate::persist::model::PaymentTxDetails;
+use crate::persist::model::{PaymentTxBalance, PaymentTxDetails};
 use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::recover::recoverer::Recoverer;
 use crate::swapper::Swapper;
@@ -257,13 +257,15 @@ impl SendSwapHandler {
             PaymentTxData {
                 tx_id: lockup_tx_id.clone(),
                 timestamp: Some(utils::now()),
-                asset_id: self.config.lbtc_asset_id(),
-                amount: create_response.expected_amount,
                 fees_sat: lockup_tx_fees_sat,
-                payment_type: PaymentType::Send,
                 is_confirmed: false,
                 unblinding_data: None,
             },
+            &[PaymentTxBalance {
+                asset_id: self.config.lbtc_asset_id(),
+                amount: create_response.expected_amount,
+                payment_type: PaymentType::Send,
+            }],
             None,
             false,
         )?;

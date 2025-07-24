@@ -114,16 +114,16 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
             destination TEXT NOT NULL,
             description TEXT
         ) STRICT;
-        
+
         INSERT INTO payment_details
          (tx_id, destination, description)
-         SELECT 
+         SELECT
             tx_id,
             destination,
             description
          FROM payment_details_old;
-        
-        DROP TABLE payment_details_old;            
+
+        DROP TABLE payment_details_old;
         ",
         "
         ALTER TABLE receive_swaps ADD COLUMN payment_hash TEXT;
@@ -167,7 +167,7 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         ) STRICT;
 
         INSERT INTO chain_swaps (
-            id, 
+            id,
             direction,
             claim_address,
             lockup_address,
@@ -188,8 +188,8 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
             state,
             description,
             id_hash
-        ) SELECT 
-            id, 
+        ) SELECT
+            id,
             direction,
             claim_address,
             lockup_address,
@@ -347,6 +347,27 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         "
         ALTER TABLE receive_swaps ADD COLUMN payer_note TEXT;
         ALTER TABLE payment_details ADD COLUMN payer_note TEXT;
+        ",
+        "
+        CREATE TABLE IF NOT EXISTS payment_balance (
+            tx_id TEXT NOT NULL REFERENCES payment_tx_data(tx_id) ON DELETE CASCADE,
+            asset_id TEXT NOT NULL,
+            amount INTEGER NOT NULL,
+            payment_type INTEGER NOT NULL,
+            PRIMARY KEY (tx_id, asset_id)
+        ) STRICT;
+
+        INSERT INTO payment_balance(tx_id, asset_id, amount, payment_type)
+        SELECT
+            tx_id,
+            asset_id,
+            amount,
+            payment_type
+        FROM payment_tx_data;
+
+        ALTER TABLE payment_tx_data DROP COLUMN asset_id;
+        ALTER TABLE payment_tx_data DROP COLUMN amount;
+        ALTER TABLE payment_tx_data DROP COLUMN payment_type;
         ",
     ]
 }

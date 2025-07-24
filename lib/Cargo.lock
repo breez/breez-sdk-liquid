@@ -3002,8 +3002,7 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 [[package]]
 name = "lwk_common"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e055bce03c8a966bbdf11b1de04b2973d8c8854d7cc5877a37c5bb0c492a2909"
+source = "git+https://github.com/breez/lwk?rev=b19e0eadecf4#b19e0eadecf41ed779d45a190e901afe1240ed9e"
 dependencies = [
  "base64 0.21.7",
  "elements",
@@ -3011,14 +3010,14 @@ dependencies = [
  "getrandom 0.2.16",
  "qr_code",
  "rand 0.8.5",
+ "serde",
  "thiserror 1.0.69",
 ]
 
 [[package]]
 name = "lwk_signer"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97ed102b56d95656bd4dbab8e36f7c2d40cabf956409b9a3e81a46cca4657aae"
+source = "git+https://github.com/breez/lwk?rev=b19e0eadecf4#b19e0eadecf41ed779d45a190e901afe1240ed9e"
 dependencies = [
  "base64 0.13.1",
  "bip39",
@@ -3030,7 +3029,7 @@ dependencies = [
 [[package]]
 name = "lwk_wollet"
 version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=08edbdab622ed0aa92afa319fe35d38ee7d2dc96#08edbdab622ed0aa92afa319fe35d38ee7d2dc96"
+source = "git+https://github.com/breez/lwk?rev=b19e0eadecf4#b19e0eadecf41ed779d45a190e901afe1240ed9e"
 dependencies = [
  "aes-gcm-siv",
  "age",
@@ -3040,6 +3039,7 @@ dependencies = [
  "electrum-client",
  "elements",
  "elements-miniscript",
+ "futures",
  "fxhash",
  "idna",
  "js-sys",
@@ -3053,9 +3053,9 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "tokio",
- "tokio_with_wasm",
  "url",
  "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

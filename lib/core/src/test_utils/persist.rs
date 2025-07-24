@@ -12,6 +12,7 @@ use std::time::SystemTime;
 
 use crate::{
     model::{LiquidNetwork, PaymentState, PaymentTxData, PaymentType, ReceiveSwap, SendSwap},
+    persist::model::PaymentTxBalance,
     test_utils::generate_random_string,
     utils,
 };
@@ -168,15 +169,19 @@ pub use create_persister;
 pub(crate) fn new_payment_tx_data(
     network: LiquidNetwork,
     payment_type: PaymentType,
-) -> PaymentTxData {
-    PaymentTxData {
-        tx_id: generate_random_string(4),
-        timestamp: None,
-        asset_id: utils::lbtc_asset_id(network).to_string(),
-        amount: 0,
-        fees_sat: 0,
-        payment_type,
-        is_confirmed: false,
-        unblinding_data: None,
-    }
+) -> (PaymentTxData, PaymentTxBalance) {
+    (
+        PaymentTxData {
+            tx_id: generate_random_string(4),
+            timestamp: None,
+            fees_sat: 0,
+            is_confirmed: false,
+            unblinding_data: None,
+        },
+        PaymentTxBalance {
+            payment_type,
+            asset_id: utils::lbtc_asset_id(network).to_string(),
+            amount: 0,
+        },
+    )
 }
