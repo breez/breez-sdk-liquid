@@ -64,6 +64,7 @@ lazy_static = "1.5.0"
 esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = [
     "async-https-rustls",
 ] }
+sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "2c3c4312d8fe" }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
