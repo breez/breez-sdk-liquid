@@ -23,9 +23,7 @@ bip39 = "2.0.0"
 chrono = "0.4"
 derivative = "2.2.0"
 env_logger = "0.11"
-flutter_rust_bridge = { version = "=2.9.0", features = [
-    "chrono",
-], optional = true }
+flutter_rust_bridge = { version = "=2.9.0", features = ["chrono"], optional = true }
 log = { workspace = true }
 lwk_common = { git = "https://github.com/breez/lwk", rev = "b19e0eadecf4" }
 lwk_signer = { git = "https://github.com/breez/lwk", rev = "b19e0eadecf4", default-features = false }

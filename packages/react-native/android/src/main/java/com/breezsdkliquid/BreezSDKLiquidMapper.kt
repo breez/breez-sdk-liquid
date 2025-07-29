@@ -1,7 +1,11 @@
 package com.breezsdkliquid
 import breez_sdk_liquid.*
 import com.facebook.react.bridge.*
+import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
+import java.io.File
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 fun asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: ReadableMap): AcceptPaymentProposedFeesRequest? {
     if (!validateMandatoryFields(
@@ -3494,7 +3498,8 @@ fun asPayAmount(payAmount: ReadableMap): PayAmount? {
         val assetId = payAmount.getString("assetId")!!
         val receiverAmount = payAmount.getDouble("receiverAmount")
         val estimateAssetFees = if (hasNonNullKey(payAmount, "estimateAssetFees")) payAmount.getBoolean("estimateAssetFees") else null
-        return PayAmount.Asset(assetId, receiverAmount, estimateAssetFees)
+        val payWithBitcoin = if (hasNonNullKey(payAmount, "payWithBitcoin")) payAmount.getBoolean("payWithBitcoin") else null
+        return PayAmount.Asset(assetId, receiverAmount, estimateAssetFees, payWithBitcoin)
     }
     if (type == "drain") {
         return PayAmount.Drain
@@ -3514,6 +3519,7 @@ fun readableMapOf(payAmount: PayAmount): ReadableMap? {
             pushToMap(map, "assetId", payAmount.assetId)
             pushToMap(map, "receiverAmount", payAmount.receiverAmount)
             pushToMap(map, "estimateAssetFees", payAmount.estimateAssetFees)
+            pushToMap(map, "payWithBitcoin", payAmount.payWithBitcoin)
         }
         is PayAmount.Drain -> {
             pushToMap(map, "type", "drain")

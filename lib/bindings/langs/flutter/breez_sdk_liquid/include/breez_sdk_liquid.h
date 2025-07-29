@@ -293,6 +293,7 @@ typedef struct wire_cst_PayAmount_Asset {
   struct wire_cst_list_prim_u_8_strict *asset_id;
   double receiver_amount;
   bool *estimate_asset_fees;
+  bool *pay_with_bitcoin;
 } wire_cst_PayAmount_Asset;
 
 typedef union PayAmountKind {

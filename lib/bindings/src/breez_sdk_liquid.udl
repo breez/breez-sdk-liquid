@@ -527,7 +527,7 @@ dictionary OnchainPaymentLimitsResponse {
 [Enum]
 interface PayAmount {
     Bitcoin(u64 receiver_amount_sat);
-    Asset(string asset_id, f64 receiver_amount, boolean? estimate_asset_fees);
+    Asset(string asset_id, f64 receiver_amount, boolean? estimate_asset_fees, boolean? pay_with_bitcoin);
     Drain();
 };
 
