@@ -100,6 +100,6 @@ Contributions are always welcome. Please read our [contribution guide](CONTRIBUT
 - [x]  WebAssembly
 - [x]  Bolt12 receive
 - [x]  Add fees via a dedicated portal
-- [ ]  USDT <-> LBTC swaps
+- [x]  USDT <-> LBTC swaps
 - [ ]  WebLN
 - [ ]  NWC
