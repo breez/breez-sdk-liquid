@@ -82,10 +82,7 @@ pub trait OnchainWallet: MaybeSend + MaybeSync {
     ) -> Result<Transaction, PaymentError>;
 
     /// Sign a partially signed transaction
-    async fn sign_pset(
-        &self,
-        pset: PartiallySignedTransaction,
-    ) -> Result<Transaction, PaymentError>;
+    async fn sign_pset(&self, pset: &mut PartiallySignedTransaction) -> Result<(), PaymentError>;
 
     /// Get the next unused address in the wallet
     async fn next_unused_address(&self) -> Result<Address, PaymentError>;
@@ -404,10 +401,7 @@ impl OnchainWallet for LiquidOnchainWallet {
         }
     }
 
-    async fn sign_pset(
-        &self,
-        mut pset: PartiallySignedTransaction,
-    ) -> Result<Transaction, PaymentError> {
+    async fn sign_pset(&self, pset: &mut PartiallySignedTransaction) -> Result<(), PaymentError> {
         let lwk_wollet = self.wallet.lock().await;
 
         // Get the tx_out for each input and add the rangeproof/witness utxo
@@ -427,13 +421,11 @@ impl OnchainWallet for LiquidOnchainWallet {
             }
         }
 
-        lwk_wollet.add_details(&mut pset)?;
+        lwk_wollet.add_details(pset)?;
 
-        self.signer
-            .sign(&mut pset)
-            .map_err(|e| PaymentError::Generic {
-                err: format!("Failed to sign transaction: {e:?}"),
-            })?;
+        self.signer.sign(pset).map_err(|e| PaymentError::Generic {
+            err: format!("Failed to sign transaction: {e:?}"),
+        })?;
 
         // Set the final script witness for each input adding the signature and any missing public key
         for input in pset.inputs_mut() {
@@ -442,10 +434,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             }
         }
 
-        let tx = pset.extract_tx().map_err(|e| PaymentError::Generic {
-            err: format!("Failed to extract transaction: {e:?}"),
-        })?;
-        Ok(tx)
+        Ok(())
     }
 
     /// Get the next unused address in the wallet

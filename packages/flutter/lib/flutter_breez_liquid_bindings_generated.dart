@@ -4562,6 +4562,8 @@ final class wire_cst_PayAmount_Asset extends ffi.Struct {
   external double receiver_amount;
 
   external ffi.Pointer<ffi.Bool> estimate_asset_fees;
+
+  external ffi.Pointer<ffi.Bool> pay_with_bitcoin;
 }
 
 final class PayAmountKind extends ffi.Union {

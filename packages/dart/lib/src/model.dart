@@ -772,6 +772,10 @@ sealed class PayAmount with _$PayAmount {
     required String assetId,
     required double receiverAmount,
     bool? estimateAssetFees,
+
+    /// Specifies whether or not to always use the wallet's L-BTC to execute the payment.
+    /// If true, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
+    bool? payWithBitcoin,
   }) = PayAmount_Asset;
 
   /// Indicates that all available Bitcoin funds should be sent

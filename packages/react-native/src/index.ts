@@ -700,6 +700,7 @@ export type PayAmount = {
     assetId: string
     receiverAmount: number
     estimateAssetFees?: boolean
+    payWithBitcoin?: boolean
 } | {
     type: PayAmountVariant.DRAIN
 }

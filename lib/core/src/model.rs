@@ -23,18 +23,19 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
 
-use crate::utils;
 use crate::{
     bitcoin,
+    chain::bitcoin::esplora::EsploraBitcoinChainService,
+    chain::liquid::esplora::EsploraLiquidChainService,
     chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
     elements,
     error::{PaymentError, SdkError, SdkResult},
+    persist::model::PaymentTxBalance,
+    prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
+    receive_swap::DEFAULT_ZERO_CONF_MAX_SAT,
+    side_swap::api::{SIDESWAP_MAINNET_URL, SIDESWAP_TESTNET_URL},
+    utils,
 };
-use crate::{
-    chain::bitcoin::esplora::EsploraBitcoinChainService,
-    chain::liquid::esplora::EsploraLiquidChainService, prelude::DEFAULT_EXTERNAL_INPUT_PARSERS,
-};
-use crate::{persist::model::PaymentTxBalance, receive_swap::DEFAULT_ZERO_CONF_MAX_SAT};
 
 // Uses f64 for the maximum precision when converting between units
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
@@ -350,6 +351,14 @@ impl Config {
             &electrum_url,
             lwk_wollet::ElectrumOptions { timeout: Some(3) },
         )
+    }
+
+    pub(crate) fn sideswap_url(&self) -> &'static str {
+        match self.network {
+            LiquidNetwork::Mainnet => SIDESWAP_MAINNET_URL,
+            LiquidNetwork::Testnet => SIDESWAP_TESTNET_URL,
+            LiquidNetwork::Regtest => unimplemented!(),
+        }
     }
 }
 
@@ -778,6 +787,9 @@ pub enum PayAmount {
         asset_id: String,
         receiver_amount: f64,
         estimate_asset_fees: Option<bool>,
+        /// Specifies whether or not to always use the wallet's L-BTC to execute the payment.
+        /// If true, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
+        pay_with_bitcoin: Option<bool>,
     },
 
     /// Indicates that all available Bitcoin funds should be sent
