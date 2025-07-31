@@ -477,18 +477,22 @@ pub(crate) async fn handle_command(
             let confirmation_msg = match (
                 use_asset_fees.unwrap_or(false),
                 prepare_response.fees_sat,
+                prepare_response.exchange_amount_sat,
                 prepare_response.estimated_asset_fees,
             ) {
-                (true, _, Some(asset_fees)) => {
+                (true, _, _, Some(asset_fees)) => {
                     format!("Fees: approx {asset_fees}. Are the fees acceptable? (y/N) ")
                 }
-                (false, Some(fees_sat), _) => {
+                (false, Some(fees_sat), None, _) => {
                     format!("Fees: {fees_sat} sat. Are the fees acceptable? (y/N) ")
                 }
-                (true, _, None) => {
+                (false, Some(fees_sat), Some(exchange_amount_sat), _) => {
+                    format!("Fees: {fees_sat} sat. Exchange amount: {exchange_amount_sat}. Are the fees and amount acceptable? (y/N) ")
+                }
+                (true, _, _, None) => {
                     bail!("Not able to pay asset fees")
                 }
-                (false, None, _) => {
+                (false, None, _, _) => {
                     bail!("Not able to pay satoshi fees")
                 }
             };

@@ -448,6 +448,7 @@ dictionary PrepareSendResponse {
     PayAmount? amount;
     u64? fees_sat;
     f64? estimated_asset_fees;
+    u64? exchange_amount_sat;
 };
 
 dictionary SendPaymentRequest {

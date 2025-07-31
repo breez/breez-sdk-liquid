@@ -1217,6 +1217,7 @@ impl LiquidSdk {
         let asset_id;
         let payment_destination;
         let mut validate_funds = true;
+        let mut exchange_amount_sat = None;
 
         match self.parse(&req.destination).await {
             Ok(InputType::LiquidAddress {
@@ -1363,6 +1364,7 @@ impl LiquidSdk {
                                 );
 
                                 validate_funds = false;
+                                exchange_amount_sat = Some(swap.payer_amount_sat - swap.fees_sat);
                                 (
                                     swap.asset_id,
                                     receiver_amount_sat,
@@ -1546,6 +1548,7 @@ impl LiquidSdk {
             fees_sat,
             estimated_asset_fees,
             amount: req.amount.clone(),
+            exchange_amount_sat,
         })
     }
 
@@ -4484,6 +4487,7 @@ impl LiquidSdk {
                     destination: prepare_response.destination.clone(),
                     fees_sat: Some(prepare_response.fees_sat),
                     estimated_asset_fees: None,
+                    exchange_amount_sat: None,
                     amount: Some(prepare_response.amount),
                 },
                 use_asset_fees: None,

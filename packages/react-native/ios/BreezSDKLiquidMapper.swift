@@ -2760,8 +2760,15 @@ enum BreezSDKLiquidMapper {
             }
             estimatedAssetFees = estimatedAssetFeesTmp
         }
+        var exchangeAmountSat: UInt64?
+        if hasNonNilKey(data: prepareSendResponse, key: "exchangeAmountSat") {
+            guard let exchangeAmountSatTmp = prepareSendResponse["exchangeAmountSat"] as? UInt64 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "exchangeAmountSat"))
+            }
+            exchangeAmountSat = exchangeAmountSatTmp
+        }
 
-        return PrepareSendResponse(destination: destination, amount: amount, feesSat: feesSat, estimatedAssetFees: estimatedAssetFees)
+        return PrepareSendResponse(destination: destination, amount: amount, feesSat: feesSat, estimatedAssetFees: estimatedAssetFees, exchangeAmountSat: exchangeAmountSat)
     }
 
     static func dictionaryOf(prepareSendResponse: PrepareSendResponse) -> [String: Any?] {
@@ -2770,6 +2777,7 @@ enum BreezSDKLiquidMapper {
             "amount": prepareSendResponse.amount == nil ? nil : dictionaryOf(payAmount: prepareSendResponse.amount!),
             "feesSat": prepareSendResponse.feesSat == nil ? nil : prepareSendResponse.feesSat,
             "estimatedAssetFees": prepareSendResponse.estimatedAssetFees == nil ? nil : prepareSendResponse.estimatedAssetFees,
+            "exchangeAmountSat": prepareSendResponse.exchangeAmountSat == nil ? nil : prepareSendResponse.exchangeAmountSat,
         ]
     }
 

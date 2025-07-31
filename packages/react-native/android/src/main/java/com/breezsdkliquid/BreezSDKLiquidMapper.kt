@@ -2373,7 +2373,17 @@ fun asPrepareSendResponse(prepareSendResponse: ReadableMap): PrepareSendResponse
         } else {
             null
         }
-    return PrepareSendResponse(destination, amount, feesSat, estimatedAssetFees)
+    val exchangeAmountSat =
+        if (hasNonNullKey(
+                prepareSendResponse,
+                "exchangeAmountSat",
+            )
+        ) {
+            prepareSendResponse.getDouble("exchangeAmountSat").toULong()
+        } else {
+            null
+        }
+    return PrepareSendResponse(destination, amount, feesSat, estimatedAssetFees, exchangeAmountSat)
 }
 
 fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
@@ -2382,6 +2392,7 @@ fun readableMapOf(prepareSendResponse: PrepareSendResponse): ReadableMap =
         "amount" to prepareSendResponse.amount?.let { readableMapOf(it) },
         "feesSat" to prepareSendResponse.feesSat,
         "estimatedAssetFees" to prepareSendResponse.estimatedAssetFees,
+        "exchangeAmountSat" to prepareSendResponse.exchangeAmountSat,
     )
 
 fun asPrepareSendResponseList(arr: ReadableArray): List<PrepareSendResponse> {

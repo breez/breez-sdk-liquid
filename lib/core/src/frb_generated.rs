@@ -4423,11 +4423,13 @@ impl SseDecode for crate::model::PrepareSendResponse {
         let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
         let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
         let mut var_estimatedAssetFees = <Option<f64>>::sse_decode(deserializer);
+        let mut var_exchangeAmountSat = <Option<u64>>::sse_decode(deserializer);
         return crate::model::PrepareSendResponse {
             destination: var_destination,
             amount: var_amount,
             fees_sat: var_feesSat,
             estimated_asset_fees: var_estimatedAssetFees,
+            exchange_amount_sat: var_exchangeAmountSat,
         };
     }
 }
@@ -6946,6 +6948,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendResponse {
             self.amount.into_into_dart().into_dart(),
             self.fees_sat.into_into_dart().into_dart(),
             self.estimated_asset_fees.into_into_dart().into_dart(),
+            self.exchange_amount_sat.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -9193,6 +9196,7 @@ impl SseEncode for crate::model::PrepareSendResponse {
         <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
         <Option<u64>>::sse_encode(self.fees_sat, serializer);
         <Option<f64>>::sse_encode(self.estimated_asset_fees, serializer);
+        <Option<u64>>::sse_encode(self.exchange_amount_sat, serializer);
     }
 }
 
@@ -11445,6 +11449,7 @@ mod io {
                 amount: self.amount.cst_decode(),
                 fees_sat: self.fees_sat.cst_decode(),
                 estimated_asset_fees: self.estimated_asset_fees.cst_decode(),
+                exchange_amount_sat: self.exchange_amount_sat.cst_decode(),
             }
         }
     }
@@ -12852,6 +12857,7 @@ mod io {
                 amount: core::ptr::null_mut(),
                 fees_sat: core::ptr::null_mut(),
                 estimated_asset_fees: core::ptr::null_mut(),
+                exchange_amount_sat: core::ptr::null_mut(),
             }
         }
     }
@@ -15320,6 +15326,7 @@ mod io {
         amount: *mut wire_cst_pay_amount,
         fees_sat: *mut u64,
         estimated_asset_fees: *mut f64,
+        exchange_amount_sat: *mut u64,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
