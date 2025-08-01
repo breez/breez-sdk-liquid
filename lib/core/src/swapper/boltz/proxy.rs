@@ -49,24 +49,20 @@ impl ProxyUrlFetcher for BoltzProxyFetcher {
             PRODUCTION_BREEZSERVER_URL.into(),
             None,
         ) {
-            Ok(breez_server) => {
-                let maybe_boltz_swapper_urls = match breez_server.fetch_boltz_swapper_urls().await {
-                    Ok(boltz_swapper_urls) => {
-                        self.persister
-                            .set_swapper_proxy_url(serde_json::to_string(&boltz_swapper_urls)?)?;
-                        Some(boltz_swapper_urls)
-                    }
-                    Err(e) => {
-                        warn!("Failed to fetch boltz swapper url: {e}. Trying to use urls cached in db...");
-                        self.persister
-                            .get_swapper_proxy_url()
-                            .unwrap_or(None)
-                            .and_then(|s| serde_json::from_str(&s).ok())
-                    }
-                };
-
-                maybe_boltz_swapper_urls
-            }
+            Ok(breez_server) => match breez_server.fetch_boltz_swapper_urls().await {
+                Ok(boltz_swapper_urls) => {
+                    self.persister
+                        .set_swapper_proxy_url(serde_json::to_string(&boltz_swapper_urls)?)?;
+                    Some(boltz_swapper_urls)
+                }
+                Err(e) => {
+                    warn!("Failed to fetch boltz swapper url: {e}. Trying to use urls cached in db...");
+                    self.persister
+                        .get_swapper_proxy_url()
+                        .unwrap_or(None)
+                        .and_then(|s| serde_json::from_str(&s).ok())
+                }
+            },
             Err(e) => {
                 warn!("Failed to create BreezServer: {e}. Trying to use urls cached in db...");
                 self.persister

@@ -302,6 +302,9 @@ class Config {
   /// The SideSwap API key used for making requests to the SideSwap payjoin service
   final String? sideswapApiKey;
 
+  /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
+  final bool useMagicRoutingHints;
+
   const Config({
     required this.liquidExplorer,
     required this.bitcoinExplorer,
@@ -316,6 +319,7 @@ class Config {
     this.onchainFeeRateLeewaySat,
     this.assetMetadata,
     this.sideswapApiKey,
+    required this.useMagicRoutingHints,
   });
 
   @override
@@ -332,7 +336,8 @@ class Config {
       useDefaultExternalInputParsers.hashCode ^
       onchainFeeRateLeewaySat.hashCode ^
       assetMetadata.hashCode ^
-      sideswapApiKey.hashCode;
+      sideswapApiKey.hashCode ^
+      useMagicRoutingHints.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -351,7 +356,8 @@ class Config {
           useDefaultExternalInputParsers == other.useDefaultExternalInputParsers &&
           onchainFeeRateLeewaySat == other.onchainFeeRateLeewaySat &&
           assetMetadata == other.assetMetadata &&
-          sideswapApiKey == other.sideswapApiKey;
+          sideswapApiKey == other.sideswapApiKey &&
+          useMagicRoutingHints == other.useMagicRoutingHints;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].

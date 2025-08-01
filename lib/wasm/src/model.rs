@@ -314,6 +314,7 @@ pub struct Config {
     pub onchain_fee_rate_leeway_sat: Option<u64>,
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     pub sideswap_api_key: Option<String>,
+    pub use_magic_routing_hints: bool,
 }
 
 #[derive(Clone)]
