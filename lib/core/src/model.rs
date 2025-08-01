@@ -749,6 +749,9 @@ pub struct PrepareSendResponse {
     /// is set to `true`, the Payjoin service accepts this asset to pay fees and there
     /// are funds available in this asset to pay fees.
     pub estimated_asset_fees: Option<f64>,
+    /// The amount of funds required (in satoshi) to execute a SideSwap payment, excluding fees.
+    /// Only present when [PayAmount::Asset::pay_with_bitcoin] is set to `true`.
+    pub exchange_amount_sat: Option<u64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

@@ -3743,6 +3743,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.amount = cst_encode_opt_box_autoadd_pay_amount(apiObj.amount);
     wireObj.fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
     wireObj.estimated_asset_fees = cst_encode_opt_box_autoadd_f_64(apiObj.estimatedAssetFees);
+    wireObj.exchange_amount_sat = cst_encode_opt_box_autoadd_u_64(apiObj.exchangeAmountSat);
   }
 
   @protected
@@ -6965,6 +6966,8 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
   external ffi.Pointer<ffi.Uint64> fees_sat;
 
   external ffi.Pointer<ffi.Double> estimated_asset_fees;
+
+  external ffi.Pointer<ffi.Uint64> exchange_amount_sat;
 }
 
 final class wire_cst_send_payment_request extends ffi.Struct {

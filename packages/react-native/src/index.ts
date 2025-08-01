@@ -407,6 +407,7 @@ export interface PrepareSendResponse {
     amount?: PayAmount
     feesSat?: number
     estimatedAssetFees?: number
+    exchangeAmountSat?: number
 }
 
 export interface Rate {

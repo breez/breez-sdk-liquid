@@ -460,6 +460,7 @@ pub struct PrepareSendResponse {
     pub amount: Option<PayAmount>,
     pub fees_sat: Option<u64>,
     pub estimated_asset_fees: Option<f64>,
+    pub exchange_amount_sat: Option<u64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentRequest)]

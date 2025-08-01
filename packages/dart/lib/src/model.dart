@@ -1461,10 +1461,25 @@ class PrepareSendResponse {
   /// are funds available in this asset to pay fees.
   final double? estimatedAssetFees;
 
-  const PrepareSendResponse({required this.destination, this.amount, this.feesSat, this.estimatedAssetFees});
+  /// The amount of funds required (in satoshi) to execute a SideSwap payment, excluding fees.
+  /// Only present when [PayAmount::Asset::pay_with_bitcoin] is set to `true`.
+  final BigInt? exchangeAmountSat;
+
+  const PrepareSendResponse({
+    required this.destination,
+    this.amount,
+    this.feesSat,
+    this.estimatedAssetFees,
+    this.exchangeAmountSat,
+  });
 
   @override
-  int get hashCode => destination.hashCode ^ amount.hashCode ^ feesSat.hashCode ^ estimatedAssetFees.hashCode;
+  int get hashCode =>
+      destination.hashCode ^
+      amount.hashCode ^
+      feesSat.hashCode ^
+      estimatedAssetFees.hashCode ^
+      exchangeAmountSat.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1474,7 +1489,8 @@ class PrepareSendResponse {
           destination == other.destination &&
           amount == other.amount &&
           feesSat == other.feesSat &&
-          estimatedAssetFees == other.estimatedAssetFees;
+          estimatedAssetFees == other.estimatedAssetFees &&
+          exchangeAmountSat == other.exchangeAmountSat;
 }
 
 @freezed

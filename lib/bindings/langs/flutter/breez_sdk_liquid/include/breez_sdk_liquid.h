@@ -467,6 +467,7 @@ typedef struct wire_cst_prepare_send_response {
   struct wire_cst_pay_amount *amount;
   uint64_t *fees_sat;
   double *estimated_asset_fees;
+  uint64_t *exchange_amount_sat;
 } wire_cst_prepare_send_response;
 
 typedef struct wire_cst_send_payment_request {
