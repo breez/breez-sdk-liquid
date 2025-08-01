@@ -302,7 +302,7 @@ class Config {
   /// The SideSwap API key used for making requests to the SideSwap payjoin service
   final String? sideswapApiKey;
 
-  /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments.
+  /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
   final bool useMagicRoutingHints;
 
   const Config({

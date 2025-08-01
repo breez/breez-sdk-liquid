@@ -99,7 +99,7 @@ pub struct Config {
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     /// The SideSwap API key used for making requests to the SideSwap payjoin service
     pub sideswap_api_key: Option<String>,
-    /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments.
+    /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
     pub use_magic_routing_hints: bool,
 }
 
