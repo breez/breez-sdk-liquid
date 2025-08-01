@@ -2762,6 +2762,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.onchain_fee_rate_leeway_sat = cst_encode_opt_box_autoadd_u_64(apiObj.onchainFeeRateLeewaySat);
     wireObj.asset_metadata = cst_encode_opt_list_asset_metadata(apiObj.assetMetadata);
     wireObj.sideswap_api_key = cst_encode_opt_String(apiObj.sideswapApiKey);
+    wireObj.use_magic_routing_hints = cst_encode_bool(apiObj.useMagicRoutingHints);
   }
 
   @protected
@@ -7324,6 +7325,9 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> sideswap_api_key;
+
+  @ffi.Bool()
+  external bool use_magic_routing_hints;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {

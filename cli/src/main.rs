@@ -19,6 +19,9 @@ pub(crate) struct Args {
     #[clap(long, action)]
     pub(crate) no_data_sync: bool,
 
+    #[clap(long, action)]
+    pub(crate) no_mrh: bool,
+
     #[clap(short, long)]
     pub(crate) log_file: Option<String>,
 
@@ -89,6 +92,7 @@ async fn main() -> Result<()> {
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
     config.working_dir = data_dir_str;
+    config.use_magic_routing_hints = !args.no_mrh;
     if args.no_data_sync {
         config.sync_service_url = None;
     } else if data_sync_url.is_some() {

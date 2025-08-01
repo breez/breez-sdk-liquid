@@ -99,6 +99,8 @@ pub struct Config {
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     /// The SideSwap API key used for making requests to the SideSwap payjoin service
     pub sideswap_api_key: Option<String>,
+    /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments.
+    pub use_magic_routing_hints: bool,
 }
 
 impl Config {
@@ -122,6 +124,7 @@ impl Config {
             onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            use_magic_routing_hints: true,
         }
     }
 
@@ -146,6 +149,7 @@ impl Config {
             onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            use_magic_routing_hints: true,
         }
     }
 
@@ -169,6 +173,7 @@ impl Config {
             onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            use_magic_routing_hints: true,
         }
     }
 
@@ -193,6 +198,7 @@ impl Config {
             onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
+            use_magic_routing_hints: true,
         }
     }
 
@@ -216,6 +222,7 @@ impl Config {
             onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: None,
+            use_magic_routing_hints: true,
         }
     }
 
@@ -240,6 +247,7 @@ impl Config {
             onchain_fee_rate_leeway_sat: None,
             asset_metadata: None,
             sideswap_api_key: None,
+            use_magic_routing_hints: true,
         }
     }
 

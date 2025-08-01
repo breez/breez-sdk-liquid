@@ -719,6 +719,7 @@ typedef struct wire_cst_config {
   uint64_t *onchain_fee_rate_leeway_sat;
   struct wire_cst_list_asset_metadata *asset_metadata;
   struct wire_cst_list_prim_u_8_strict *sideswap_api_key;
+  bool use_magic_routing_hints;
 } wire_cst_config;
 
 typedef struct wire_cst_connect_request {

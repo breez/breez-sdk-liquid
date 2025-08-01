@@ -553,6 +553,9 @@ enum BreezSDKLiquidMapper {
         guard let useDefaultExternalInputParsers = config["useDefaultExternalInputParsers"] as? Bool else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "useDefaultExternalInputParsers", typeName: "Config"))
         }
+        guard let useMagicRoutingHints = config["useMagicRoutingHints"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "useMagicRoutingHints", typeName: "Config"))
+        }
         var externalInputParsers: [ExternalInputParser]?
         if let externalInputParsersTmp = config["externalInputParsers"] as? [[String: Any?]] {
             externalInputParsers = try asExternalInputParserList(arr: externalInputParsersTmp)
@@ -578,7 +581,7 @@ enum BreezSDKLiquidMapper {
             sideswapApiKey = sideswapApiKeyTmp
         }
 
-        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, useMagicRoutingHints: useMagicRoutingHints, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -592,6 +595,7 @@ enum BreezSDKLiquidMapper {
             "breezApiKey": config.breezApiKey == nil ? nil : config.breezApiKey,
             "zeroConfMaxAmountSat": config.zeroConfMaxAmountSat == nil ? nil : config.zeroConfMaxAmountSat,
             "useDefaultExternalInputParsers": config.useDefaultExternalInputParsers,
+            "useMagicRoutingHints": config.useMagicRoutingHints,
             "externalInputParsers": config.externalInputParsers == nil ? nil : arrayOf(externalInputParserList: config.externalInputParsers!),
             "onchainFeeRateLeewaySat": config.onchainFeeRateLeewaySat == nil ? nil : config.onchainFeeRateLeewaySat,
             "assetMetadata": config.assetMetadata == nil ? nil : arrayOf(assetMetadataList: config.assetMetadata!),

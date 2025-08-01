@@ -342,6 +342,7 @@ dictionary Config {
     string? breez_api_key;
     u64? zero_conf_max_amount_sat;
     boolean use_default_external_input_parsers = true;
+    boolean use_magic_routing_hints = true;
     sequence<ExternalInputParser>? external_input_parsers = null;
     u64? onchain_fee_rate_leeway_sat = null;
     sequence<AssetMetadata>? asset_metadata = null;
