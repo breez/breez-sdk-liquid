@@ -86,6 +86,10 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
     "picknpay",
     "(.*)(za.co.electrum.picknpay)(.*)",
     "https://cryptoqr.net/.well-known/lnurlp/<input>",
+),(
+    "bootleggers",
+    "(.*)(wigroup\.co|yoyogroup\.co)(.*)",
+    "https://cryptoqr.net/.well-known/lnurlw/<input>",
 )];
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(120);
