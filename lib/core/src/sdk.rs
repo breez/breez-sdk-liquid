@@ -1408,11 +1408,14 @@ impl LiquidSdk {
                 }
 
                 let lbtc_pair = self.validate_submarine_pairs(invoice_amount_sat).await?;
-                let mrh_address = self
-                    .swapper
-                    .check_for_mrh(&invoice.bolt11)
-                    .await?
-                    .map(|(address, _)| address);
+                let mrh_address = if self.config.use_magic_routing_hints {
+                    self.swapper
+                        .check_for_mrh(&invoice.bolt11)
+                        .await?
+                        .map(|(address, _)| address)
+                } else {
+                    None
+                };
                 asset_id = self.config.lbtc_asset_id();
                 estimated_asset_fees = None;
                 (receiver_amount_sat, fees_sat) = match (mrh_address.clone(), req.amount.clone()) {
@@ -1440,7 +1443,7 @@ impl LiquidSdk {
                         (invoice_amount_sat, Some(fees_sat))
                     }
                     (None, _) => {
-                        // The BOLT11 invoice has no MRH, so we calculate the fees using a swap
+                        // The BOLT11 invoice has no MRH (or MRH is disabled), so we calculate the fees using a swap
                         let boltz_fees_total = lbtc_pair.fees.total(invoice_amount_sat);
                         let user_lockup_amount_sat = invoice_amount_sat + boltz_fees_total;
                         let lockup_fees_sat = self
@@ -1768,9 +1771,18 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Hash(_) => None,
         };
 
-        match self.swapper.check_for_mrh(invoice).await? {
+        let mrh_address = if self.config.use_magic_routing_hints {
+            self.swapper
+                .check_for_mrh(invoice)
+                .await?
+                .map(|(address, _)| address)
+        } else {
+            None
+        };
+
+        match mrh_address {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
-            Some((address, _)) => {
+            Some(address) => {
                 info!("Found MRH for L-BTC address {address}, invoice amount_sat {amount_sat}");
                 let (amount_sat, fees_sat) = if is_drain {
                     let drain_fees_sat = self.estimate_drain_tx_fee(None, Some(&address)).await?;
@@ -1799,7 +1811,7 @@ impl LiquidSdk {
                 .await
             }
 
-            // If no MRH found, perform usual swap
+            // If no MRH found (or MRH is disabled), perform usual swap
             None => {
                 self.send_payment_via_swap(SendPaymentViaSwapRequest {
                     invoice: invoice.to_string(),
@@ -1836,9 +1848,12 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        match bolt12_info.magic_routing_hint {
+        match (
+            bolt12_info.magic_routing_hint,
+            self.config.use_magic_routing_hints,
+        ) {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
-            Some(MagicRoutingHint { bip21, signature }) => {
+            (Some(MagicRoutingHint { bip21, signature }), true) => {
                 info!(
                     "Found MRH for L-BTC address {bip21}, invoice amount_sat {receiver_amount_sat}"
                 );
@@ -1871,8 +1886,8 @@ impl LiquidSdk {
                 .await
             }
 
-            // If no MRH found, perform usual swap
-            None => {
+            // If no MRH found (or MRH is disabled), perform usual swap
+            _ => {
                 self.send_payment_via_swap(SendPaymentViaSwapRequest {
                     invoice: bolt12_info.invoice,
                     bolt12_offer: Some(offer.offer.clone()),

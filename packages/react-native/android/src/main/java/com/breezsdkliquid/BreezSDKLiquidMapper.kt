@@ -432,6 +432,7 @@ fun asConfig(config: ReadableMap): Config? {
                 "network",
                 "paymentTimeoutSec",
                 "useDefaultExternalInputParsers",
+                "useMagicRoutingHints",
             ),
         )
     ) {
@@ -455,6 +456,7 @@ fun asConfig(config: ReadableMap): Config? {
             null
         }
     val useDefaultExternalInputParsers = config.getBoolean("useDefaultExternalInputParsers")
+    val useMagicRoutingHints = config.getBoolean("useMagicRoutingHints")
     val externalInputParsers =
         if (hasNonNullKey(config, "externalInputParsers")) {
             config.getArray("externalInputParsers")?.let {
@@ -494,6 +496,7 @@ fun asConfig(config: ReadableMap): Config? {
         breezApiKey,
         zeroConfMaxAmountSat,
         useDefaultExternalInputParsers,
+        useMagicRoutingHints,
         externalInputParsers,
         onchainFeeRateLeewaySat,
         assetMetadata,
@@ -512,6 +515,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "breezApiKey" to config.breezApiKey,
         "zeroConfMaxAmountSat" to config.zeroConfMaxAmountSat,
         "useDefaultExternalInputParsers" to config.useDefaultExternalInputParsers,
+        "useMagicRoutingHints" to config.useMagicRoutingHints,
         "externalInputParsers" to config.externalInputParsers?.let { readableArrayOf(it) },
         "onchainFeeRateLeewaySat" to config.onchainFeeRateLeewaySat,
         "assetMetadata" to config.assetMetadata?.let { readableArrayOf(it) },

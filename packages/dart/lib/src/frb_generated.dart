@@ -1970,7 +1970,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Config dco_decode_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 13) throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
+    if (arr.length != 14) throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
     return Config(
       liquidExplorer: dco_decode_blockchain_explorer(arr[0]),
       bitcoinExplorer: dco_decode_blockchain_explorer(arr[1]),
@@ -1985,6 +1985,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       onchainFeeRateLeewaySat: dco_decode_opt_box_autoadd_u_64(arr[10]),
       assetMetadata: dco_decode_opt_list_asset_metadata(arr[11]),
       sideswapApiKey: dco_decode_opt_String(arr[12]),
+      useMagicRoutingHints: dco_decode_bool(arr[13]),
     );
   }
 
@@ -4061,6 +4062,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_onchainFeeRateLeewaySat = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_assetMetadata = sse_decode_opt_list_asset_metadata(deserializer);
     var var_sideswapApiKey = sse_decode_opt_String(deserializer);
+    var var_useMagicRoutingHints = sse_decode_bool(deserializer);
     return Config(
       liquidExplorer: var_liquidExplorer,
       bitcoinExplorer: var_bitcoinExplorer,
@@ -4075,6 +4077,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       onchainFeeRateLeewaySat: var_onchainFeeRateLeewaySat,
       assetMetadata: var_assetMetadata,
       sideswapApiKey: var_sideswapApiKey,
+      useMagicRoutingHints: var_useMagicRoutingHints,
     );
   }
 
@@ -6618,6 +6621,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_u_64(self.onchainFeeRateLeewaySat, serializer);
     sse_encode_opt_list_asset_metadata(self.assetMetadata, serializer);
     sse_encode_opt_String(self.sideswapApiKey, serializer);
+    sse_encode_bool(self.useMagicRoutingHints, serializer);
   }
 
   @protected

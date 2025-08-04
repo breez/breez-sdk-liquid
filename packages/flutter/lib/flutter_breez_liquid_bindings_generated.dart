@@ -5170,6 +5170,9 @@ final class wire_cst_config extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_asset_metadata> asset_metadata;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> sideswap_api_key;
+
+  @ffi.Bool()
+  external bool use_magic_routing_hints;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {

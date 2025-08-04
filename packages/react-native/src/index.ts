@@ -99,6 +99,7 @@ export interface Config {
     breezApiKey?: string
     zeroConfMaxAmountSat?: number
     useDefaultExternalInputParsers: boolean
+    useMagicRoutingHints: boolean
     externalInputParsers?: ExternalInputParser[]
     onchainFeeRateLeewaySat?: number
     assetMetadata?: AssetMetadata[]

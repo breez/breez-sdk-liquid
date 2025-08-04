@@ -2640,6 +2640,7 @@ impl SseDecode for crate::model::Config {
         let mut var_assetMetadata =
             <Option<Vec<crate::model::AssetMetadata>>>::sse_decode(deserializer);
         let mut var_sideswapApiKey = <Option<String>>::sse_decode(deserializer);
+        let mut var_useMagicRoutingHints = <bool>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_explorer: var_liquidExplorer,
             bitcoin_explorer: var_bitcoinExplorer,
@@ -2654,6 +2655,7 @@ impl SseDecode for crate::model::Config {
             onchain_fee_rate_leeway_sat: var_onchainFeeRateLeewaySat,
             asset_metadata: var_assetMetadata,
             sideswap_api_key: var_sideswapApiKey,
+            use_magic_routing_hints: var_useMagicRoutingHints,
         };
     }
 }
@@ -5346,6 +5348,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
                 .into_dart(),
             self.asset_metadata.into_into_dart().into_dart(),
             self.sideswap_api_key.into_into_dart().into_dart(),
+            self.use_magic_routing_hints.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7776,6 +7779,7 @@ impl SseEncode for crate::model::Config {
         <Option<u64>>::sse_encode(self.onchain_fee_rate_leeway_sat, serializer);
         <Option<Vec<crate::model::AssetMetadata>>>::sse_encode(self.asset_metadata, serializer);
         <Option<String>>::sse_encode(self.sideswap_api_key, serializer);
+        <bool>::sse_encode(self.use_magic_routing_hints, serializer);
     }
 }
 
@@ -10285,6 +10289,7 @@ mod io {
                 onchain_fee_rate_leeway_sat: self.onchain_fee_rate_leeway_sat.cst_decode(),
                 asset_metadata: self.asset_metadata.cst_decode(),
                 sideswap_api_key: self.sideswap_api_key.cst_decode(),
+                use_magic_routing_hints: self.use_magic_routing_hints.cst_decode(),
             }
         }
     }
@@ -12041,6 +12046,7 @@ mod io {
                 onchain_fee_rate_leeway_sat: core::ptr::null_mut(),
                 asset_metadata: core::ptr::null_mut(),
                 sideswap_api_key: core::ptr::null_mut(),
+                use_magic_routing_hints: Default::default(),
             }
         }
     }
@@ -14369,6 +14375,7 @@ mod io {
         onchain_fee_rate_leeway_sat: *mut u64,
         asset_metadata: *mut wire_cst_list_asset_metadata,
         sideswap_api_key: *mut wire_cst_list_prim_u_8_strict,
+        use_magic_routing_hints: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
