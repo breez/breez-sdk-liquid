@@ -1,8 +1,9 @@
 use std::collections::HashSet;
 use std::time::Duration;
 
-use crate::swapper::{
-    boltz::BoltzSwapper, ProxyUrlFetcher, SubscriptionHandler, SwapperStatusStream,
+use crate::{
+    swapper::{boltz::BoltzSwapper, ProxyUrlFetcher, SubscriptionHandler, SwapperStatusStream},
+    utils::run_with_shutdown,
 };
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{
@@ -11,7 +12,7 @@ use boltz_client::boltz::{
     InvoiceRequestParams, WsRequest, WsResponse,
 };
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 use sdk_common::utils::Arc;
 use serde::Serialize;
 use tokio::sync::{broadcast, watch};
@@ -44,27 +45,15 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
     fn start(
         self: Arc<Self>,
         callback: Box<dyn SubscriptionHandler>,
-        mut shutdown: watch::Receiver<()>,
+        shutdown: watch::Receiver<()>,
     ) {
         let keep_alive_ping_interval = Duration::from_secs(15);
         let reconnect_delay = Duration::from_secs(2);
 
         let swapper = Arc::clone(&self);
-        tokio::spawn(async move {
+        let status_stream_future = async move {
             loop {
                 debug!("Start of ws stream loop");
-                match shutdown.has_changed() {
-                    Ok(true) => {
-                        info!("Received shutdown signal, exiting Status Stream loop");
-                        return;
-                    }
-                    Ok(false) => {}
-                    Err(_) => {
-                        warn!("Shutdown channel was closed, exiting Status Stream loop");
-                        return;
-                    }
-                }
-
                 let mut request_stream = self.request_notifier.subscribe();
                 let client = match swapper.get_boltz_client().await {
                     Ok(client) => client,
@@ -102,11 +91,6 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
 
                         loop {
                             tokio::select! {
-                                _ = shutdown.changed() => {
-                                    info!("Received shutdown signal, exiting Status Stream loop");
-                                    return;
-                                },
-
                                 _ = tokio::time::sleep(keep_alive_ping_interval) => {
                                     match serde_json::to_string(&WsRequest::Ping) {
                                         Ok(ping_msg) => {
@@ -200,6 +184,15 @@ impl<P: ProxyUrlFetcher> SwapperStatusStream for BoltzSwapper<P> {
                     }
                 }
             }
+        };
+
+        tokio::spawn(async move {
+            run_with_shutdown(
+                shutdown,
+                "Received shutdown signal, exiting status stream loop",
+                status_stream_future,
+            )
+            .await
         });
     }
 

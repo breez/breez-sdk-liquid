@@ -43,7 +43,7 @@ use sdk_common::utils::Arc;
 use side_swap::api::SideSwapService;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
-use tokio::sync::{watch, RwLock};
+use tokio::sync::{watch, Mutex, RwLock};
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_with_wasm::alias as tokio;
 use web_time::{Instant, SystemTime, UNIX_EPOCH};
@@ -63,6 +63,7 @@ use crate::swapper::{
     boltz::BoltzSwapper, Swapper, SwapperStatusStream, SwapperSubscriptionHandler,
 };
 use crate::utils::bolt12::encode_invoice;
+use crate::utils::run_with_shutdown;
 use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
@@ -374,6 +375,7 @@ impl LiquidSdkBuilder {
             payjoin_service,
             buy_bitcoin_service,
             external_input_parsers,
+            background_task_handles: Mutex::new(vec![]),
         });
         Ok(sdk)
     }
@@ -402,6 +404,7 @@ pub struct LiquidSdk {
     pub(crate) payjoin_service: Arc<dyn PayjoinService>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
+    pub(crate) background_task_handles: Mutex<Vec<TaskHandle>>,
 }
 
 impl LiquidSdk {
@@ -508,6 +511,7 @@ impl LiquidSdk {
     ///
     /// Internal method. Should only be used as part of [LiquidSdk::start].
     async fn start_background_tasks(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+        let mut handles = self.background_task_handles.lock().await;
         let subscription_handler = Box::new(SwapperSubscriptionHandler::new(
             self.persister.clone(),
             self.status_stream.clone(),
@@ -516,11 +520,25 @@ impl LiquidSdk {
             .clone()
             .start(subscription_handler.clone(), self.shutdown_receiver.clone());
         if let Some(sync_service) = self.sync_service.clone() {
-            sync_service.start(self.shutdown_receiver.clone());
+            handles.push(TaskHandle {
+                name: "sync-reconnect".to_string(),
+                handle: sync_service.start(self.shutdown_receiver.clone()),
+            });
         }
-        self.start_track_new_blocks_task();
-        self.track_swap_updates();
-        self.track_realtime_sync_events(subscription_handler);
+        handles.push(TaskHandle {
+            name: "track-new-blocks".to_string(),
+            handle: self.start_track_new_blocks_task(),
+        });
+        handles.push(TaskHandle {
+            name: "track-swap-updates".to_string(),
+            handle: self.track_swap_updates(),
+        });
+        if let Some(handle) = self.track_realtime_sync_events(subscription_handler) {
+            handles.push(TaskHandle {
+                name: "track-realtime-sync-events".to_string(),
+                handle,
+            });
+        }
 
         Ok(())
     }
@@ -536,9 +554,40 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
 
         let mut is_started = self.is_started.write().await;
-        self.shutdown_sender
-            .send(())
-            .map_err(|e| SdkError::generic(format!("Shutdown failed: {e}")))?;
+        let mut handles: Vec<_> = self
+            .background_task_handles
+            .lock()
+            .await
+            .drain(..)
+            .collect();
+
+        // Send graceful shutdown signal
+        if self.shutdown_sender.send(()).is_ok() {
+            info!("Sent shutdown signal to background tasks - waiting for tasks to shutdown gracefully");
+
+            let graceful_shutdown_result = tokio::time::timeout(
+                Duration::from_secs(5),
+                futures::future::try_join_all(handles.iter_mut().map(|h| &mut h.handle)),
+            )
+            .await;
+
+            match graceful_shutdown_result {
+                Ok(_) => info!("All background tasks completed gracefully"),
+                Err(_) => {
+                    warn!("Some background tasks did not complete within timeout - aborting remaining tasks");
+                }
+            }
+        } else {
+            warn!("Failed to send shutdown signal - aborting tasks");
+        }
+
+        for handle in handles {
+            if !handle.handle.is_finished() {
+                info!("Aborting task: {:?}", handle.name);
+                handle.handle.abort();
+            }
+        }
+
         *is_started = false;
         Ok(())
     }
@@ -546,41 +595,44 @@ impl LiquidSdk {
     fn track_realtime_sync_events(
         self: &Arc<LiquidSdk>,
         subscription_handler: Box<dyn SubscriptionHandler>,
-    ) {
+    ) -> Option<tokio::task::JoinHandle<()>> {
         let cloned = self.clone();
-        let Some(sync_service) = cloned.sync_service.clone() else {
-            return;
-        };
-        let mut shutdown_receiver = cloned.shutdown_receiver.clone();
-
-        tokio::spawn(async move {
+        let sync_service = cloned.sync_service.clone()?;
+        let track_realtime_sync_events_future = async move {
             let mut sync_events_receiver = sync_service.subscribe_events();
             loop {
-                tokio::select! {
-                    event = sync_events_receiver.recv() => {
-                        if let Ok(e) = event {
-                            match e {
-                                sync::Event::SyncedCompleted{data} => {
-                                    info!(
-                                      "Received sync event: pulled {} records, pushed {} records",
-                                      data.pulled_records_count, data.pushed_records_count
-                                    );
-                                    let did_pull_new_records = data.pulled_records_count > 0;
-                                    if did_pull_new_records {
-                                        subscription_handler.track_subscriptions().await;
-                                    }
-                                    cloned.notify_event_listeners(SdkEvent::DataSynced {did_pull_new_records}).await
-                                }
+                if let Ok(event) = sync_events_receiver.recv().await {
+                    match event {
+                        sync::Event::SyncedCompleted { data } => {
+                            info!(
+                                "Received sync event: pulled {} records, pushed {} records",
+                                data.pulled_records_count, data.pushed_records_count
+                            );
+                            let did_pull_new_records = data.pulled_records_count > 0;
+                            if did_pull_new_records {
+                                subscription_handler.track_subscriptions().await;
                             }
+                            cloned
+                                .notify_event_listeners(SdkEvent::DataSynced {
+                                    did_pull_new_records,
+                                })
+                                .await
                         }
-                    }
-                    _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting real-time sync loop");
-                        return;
                     }
                 }
             }
-        });
+        };
+
+        let shutdown_receiver = self.shutdown_receiver.clone();
+        info!("Starting track-realtime-sync-events task");
+        Some(tokio::spawn(async move {
+            run_with_shutdown(
+                shutdown_receiver,
+                "Received shutdown signal, exiting real-time sync loop",
+                track_realtime_sync_events_future,
+            )
+            .await
+        }))
     }
 
     async fn track_new_blocks(
@@ -653,9 +705,10 @@ impl LiquidSdk {
         }
     }
 
-    fn start_track_new_blocks_task(self: &Arc<LiquidSdk>) {
+    fn start_track_new_blocks_task(self: &Arc<LiquidSdk>) -> tokio::task::JoinHandle<()> {
         let cloned = self.clone();
-        tokio::spawn(async move {
+
+        let track_new_blocks_future = async move {
             let last_blockchain_info = cloned
                 .get_info()
                 .await
@@ -664,29 +717,32 @@ impl LiquidSdk {
 
             let mut current_liquid_block: u32 = last_blockchain_info.liquid_tip;
             let mut current_bitcoin_block: u32 = last_blockchain_info.bitcoin_tip;
-            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
             cloned
                 .track_new_blocks(&mut current_liquid_block, &mut current_bitcoin_block)
                 .await;
             loop {
-                tokio::select! {
-                    _ = tokio::time::sleep(Duration::from_secs(10)) => {
-                        cloned.track_new_blocks(&mut current_liquid_block, &mut current_bitcoin_block).await;
-                    }
-
-                    _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting track blocks loop");
-                        return;
-                    }
-                }
+                tokio::time::sleep(Duration::from_secs(10)).await;
+                cloned
+                    .track_new_blocks(&mut current_liquid_block, &mut current_bitcoin_block)
+                    .await;
             }
-        });
+        };
+
+        let shutdown_receiver = self.shutdown_receiver.clone();
+        info!("Starting track-new-blocks task");
+        tokio::spawn(async move {
+            run_with_shutdown(
+                shutdown_receiver,
+                "Received shutdown signal, exiting track blocks loop",
+                track_new_blocks_future,
+            )
+            .await
+        })
     }
 
-    fn track_swap_updates(self: &Arc<LiquidSdk>) {
+    fn track_swap_updates(self: &Arc<LiquidSdk>) -> tokio::task::JoinHandle<()> {
         let cloned = self.clone();
-        tokio::spawn(async move {
-            let mut shutdown_receiver = cloned.shutdown_receiver.clone();
+        let track_swap_updates_future = async move {
             let mut updates_stream = cloned.status_stream.subscribe_swap_updates();
             let mut invoice_request_stream = cloned.status_stream.subscribe_invoice_requests();
             let swaps_streams = vec![
@@ -757,13 +813,20 @@ impl LiquidSdk {
                         },
                         Err(e) => error!("Received invoice request stream error: {e:?}"),
                     },
-                    _ = shutdown_receiver.changed() => {
-                        info!("Received shutdown signal, exiting swap updates loop");
-                        return;
-                    }
                 }
             }
-        });
+        };
+
+        let shutdown_receiver = self.shutdown_receiver.clone();
+        info!("Starting track-swap-updates task");
+        tokio::spawn(async move {
+            run_with_shutdown(
+                shutdown_receiver,
+                "Received shutdown signal, exiting track swap updates loop",
+                track_swap_updates_future,
+            )
+            .await
+        })
     }
 
     async fn notify_event_listeners(&self, e: SdkEvent) {
