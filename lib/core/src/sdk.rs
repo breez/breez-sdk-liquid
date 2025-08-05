@@ -82,15 +82,18 @@ pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 4320;
 
 /// A list of external input parsers that are used by default.
 /// To opt-out, set `use_default_external_input_parsers` in [Config] to false.
-pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[(
-    "picknpay",
-    "(.*)(za.co.electrum.picknpay)(.*)",
-    "https://cryptoqr.net/.well-known/lnurlp/<input>",
-),(
-    "bootleggers",
-    "(.*)(wigroup\.co|yoyogroup\.co)(.*)",
-    "https://cryptoqr.net/.well-known/lnurlw/<input>",
-)];
+pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[
+    (
+        "picknpay",
+        "(.*)(za.co.electrum.picknpay)(.*)",
+        "https://cryptoqr.net/.well-known/lnurlp/<input>",
+    ),
+    (
+        "bootleggers",
+        r"(.*)(wigroup\.co|yoyogroup\.co)(.*)",
+        "https://cryptoqr.net/.well-known/lnurlw/<input>",
+    ),
+];
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(120);
 
