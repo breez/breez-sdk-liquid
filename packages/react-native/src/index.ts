@@ -699,10 +699,10 @@ export type PayAmount = {
     receiverAmountSat: number
 } | {
     type: PayAmountVariant.ASSET,
-    assetId: string
+    toAsset: string
     receiverAmount: number
     estimateAssetFees?: boolean
-    payWithBitcoin?: boolean
+    fromAsset?: string
 } | {
     type: PayAmountVariant.DRAIN
 }

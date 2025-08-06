@@ -482,10 +482,10 @@ pub enum PayAmount {
         receiver_amount_sat: u64,
     },
     Asset {
-        asset_id: String,
+        to_asset: String,
         receiver_amount: f64,
         estimate_asset_fees: Option<bool>,
-        pay_with_bitcoin: Option<bool>,
+        from_asset: Option<String>,
     },
     Drain,
 }
