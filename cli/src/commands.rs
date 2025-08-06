@@ -67,11 +67,10 @@ pub(crate) enum Command {
         #[arg(long)]
         delay: Option<u64>,
 
-        /// Can only be used when a non-LBTC asset is provided, along with an amount and destination
-        /// Specifies whether or not to swap bitcoin for the provided asset, or use the wallet's
-        /// assets (if present)
-        #[clap(long, action = ArgAction::SetTrue)]
-        use_bitcoin: Option<bool>,
+        /// The asset id specifying which asset to use to execute the payment.
+        /// If it differs from the provided `asset_id`, it will execute a SideSwap payment.
+        #[clap(long)]
+        from_asset: Option<String>,
     },
     /// Fetch the current limits for Send and Receive payments
     FetchLightningLimits,
@@ -432,7 +431,7 @@ pub(crate) async fn handle_command(
             use_asset_fees,
             drain,
             delay,
-            use_bitcoin: pay_with_bitcoin,
+            from_asset,
         } => {
             let destination = invoice.or(offer.or(address.clone())).ok_or(anyhow!(
                 "Must specify either a BOLT11 invoice, a BOLT12 offer or a direct/BIP21 address."
@@ -455,10 +454,10 @@ pub(crate) async fn handle_command(
 
             let amount = match (asset_id, amount, amount_sat, drain.unwrap_or(false)) {
                 (Some(asset_id), Some(receiver_amount), _, _) => Some(PayAmount::Asset {
-                    asset_id,
+                    to_asset: asset_id,
                     receiver_amount,
                     estimate_asset_fees: use_asset_fees,
-                    pay_with_bitcoin,
+                    from_asset,
                 }),
                 (None, None, Some(receiver_amount_sat), _) => Some(PayAmount::Bitcoin {
                     receiver_amount_sat,
