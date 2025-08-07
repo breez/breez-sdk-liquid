@@ -40,6 +40,14 @@ jobs:
       - name: Install GTK
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev
+      
+      - name: Setup Android SDK
+        if: matrix.os == 'ubuntu-latest'
+        uses: android-actions/setup-android@v3
+        with:
+            api-level: 34
+            ndk-version: '25.1.8937393'
+            build-tools-version: '34.0.0'
 
       - name: Precompile (macOS & Windows)
         if: matrix.os == 'macOS-latest' || matrix.os == 'windows-latest'
@@ -51,7 +59,7 @@ jobs:
 
       - name: Precompile (with Android)
         if: matrix.os == 'ubuntu-latest'
-        run: dart run build_tool precompile-binaries -v --manifest-dir=../../../../lib/core --repository=breez/breez-sdk-liquid --android-sdk-location=/usr/local/lib/android/sdk --android-ndk-version=24.0.8215888 --android-min-sdk-version=23
+        run: dart run build_tool precompile-binaries -v --manifest-dir=../../../../lib/core --repository=breez/breez-sdk-liquid --android-sdk-location=$ANDROID_HOME --android-ndk-version=25.1.8937393 --android-min-sdk-version=24
         working-directory: packages/dart/cargokit/build_tool
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
