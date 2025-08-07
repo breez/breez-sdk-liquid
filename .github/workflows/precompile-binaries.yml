@@ -44,10 +44,10 @@ jobs:
       - name: Setup Android SDK
         if: matrix.os == 'ubuntu-latest'
         uses: android-actions/setup-android@v3
-        with:
-            api-level: 34
-            ndk-version: '23.2.8568313'
-            build-tools-version: '34.0.0'
+
+      - name: Install NDK
+        if: matrix.os == 'ubuntu-latest'
+        run: sdkmanager "ndk;23.2.8568313"
 
       - name: Set IPHONEOS_DEPLOYMENT_TARGET
         if: matrix.os == 'macOS-latest'
