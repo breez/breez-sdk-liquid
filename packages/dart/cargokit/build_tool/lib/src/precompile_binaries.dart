@@ -29,6 +29,7 @@ class PrecompileBinaries {
     this.androidNdkVersion,
     this.androidMinSdkVersion,
     this.tempDir,
+    this.skipRelease = true,
   });
 
   final PrivateKey privateKey;
@@ -40,6 +41,7 @@ class PrecompileBinaries {
   final String? androidNdkVersion;
   final int? androidMinSdkVersion;
   final String? tempDir;
+  final bool skipRelease;
 
   static String fileName(Target target, String name) {
     return '${target.rust}_$name';
@@ -69,12 +71,14 @@ class PrecompileBinaries {
 
     final github = GitHub(auth: Authentication.withToken(githubToken));
     final repo = github.repositories;
-    final release = await _getOrCreateRelease(
-      repo: repo,
-      tagName: tagName,
-      packageName: crateInfo.packageName,
-      hash: hash,
-    );
+    final release = skipRelease
+        ? (Release()..assets = [])
+        : await _getOrCreateRelease(
+            repo: repo,
+            tagName: tagName,
+            packageName: crateInfo.packageName,
+            hash: hash,
+          );
 
     final tempDir = this.tempDir != null
         ? Directory(this.tempDir!)
@@ -148,22 +152,28 @@ class PrecompileBinaries {
         assets.add(create);
         assets.add(signatureCreate);
       }
-      _log.info('Uploading assets: ${assets.map((e) => e.name)}');
-      for (final asset in assets) {
-        // This seems to be failing on CI so do it one by one
-        int retryCount = 0;
-        while (true) {
-          try {
-            await repo.uploadReleaseAssets(release, [asset]);
-            break;
-          } on Exception catch (e) {
-            if (retryCount == 10) {
-              rethrow;
+
+      if (skipRelease) {
+        _log.info('Skipping upload (skipRelease=true)');
+        _log.info('Built artifacts: ${assets.map((a) => a.name)}');
+      } else {
+        _log.info('Uploading assets: ${assets.map((e) => e.name)}');
+        for (final asset in assets) {
+          // This seems to be failing on CI so do it one by one
+          int retryCount = 0;
+          while (true) {
+            try {
+              await repo.uploadReleaseAssets(release, [asset]);
+              break;
+            } on Exception catch (e) {
+              if (retryCount == 10) {
+                rethrow;
+              }
+              ++retryCount;
+              _log.shout(
+                  'Upload failed (attempt $retryCount, will retry): ${e.toString()}');
+              await Future.delayed(Duration(seconds: 2));
             }
-            ++retryCount;
-            _log.shout(
-                'Upload failed (attempt $retryCount, will retry): ${e.toString()}');
-            await Future.delayed(Duration(seconds: 2));
           }
         }
       }
