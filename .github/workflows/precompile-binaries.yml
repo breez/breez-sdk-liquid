@@ -1,6 +1,12 @@
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'commit/tag/branch reference'
+        required: true
+        type: string
 
 name: Precompile Binaries
 
@@ -15,7 +21,10 @@ jobs:
           - macOS-latest
           - windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          ref: ${{ inputs.ref || github.sha }}
       - uses: dart-lang/setup-dart@v1
       - name: Install GTK
         if: (matrix.os == 'ubuntu-latest')
