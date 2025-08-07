@@ -38,7 +38,3 @@ String dylibPath(String profile) =>
           ]),
         )
         .toFilePath();
-
-Future<void> initApi({String profile = 'frb-min'}) {
-  return initialize(dylib: ExternalLibrary.open(dylibPath(profile)));
-}

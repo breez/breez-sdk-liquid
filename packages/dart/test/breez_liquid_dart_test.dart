@@ -8,7 +8,7 @@ void main() {
 
   group('main', () {
     setUpAll(() async {
-      await initApi();
+      await RustLib.init();
       ConnectRequest connectRequest = ConnectRequest(
         mnemonic: "",
         config: defaultConfig(network: LiquidNetwork.testnet, breezApiKey: "<breez-api-key>"),

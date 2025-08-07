@@ -1,0 +1,8 @@
+rust_input: crate::bindings
+rust_root: ../../lib/core/
+dart_output: lib/src/rust
+c_output: ../../lib/bindings/langs/flutter/breez_sdk_liquid/include/breez_sdk_liquid.h
+web: false
+full_dep: true
+add_mod_to_lib: false
+dart_format_line_length: 110

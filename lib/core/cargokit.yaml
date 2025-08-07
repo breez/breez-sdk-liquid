@@ -1,0 +1,16 @@
+cargo:
+  debug: # Configuration of cargo execution during debug builds
+    toolchain: stable # default
+  release: # Configuration of cargo execution for release builds
+    toolchain: nightly # rustup will be invoked with nightly toolchain
+    extra_flags: # extra arguments passed to cargo build
+      - -Z
+      - build-std=panic_abort,std
+
+# If crate ships with precompiled binaries, they can be configured here.
+precompiled_binaries:
+  # Uri prefix used when downloading precompiled binaries.
+  url_prefix: https://github.com/breez/breez-sdk-liquid/releases/download/precompiled_
+
+  # Public key for verifying downloaded precompiled binaries.
+  public_key: 9f1d5288ad8d6581a7f14c852f71db594991569bc4f173ef6ef0d33f1e359975
