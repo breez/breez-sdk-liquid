@@ -49,6 +49,10 @@ jobs:
             ndk-version: '23.2.8568313'
             build-tools-version: '34.0.0'
 
+      - name: Set IPHONEOS_DEPLOYMENT_TARGET
+        if: matrix.os == 'macOS-latest'
+        run: echo "IPHONEOS_DEPLOYMENT_TARGET=13.0" >> $GITHUB_ENV
+
       - name: Precompile (macOS & Windows)
         if: matrix.os == 'macOS-latest' || matrix.os == 'windows-latest'
         run: dart run build_tool precompile-binaries -v --manifest-dir=../../../../lib/core --repository=breez/breez-sdk-liquid

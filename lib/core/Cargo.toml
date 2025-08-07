@@ -135,6 +135,3 @@ tonic-build = "^0.8"
 [target.'cfg(target_os = "ios")'.build-dependencies]
 security-framework = "=2.10.0"
 security-framework-sys = "=2.10.0"
-
-[package.metadata.ios]
-deployment_target = "13.0"
