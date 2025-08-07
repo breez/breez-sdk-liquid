@@ -107,9 +107,11 @@ class PrecompileBinaries {
     for (final target in targets) {
       final artifactNames = getArtifactNames(
         target: target,
-        libraryName: crateInfo.packageName,
+        libraryName: crateInfo.libraryName,
         remote: true,
       );
+
+      _log.info('Looking for artifacts: $artifactNames');
 
       if (artifactNames.every((name) {
         final fileName = PrecompileBinaries.fileName(target, name);
@@ -126,9 +128,19 @@ class PrecompileBinaries {
       builder.prepare(rustup);
       final res = await builder.build();
 
+      _log.info('Build result directory: $res');
+      _log.info('Files in build directory: ${Directory(res).listSync()}');
+
       final assets = <CreateReleaseAsset>[];
       for (final name in artifactNames) {
         final file = File(path.join(res, name));
+
+        _log.info('Looking for artifact: $name');
+        _log.info('Full path: ${file.path}');
+        _log.info('File exists: ${file.existsSync()}');
+        _log.info(
+            'Directory contents: ${Directory(res).listSync().map((f) => path.basename(f.path))}');
+
         if (!file.existsSync()) {
           throw Exception('Missing artifact: ${file.path}');
         }
