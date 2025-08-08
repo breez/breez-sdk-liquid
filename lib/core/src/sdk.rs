@@ -1320,12 +1320,12 @@ impl LiquidSdk {
                         estimate_asset_fees,
                     } => {
                         let from_asset = from_asset.unwrap_or(to_asset.clone());
-                        let _payer_asset_metadata = self
-                            .persister
-                            .get_asset_metadata(&from_asset)?
-                            .ok_or(PaymentError::AssetError {
-                                err: format!("Asset {to_asset} is not supported"),
-                            })?;
+                        ensure_sdk!(
+                            self.persister.get_asset_metadata(&from_asset)?.is_some(),
+                            PaymentError::AssetError {
+                                err: format!("Asset {from_asset} is not supported"),
+                            }
+                        );
                         let receiver_asset_metadata = self
                             .persister
                             .get_asset_metadata(&to_asset)?
@@ -1336,8 +1336,12 @@ impl LiquidSdk {
                             receiver_asset_metadata.amount_to_sat(receiver_amount);
 
                         let asset_fees = if estimate_asset_fees.unwrap_or(false) {
+                            ensure_sdk!(
+                                !is_sideswap_payment,
+                                PaymentError::generic("Cannot pay asset fees when executing a payment between two separate assets")
+                            );
                             self.payjoin_service
-                                .estimate_payjoin_tx_fee(&from_asset, receiver_amount_sat)
+                                .estimate_payjoin_tx_fee(&to_asset, receiver_amount_sat)
                                 .await
                                 .inspect_err(|e| debug!("Error estimating payjoin tx: {e}"))
                                 .ok()
@@ -1361,6 +1365,11 @@ impl LiquidSdk {
                                     .get_asset_swap(from_asset, to_asset, receiver_amount_sat)
                                     .await?;
                                 validate_funds = false;
+                                ensure_sdk!(
+                                    get_info_res.wallet_info.balance_sat
+                                        >= swap.payer_amount_sat + swap.fees_sat,
+                                    PaymentError::InsufficientFunds
+                                );
                                 exchange_amount_sat = Some(swap.payer_amount_sat - swap.fees_sat);
                                 Ok(swap.fees_sat)
                             }
@@ -1608,7 +1617,7 @@ impl LiquidSdk {
                             .to_string(),
                     });
                 };
-                let Some(ref to_asset) = liquid_address_data.asset_id else {
+                let Some(to_asset) = liquid_address_data.asset_id.clone() else {
                     return Err(PaymentError::asset_error(
                         "Asset must be set when paying to a Liquid address",
                     ));
@@ -1628,65 +1637,29 @@ impl LiquidSdk {
                 let asset_pay_fees = req.use_asset_fees.unwrap_or_default();
                 let mut response = match amount.as_ref().is_some_and(|a| a.is_sideswap_payment()) {
                     false => {
-                        self.get_info()
-                            .await?
-                            .wallet_info
-                            .validate_sufficient_funds(
-                                self.config.network,
-                                receiver_amount_sat,
-                                *fees_sat,
-                                to_asset,
-                            )?;
-
-                        if asset_pay_fees {
-                            return self
-                                .pay_liquid_payjoin(
-                                    liquid_address_data.clone(),
-                                    receiver_amount_sat,
-                                )
-                                .await;
-                        }
-
-                        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
-                        self.pay_liquid(
-                            liquid_address_data.clone(),
+                        self.pay_liquid(PayLiquidRequest {
+                            address_data: liquid_address_data.clone(),
+                            to_asset,
                             receiver_amount_sat,
-                            fees_sat,
-                            true,
-                        )
+                            asset_pay_fees,
+                            fees_sat: *fees_sat,
+                        })
                         .await
                     }
                     true => {
-                        // TODO: Remove to allow paying fees with assets
                         let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                        ensure_sdk!(
+                            !asset_pay_fees,
+                            PaymentError::generic("Cannot pay asset fees when executing a payment between two separate assets")
+                        );
 
-                        let sideswap_service = SideSwapService::from_sdk(self);
-                        let from_asset = AssetId::from_str(match amount {
-                            Some(PayAmount::Asset {
-                                from_asset: Some(from_asset),
-                                ..
-                            }) => from_asset,
-                            _ => to_asset,
-                        })?;
-                        let to_asset = AssetId::from_str(to_asset)?;
-                        let to_address = elements::Address::from_str(&liquid_address_data.address)
-                            .map_err(|err| {
-                                PaymentError::generic(format!(
-                                    "Could not convert destination address: {err}"
-                                ))
-                            })?;
-
-                        self.pay_sideswap(
-                            &sideswap_service,
-                            PaySideSwapRequest {
-                                from_asset,
-                                to_asset,
-                                to_address,
-                                receiver_amount_sat,
-                                fees_sat,
-                                description: liquid_address_data.message.clone(),
-                            },
-                        )
+                        self.pay_sideswap(PaySideSwapRequest {
+                            address_data: liquid_address_data.clone(),
+                            to_asset,
+                            receiver_amount_sat,
+                            fees_sat,
+                            amount: amount.clone(),
+                        })
                         .await
                     }
                 }?;
@@ -1811,7 +1784,7 @@ impl LiquidSdk {
                     (amount_sat, fees_sat)
                 };
 
-                self.pay_liquid(
+                self.pay_liquid_onchain(
                     LiquidAddressData {
                         address,
                         network: self.config.network.into(),
@@ -1886,7 +1859,7 @@ impl LiquidSdk {
                     (receiver_amount_sat, fees_sat)
                 };
 
-                self.pay_liquid(
+                self.pay_liquid_onchain(
                     LiquidAddressData {
                         address,
                         network: self.config.network.into(),
@@ -1918,8 +1891,39 @@ impl LiquidSdk {
         }
     }
 
+    async fn pay_liquid(&self, req: PayLiquidRequest) -> Result<SendPaymentResponse, PaymentError> {
+        let PayLiquidRequest {
+            address_data,
+            receiver_amount_sat,
+            to_asset,
+            fees_sat,
+            asset_pay_fees,
+            ..
+        } = req;
+
+        self.get_info()
+            .await?
+            .wallet_info
+            .validate_sufficient_funds(
+                self.config.network,
+                receiver_amount_sat,
+                fees_sat,
+                &to_asset,
+            )?;
+
+        if asset_pay_fees {
+            return self
+                .pay_liquid_payjoin(address_data.clone(), receiver_amount_sat)
+                .await;
+        }
+
+        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+        self.pay_liquid_onchain(address_data.clone(), receiver_amount_sat, fees_sat, true)
+            .await
+    }
+
     /// Performs a Send Payment by doing an onchain tx to a Liquid address
-    async fn pay_liquid(
+    async fn pay_liquid_onchain(
         &self,
         address_data: LiquidAddressData,
         receiver_amount_sat: u64,
@@ -2018,17 +2022,30 @@ impl LiquidSdk {
     /// Performs a Liquid send payment via SideSwap
     async fn pay_sideswap(
         &self,
-        sideswap_service: &SideSwapService,
         req: PaySideSwapRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let PaySideSwapRequest {
-            from_asset,
+            address_data,
             to_asset,
-            to_address,
+            amount,
             receiver_amount_sat,
             fees_sat,
-            description,
         } = req;
+
+        let from_asset = AssetId::from_str(match amount {
+            Some(PayAmount::Asset {
+                from_asset: Some(ref from_asset),
+                ..
+            }) => from_asset,
+            _ => &to_asset,
+        })?;
+        let to_asset = AssetId::from_str(&to_asset)?;
+        let to_address = elements::Address::from_str(&address_data.address).map_err(|err| {
+            PaymentError::generic(format!("Could not convert destination address: {err}"))
+        })?;
+
+        let sideswap_service = SideSwapService::from_sdk(self);
+
         let swap = sideswap_service
             .get_asset_swap(from_asset, to_asset, receiver_amount_sat)
             .await?;
@@ -2065,7 +2082,7 @@ impl LiquidSdk {
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: to_address.to_string(),
-                description,
+                description: address_data.message,
                 ..Default::default()
             }),
             false,

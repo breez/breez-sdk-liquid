@@ -787,14 +787,20 @@ pub(crate) struct SendPaymentViaSwapRequest {
     pub(crate) fees_sat: u64,
 }
 
+pub(crate) struct PayLiquidRequest {
+    pub address_data: LiquidAddressData,
+    pub to_asset: String,
+    pub receiver_amount_sat: u64,
+    pub asset_pay_fees: bool,
+    pub fees_sat: Option<u64>,
+}
+
 pub(crate) struct PaySideSwapRequest {
-    pub(crate) from_asset: AssetId,
-    pub(crate) to_asset: AssetId,
-    pub(crate) to_address: elements::Address,
-    pub(crate) receiver_amount_sat: u64,
-    // TODO: Change to Option<u64> to allow paying fees with assets
-    pub(crate) fees_sat: u64,
-    pub(crate) description: Option<String>,
+    pub address_data: LiquidAddressData,
+    pub to_asset: String,
+    pub receiver_amount_sat: u64,
+    pub fees_sat: u64,
+    pub amount: Option<PayAmount>,
 }
 
 /// Used to specify the amount to sent or to send all funds.
