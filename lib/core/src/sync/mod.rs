@@ -137,9 +137,13 @@ impl SyncService {
         self.client.listen(req).await
     }
 
-    pub(crate) fn start(self: Arc<Self>, mut shutdown: watch::Receiver<()>) {
+    pub(crate) fn start(
+        self: Arc<Self>,
+        shutdown: watch::Receiver<()>,
+    ) -> tokio::task::JoinHandle<()> {
         info!("realtime-sync: sync-reconnect start service");
-        tokio::spawn(async move {
+        let cloned_self = self.clone();
+        let sync_service_future = async move {
             if let Err(err) = self.client.connect(self.remote_url.clone()).await {
                 warn!("realtime-sync: Could not connect to sync service: {err:?}");
                 return;
@@ -155,9 +159,6 @@ impl SyncService {
 
             info!("realtime-sync: Starting real-time sync event loop");
             loop {
-                if shutdown.has_changed().unwrap_or(true) {
-                    return;
-                }
                 let mut remote_sync_trigger = match self.new_listener().await {
                     Ok(trigger) => trigger,
                     Err(e) => {
@@ -198,17 +199,31 @@ impl SyncService {
                             }
                           }
                         },
-                        _ = shutdown.changed() => {
-                            info!("realtime-sync: Received shutdown signal, exiting realtime sync service loop");
-                            if let Err(err) = self.client.disconnect().await {
-                                warn!("realtime-sync: Could not disconnect sync service client: {err:?}");
-                            };
-                            return;
-                        }
                     }
                 }
             }
-        });
+        };
+
+        tokio::spawn(async move {
+            utils::run_with_shutdown_and_cleanup(
+                shutdown,
+                "realtime-sync: Received shutdown signal, exiting realtime sync service loop",
+                sync_service_future,
+                || async move {
+                    match tokio::time::timeout(Duration::from_secs(2), cloned_self.client.disconnect()).await {
+                        Ok(Ok(())) => {
+                            info!("realtime-sync: Successfully disconnected sync service client");
+                        }
+                        Ok(Err(err)) => {
+                            warn!("realtime-sync: Could not disconnect sync service client: {err:?}");
+                        }
+                        Err(_) => {
+                            warn!("realtime-sync: Failed to disconnect sync service client within 2 seconds, giving up");
+                        }
+                    }
+                },
+            ).await
+        })
     }
 
     fn commit_record(&self, decryption_info: &DecryptionInfo, swap: Option<Swap>) -> Result<()> {

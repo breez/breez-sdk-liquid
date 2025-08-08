@@ -1,0 +1,12 @@
+{
+    "name": "node-mem-usage-bench",
+    "private": true,
+    "version": "0.0.0",
+    "main": "src/main.js",
+    "scripts": {
+        "memory-test": "node --expose-gc --inspect=0 src/main.js"
+    },
+    "dependencies": {
+        "@breeztech/breez-sdk-liquid": "file:../../"
+    }
+}

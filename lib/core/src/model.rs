@@ -22,6 +22,7 @@ use std::cmp::PartialEq;
 use std::path::PathBuf;
 use std::str::FromStr;
 use strum_macros::{Display, EnumString};
+use tokio_with_wasm::alias as tokio;
 
 use crate::{
     bitcoin,
@@ -2529,6 +2530,11 @@ pub(crate) struct SyncContext {
     pub recoverable_swaps: Vec<Swap>,
     pub is_new_liquid_block: bool,
     pub is_new_bitcoin_block: bool,
+}
+
+pub(crate) struct TaskHandle {
+    pub name: String,
+    pub handle: tokio::task::JoinHandle<()>,
 }
 
 #[macro_export]

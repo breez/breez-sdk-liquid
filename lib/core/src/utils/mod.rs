@@ -191,6 +191,44 @@ pub(crate) fn log_print_header(init_time_ms: Duration) {
     );
 }
 
+/// Runs a future until completion or until a shutdown signal is received.
+/// When shutdown is received, logs the exit message and returns.
+pub async fn run_with_shutdown<F, T>(
+    mut shutdown: tokio::sync::watch::Receiver<()>,
+    exit_message: &str,
+    future: F,
+) where
+    F: std::future::Future<Output = T>,
+{
+    tokio::select! {
+        _ = future => {}
+        _ = shutdown.changed() => {
+            log::info!("{exit_message}");
+        }
+    }
+}
+
+/// Runs a future until completion or until a shutdown signal is received.
+/// When shutdown is received, runs cleanup code, logs the exit message and returns.
+pub async fn run_with_shutdown_and_cleanup<F, T, Fut, C>(
+    mut shutdown: tokio::sync::watch::Receiver<()>,
+    exit_message: &str,
+    future: F,
+    cleanup: C,
+) where
+    F: std::future::Future<Output = T>,
+    C: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = ()>,
+{
+    tokio::select! {
+        _ = future => {}
+        _ = shutdown.changed() => {
+            log::info!("{exit_message}");
+            cleanup().await;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::error::PaymentError;

@@ -28,6 +28,7 @@ use crate::bitcoin::base64;
 use crate::elements::{self, pset::PartiallySignedTransaction, Address, AssetId};
 use crate::error::PaymentError;
 use crate::model::Config;
+use crate::utils::run_with_shutdown;
 use crate::wallet::OnchainWallet;
 use crate::{ensure_sdk, utils};
 
@@ -61,7 +62,7 @@ impl SideSwapService {
         config: Config,
         rest_client: Arc<dyn RestClient>,
         onchain_wallet: Arc<dyn OnchainWallet>,
-        mut shutdown_rx: watch::Receiver<()>,
+        shutdown_rx: watch::Receiver<()>,
     ) -> Self {
         let request_handler = Arc::new(SideSwapRequestHandler::new());
         let response_handler = Arc::new(SideSwapResponseHandler::new());
@@ -74,13 +75,9 @@ impl SideSwapService {
             event_loop_handle: OnceCell::new(),
         };
 
-        let handle = tokio::spawn(async move {
+        let side_swap_service_future = async move {
             info!("Starting SideSwap service event loop");
             loop {
-                if shutdown_rx.has_changed().unwrap_or(true) {
-                    return;
-                }
-
                 let ws = match connect(config.sideswap_url()).await {
                     Ok(ws) => ws,
                     Err(err) => {
@@ -94,11 +91,6 @@ impl SideSwapService {
                 let keep_alive_ping_interval = Duration::from_secs(15);
                 loop {
                     tokio::select! {
-                        _ = shutdown_rx.changed() => {
-                            info!("Received shutdown signal from SDK, exiting SideSwap service loop");
-                            return;
-                        }
-
                         _ = tokio::time::sleep(keep_alive_ping_interval) => {
                             if let Err(err) = request_handler.send(Request::Ping(None)).await {
                                 warn!("Could not send ping message to SideSwap server: {err:?}");
@@ -136,6 +128,15 @@ impl SideSwapService {
                     }
                 }
             }
+        };
+
+        let handle = tokio::spawn(async move {
+            run_with_shutdown(
+                shutdown_rx,
+                "Received shutdown signal, exiting SideSwap service loop",
+                side_swap_service_future,
+            )
+            .await
         });
         let _ = service.event_loop_handle.set(handle);
         service
