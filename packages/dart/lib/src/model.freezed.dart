@@ -869,15 +869,16 @@ as BigInt,
 
 
 class PayAmount_Asset extends PayAmount {
-  const PayAmount_Asset({required this.assetId, required this.receiverAmount, this.estimateAssetFees, this.payWithBitcoin}): super._();
+  const PayAmount_Asset({required this.toAsset, required this.receiverAmount, this.estimateAssetFees, this.fromAsset}): super._();
   
 
- final  String assetId;
+/// The asset id specifying which asset will be sent
+ final  String toAsset;
  final  double receiverAmount;
  final  bool? estimateAssetFees;
-/// Specifies whether or not to always use the wallet's L-BTC to execute the payment.
-/// If true, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
- final  bool? payWithBitcoin;
+/// The asset id whose balance we want to send funds with.
+/// Defaults to the value provided for [PayAmount::Asset::to_asset]
+ final  String? fromAsset;
 
 /// Create a copy of PayAmount
 /// with the given fields replaced by the non-null parameter values.
@@ -889,16 +890,16 @@ $PayAmount_AssetCopyWith<PayAmount_Asset> get copyWith => _$PayAmount_AssetCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PayAmount_Asset&&(identical(other.assetId, assetId) || other.assetId == assetId)&&(identical(other.receiverAmount, receiverAmount) || other.receiverAmount == receiverAmount)&&(identical(other.estimateAssetFees, estimateAssetFees) || other.estimateAssetFees == estimateAssetFees)&&(identical(other.payWithBitcoin, payWithBitcoin) || other.payWithBitcoin == payWithBitcoin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PayAmount_Asset&&(identical(other.toAsset, toAsset) || other.toAsset == toAsset)&&(identical(other.receiverAmount, receiverAmount) || other.receiverAmount == receiverAmount)&&(identical(other.estimateAssetFees, estimateAssetFees) || other.estimateAssetFees == estimateAssetFees)&&(identical(other.fromAsset, fromAsset) || other.fromAsset == fromAsset));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,assetId,receiverAmount,estimateAssetFees,payWithBitcoin);
+int get hashCode => Object.hash(runtimeType,toAsset,receiverAmount,estimateAssetFees,fromAsset);
 
 @override
 String toString() {
-  return 'PayAmount.asset(assetId: $assetId, receiverAmount: $receiverAmount, estimateAssetFees: $estimateAssetFees, payWithBitcoin: $payWithBitcoin)';
+  return 'PayAmount.asset(toAsset: $toAsset, receiverAmount: $receiverAmount, estimateAssetFees: $estimateAssetFees, fromAsset: $fromAsset)';
 }
 
 
@@ -909,7 +910,7 @@ abstract mixin class $PayAmount_AssetCopyWith<$Res> implements $PayAmountCopyWit
   factory $PayAmount_AssetCopyWith(PayAmount_Asset value, $Res Function(PayAmount_Asset) _then) = _$PayAmount_AssetCopyWithImpl;
 @useResult
 $Res call({
- String assetId, double receiverAmount, bool? estimateAssetFees, bool? payWithBitcoin
+ String toAsset, double receiverAmount, bool? estimateAssetFees, String? fromAsset
 });
 
 
@@ -926,13 +927,13 @@ class _$PayAmount_AssetCopyWithImpl<$Res>
 
 /// Create a copy of PayAmount
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? assetId = null,Object? receiverAmount = null,Object? estimateAssetFees = freezed,Object? payWithBitcoin = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? toAsset = null,Object? receiverAmount = null,Object? estimateAssetFees = freezed,Object? fromAsset = freezed,}) {
   return _then(PayAmount_Asset(
-assetId: null == assetId ? _self.assetId : assetId // ignore: cast_nullable_to_non_nullable
+toAsset: null == toAsset ? _self.toAsset : toAsset // ignore: cast_nullable_to_non_nullable
 as String,receiverAmount: null == receiverAmount ? _self.receiverAmount : receiverAmount // ignore: cast_nullable_to_non_nullable
 as double,estimateAssetFees: freezed == estimateAssetFees ? _self.estimateAssetFees : estimateAssetFees // ignore: cast_nullable_to_non_nullable
-as bool?,payWithBitcoin: freezed == payWithBitcoin ? _self.payWithBitcoin : payWithBitcoin // ignore: cast_nullable_to_non_nullable
-as bool?,
+as bool?,fromAsset: freezed == fromAsset ? _self.fromAsset : fromAsset // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

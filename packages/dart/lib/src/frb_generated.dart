@@ -2789,10 +2789,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return PayAmount_Bitcoin(receiverAmountSat: dco_decode_u_64(raw[1]));
       case 1:
         return PayAmount_Asset(
-          assetId: dco_decode_String(raw[1]),
+          toAsset: dco_decode_String(raw[1]),
           receiverAmount: dco_decode_f_64(raw[2]),
           estimateAssetFees: dco_decode_opt_box_autoadd_bool(raw[3]),
-          payWithBitcoin: dco_decode_opt_box_autoadd_bool(raw[4]),
+          fromAsset: dco_decode_opt_String(raw[4]),
         );
       case 2:
         return PayAmount_Drain();
@@ -5160,15 +5160,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_receiverAmountSat = sse_decode_u_64(deserializer);
         return PayAmount_Bitcoin(receiverAmountSat: var_receiverAmountSat);
       case 1:
-        var var_assetId = sse_decode_String(deserializer);
+        var var_toAsset = sse_decode_String(deserializer);
         var var_receiverAmount = sse_decode_f_64(deserializer);
         var var_estimateAssetFees = sse_decode_opt_box_autoadd_bool(deserializer);
-        var var_payWithBitcoin = sse_decode_opt_box_autoadd_bool(deserializer);
+        var var_fromAsset = sse_decode_opt_String(deserializer);
         return PayAmount_Asset(
-          assetId: var_assetId,
+          toAsset: var_toAsset,
           receiverAmount: var_receiverAmount,
           estimateAssetFees: var_estimateAssetFees,
-          payWithBitcoin: var_payWithBitcoin,
+          fromAsset: var_fromAsset,
         );
       case 2:
         return PayAmount_Drain();
@@ -7495,16 +7495,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(0, serializer);
         sse_encode_u_64(receiverAmountSat, serializer);
       case PayAmount_Asset(
-        assetId: final assetId,
+        toAsset: final toAsset,
         receiverAmount: final receiverAmount,
         estimateAssetFees: final estimateAssetFees,
-        payWithBitcoin: final payWithBitcoin,
+        fromAsset: final fromAsset,
       ):
         sse_encode_i_32(1, serializer);
-        sse_encode_String(assetId, serializer);
+        sse_encode_String(toAsset, serializer);
         sse_encode_f_64(receiverAmount, serializer);
         sse_encode_opt_box_autoadd_bool(estimateAssetFees, serializer);
-        sse_encode_opt_box_autoadd_bool(payWithBitcoin, serializer);
+        sse_encode_opt_String(fromAsset, serializer);
       case PayAmount_Drain():
         sse_encode_i_32(2, serializer);
     }

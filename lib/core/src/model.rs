@@ -788,6 +788,22 @@ pub(crate) struct SendPaymentViaSwapRequest {
     pub(crate) fees_sat: u64,
 }
 
+pub(crate) struct PayLiquidRequest {
+    pub address_data: LiquidAddressData,
+    pub to_asset: String,
+    pub receiver_amount_sat: u64,
+    pub asset_pay_fees: bool,
+    pub fees_sat: Option<u64>,
+}
+
+pub(crate) struct PaySideSwapRequest {
+    pub address_data: LiquidAddressData,
+    pub to_asset: String,
+    pub receiver_amount_sat: u64,
+    pub fees_sat: u64,
+    pub amount: Option<PayAmount>,
+}
+
 /// Used to specify the amount to sent or to send all funds.
 #[derive(Debug, Serialize, Clone)]
 pub enum PayAmount {
@@ -796,16 +812,30 @@ pub enum PayAmount {
 
     /// The amount of an asset that will be received
     Asset {
-        asset_id: String,
+        /// The asset id specifying which asset will be sent
+        to_asset: String,
         receiver_amount: f64,
         estimate_asset_fees: Option<bool>,
-        /// Specifies whether or not to always use the wallet's L-BTC to execute the payment.
-        /// If true, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
-        pay_with_bitcoin: Option<bool>,
+        /// The asset id whose balance we want to send funds with.
+        /// Defaults to the value provided for [PayAmount::Asset::to_asset]
+        from_asset: Option<String>,
     },
 
     /// Indicates that all available Bitcoin funds should be sent
     Drain,
+}
+
+impl PayAmount {
+    pub(crate) fn is_sideswap_payment(&self) -> bool {
+        match self {
+            PayAmount::Asset {
+                to_asset,
+                from_asset,
+                ..
+            } => from_asset.as_ref().is_some_and(|asset| asset != to_asset),
+            _ => false,
+        }
+    }
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::prepare_pay_onchain].

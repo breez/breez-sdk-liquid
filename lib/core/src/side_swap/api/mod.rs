@@ -189,17 +189,22 @@ impl SideSwapService {
         anyhow!("Received invalid response from the server: {res:?}")
     }
 
+    fn send_bitcoins(&self, from_asset: AssetId) -> bool {
+        from_asset == utils::lbtc_asset_id(self.config.network)
+    }
+
     pub(crate) async fn get_asset_swap(
         &self,
-        asset_id: AssetId,
+        from_asset: AssetId,
+        to_asset: AssetId,
         receiver_amount_sat: u64,
     ) -> Result<AssetSwap> {
         let req = Request::SubscribePriceStream(SubscribePriceStreamRequest {
             subscribe_id: None,
-            asset: asset_id,
-            send_bitcoins: true,
+            asset: to_asset,
             send_amount: None,
             recv_amount: Some(receiver_amount_sat as i64),
+            send_bitcoins: self.send_bitcoins(from_asset),
         });
         let request_id = self.request_handler.send(req).await?;
         let res = match self.response_handler.recv(request_id).await? {
@@ -209,7 +214,7 @@ impl SideSwapService {
             }
         };
 
-        res.try_into()
+        AssetSwap::try_from_price_stream_res(from_asset, res)
     }
 
     pub(crate) async fn execute_swap(
@@ -218,11 +223,11 @@ impl SideSwapService {
         asset_swap: &AssetSwap,
     ) -> Result<String> {
         let req = Request::StartSwapWeb(StartSwapWebRequest {
-            asset: AssetId::from_str(&asset_swap.asset_id)?,
+            asset: asset_swap.to_asset,
             price: asset_swap.exchange_rate,
             send_amount: asset_swap.payer_amount_sat as i64,
             recv_amount: asset_swap.receiver_amount_sat as i64,
-            send_bitcoins: true,
+            send_bitcoins: self.send_bitcoins(asset_swap.from_asset),
         });
         let request_id = self.request_handler.send(req).await?;
         let start_res = match self.response_handler.recv(request_id).await? {
@@ -245,9 +250,10 @@ impl SideSwapService {
         let mut inputs = vec![];
         let mut send_value = 0i64;
         for wallet_utxo in wallet_utxos {
-            if wallet_utxo.is_spent {
+            if wallet_utxo.is_spent || wallet_utxo.unblinded.asset != asset_swap.from_asset {
                 continue;
             }
+
             send_value += wallet_utxo.unblinded.value as i64;
             inputs.push(Utxo {
                 txid: wallet_utxo.outpoint.txid,

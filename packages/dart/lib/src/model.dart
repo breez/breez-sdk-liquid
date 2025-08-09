@@ -775,13 +775,14 @@ sealed class PayAmount with _$PayAmount {
 
   /// The amount of an asset that will be received
   const factory PayAmount.asset({
-    required String assetId,
+    /// The asset id specifying which asset will be sent
+    required String toAsset,
     required double receiverAmount,
     bool? estimateAssetFees,
 
-    /// Specifies whether or not to always use the wallet's L-BTC to execute the payment.
-    /// If true, it will try swapping the asset via the [Side Swap Service](crate::side_swap::api::SideSwapService)
-    bool? payWithBitcoin,
+    /// The asset id whose balance we want to send funds with.
+    /// Defaults to the value provided for [PayAmount::Asset::to_asset]
+    String? fromAsset,
   }) = PayAmount_Asset;
 
   /// Indicates that all available Bitcoin funds should be sent

@@ -3385,15 +3385,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       return;
     }
     if (apiObj is PayAmount_Asset) {
-      var pre_asset_id = cst_encode_String(apiObj.assetId);
+      var pre_to_asset = cst_encode_String(apiObj.toAsset);
       var pre_receiver_amount = cst_encode_f_64(apiObj.receiverAmount);
       var pre_estimate_asset_fees = cst_encode_opt_box_autoadd_bool(apiObj.estimateAssetFees);
-      var pre_pay_with_bitcoin = cst_encode_opt_box_autoadd_bool(apiObj.payWithBitcoin);
+      var pre_from_asset = cst_encode_opt_String(apiObj.fromAsset);
       wireObj.tag = 1;
-      wireObj.kind.Asset.asset_id = pre_asset_id;
+      wireObj.kind.Asset.to_asset = pre_to_asset;
       wireObj.kind.Asset.receiver_amount = pre_receiver_amount;
       wireObj.kind.Asset.estimate_asset_fees = pre_estimate_asset_fees;
-      wireObj.kind.Asset.pay_with_bitcoin = pre_pay_with_bitcoin;
+      wireObj.kind.Asset.from_asset = pre_from_asset;
       return;
     }
     if (apiObj is PayAmount_Drain) {
@@ -6718,14 +6718,14 @@ final class wire_cst_PayAmount_Bitcoin extends ffi.Struct {
 }
 
 final class wire_cst_PayAmount_Asset extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> to_asset;
 
   @ffi.Double()
   external double receiver_amount;
 
   external ffi.Pointer<ffi.Bool> estimate_asset_fees;
 
-  external ffi.Pointer<ffi.Bool> pay_with_bitcoin;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> from_asset;
 }
 
 final class PayAmountKind extends ffi.Union {

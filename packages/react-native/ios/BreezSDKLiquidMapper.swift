@@ -4326,17 +4326,17 @@ enum BreezSDKLiquidMapper {
             return PayAmount.bitcoin(receiverAmountSat: _receiverAmountSat)
         }
         if type == "asset" {
-            guard let _assetId = payAmount["assetId"] as? String else {
-                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "assetId", typeName: "PayAmount"))
+            guard let _toAsset = payAmount["toAsset"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "toAsset", typeName: "PayAmount"))
             }
             guard let _receiverAmount = payAmount["receiverAmount"] as? Double else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "receiverAmount", typeName: "PayAmount"))
             }
             let _estimateAssetFees = payAmount["estimateAssetFees"] as? Bool
 
-            let _payWithBitcoin = payAmount["payWithBitcoin"] as? Bool
+            let _fromAsset = payAmount["fromAsset"] as? String
 
-            return PayAmount.asset(assetId: _assetId, receiverAmount: _receiverAmount, estimateAssetFees: _estimateAssetFees, payWithBitcoin: _payWithBitcoin)
+            return PayAmount.asset(toAsset: _toAsset, receiverAmount: _receiverAmount, estimateAssetFees: _estimateAssetFees, fromAsset: _fromAsset)
         }
         if type == "drain" {
             return PayAmount.drain
@@ -4356,14 +4356,14 @@ enum BreezSDKLiquidMapper {
             ]
 
         case let .asset(
-            assetId, receiverAmount, estimateAssetFees, payWithBitcoin
+            toAsset, receiverAmount, estimateAssetFees, fromAsset
         ):
             return [
                 "type": "asset",
-                "assetId": assetId,
+                "toAsset": toAsset,
                 "receiverAmount": receiverAmount,
                 "estimateAssetFees": estimateAssetFees == nil ? nil : estimateAssetFees,
-                "payWithBitcoin": payWithBitcoin == nil ? nil : payWithBitcoin,
+                "fromAsset": fromAsset == nil ? nil : fromAsset,
             ]
 
         case .drain:
