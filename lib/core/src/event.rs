@@ -62,8 +62,4 @@ impl EventManager {
         info!("Resuming event notifications");
         self.is_paused.store(false, Ordering::SeqCst);
     }
-
-    pub(crate) fn notifier(&self) -> broadcast::Sender<SdkEvent> {
-        self.notifier.clone()
-    }
 }

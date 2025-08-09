@@ -546,8 +546,7 @@ impl LiquidSdk {
         if let Some(nwc_service) = self.nwc_service.get() {
             nwc_service.start(
                 self.shutdown_receiver.clone(),
-                self.event_manager.subscribe(),
-                self.event_manager.notifier(),
+                self.event_manager.clone(), 
             );
         }
 

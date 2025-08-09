@@ -1,6 +1,7 @@
 use std::{collections::BTreeSet, str::FromStr as _};
 
 use anyhow::Result;
+use crate::event::EventManager;
 use bip39::rand::{self, RngCore};
 use handler::{BreezRelayMessageHandler, RelayMessageHandler};
 use log::{info, warn};
@@ -16,7 +17,7 @@ use nostr_sdk::{
     Timestamp,
 };
 use sdk_common::utils::Arc;
-use tokio::sync::{broadcast, watch, OnceCell};
+use tokio::sync::{watch, OnceCell};
 use tokio::task::JoinHandle;
 
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -55,8 +56,7 @@ pub trait NWCService: MaybeSend + MaybeSync {
     fn start(
         &self,
         shutdown_receiver: watch::Receiver<()>,
-        listener: broadcast::Receiver<SdkEvent>,
-        notifier: broadcast::Sender<SdkEvent>,
+        event_manager: Arc<EventManager>,
     );
 
     /// Stops the NWC service and performs cleanup.
@@ -138,11 +138,12 @@ impl BreezNWCService<BreezRelayMessageHandler> {
         Ok(())
     }
 
-    fn handle_notification(
-        notifier: &broadcast::Sender<SdkEvent>,
+    async fn handle_notification(
+        event_manager: &EventManager,
         result: &Option<ResponseResult>,
         error: &Option<NIP47Error>,
     ) -> Result<()> {
+        info!("Handling notification: {result:?} {error:?}");
         let event: SdkEvent = match (result, error) {
             (Some(ResponseResult::PayInvoice(response)), None) => SdkEvent::NWC {
                 details: NwcEvent::PayInvoice {
@@ -177,7 +178,8 @@ impl BreezNWCService<BreezRelayMessageHandler> {
                 return Ok(());
             }
         };
-        notifier.send(event)?;
+        info!("Sending event: {event:?}");
+        event_manager.notify(event).await;
         Ok(())
     }
 }
@@ -191,14 +193,14 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
     fn start(
         &self,
         mut shutdown_receiver: watch::Receiver<()>,
-        mut listener: broadcast::Receiver<SdkEvent>,
-        notifier: broadcast::Sender<SdkEvent>,
+        event_manager: Arc<EventManager>,
     ) {
         let client = self.client.clone();
         let handler = self.handler.clone();
         let our_keys = self.keys.clone();
         let client_keys = Keys::new(self.nwc_uri.secret.clone());
 
+        let mut listener = event_manager.subscribe();
         let handle = platform_spawn(async move {
             client.connect().await;
 
@@ -400,7 +402,7 @@ impl NWCService for BreezNWCService<BreezRelayMessageHandler> {
                             }
                         };
 
-                        let _ = Self::handle_notification(&notifier, &result, &error);
+                        let _ = Self::handle_notification(&event_manager, &result, &error).await;
 
                         let content = match serde_json::to_string(&Response {
                             result_type: req.method,

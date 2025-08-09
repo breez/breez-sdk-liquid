@@ -780,6 +780,7 @@ dependencies = [
  "tonic-build 0.8.4",
  "url",
  "uuid",
+ "wasm-bindgen-futures",
  "web-time",
  "x509-parser",
  "zbase32",
@@ -2807,9 +2808,9 @@ checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
 
 [[package]]
 name = "lru"
-version = "0.14.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f8cc7106155f10bdf99a6f379688f543ad6596a415375b36a59a054ceda1198"
+checksum = "86ea4e65087ff52f3862caff188d489f1fab49a0cb09e01b2e3f1a617b10aaed"
 
 [[package]]
 name = "lru-cache"
@@ -3121,8 +3122,8 @@ dependencies = [
 
 [[package]]
 name = "nostr"
-version = "0.42.1"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+version = "0.43.0"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#8eac4870c7ba7930ea77ebf05b2ce73c5abf613a"
 dependencies = [
  "aes",
  "base64 0.22.1",
@@ -3144,8 +3145,8 @@ dependencies = [
 
 [[package]]
 name = "nostr-database"
-version = "0.42.0"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+version = "0.43.0"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#8eac4870c7ba7930ea77ebf05b2ce73c5abf613a"
 dependencies = [
  "lru",
  "nostr",
@@ -3154,8 +3155,8 @@ dependencies = [
 
 [[package]]
 name = "nostr-relay-pool"
-version = "0.42.0"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+version = "0.43.0"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#8eac4870c7ba7930ea77ebf05b2ce73c5abf613a"
 dependencies = [
  "async-utility",
  "async-wsocket",
@@ -3170,15 +3171,14 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk"
-version = "0.42.0"
-source = "git+https://github.com/ayushsaksena30/nostr.git?branch=master#e967bb2632ab46da8b0ceb3d455ddd30886a162f"
+version = "0.43.0"
+source = "git+https://github.com/rust-nostr/nostr.git?branch=master#8eac4870c7ba7930ea77ebf05b2ce73c5abf613a"
 dependencies = [
  "async-utility",
  "nostr",
  "nostr-database",
  "nostr-relay-pool",
  "tokio",
- "tracing",
 ]
 
 [[package]]
