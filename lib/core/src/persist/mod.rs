@@ -222,8 +222,13 @@ impl Persister {
         let payment_balances: Vec<PaymentTxBalance> = tx_balances
             .into_iter()
             .filter_map(|(asset_id, mut balance)| {
+                let payment_type = match balance >= 0 {
+                    true => PaymentType::Receive,
+                    false => PaymentType::Send,
+                };
+
                 // Only account for fee changes in case of outbound L-BTC payments
-                if asset_id == lbtc_asset_id && balance < 0 {
+                if asset_id == lbtc_asset_id && payment_type == PaymentType::Send {
                     balance += tx.fee as i64;
 
                     // If we have send with no outputs w.r.t. our wallet, we want to exclude it from the list
@@ -233,10 +238,6 @@ impl Persister {
                 }
 
                 let asset_id = asset_id.to_string();
-                let payment_type = match balance >= 0 {
-                    true => PaymentType::Receive,
-                    false => PaymentType::Send,
-                };
                 let amount = balance.unsigned_abs();
                 Some(PaymentTxBalance {
                     asset_id,
