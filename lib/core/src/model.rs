@@ -811,12 +811,12 @@ pub enum PayAmount {
 
     /// The amount of an asset that will be received
     Asset {
-        // The asset id specifying which asset will be sent
+        /// The asset id specifying which asset will be sent
         to_asset: String,
         receiver_amount: f64,
         estimate_asset_fees: Option<bool>,
-        // The asset id whose balance we want to send funds with.
-        // Defaults to the value provided for [PayAmount::Asset::to_asset]
+        /// The asset id whose balance we want to send funds with.
+        /// Defaults to the value provided for [PayAmount::Asset::to_asset]
         from_asset: Option<String>,
     },
 

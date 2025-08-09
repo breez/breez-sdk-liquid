@@ -872,9 +872,12 @@ class PayAmount_Asset extends PayAmount {
   const PayAmount_Asset({required this.toAsset, required this.receiverAmount, this.estimateAssetFees, this.fromAsset}): super._();
   
 
+/// The asset id specifying which asset will be sent
  final  String toAsset;
  final  double receiverAmount;
  final  bool? estimateAssetFees;
+/// The asset id whose balance we want to send funds with.
+/// Defaults to the value provided for [PayAmount::Asset::to_asset]
  final  String? fromAsset;
 
 /// Create a copy of PayAmount

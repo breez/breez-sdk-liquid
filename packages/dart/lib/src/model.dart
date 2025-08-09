@@ -775,9 +775,13 @@ sealed class PayAmount with _$PayAmount {
 
   /// The amount of an asset that will be received
   const factory PayAmount.asset({
+    /// The asset id specifying which asset will be sent
     required String toAsset,
     required double receiverAmount,
     bool? estimateAssetFees,
+
+    /// The asset id whose balance we want to send funds with.
+    /// Defaults to the value provided for [PayAmount::Asset::to_asset]
     String? fromAsset,
   }) = PayAmount_Asset;
 
