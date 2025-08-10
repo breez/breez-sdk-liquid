@@ -9,7 +9,7 @@ use crate::{
 
 pub(crate) const LAST_DERIVATION_INDEX_DATA_ID: &str = "last-derivation-index";
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct ChainSyncData {
     pub(crate) swap_id: String,
     pub(crate) preimage: String,
@@ -22,7 +22,6 @@ pub(crate) struct ChainSyncData {
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
     pub(crate) timeout_block_height: u32,
-    pub(crate) claim_timeout_block_height: u32,
     pub(crate) payer_amount_sat: u64,
     pub(crate) receiver_amount_sat: u64,
     pub(crate) accepted_receiver_amount_sat: Option<u64>,
@@ -31,78 +30,6 @@ pub(crate) struct ChainSyncData {
     pub(crate) description: Option<String>,
     #[serde(default)]
     pub(crate) auto_accepted_fees: bool,
-}
-
-// Custom deserialization to derive claim_timeout_block_height from create_response_json when missing
-impl<'de> Deserialize<'de> for ChainSyncData {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        struct RawChainSyncData {
-            swap_id: String,
-            preimage: String,
-            pair_fees_json: String,
-            create_response_json: String,
-            direction: Direction,
-            claim_address: Option<String>,
-            lockup_address: String,
-            claim_fees_sat: u64,
-            claim_private_key: String,
-            refund_private_key: String,
-            timeout_block_height: u32,
-            #[serde(default)]
-            claim_timeout_block_height: Option<u32>,
-            payer_amount_sat: u64,
-            receiver_amount_sat: u64,
-            accepted_receiver_amount_sat: Option<u64>,
-            accept_zero_conf: bool,
-            created_at: u32,
-            description: Option<String>,
-            #[serde(default)]
-            auto_accepted_fees: Option<bool>,
-        }
-
-        let raw = RawChainSyncData::deserialize(deserializer)?;
-
-        // Prefer explicit field, otherwise derive from JSON. Fallback to 0.
-        let derived_claim_timeout = raw
-            .claim_timeout_block_height
-            .or_else(|| extract_claim_timeout_block_height(&raw.create_response_json))
-            .unwrap_or(0);
-
-        Ok(ChainSyncData {
-            swap_id: raw.swap_id,
-            preimage: raw.preimage,
-            pair_fees_json: raw.pair_fees_json,
-            create_response_json: raw.create_response_json,
-            direction: raw.direction,
-            claim_address: raw.claim_address,
-            lockup_address: raw.lockup_address,
-            claim_fees_sat: raw.claim_fees_sat,
-            claim_private_key: raw.claim_private_key,
-            refund_private_key: raw.refund_private_key,
-            timeout_block_height: raw.timeout_block_height,
-            claim_timeout_block_height: derived_claim_timeout,
-            payer_amount_sat: raw.payer_amount_sat,
-            receiver_amount_sat: raw.receiver_amount_sat,
-            accepted_receiver_amount_sat: raw.accepted_receiver_amount_sat,
-            accept_zero_conf: raw.accept_zero_conf,
-            created_at: raw.created_at,
-            description: raw.description,
-            auto_accepted_fees: raw.auto_accepted_fees.unwrap_or(false),
-        })
-    }
-}
-
-fn extract_claim_timeout_block_height(create_response_json: &str) -> Option<u32> {
-    let value: serde_json::Value = serde_json::from_str(create_response_json).ok()?;
-    let timeout = value
-        .get("claim_details")?
-        .get("timeoutBlockHeight")?
-        .as_u64()?;
-    u32::try_from(timeout).ok()
 }
 
 impl ChainSyncData {
@@ -158,7 +85,6 @@ impl From<ChainSwap> for ChainSyncData {
             claim_private_key: value.claim_private_key,
             refund_private_key: value.refund_private_key,
             timeout_block_height: value.timeout_block_height,
-            claim_timeout_block_height: value.claim_timeout_block_height,
             payer_amount_sat: value.payer_amount_sat,
             receiver_amount_sat: value.receiver_amount_sat,
             accepted_receiver_amount_sat: value.accepted_receiver_amount_sat,
@@ -177,7 +103,10 @@ impl From<ChainSyncData> for ChainSwap {
             direction: val.direction,
             lockup_address: val.lockup_address,
             timeout_block_height: val.timeout_block_height,
-            claim_timeout_block_height: val.claim_timeout_block_height,
+            claim_timeout_block_height: extract_claim_timeout_block_height(
+                &val.create_response_json,
+            )
+            .unwrap_or_default(),
             preimage: val.preimage,
             description: val.description,
             payer_amount_sat: val.payer_amount_sat,
@@ -202,6 +131,15 @@ impl From<ChainSyncData> for ChainSwap {
             metadata: Default::default(),
         }
     }
+}
+
+fn extract_claim_timeout_block_height(create_response_json: &str) -> Option<u32> {
+    let value: serde_json::Value = serde_json::from_str(create_response_json).ok()?;
+    let timeout = value
+        .get("claim_details")?
+        .get("timeoutBlockHeight")?
+        .as_u64()?;
+    u32::try_from(timeout).ok()
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
