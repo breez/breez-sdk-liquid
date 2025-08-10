@@ -101,6 +101,7 @@ impl ChainReceiveSwapHandler {
         Self::update_swap(
             chain_swap,
             &recovered_data,
+            context.liquid_tip_height,
             context.bitcoin_tip_height,
             is_within_grace_period,
         )
@@ -110,7 +111,8 @@ impl ChainReceiveSwapHandler {
     pub fn update_swap(
         chain_swap: &mut ChainSwap,
         recovered_data: &RecoveredOnchainDataChainReceive,
-        current_block_height: u32,
+        current_liquid_block_height: u32,
+        current_bitcoin_block_height: u32,
         is_within_grace_period: bool,
     ) -> Result<()> {
         // Skip updating if within grace period and would clear transactions
@@ -124,7 +126,8 @@ impl ChainReceiveSwapHandler {
         }
 
         // Update state based on chain tip
-        let is_expired = current_block_height >= chain_swap.timeout_block_height;
+        let is_expired = current_liquid_block_height >= chain_swap.claim_timeout_block_height
+            || current_bitcoin_block_height >= chain_swap.timeout_block_height;
         let (expected_user_lockup_amount_sat, swap_limits) = match chain_swap.payer_amount_sat {
             0 => (None, Some(chain_swap.get_boltz_pair()?.limits)),
             expected => (Some(expected), None),

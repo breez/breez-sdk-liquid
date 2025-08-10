@@ -369,5 +369,96 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         ALTER TABLE payment_tx_data DROP COLUMN amount;
         ALTER TABLE payment_tx_data DROP COLUMN payment_type;
         ",
+        "
+        ALTER TABLE chain_swaps ADD COLUMN claim_timeout_block_height INTEGER NOT NULL DEFAULT 0;
+        UPDATE chain_swaps
+        SET claim_timeout_block_height = CAST(json_extract(create_response_json, '$.claim_details.timeoutBlockHeight') AS INTEGER);
+        ",
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use rusqlite::{params, Connection};
+    use rusqlite_migration::{Migrations, M};
+
+    #[cfg(feature = "browser-tests")]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
+    fn test_migration_sets_claim_timeout_block_height_from_json() -> Result<()> {
+        let network = LiquidNetwork::Testnet;
+        let all_migs = current_migrations(network);
+
+        // Find the migration that adds and backfills claim_timeout_block_height
+        let target_idx = all_migs
+            .iter()
+            .position(|m| {
+                m.contains("ALTER TABLE chain_swaps ADD COLUMN claim_timeout_block_height")
+            })
+            .expect("target migration not found");
+
+        // Apply all migrations up to (but not including) the target migration
+        let before_target = &all_migs[..target_idx];
+        let mut conn = Connection::open_in_memory()?;
+        let migs_before = Migrations::new(before_target.iter().copied().map(M::up).collect());
+        migs_before.to_latest(&mut conn)?;
+
+        // Insert a chain_swap row without the new column; the JSON contains the value to be migrated
+        let swap_id = "test_swap";
+        let expected_claim_timeout: i64 = 1_484_562;
+        let create_response_json = format!(
+            r#"{{"claim_details":{{"timeoutBlockHeight":{expected_claim_timeout}}},"lockup_details":{{}}}}"#
+        );
+
+        conn.execute(
+            "INSERT INTO chain_swaps (
+                id,
+                direction,
+                lockup_address,
+                timeout_block_height,
+                preimage,
+                payer_amount_sat,
+                receiver_amount_sat,
+                accept_zero_conf,
+                create_response_json,
+                claim_private_key,
+                refund_private_key,
+                claim_fees_sat,
+                created_at,
+                state
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+            params![
+                swap_id,
+                0_i8, // direction (Incoming)
+                "lockup_addr",
+                0_i64, // timeout_block_height
+                "preimage",
+                0_i64, // payer_amount_sat
+                0_i64, // receiver_amount_sat
+                0_i8,  // accept_zero_conf
+                create_response_json,
+                "claim_priv_key",
+                "refund_priv_key",
+                0_i64, // claim_fees_sat
+                0_i64, // created_at
+                0_i8   // state (Created)
+            ],
+        )?;
+
+        // Now apply the remaining migrations (including the target) to backfill claim_timeout_block_height
+        let migs_all = Migrations::new(all_migs.into_iter().map(M::up).collect());
+        migs_all.to_latest(&mut conn)?;
+
+        let actual: i64 = conn.query_row(
+            "SELECT claim_timeout_block_height FROM chain_swaps WHERE id = ?1",
+            params![swap_id],
+            |row| row.get(0),
+        )?;
+        assert_eq!(actual, expected_claim_timeout);
+
+        Ok(())
+    }
 }

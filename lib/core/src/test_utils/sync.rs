@@ -165,6 +165,7 @@ pub(crate) fn new_chain_sync_data(accept_zero_conf: Option<bool>) -> ChainSyncDa
         claim_private_key: "".to_string(),
         refund_private_key: "".to_string(),
         timeout_block_height: 0,
+        claim_timeout_block_height: 0,
         payer_amount_sat: 0,
         receiver_amount_sat: 0,
         accepted_receiver_amount_sat: None,

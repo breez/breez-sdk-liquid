@@ -4090,8 +4090,8 @@ impl SseDecode for crate::model::PaymentDetails {
                 let mut var_bitcoinAddress = <String>::sse_decode(deserializer);
                 let mut var_description = <String>::sse_decode(deserializer);
                 let mut var_autoAcceptedFees = <bool>::sse_decode(deserializer);
-                let mut var_liquidExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
-                let mut var_bitcoinExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
+                let mut var_liquidExpirationBlockheight = <u32>::sse_decode(deserializer);
+                let mut var_bitcoinExpirationBlockheight = <u32>::sse_decode(deserializer);
                 let mut var_lockupTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_claimTxId = <Option<String>>::sse_decode(deserializer);
                 let mut var_refundTxId = <Option<String>>::sse_decode(deserializer);
@@ -4495,8 +4495,12 @@ impl SseDecode for crate::model::ReceivePaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <String>::sse_decode(deserializer);
+        let mut var_liquidExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
+        let mut var_bitcoinExpirationBlockheight = <Option<u32>>::sse_decode(deserializer);
         return crate::model::ReceivePaymentResponse {
             destination: var_destination,
+            liquid_expiration_blockheight: var_liquidExpirationBlockheight,
+            bitcoin_expiration_blockheight: var_bitcoinExpirationBlockheight,
         };
     }
 }
@@ -7044,7 +7048,16 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::ReceivePaymentRequest>
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::ReceivePaymentResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.destination.into_into_dart().into_dart()].into_dart()
+        [
+            self.destination.into_into_dart().into_dart(),
+            self.liquid_expiration_blockheight
+                .into_into_dart()
+                .into_dart(),
+            self.bitcoin_expiration_blockheight
+                .into_into_dart()
+                .into_dart(),
+        ]
+        .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
@@ -8932,8 +8945,8 @@ impl SseEncode for crate::model::PaymentDetails {
                 <String>::sse_encode(bitcoin_address, serializer);
                 <String>::sse_encode(description, serializer);
                 <bool>::sse_encode(auto_accepted_fees, serializer);
-                <Option<u32>>::sse_encode(liquid_expiration_blockheight, serializer);
-                <Option<u32>>::sse_encode(bitcoin_expiration_blockheight, serializer);
+                <u32>::sse_encode(liquid_expiration_blockheight, serializer);
+                <u32>::sse_encode(bitcoin_expiration_blockheight, serializer);
                 <Option<String>>::sse_encode(lockup_tx_id, serializer);
                 <Option<String>>::sse_encode(claim_tx_id, serializer);
                 <Option<String>>::sse_encode(refund_tx_id, serializer);
@@ -9249,6 +9262,8 @@ impl SseEncode for crate::model::ReceivePaymentResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.destination, serializer);
+        <Option<u32>>::sse_encode(self.liquid_expiration_blockheight, serializer);
+        <Option<u32>>::sse_encode(self.bitcoin_expiration_blockheight, serializer);
     }
 }
 
@@ -11504,6 +11519,8 @@ mod io {
         fn cst_decode(self) -> crate::model::ReceivePaymentResponse {
             crate::model::ReceivePaymentResponse {
                 destination: self.destination.cst_decode(),
+                liquid_expiration_blockheight: self.liquid_expiration_blockheight.cst_decode(),
+                bitcoin_expiration_blockheight: self.bitcoin_expiration_blockheight.cst_decode(),
             }
         }
     }
@@ -12917,6 +12934,8 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 destination: core::ptr::null_mut(),
+                liquid_expiration_blockheight: core::ptr::null_mut(),
+                bitcoin_expiration_blockheight: core::ptr::null_mut(),
             }
         }
     }
@@ -15159,8 +15178,8 @@ mod io {
         bitcoin_address: *mut wire_cst_list_prim_u_8_strict,
         description: *mut wire_cst_list_prim_u_8_strict,
         auto_accepted_fees: bool,
-        liquid_expiration_blockheight: *mut u32,
-        bitcoin_expiration_blockheight: *mut u32,
+        liquid_expiration_blockheight: u32,
+        bitcoin_expiration_blockheight: u32,
         lockup_tx_id: *mut wire_cst_list_prim_u_8_strict,
         claim_tx_id: *mut wire_cst_list_prim_u_8_strict,
         refund_tx_id: *mut wire_cst_list_prim_u_8_strict,
@@ -15377,6 +15396,8 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_receive_payment_response {
         destination: *mut wire_cst_list_prim_u_8_strict,
+        liquid_expiration_blockheight: *mut u32,
+        bitcoin_expiration_blockheight: *mut u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

@@ -2868,8 +2868,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           bitcoinAddress: dco_decode_String(raw[2]),
           description: dco_decode_String(raw[3]),
           autoAcceptedFees: dco_decode_bool(raw[4]),
-          liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[5]),
-          bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(raw[6]),
+          liquidExpirationBlockheight: dco_decode_u_32(raw[5]),
+          bitcoinExpirationBlockheight: dco_decode_u_32(raw[6]),
           lockupTxId: dco_decode_opt_String(raw[7]),
           claimTxId: dco_decode_opt_String(raw[8]),
           refundTxId: dco_decode_opt_String(raw[9]),
@@ -3140,8 +3140,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ReceivePaymentResponse dco_decode_receive_payment_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return ReceivePaymentResponse(destination: dco_decode_String(arr[0]));
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return ReceivePaymentResponse(
+      destination: dco_decode_String(arr[0]),
+      liquidExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(arr[1]),
+      bitcoinExpirationBlockheight: dco_decode_opt_box_autoadd_u_32(arr[2]),
+    );
   }
 
   @protected
@@ -5271,8 +5275,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_bitcoinAddress = sse_decode_String(deserializer);
         var var_description = sse_decode_String(deserializer);
         var var_autoAcceptedFees = sse_decode_bool(deserializer);
-        var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
-        var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
+        var var_liquidExpirationBlockheight = sse_decode_u_32(deserializer);
+        var var_bitcoinExpirationBlockheight = sse_decode_u_32(deserializer);
         var var_lockupTxId = sse_decode_opt_String(deserializer);
         var var_claimTxId = sse_decode_opt_String(deserializer);
         var var_refundTxId = sse_decode_opt_String(deserializer);
@@ -5578,7 +5582,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ReceivePaymentResponse sse_decode_receive_payment_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_destination = sse_decode_String(deserializer);
-    return ReceivePaymentResponse(destination: var_destination);
+    var var_liquidExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_bitcoinExpirationBlockheight = sse_decode_opt_box_autoadd_u_32(deserializer);
+    return ReceivePaymentResponse(
+      destination: var_destination,
+      liquidExpirationBlockheight: var_liquidExpirationBlockheight,
+      bitcoinExpirationBlockheight: var_bitcoinExpirationBlockheight,
+    );
   }
 
   @protected
@@ -7601,8 +7611,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_String(bitcoinAddress, serializer);
         sse_encode_String(description, serializer);
         sse_encode_bool(autoAcceptedFees, serializer);
-        sse_encode_opt_box_autoadd_u_32(liquidExpirationBlockheight, serializer);
-        sse_encode_opt_box_autoadd_u_32(bitcoinExpirationBlockheight, serializer);
+        sse_encode_u_32(liquidExpirationBlockheight, serializer);
+        sse_encode_u_32(bitcoinExpirationBlockheight, serializer);
         sse_encode_opt_String(lockupTxId, serializer);
         sse_encode_opt_String(claimTxId, serializer);
         sse_encode_opt_String(refundTxId, serializer);
@@ -7826,6 +7836,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_receive_payment_response(ReceivePaymentResponse self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.destination, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.liquidExpirationBlockheight, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.bitcoinExpirationBlockheight, serializer);
   }
 
   @protected

@@ -499,6 +499,8 @@ dictionary ReceivePaymentRequest {
 
 dictionary ReceivePaymentResponse {
     string destination;
+    u32? liquid_expiration_blockheight;
+    u32? bitcoin_expiration_blockheight;
 };
 
 dictionary CreateBolt12InvoiceRequest {
@@ -636,7 +638,7 @@ dictionary AssetInfo {
 interface PaymentDetails {
     Lightning(string swap_id, string description, u32 liquid_expiration_blockheight, string? preimage, string? invoice, string? bolt12_offer, string? payment_hash, string? destination_pubkey, LnUrlInfo? lnurl_info, string? bip353_address, string? payer_note, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
     Liquid(string asset_id, string destination, string description, AssetInfo? asset_info, LnUrlInfo? lnurl_info, string? bip353_address, string? payer_note);
-    Bitcoin(string swap_id, string bitcoin_address, string description, boolean auto_accepted_fees, u32? bitcoin_expiration_blockheight, u32? liquid_expiration_blockheight, string? lockup_tx_id, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
+    Bitcoin(string swap_id, string bitcoin_address, string description, boolean auto_accepted_fees, u32 bitcoin_expiration_blockheight, u32 liquid_expiration_blockheight, string? lockup_tx_id, string? claim_tx_id, string? refund_tx_id, u64? refund_tx_amount_sat);
 };
 
 dictionary Payment {
