@@ -3482,12 +3482,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       var pre_bitcoin_address = cst_encode_String(apiObj.bitcoinAddress);
       var pre_description = cst_encode_String(apiObj.description);
       var pre_auto_accepted_fees = cst_encode_bool(apiObj.autoAcceptedFees);
-      var pre_liquid_expiration_blockheight = cst_encode_opt_box_autoadd_u_32(
-        apiObj.liquidExpirationBlockheight,
-      );
-      var pre_bitcoin_expiration_blockheight = cst_encode_opt_box_autoadd_u_32(
-        apiObj.bitcoinExpirationBlockheight,
-      );
+      var pre_liquid_expiration_blockheight = cst_encode_u_32(apiObj.liquidExpirationBlockheight);
+      var pre_bitcoin_expiration_blockheight = cst_encode_u_32(apiObj.bitcoinExpirationBlockheight);
       var pre_lockup_tx_id = cst_encode_opt_String(apiObj.lockupTxId);
       var pre_claim_tx_id = cst_encode_opt_String(apiObj.claimTxId);
       var pre_refund_tx_id = cst_encode_opt_String(apiObj.refundTxId);
@@ -3788,6 +3784,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_receive_payment_response wireObj,
   ) {
     wireObj.destination = cst_encode_String(apiObj.destination);
+    wireObj.liquid_expiration_blockheight = cst_encode_opt_box_autoadd_u_32(
+      apiObj.liquidExpirationBlockheight,
+    );
+    wireObj.bitcoin_expiration_blockheight = cst_encode_opt_box_autoadd_u_32(
+      apiObj.bitcoinExpirationBlockheight,
+    );
   }
 
   @protected
@@ -7125,9 +7127,11 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
   @ffi.Bool()
   external bool auto_accepted_fees;
 
-  external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
+  @ffi.Uint32()
+  external int liquid_expiration_blockheight;
 
-  external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
+  @ffi.Uint32()
+  external int bitcoin_expiration_blockheight;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> lockup_tx_id;
 
@@ -7965,6 +7969,10 @@ final class wire_cst_prepare_refund_response extends ffi.Struct {
 
 final class wire_cst_receive_payment_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+
+  external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
+
+  external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
 }
 
 final class wire_cst_recommended_fees extends ffi.Struct {
@@ -8038,3 +8046,5 @@ const int WEIGHT_VOUT_NESTED = 270;
 const int DEFAULT_ZERO_CONF_MAX_SAT = 1000000;
 
 const int CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS = 4320;
+
+const int CHAIN_SWAP_MONITORING_PERIOD_LIQUID_BLOCKS = 43200;

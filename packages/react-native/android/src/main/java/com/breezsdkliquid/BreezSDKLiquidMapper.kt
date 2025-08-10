@@ -2499,12 +2499,34 @@ fun asReceivePaymentResponse(receivePaymentResponse: ReadableMap): ReceivePaymen
         return null
     }
     val destination = receivePaymentResponse.getString("destination")!!
-    return ReceivePaymentResponse(destination)
+    val liquidExpirationBlockheight =
+        if (hasNonNullKey(
+                receivePaymentResponse,
+                "liquidExpirationBlockheight",
+            )
+        ) {
+            receivePaymentResponse.getInt("liquidExpirationBlockheight").toUInt()
+        } else {
+            null
+        }
+    val bitcoinExpirationBlockheight =
+        if (hasNonNullKey(
+                receivePaymentResponse,
+                "bitcoinExpirationBlockheight",
+            )
+        ) {
+            receivePaymentResponse.getInt("bitcoinExpirationBlockheight").toUInt()
+        } else {
+            null
+        }
+    return ReceivePaymentResponse(destination, liquidExpirationBlockheight, bitcoinExpirationBlockheight)
 }
 
 fun readableMapOf(receivePaymentResponse: ReceivePaymentResponse): ReadableMap =
     readableMapOf(
         "destination" to receivePaymentResponse.destination,
+        "liquidExpirationBlockheight" to receivePaymentResponse.liquidExpirationBlockheight,
+        "bitcoinExpirationBlockheight" to receivePaymentResponse.bitcoinExpirationBlockheight,
     )
 
 fun asReceivePaymentResponseList(arr: ReadableArray): List<ReceivePaymentResponse> {
@@ -3649,26 +3671,8 @@ fun asPaymentDetails(paymentDetails: ReadableMap): PaymentDetails? {
         val bitcoinAddress = paymentDetails.getString("bitcoinAddress")!!
         val description = paymentDetails.getString("description")!!
         val autoAcceptedFees = paymentDetails.getBoolean("autoAcceptedFees")
-        val bitcoinExpirationBlockheight =
-            if (hasNonNullKey(
-                    paymentDetails,
-                    "bitcoinExpirationBlockheight",
-                )
-            ) {
-                paymentDetails.getInt("bitcoinExpirationBlockheight").toUInt()
-            } else {
-                null
-            }
-        val liquidExpirationBlockheight =
-            if (hasNonNullKey(
-                    paymentDetails,
-                    "liquidExpirationBlockheight",
-                )
-            ) {
-                paymentDetails.getInt("liquidExpirationBlockheight").toUInt()
-            } else {
-                null
-            }
+        val bitcoinExpirationBlockheight = paymentDetails.getInt("bitcoinExpirationBlockheight").toUInt()
+        val liquidExpirationBlockheight = paymentDetails.getInt("liquidExpirationBlockheight").toUInt()
         val lockupTxId = if (hasNonNullKey(paymentDetails, "lockupTxId")) paymentDetails.getString("lockupTxId") else null
         val claimTxId = if (hasNonNullKey(paymentDetails, "claimTxId")) paymentDetails.getString("claimTxId") else null
         val refundTxId = if (hasNonNullKey(paymentDetails, "refundTxId")) paymentDetails.getString("refundTxId") else null

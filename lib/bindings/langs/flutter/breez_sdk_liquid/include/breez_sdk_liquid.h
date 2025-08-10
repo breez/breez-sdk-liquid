@@ -42,6 +42,8 @@ typedef struct _Dart_Handle* Dart_Handle;
  */
 #define CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS 4320
 
+#define CHAIN_SWAP_MONITORING_PERIOD_LIQUID_BLOCKS 43200
+
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
   int32_t len;
@@ -579,8 +581,8 @@ typedef struct wire_cst_PaymentDetails_Bitcoin {
   struct wire_cst_list_prim_u_8_strict *bitcoin_address;
   struct wire_cst_list_prim_u_8_strict *description;
   bool auto_accepted_fees;
-  uint32_t *liquid_expiration_blockheight;
-  uint32_t *bitcoin_expiration_blockheight;
+  uint32_t liquid_expiration_blockheight;
+  uint32_t bitcoin_expiration_blockheight;
   struct wire_cst_list_prim_u_8_strict *lockup_tx_id;
   struct wire_cst_list_prim_u_8_strict *claim_tx_id;
   struct wire_cst_list_prim_u_8_strict *refund_tx_id;
@@ -1214,6 +1216,8 @@ typedef struct wire_cst_prepare_refund_response {
 
 typedef struct wire_cst_receive_payment_response {
   struct wire_cst_list_prim_u_8_strict *destination;
+  uint32_t *liquid_expiration_blockheight;
+  uint32_t *bitcoin_expiration_blockheight;
 } wire_cst_receive_payment_response;
 
 typedef struct wire_cst_recommended_fees {

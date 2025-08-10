@@ -172,11 +172,29 @@ mod test {
     #[sdk_macros::async_test_all]
     async fn test_recover_expired_swap() {
         // Setup mock data
-        let (mut chain_swap, mut recovery_context) = setup_test_data();
+        let (chain_swap, mut recovery_context) = setup_test_data();
 
         // Make the swap expired
-        recovery_context.bitcoin_tip_height = chain_swap.timeout_block_height + 10;
+        recovery_context.bitcoin_tip_height = chain_swap.timeout_block_height;
 
+        test_recover_expired_swap_common(chain_swap, recovery_context).await;
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_recover_expired_swap_claim() {
+        // Setup mock data
+        let (chain_swap, mut recovery_context) = setup_test_data();
+
+        // Make the swap expired
+        recovery_context.liquid_tip_height = chain_swap.claim_timeout_block_height;
+
+        test_recover_expired_swap_common(chain_swap, recovery_context).await;
+    }
+
+    async fn test_recover_expired_swap_common(
+        mut chain_swap: ChainSwap,
+        recovery_context: ChainSwapRecoveryContext,
+    ) {
         // Add BTC lockup tx to history
         let btc_lockup_script = chain_swap
             .get_lockup_swap_script()
@@ -352,6 +370,7 @@ mod test {
             claim_address: None,
             created_at: 1000,
             timeout_block_height: 1000,
+            claim_timeout_block_height: 10000,
             state: PaymentState::Created,
             metadata: SwapMetadata {
                 version: 1,

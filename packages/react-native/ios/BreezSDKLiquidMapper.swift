@@ -2898,13 +2898,29 @@ enum BreezSDKLiquidMapper {
         guard let destination = receivePaymentResponse["destination"] as? String else {
             throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "destination", typeName: "ReceivePaymentResponse"))
         }
+        var liquidExpirationBlockheight: UInt32?
+        if hasNonNilKey(data: receivePaymentResponse, key: "liquidExpirationBlockheight") {
+            guard let liquidExpirationBlockheightTmp = receivePaymentResponse["liquidExpirationBlockheight"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "liquidExpirationBlockheight"))
+            }
+            liquidExpirationBlockheight = liquidExpirationBlockheightTmp
+        }
+        var bitcoinExpirationBlockheight: UInt32?
+        if hasNonNilKey(data: receivePaymentResponse, key: "bitcoinExpirationBlockheight") {
+            guard let bitcoinExpirationBlockheightTmp = receivePaymentResponse["bitcoinExpirationBlockheight"] as? UInt32 else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "bitcoinExpirationBlockheight"))
+            }
+            bitcoinExpirationBlockheight = bitcoinExpirationBlockheightTmp
+        }
 
-        return ReceivePaymentResponse(destination: destination)
+        return ReceivePaymentResponse(destination: destination, liquidExpirationBlockheight: liquidExpirationBlockheight, bitcoinExpirationBlockheight: bitcoinExpirationBlockheight)
     }
 
     static func dictionaryOf(receivePaymentResponse: ReceivePaymentResponse) -> [String: Any?] {
         return [
             "destination": receivePaymentResponse.destination,
+            "liquidExpirationBlockheight": receivePaymentResponse.liquidExpirationBlockheight == nil ? nil : receivePaymentResponse.liquidExpirationBlockheight,
+            "bitcoinExpirationBlockheight": receivePaymentResponse.bitcoinExpirationBlockheight == nil ? nil : receivePaymentResponse.bitcoinExpirationBlockheight,
         ]
     }
 
@@ -4468,10 +4484,12 @@ enum BreezSDKLiquidMapper {
             guard let _autoAcceptedFees = paymentDetails["autoAcceptedFees"] as? Bool else {
                 throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "autoAcceptedFees", typeName: "PaymentDetails"))
             }
-            let _bitcoinExpirationBlockheight = paymentDetails["bitcoinExpirationBlockheight"] as? UInt32
-
-            let _liquidExpirationBlockheight = paymentDetails["liquidExpirationBlockheight"] as? UInt32
-
+            guard let _bitcoinExpirationBlockheight = paymentDetails["bitcoinExpirationBlockheight"] as? UInt32 else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "bitcoinExpirationBlockheight", typeName: "PaymentDetails"))
+            }
+            guard let _liquidExpirationBlockheight = paymentDetails["liquidExpirationBlockheight"] as? UInt32 else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "liquidExpirationBlockheight", typeName: "PaymentDetails"))
+            }
             let _lockupTxId = paymentDetails["lockupTxId"] as? String
 
             let _claimTxId = paymentDetails["claimTxId"] as? String
@@ -4532,8 +4550,8 @@ enum BreezSDKLiquidMapper {
                 "bitcoinAddress": bitcoinAddress,
                 "description": description,
                 "autoAcceptedFees": autoAcceptedFees,
-                "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight == nil ? nil : bitcoinExpirationBlockheight,
-                "liquidExpirationBlockheight": liquidExpirationBlockheight == nil ? nil : liquidExpirationBlockheight,
+                "bitcoinExpirationBlockheight": bitcoinExpirationBlockheight,
+                "liquidExpirationBlockheight": liquidExpirationBlockheight,
                 "lockupTxId": lockupTxId == nil ? nil : lockupTxId,
                 "claimTxId": claimTxId == nil ? nil : claimTxId,
                 "refundTxId": refundTxId == nil ? nil : refundTxId,

@@ -669,6 +669,10 @@ pub struct ReceivePaymentResponse {
     /// Either a BIP21 URI (Liquid or Bitcoin), a Liquid address
     /// or an invoice, depending on the [PrepareReceiveResponse] parameters
     pub destination: String,
+    /// The Liquid block height at which the payment will expire
+    pub liquid_expiration_blockheight: Option<u32>,
+    /// The Bitcoin block height at which the payment will expire
+    pub bitcoin_expiration_blockheight: Option<u32>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::create_bolt12_invoice].
@@ -1205,7 +1209,10 @@ pub struct ChainSwap {
     pub(crate) lockup_address: String,
     /// The Liquid refund address is only set for Outgoing Chain Swaps
     pub(crate) refund_address: Option<String>,
+    /// The block height at which the swap will expire (origin chain)
     pub(crate) timeout_block_height: u32,
+    /// The block height at which the claim will expire (destination chain)
+    pub(crate) claim_timeout_block_height: u32,
     pub(crate) preimage: String,
     pub(crate) description: Option<String>,
     /// Payer amount defined at swap creation
@@ -1826,7 +1833,11 @@ pub struct PaymentSwapData {
     pub created_at: u32,
 
     /// The height of the block at which the swap will no longer be valid
+    /// For chain swaps, this is the timeout on the origin chain
     pub expiration_blockheight: u32,
+
+    /// For chain swaps, this is the timeout on the destination chain
+    pub claim_expiration_blockheight: Option<u32>,
 
     pub preimage: Option<String>,
     pub invoice: Option<String>,
@@ -1999,12 +2010,10 @@ pub enum PaymentDetails {
         auto_accepted_fees: bool,
 
         /// The height of the Liquid block at which the swap will no longer be valid
-        /// It should always be populated in case of an outgoing chain swap
-        liquid_expiration_blockheight: Option<u32>,
+        liquid_expiration_blockheight: u32,
 
         /// The height of the Bitcoin block at which the swap will no longer be valid
-        /// It should always be populated in case of an incoming chain swap
-        bitcoin_expiration_blockheight: Option<u32>,
+        bitcoin_expiration_blockheight: u32,
 
         /// The lockup tx id that initiates the swap
         lockup_tx_id: Option<String>,

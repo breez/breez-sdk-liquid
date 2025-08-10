@@ -425,6 +425,8 @@ export interface ReceivePaymentRequest {
 
 export interface ReceivePaymentResponse {
     destination: string
+    liquidExpirationBlockheight?: number
+    bitcoinExpirationBlockheight?: number
 }
 
 export interface RecommendedFees {
@@ -744,8 +746,8 @@ export type PaymentDetails = {
     bitcoinAddress: string
     description: string
     autoAcceptedFees: boolean
-    bitcoinExpirationBlockheight?: number
-    liquidExpirationBlockheight?: number
+    bitcoinExpirationBlockheight: number
+    liquidExpirationBlockheight: number
     lockupTxId?: string
     claimTxId?: string
     refundTxId?: string

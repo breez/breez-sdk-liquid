@@ -400,6 +400,8 @@ pub struct ReceivePaymentRequest {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ReceivePaymentResponse)]
 pub struct ReceivePaymentResponse {
     pub destination: String,
+    pub liquid_expiration_blockheight: Option<u32>,
+    pub bitcoin_expiration_blockheight: Option<u32>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::CreateBolt12InvoiceRequest)]
@@ -721,8 +723,8 @@ pub enum PaymentDetails {
         bitcoin_address: String,
         description: String,
         auto_accepted_fees: bool,
-        liquid_expiration_blockheight: Option<u32>,
-        bitcoin_expiration_blockheight: Option<u32>,
+        liquid_expiration_blockheight: u32,
+        bitcoin_expiration_blockheight: u32,
         lockup_tx_id: Option<String>,
         claim_tx_id: Option<String>,
         refund_tx_id: Option<String>,

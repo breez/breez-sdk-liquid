@@ -591,6 +591,7 @@ impl Persister {
                 cs.id,
                 cs.created_at,
                 cs.timeout_block_height,
+                cs.claim_timeout_block_height,
                 cs.direction,
                 cs.preimage,
                 cs.description,
@@ -715,38 +716,39 @@ impl Persister {
         let maybe_chain_swap_id: Option<String> = row.get(37)?;
         let maybe_chain_swap_created_at: Option<u32> = row.get(38)?;
         let maybe_chain_swap_timeout_block_height: Option<u32> = row.get(39)?;
-        let maybe_chain_swap_direction: Option<Direction> = row.get(40)?;
-        let maybe_chain_swap_preimage: Option<String> = row.get(41)?;
-        let maybe_chain_swap_description: Option<String> = row.get(42)?;
-        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(43)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(44)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(45)?;
-        let maybe_chain_swap_claim_address: Option<String> = row.get(46)?;
-        let maybe_chain_swap_lockup_address: Option<String> = row.get(47)?;
-        let maybe_chain_swap_state: Option<PaymentState> = row.get(48)?;
-        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(49)?;
+        let maybe_chain_swap_claim_timeout_block_height: Option<u32> = row.get(40)?;
+        let maybe_chain_swap_direction: Option<Direction> = row.get(41)?;
+        let maybe_chain_swap_preimage: Option<String> = row.get(42)?;
+        let maybe_chain_swap_description: Option<String> = row.get(43)?;
+        let maybe_chain_swap_refund_tx_id: Option<String> = row.get(44)?;
+        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(45)?;
+        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(46)?;
+        let maybe_chain_swap_claim_address: Option<String> = row.get(47)?;
+        let maybe_chain_swap_lockup_address: Option<String> = row.get(48)?;
+        let maybe_chain_swap_state: Option<PaymentState> = row.get(49)?;
+        let maybe_chain_swap_pair_fees_json: Option<String> = row.get(50)?;
         let maybe_chain_swap_pair_fees: Option<ChainPair> =
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
-        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(50)?;
-        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(51)?;
-        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(52)?;
-        let maybe_chain_swap_user_lockup_tx_id: Option<String> = row.get(53)?;
-        let maybe_chain_swap_claim_tx_id: Option<String> = row.get(54)?;
+        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(51)?;
+        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(52)?;
+        let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(53)?;
+        let maybe_chain_swap_user_lockup_tx_id: Option<String> = row.get(54)?;
+        let maybe_chain_swap_claim_tx_id: Option<String> = row.get(55)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(55)?;
+        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(56)?;
 
-        let maybe_payment_details_destination: Option<String> = row.get(56)?;
-        let maybe_payment_details_description: Option<String> = row.get(57)?;
-        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(58)?;
+        let maybe_payment_details_destination: Option<String> = row.get(57)?;
+        let maybe_payment_details_description: Option<String> = row.get(58)?;
+        let maybe_payment_details_lnurl_info_json: Option<String> = row.get(59)?;
         let maybe_payment_details_lnurl_info: Option<LnUrlInfo> =
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
-        let maybe_payment_details_bip353_address: Option<String> = row.get(59)?;
-        let maybe_payment_details_payer_note: Option<String> = row.get(60)?;
-        let maybe_payment_details_asset_fees: Option<u64> = row.get(61)?;
+        let maybe_payment_details_bip353_address: Option<String> = row.get(60)?;
+        let maybe_payment_details_payer_note: Option<String> = row.get(61)?;
+        let maybe_payment_details_asset_fees: Option<u64> = row.get(62)?;
 
-        let maybe_asset_metadata_name: Option<String> = row.get(62)?;
-        let maybe_asset_metadata_ticker: Option<String> = row.get(63)?;
-        let maybe_asset_metadata_precision: Option<u8> = row.get(64)?;
+        let maybe_asset_metadata_name: Option<String> = row.get(63)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(64)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(65)?;
 
         let bitcoin_address = match maybe_chain_swap_direction {
             Some(Direction::Incoming) => maybe_chain_swap_lockup_address,
@@ -765,6 +767,7 @@ impl Persister {
                         created_at: maybe_receive_swap_created_at.unwrap_or(utils::now()),
                         expiration_blockheight: maybe_receive_swap_timeout_block_height
                             .unwrap_or(0),
+                        claim_expiration_blockheight: None,
                         preimage: maybe_receive_swap_preimage,
                         invoice: maybe_receive_swap_invoice.clone(),
                         bolt12_offer: maybe_receive_swap_bolt12_offer,
@@ -801,6 +804,7 @@ impl Persister {
                             created_at: maybe_send_swap_created_at.unwrap_or(utils::now()),
                             expiration_blockheight: maybe_send_swap_timeout_block_height
                                 .unwrap_or(0),
+                            claim_expiration_blockheight: None,
                             preimage: maybe_send_swap_preimage,
                             invoice: maybe_send_swap_invoice,
                             bolt12_offer: maybe_send_swap_bolt12_offer,
@@ -857,6 +861,8 @@ impl Persister {
                                 created_at: maybe_chain_swap_created_at.unwrap_or(utils::now()),
                                 expiration_blockheight: maybe_chain_swap_timeout_block_height
                                     .unwrap_or(0),
+                                claim_expiration_blockheight:
+                                    maybe_chain_swap_claim_timeout_block_height,
                                 preimage: maybe_chain_swap_preimage,
                                 invoice: None,
                                 bolt12_offer: None, // Bolt12 not supported for Chain Swaps
@@ -942,12 +948,19 @@ impl Persister {
                 refund_tx_id,
                 refund_tx_amount_sat,
                 expiration_blockheight,
+                claim_expiration_blockheight,
                 ..
             }) => {
                 let (bitcoin_expiration_blockheight, liquid_expiration_blockheight) =
                     match maybe_chain_swap_direction {
-                        Some(Direction::Incoming) => (Some(expiration_blockheight), None),
-                        Some(Direction::Outgoing) | None => (None, Some(expiration_blockheight)),
+                        Some(Direction::Incoming) => (
+                            expiration_blockheight,
+                            claim_expiration_blockheight.unwrap_or_default(),
+                        ),
+                        Some(Direction::Outgoing) | None => (
+                            claim_expiration_blockheight.unwrap_or_default(),
+                            expiration_blockheight,
+                        ),
                     };
                 let auto_accepted_fees = maybe_chain_swap_auto_accepted_fees.unwrap_or(false);
 
