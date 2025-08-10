@@ -4300,6 +4300,8 @@ impl LiquidSdk {
             info!("Fetched liquid tip in ({duration_ms} ms)");
         }
 
+        let is_new_liquid_block = liquid_tip.is_some_and(|lt| lt > req.last_liquid_tip);
+
         // Get the recoverable swaps assuming full sync if partial sync is not provided
         let mut recoverable_swaps = self
             .get_monitored_swaps_list(
@@ -4311,12 +4313,17 @@ impl LiquidSdk {
             )
             .await?;
 
-        let bitcoin_tip = if recoverable_swaps
+        // Only fetch the bitcoin tip if there is a new liquid block and
+        // there are chain swaps being monitored
+        let bitcoin_tip = if !is_new_liquid_block {
+            debug!("No new liquid block, skipping bitcoin tip fetch");
+            None
+        } else if recoverable_swaps
             .iter()
             .any(|s| matches!(s, Swap::Chain(_)))
             .not()
         {
-            info!("No chain swaps being monitored, skipping bitcoin tip fetch");
+            debug!("No chain swaps being monitored, skipping bitcoin tip fetch");
             None
         } else {
             // Get the bitcoin tip
@@ -4337,7 +4344,6 @@ impl LiquidSdk {
             bitcoin_tip
         };
 
-        let is_new_liquid_block = liquid_tip.is_some_and(|lt| lt > req.last_liquid_tip);
         let is_new_bitcoin_block = bitcoin_tip.is_some_and(|bt| bt > req.last_bitcoin_tip);
 
         // Update the recoverable swaps if we previously didn't know if this is a partial sync or not
