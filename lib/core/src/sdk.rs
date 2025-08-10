@@ -3804,12 +3804,11 @@ impl LiquidSdk {
 
     /// Returns a list of swaps that need to be monitored for recovery.
     ///
-    /// If `partial_sync` is true, only receive swaps will be considered.
-    ///
     /// If no Bitcoin tip is provided, chain swaps will not be considered.
     pub(crate) async fn get_monitored_swaps_list(
         &self,
-        partial_sync: bool,
+        only_receive_swaps: bool,
+        include_expired_incoming_chain_swaps: bool,
         chain_tips: ChainTips,
     ) -> Result<Vec<Swap>> {
         let receive_swaps = self
@@ -3818,42 +3817,47 @@ impl LiquidSdk {
             .into_iter()
             .map(Into::into)
             .collect();
-        match partial_sync {
-            false => {
-                let final_swap_states = [PaymentState::Complete, PaymentState::Failed];
 
-                let send_swaps = self
-                    .persister
-                    .list_recoverable_send_swaps()?
-                    .into_iter()
-                    .map(Into::into)
-                    .collect();
-
-                let Some(bitcoin_tip) = chain_tips.bitcoin_tip else {
-                    return Ok([receive_swaps, send_swaps].concat());
-                };
-
-                let chain_swaps: Vec<Swap> = self
-                    .persister
-                    .list_chain_swaps()?
-                    .into_iter()
-                    .filter(|swap| match swap.direction {
-                        Direction::Incoming => {
-                            bitcoin_tip
-                                <= swap.timeout_block_height
-                                    + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
-                        }
-                        Direction::Outgoing => {
-                            !final_swap_states.contains(&swap.state)
-                                && chain_tips.liquid_tip <= swap.timeout_block_height
-                        }
-                    })
-                    .map(Into::into)
-                    .collect();
-                Ok([receive_swaps, send_swaps, chain_swaps].concat())
-            }
-            true => Ok(receive_swaps),
+        if only_receive_swaps {
+            return Ok(receive_swaps);
         }
+
+        let send_swaps = self
+            .persister
+            .list_recoverable_send_swaps()?
+            .into_iter()
+            .map(Into::into)
+            .collect();
+
+        let Some(bitcoin_tip) = chain_tips.bitcoin_tip else {
+            return Ok([receive_swaps, send_swaps].concat());
+        };
+
+        let final_swap_states: [PaymentState; 2] = [PaymentState::Complete, PaymentState::Failed];
+
+        let chain_swaps: Vec<Swap> = self
+            .persister
+            .list_chain_swaps()?
+            .into_iter()
+            .filter(|swap| match swap.direction {
+                Direction::Incoming => {
+                    if include_expired_incoming_chain_swaps {
+                        bitcoin_tip
+                            <= swap.timeout_block_height
+                                + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                    } else {
+                        bitcoin_tip <= swap.timeout_block_height
+                    }
+                }
+                Direction::Outgoing => {
+                    !final_swap_states.contains(&swap.state)
+                        && chain_tips.liquid_tip <= swap.timeout_block_height
+                }
+            })
+            .map(Into::into)
+            .collect();
+
+        Ok([receive_swaps, send_swaps, chain_swaps].concat())
     }
 
     /// This method fetches the chain tx data (onchain and mempool) using LWK. For every wallet tx,
@@ -4306,6 +4310,7 @@ impl LiquidSdk {
         let mut recoverable_swaps = self
             .get_monitored_swaps_list(
                 req.partial_sync.unwrap_or(false),
+                true,
                 ChainTips {
                     liquid_tip: liquid_tip.unwrap_or(req.last_liquid_tip),
                     bitcoin_tip: Some(req.last_bitcoin_tip),
@@ -4350,19 +4355,19 @@ impl LiquidSdk {
         // No liquid tip means there's no point in returning recoverable swaps
         if let Some(liquid_tip) = liquid_tip {
             if req.partial_sync.is_none() {
-                let partial_sync = (is_new_liquid_block || is_new_bitcoin_block).not();
+                let only_receive_swaps = !is_new_liquid_block && !is_new_bitcoin_block;
+                let include_expired_incoming_chain_swaps = is_new_bitcoin_block;
 
-                if partial_sync {
-                    recoverable_swaps = self
-                        .get_monitored_swaps_list(
-                            true,
-                            ChainTips {
-                                liquid_tip,
-                                bitcoin_tip: None,
-                            },
-                        )
-                        .await?;
-                }
+                recoverable_swaps = self
+                    .get_monitored_swaps_list(
+                        only_receive_swaps,
+                        include_expired_incoming_chain_swaps,
+                        ChainTips {
+                            liquid_tip,
+                            bitcoin_tip,
+                        },
+                    )
+                    .await?;
             }
         } else {
             recoverable_swaps = Vec::new();
