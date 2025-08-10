@@ -523,3 +523,25 @@ fn clone_if_set<T: Clone>(s: &mut Option<T>, other: &Option<T>) {
         s.clone_from(other)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::chain_swap::new_chain_swap;
+
+    use super::*;
+
+    #[cfg(feature = "browser-tests")]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
+    fn test_extract_claim_timeout_block_height() {
+        let chain_swap = new_chain_swap(Direction::Incoming, None, true, None, false, false, None);
+
+        let claim_timeout_block_height =
+            extract_claim_timeout_block_height(&chain_swap.create_response_json).unwrap();
+        assert_eq!(
+            claim_timeout_block_height,
+            chain_swap.claim_timeout_block_height
+        );
+    }
+}

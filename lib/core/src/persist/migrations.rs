@@ -379,6 +379,8 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{model::Direction, test_utils::chain_swap::new_chain_swap};
+
     use super::*;
     use anyhow::Result;
     use rusqlite::{params, Connection};
@@ -407,11 +409,11 @@ mod tests {
         migs_before.to_latest(&mut conn)?;
 
         // Insert a chain_swap row without the new column; the JSON contains the value to be migrated
-        let swap_id = "test_swap";
-        let expected_claim_timeout: i64 = 1_484_562;
-        let create_response_json = format!(
-            r#"{{"claim_details":{{"timeoutBlockHeight":{expected_claim_timeout}}},"lockup_details":{{}}}}"#
-        );
+        // No need to persist unrelated swap field.
+        let chain_swap = new_chain_swap(Direction::Incoming, None, true, None, false, false, None);
+        let swap_id = chain_swap.id;
+        let expected_claim_timeout = chain_swap.claim_timeout_block_height;
+        let create_response_json = chain_swap.create_response_json;
 
         conn.execute(
             "INSERT INTO chain_swaps (
@@ -452,7 +454,7 @@ mod tests {
         let migs_all = Migrations::new(all_migs.into_iter().map(M::up).collect());
         migs_all.to_latest(&mut conn)?;
 
-        let actual: i64 = conn.query_row(
+        let actual: u32 = conn.query_row(
             "SELECT claim_timeout_block_height FROM chain_swaps WHERE id = ?1",
             params![swap_id],
             |row| row.get(0),
