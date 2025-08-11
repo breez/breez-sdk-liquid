@@ -202,6 +202,7 @@ pub mod wallet;
 pub use lwk_wollet::bitcoin;
 pub use lwk_wollet::elements;
 pub use sdk_common::prelude::*;
+pub use lwk_common;
 
 #[allow(ambiguous_glob_reexports)]
 #[rustfmt::skip]
