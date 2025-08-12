@@ -15,6 +15,7 @@ use std::collections::{HashMap, HashSet};
 use std::ops::Not;
 use std::{path::PathBuf, str::FromStr};
 
+use crate::elements::AssetId;
 use crate::model::*;
 use crate::sync::model::RecordType;
 use crate::utils;
@@ -214,43 +215,54 @@ impl Persister {
     pub(crate) fn insert_or_update_payment_with_wallet_tx(&self, tx: &WalletTx) -> Result<()> {
         let tx_id = tx.txid.to_string();
         let is_tx_confirmed = tx.height.is_some();
-        let tx_balances = tx.balance.clone();
+
+        let mut tx_balances: HashMap<AssetId, i64> = HashMap::new();
+        for input in &tx.inputs {
+            let Some(input) = input else {
+                continue;
+            };
+            let value = input.unblinded.value as i64;
+            tx_balances
+                .entry(input.unblinded.asset)
+                .and_modify(|v| *v -= value)
+                .or_insert_with(|| -value);
+        }
+        for output in &tx.outputs {
+            let Some(output) = output else {
+                continue;
+            };
+            let value = output.unblinded.value as i64;
+            tx_balances
+                .entry(output.unblinded.asset)
+                .and_modify(|v| *v += value)
+                .or_insert_with(|| value);
+        }
+
+        if tx_balances.is_empty() {
+            warn!("Attempted to persist a payment with no balance: tx_id {tx_id} balances {tx_balances:?}");
+            return Ok(());
+        }
 
         let lbtc_asset_id = utils::lbtc_asset_id(self.network);
-        let num_outputs = tx.outputs.iter().filter(|out| out.is_some()).count();
-
         let payment_balances: Vec<PaymentTxBalance> = tx_balances
             .into_iter()
-            .filter_map(|(asset_id, mut balance)| {
+            .map(|(asset_id, balance)| {
                 let payment_type = match balance >= 0 {
                     true => PaymentType::Receive,
                     false => PaymentType::Send,
                 };
-
-                // Only account for fee changes in case of outbound L-BTC payments
-                if asset_id == lbtc_asset_id && payment_type == PaymentType::Send {
-                    balance += tx.fee as i64;
-
-                    // If we have send with no outputs w.r.t. our wallet, we want to exclude it from the list
-                    if num_outputs == 0 {
-                        return None;
-                    }
+                let mut amount = balance.unsigned_abs();
+                if payment_type == PaymentType::Send && asset_id == lbtc_asset_id {
+                    amount = amount.saturating_sub(tx.fee);
                 }
-
                 let asset_id = asset_id.to_string();
-                let amount = balance.unsigned_abs();
-                Some(PaymentTxBalance {
+                PaymentTxBalance {
+                    payment_type,
                     asset_id,
                     amount,
-                    payment_type,
-                })
+                }
             })
             .collect();
-
-        if payment_balances.is_empty() {
-            warn!("Attempted to persist a payment with no balance: tx_id {tx_id} balances {payment_balances:?}");
-            return Ok(());
-        }
 
         let maybe_address = tx
             .outputs

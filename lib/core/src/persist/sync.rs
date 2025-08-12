@@ -7,10 +7,7 @@ use rusqlite::{
 };
 use tokio::sync::broadcast;
 
-use super::{
-    cache::{KEY_ENQUEUE_REUNBLIND, KEY_LAST_DERIVATION_INDEX},
-    PaymentTxDetails, Persister, Swap,
-};
+use super::{cache::KEY_LAST_DERIVATION_INDEX, PaymentTxDetails, Persister, Swap};
 use crate::{
     model::Bolt12Offer,
     persist::where_clauses_to_string,
@@ -460,7 +457,6 @@ impl Persister {
             KEY_LAST_DERIVATION_INDEX,
             new_address_index.to_string(),
         )?;
-        Self::update_cached_item_inner(&tx, KEY_ENQUEUE_REUNBLIND, true.to_string())?;
 
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": sync_state.data_id,

@@ -24,7 +24,6 @@ use tokio::sync::Mutex;
 use web_time::Instant;
 
 use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
-use crate::persist::cache::KEY_ENQUEUE_REUNBLIND;
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{ensure_sdk, error::PaymentError, model::Config};
@@ -508,10 +507,14 @@ impl OnchainWallet for LiquidOnchainWallet {
         let index_with_buffer = last_derivation_index + 5;
         let mut wallet = self.wallet.lock().await;
 
-        if self.persister.should_reunblind().unwrap_or(false) {
+        // Reunblind the wallet txs if there has been a change in the derivation index since the
+        // last full scan
+        if self
+            .persister
+            .get_last_scanned_derivation_index()?
+            .is_some_and(|index| index != last_derivation_index)
+        {
             wallet.reunblind()?;
-            self.persister
-                .update_cached_item(KEY_ENQUEUE_REUNBLIND, false.to_string())?;
         }
 
         let res = match client

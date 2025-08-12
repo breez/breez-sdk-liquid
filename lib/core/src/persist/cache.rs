@@ -13,7 +13,6 @@ const KEY_SWAPPER_PROXY_URL: &str = "swapper_proxy_url";
 const KEY_IS_FIRST_SYNC_COMPLETE: &str = "is_first_sync_complete";
 const KEY_WEBHOOK_URL: &str = "webhook_url";
 pub(crate) const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
-pub(crate) const KEY_ENQUEUE_REUNBLIND: &str = "enqueue_reunblind";
 const KEY_LAST_SCANNED_DERIVATION_INDEX: &str = "last_scanned_derivation_index";
 
 impl Persister {
@@ -218,15 +217,6 @@ impl Persister {
     pub fn get_last_scanned_derivation_index(&self) -> Result<Option<u32>> {
         self.get_cached_item(KEY_LAST_SCANNED_DERIVATION_INDEX)
             .map(|maybe_str| maybe_str.and_then(|str| str.as_str().parse::<u32>().ok()))
-    }
-
-    pub fn should_reunblind(&self) -> Result<bool> {
-        self.get_cached_item(KEY_ENQUEUE_REUNBLIND)
-            .map(|maybe_str| {
-                maybe_str
-                    .and_then(|str| str.as_str().parse::<bool>().ok())
-                    .unwrap_or(false)
-            })
     }
 }
 
