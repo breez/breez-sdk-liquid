@@ -52,12 +52,14 @@ async fn connect_inner(
     signer: Box<dyn breez_sdk_liquid::model::Signer>,
 ) -> WasmResult<BindingLiquidSdk> {
     let config: breez_sdk_liquid::model::Config = config.into();
+    let lwk_signer = SdkLwkSigner::new(Arc::new(Box::new(signer)));
     let signer = Rc::new(signer);
 
     let mut sdk_builder = LiquidSdkBuilder::new(
         config.clone(),
         PRODUCTION_BREEZSERVER_URL.to_string(),
         Rc::clone(&signer),
+        Arc::new(lwk_signer),
     )?;
 
     let sdk_lwk_signer = SdkLwkSigner::new(Rc::clone(&signer))?;
@@ -83,6 +85,17 @@ async fn connect_inner(
         config.asset_metadata.clone(),
         maybe_backup_bytes,
     )?);
+
+    let wollet_descriptor = get_descriptor(&sdk_lwk_signer, config.network, config.wallet_policy)?;
+    let onchain_wallet = platform::create_onchain_wallet(
+        &wallet_dir,
+        config.clone(),
+        wollet_descriptor,
+        &fingerprint,
+        Rc::clone(&persister),
+        Rc::clone(&signer),
+    )
+    .await?;
 
     sdk_builder.persister(persister.clone());
 

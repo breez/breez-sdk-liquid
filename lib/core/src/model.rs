@@ -10,7 +10,7 @@ use boltz_client::{
 };
 use derivative::Derivative;
 use elements::AssetId;
-use lwk_wollet::ElementsNetwork;
+use lwk_wollet::{bitcoin::bip32::Xpub, ElementsNetwork};
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -59,6 +59,12 @@ pub enum BlockchainExplorer {
     },
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum WalletPolicy {
+    Singlesig,
+    Multisig { threshold: usize, xpubs: Vec<Xpub> },
+}
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
@@ -103,6 +109,8 @@ pub struct Config {
     pub sideswap_api_key: Option<String>,
     /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
     pub use_magic_routing_hints: bool,
+
+    pub wallet_policy: WalletPolicy,
 }
 
 impl Config {
@@ -127,6 +135,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -152,6 +161,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -176,6 +186,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -201,6 +212,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -225,6 +237,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: None,
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -250,6 +263,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: None,
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 

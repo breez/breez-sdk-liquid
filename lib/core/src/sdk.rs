@@ -58,6 +58,7 @@ use crate::model::Signer;
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
+use crate::signer::{FullSigner, SdkLwkSigner};
 use crate::swapper::SubscriptionHandler;
 use crate::swapper::{
     boltz::BoltzSwapper, Swapper, SwapperStatusStream, SwapperSubscriptionHandler,
@@ -98,7 +99,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(120);
 
-pub struct LiquidSdkBuilder {
+pub struct LiquidSdkBuilder<S: FullSigner> {
     config: Config,
     signer: Arc<Box<dyn Signer>>,
     breez_server: Arc<BreezServer>,
@@ -112,15 +113,17 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
+    lwk_signer: Arc<S>,
 }
 
 #[allow(dead_code)]
-impl LiquidSdkBuilder {
+impl<S: FullSigner + 'static> LiquidSdkBuilder<S> {
     pub fn new(
         config: Config,
         server_url: String,
         signer: Arc<Box<dyn Signer>>,
-    ) -> Result<LiquidSdkBuilder> {
+        lwk_signer: Arc<S>,
+    ) -> Result<LiquidSdkBuilder<S>> {
         let breez_server = Arc::new(BreezServer::new(server_url, None)?);
         Ok(LiquidSdkBuilder {
             config,
@@ -136,6 +139,7 @@ impl LiquidSdkBuilder {
             status_stream: None,
             swapper: None,
             sync_service: None,
+            lwk_signer,
         })
     }
 
@@ -241,13 +245,15 @@ impl LiquidSdkBuilder {
                 None => self.config.liquid_chain_service()?,
             };
 
+        // let signer = SdkLwkSigner::new(self.signer.clone())?;
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
             Some(onchain_wallet) => onchain_wallet,
             None => Arc::new(
                 LiquidOnchainWallet::new(
                     self.config.clone(),
                     persister.clone(),
-                    self.signer.clone(),
+                    // self.signer.clone(),
+                    self.lwk_signer.clone(),
                 )
                 .await?,
             ),
@@ -450,11 +456,40 @@ impl LiquidSdk {
 
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
+        let signer = Arc::new(signer);
+        let lwk_signer = SdkLwkSigner::new(signer.clone())?;
 
         let sdk = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
-            Arc::new(signer),
+            signer,
+            Arc::new(lwk_signer),
+        )?
+        .build()
+        .await?;
+        sdk.start().await?;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
+        Ok(sdk)
+    }
+
+    pub async fn connect_with_lwk_signer<S: FullSigner + 'static>(
+        req: ConnectRequest,
+        lwk_signer: S,
+    ) -> Result<Arc<LiquidSdk>> {
+        let start_ts = Instant::now();
+        let signer = Self::default_signer(&req)?;
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&req.config.working_dir)?;
+
+        let sdk = LiquidSdkBuilder::new(
+            req.config,
+            PRODUCTION_BREEZSERVER_URL.into(),
+            Arc::new(Box::new(signer)),
+            Arc::new(lwk_signer),
         )?
         .build()
         .await?;
@@ -1158,18 +1193,50 @@ impl LiquidSdk {
         address: &str,
         asset_id: &str,
     ) -> Result<u64, PaymentError> {
-        let fee_sat = self
-            .onchain_wallet
-            .build_tx(
-                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                address,
-                asset_id,
-                amount_sat,
-            )
-            .await?
-            .all_fees()
-            .values()
-            .sum::<u64>();
+        let fee_sat = match &self.config.wallet_policy {
+            model::WalletPolicy::Singlesig => self
+                .onchain_wallet
+                .build_tx(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    address,
+                    asset_id,
+                    amount_sat,
+                )
+                .await?
+                .all_fees()
+                .values()
+                .sum::<u64>(),
+            model::WalletPolicy::Multisig {
+                threshold: _,
+                xpubs: _,
+            } => self
+                .onchain_wallet
+                .build_psbt(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    address,
+                    asset_id,
+                    amount_sat,
+                )
+                .await?
+                .extract_tx()
+                .unwrap()
+                .all_fees()
+                .values()
+                .sum::<u64>(),
+        };
+
+        // let fee_sat = self
+        //     .onchain_wallet
+        //     .build_tx(
+        //         Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+        //         address,
+        //         asset_id,
+        //         amount_sat,
+        //     )
+        //     .await?
+        //     .all_fees()
+        //     .values()
+        //     .sum::<u64>();
         info!("Estimated tx fee: {fee_sat} sat");
         Ok(fee_sat)
     }
