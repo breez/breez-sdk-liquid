@@ -49,8 +49,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                 &swap.get_claim_keypair()?,
                 &Preimage::from_str(&swap.preimage)?,
                 Fee::Absolute(swap.claim_fees_sat),
-                self.get_cooperative_details(swap.id.clone(), None, None)
-                    .await?,
+                self.get_cooperative_details(swap.id.clone(), None).await?,
                 true,
             )
             .await?;
@@ -75,14 +74,14 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         )
         .await?;
 
-        let (partial_sig, pub_nonce) = self.get_claim_partial_sig(swap).await?;
+        let signature = self.get_claim_partial_sig(swap).await?;
 
         let signed_tx = claim_tx_wrapper
             .sign_claim(
                 &claim_keypair,
                 &Preimage::from_str(&swap.preimage)?,
                 Fee::Absolute(swap.claim_fees_sat),
-                self.get_cooperative_details(swap.id.clone(), Some(pub_nonce), Some(partial_sig))
+                self.get_cooperative_details(swap.id.clone(), signature)
                     .await?,
                 true,
             )
@@ -196,10 +195,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         let broadcast_fees_sat = self.calculate_refund_fees(refund_tx_size);
 
         let cooperative = match is_cooperative {
-            true => {
-                self.get_cooperative_details(swap_id.clone(), None, None)
-                    .await?
-            }
+            true => self.get_cooperative_details(swap_id.clone(), None).await?,
             false => None,
         };
 

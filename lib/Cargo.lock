@@ -754,7 +754,7 @@ checksum = "829a082bd3761fde7476dc2ed85ca56c11628948460ece621e4f56fef5046567"
 [[package]]
 name = "boltz-client"
 version = "0.3.0"
-source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=a51930a211110623f8354842d2ea1a961c598a79#a51930a211110623f8354842d2ea1a961c598a79"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=d62288fdd1799d90df72a811f4bb6a1b400c5ac7#d62288fdd1799d90df72a811f4bb6a1b400c5ac7"
 dependencies = [
  "async-trait",
  "bip39",
@@ -3162,7 +3162,7 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.0.0"
-source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=a51930a211110623f8354842d2ea1a961c598a79#a51930a211110623f8354842d2ea1a961c598a79"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=d62288fdd1799d90df72a811f4bb6a1b400c5ac7#d62288fdd1799d90df72a811f4bb6a1b400c5ac7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5497,9 +5497,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-tungstenite-wasm"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fdedcaa28c04d697d2286d386594ccfcdbbead98114fd52576c943ab9b32820c"
+checksum = "02567f5f341725fb3e452c1f55dd4e5b0f2a685355c3b10babf0fe8e137d176e"
 dependencies = [
  "bytes",
  "futures-channel",
