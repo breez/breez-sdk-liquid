@@ -754,7 +754,7 @@ checksum = "829a082bd3761fde7476dc2ed85ca56c11628948460ece621e4f56fef5046567"
 [[package]]
 name = "boltz-client"
 version = "0.3.0"
-source = "git+https://github.com/danielgranhao/boltz-rust?rev=6167f214b5da2e72d1eb945e87c3fa8d5adca671#6167f214b5da2e72d1eb945e87c3fa8d5adca671"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=d62288fdd1799d90df72a811f4bb6a1b400c5ac7#d62288fdd1799d90df72a811f4bb6a1b400c5ac7"
 dependencies = [
  "async-trait",
  "bip39",
@@ -3162,7 +3162,7 @@ dependencies = [
 [[package]]
 name = "macros"
 version = "0.0.0"
-source = "git+https://github.com/danielgranhao/boltz-rust?rev=6167f214b5da2e72d1eb945e87c3fa8d5adca671#6167f214b5da2e72d1eb945e87c3fa8d5adca671"
+source = "git+https://github.com/SatoshiPortal/boltz-rust?rev=d62288fdd1799d90df72a811f4bb6a1b400c5ac7#d62288fdd1799d90df72a811f4bb6a1b400c5ac7"
 dependencies = [
  "proc-macro2",
  "quote",
