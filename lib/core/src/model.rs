@@ -10,7 +10,7 @@ use boltz_client::{
 };
 use derivative::Derivative;
 use elements::AssetId;
-use lwk_wollet::{bitcoin::bip32::Xpub, ElementsNetwork};
+use lwk_wollet::ElementsNetwork;
 use maybe_sync::{MaybeSend, MaybeSync};
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
@@ -62,7 +62,7 @@ pub enum BlockchainExplorer {
 #[derive(Clone, Debug, Serialize)]
 pub enum WalletPolicy {
     Singlesig,
-    Multisig { threshold: usize, xpubs: Vec<Xpub> },
+    Multisig { threshold: usize, xpubs: Vec<String> },
 }
 
 /// Configuration for the Liquid SDK
@@ -964,7 +964,9 @@ impl WalletInfo {
         if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
             ensure_sdk!(
                 amount_sat + fees_sat <= self.balance_sat,
-                PaymentError::InsufficientFunds
+                PaymentError::InsufficientFunds {
+                    missing_sats: (amount_sat + fees_sat) - self.balance_sat
+                }
             );
         } else {
             match self
@@ -974,9 +976,13 @@ impl WalletInfo {
             {
                 Some(asset_balance) => ensure_sdk!(
                     amount_sat <= asset_balance.balance_sat && fees_sat <= self.balance_sat,
-                    PaymentError::InsufficientFunds
+                    PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat - asset_balance.balance_sat
+                    }
                 ),
-                None => return Err(PaymentError::InsufficientFunds),
+                None => return Err(PaymentError::InsufficientFunds {
+                    missing_sats: amount_sat,
+                }),
             }
         }
         Ok(())

@@ -9,6 +9,7 @@ use boltz_client::ElementsAddress;
 use log::{debug, error, info, warn};
 use lwk_common::{multisig_desc, singlesig_desc, DescriptorBlindingKey, Multisig, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
+use lwk_wollet::bitcoin::bip32::Xpub;
 use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
@@ -287,7 +288,7 @@ pub fn get_descriptor<S: FullSigner>(
             xpubs_with_origins.append(
                 &mut xpubs
                     .into_iter()
-                    .map(|xpub| (None, xpub))
+                    .map(|xpub| (None, Xpub::from_str(&xpub).unwrap()))
                     .collect::<Vec<_>>(),
             );
 
@@ -466,7 +467,7 @@ impl<S: FullSigner> OnchainWallet for LiquidOnchainWallet<S> {
             .await
         {
             Ok(tx) => Ok(tx),
-            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
+            Err(PaymentError::InsufficientFunds { .. }) if asset_id.eq(&self.config.lbtc_asset_id()) => {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
                 self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
                     .await
