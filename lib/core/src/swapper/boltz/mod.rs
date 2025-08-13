@@ -167,12 +167,9 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             .await
         {
             Ok(claim_tx_details) => claim_tx_details,
-            Err(boltz_client::error::Error::JSON(e)) => {
-                warn!("Failed to parse chain claim tx details: {e} - continuing without signature as we may have already sent it");
-                return Ok(None);
-            }
             Err(e) => {
-                return Err(e.into());
+                warn!("Failed to get chain claim tx details: {e:?} - continuing without signature as we may have already sent it");
+                return Ok(None);
             }
         };
 
