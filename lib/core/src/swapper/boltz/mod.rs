@@ -147,23 +147,36 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         Ok(bitcoin_client)
     }
 
+    /// Get the partial signature and pub nonce for a chain swap.
+    /// If we fail to get the claim tx details, we may have already sent it, so we return None.
     async fn get_claim_partial_sig(
         &self,
         swap: &ChainSwap,
-    ) -> Result<(MusigPartialSignature, MusigPubNonce), PaymentError> {
+    ) -> Result<Option<(MusigPartialSignature, MusigPubNonce)>, PaymentError> {
         let refund_keypair = swap.get_refund_keypair()?;
 
         // Create a temporary refund tx to an address from the swap lockup chain
         // We need it to calculate the musig partial sig for the claim tx from the other chain
         let lockup_address = &swap.lockup_address;
 
-        let claim_tx_details = self
+        let claim_tx_details = match self
             .get_boltz_client()
             .await?
             .inner
             .get_chain_claim_tx_details(&swap.id)
-            .await?;
-        match swap.direction {
+            .await
+        {
+            Ok(claim_tx_details) => claim_tx_details,
+            Err(boltz_client::error::Error::JSON(e)) => {
+                warn!("Failed to parse chain claim tx details: {e} - continuing without signature as we may have already sent it");
+                return Ok(None);
+            }
+            Err(e) => {
+                return Err(e.into());
+            }
+        };
+
+        let signature = match swap.direction {
             Direction::Incoming => {
                 let refund_tx_wrapper = self
                     .new_btc_refund_wrapper(&Swap::Chain(swap.clone()), lockup_address)
@@ -173,7 +186,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     &refund_keypair,
                     &claim_tx_details.pub_nonce,
                     &claim_tx_details.transaction_hash,
-                )
+                )?
             }
             Direction::Outgoing => {
                 let refund_tx_wrapper = self
@@ -184,23 +197,22 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                     &refund_keypair,
                     &claim_tx_details.pub_nonce,
                     &claim_tx_details.transaction_hash,
-                )
+                )?
             }
-        }
-        .map_err(Into::into)
+        };
+
+        Ok(Some(signature))
     }
 
     async fn get_cooperative_details(
         &self,
         swap_id: String,
-        pub_nonce: Option<MusigPubNonce>,
-        partial_sig: Option<MusigPartialSignature>,
+        signature: Option<(MusigPartialSignature, MusigPubNonce)>,
     ) -> Result<Option<Cooperative>> {
         Ok(Some(Cooperative {
             boltz_api: &self.get_boltz_client().await?.inner,
             swap_id,
-            pub_nonce,
-            partial_sig,
+            signature,
         }))
     }
 
