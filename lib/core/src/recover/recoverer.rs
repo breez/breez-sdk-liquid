@@ -78,6 +78,8 @@ impl Recoverer {
         swaps: &mut [Swap],
         maybe_chain_tips: Option<ChainTips>,
     ) -> Result<HashMap<Txid, WalletTx>> {
+        debug!("Recoverer::recover_from_onchain: start");
+
         let chain_tips = match maybe_chain_tips {
             None => ChainTips {
                 liquid_tip: self.liquid_chain_service.tip().await?,
@@ -92,6 +94,10 @@ impl Recoverer {
             },
             Some(tips) => tips,
         };
+        debug!(
+            "Recoverer::recover_from_onchain: got chain tips Liquid {} Bitcoin {:?}",
+            chain_tips.liquid_tip, chain_tips.bitcoin_tip
+        );
 
         self.sync_wallet_if_needed(chain_tips.liquid_tip).await?;
 
@@ -99,6 +105,10 @@ impl Recoverer {
 
         // Create wallet transactions map
         let raw_tx_map = self.onchain_wallet.transactions_by_tx_id().await?;
+        debug!(
+            "Recoverer::recover_from_onchain: got {} raw txs from LWK wallet",
+            raw_tx_map.len()
+        );
 
         // Convert swaps to SwapsList and fetch history data
         let swaps_list = swaps.to_vec().try_into()?;
@@ -159,6 +169,8 @@ impl Recoverer {
             if let Err(err) = res {
                 warn!("Error recovering data for swap {swap_id}: {err}");
             }
+
+            debug!("Recoverer::recover_from_onchain: successfully recovered swap {swap_id}");
         }
 
         debug!("Recoverer::recover_from_onchain completed");
@@ -209,7 +221,7 @@ impl Recoverer {
         ReceiveOrSendSwapRecoveryContext,
         Option<ChainSwapRecoveryContext>,
     )> {
-        debug!("Recoverer::create_recovery_contexts");
+        debug!("Recoverer::create_recovery_contexts: start");
         // Fetch history data for each lbtc swap script
         let lbtc_script_to_history_map = self
             .fetch_lbtc_history_map(swaps_list.get_swap_lbtc_scripts())
@@ -242,6 +254,7 @@ impl Recoverer {
             None
         };
 
+        debug!("Recoverer::create_recovery_contexts: end");
         Ok((
             ReceiveOrSendSwapRecoveryContext {
                 lbtc_script_to_history_map,
@@ -258,13 +271,15 @@ impl Recoverer {
         &self,
         swap_lbtc_scripts: Vec<LBtcScript>,
     ) -> Result<HashMap<LBtcScript, Vec<LBtcHistory>>> {
+        debug!("Recoverer::fetch_lbtc_history_map: start");
+
         let t0 = web_time::Instant::now();
         let lbtc_script_histories = self
             .liquid_chain_service
             .get_scripts_history(&swap_lbtc_scripts)
             .await?;
         info!(
-            "Recoverer executed liquid get_scripts_history for {} scripts in {} milliseconds",
+            "Recoverer::fetch_lbtc_history_map: executed liquid get_scripts_history for {} scripts in {} milliseconds",
             swap_lbtc_scripts.len(),
             t0.elapsed().as_millis()
         );
@@ -280,6 +295,7 @@ impl Recoverer {
             .zip(lbtc_script_histories.into_iter())
             .collect();
 
+        debug!("Recoverer::fetch_lbtc_history_map: end");
         Ok(lbtc_script_to_history_map)
     }
 
@@ -291,6 +307,7 @@ impl Recoverer {
         HashMap<BtcScript, Vec<bitcoin::Transaction>>,
         HashMap<BtcScript, BtcScriptBalance>,
     )> {
+        debug!("Recoverer::fetch_btc_history_map: start");
         let swap_btc_scripts = swap_btc_script_bufs
             .iter()
             .map(|x| x.as_script())
@@ -303,7 +320,7 @@ impl Recoverer {
             .await?;
 
         info!(
-            "Recoverer executed bitcoin get_scripts_history for {} scripts in {} milliseconds",
+            "Recoverer::fetch_btc_history_map: executed bitcoin get_scripts_history for {} scripts in {} milliseconds",
             swap_btc_scripts.len(),
             t0.elapsed().as_millis()
         );
@@ -374,6 +391,7 @@ impl Recoverer {
             .zip(btc_script_balances)
             .collect();
 
+        debug!("Recoverer::fetch_btc_history_map: end");
         Ok((
             btc_script_to_history_map,
             btc_script_to_txs_map,
