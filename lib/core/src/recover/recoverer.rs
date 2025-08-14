@@ -192,7 +192,6 @@ impl Recoverer {
             .unwrap_or_default();
         let has_unscanned_derivation_indices =
             last_used_derivation_index > last_scanned_derivation_index;
-
         if tips_too_far_apart || has_unscanned_derivation_indices {
             if tips_too_far_apart {
                 debug!(

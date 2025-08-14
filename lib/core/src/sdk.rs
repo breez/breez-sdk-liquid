@@ -58,6 +58,7 @@ use crate::model::Signer;
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
+use crate::signer::{FullSigner, SdkLwkSigner};
 use crate::swapper::SubscriptionHandler;
 use crate::swapper::{
     boltz::BoltzSwapper, Swapper, SwapperStatusStream, SwapperSubscriptionHandler,
@@ -98,7 +99,7 @@ pub const DEFAULT_EXTERNAL_INPUT_PARSERS: &[(&str, &str, &str)] = &[
 
 pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_secs(120);
 
-pub struct LiquidSdkBuilder {
+pub struct LiquidSdkBuilder<S: FullSigner> {
     config: Config,
     signer: Arc<Box<dyn Signer>>,
     breez_server: Arc<BreezServer>,
@@ -112,15 +113,17 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
+    lwk_signer: Arc<S>,
 }
 
 #[allow(dead_code)]
-impl LiquidSdkBuilder {
+impl<S: FullSigner + 'static> LiquidSdkBuilder<S> {
     pub fn new(
         config: Config,
         server_url: String,
         signer: Arc<Box<dyn Signer>>,
-    ) -> Result<LiquidSdkBuilder> {
+        lwk_signer: Arc<S>,
+    ) -> Result<LiquidSdkBuilder<S>> {
         let breez_server = Arc::new(BreezServer::new(server_url, None)?);
         Ok(LiquidSdkBuilder {
             config,
@@ -136,6 +139,7 @@ impl LiquidSdkBuilder {
             status_stream: None,
             swapper: None,
             sync_service: None,
+            lwk_signer,
         })
     }
 
@@ -241,13 +245,15 @@ impl LiquidSdkBuilder {
                 None => self.config.liquid_chain_service()?,
             };
 
+        // let signer = SdkLwkSigner::new(self.signer.clone())?;
         let onchain_wallet: Arc<dyn OnchainWallet> = match self.onchain_wallet.clone() {
             Some(onchain_wallet) => onchain_wallet,
             None => Arc::new(
                 LiquidOnchainWallet::new(
                     self.config.clone(),
                     persister.clone(),
-                    self.signer.clone(),
+                    // self.signer.clone(),
+                    self.lwk_signer.clone(),
                 )
                 .await?,
             ),
@@ -450,11 +456,40 @@ impl LiquidSdk {
 
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
+        let signer = Arc::new(signer);
+        let lwk_signer = SdkLwkSigner::new(signer.clone())?;
 
         let sdk = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
-            Arc::new(signer),
+            signer,
+            Arc::new(lwk_signer),
+        )?
+        .build()
+        .await?;
+        sdk.start().await?;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
+        Ok(sdk)
+    }
+
+    pub async fn connect_with_lwk_signer<S: FullSigner + 'static>(
+        req: ConnectRequest,
+        lwk_signer: S,
+    ) -> Result<Arc<LiquidSdk>> {
+        let start_ts = Instant::now();
+        let signer = Self::default_signer(&req)?;
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&req.config.working_dir)?;
+
+        let sdk = LiquidSdkBuilder::new(
+            req.config,
+            PRODUCTION_BREEZSERVER_URL.into(),
+            Arc::new(Box::new(signer)),
+            Arc::new(lwk_signer),
         )?
         .build()
         .await?;
@@ -1158,18 +1193,38 @@ impl LiquidSdk {
         address: &str,
         asset_id: &str,
     ) -> Result<u64, PaymentError> {
-        let fee_sat = self
-            .onchain_wallet
-            .build_tx(
-                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                address,
-                asset_id,
-                amount_sat,
-            )
-            .await?
-            .all_fees()
-            .values()
-            .sum::<u64>();
+        let fee_sat = match &self.config.wallet_policy {
+            model::WalletPolicy::Singlesig => self
+                .onchain_wallet
+                .build_tx(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    address,
+                    asset_id,
+                    amount_sat,
+                )
+                .await?
+                .all_fees()
+                .values()
+                .sum::<u64>(),
+            model::WalletPolicy::Multisig {
+                threshold: _,
+                xpubs: _,
+            } => self
+                .onchain_wallet
+                .build_psbt(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    address,
+                    asset_id,
+                    amount_sat,
+                )
+                .await?
+                .extract_tx()
+                .unwrap()
+                .all_fees()
+                .values()
+                .sum::<u64>(),
+        };
+
         info!("Estimated tx fee: {fee_sat} sat");
         Ok(fee_sat)
     }
@@ -1231,10 +1286,10 @@ impl LiquidSdk {
             .await
         {
             Ok(fees_sat) => Ok(fees_sat),
-            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
+            Err(PaymentError::InsufficientFunds { missing_sats }) if asset_id.eq(&self.config.lbtc_asset_id()) => {
                 self.estimate_drain_tx_fee(Some(amount_sat), Some(address))
                     .await
-                    .map_err(|_| PaymentError::InsufficientFunds)
+                    .map_err(|_| PaymentError::InsufficientFunds { missing_sats })
             }
             Err(e) => Err(e),
         }
@@ -1431,7 +1486,9 @@ impl LiquidSdk {
                                 ensure_sdk!(
                                     get_info_res.wallet_info.balance_sat
                                         >= swap.payer_amount_sat + swap.fees_sat,
-                                    PaymentError::InsufficientFunds
+                                    PaymentError::InsufficientFunds {
+                                        missing_sats: (swap.payer_amount_sat + swap.fees_sat) - get_info_res.wallet_info.balance_sat,
+                                    }
                                 );
                                 exchange_amount_sat = Some(swap.payer_amount_sat - swap.fees_sat);
                                 Ok(swap.fees_sat)
@@ -1710,7 +1767,7 @@ impl LiquidSdk {
                         .await
                     }
                     true => {
-                        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
                         ensure_sdk!(
                             !asset_pay_fees,
                             PaymentError::generic("Cannot pay asset fees when executing a payment between two separate assets")
@@ -1734,7 +1791,7 @@ impl LiquidSdk {
                 invoice,
                 bip353_address,
             } => {
-                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
                 let mut response = self
                     .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain)
                     .await?;
@@ -1746,7 +1803,7 @@ impl LiquidSdk {
                 receiver_amount_sat,
                 bip353_address,
             } => {
-                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
                 let bolt12_info = self
                     .swapper
                     .get_bolt12_info(GetBolt12FetchRequest {
@@ -1816,7 +1873,7 @@ impl LiquidSdk {
         let get_info_response = self.get_info().await?;
         ensure_sdk!(
             payer_amount_sat <= get_info_response.wallet_info.balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds { missing_sats: payer_amount_sat - get_info_response.wallet_info.balance_sat }
         );
 
         let description = match bolt11_invoice.description() {
@@ -1898,7 +1955,9 @@ impl LiquidSdk {
         let get_info_response = self.get_info().await?;
         ensure_sdk!(
             payer_amount_sat <= get_info_response.wallet_info.balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - get_info_response.wallet_info.balance_sat
+            }
         );
 
         match (
@@ -1980,7 +2039,7 @@ impl LiquidSdk {
                 .await;
         }
 
-        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
         self.pay_liquid_onchain(address_data.clone(), receiver_amount_sat, fees_sat, true)
             .await
     }
@@ -2118,9 +2177,10 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
+        let balance_sat = self.get_info().await?.wallet_info.balance_sat;
         ensure_sdk!(
-            self.get_info().await?.wallet_info.balance_sat >= swap.payer_amount_sat,
-            PaymentError::InsufficientFunds
+            balance_sat >= swap.payer_amount_sat,
+            PaymentError::InsufficientFunds { missing_sats: swap.payer_amount_sat - balance_sat }
         );
 
         let tx_id = sideswap_service
@@ -2517,7 +2577,9 @@ impl LiquidSdk {
 
         ensure_sdk!(
             payer_amount_sat <= get_info_res.wallet_info.balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - get_info_res.wallet_info.balance_sat
+            }
         );
 
         info!("Prepared onchain payment: {res:?}");
@@ -2581,7 +2643,9 @@ impl LiquidSdk {
 
         ensure_sdk!(
             payer_amount_sat <= balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - balance_sat
+            }
         );
 
         let preimage = Preimage::new();
@@ -4596,7 +4660,7 @@ impl LiquidSdk {
                 };
                 let fees_sat = prepare_response
                     .fees_sat
-                    .ok_or(PaymentError::InsufficientFunds)?;
+                    .ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
 
                 Ok(PrepareLnUrlPayResponse {
                     destination,
