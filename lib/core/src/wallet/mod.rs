@@ -488,6 +488,7 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError> {
+        debug!("LiquidOnchainWallet::full_scan");
         let full_scan_started = Instant::now();
 
         // create electrum client if doesn't already exist

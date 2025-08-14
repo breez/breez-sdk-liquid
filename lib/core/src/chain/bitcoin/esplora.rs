@@ -49,6 +49,7 @@ impl EsploraBitcoinChainService {
             }
         };
         let client = Builder::new(esplora_url)
+            .connect_timeout(10)
             .timeout(3)
             .max_retries(10)
             .build_async()?;

@@ -60,7 +60,7 @@ tempfile = "3"
 ecies = { version = "0.2.7", default-features = false, features = ["pure"] }
 semver = "1.0.23"
 lazy_static = "1.5.0"
-esplora-client = { git = "https://github.com/hydra-yse/rust-esplora-client", branch = "scripthash-utxo", features = [
+esplora-client = { git = "https://github.com/breez/rust-esplora-client", branch = "connect-timeout", features = [
     "async-https-rustls",
 ] }
 sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "2c3c4312d8fe" }

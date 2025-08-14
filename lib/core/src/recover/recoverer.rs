@@ -161,6 +161,7 @@ impl Recoverer {
             }
         }
 
+        debug!("Recoverer::recover_from_onchain completed");
         Ok(raw_tx_map)
     }
 
@@ -208,6 +209,7 @@ impl Recoverer {
         ReceiveOrSendSwapRecoveryContext,
         Option<ChainSwapRecoveryContext>,
     )> {
+        debug!("Recoverer::create_recovery_contexts");
         // Fetch history data for each lbtc swap script
         let lbtc_script_to_history_map = self
             .fetch_lbtc_history_map(swaps_list.get_swap_lbtc_scripts())
