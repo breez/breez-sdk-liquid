@@ -11,6 +11,7 @@ import breez_sdk_liquid.EventListener
 import breez_sdk_liquid.Logger
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.connectSDK
+import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.shutdownSDK
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_INVOICE_REQUEST
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INFO
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INVOICE
@@ -104,6 +105,7 @@ abstract class ForegroundService :
     open fun shutdown() {
         logger.log(TAG, "Shutting down foreground service", "DEBUG")
         cancelNotification(applicationContext, NOTIFICATION_ID_REPLACEABLE)
+        shutdownSdkConnection()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -217,6 +219,12 @@ abstract class ForegroundService :
                 job.start(liquidSDK!!)
             }
         }
+    }
+
+    private fun shutdownSdkConnection() {
+        logger.log(TAG, "Shutting down Breez Liquid SDK connection", "DEBUG")
+        shutdownSDK()
+        liquidSDK = null
     }
 
     /** Handles incoming events from the Breez Liquid SDK EventListener */
