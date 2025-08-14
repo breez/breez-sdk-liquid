@@ -314,6 +314,8 @@ pub struct Config {
     pub onchain_fee_rate_leeway_sat: Option<u64>,
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     pub sideswap_api_key: Option<String>,
+    pub enable_nwc: Option<bool>,
+    pub nwc_relay_urls: Option<Vec<String>>,
     pub use_magic_routing_hints: bool,
 }
 
@@ -337,6 +339,7 @@ pub enum SdkEvent {
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
     DataSynced { did_pull_new_records: bool },
+    NWC { details: NwcEvent },
 }
 
 #[derive(Clone)]
@@ -837,4 +840,18 @@ pub struct FetchPaymentProposedFeesResponse {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::AcceptPaymentProposedFeesRequest)]
 pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NwcEvent)]
+pub enum NwcEvent {
+    Connected,
+    Disconnected,
+    PayInvoice {
+        success: bool,
+        preimage: Option<String>,
+        fees_sat: Option<u64>,
+        error: Option<String>,
+    },
+    ListTransactions,
+    GetBalance,
 }

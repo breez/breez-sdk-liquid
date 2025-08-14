@@ -180,6 +180,7 @@ pub(crate) mod lnurl;
 pub mod logger;
 #[allow(deprecated)]
 pub mod model;
+pub(crate) mod nwc;
 pub(crate) mod payjoin;
 pub mod persist;
 pub mod receive_swap;

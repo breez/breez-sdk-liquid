@@ -395,4 +395,9 @@ impl BindingLiquidSdk {
         self.persister.clear_in_memory_db()?;
         Ok(())
     }
+
+    #[wasm_bindgen(js_name = "getNwcUri")]
+    pub async fn get_nwc_uri(&self) -> WasmResult<String> {
+        Ok(self.sdk.get_nwc_uri().await?)
+    }
 }
