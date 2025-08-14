@@ -165,6 +165,10 @@ impl WalletClient {
         };
 
         if let Some(update) = maybe_update {
+            debug!(
+                "WalletClient::full_scan_to_index: applying update {}",
+                update.version
+            );
             wallet.apply_update(update)?;
         }
 
@@ -488,7 +492,7 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError> {
-        debug!("LiquidOnchainWallet::full_scan");
+        debug!("LiquidOnchainWallet::full_scan: start");
         let full_scan_started = Instant::now();
 
         // create electrum client if doesn't already exist
@@ -515,6 +519,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             .get_last_scanned_derivation_index()?
             .is_some_and(|index| index != last_derivation_index)
         {
+            debug!("LiquidOnchainWallet::full_scan: reunblinding all transactions");
             wallet.reunblind()?;
         }
 
@@ -551,6 +556,7 @@ impl OnchainWallet for LiquidOnchainWallet {
 
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
         info!("lwk wallet full_scan duration: ({duration_ms} ms)");
+        debug!("LiquidOnchainWallet::full_scan: end");
         res
     }
 

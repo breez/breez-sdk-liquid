@@ -3867,8 +3867,9 @@ impl LiquidSdk {
         mut recoverable_swaps: Vec<Swap>,
         chain_tips: ChainTips,
     ) -> Result<()> {
+        debug!("LiquidSdk::sync_payments_with_chain_data: start");
         debug!(
-            "LiquidSdk::sync_payments_with_chain_data called with {} recoverable swaps",
+            "LiquidSdk::sync_payments_with_chain_data: called with {} recoverable swaps",
             recoverable_swaps.len()
         );
         let mut wallet_tx_map = self
@@ -4023,6 +4024,7 @@ impl LiquidSdk {
         }
 
         self.update_wallet_info().await?;
+        debug!("LiquidSdk::sync_payments_with_chain_data: end");
         Ok(())
     }
 
