@@ -33,5 +33,12 @@ class BreezSdkLiquidConnector {
                 return liquidSDK!!
             }
         }
+
+        internal fun shutdownSDK() {
+            synchronized(this) {
+                liquidSDK?.disconnect()
+                liquidSDK = null
+            }
+        }
     }
 }

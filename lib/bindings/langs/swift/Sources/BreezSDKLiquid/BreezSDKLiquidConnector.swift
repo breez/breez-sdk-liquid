@@ -28,6 +28,14 @@ class BreezSDKLiquidConnector {
     static func unregister() {
         BreezSDKLiquidConnector.queue.sync { [] in
             BreezSDKLiquidConnector.sdkListener = nil
+            if let sdk = BreezSDKLiquidConnector.liquidSDK {
+                do {
+                    try sdk.disconnect()
+                } catch {
+                    os_log("Failed to disconnect SDK: %@", log: logger, type: .error, error.localizedDescription)
+                }
+                BreezSDKLiquidConnector.liquidSDK = nil
+            }
         }
     }
     
