@@ -38,9 +38,9 @@ typedef struct _Dart_Handle* Dart_Handle;
 #define DEFAULT_ZERO_CONF_MAX_SAT 1000000
 
 /**
- * Number of blocks to monitor a swap after its timeout block height
+ * Number of blocks to monitor a swap after its timeout block height (~14 days)
  */
-#define CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS 4320
+#define CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS ((6 * 24) * 14)
 
 typedef struct wire_cst_list_prim_u_8_strict {
   uint8_t *ptr;
