@@ -1425,6 +1425,7 @@ impl LiquidSdk {
                                 let to_asset = AssetId::from_str(&to_asset)?;
                                 let from_asset = AssetId::from_str(&from_asset)?;
                                 let swap = SideSwapService::from_sdk(self)
+                                    .await
                                     .get_asset_swap(from_asset, to_asset, receiver_amount_sat)
                                     .await?;
                                 validate_funds = false;
@@ -2107,7 +2108,7 @@ impl LiquidSdk {
             PaymentError::generic(format!("Could not convert destination address: {err}"))
         })?;
 
-        let sideswap_service = SideSwapService::from_sdk(self);
+        let sideswap_service = SideSwapService::from_sdk(self).await;
 
         let swap = sideswap_service
             .get_asset_swap(from_asset, to_asset, receiver_amount_sat)

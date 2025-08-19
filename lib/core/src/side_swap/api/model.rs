@@ -2,9 +2,9 @@ use anyhow::Context as _;
 use serde::{Deserialize, Serialize};
 pub(crate) use sideswap_api::http_rpc::{Request as HttpRequest, Response as HttpResponse};
 use sideswap_api::{
-    AssetId, Empty, StartSwapWebRequest, StartSwapWebResponse, SubscribePriceStreamRequest,
-    SubscribePriceStreamResponse, SwapDoneNotification, UnsubscribePriceStreamRequest,
-    UnsubscribePriceStreamResponse,
+    AssetId, Empty, LoginClientRequest, LoginClientResponse, StartSwapWebRequest,
+    StartSwapWebResponse, SubscribePriceStreamRequest, SubscribePriceStreamResponse,
+    SwapDoneNotification, UnsubscribePriceStreamRequest, UnsubscribePriceStreamResponse,
 };
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -21,6 +21,7 @@ pub(crate) enum Request {
     SubscribePriceStream(SubscribePriceStreamRequest),
     UnsubscribePriceStream(UnsubscribePriceStreamRequest),
     StartSwapWeb(StartSwapWebRequest),
+    LoginClient(LoginClientRequest),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -37,6 +38,7 @@ pub(crate) enum Response {
     SubscribePriceStream(SubscribePriceStreamResponse),
     UnsubscribePriceStream(UnsubscribePriceStreamResponse),
     StartSwapWeb(StartSwapWebResponse),
+    LoginClient(LoginClientResponse),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
