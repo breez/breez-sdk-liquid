@@ -10,7 +10,7 @@ use sdk_common::utils::Arc;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use sideswap_api::http_rpc::{SwapSignRequest, SwapStartRequest};
-use sideswap_api::{StartSwapWebRequest, SubscribePriceStreamRequest, Utxo};
+use sideswap_api::{LoginClientRequest, StartSwapWebRequest, SubscribePriceStreamRequest, Utxo};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
@@ -49,16 +49,17 @@ pub(crate) struct SideSwapService {
 }
 
 impl SideSwapService {
-    pub(crate) fn from_sdk(sdk: &crate::sdk::LiquidSdk) -> Self {
+    pub(crate) async fn from_sdk(sdk: &crate::sdk::LiquidSdk) -> Self {
         Self::new(
             sdk.config.clone(),
             sdk.rest_client.clone(),
             sdk.onchain_wallet.clone(),
             sdk.shutdown_receiver.clone(),
         )
+        .await
     }
 
-    pub(crate) fn new(
+    pub(crate) async fn new(
         config: Config,
         rest_client: Arc<dyn RestClient>,
         onchain_wallet: Arc<dyn OnchainWallet>,
@@ -139,7 +140,32 @@ impl SideSwapService {
             .await
         });
         let _ = service.event_loop_handle.set(handle);
+
+        if let Err(err) = service.authenticate().await {
+            warn!("Could not authenticate with SideSwap servers: {err:?}");
+        };
         service
+    }
+
+    async fn authenticate(&self) -> Result<()> {
+        let Some(api_key) = self.config.sideswap_api_key.clone() else {
+            return Ok(());
+        };
+
+        let req_id = self
+            .request_handler
+            .send(Request::LoginClient(LoginClientRequest {
+                api_key: Some(api_key),
+                cookie: None,
+                user_agent: "breezsdk".to_string(),
+                version: "1.0.0".to_string(),
+            }))
+            .await?;
+
+        match self.response_handler.recv(req_id).await? {
+            Response::LoginClient(_) => Ok(()),
+            res => Err(Self::invalid_response(res)),
+        }
     }
 
     async fn post_request<I: Serialize, O: DeserializeOwned>(
