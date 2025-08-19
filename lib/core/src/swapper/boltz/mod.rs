@@ -205,7 +205,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         &self,
         swap_id: String,
         signature: Option<(MusigPartialSignature, MusigPubNonce)>,
-    ) -> Result<Option<Cooperative>> {
+    ) -> Result<Option<Cooperative<'_>>> {
         Ok(Some(Cooperative {
             boltz_api: &self.get_boltz_client().await?.inner,
             swap_id,

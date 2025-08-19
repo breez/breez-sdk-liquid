@@ -53,7 +53,7 @@ impl Persister {
         Ok(sync_state)
     }
 
-    fn set_sync_state_stmt(con: &Connection) -> rusqlite::Result<Statement> {
+    fn set_sync_state_stmt(con: &Connection) -> rusqlite::Result<Statement<'_>> {
         con.prepare(
             "
             INSERT OR REPLACE INTO sync_state(data_id, record_id, record_revision, is_local)
@@ -97,7 +97,7 @@ impl Persister {
         Ok(sync_settings)
     }
 
-    fn set_sync_setting_stmt(con: &Connection) -> rusqlite::Result<Statement> {
+    fn set_sync_setting_stmt(con: &Connection) -> rusqlite::Result<Statement<'_>> {
         con.prepare("INSERT OR REPLACE INTO sync_settings(key, value) VALUES(:key, :value)")
     }
 

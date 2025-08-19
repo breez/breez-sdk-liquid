@@ -2047,7 +2047,7 @@ impl LiquidSdk {
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
-            &[tx_balance.clone()],
+            std::slice::from_ref(&tx_balance),
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),
@@ -2207,7 +2207,7 @@ impl LiquidSdk {
 
         self.persister.insert_or_update_payment(
             tx_data.clone(),
-            &[tx_balance.clone()],
+            std::slice::from_ref(&tx_balance),
             Some(PaymentTxDetails {
                 tx_id: tx_id.clone(),
                 destination: destination.clone(),

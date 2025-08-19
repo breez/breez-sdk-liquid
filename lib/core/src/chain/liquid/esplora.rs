@@ -98,7 +98,7 @@ impl LiquidChainService for EsploraLiquidChainService {
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
-        self.get_scripts_history(&[script.clone()])
+        self.get_scripts_history(std::slice::from_ref(script))
             .await?
             .into_iter()
             .nth(0)
