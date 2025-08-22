@@ -246,6 +246,12 @@ const initCommand = () => {
             )
         )
         .addOption(new Option('--use-asset-fees', 'Whether or not the tx should be paid using the asset'))
+        .addOption(
+            new Option(
+                '--from-asset <string>',
+                'The asset id specifying which asset to use to execute the payment.'
+            )
+        )
         .action(sendPayment)
 
     program
