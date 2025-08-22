@@ -27,6 +27,7 @@
 
 use crate::bindings::*;
 use crate::model::EventListener;
+use crate::prelude::WalletPolicy;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -2656,6 +2657,7 @@ impl SseDecode for crate::model::Config {
             asset_metadata: var_assetMetadata,
             sideswap_api_key: var_sideswapApiKey,
             use_magic_routing_hints: var_useMagicRoutingHints,
+            wallet_policy: WalletPolicy::Singlesig,
         };
     }
 }
@@ -4158,7 +4160,7 @@ impl SseDecode for crate::error::PaymentError {
                 return crate::error::PaymentError::InvalidOrExpiredFees;
             }
             9 => {
-                return crate::error::PaymentError::InsufficientFunds;
+                return crate::error::PaymentError::InsufficientFunds { missing_sats: 0 };
             }
             10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
@@ -6597,7 +6599,7 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
                 [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::InvalidOrExpiredFees => [8.into_dart()].into_dart(),
-            crate::error::PaymentError::InsufficientFunds => [9.into_dart()].into_dart(),
+            crate::error::PaymentError::InsufficientFunds { .. } => [9.into_dart()].into_dart(),
             crate::error::PaymentError::InvalidDescription { err } => {
                 [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
@@ -8983,7 +8985,7 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::InvalidOrExpiredFees => {
                 <i32>::sse_encode(8, serializer);
             }
-            crate::error::PaymentError::InsufficientFunds => {
+            crate::error::PaymentError::InsufficientFunds { .. } => {
                 <i32>::sse_encode(9, serializer);
             }
             crate::error::PaymentError::InvalidDescription { err } => {
@@ -10290,6 +10292,7 @@ mod io {
                 asset_metadata: self.asset_metadata.cst_decode(),
                 sideswap_api_key: self.sideswap_api_key.cst_decode(),
                 use_magic_routing_hints: self.use_magic_routing_hints.cst_decode(),
+                wallet_policy: WalletPolicy::Singlesig,
             }
         }
     }
@@ -11285,7 +11288,7 @@ mod io {
                     }
                 }
                 8 => crate::error::PaymentError::InvalidOrExpiredFees,
-                9 => crate::error::PaymentError::InsufficientFunds,
+                9 => crate::error::PaymentError::InsufficientFunds { missing_sats: 0 },
                 10 => {
                     let ans = unsafe { self.kind.InvalidDescription };
                     crate::error::PaymentError::InvalidDescription {

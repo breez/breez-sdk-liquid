@@ -62,6 +62,12 @@ pub enum NewError {
     Seed(#[from] anyhow::Error),
 }
 
+pub trait FullSigner: LwkSigner<Error = SignError> + Send + Sync {
+    fn xpub(&self) -> Result<Xpub, SignError>;
+    fn fingerprint(&self) -> Result<Fingerprint, SignError>;
+    fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError>;
+}
+
 /// A software signer
 pub struct SdkLwkSigner {
     sdk_signer: Arc<Box<dyn Signer>>,
@@ -75,20 +81,22 @@ impl SdkLwkSigner {
     pub fn new(sdk_signer: Arc<Box<dyn Signer>>) -> Result<Self, NewError> {
         Ok(Self { sdk_signer })
     }
+}
 
-    pub(crate) fn xpub(&self) -> Result<Xpub, SignError> {
+impl FullSigner for SdkLwkSigner {
+    fn xpub(&self) -> Result<Xpub, SignError> {
         let xpub = self.sdk_signer.xpub()?;
         Ok(Xpub::decode(&xpub)?)
     }
 
-    pub fn fingerprint(&self) -> Result<Fingerprint, SignError> {
-        let f: Fingerprint = self.xpub()?.identifier()[0..4]
+    fn fingerprint(&self) -> Result<Fingerprint, SignError> {
+        let f: Fingerprint = FullSigner::xpub(self)?.identifier()[0..4]
             .try_into()
             .map_err(|_| SignError::Generic(anyhow::anyhow!("Wrong fingerprint length")))?;
         Ok(f)
     }
 
-    pub(crate) fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
+    fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
         let sig_bytes = self
             .sdk_signer
             .sign_ecdsa_recoverable(msg.as_ref().to_vec())?;
@@ -119,7 +127,7 @@ impl LwkSigner for SdkLwkSigner {
         // Fixme: Take a parameter
         let hash_ty = elements_miniscript::elements::EcdsaSighashType::All;
 
-        let signer_fingerprint = self.fingerprint()?;
+        let signer_fingerprint = FullSigner::fingerprint(self)?;
         for (input, msg) in pset.inputs_mut().iter_mut().zip(messages) {
             for (want_public_key, (fingerprint, derivation_path)) in input.bip32_derivation.iter() {
                 if &signer_fingerprint == fingerprint {

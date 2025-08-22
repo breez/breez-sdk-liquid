@@ -7,9 +7,9 @@ use std::str::FromStr;
 use anyhow::{anyhow, bail, Result};
 use boltz_client::ElementsAddress;
 use log::{debug, error, info, warn};
-use lwk_common::Signer as LwkSigner;
-use lwk_common::{singlesig_desc, Singlesig};
+use lwk_common::{multisig_desc, singlesig_desc, DescriptorBlindingKey, Multisig, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
+use lwk_wollet::bitcoin::bip32::Xpub;
 use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
@@ -23,15 +23,17 @@ use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 use web_time::Instant;
 
-use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
+use crate::model::{BlockchainExplorer, BREEZ_LIQUID_ESPLORA_URL};
 use crate::persist::Persister;
-use crate::signer::SdkLwkSigner;
+use crate::prelude::WalletPolicy;
 use crate::{ensure_sdk, error::PaymentError, model::Config};
 use sdk_common::utils::Arc;
 
 use crate::wallet::persister::WalletCachePersister;
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 use lwk_wollet::blocking::BlockchainBackend;
+
+use crate::signer::FullSigner;
 
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
@@ -54,6 +56,14 @@ pub trait OnchainWallet: MaybeSend + MaybeSync {
         asset_id: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError>;
+
+    async fn build_psbt(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        asset_id: &str,
+        amount_sat: u64,
+    ) -> Result<PartiallySignedTransaction, PaymentError>;
 
     /// Builds a drain tx.
     ///
@@ -176,49 +186,49 @@ impl WalletClient {
     }
 }
 
-pub struct LiquidOnchainWallet {
+pub struct LiquidOnchainWallet<S: FullSigner> {
     config: Config,
     persister: std::sync::Arc<Persister>,
     wallet: Arc<Mutex<Wollet>>,
     client: Mutex<Option<WalletClient>>,
-    pub(crate) signer: SdkLwkSigner,
+    // pub(crate) signer: SdkLwkSigner,
+    pub(crate) signer: Arc<S>,
     wallet_cache_persister: Arc<dyn WalletCachePersister>,
 }
 
-impl LiquidOnchainWallet {
+impl<S: FullSigner> LiquidOnchainWallet<S> {
     /// Creates a new LiquidOnchainWallet that caches data on the provided `working_dir`.
     pub(crate) async fn new(
         config: Config,
         persister: std::sync::Arc<Persister>,
-        user_signer: Arc<Box<dyn Signer>>,
+        lwk_signer: Arc<S>,
     ) -> Result<Self> {
-        let signer = SdkLwkSigner::new(user_signer.clone())?;
-
         let wallet_cache_persister: Arc<dyn WalletCachePersister> =
             Arc::new(SqliteWalletCachePersister::new(
                 std::sync::Arc::clone(&persister),
-                get_descriptor(&signer)?,
+                get_descriptor(&*lwk_signer, config.wallet_policy.clone())?,
             )?);
 
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
+        let wollet = Self::create_wallet(&config, &lwk_signer, wallet_cache_persister.clone()).await?;
 
         Ok(Self {
             config,
             persister,
             wallet: Arc::new(Mutex::new(wollet)),
             client: Mutex::new(None),
-            signer,
+            signer: lwk_signer.clone(),
             wallet_cache_persister,
         })
     }
 
     async fn create_wallet(
         config: &Config,
-        signer: &SdkLwkSigner,
+        // signer: &SdkLwkSigner,
+        signer: &S,
         wallet_cache_persister: Arc<dyn WalletCachePersister>,
     ) -> Result<Wollet> {
         let elements_network: ElementsNetwork = config.network.into();
-        let descriptor = get_descriptor(signer)?;
+        let descriptor = get_descriptor(signer, config.wallet_policy.clone())?;
         let wollet_res = Wollet::new(
             elements_network,
             wallet_cache_persister.get_lwk_persister()?,
@@ -256,18 +266,52 @@ impl LiquidOnchainWallet {
     }
 }
 
-pub fn get_descriptor(signer: &SdkLwkSigner) -> Result<WolletDescriptor, PaymentError> {
-    let descriptor_str = singlesig_desc(
-        signer,
-        Singlesig::Wpkh,
-        lwk_common::DescriptorBlindingKey::Slip77,
-    )
-    .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+pub fn get_descriptor<S: FullSigner>(
+    signer: &S,
+    policy: WalletPolicy,
+) -> Result<WolletDescriptor, PaymentError> {
+    let descriptor_str = match policy {
+        WalletPolicy::Singlesig => singlesig_desc(
+            signer,
+            Singlesig::Wpkh,
+            lwk_common::DescriptorBlindingKey::Slip77,
+        )
+        .map_err(|e| anyhow!("Invalid singlesig descriptor: {e}"))?,
+
+        WalletPolicy::Multisig { threshold, xpubs } => {
+            if xpubs.len() < threshold || threshold == 0 {
+                return Err(anyhow!(
+                    "Invalid multisig policy: threshold={}, xpubs={}",
+                    threshold,
+                    xpubs.len()
+                )
+                .into());
+            }
+
+            let mut xpubs_with_origins = vec![];
+            xpubs_with_origins.append(
+                &mut xpubs
+                    .into_iter()
+                    .map(|xpub| (None, Xpub::from_str(&xpub).unwrap()))
+                    .collect::<Vec<_>>(),
+            );
+
+            multisig_desc(
+                threshold as u32,
+                xpubs_with_origins,
+                Multisig::Wsh,
+                DescriptorBlindingKey::Elip151,
+            )
+            .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
+        }
+    };
+
+    println!("{:?}", descriptor_str);
     Ok(descriptor_str.parse()?)
 }
 
 #[sdk_macros::async_trait]
-impl OnchainWallet for LiquidOnchainWallet {
+impl<S: FullSigner> OnchainWallet for LiquidOnchainWallet<S> {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError> {
         let wallet = self.wallet.lock().await;
@@ -329,6 +373,38 @@ impl OnchainWallet for LiquidOnchainWallet {
                 err: format!("Failed to sign transaction: {e:?}"),
             })?;
         Ok(lwk_wollet.finalize(&mut pset)?)
+    }
+
+    async fn build_psbt(
+        &self,
+        fee_rate_sats_per_kvb: Option<f32>,
+        recipient_address: &str,
+        asset_id: &str,
+        amount_sat: u64,
+    ) -> Result<PartiallySignedTransaction, PaymentError> {
+        let lwk_wollet = self.wallet.lock().await;
+        let address =
+            ElementsAddress::from_str(recipient_address).map_err(|e| PaymentError::Generic {
+                err: format!(
+                    "Recipient address {recipient_address} is not a valid ElementsAddress: {e:?}"
+                ),
+            })?;
+        let mut tx_builder = lwk_wollet::TxBuilder::new(self.config.network.into())
+            .fee_rate(fee_rate_sats_per_kvb)
+            .enable_ct_discount();
+        if asset_id.eq(&self.config.lbtc_asset_id()) {
+            tx_builder = tx_builder.add_lbtc_recipient(&address, amount_sat)?;
+        } else {
+            let asset = AssetId::from_str(asset_id)?;
+            tx_builder = tx_builder.add_recipient(&address, amount_sat, asset)?;
+        }
+        let mut pset = tx_builder.finish(&lwk_wollet)?;
+        self.signer
+            .sign(&mut pset)
+            .map_err(|e| PaymentError::Generic {
+                err: format!("Failed to sign transaction: {e:?}"),
+            })?;
+        Ok(pset)
     }
 
     async fn build_drain_tx(
@@ -395,7 +471,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             .await
         {
             Ok(tx) => Ok(tx),
-            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
+            Err(PaymentError::InsufficientFunds { .. }) if asset_id.eq(&self.config.lbtc_asset_id()) => {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
                 self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
                     .await
@@ -482,12 +558,14 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Get the public key of the wallet
     fn pubkey(&self) -> Result<String> {
-        Ok(self.signer.xpub()?.public_key.to_string())
+        // Ok(self.signer.xpub()?.public_key.to_string())
+        Ok(FullSigner::xpub(&*self.signer)?.public_key.to_string())
     }
 
     /// Get the fingerprint of the wallet
     fn fingerprint(&self) -> Result<String> {
-        Ok(self.signer.fingerprint()?.to_hex())
+        // Ok(self.signer.fingerprint()?.to_hex())
+        Ok(FullSigner::fingerprint(&*self.signer)?.to_hex())
     }
 
     /// Perform a full scan of the wallet
@@ -581,8 +659,8 @@ impl OnchainWallet for LiquidOnchainWallet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::Config;
-    use crate::signer::SdkSigner;
+    use crate::model::{Config, Signer};
+    use crate::signer::{SdkLwkSigner, SdkSigner};
     use crate::test_utils::persist::create_persister;
     use crate::wallet::LiquidOnchainWallet;
     use anyhow::Result;
@@ -595,6 +673,7 @@ mod tests {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
+        let sdk_signer = SdkLwkSigner::new(sdk_signer)?;
 
         let config = Config::testnet_esplora(None);
 
