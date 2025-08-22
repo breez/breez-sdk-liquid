@@ -308,7 +308,8 @@ const sendPayment = async (options) => {
         : options.asset
         ? {
               type: 'asset',
-              assetId: options.asset,
+              toAsset: options.asset,
+              fromAsset: options.fromAsset,
               receiverAmount: options.amount,
               estimateAssetFees: useAssetFees
           }

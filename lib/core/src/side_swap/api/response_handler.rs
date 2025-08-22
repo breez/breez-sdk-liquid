@@ -7,6 +7,7 @@ use tokio::sync::{
     mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
     Mutex,
 };
+use tokio_with_wasm::alias as tokio;
 
 const RECV_TIMEOUT_SECS: u64 = 10;
 
