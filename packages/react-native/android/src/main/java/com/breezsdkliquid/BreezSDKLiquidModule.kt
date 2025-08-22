@@ -725,4 +725,16 @@ class BreezSDKLiquidModule(
             }
         }
     }
+
+    @ReactMethod
+    fun getNwcUri(promise: Promise) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().getNwcUri()
+                promise.resolve(res)
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

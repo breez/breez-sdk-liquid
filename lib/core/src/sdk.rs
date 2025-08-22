@@ -43,7 +43,7 @@ use sdk_common::utils::Arc;
 use side_swap::api::SideSwapService;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
-use tokio::sync::{watch, Mutex, RwLock};
+use tokio::sync::{watch, Mutex, OnceCell, RwLock};
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_with_wasm::alias as tokio;
 use web_time::{Instant, SystemTime, UNIX_EPOCH};
@@ -55,6 +55,7 @@ use crate::error::SdkError;
 use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::model::Signer;
+use crate::nwc::{handler::BreezRelayMessageHandler, BreezNWCService, NWCService};
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
@@ -112,6 +113,7 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
+    nwc_service: Option<Arc<dyn NWCService>>,
 }
 
 #[allow(dead_code)]
@@ -136,6 +138,7 @@ impl LiquidSdkBuilder {
             status_stream: None,
             swapper: None,
             sync_service: None,
+            nwc_service: None,
         })
     }
 
@@ -192,6 +195,11 @@ impl LiquidSdkBuilder {
 
     pub fn sync_service(&mut self, sync_service: Arc<SyncService>) -> &mut Self {
         self.sync_service = Some(sync_service.clone());
+        self
+    }
+
+    pub fn nwc_service(&mut self, nwc_service: Arc<dyn NWCService>) -> &mut Self {
+        self.nwc_service = Some(nwc_service);
         self
     }
 
@@ -376,7 +384,31 @@ impl LiquidSdkBuilder {
             buy_bitcoin_service,
             external_input_parsers,
             background_task_handles: Mutex::new(vec![]),
+            nwc_service: OnceCell::new(),
         });
+
+        let nwc_service = match self.nwc_service.clone() {
+            Some(nwc_service) => Some(nwc_service),
+            None => match self.config.enable_nwc.unwrap_or(false) {
+                false => None,
+                true => {
+                    let nwc_service: Arc<dyn NWCService> = sdk_common::utils::Arc::new(
+                        BreezNWCService::new(
+                            sdk_common::utils::Arc::new(BreezRelayMessageHandler::new(sdk.clone())),
+                            &self.config.nwc_relays(),
+                        )
+                        .await?,
+                    );
+                    Some(nwc_service)
+                }
+            },
+        };
+        if let Some(nwc_service) = nwc_service {
+            sdk.nwc_service
+                .set(nwc_service)
+                .map_err(|e| anyhow!("Failed to set NWC Service: {e}"))?;
+        }
+
         Ok(sdk)
     }
 }
@@ -404,6 +436,7 @@ pub struct LiquidSdk {
     pub(crate) payjoin_service: Arc<dyn PayjoinService>,
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
+    pub(crate) nwc_service: OnceCell<Arc<dyn NWCService>>,
     pub(crate) background_task_handles: Mutex<Vec<TaskHandle>>,
 }
 
@@ -525,6 +558,13 @@ impl LiquidSdk {
                 handle: sync_service.start(self.shutdown_receiver.clone()),
             });
         }
+        if let Some(nwc_service) = self.nwc_service.get() {
+            nwc_service.start(
+                self.shutdown_receiver.clone(),
+                self.event_manager.clone(), 
+            );
+        }
+
         handles.push(TaskHandle {
             name: "track-new-blocks".to_string(),
             handle: self.start_track_new_blocks_task(),
@@ -4982,6 +5022,30 @@ impl LiquidSdk {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
+    }
+
+    /// Returns the Nostr Wallet Connect (NWC) connection URI.
+    ///
+    /// ### Returns
+    ///
+    /// Returns the NWC connection URI as a string if NWC is enabled and initialized,
+    /// otherwise returns an error.
+    ///
+    /// ### Errors
+    /// Error is thrown when:
+    /// - NWC service is not enabled in the configuration
+    /// - There's an error generating the connection string
+
+    pub async fn get_nwc_uri(&self) -> SdkResult<String> {
+        match self.nwc_service.get() {
+            Some(nwc_service) =>
+                Ok(nwc_service
+                    .get_connection_string()
+                    .await),
+            None => Err(SdkError::Generic {
+                err: "NWC service is not enabled. Set 'enable_nwc' to true in the Config to use NWC functionality".to_string()
+            }),
+        }
     }
 }
 

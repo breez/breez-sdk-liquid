@@ -580,8 +580,18 @@ enum BreezSDKLiquidMapper {
             }
             sideswapApiKey = sideswapApiKeyTmp
         }
+        guard let enableNwc = config["enableNwc"] as? Bool else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "enableNwc", typeName: "Config"))
+        }
+        var nwcRelayUrls: [String]?
+        if hasNonNilKey(data: config, key: "nwcRelayUrls") {
+            guard let nwcRelayUrlsTmp = config["nwcRelayUrls"] as? [String] else {
+                throw SdkError.Generic(message: errUnexpectedValue(fieldName: "nwcRelayUrls"))
+            }
+            nwcRelayUrls = nwcRelayUrlsTmp
+        }
 
-        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, useMagicRoutingHints: useMagicRoutingHints, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, useMagicRoutingHints: useMagicRoutingHints, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey, enableNwc: enableNwc, nwcRelayUrls: nwcRelayUrls)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -600,6 +610,8 @@ enum BreezSDKLiquidMapper {
             "onchainFeeRateLeewaySat": config.onchainFeeRateLeewaySat == nil ? nil : config.onchainFeeRateLeewaySat,
             "assetMetadata": config.assetMetadata == nil ? nil : arrayOf(assetMetadataList: config.assetMetadata!),
             "sideswapApiKey": config.sideswapApiKey == nil ? nil : config.sideswapApiKey,
+            "enableNwc": config.enableNwc,
+            "nwcRelayUrls": config.nwcRelayUrls == nil ? nil : config.nwcRelayUrls,
         ]
     }
 
@@ -4317,6 +4329,88 @@ enum BreezSDKLiquidMapper {
         return list
     }
 
+    static func asNwcEvent(nwcEvent: [String: Any?]) throws -> NwcEvent {
+        let type = nwcEvent["type"] as! String
+        if type == "connected" {
+            return NwcEvent.connected
+        }
+        if type == "disconnected" {
+            return NwcEvent.disconnected
+        }
+        if type == "payInvoice" {
+            guard let _success = nwcEvent["success"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "success", typeName: "NwcEvent"))
+            }
+            let _preimage = nwcEvent["preimage"] as? String
+
+            let _feesSat = nwcEvent["feesSat"] as? UInt64
+
+            let _error = nwcEvent["error"] as? String
+
+            return NwcEvent.payInvoice(success: _success, preimage: _preimage, feesSat: _feesSat, error: _error)
+        }
+        if type == "listTransactions" {
+            return NwcEvent.listTransactions
+        }
+        if type == "getBalance" {
+            return NwcEvent.getBalance
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum NwcEvent")
+    }
+
+    static func dictionaryOf(nwcEvent: NwcEvent) -> [String: Any?] {
+        switch nwcEvent {
+        case .connected:
+            return [
+                "type": "connected",
+            ]
+
+        case .disconnected:
+            return [
+                "type": "disconnected",
+            ]
+
+        case let .payInvoice(
+            success, preimage, feesSat, error
+        ):
+            return [
+                "type": "payInvoice",
+                "success": success,
+                "preimage": preimage == nil ? nil : preimage,
+                "feesSat": feesSat == nil ? nil : feesSat,
+                "error": error == nil ? nil : error,
+            ]
+
+        case .listTransactions:
+            return [
+                "type": "listTransactions",
+            ]
+
+        case .getBalance:
+            return [
+                "type": "getBalance",
+            ]
+        }
+    }
+
+    static func arrayOf(nwcEventList: [NwcEvent]) -> [Any] {
+        return nwcEventList.map { v -> [String: Any?] in return dictionaryOf(nwcEvent: v) }
+    }
+
+    static func asNwcEventList(arr: [Any]) throws -> [NwcEvent] {
+        var list = [NwcEvent]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var nwcEvent = try asNwcEvent(nwcEvent: val)
+                list.append(nwcEvent)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "NwcEvent"))
+            }
+        }
+        return list
+    }
+
     static func asPayAmount(payAmount: [String: Any?]) throws -> PayAmount {
         let type = payAmount["type"] as! String
         if type == "bitcoin" {
@@ -4863,6 +4957,14 @@ enum BreezSDKLiquidMapper {
             }
             return SdkEvent.dataSynced(didPullNewRecords: _didPullNewRecords)
         }
+        if type == "nwc" {
+            guard let detailsTmp = sdkEvent["details"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "SdkEvent"))
+            }
+            let _details = try asNwcEvent(nwcEvent: detailsTmp)
+
+            return SdkEvent.nwc(details: _details)
+        }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SdkEvent")
     }
@@ -4944,6 +5046,14 @@ enum BreezSDKLiquidMapper {
             return [
                 "type": "dataSynced",
                 "didPullNewRecords": didPullNewRecords,
+            ]
+
+        case let .nwc(
+            details
+        ):
+            return [
+                "type": "nwc",
+                "details": dictionaryOf(nwcEvent: details),
             ]
         }
     }

@@ -104,6 +104,8 @@ export interface Config {
     onchainFeeRateLeewaySat?: number
     assetMetadata?: AssetMetadata[]
     sideswapApiKey?: string
+    enableNwc: boolean
+    nwcRelayUrls?: string[]
 }
 
 export interface ConnectRequest {
@@ -688,6 +690,30 @@ export enum Network {
     REGTEST = "regtest"
 }
 
+export enum NwcEventVariant {
+    CONNECTED = "connected",
+    DISCONNECTED = "disconnected",
+    PAY_INVOICE = "payInvoice",
+    LIST_TRANSACTIONS = "listTransactions",
+    GET_BALANCE = "getBalance"
+}
+
+export type NwcEvent = {
+    type: NwcEventVariant.CONNECTED
+} | {
+    type: NwcEventVariant.DISCONNECTED
+} | {
+    type: NwcEventVariant.PAY_INVOICE,
+    success: boolean
+    preimage?: string
+    feesSat?: number
+    error?: string
+} | {
+    type: NwcEventVariant.LIST_TRANSACTIONS
+} | {
+    type: NwcEventVariant.GET_BALANCE
+}
+
 export enum PayAmountVariant {
     BITCOIN = "bitcoin",
     ASSET = "asset",
@@ -800,7 +826,8 @@ export enum SdkEventVariant {
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
     PAYMENT_WAITING_FEE_ACCEPTANCE = "paymentWaitingFeeAcceptance",
     SYNCED = "synced",
-    DATA_SYNCED = "dataSynced"
+    DATA_SYNCED = "dataSynced",
+    NWC = "nwc"
 }
 
 export type SdkEvent = {
@@ -832,6 +859,9 @@ export type SdkEvent = {
 } | {
     type: SdkEventVariant.DATA_SYNCED,
     didPullNewRecords: boolean
+} | {
+    type: SdkEventVariant.NWC,
+    details: NwcEvent
 }
 
 export enum SendDestinationVariant {
@@ -1099,5 +1129,10 @@ export const fetchFiatRates = async (): Promise<Rate[]> => {
 
 export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
     const response = await BreezSDKLiquid.listFiatCurrencies()
+    return response
+}
+
+export const getNwcUri = async (): Promise<string> => {
+    const response = await BreezSDKLiquid.getNwcUri()
     return response
 }

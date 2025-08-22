@@ -304,6 +304,10 @@ class Config {
 
   /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
   final bool useMagicRoutingHints;
+  final bool? enableNwc;
+
+  /// A list of Nostr relay URLs for NWC connections. If None, default relays will be used.
+  final List<String>? nwcRelayUrls;
 
   const Config({
     required this.liquidExplorer,
@@ -320,6 +324,8 @@ class Config {
     this.assetMetadata,
     this.sideswapApiKey,
     required this.useMagicRoutingHints,
+    this.enableNwc,
+    this.nwcRelayUrls,
   });
 
   @override
@@ -337,7 +343,9 @@ class Config {
       onchainFeeRateLeewaySat.hashCode ^
       assetMetadata.hashCode ^
       sideswapApiKey.hashCode ^
-      useMagicRoutingHints.hashCode;
+      useMagicRoutingHints.hashCode ^
+      enableNwc.hashCode ^
+      nwcRelayUrls.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -357,11 +365,13 @@ class Config {
           onchainFeeRateLeewaySat == other.onchainFeeRateLeewaySat &&
           assetMetadata == other.assetMetadata &&
           sideswapApiKey == other.sideswapApiKey &&
-          useMagicRoutingHints == other.useMagicRoutingHints;
+          useMagicRoutingHints == other.useMagicRoutingHints &&
+          enableNwc == other.enableNwc &&
+          nwcRelayUrls == other.nwcRelayUrls;
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
-/// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
+/// The request takes either a `mnemonic` and `passphrase`, or a `seed`.
 class ConnectRequest {
   /// The SDK [Config]
   final Config config;
@@ -742,6 +752,22 @@ class LogEntry {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
+}
+
+@freezed
+sealed class NwcEvent with _$NwcEvent {
+  const NwcEvent._();
+
+  const factory NwcEvent.connected() = NwcEvent_Connected;
+  const factory NwcEvent.disconnected() = NwcEvent_Disconnected;
+  const factory NwcEvent.payInvoice({
+    required bool success,
+    String? preimage,
+    BigInt? feesSat,
+    String? error,
+  }) = NwcEvent_PayInvoice;
+  const factory NwcEvent.listTransactions() = NwcEvent_ListTransactions;
+  const factory NwcEvent.getBalance() = NwcEvent_GetBalance;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_onchain_limits].
@@ -1715,6 +1741,7 @@ sealed class SdkEvent with _$SdkEvent {
     /// Indicates new data was pulled from other instances.
     required bool didPullNewRecords,
   }) = SdkEvent_DataSynced;
+  const factory SdkEvent.nwc({required NwcEvent details}) = SdkEvent_NWC;
 }
 
 @freezed

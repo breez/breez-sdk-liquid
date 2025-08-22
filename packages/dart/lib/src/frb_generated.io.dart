@@ -198,6 +198,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MessageSuccessActionData dco_decode_box_autoadd_message_success_action_data(dynamic raw);
 
   @protected
+  NwcEvent dco_decode_box_autoadd_nwc_event(dynamic raw);
+
+  @protected
   PayAmount dco_decode_box_autoadd_pay_amount(dynamic raw);
 
   @protected
@@ -459,6 +462,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Network dco_decode_network(dynamic raw);
 
   @protected
+  NwcEvent dco_decode_nwc_event(dynamic raw);
+
+  @protected
   OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw);
 
   @protected
@@ -508,6 +514,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
+
+  @protected
+  List<String>? dco_decode_opt_list_String(dynamic raw);
 
   @protected
   List<AssetMetadata>? dco_decode_opt_list_asset_metadata(dynamic raw);
@@ -857,6 +866,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MessageSuccessActionData sse_decode_box_autoadd_message_success_action_data(SseDeserializer deserializer);
 
   @protected
+  NwcEvent sse_decode_box_autoadd_nwc_event(SseDeserializer deserializer);
+
+  @protected
   PayAmount sse_decode_box_autoadd_pay_amount(SseDeserializer deserializer);
 
   @protected
@@ -1122,6 +1134,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Network sse_decode_network(SseDeserializer deserializer);
 
   @protected
+  NwcEvent sse_decode_nwc_event(SseDeserializer deserializer);
+
+  @protected
   OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer);
 
   @protected
@@ -1171,6 +1186,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
+
+  @protected
+  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
 
   @protected
   List<AssetMetadata>? sse_decode_opt_list_asset_metadata(SseDeserializer deserializer);
@@ -1678,6 +1696,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_nwc_event> cst_encode_box_autoadd_nwc_event(NwcEvent raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_nwc_event();
+    cst_api_fill_to_wire_nwc_event(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_pay_amount> cst_encode_box_autoadd_pay_amount(PayAmount raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_pay_amount();
@@ -2142,6 +2168,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_opt_list_String(List<String>? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_list_String(raw);
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_asset_metadata> cst_encode_opt_list_asset_metadata(List<AssetMetadata>? raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw == null ? ffi.nullptr : cst_encode_list_asset_metadata(raw);
@@ -2570,6 +2602,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_nwc_event(NwcEvent apiObj, ffi.Pointer<wire_cst_nwc_event> wireObj) {
+    cst_api_fill_to_wire_nwc_event(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_pay_amount(
     PayAmount apiObj,
     ffi.Pointer<wire_cst_pay_amount> wireObj,
@@ -2763,6 +2800,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.asset_metadata = cst_encode_opt_list_asset_metadata(apiObj.assetMetadata);
     wireObj.sideswap_api_key = cst_encode_opt_String(apiObj.sideswapApiKey);
     wireObj.use_magic_routing_hints = cst_encode_bool(apiObj.useMagicRoutingHints);
+    wireObj.enable_nwc = cst_encode_opt_box_autoadd_bool(apiObj.enableNwc);
+    wireObj.nwc_relay_urls = cst_encode_opt_list_String(apiObj.nwcRelayUrls);
   }
 
   @protected
@@ -3368,6 +3407,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_nwc_event(NwcEvent apiObj, wire_cst_nwc_event wireObj) {
+    if (apiObj is NwcEvent_Connected) {
+      wireObj.tag = 0;
+      return;
+    }
+    if (apiObj is NwcEvent_Disconnected) {
+      wireObj.tag = 1;
+      return;
+    }
+    if (apiObj is NwcEvent_PayInvoice) {
+      var pre_success = cst_encode_bool(apiObj.success);
+      var pre_preimage = cst_encode_opt_String(apiObj.preimage);
+      var pre_fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
+      var pre_error = cst_encode_opt_String(apiObj.error);
+      wireObj.tag = 2;
+      wireObj.kind.PayInvoice.success = pre_success;
+      wireObj.kind.PayInvoice.preimage = pre_preimage;
+      wireObj.kind.PayInvoice.fees_sat = pre_fees_sat;
+      wireObj.kind.PayInvoice.error = pre_error;
+      return;
+    }
+    if (apiObj is NwcEvent_ListTransactions) {
+      wireObj.tag = 3;
+      return;
+    }
+    if (apiObj is NwcEvent_GetBalance) {
+      wireObj.tag = 4;
+      return;
+    }
+  }
+
+  @protected
   void cst_api_fill_to_wire_onchain_payment_limits_response(
     OnchainPaymentLimitsResponse apiObj,
     wire_cst_onchain_payment_limits_response wireObj,
@@ -3924,6 +3995,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.DataSynced.did_pull_new_records = pre_did_pull_new_records;
       return;
     }
+    if (apiObj is SdkEvent_NWC) {
+      var pre_details = cst_encode_box_autoadd_nwc_event(apiObj.details);
+      wireObj.tag = 10;
+      wireObj.kind.NWC.details = pre_details;
+      return;
+    }
   }
 
   @protected
@@ -4324,6 +4401,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_nwc_event(NwcEvent self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_pay_amount(PayAmount self, SseSerializer serializer);
 
   @protected
@@ -4603,6 +4683,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_network(Network self, SseSerializer serializer);
 
   @protected
+  void sse_encode_nwc_event(NwcEvent self, SseSerializer serializer);
+
+  @protected
   void sse_encode_onchain_payment_limits_response(
     OnchainPaymentLimitsResponse self,
     SseSerializer serializer,
@@ -4658,6 +4741,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_list_asset_metadata(List<AssetMetadata>? self, SseSerializer serializer);
@@ -4844,14 +4930,14 @@ class RustLibWire implements BaseWire {
   RustLibWire.fromLookup(ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup)
     : _lookup = lookup;
 
-  void store_dart_post_cobject(DartPostCObjectFnType ptr) {
+  void store_dart_post_cobject(int ptr) {
     return _store_dart_post_cobject(ptr);
   }
 
-  late final _store_dart_post_cobjectPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(DartPostCObjectFnType)>>('store_dart_post_cobject');
-  late final _store_dart_post_cobject =
-      _store_dart_post_cobjectPtr.asFunction<void Function(DartPostCObjectFnType)>();
+  late final _store_dart_post_cobjectPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
+    'store_dart_post_cobject',
+  );
+  late final _store_dart_post_cobject = _store_dart_post_cobjectPtr.asFunction<void Function(int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_accept_payment_proposed_fees(
     int port_,
@@ -5031,6 +5117,17 @@ class RustLibWire implements BaseWire {
       );
   late final _wire__crate__bindings__BindingLiquidSdk_get_info =
       _wire__crate__bindings__BindingLiquidSdk_get_infoPtr.asFunction<void Function(int, int)>();
+
+  void wire__crate__bindings__BindingLiquidSdk_get_nwc_uri(int port_, int that) {
+    return _wire__crate__bindings__BindingLiquidSdk_get_nwc_uri(port_, that);
+  }
+
+  late final _wire__crate__bindings__BindingLiquidSdk_get_nwc_uriPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_get_nwc_uri',
+      );
+  late final _wire__crate__bindings__BindingLiquidSdk_get_nwc_uri =
+      _wire__crate__bindings__BindingLiquidSdk_get_nwc_uriPtr.asFunction<void Function(int, int)>();
 
   void wire__crate__bindings__BindingLiquidSdk_get_payment(
     int port_,
@@ -5613,16 +5710,16 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_bitcoin_address_dataPtr
           .asFunction<ffi.Pointer<wire_cst_bitcoin_address_data> Function()>();
 
-  ffi.Pointer<ffi.Bool> cst_new_box_autoadd_bool(bool value) {
+  ffi.Pointer<bool> cst_new_box_autoadd_bool(ffi.Pointer<bool> value) {
     return _cst_new_box_autoadd_bool(value);
   }
 
   late final _cst_new_box_autoadd_boolPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Bool)>>(
+      _lookup<ffi.NativeFunction<ffi.Pointer<bool> Function(ffi.Pointer<bool>)>>(
         'frbgen_breez_liquid_cst_new_box_autoadd_bool',
       );
   late final _cst_new_box_autoadd_bool =
-      _cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
+      _cst_new_box_autoadd_boolPtr.asFunction<ffi.Pointer<bool> Function(ffi.Pointer<bool>)>();
 
   ffi.Pointer<wire_cst_buy_bitcoin_request> cst_new_box_autoadd_buy_bitcoin_request() {
     return _cst_new_box_autoadd_buy_bitcoin_request();
@@ -5906,6 +6003,17 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_message_success_action_data =
       _cst_new_box_autoadd_message_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_message_success_action_data> Function()>();
+
+  ffi.Pointer<wire_cst_nwc_event> cst_new_box_autoadd_nwc_event() {
+    return _cst_new_box_autoadd_nwc_event();
+  }
+
+  late final _cst_new_box_autoadd_nwc_eventPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_nwc_event> Function()>>(
+        'frbgen_breez_liquid_cst_new_box_autoadd_nwc_event',
+      );
+  late final _cst_new_box_autoadd_nwc_event =
+      _cst_new_box_autoadd_nwc_eventPtr.asFunction<ffi.Pointer<wire_cst_nwc_event> Function()>();
 
   ffi.Pointer<wire_cst_pay_amount> cst_new_box_autoadd_pay_amount() {
     return _cst_new_box_autoadd_pay_amount();
@@ -6353,10 +6461,7 @@ class RustLibWire implements BaseWire {
 
 typedef DartPort = ffi.Int64;
 typedef DartDartPort = int;
-typedef DartPostCObjectFnTypeFunction = ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartDartPostCObjectFnTypeFunction =
-    bool Function(DartDartPort port_id, ffi.Pointer<ffi.Void> message);
-typedef DartPostCObjectFnType = ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
+typedef bool = ffi.NativeFunction<ffi.Int Function(ffi.Pointer<ffi.Int>)>;
 
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
@@ -6494,7 +6599,7 @@ final class wire_cst_list_payments_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_payment_details> details;
 
-  external ffi.Pointer<ffi.Bool> sort_ascending;
+  external ffi.Pointer<bool> sort_ascending;
 }
 
 final class wire_cst_ln_url_auth_request_data extends ffi.Struct {
@@ -6704,7 +6809,6 @@ final class wire_cst_ln_url_pay_request_data extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> domain;
 
-  @ffi.Bool()
   external bool allows_nostr;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> nostr_pubkey;
@@ -6723,7 +6827,7 @@ final class wire_cst_PayAmount_Asset extends ffi.Struct {
   @ffi.Double()
   external double receiver_amount;
 
-  external ffi.Pointer<ffi.Bool> estimate_asset_fees;
+  external ffi.Pointer<bool> estimate_asset_fees;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> from_asset;
 }
@@ -6766,7 +6870,6 @@ final class wire_cst_url_success_action_data extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
 
-  @ffi.Bool()
   external bool matches_callback_domain;
 }
 
@@ -6865,7 +6968,7 @@ final class wire_cst_prepare_ln_url_pay_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> comment;
 
-  external ffi.Pointer<ffi.Bool> validate_success_action_url;
+  external ffi.Pointer<bool> validate_success_action_url;
 }
 
 final class wire_cst_prepare_pay_onchain_request extends ffi.Struct {
@@ -6941,7 +7044,7 @@ final class wire_cst_receive_payment_request extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  external ffi.Pointer<ffi.Bool> use_description_hash;
+  external ffi.Pointer<bool> use_description_hash;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
@@ -6974,7 +7077,7 @@ final class wire_cst_prepare_send_response extends ffi.Struct {
 final class wire_cst_send_payment_request extends ffi.Struct {
   external wire_cst_prepare_send_response prepare_response;
 
-  external ffi.Pointer<ffi.Bool> use_asset_fees;
+  external ffi.Pointer<bool> use_asset_fees;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
 }
@@ -7122,7 +7225,6 @@ final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
 
-  @ffi.Bool()
   external bool auto_accepted_fees;
 
   external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
@@ -7213,8 +7315,32 @@ final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
 }
 
 final class wire_cst_SdkEvent_DataSynced extends ffi.Struct {
-  @ffi.Bool()
   external bool did_pull_new_records;
+}
+
+final class wire_cst_NwcEvent_PayInvoice extends ffi.Struct {
+  external bool success;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
+
+  external ffi.Pointer<ffi.Uint64> fees_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> error;
+}
+
+final class NwcEventKind extends ffi.Union {
+  external wire_cst_NwcEvent_PayInvoice PayInvoice;
+}
+
+final class wire_cst_nwc_event extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external NwcEventKind kind;
+}
+
+final class wire_cst_SdkEvent_NWC extends ffi.Struct {
+  external ffi.Pointer<wire_cst_nwc_event> details;
 }
 
 final class SdkEventKind extends ffi.Union {
@@ -7235,6 +7361,8 @@ final class SdkEventKind extends ffi.Union {
   external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
 
   external wire_cst_SdkEvent_DataSynced DataSynced;
+
+  external wire_cst_SdkEvent_NWC NWC;
 }
 
 final class wire_cst_sdk_event extends ffi.Struct {
@@ -7251,7 +7379,6 @@ final class wire_cst_BlockchainExplorer_Electrum extends ffi.Struct {
 final class wire_cst_BlockchainExplorer_Esplora extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
 
-  @ffi.Bool()
   external bool use_waterfalls;
 }
 
@@ -7324,7 +7451,6 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_external_input_parser> external_input_parsers;
 
-  @ffi.Bool()
   external bool use_default_external_input_parsers;
 
   external ffi.Pointer<ffi.Uint64> onchain_fee_rate_leeway_sat;
@@ -7333,8 +7459,11 @@ final class wire_cst_config extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> sideswap_api_key;
 
-  @ffi.Bool()
   external bool use_magic_routing_hints;
+
+  external ffi.Pointer<bool> enable_nwc;
+
+  external ffi.Pointer<wire_cst_list_String> nwc_relay_urls;
 }
 
 final class wire_cst_connect_request extends ffi.Struct {
@@ -7385,7 +7514,7 @@ final class wire_cst_symbol extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> template_;
 
-  external ffi.Pointer<ffi.Bool> rtl;
+  external ffi.Pointer<bool> rtl;
 
   external ffi.Pointer<ffi.Uint32> position;
 }
@@ -7517,7 +7646,6 @@ final class wire_cst_blockchain_info extends ffi.Struct {
 }
 
 final class wire_cst_check_message_response extends ffi.Struct {
-  @ffi.Bool()
   external bool is_valid;
 }
 
