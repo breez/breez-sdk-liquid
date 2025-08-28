@@ -26,7 +26,7 @@
 // Section: imports
 
 use crate::bindings::*;
-use crate::model::EventListener;
+use crate::model::{EventListener, WalletPolicy};
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -2656,6 +2656,7 @@ impl SseDecode for crate::model::Config {
             asset_metadata: var_assetMetadata,
             sideswap_api_key: var_sideswapApiKey,
             use_magic_routing_hints: var_useMagicRoutingHints,
+            wallet_policy: WalletPolicy::Singlesig,
         };
     }
 }
@@ -10290,6 +10291,7 @@ mod io {
                 asset_metadata: self.asset_metadata.cst_decode(),
                 sideswap_api_key: self.sideswap_api_key.cst_decode(),
                 use_magic_routing_hints: self.use_magic_routing_hints.cst_decode(),
+                wallet_policy: WalletPolicy::Singlesig,
             }
         }
     }

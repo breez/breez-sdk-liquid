@@ -282,6 +282,8 @@ impl Signer for SdkSigner {
 
 #[cfg(test)]
 mod tests {
+    use crate::model::WalletPolicy;
+
     use super::*;
     use bip32::KeySource;
     use bip39::rand::{self, RngCore};
@@ -301,7 +303,10 @@ mod tests {
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    fn get_descriptor<S: LwkSigner>(signer: &S) -> Result<WolletDescriptor, anyhow::Error> {
+    fn get_descriptor<S: LwkSigner>(
+        signer: &S,
+        wallet_policy: &WalletPolicy,
+    ) -> Result<WolletDescriptor, anyhow::Error> {
         let descriptor_str = singlesig_desc(
             signer,
             Singlesig::Wpkh,
@@ -478,7 +483,7 @@ mod tests {
         let sw_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sw_signer).unwrap(),
+            get_descriptor(&sw_signer, &WalletPolicy::Singlesig).unwrap(),
         )
         .unwrap();
 
@@ -488,7 +493,7 @@ mod tests {
         let sdk_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sdk_signer).unwrap(),
+            get_descriptor(&sdk_signer, &WalletPolicy::Singlesig).unwrap(),
         )
         .unwrap();
 
