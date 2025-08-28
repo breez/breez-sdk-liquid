@@ -22,16 +22,6 @@ typedef struct _Dart_Handle* Dart_Handle;
 
 #define DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT 500
 
-#define MIN_FEE_RATE 0.1
-
-#define WEIGHT_FIXED 222
-
-#define WEIGHT_VIN_SINGLE_SIG_NATIVE 275
-
-#define WEIGHT_VIN_SINGLE_SIG_NESTED 367
-
-#define WEIGHT_VOUT_NESTED 270
-
 /**
  * The maximum acceptable amount in satoshi when claiming using zero-conf
  */
