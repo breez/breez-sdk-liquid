@@ -327,6 +327,7 @@ mod tests {
         utxo_select_basic, utxo_select_best, utxo_select_dynamic, utxo_select_fixed,
         utxo_select_in_range,
     };
+    use web_time::Instant;
 
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -594,5 +595,50 @@ mod tests {
         let selection = selected.unwrap();
         let fee = fee_fn(selection.len(), 0);
         assert_eq!(selection.iter().sum::<u64>(), target + fee);
+    }
+
+    fn test_with_large_utxo_set(size: u64, target_div: u64) {
+        let fee_fn = |utxo_count, _change_count| 5 * utxo_count as u64;
+
+        let utxos = (1..=size).map(|i| i * 10).collect::<Vec<u64>>();
+        let total_available: u64 = utxos.iter().sum();
+        let target = total_available / target_div;
+
+        let start = Instant::now();
+        let selected = utxo_select_dynamic(target, &utxos, fee_fn);
+        let duration = start.elapsed();
+
+        assert!(selected.is_some());
+        let selection = selected.unwrap();
+        let fee = fee_fn(selection.len(), 1); // Assuming change output
+        let sum: u64 = selection.iter().sum();
+        assert!(sum >= target + fee);
+        assert!(sum <= total_available);
+
+        println!(
+            "  - {size} UTXOs, divider: {:?}, duration: {:?}",
+            target_div, duration
+        );
+    }
+
+    #[sdk_macros::test_all]
+    fn test_with_large_utxo_sets() {
+        println!("UTXO selection performance:");
+        test_with_large_utxo_set(2, 4);
+        test_with_large_utxo_set(4, 4);
+        test_with_large_utxo_set(8, 4);
+        test_with_large_utxo_set(16, 4);
+        test_with_large_utxo_set(32, 2);
+        test_with_large_utxo_set(32, 4);
+        test_with_large_utxo_set(64, 2);
+        test_with_large_utxo_set(64, 4);
+        test_with_large_utxo_set(128, 2);
+        test_with_large_utxo_set(128, 4);
+        test_with_large_utxo_set(256, 2);
+        test_with_large_utxo_set(256, 4);
+        test_with_large_utxo_set(256, 8);
+        test_with_large_utxo_set(512, 2);
+        test_with_large_utxo_set(512, 4);
+        test_with_large_utxo_set(512, 8);
     }
 }
