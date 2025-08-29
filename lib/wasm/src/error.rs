@@ -27,6 +27,12 @@ impl From<JsValue> for WasmError {
     }
 }
 
+impl From<serde_wasm_bindgen::Error> for WasmError {
+    fn from(err: serde_wasm_bindgen::Error) -> Self {
+        Self(JsValue::from_str(&err.to_string()))
+    }
+}
+
 macro_rules! wasm_error_wrapper {
     ($($t:ty),*) => {
         $(

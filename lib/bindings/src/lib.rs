@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Result;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
@@ -128,6 +128,18 @@ impl BindingLiquidSdk {
         req: ReceivePaymentRequest,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         rt().block_on(self.sdk.receive_payment(&req))
+    }
+
+    pub fn new_nwc_uri(&self, name: String) -> Result<String, SdkError> {
+        rt().block_on(self.sdk.new_nwc_uri(name))
+    }
+
+    pub fn list_nwc_uris(&self) -> Result<HashMap<String, String>, SdkError> {
+        rt().block_on(self.sdk.list_nwc_uris())
+    }
+
+    pub fn remove_nwc_uri(&self, name: String) -> Result<(), SdkError> {
+        rt().block_on(self.sdk.remove_nwc_uri(name))
     }
 
     pub fn create_bolt12_invoice(

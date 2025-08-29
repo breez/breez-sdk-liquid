@@ -36,6 +36,7 @@ object Constants {
     const val MESSAGE_TYPE_LNURL_PAY_INVOICE = "lnurlpay_invoice"
     const val MESSAGE_TYPE_LNURL_PAY_VERIFY = "lnurlpay_verify"
     const val MESSAGE_TYPE_SWAP_UPDATED = "swap_updated"
+    const val MESSAGE_TYPE_NWC_EVENT = "nwc_event"
 
     // Resource Identifiers
     const val DISMISSIBLE_NOTIFICATION_CHANNEL_DESCRIPTION =

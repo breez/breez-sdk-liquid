@@ -343,7 +343,8 @@ impl Swapper for MockSwapper {
         _invoice: &str,
     ) -> Result<Option<(String, boltz_client::bitcoin::Amount)>, PaymentError> {
         // Ok(Some(("".to_string(), 0.0)))
-        unimplemented!()
+        // unimplemented!()
+        Ok(None)
     }
 
     async fn get_bolt12_info(

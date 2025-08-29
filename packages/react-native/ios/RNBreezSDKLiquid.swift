@@ -533,6 +533,16 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(getNwcUri:reject:)
+    func getNwcUri(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try getBindingLiquidSdk().getNwcUri()
+            resolve(res)
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

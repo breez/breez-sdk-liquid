@@ -243,4 +243,9 @@ RCT_EXTERN_METHOD(
     reject: (RCTPromiseRejectBlock)reject
 )
 
+RCT_EXTERN_METHOD(
+    getNwcUri: (RCTPromiseResolveBlock)resolve
+    reject: (RCTPromiseRejectBlock)reject
+)
+
 @end

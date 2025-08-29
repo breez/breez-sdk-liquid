@@ -36,6 +36,9 @@ pub(crate) struct Args {
 
     #[clap(long, default_value = "false")]
     pub(crate) no_qrs: bool,
+
+    #[clap(long, action)]
+    pub(crate) enable_nwc: bool,
 }
 
 fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
@@ -97,6 +100,12 @@ async fn main() -> Result<()> {
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
+    if args.enable_nwc {
+        config.nwc_options = Some(NWCOptions {
+            enabled: true,
+            ..Default::default()
+        })
+    }
     config.working_dir = data_dir_str;
     config.use_magic_routing_hints = !args.no_mrh;
     if args.no_data_sync {

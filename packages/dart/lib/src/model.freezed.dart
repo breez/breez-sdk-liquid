@@ -769,6 +769,237 @@ as LnUrlPayErrorData,
 }
 
 /// @nodoc
+mixin _$NwcEvent {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NwcEvent);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'NwcEvent()';
+}
+
+
+}
+
+/// @nodoc
+class $NwcEventCopyWith<$Res>  {
+$NwcEventCopyWith(NwcEvent _, $Res Function(NwcEvent) __);
+}
+
+
+
+/// @nodoc
+
+
+class NwcEvent_Connected extends NwcEvent {
+  const NwcEvent_Connected(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NwcEvent_Connected);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'NwcEvent.connected()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class NwcEvent_Disconnected extends NwcEvent {
+  const NwcEvent_Disconnected(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NwcEvent_Disconnected);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'NwcEvent.disconnected()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class NwcEvent_PayInvoice extends NwcEvent {
+  const NwcEvent_PayInvoice({required this.success, this.preimage, this.feesSat, this.error}): super._();
+  
+
+ final  bool success;
+ final  String? preimage;
+ final  BigInt? feesSat;
+ final  String? error;
+
+/// Create a copy of NwcEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$NwcEvent_PayInvoiceCopyWith<NwcEvent_PayInvoice> get copyWith => _$NwcEvent_PayInvoiceCopyWithImpl<NwcEvent_PayInvoice>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NwcEvent_PayInvoice&&(identical(other.success, success) || other.success == success)&&(identical(other.preimage, preimage) || other.preimage == preimage)&&(identical(other.feesSat, feesSat) || other.feesSat == feesSat)&&(identical(other.error, error) || other.error == error));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,success,preimage,feesSat,error);
+
+@override
+String toString() {
+  return 'NwcEvent.payInvoice(success: $success, preimage: $preimage, feesSat: $feesSat, error: $error)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $NwcEvent_PayInvoiceCopyWith<$Res> implements $NwcEventCopyWith<$Res> {
+  factory $NwcEvent_PayInvoiceCopyWith(NwcEvent_PayInvoice value, $Res Function(NwcEvent_PayInvoice) _then) = _$NwcEvent_PayInvoiceCopyWithImpl;
+@useResult
+$Res call({
+ bool success, String? preimage, BigInt? feesSat, String? error
+});
+
+
+
+
+}
+/// @nodoc
+class _$NwcEvent_PayInvoiceCopyWithImpl<$Res>
+    implements $NwcEvent_PayInvoiceCopyWith<$Res> {
+  _$NwcEvent_PayInvoiceCopyWithImpl(this._self, this._then);
+
+  final NwcEvent_PayInvoice _self;
+  final $Res Function(NwcEvent_PayInvoice) _then;
+
+/// Create a copy of NwcEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? success = null,Object? preimage = freezed,Object? feesSat = freezed,Object? error = freezed,}) {
+  return _then(NwcEvent_PayInvoice(
+success: null == success ? _self.success : success // ignore: cast_nullable_to_non_nullable
+as bool,preimage: freezed == preimage ? _self.preimage : preimage // ignore: cast_nullable_to_non_nullable
+as String?,feesSat: freezed == feesSat ? _self.feesSat : feesSat // ignore: cast_nullable_to_non_nullable
+as BigInt?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class NwcEvent_ListTransactions extends NwcEvent {
+  const NwcEvent_ListTransactions(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NwcEvent_ListTransactions);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'NwcEvent.listTransactions()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class NwcEvent_GetBalance extends NwcEvent {
+  const NwcEvent_GetBalance(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NwcEvent_GetBalance);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'NwcEvent.getBalance()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
 mixin _$PayAmount {
 
 
@@ -2144,6 +2375,81 @@ as bool,
 }
 
 
+}
+
+/// @nodoc
+
+
+class SdkEvent_NWC extends SdkEvent {
+  const SdkEvent_NWC({required this.details}): super._();
+  
+
+ final  NwcEvent details;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SdkEvent_NWCCopyWith<SdkEvent_NWC> get copyWith => _$SdkEvent_NWCCopyWithImpl<SdkEvent_NWC>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SdkEvent_NWC&&(identical(other.details, details) || other.details == details));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,details);
+
+@override
+String toString() {
+  return 'SdkEvent.nwc(details: $details)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SdkEvent_NWCCopyWith<$Res> implements $SdkEventCopyWith<$Res> {
+  factory $SdkEvent_NWCCopyWith(SdkEvent_NWC value, $Res Function(SdkEvent_NWC) _then) = _$SdkEvent_NWCCopyWithImpl;
+@useResult
+$Res call({
+ NwcEvent details
+});
+
+
+$NwcEventCopyWith<$Res> get details;
+
+}
+/// @nodoc
+class _$SdkEvent_NWCCopyWithImpl<$Res>
+    implements $SdkEvent_NWCCopyWith<$Res> {
+  _$SdkEvent_NWCCopyWithImpl(this._self, this._then);
+
+  final SdkEvent_NWC _self;
+  final $Res Function(SdkEvent_NWC) _then;
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? details = null,}) {
+  return _then(SdkEvent_NWC(
+details: null == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
+as NwcEvent,
+  ));
+}
+
+/// Create a copy of SdkEvent
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$NwcEventCopyWith<$Res> get details {
+  
+  return $NwcEventCopyWith<$Res>(_self.details, (value) {
+    return _then(_self.copyWith(details: value));
+  });
+}
 }
 
 /// @nodoc

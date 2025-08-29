@@ -486,6 +486,7 @@ fun asConfig(config: ReadableMap): Config? {
             null
         }
     val sideswapApiKey = if (hasNonNullKey(config, "sideswapApiKey")) config.getString("sideswapApiKey") else null
+    val nwcOptions = if (hasNonNullKey(config, "nwcOptions")) config.getMap("nwcOptions")?.let { asNwcOptions(it) } else null
     return Config(
         liquidExplorer,
         bitcoinExplorer,
@@ -501,6 +502,7 @@ fun asConfig(config: ReadableMap): Config? {
         onchainFeeRateLeewaySat,
         assetMetadata,
         sideswapApiKey,
+        nwcOptions,
     )
 }
 
@@ -520,6 +522,7 @@ fun readableMapOf(config: Config): ReadableMap =
         "onchainFeeRateLeewaySat" to config.onchainFeeRateLeewaySat,
         "assetMetadata" to config.assetMetadata?.let { readableArrayOf(it) },
         "sideswapApiKey" to config.sideswapApiKey,
+        "nwcOptions" to config.nwcOptions?.let { readableMapOf(it) },
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {
@@ -1750,6 +1753,40 @@ fun asMessageSuccessActionDataList(arr: ReadableArray): List<MessageSuccessActio
     for (value in arr.toList()) {
         when (value) {
             is ReadableMap -> list.add(asMessageSuccessActionData(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
+fun asNwcOptions(nwcOptions: ReadableMap): NwcOptions? {
+    if (!validateMandatoryFields(
+            nwcOptions,
+            arrayOf(
+                "enabled",
+            ),
+        )
+    ) {
+        return null
+    }
+    val enabled = nwcOptions.getBoolean("enabled")
+    val relayUrls = if (hasNonNullKey(nwcOptions, "relayUrls")) nwcOptions.getArray("relayUrls")?.let { asStringList(it) } else null
+    val secretKey = if (hasNonNullKey(nwcOptions, "secretKey")) nwcOptions.getString("secretKey") else null
+    return NwcOptions(enabled, relayUrls, secretKey)
+}
+
+fun readableMapOf(nwcOptions: NwcOptions): ReadableMap =
+    readableMapOf(
+        "enabled" to nwcOptions.enabled,
+        "relayUrls" to nwcOptions.relayUrls?.let { readableArrayOf(it) },
+        "secretKey" to nwcOptions.secretKey,
+    )
+
+fun asNwcOptionsList(arr: ReadableArray): List<NwcOptions> {
+    val list = ArrayList<NwcOptions>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asNwcOptions(value)!!)
             else -> throw SdkException.Generic(errUnexpectedType(value))
         }
     }
@@ -3502,6 +3539,68 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
     return list
 }
 
+fun asNwcEvent(nwcEvent: ReadableMap): NwcEvent? {
+    val type = nwcEvent.getString("type")
+
+    if (type == "connected") {
+        return NwcEvent.Connected
+    }
+    if (type == "disconnected") {
+        return NwcEvent.Disconnected
+    }
+    if (type == "payInvoice") {
+        val success = nwcEvent.getBoolean("success")
+        val preimage = if (hasNonNullKey(nwcEvent, "preimage")) nwcEvent.getString("preimage") else null
+        val feesSat = if (hasNonNullKey(nwcEvent, "feesSat")) nwcEvent.getDouble("feesSat").toULong() else null
+        val error = if (hasNonNullKey(nwcEvent, "error")) nwcEvent.getString("error") else null
+        return NwcEvent.PayInvoice(success, preimage, feesSat, error)
+    }
+    if (type == "listTransactions") {
+        return NwcEvent.ListTransactions
+    }
+    if (type == "getBalance") {
+        return NwcEvent.GetBalance
+    }
+    return null
+}
+
+fun readableMapOf(nwcEvent: NwcEvent): ReadableMap? {
+    val map = Arguments.createMap()
+    when (nwcEvent) {
+        is NwcEvent.Connected -> {
+            pushToMap(map, "type", "connected")
+        }
+        is NwcEvent.Disconnected -> {
+            pushToMap(map, "type", "disconnected")
+        }
+        is NwcEvent.PayInvoice -> {
+            pushToMap(map, "type", "payInvoice")
+            pushToMap(map, "success", nwcEvent.success)
+            pushToMap(map, "preimage", nwcEvent.preimage)
+            pushToMap(map, "feesSat", nwcEvent.feesSat)
+            pushToMap(map, "error", nwcEvent.error)
+        }
+        is NwcEvent.ListTransactions -> {
+            pushToMap(map, "type", "listTransactions")
+        }
+        is NwcEvent.GetBalance -> {
+            pushToMap(map, "type", "getBalance")
+        }
+    }
+    return map
+}
+
+fun asNwcEventList(arr: ReadableArray): List<NwcEvent> {
+    val list = ArrayList<NwcEvent>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asNwcEvent(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asPayAmount(payAmount: ReadableMap): PayAmount? {
     val type = payAmount.getString("type")
 
@@ -3879,6 +3978,10 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
         val didPullNewRecords = sdkEvent.getBoolean("didPullNewRecords")
         return SdkEvent.DataSynced(didPullNewRecords)
     }
+    if (type == "nwc") {
+        val details = sdkEvent.getMap("details")?.let { asNwcEvent(it) }!!
+        return SdkEvent.NWC(details)
+    }
     return null
 }
 
@@ -3923,6 +4026,10 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
         is SdkEvent.DataSynced -> {
             pushToMap(map, "type", "dataSynced")
             pushToMap(map, "didPullNewRecords", sdkEvent.didPullNewRecords)
+        }
+        is SdkEvent.NWC -> {
+            pushToMap(map, "type", "nwc")
+            pushToMap(map, "details", readableMapOf(sdkEvent.details))
         }
     }
     return map
