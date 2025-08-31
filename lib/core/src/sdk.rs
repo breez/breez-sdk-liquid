@@ -355,7 +355,7 @@ impl LiquidSdkBuilder {
         let sdk = Arc::new(LiquidSdk {
             config: self.config.clone(),
             onchain_wallet,
-            signer: self.signer.clone(),
+            // signer: self.signer.clone(),
             persister: persister.clone(),
             rest_client,
             event_manager,
@@ -384,7 +384,7 @@ impl LiquidSdkBuilder {
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
-    pub(crate) signer: Arc<Box<dyn Signer>>,
+    // pub(crate) signer: Arc<Box<dyn Signer>>,
     pub(crate) persister: std::sync::Arc<Persister>,
     pub(crate) rest_client: Arc<dyn RestClient>,
     pub(crate) event_manager: Arc<EventManager>,
@@ -4807,12 +4807,13 @@ impl LiquidSdk {
         &self,
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
-        Ok(perform_lnurl_auth(
-            self.rest_client.as_ref(),
-            &req_data,
-            &SdkLnurlAuthSigner::new(self.signer.clone()),
-        )
-        .await?)
+        // Ok(perform_lnurl_auth(
+        //     self.rest_client.as_ref(),
+        //     &req_data,
+        //     &SdkLnurlAuthSigner::new(self.signer.clone()),
+        // )
+        // .await?)
+        todo!()
     }
 
     /// Register for webhook callbacks at the given `webhook_url`. Each created swap after registering the

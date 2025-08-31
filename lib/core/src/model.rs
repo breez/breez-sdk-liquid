@@ -578,6 +578,15 @@ pub trait Signer: MaybeSend + MaybeSync {
     fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
+pub trait GenericSigner: MaybeSend + MaybeSync {
+    fn sign(&self, pset: String) -> Result<(String, u32), SignerError>;
+    fn xpub(&self) -> Result<Vec<u8>, SignerError>;
+    fn derive_xpub(&self, derivation_path: String) -> Result<Vec<u8>, SignerError>;
+    fn sign_ecdsa(&self, msg: Vec<u8>, derivation_path: String) -> Result<Vec<u8>, SignerError>;
+    fn sign_ecdsa_recoverable(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
+    fn slip77_master_blinding_key(&self) -> Result<Vec<u8>, SignerError>;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
 /// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
 pub struct ConnectRequest {

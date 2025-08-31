@@ -1,3 +1,6 @@
+use std::any::Any;
+use std::str::FromStr;
+
 use anyhow::anyhow;
 use bip39::Mnemonic;
 use boltz_client::PublicKey;
@@ -23,7 +26,7 @@ use lwk_wollet::secp256k1::ecdsa::Signature;
 use lwk_wollet::secp256k1::Message;
 use sdk_common::utils::Arc;
 
-use crate::model::{Signer, SignerError};
+use crate::model::{GenericSigner, Signer, SignerError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SignError {
@@ -62,6 +65,24 @@ pub enum NewError {
     Seed(#[from] anyhow::Error),
 }
 
+pub trait BaseSigner {
+    fn xpub(&self) -> Result<Xpub, SignError>;
+    fn fingerprint(&self) -> Result<Fingerprint, SignError>;
+    fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError>;
+}
+
+pub trait WalletSigner: BaseSigner + LwkSigner<Error = SignError> + Send + Sync + Any {
+    fn as_any(&self) -> &dyn Any;
+}
+impl<T> WalletSigner for T
+where
+    T: BaseSigner + LwkSigner<Error = SignError> + Send + Sync + Any,
+{
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 /// A software signer
 pub struct SdkLwkSigner {
     sdk_signer: Arc<Box<dyn Signer>>,
@@ -75,20 +96,22 @@ impl SdkLwkSigner {
     pub fn new(sdk_signer: Arc<Box<dyn Signer>>) -> Result<Self, NewError> {
         Ok(Self { sdk_signer })
     }
+}
 
-    pub(crate) fn xpub(&self) -> Result<Xpub, SignError> {
+impl BaseSigner for SdkLwkSigner {
+    fn xpub(&self) -> Result<Xpub, SignError> {
         let xpub = self.sdk_signer.xpub()?;
         Ok(Xpub::decode(&xpub)?)
     }
 
-    pub fn fingerprint(&self) -> Result<Fingerprint, SignError> {
-        let f: Fingerprint = self.xpub()?.identifier()[0..4]
+    fn fingerprint(&self) -> Result<Fingerprint, SignError> {
+        let f: Fingerprint = BaseSigner::xpub(self)?.identifier()[0..4]
             .try_into()
             .map_err(|_| SignError::Generic(anyhow::anyhow!("Wrong fingerprint length")))?;
         Ok(f)
     }
 
-    pub(crate) fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
+    fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
         let sig_bytes = self
             .sdk_signer
             .sign_ecdsa_recoverable(msg.as_ref().to_vec())?;
@@ -119,7 +142,7 @@ impl LwkSigner for SdkLwkSigner {
         // Fixme: Take a parameter
         let hash_ty = elements_miniscript::elements::EcdsaSighashType::All;
 
-        let signer_fingerprint = self.fingerprint()?;
+        let signer_fingerprint = BaseSigner::fingerprint(self)?;
         for (input, msg) in pset.inputs_mut().iter_mut().zip(messages) {
             for (want_public_key, (fingerprint, derivation_path)) in input.bip32_derivation.iter() {
                 if &signer_fingerprint == fingerprint {
@@ -166,6 +189,49 @@ impl LwkSigner for SdkLwkSigner {
         };
         let xpub = Xpub::decode(pubkey_bytes.as_slice())?;
         Ok(xpub)
+    }
+}
+
+pub struct GenericSdkLwkSigner {
+    generic_sdk_signer: Arc<Box<dyn GenericSigner>>,
+}
+
+impl GenericSdkLwkSigner {
+    pub fn new(generic_sdk_signer: Arc<Box<dyn GenericSigner>>) -> Self {
+        Self { generic_sdk_signer }
+    }
+}
+
+impl LwkSigner for GenericSdkLwkSigner {
+    type Error = SignError;
+
+    fn sign(&self, pset: &mut PartiallySignedTransaction) -> Result<u32, Self::Error> {
+        let (signed_pset, signature_added) = self.generic_sdk_signer.sign(pset.to_string()).unwrap();
+        let signed_pset = PartiallySignedTransaction::from_str(&signed_pset)?.try_into().map_err(|_| SignError::Generic(anyhow::anyhow!("Invalid PSET")))?;
+
+        pset.merge(signed_pset)?;
+        Ok(signature_added)
+    }
+
+    fn derive_xpub(&self, path: &DerivationPath) -> Result<Xpub, Self::Error> {
+        let pubkey_bytes = if path.is_empty() {
+            self.generic_sdk_signer.xpub()?
+        } else {
+            self.generic_sdk_signer.derive_xpub(path.to_string())?
+        };
+        let xpub = Xpub::decode(pubkey_bytes.as_slice())?;
+        Ok(xpub)
+    }
+
+    fn slip77_master_blinding_key(&self) -> Result<MasterBlindingKey, Self::Error> {
+        let bytes: [u8; 32] = self
+            .generic_sdk_signer
+            .slip77_master_blinding_key()?
+            .try_into()
+            .map_err(|_| {
+                SignError::Generic(anyhow::anyhow!("Wrong slip77 master blinding key length"))
+            })?;
+        Ok(bytes.into())
     }
 }
 
@@ -292,13 +358,13 @@ mod tests {
         pset::{Input, Output, PartiallySignedTransaction},
         AssetId, TxOut, Txid,
     };
-    use lwk_common::{singlesig_desc, Singlesig};
+    use lwk_common::{multisig_desc, singlesig_desc, DescriptorBlindingKey, Multisig, Singlesig};
     use lwk_signer::SwSigner;
     use lwk_wollet::{
         elements::{self, Script},
         ElementsNetwork, NoPersist, Wollet, WolletDescriptor,
     };
-    use std::collections::BTreeMap;
+    use std::{collections::BTreeMap, str::FromStr};
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
@@ -307,13 +373,47 @@ mod tests {
         signer: &S,
         wallet_policy: &WalletPolicy,
     ) -> Result<WolletDescriptor, anyhow::Error> {
-        let descriptor_str = singlesig_desc(
+        let descriptor_str = match wallet_policy {
+        WalletPolicy::Singlesig => singlesig_desc(
             signer,
             Singlesig::Wpkh,
             lwk_common::DescriptorBlindingKey::Slip77,
         )
-        .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?;
-        Ok(descriptor_str.parse()?)
+        .map_err(|e| anyhow!("Invalid singlesig descriptor: {e}"))?,
+
+        WalletPolicy::Multisig { threshold, xpubs } => {
+            if xpubs.len() < (*threshold as usize) || *threshold == 0 {
+                return Err(anyhow!(
+                    "Invalid multisig policy: threshold={}, xpubs={}",
+                    threshold,
+                    xpubs.len()
+                )
+                .into());
+            }
+
+            let xpubs = xpubs
+                .into_iter()
+                .map(|xpub| {
+                    (
+                        None,
+                        Xpub::from_str(&xpub)
+                            .map_err(|e| anyhow!("Invalid Xpub: {e}"))
+                            .unwrap(),
+                    )
+                })
+                .collect();
+
+            multisig_desc(
+                *threshold,
+                xpubs,
+                Multisig::Wsh,
+                DescriptorBlindingKey::Elip151,
+            )
+            .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
+        }
+    };
+
+    Ok(descriptor_str.parse()?)
     }
 
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {
@@ -443,7 +543,7 @@ mod tests {
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
 
         let sw_identifier = sw_signer.xpub().identifier();
-        let sdk_identifier = sdk_signer.xpub().unwrap().identifier();
+        let sdk_identifier = BaseSigner::xpub(&sdk_signer).unwrap().identifier();
 
         assert_eq!(
             sw_identifier, sdk_identifier,
@@ -457,8 +557,8 @@ mod tests {
         let (sw_signer, sdk_signer) = create_signers(mnemonic);
 
         let sw_fingerprint = sw_signer.fingerprint();
-        let sdk_fingerprint = sdk_signer.fingerprint().unwrap();
-        let manual_finger_print = sdk_signer.xpub().unwrap().identifier()[0..4]
+        let sdk_fingerprint = BaseSigner::fingerprint(&sdk_signer).unwrap();
+        let manual_finger_print = BaseSigner::xpub(&sdk_signer).unwrap().identifier()[0..4]
             .try_into()
             .unwrap();
         assert_eq!(
