@@ -4159,7 +4159,7 @@ impl SseDecode for crate::error::PaymentError {
                 return crate::error::PaymentError::InvalidOrExpiredFees;
             }
             9 => {
-                return crate::error::PaymentError::InsufficientFunds;
+                return crate::error::PaymentError::InsufficientFunds { missing_sats: 0 };
             }
             10 => {
                 let mut var_err = <String>::sse_decode(deserializer);
@@ -6598,7 +6598,7 @@ impl flutter_rust_bridge::IntoDart for crate::error::PaymentError {
                 [7.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
             crate::error::PaymentError::InvalidOrExpiredFees => [8.into_dart()].into_dart(),
-            crate::error::PaymentError::InsufficientFunds => [9.into_dart()].into_dart(),
+            crate::error::PaymentError::InsufficientFunds { .. } => [9.into_dart()].into_dart(),
             crate::error::PaymentError::InvalidDescription { err } => {
                 [10.into_dart(), err.into_into_dart().into_dart()].into_dart()
             }
@@ -8984,7 +8984,7 @@ impl SseEncode for crate::error::PaymentError {
             crate::error::PaymentError::InvalidOrExpiredFees => {
                 <i32>::sse_encode(8, serializer);
             }
-            crate::error::PaymentError::InsufficientFunds => {
+            crate::error::PaymentError::InsufficientFunds { .. } => {
                 <i32>::sse_encode(9, serializer);
             }
             crate::error::PaymentError::InvalidDescription { err } => {
@@ -11287,7 +11287,7 @@ mod io {
                     }
                 }
                 8 => crate::error::PaymentError::InvalidOrExpiredFees,
-                9 => crate::error::PaymentError::InsufficientFunds,
+                9 => crate::error::PaymentError::InsufficientFunds { missing_sats: 0 },
                 10 => {
                     let ans = unsafe { self.kind.InvalidDescription };
                     crate::error::PaymentError::InvalidDescription {

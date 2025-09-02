@@ -1273,10 +1273,12 @@ impl LiquidSdk {
             .await
         {
             Ok(fees_sat) => Ok(fees_sat),
-            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
+            Err(PaymentError::InsufficientFunds { missing_sats })
+                if asset_id.eq(&self.config.lbtc_asset_id()) =>
+            {
                 self.estimate_drain_tx_fee(Some(amount_sat), Some(address))
                     .await
-                    .map_err(|_| PaymentError::InsufficientFunds)
+                    .map_err(|_| PaymentError::InsufficientFunds { missing_sats })
             }
             Err(e) => Err(e),
         }
@@ -1474,7 +1476,10 @@ impl LiquidSdk {
                                 ensure_sdk!(
                                     get_info_res.wallet_info.balance_sat
                                         >= swap.payer_amount_sat + swap.fees_sat,
-                                    PaymentError::InsufficientFunds
+                                    PaymentError::InsufficientFunds {
+                                        missing_sats: (swap.payer_amount_sat + swap.fees_sat)
+                                            - get_info_res.wallet_info.balance_sat,
+                                    }
                                 );
                                 exchange_amount_sat = Some(swap.payer_amount_sat - swap.fees_sat);
                                 Ok(swap.fees_sat)
@@ -1753,7 +1758,8 @@ impl LiquidSdk {
                         .await
                     }
                     true => {
-                        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                        let fees_sat =
+                            fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
                         ensure_sdk!(
                             !asset_pay_fees,
                             PaymentError::generic("Cannot pay asset fees when executing a payment between two separate assets")
@@ -1777,7 +1783,8 @@ impl LiquidSdk {
                 invoice,
                 bip353_address,
             } => {
-                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                let fees_sat =
+                    fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
                 let mut response = self
                     .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain)
                     .await?;
@@ -1789,7 +1796,8 @@ impl LiquidSdk {
                 receiver_amount_sat,
                 bip353_address,
             } => {
-                let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+                let fees_sat =
+                    fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
                 let bolt12_info = self
                     .swapper
                     .get_bolt12_info(GetBolt12FetchRequest {
@@ -1859,7 +1867,9 @@ impl LiquidSdk {
         let get_info_response = self.get_info().await?;
         ensure_sdk!(
             payer_amount_sat <= get_info_response.wallet_info.balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - get_info_response.wallet_info.balance_sat
+            }
         );
 
         let description = match bolt11_invoice.description() {
@@ -1941,7 +1951,9 @@ impl LiquidSdk {
         let get_info_response = self.get_info().await?;
         ensure_sdk!(
             payer_amount_sat <= get_info_response.wallet_info.balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - get_info_response.wallet_info.balance_sat
+            }
         );
 
         match (
@@ -2023,7 +2035,7 @@ impl LiquidSdk {
                 .await;
         }
 
-        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
+        let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
         self.pay_liquid_onchain(address_data.clone(), receiver_amount_sat, fees_sat, true)
             .await
     }
@@ -2161,9 +2173,12 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
+        let balance_sat = self.get_info().await?.wallet_info.balance_sat;
         ensure_sdk!(
-            self.get_info().await?.wallet_info.balance_sat >= swap.payer_amount_sat,
-            PaymentError::InsufficientFunds
+            balance_sat >= swap.payer_amount_sat,
+            PaymentError::InsufficientFunds {
+                missing_sats: swap.payer_amount_sat - balance_sat
+            }
         );
 
         let tx_id = sideswap_service
@@ -2560,7 +2575,9 @@ impl LiquidSdk {
 
         ensure_sdk!(
             payer_amount_sat <= get_info_res.wallet_info.balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - get_info_res.wallet_info.balance_sat
+            }
         );
 
         info!("Prepared onchain payment: {res:?}");
@@ -2624,7 +2641,9 @@ impl LiquidSdk {
 
         ensure_sdk!(
             payer_amount_sat <= balance_sat,
-            PaymentError::InsufficientFunds
+            PaymentError::InsufficientFunds {
+                missing_sats: payer_amount_sat - balance_sat
+            }
         );
 
         let preimage = Preimage::new();
@@ -4639,7 +4658,7 @@ impl LiquidSdk {
                 };
                 let fees_sat = prepare_response
                     .fees_sat
-                    .ok_or(PaymentError::InsufficientFunds)?;
+                    .ok_or(PaymentError::InsufficientFunds { missing_sats: 0 })?;
 
                 Ok(PrepareLnUrlPayResponse {
                     destination,
