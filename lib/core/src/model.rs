@@ -943,7 +943,9 @@ impl WalletInfo {
         if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
             ensure_sdk!(
                 amount_sat + fees_sat <= self.balance_sat,
-                PaymentError::InsufficientFunds
+                PaymentError::InsufficientFunds {
+                    missing_sats: (amount_sat + fees_sat) - self.balance_sat
+                }
             );
         } else {
             match self
@@ -953,9 +955,15 @@ impl WalletInfo {
             {
                 Some(asset_balance) => ensure_sdk!(
                     amount_sat <= asset_balance.balance_sat && fees_sat <= self.balance_sat,
-                    PaymentError::InsufficientFunds
+                    PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat - asset_balance.balance_sat
+                    }
                 ),
-                None => return Err(PaymentError::InsufficientFunds),
+                None => {
+                    return Err(PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat,
+                    })
+                }
             }
         }
         Ok(())

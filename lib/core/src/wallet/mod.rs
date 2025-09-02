@@ -399,7 +399,9 @@ impl OnchainWallet for LiquidOnchainWallet {
             .await
         {
             Ok(tx) => Ok(tx),
-            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
+            Err(PaymentError::InsufficientFunds { .. })
+                if asset_id.eq(&self.config.lbtc_asset_id()) =>
+            {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
                 self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
                     .await
