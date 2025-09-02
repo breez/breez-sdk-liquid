@@ -202,12 +202,36 @@ impl GenericSdkLwkSigner {
     }
 }
 
+impl BaseSigner for GenericSdkLwkSigner {
+    fn xpub(&self) -> Result<Xpub, SignError> {
+        let xpub = self.generic_sdk_signer.xpub()?;
+        Ok(Xpub::decode(&xpub)?)
+    }
+
+    fn fingerprint(&self) -> Result<Fingerprint, SignError> {
+        let f: Fingerprint = BaseSigner::xpub(self)?.identifier()[0..4]
+            .try_into()
+            .map_err(|_| SignError::Generic(anyhow::anyhow!("Wrong fingerprint length")))?;
+        Ok(f)
+    }
+
+    fn sign_ecdsa_recoverable(&self, msg: &Message) -> Result<Vec<u8>, SignError> {
+        let sig_bytes = self
+            .generic_sdk_signer
+            .sign_ecdsa_recoverable(msg.as_ref().to_vec())?;
+        Ok(sig_bytes)
+    }
+}
+
 impl LwkSigner for GenericSdkLwkSigner {
     type Error = SignError;
 
     fn sign(&self, pset: &mut PartiallySignedTransaction) -> Result<u32, Self::Error> {
-        let (signed_pset, signature_added) = self.generic_sdk_signer.sign(pset.to_string()).unwrap();
-        let signed_pset = PartiallySignedTransaction::from_str(&signed_pset)?.try_into().map_err(|_| SignError::Generic(anyhow::anyhow!("Invalid PSET")))?;
+        let (signed_pset, signature_added) =
+            self.generic_sdk_signer.sign(pset.to_string()).unwrap();
+        let signed_pset = PartiallySignedTransaction::from_str(&signed_pset)?
+            .try_into()
+            .map_err(|_| SignError::Generic(anyhow::anyhow!("Invalid PSET")))?;
 
         pset.merge(signed_pset)?;
         Ok(signature_added)
@@ -374,46 +398,46 @@ mod tests {
         wallet_policy: &WalletPolicy,
     ) -> Result<WolletDescriptor, anyhow::Error> {
         let descriptor_str = match wallet_policy {
-        WalletPolicy::Singlesig => singlesig_desc(
-            signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Slip77,
-        )
-        .map_err(|e| anyhow!("Invalid singlesig descriptor: {e}"))?,
-
-        WalletPolicy::Multisig { threshold, xpubs } => {
-            if xpubs.len() < (*threshold as usize) || *threshold == 0 {
-                return Err(anyhow!(
-                    "Invalid multisig policy: threshold={}, xpubs={}",
-                    threshold,
-                    xpubs.len()
-                )
-                .into());
-            }
-
-            let xpubs = xpubs
-                .into_iter()
-                .map(|xpub| {
-                    (
-                        None,
-                        Xpub::from_str(&xpub)
-                            .map_err(|e| anyhow!("Invalid Xpub: {e}"))
-                            .unwrap(),
-                    )
-                })
-                .collect();
-
-            multisig_desc(
-                *threshold,
-                xpubs,
-                Multisig::Wsh,
-                DescriptorBlindingKey::Elip151,
+            WalletPolicy::Singlesig => singlesig_desc(
+                signer,
+                Singlesig::Wpkh,
+                lwk_common::DescriptorBlindingKey::Slip77,
             )
-            .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
-        }
-    };
+            .map_err(|e| anyhow!("Invalid singlesig descriptor: {e}"))?,
 
-    Ok(descriptor_str.parse()?)
+            WalletPolicy::Multisig { threshold, xpubs } => {
+                if xpubs.len() < (*threshold as usize) || *threshold == 0 {
+                    return Err(anyhow!(
+                        "Invalid multisig policy: threshold={}, xpubs={}",
+                        threshold,
+                        xpubs.len()
+                    )
+                    .into());
+                }
+
+                let xpubs = xpubs
+                    .into_iter()
+                    .map(|xpub| {
+                        (
+                            None,
+                            Xpub::from_str(&xpub)
+                                .map_err(|e| anyhow!("Invalid Xpub: {e}"))
+                                .unwrap(),
+                        )
+                    })
+                    .collect();
+
+                multisig_desc(
+                    *threshold,
+                    xpubs,
+                    Multisig::Wsh,
+                    DescriptorBlindingKey::Elip151,
+                )
+                .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
+            }
+        };
+
+        Ok(descriptor_str.parse()?)
     }
 
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {

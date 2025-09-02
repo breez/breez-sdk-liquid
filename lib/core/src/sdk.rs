@@ -355,7 +355,7 @@ impl LiquidSdkBuilder {
         let sdk = Arc::new(LiquidSdk {
             config: self.config.clone(),
             onchain_wallet,
-            // signer: self.signer.clone(),
+            signer: self.signer.clone(),
             persister: persister.clone(),
             rest_client,
             event_manager,
@@ -384,7 +384,7 @@ impl LiquidSdkBuilder {
 pub struct LiquidSdk {
     pub(crate) config: Config,
     pub(crate) onchain_wallet: Arc<dyn OnchainWallet>,
-    // pub(crate) signer: Arc<Box<dyn Signer>>,
+    pub(crate) signer: Arc<Box<dyn Signer>>,
     pub(crate) persister: std::sync::Arc<Persister>,
     pub(crate) rest_client: Arc<dyn RestClient>,
     pub(crate) event_manager: Arc<EventManager>,
@@ -458,6 +458,48 @@ impl LiquidSdk {
         )?
         .build()
         .await?;
+        sdk.start().await?;
+
+        let init_time = Instant::now().duration_since(start_ts);
+        utils::log_print_header(init_time);
+
+        Ok(sdk)
+    }
+
+    pub async fn connect_with_generic_signer(
+        req: ConnectWithSignerRequest,
+        generic_signer: Box<dyn GenericSigner>,
+    ) -> Result<Arc<LiquidSdk>> {
+        let start_ts = Instant::now();
+
+        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+        std::fs::create_dir_all(&req.config.working_dir)?;
+
+        let mut sdk_builder = LiquidSdkBuilder::new(
+            req.config.clone(),
+            PRODUCTION_BREEZSERVER_URL.into(),
+            Arc::new(generic_signer.clone() as Box<dyn Signer>),
+        )?;
+
+        let persister = std::sync::Arc::new(Persister::new_using_fs(
+            &sdk_builder.get_working_dir()?,
+            req.config.network,
+            req.config.sync_enabled(),
+            req.config.asset_metadata.clone(),
+        )?);
+
+        let sdk = sdk_builder
+            .persister(persister.clone())
+            .onchain_wallet(Arc::new(
+                LiquidOnchainWallet::new_generic(
+                    req.config.clone(),
+                    persister.clone(),
+                    Arc::new(generic_signer.clone()),
+                )
+                .await?,
+            ))
+            .build()
+            .await?;
         sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);
@@ -4807,13 +4849,12 @@ impl LiquidSdk {
         &self,
         req_data: LnUrlAuthRequestData,
     ) -> Result<LnUrlCallbackStatus, LnUrlAuthError> {
-        // Ok(perform_lnurl_auth(
-        //     self.rest_client.as_ref(),
-        //     &req_data,
-        //     &SdkLnurlAuthSigner::new(self.signer.clone()),
-        // )
-        // .await?)
-        todo!()
+        Ok(perform_lnurl_auth(
+            self.rest_client.as_ref(),
+            &req_data,
+            &SdkLnurlAuthSigner::new(self.signer.clone()),
+        )
+        .await?)
     }
 
     /// Register for webhook callbacks at the given `webhook_url`. Each created swap after registering the

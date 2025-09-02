@@ -24,7 +24,9 @@ use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 use web_time::Instant;
 
-use crate::model::{BlockchainExplorer, Signer, WalletPolicy, BREEZ_LIQUID_ESPLORA_URL};
+use crate::model::{
+    BlockchainExplorer, GenericSigner, Signer, WalletPolicy, BREEZ_LIQUID_ESPLORA_URL,
+};
 use crate::persist::Persister;
 use crate::signer::{BaseSigner, GenericSdkLwkSigner, SdkLwkSigner, WalletSigner};
 use crate::{ensure_sdk, error::PaymentError, model::Config};
@@ -194,7 +196,34 @@ impl LiquidOnchainWallet {
         persister: std::sync::Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
     ) -> Result<Self> {
-        let signer: Arc<dyn WalletSigner + Send + Sync> = Arc::new(SdkLwkSigner::new(user_signer.clone())?);
+        let signer: Arc<dyn WalletSigner + Send + Sync> =
+            Arc::new(SdkLwkSigner::new(user_signer.clone())?);
+
+        let wallet_cache_persister: Arc<dyn WalletCachePersister> =
+            Arc::new(SqliteWalletCachePersister::new(
+                std::sync::Arc::clone(&persister),
+                get_descriptor(&signer, &config.wallet_policy)?,
+            )?);
+
+        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
+
+        Ok(Self {
+            config,
+            persister,
+            wallet: Arc::new(Mutex::new(wollet)),
+            client: Mutex::new(None),
+            signer,
+            wallet_cache_persister,
+        })
+    }
+
+    pub(crate) async fn new_generic(
+        config: Config,
+        persister: std::sync::Arc<Persister>,
+        generic_user_signer: Arc<Box<dyn GenericSigner>>,
+    ) -> Result<Self> {
+        let signer: Arc<dyn WalletSigner + Send + Sync> =
+            Arc::new(GenericSdkLwkSigner::new(generic_user_signer.clone()));
 
         let wallet_cache_persister: Arc<dyn WalletCachePersister> =
             Arc::new(SqliteWalletCachePersister::new(
@@ -273,7 +302,7 @@ pub fn get_descriptor(
             } else {
                 return Err(anyhow!("Unknown signer type").into());
             }
-        },
+        }
 
         WalletPolicy::Multisig { threshold, xpubs } => {
             if xpubs.len() < (*threshold as usize) || *threshold == 0 {
