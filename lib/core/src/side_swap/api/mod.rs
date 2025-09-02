@@ -273,7 +273,10 @@ impl SideSwapService {
 
         ensure_sdk!(
             !wallet_utxos.is_empty(),
-            PaymentError::InsufficientFunds.into()
+            PaymentError::InsufficientFunds {
+                missing_sats: start_res.send_amount as u64
+            }
+            .into()
         );
 
         let mut inputs = vec![];
@@ -299,7 +302,10 @@ impl SideSwapService {
         }
         ensure_sdk!(
             send_value >= start_res.send_amount,
-            PaymentError::InsufficientFunds.into()
+            PaymentError::InsufficientFunds {
+                missing_sats: (start_res.send_amount - send_value) as u64
+            }
+            .into()
         );
 
         let body = HttpRequest::SwapStart(SwapStartRequest {
