@@ -145,7 +145,9 @@ impl PayjoinService for SideSwapPayjoinService {
             .sum();
         ensure_sdk!(
             wallet_asset_balance > amount_sat,
-            PayjoinError::InsufficientFunds
+            PayjoinError::InsufficientFunds {
+                missing_sats: amount_sat - wallet_asset_balance,
+            }
         );
 
         // Fetch the fiat rates
@@ -191,7 +193,9 @@ impl PayjoinService for SideSwapPayjoinService {
         let fee_sat = (network_fee as f64 * asset_index_price) as u64 + fixed_fee;
         ensure_sdk!(
             wallet_asset_balance >= amount_sat + fee_sat,
-            PayjoinError::InsufficientFunds
+            PayjoinError::InsufficientFunds {
+                missing_sats: (amount_sat + fee_sat) - wallet_asset_balance
+            }
         );
 
         // The estimation accuracy gives a fee to two decimal places
@@ -217,7 +221,12 @@ impl PayjoinService for SideSwapPayjoinService {
             .iter()
             .map(Utxo::from)
             .collect::<Vec<_>>();
-        ensure_sdk!(!wallet_utxos.is_empty(), PayjoinError::InsufficientFunds);
+        ensure_sdk!(
+            !wallet_utxos.is_empty(),
+            PayjoinError::InsufficientFunds {
+                missing_sats: amount_sat
+            }
+        );
 
         let address = Address::from_str(recipient_address).map_err(|e| {
             PayjoinError::generic(format!(
