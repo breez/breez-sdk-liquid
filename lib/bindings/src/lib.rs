@@ -1,8 +1,8 @@
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use anyhow::Result;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
-use log::{Metadata, Record, SetLoggerError};
+use log::{warn, Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 use uniffi::deps::log::{Level, LevelFilter};
@@ -40,14 +40,123 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
+pub struct PluginEventEmitter {
+    event_emitter: breez_sdk_liquid::prelude::PluginEventEmitter,
+}
+
+impl PluginEventEmitter {
+    pub fn broadcast(&self, e: SdkEvent) {
+        rt().block_on(async {
+            self.event_emitter.broadcast(e).await;
+        })
+    }
+}
+
+pub trait EventListener: Send + Sync {
+    fn on_event(&self, e: SdkEvent);
+}
+
+struct EventListenerWrapper {
+    inner: Box<dyn EventListener>,
+}
+
+impl EventListenerWrapper {
+    pub(crate) fn new(inner: Box<dyn EventListener>) -> Self {
+        Self { inner }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl breez_sdk_liquid::prelude::EventListener for EventListenerWrapper {
+    async fn on_event(&self, e: SdkEvent) {
+        self.inner.on_event(e);
+    }
+}
+
+pub struct PluginStorage {
+    pub(crate) storage: breez_sdk_liquid::prelude::PluginStorage,
+}
+
+impl PluginStorage {
+    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
+        self.storage.set_item(&key, value)
+    }
+
+    pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
+        self.storage.get_item(&key)
+    }
+
+    pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
+        self.storage.remove_item(&key)
+    }
+}
+
+pub trait Plugin: Send + Sync {
+    fn id(&self) -> String;
+    fn on_start(
+        &self,
+        sdk: Arc<BindingLiquidSdk>,
+        storage: Arc<PluginStorage>,
+        event_emitter: Arc<PluginEventEmitter>,
+    );
+    fn on_stop(&self);
+}
+
+struct PluginWrapper {
+    inner: Box<dyn Plugin>,
+}
+
+#[sdk_macros::async_trait]
+impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
+    fn id(&self) -> String {
+        self.inner.id()
+    }
+
+    async fn on_start(
+        &self,
+        sdk: Weak<LiquidSdk>,
+        storage: breez_sdk_liquid::prelude::PluginStorage,
+        event_emitter: breez_sdk_liquid::prelude::PluginEventEmitter,
+    ) {
+        let Some(sdk) = sdk.upgrade() else {
+            warn!(
+                "Tried to start plugin {} while SDK was unavailable",
+                self.id()
+            );
+            return;
+        };
+        self.inner.on_start(
+            BindingLiquidSdk { sdk }.into(),
+            PluginStorage { storage }.into(),
+            PluginEventEmitter { event_emitter }.into(),
+        );
+    }
+
+    async fn on_stop(&self) {
+        self.inner.on_stop();
+    }
+}
+
 /// If used, this must be called before `connect`
 pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
     UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
 }
 
-pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
+pub fn connect(
+    req: ConnectRequest,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
+) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let sdk = LiquidSdk::connect(req).await?;
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| {
+                    Arc::new(PluginWrapper { inner: p })
+                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+                })
+                .collect()
+        });
+        let sdk = LiquidSdk::connect(req, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
 }
@@ -55,9 +164,19 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let sdk = LiquidSdk::connect_with_signer(req, signer).await?;
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| {
+                    Arc::new(PluginWrapper { inner: p })
+                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+                })
+                .collect()
+        });
+        let sdk = LiquidSdk::connect_with_signer(req, signer, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
 }
@@ -79,6 +198,8 @@ pub struct BindingLiquidSdk {
 
 impl BindingLiquidSdk {
     pub fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {
+        let listener: Box<dyn breez_sdk_liquid::prelude::EventListener> =
+            Box::new(EventListenerWrapper::new(listener));
         rt().block_on(self.sdk.add_event_listener(listener))
     }
 
