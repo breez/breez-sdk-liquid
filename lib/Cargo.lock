@@ -814,11 +814,14 @@ name = "breez-sdk-liquid-bindings"
 version = "0.11.7"
 dependencies = [
  "anyhow",
+ "async-trait",
  "breez-sdk-liquid",
  "camino",
  "glob",
  "log",
  "once_cell",
+ "sdk-common",
+ "sdk-macros",
  "thiserror 1.0.69",
  "tokio",
  "uniffi 0.28.3",
@@ -4399,7 +4402,7 @@ checksum = "490dcfcbfef26be6800d11870ff2df8774fa6e86d047e3e8c8a76b25655e41ca"
 [[package]]
 name = "sdk-common"
 version = "0.7.1"
-source = "git+https://github.com/breez/breez-sdk?rev=5d96541a4cb03f30b8c4197a619ea52a98bc0bfe#5d96541a4cb03f30b8c4197a619ea52a98bc0bfe"
+source = "git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52#7c3577f260e6a197161d4c389ed9b75659623b52"
 dependencies = [
  "aes",
  "anyhow",
@@ -4444,7 +4447,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.7.1"
-source = "git+https://github.com/breez/breez-sdk?rev=5d96541a4cb03f30b8c4197a619ea52a98bc0bfe#5d96541a4cb03f30b8c4197a619ea52a98bc0bfe"
+source = "git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52#7c3577f260e6a197161d4c389ed9b75659623b52"
 dependencies = [
  "proc-macro2",
  "quote",
