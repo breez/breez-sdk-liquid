@@ -79,6 +79,7 @@ impl SdkNodeHandle {
                 config.clone(),
                 sdk_common::prelude::PRODUCTION_BREEZSERVER_URL.to_string(),
                 signer.clone(),
+                None,
             )?;
             let persister =
                 std::sync::Arc::new(breez_sdk_liquid::persist::Persister::new_in_memory(
@@ -96,12 +97,15 @@ impl SdkNodeHandle {
             sdk
         };
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-        let sdk = LiquidSdk::connect(ConnectRequest {
-            config,
-            mnemonic: Some(mnemonic.to_string()),
-            passphrase: None,
-            seed: None,
-        })
+        let sdk = LiquidSdk::connect(
+            ConnectRequest {
+                config,
+                mnemonic: Some(mnemonic.to_string()),
+                passphrase: None,
+                seed: None,
+            },
+            None,
+        )
         .await?;
 
         let (sender, receiver) = mpsc::channel(50);
