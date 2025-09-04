@@ -746,12 +746,17 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
+callback interface Plugin {
+    void on_start(BindingLiquidSdk sdk);
+    void on_stop();
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
-    BindingLiquidSdk connect(ConnectRequest req);
+    BindingLiquidSdk connect(ConnectRequest req, sequence<Plugin>? plugins);
 
     [Throws=SdkError]
-    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer);
+    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer, sequence<Plugin>? plugins);
 
     [Throws=SdkError]
     void set_logger(Logger logger);

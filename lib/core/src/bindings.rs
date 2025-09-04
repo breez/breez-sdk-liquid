@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+pub use crate::prelude::Plugin;
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
@@ -47,8 +48,11 @@ impl log::Log for DartBindingLogger {
     fn flush(&self) {}
 }
 
-pub async fn connect(req: ConnectRequest) -> Result<BindingLiquidSdk, SdkError> {
-    let ln_sdk = LiquidSdk::connect(req).await?;
+pub async fn connect(
+    req: ConnectRequest,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
+) -> Result<BindingLiquidSdk, SdkError> {
+    let ln_sdk = LiquidSdk::connect(req, plugins).await?;
     Ok(BindingLiquidSdk { sdk: ln_sdk })
 }
 
