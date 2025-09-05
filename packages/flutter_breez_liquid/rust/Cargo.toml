@@ -1,0 +1,36 @@
+[package]
+name = "flutter_breez_liquid"
+version = "0.10.3"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.9.0"
+
+# Replaced with release commit during publishing
+breez-sdk-liquid = { path = "../../../lib/core" }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "5d96541a4cb03f30b8c4197a619ea52a98bc0bfe", features = ["liquid"] }
+
+anyhow = { version = "1.0.79", features = ["backtrace"] }
+log = "0.4.20"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+
+[build-dependencies]
+flutter_rust_bridge_codegen = "=2.9.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[patch.crates-io]
+# https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits and rebased on secp256k1-zkp 0.11.0
+secp256k1-zkp = { git = "https://github.com/breez/rust-secp256k1-zkp.git", rev = "eac2e479255a6e32b5588bc25ee53c642fdd8395" }
+
+[profile.release]
+lto = true
+opt-level = "z"   # Optimize for size.
+codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimization
+panic = "abort"   # Abort on panic, as unwinding code does require extra binary size
+rpath = true
