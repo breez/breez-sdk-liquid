@@ -1,3 +1,4 @@
+// use sdk_common::utils::Arc;
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -40,6 +41,25 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
+pub trait BindingPlugin: Send + Sync {
+    fn on_start(&self, sdk: Arc<BindingLiquidSdk>);
+    fn on_stop(&self);
+}
+
+struct SdkBindingPlugin {
+    inner: Box<dyn BindingPlugin>,
+}
+
+impl Plugin for SdkBindingPlugin {
+    fn on_start(&self, sdk: Arc<LiquidSdk>) {
+        self.inner.on_start(BindingLiquidSdk { sdk }.into());
+    }
+
+    fn on_stop(&self) {
+        self.inner.on_stop();
+    }
+}
+
 /// If used, this must be called before `connect`
 pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
     UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
@@ -47,9 +67,15 @@ pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
 
 pub fn connect(
     req: ConnectRequest,
-    plugins: Option<Vec<Box<dyn Plugin>>>,
+    plugins: Option<Vec<Box<dyn BindingPlugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| Arc::new(SdkBindingPlugin { inner: p }) as Arc<dyn Plugin>)
+                .collect()
+        });
         let sdk = LiquidSdk::connect(req, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
@@ -58,9 +84,15 @@ pub fn connect(
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
-    plugins: Option<Vec<Box<dyn Plugin>>>,
+    plugins: Option<Vec<Box<dyn BindingPlugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| Arc::new(SdkBindingPlugin { inner: p }) as Arc<dyn Plugin>)
+                .collect()
+        });
         let sdk = LiquidSdk::connect_with_signer(req, signer, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })

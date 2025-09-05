@@ -113,7 +113,7 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
-    plugins: Option<Vec<Box<dyn Plugin>>>,
+    plugins: Option<Vec<Arc<dyn Plugin>>>,
 }
 
 #[allow(dead_code)]
@@ -122,7 +122,6 @@ impl LiquidSdkBuilder {
         config: Config,
         server_url: String,
         signer: Arc<Box<dyn Signer>>,
-        plugins: Option<Vec<Box<dyn Plugin>>>,
     ) -> Result<LiquidSdkBuilder> {
         let breez_server = Arc::new(BreezServer::new(server_url, None)?);
         Ok(LiquidSdkBuilder {
@@ -139,7 +138,7 @@ impl LiquidSdkBuilder {
             status_stream: None,
             swapper: None,
             sync_service: None,
-            plugins,
+            plugins: None,
         })
     }
 
@@ -196,6 +195,11 @@ impl LiquidSdkBuilder {
 
     pub fn sync_service(&mut self, sync_service: Arc<SyncService>) -> &mut Self {
         self.sync_service = Some(sync_service.clone());
+        self
+    }
+
+    pub fn plugins(&mut self, plugins: Vec<Arc<dyn Plugin>>) -> &mut Self {
+        self.plugins = Some(plugins);
         self
     }
 
@@ -410,7 +414,7 @@ pub struct LiquidSdk {
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
     pub(crate) background_task_handles: Mutex<Vec<TaskHandle>>,
-    pub(crate) plugins: Vec<Box<dyn Plugin>>,
+    pub(crate) plugins: Vec<Arc<dyn Plugin>>,
 }
 
 impl LiquidSdk {
@@ -427,7 +431,7 @@ impl LiquidSdk {
     /// * `plugins` - the [Plugin]s which should be loaded by the SDK at startup
     pub async fn connect(
         req: ConnectRequest,
-        plugins: Option<Vec<Box<dyn Plugin>>>,
+        plugins: Option<Vec<Arc<dyn Plugin>>>,
     ) -> Result<Arc<LiquidSdk>> {
         let signer = Self::default_signer(&req)?;
 
@@ -456,21 +460,24 @@ impl LiquidSdk {
     pub async fn connect_with_signer(
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
-        plugins: Option<Vec<Box<dyn Plugin>>>,
+        plugins: Option<Vec<Arc<dyn Plugin>>>,
     ) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
 
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
 
-        let sdk = LiquidSdkBuilder::new(
+        let mut builder = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
-            plugins,
-        )?
-        .build()
-        .await?;
+        )?;
+
+        if let Some(plugins) = plugins {
+            builder.plugins(plugins);
+        }
+
+        let sdk = builder.build().await?;
         sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);

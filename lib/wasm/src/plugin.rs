@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use breez_sdk_liquid::sdk::LiquidSdk;
 use wasm_bindgen::prelude::*;
 
@@ -7,9 +9,9 @@ pub struct WasmPlugin {
     pub plugin: Plugin,
 }
 
-impl From<Plugin> for Box<dyn breez_sdk_liquid::plugin::Plugin> {
+impl From<Plugin> for Rc<dyn breez_sdk_liquid::plugin::Plugin> {
     fn from(val: Plugin) -> Self {
-        Box::new(WasmPlugin { plugin: val })
+        Rc::new(WasmPlugin { plugin: val })
     }
 }
 

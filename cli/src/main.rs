@@ -104,12 +104,15 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
-    let sdk = LiquidSdk::connect(ConnectRequest {
-        config,
-        mnemonic: Some(mnemonic.to_string()),
-        passphrase,
-        seed: None,
-    })
+    let sdk = LiquidSdk::connect(
+        ConnectRequest {
+            config,
+            mnemonic: Some(mnemonic.to_string()),
+            passphrase,
+            seed: None,
+        },
+        None,
+    )
     .await?;
     let listener_id = sdk
         .add_event_listener(Box::new(CliEventListener {}))

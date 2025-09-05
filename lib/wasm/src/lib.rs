@@ -66,8 +66,10 @@ async fn connect_inner(
         config.clone(),
         PRODUCTION_BREEZSERVER_URL.to_string(),
         Rc::clone(&signer),
-        plugins,
     )?;
+    if let Some(plugins) = plugins {
+        sdk_builder.plugins(plugins);
+    }
 
     let sdk_lwk_signer = SdkLwkSigner::new(Rc::clone(&signer))?;
     let fingerprint = sdk_lwk_signer.fingerprint()?;

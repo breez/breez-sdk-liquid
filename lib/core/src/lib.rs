@@ -31,7 +31,7 @@
 //!     mnemonic: mnemonic.to_string(),
 //!     config,
 //! };
-//! let sdk = sdk::LiquidSdk::connect(connect_request).await?;
+//! let sdk = sdk::LiquidSdk::connect(connect_request, None).await?;
 //!
 //! ```
 //!
