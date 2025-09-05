@@ -1,0 +1,6 @@
+rust_input: crate
+rust_root: rust/
+dart_output: lib/src/rust
+web: false
+dart_format_line_length: 110
+dart_entrypoint_class_name: FlutterBreezLiquid
