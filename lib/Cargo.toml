@@ -5,20 +5,6 @@ codegen-units = 1 # Reduce Parallel Code Generation Units to Increase Optimizati
 panic = "abort"   # Abort on panic, as unwinding code does require extra binary size
 rpath = true
 
-[profile.frb]
-inherits = "release"
-strip = true      # Automatically strip symbols from the binary.
-opt-level = 3
-lto = "thin"
-debug = 0
-split-debuginfo = "unpacked"
-incremental = false
-
-[profile.frb-min]
-inherits = "frb"
-opt-level = "z"   # Optimize for size.
-lto = true
-
 [workspace]
 members = ["bindings", "bindings/langs/react-native", "core", "wasm"]
 resolver = "2"
@@ -28,9 +14,6 @@ version = "0.10.3"
 
 [workspace.lints.clippy]
 empty_line_after_doc_comments = "allow"
-
-[workspace.lints.rust]
-unexpected_cfgs = { level = "allow", check-cfg = ['cfg(frb_expand)'] }
 
 [workspace.dependencies]
 anyhow = "1.0"
