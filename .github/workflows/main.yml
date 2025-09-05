@@ -413,7 +413,6 @@ jobs:
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/Headers
-          cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_sdk_liquidFFI/include/
           rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
           rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
 
@@ -435,87 +434,6 @@ jobs:
           yarn global add tslint typescript
           brew install kotlin ktlint swiftformat
           make react-native
-
-      - name: Check git status
-        env:
-          GIT_PAGER: cat
-        run: |
-          status=$(git status --porcelain)
-          if [[ -n "$status" ]]; then
-            echo "Git status has changes"
-            echo "$status"
-            git diff
-            exit 1
-          else
-            echo "No changes in git status"
-          fi
-
-  flutter:
-    name: Check Dart/Flutter bindings
-    runs-on: macOS-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.29.0
-      - run: flutter --version
-
-      - name: Set up just
-        uses: extractions/setup-just@v2
-      
-      - name: Set up Melos
-        uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: false
-
-      - name: Initialize the workspace
-        working-directory: lib/bindings/langs/flutter/
-        run: |
-          just clean
-          just init
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          version: "27.2"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Install flutter_rust_bridge_codegen dependencies
-        working-directory: lib/bindings/langs/flutter/
-        run: just frb
-
-      - name: Generate Dart/Flutter bindings & Softlink C Headers
-        working-directory: lib/bindings/langs/flutter/
-        run: just codegen
-
-      - name: Build iOS Framework & Softlink C Headers
-        working-directory: lib/bindings/langs/flutter/
-        if: ${{ success() || failure() }}
-        run: just build-ios-framework
-
-      - name: Generate FFI bindings
-        working-directory: lib/bindings/langs/flutter/
-        if: ${{ success() || failure() }}
-        run: just ffigen
-
-      - name: Static Analysis
-        working-directory: lib/bindings/langs/flutter/
-        if: ${{ success() || failure() }}
-        run: melos analyze
-
-      - name: Check Formatting
-        working-directory: lib/bindings/langs/flutter/
-        run: melos check-format
-
-      # This step is added to ensure version recipe was run to update podspec files & CMake script.
-      # It does not catch the case where 'packages/flutter/pubspec.yaml' wasn't updated properly.
-      - name: Update version number on podspec files & CMake scripts
-        working-directory: lib/bindings/langs/flutter/
-        run: just version
 
       - name: Check git status
         env:

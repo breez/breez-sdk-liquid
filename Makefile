@@ -30,10 +30,7 @@ wasm-test:
 	make -C ./lib/core wasm-test
 	make -C ./lib/wasm test
 
-codegen: flutter-codegen react-native-codegen
-
-flutter-codegen:
-	cd lib/bindings/langs/flutter && just gen
+codegen: react-native-codegen
 
 react-native-codegen:
 	make -C ./packages/react-native react-native
