@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use anyhow::Result;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
@@ -40,14 +40,42 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
+pub trait BindingPlugin: Send + Sync {
+    fn on_start(&self, sdk: Arc<BindingLiquidSdk>);
+    fn on_stop(&self);
+}
+
+struct SdkBindingPlugin {
+    inner: Box<dyn BindingPlugin>,
+}
+
+impl Plugin for SdkBindingPlugin {
+    fn on_start(&self, sdk: Arc<LiquidSdk>) {
+        self.inner.on_start(BindingLiquidSdk { sdk }.into());
+    }
+
+    fn on_stop(&self) {
+        self.inner.on_stop();
+    }
+}
+
 /// If used, this must be called before `connect`
 pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
     UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
 }
 
-pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
+pub fn connect(
+    req: ConnectRequest,
+    plugins: Option<Vec<Box<dyn BindingPlugin>>>,
+) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let sdk = LiquidSdk::connect(req).await?;
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| Arc::new(SdkBindingPlugin { inner: p }) as Arc<dyn Plugin>)
+                .collect()
+        });
+        let sdk = LiquidSdk::connect(req, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
 }
@@ -55,9 +83,16 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
+    plugins: Option<Vec<Box<dyn BindingPlugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let sdk = LiquidSdk::connect_with_signer(req, signer).await?;
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| Arc::new(SdkBindingPlugin { inner: p }) as Arc<dyn Plugin>)
+                .collect()
+        });
+        let sdk = LiquidSdk::connect_with_signer(req, signer, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
 }
@@ -128,6 +163,18 @@ impl BindingLiquidSdk {
         req: ReceivePaymentRequest,
     ) -> Result<ReceivePaymentResponse, PaymentError> {
         rt().block_on(self.sdk.receive_payment(&req))
+    }
+
+    pub fn new_nwc_uri(&self, name: String) -> Result<String, SdkError> {
+        rt().block_on(self.sdk.new_nwc_uri(name))
+    }
+
+    pub fn list_nwc_uris(&self) -> Result<HashMap<String, String>, SdkError> {
+        rt().block_on(self.sdk.list_nwc_uris())
+    }
+
+    pub fn remove_nwc_uri(&self, name: String) -> Result<(), SdkError> {
+        rt().block_on(self.sdk.remove_nwc_uri(name))
     }
 
     pub fn create_bolt12_invoice(

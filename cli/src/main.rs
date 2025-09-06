@@ -36,6 +36,9 @@ pub(crate) struct Args {
 
     #[clap(long, default_value = "false")]
     pub(crate) no_qrs: bool,
+
+    #[clap(long, action)]
+    pub(crate) enable_nwc: bool,
 }
 
 fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
@@ -97,6 +100,12 @@ async fn main() -> Result<()> {
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;
+    if args.enable_nwc {
+        config.nwc_options = Some(NwcOptions {
+            enabled: true,
+            ..Default::default()
+        })
+    }
     config.working_dir = data_dir_str;
     config.use_magic_routing_hints = !args.no_mrh;
     if args.no_data_sync {
@@ -104,12 +113,15 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
-    let sdk = LiquidSdk::connect(ConnectRequest {
-        config,
-        mnemonic: Some(mnemonic.to_string()),
-        passphrase,
-        seed: None,
-    })
+    let sdk = LiquidSdk::connect(
+        ConnectRequest {
+            config,
+            mnemonic: Some(mnemonic.to_string()),
+            passphrase,
+            seed: None,
+        },
+        None,
+    )
     .await?;
     let listener_id = sdk
         .add_event_listener(Box::new(CliEventListener {}))

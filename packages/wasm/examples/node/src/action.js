@@ -1,4 +1,5 @@
-const { connect, defaultConfig, setLogger } = require('@breeztech/breez-sdk-liquid/node')
+import { Plugin } from "@breeztech/breez-sdk-liquid/node";
+const { connect, defaultConfig, setLogger, Plugin: SdkPlugin } = require('@breeztech/breez-sdk-liquid/node')
 const { confirm, question } = require('./prompt.js')
 const fs = require('fs')
 const qrcode = require('qrcode')

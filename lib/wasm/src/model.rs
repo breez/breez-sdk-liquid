@@ -299,6 +299,14 @@ pub enum BlockchainExplorer {
 }
 
 #[derive(Clone)]
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NWCOptions)]
+pub struct NWCOptions {
+    pub enabled: bool,
+    pub relay_urls: Option<Vec<String>>,
+    pub secret_key: Option<String>,
+}
+
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::Config)]
 pub struct Config {
     pub liquid_explorer: BlockchainExplorer,
@@ -315,6 +323,7 @@ pub struct Config {
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     pub sideswap_api_key: Option<String>,
     pub use_magic_routing_hints: bool,
+    pub nwc_options: Option<NWCOptions>,
 }
 
 #[derive(Clone)]
@@ -337,6 +346,7 @@ pub enum SdkEvent {
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
     DataSynced { did_pull_new_records: bool },
+    NWC { details: NwcEvent, event_id: String },
 }
 
 #[derive(Clone)]
@@ -837,4 +847,18 @@ pub struct FetchPaymentProposedFeesResponse {
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::AcceptPaymentProposedFeesRequest)]
 pub struct AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NwcEvent)]
+pub enum NwcEvent {
+    ConnectedHandled,
+    DisconnectedHandled,
+    PayInvoiceHandled {
+        success: bool,
+        preimage: Option<String>,
+        fees_sat: Option<u64>,
+        error: Option<String>,
+    },
+    ListTransactionsHandled,
+    GetBalanceHandled,
 }

@@ -193,6 +193,14 @@ abstract class ForegroundService :
                             logger,
                         )
 
+                    MESSAGE_TYPE_NWC_EVENT ->
+                        NwcEventJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
+
                     else -> null
                 }
             }

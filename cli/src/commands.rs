@@ -277,6 +277,18 @@ pub(crate) enum Command {
     ListFiat {},
     /// Fetch available fiat rates
     FetchFiatRates {},
+    /// Gets the Nostr Wallet Connect URI
+    NewNwcUri {
+        /// The unique identifier of the URI
+        name: String,
+    },
+    /// Remove an active Nostr Wallet Connect URI
+    RemoveNwcUri {
+        /// The unique identifier of the URI
+        name: String,
+    },
+    /// Lists the active Nostr Wallet Connect URIs
+    ListNwcUris {},
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -862,6 +874,15 @@ pub(crate) async fn handle_command(
         Command::ListFiat {} => {
             let res = sdk.list_fiat_currencies().await?;
             command_result!(res)
+        }
+        Command::NewNwcUri { name } => {
+            command_result!(sdk.new_nwc_uri(name).await?)
+        }
+        Command::RemoveNwcUri { name } => {
+            command_result!(sdk.remove_nwc_uri(name).await?)
+        }
+        Command::ListNwcUris {} => {
+            command_result!(sdk.list_nwc_uris().await?)
         }
     })
 }

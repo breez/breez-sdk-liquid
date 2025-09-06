@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 464449310;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -490515056;
 
 // Section: executor
 
@@ -138,6 +138,55 @@ fn wire__crate__bindings__BindingLiquidSdk_add_event_listener_impl(
                         let output_ok = crate::bindings::BindingLiquidSdk::add_event_listener(
                             &*api_that_guard,
                             api_listener,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_add_nwc_uri_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    name: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_add_nwc_uri",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_name = name.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::add_nwc_uri(
+                            &*api_that_guard,
+                            api_name,
                         )
                         .await?;
                         Ok(output_ok)
@@ -725,6 +774,97 @@ fn wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_list_nwc_uris_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_list_nwc_uris",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::list_fiat_currencies(
+                            &*api_that_guard,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_list_nwc_uris_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_list_nwc_uris",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok =
+                            crate::bindings::BindingLiquidSdk::list_nwc_uris(&*api_that_guard)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_list_payments_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -954,6 +1094,55 @@ fn wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw_impl(
                         let output_ok = crate::bindings::BindingLiquidSdk::lnurl_withdraw(
                             &*api_that_guard,
                             api_req,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__bindings__BindingLiquidSdk_new_nwc_uri_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    name: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_new_nwc_uri",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_name = name.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::new_nwc_uri(
+                            &*api_that_guard,
+                            api_name,
                         )
                         .await?;
                         Ok(output_ok)
@@ -1544,6 +1733,55 @@ fn wire__crate__bindings__BindingLiquidSdk_register_webhook_impl(
         },
     )
 }
+fn wire__crate__bindings__BindingLiquidSdk_remove_nwc_uri_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    that: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>,
+    >,
+    name: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BindingLiquidSdk_remove_nwc_uri",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_that = that.cst_decode();
+            let api_name = name.cst_decode();
+            move |context| async move {
+                transform_result_dco::<_, _, crate::error::SdkError>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::bindings::BindingLiquidSdk::remove_nwc_uri(
+                            &*api_that_guard,
+                            api_name,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     that: impl CstDecode<
@@ -1853,6 +2091,7 @@ fn wire__crate__bindings__breez_log_stream_impl(
 fn wire__crate__bindings__connect_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     req: impl CstDecode<crate::model::ConnectRequest>,
+    plugins: impl CstDecode<Option<Vec<Arc<dyn Plugin>>>>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -1862,10 +2101,11 @@ fn wire__crate__bindings__connect_impl(
         },
         move || {
             let api_req = req.cst_decode();
+            let api_plugins = plugins.cst_decode();
             move |context| async move {
                 transform_result_dco::<_, _, crate::error::SdkError>(
                     (move || async move {
-                        let output_ok = crate::bindings::connect(api_req).await?;
+                        let output_ok = crate::bindings::connect(api_req, api_plugins).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -2306,6 +2546,16 @@ impl SseDecode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
+impl SseDecode for Arc<dyn Plugin> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <RustOpaqueNom<
+            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Plugin>>,
+        >>::sse_decode(deserializer);
+        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
 impl SseDecode for BindingLiquidSdk {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2313,6 +2563,24 @@ impl SseDecode for BindingLiquidSdk {
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
+    }
+}
+
+impl SseDecode for std::collections::HashMap<String, String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <Vec<(String, String)>>::sse_decode(deserializer);
+        return inner.into_iter().collect();
+    }
+}
+
+impl SseDecode
+    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Plugin>>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <usize>::sse_decode(deserializer);
+        return unsafe { decode_rust_opaque_nom(inner) };
     }
 }
 
@@ -2641,6 +2909,7 @@ impl SseDecode for crate::model::Config {
             <Option<Vec<crate::model::AssetMetadata>>>::sse_decode(deserializer);
         let mut var_sideswapApiKey = <Option<String>>::sse_decode(deserializer);
         let mut var_useMagicRoutingHints = <bool>::sse_decode(deserializer);
+        let mut var_nwcOptions = <Option<crate::model::NwcOptions>>::sse_decode(deserializer);
         return crate::model::Config {
             liquid_explorer: var_liquidExplorer,
             bitcoin_explorer: var_bitcoinExplorer,
@@ -2656,6 +2925,7 @@ impl SseDecode for crate::model::Config {
             asset_metadata: var_assetMetadata,
             sideswap_api_key: var_sideswapApiKey,
             use_magic_routing_hints: var_useMagicRoutingHints,
+            nwc_options: var_nwcOptions,
         };
     }
 }
@@ -2963,6 +3233,18 @@ impl SseDecode for crate::model::LiquidNetwork {
     }
 }
 
+impl SseDecode for Vec<Arc<dyn Plugin>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<Arc<dyn Plugin>>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2972,6 +3254,18 @@ impl SseDecode for Vec<String> {
             ans_.push(<String>::sse_decode(deserializer));
         }
         return ans_;
+    }
+}
+
+impl SseDecode for Option<Vec<String>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut is_some = <bool>::sse_decode(deserializer);
+        if is_some {
+            Some(<Vec<String>>::sse_decode(deserializer))
+        } else {
+            None
+        }
     }
 }
 
@@ -3168,6 +3462,18 @@ impl SseDecode for Vec<crate::bindings::Rate> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<crate::bindings::Rate>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<(String, String)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<(String, String)>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3709,6 +4015,56 @@ impl SseDecode for crate::bindings::Network {
     }
 }
 
+impl SseDecode for crate::model::NwcEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                return crate::model::NwcEvent::ConnectedHandled;
+            }
+            1 => {
+                return crate::model::NwcEvent::DisconnectedHandled;
+            }
+            2 => {
+                let mut var_success = <bool>::sse_decode(deserializer);
+                let mut var_preimage = <Option<String>>::sse_decode(deserializer);
+                let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
+                let mut var_error = <Option<String>>::sse_decode(deserializer);
+                return crate::model::NwcEvent::PayInvoiceHandled {
+                    success: var_success,
+                    preimage: var_preimage,
+                    fees_sat: var_feesSat,
+                    error: var_error,
+                };
+            }
+            3 => {
+                return crate::model::NwcEvent::ListTransactionsHandled;
+            }
+            4 => {
+                return crate::model::NwcEvent::GetBalanceHandled;
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::model::NwcOptions {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_enabled = <bool>::sse_decode(deserializer);
+        let mut var_relayUrls = <Option<Vec<String>>>::sse_decode(deserializer);
+        let mut var_secretKey = <Option<String>>::sse_decode(deserializer);
+        return crate::model::NwcOptions {
+            enabled: var_enabled,
+            relay_urls: var_relayUrls,
+            secret_key: var_secretKey,
+        };
+    }
+}
+
 impl SseDecode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3809,6 +4165,17 @@ impl SseDecode for Option<crate::model::LnUrlInfo> {
     }
 }
 
+impl SseDecode for Option<crate::model::NwcOptions> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::model::NwcOptions>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::model::PayAmount> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3893,6 +4260,17 @@ impl SseDecode for Option<u64> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<u64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<Vec<Arc<dyn Plugin>>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<Vec<Arc<dyn Plugin>>>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -4519,6 +4897,15 @@ impl SseDecode for crate::model::RecommendedFees {
     }
 }
 
+impl SseDecode for (String, String) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_field0 = <String>::sse_decode(deserializer);
+        let mut var_field1 = <String>::sse_decode(deserializer);
+        return (var_field0, var_field1);
+    }
+}
+
 impl SseDecode for crate::model::RefundRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4685,6 +5072,14 @@ impl SseDecode for crate::model::SdkEvent {
                 let mut var_didPullNewRecords = <bool>::sse_decode(deserializer);
                 return crate::model::SdkEvent::DataSynced {
                     did_pull_new_records: var_didPullNewRecords,
+                };
+            }
+            10 => {
+                let mut var_details = <crate::model::NwcEvent>::sse_decode(deserializer);
+                let mut var_eventId = <String>::sse_decode(deserializer);
+                return crate::model::SdkEvent::NWC {
+                    details: var_details,
+                    event_id: var_eventId,
                 };
             }
             _ => {
@@ -4947,6 +5342,21 @@ fn pde_ffi_dispatcher_sync_impl(
 }
 
 // Section: rust2dart
+
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<Arc<dyn Plugin>> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self.0)
+            .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Arc<dyn Plugin>> {}
+
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Arc<dyn Plugin>>> for Arc<dyn Plugin> {
+    fn into_into_dart(self) -> FrbWrapper<Arc<dyn Plugin>> {
+        self.into()
+    }
+}
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<BindingLiquidSdk> {
@@ -5349,6 +5759,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::Config {
             self.asset_metadata.into_into_dart().into_dart(),
             self.sideswap_api_key.into_into_dart().into_dart(),
             self.use_magic_routing_hints.into_into_dart().into_dart(),
+            self.nwc_options.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6374,6 +6785,56 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Network>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::NwcEvent {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::NwcEvent::ConnectedHandled => [0.into_dart()].into_dart(),
+            crate::model::NwcEvent::DisconnectedHandled => [1.into_dart()].into_dart(),
+            crate::model::NwcEvent::PayInvoiceHandled {
+                success,
+                preimage,
+                fees_sat,
+                error,
+            } => [
+                2.into_dart(),
+                success.into_into_dart().into_dart(),
+                preimage.into_into_dart().into_dart(),
+                fees_sat.into_into_dart().into_dart(),
+                error.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::model::NwcEvent::ListTransactionsHandled => [3.into_dart()].into_dart(),
+            crate::model::NwcEvent::GetBalanceHandled => [4.into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::NwcEvent {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::NwcEvent> for crate::model::NwcEvent {
+    fn into_into_dart(self) -> crate::model::NwcEvent {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::NwcOptions {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.enabled.into_into_dart().into_dart(),
+            self.relay_urls.into_into_dart().into_dart(),
+            self.secret_key.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::NwcOptions {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::NwcOptions> for crate::model::NwcOptions {
+    fn into_into_dart(self) -> crate::model::NwcOptions {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::OnchainPaymentLimitsResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -7252,6 +7713,12 @@ impl flutter_rust_bridge::IntoDart for crate::model::SdkEvent {
                 did_pull_new_records.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::model::SdkEvent::NWC { details, event_id } => [
+                10.into_dart(),
+                details.into_into_dart().into_dart(),
+                event_id.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -7517,10 +7984,35 @@ impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     }
 }
 
+impl SseEncode for Arc<dyn Plugin> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Plugin >>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
+    }
+}
+
 impl SseEncode for BindingLiquidSdk {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, StdArc<_>>(self), serializer);
+    }
+}
+
+impl SseEncode for std::collections::HashMap<String, String> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<(String, String)>>::sse_encode(self.into_iter().collect(), serializer);
+    }
+}
+
+impl SseEncode
+    for RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Plugin>>>
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        let (ptr, size) = self.sse_encode_raw();
+        <usize>::sse_encode(ptr, serializer);
+        <i32>::sse_encode(size, serializer);
     }
 }
 
@@ -7780,6 +8272,7 @@ impl SseEncode for crate::model::Config {
         <Option<Vec<crate::model::AssetMetadata>>>::sse_encode(self.asset_metadata, serializer);
         <Option<String>>::sse_encode(self.sideswap_api_key, serializer);
         <bool>::sse_encode(self.use_magic_routing_hints, serializer);
+        <Option<crate::model::NwcOptions>>::sse_encode(self.nwc_options, serializer);
     }
 }
 
@@ -8009,6 +8502,16 @@ impl SseEncode for crate::model::LiquidNetwork {
     }
 }
 
+impl SseEncode for Vec<Arc<dyn Plugin>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <Arc<dyn Plugin>>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -8172,6 +8675,16 @@ impl SseEncode for Vec<crate::bindings::Rate> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::bindings::Rate>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<(String, String)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <(String, String)>::sse_encode(item, serializer);
         }
     }
 }
@@ -8587,6 +9100,50 @@ impl SseEncode for crate::bindings::Network {
     }
 }
 
+impl SseEncode for crate::model::NwcEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::NwcEvent::ConnectedHandled => {
+                <i32>::sse_encode(0, serializer);
+            }
+            crate::model::NwcEvent::DisconnectedHandled => {
+                <i32>::sse_encode(1, serializer);
+            }
+            crate::model::NwcEvent::PayInvoiceHandled {
+                success,
+                preimage,
+                fees_sat,
+                error,
+            } => {
+                <i32>::sse_encode(2, serializer);
+                <bool>::sse_encode(success, serializer);
+                <Option<String>>::sse_encode(preimage, serializer);
+                <Option<u64>>::sse_encode(fees_sat, serializer);
+                <Option<String>>::sse_encode(error, serializer);
+            }
+            crate::model::NwcEvent::ListTransactionsHandled => {
+                <i32>::sse_encode(3, serializer);
+            }
+            crate::model::NwcEvent::GetBalanceHandled => {
+                <i32>::sse_encode(4, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::model::NwcOptions {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.enabled, serializer);
+        <Option<Vec<String>>>::sse_encode(self.relay_urls, serializer);
+        <Option<String>>::sse_encode(self.secret_key, serializer);
+    }
+}
+
 impl SseEncode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -8675,6 +9232,16 @@ impl SseEncode for Option<crate::model::LnUrlInfo> {
     }
 }
 
+impl SseEncode for Option<crate::model::NwcOptions> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::model::NwcOptions>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::model::PayAmount> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -8751,6 +9318,16 @@ impl SseEncode for Option<u64> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <u64>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<Vec<Arc<dyn Plugin>>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <Vec<Arc<dyn Plugin>>>::sse_encode(value, serializer);
         }
     }
 }
@@ -9263,6 +9840,14 @@ impl SseEncode for crate::model::RecommendedFees {
     }
 }
 
+impl SseEncode for (String, String) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.0, serializer);
+        <String>::sse_encode(self.1, serializer);
+    }
+}
+
 impl SseEncode for crate::model::RefundRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -9385,6 +9970,11 @@ impl SseEncode for crate::model::SdkEvent {
             } => {
                 <i32>::sse_encode(9, serializer);
                 <bool>::sse_encode(did_pull_new_records, serializer);
+            }
+            crate::model::SdkEvent::NWC { details, event_id } => {
+                <i32>::sse_encode(10, serializer);
+                <crate::model::NwcEvent>::sse_encode(details, serializer);
+                <String>::sse_encode(event_id, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -9610,6 +10200,18 @@ mod io {
             unimplemented!()
         }
     }
+    impl CstDecode<Arc<dyn Plugin>> for usize {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Arc<dyn Plugin> {
+            flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(CstDecode::<
+                RustOpaqueNom<
+                    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Plugin>>,
+                >,
+            >::cst_decode(
+                self
+            ))
+        }
+    }
     impl CstDecode<BindingLiquidSdk> for usize {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> BindingLiquidSdk {
@@ -9620,6 +10222,28 @@ mod io {
             >::cst_decode(
                 self
             ))
+        }
+    }
+    impl CstDecode<std::collections::HashMap<String, String>>
+        for *mut wire_cst_list_record_string_string
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> std::collections::HashMap<String, String> {
+            let vec: Vec<(String, String)> = self.cst_decode();
+            vec.into_iter().collect()
+        }
+    }
+    impl
+        CstDecode<
+            RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Plugin>>>,
+        > for usize
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(
+            self,
+        ) -> RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc<dyn Plugin>>>
+        {
+            unsafe { decode_rust_opaque_nom(self as _) }
         }
     }
     impl
@@ -10087,6 +10711,20 @@ mod io {
             CstDecode::<crate::bindings::MessageSuccessActionData>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::NwcEvent> for *mut wire_cst_nwc_event {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::NwcEvent {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::NwcEvent>::cst_decode(*wrap).into()
+        }
+    }
+    impl CstDecode<crate::model::NwcOptions> for *mut wire_cst_nwc_options {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::NwcOptions {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::NwcOptions>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::model::PayAmount> for *mut wire_cst_pay_amount {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PayAmount {
@@ -10290,6 +10928,7 @@ mod io {
                 asset_metadata: self.asset_metadata.cst_decode(),
                 sideswap_api_key: self.sideswap_api_key.cst_decode(),
                 use_magic_routing_hints: self.use_magic_routing_hints.cst_decode(),
+                nwc_options: self.nwc_options.cst_decode(),
             }
         }
     }
@@ -10515,6 +11154,16 @@ mod io {
             }
         }
     }
+    impl CstDecode<Vec<Arc < dyn Plugin >>> for *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin {
+            // Codec=Cst (C-struct based), see doc to use other codecs
+            fn cst_decode(self) -> Vec<Arc < dyn Plugin >> {
+                let vec = unsafe {
+        let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+        flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+    };
+    vec.into_iter().map(CstDecode::cst_decode).collect()
+            }
+        }
     impl CstDecode<Vec<String>> for *mut wire_cst_list_String {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<String> {
@@ -10677,6 +11326,16 @@ mod io {
     impl CstDecode<Vec<crate::bindings::Rate>> for *mut wire_cst_list_rate {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<crate::bindings::Rate> {
+            let vec = unsafe {
+                let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
+                flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
+            };
+            vec.into_iter().map(CstDecode::cst_decode).collect()
+        }
+    }
+    impl CstDecode<Vec<(String, String)>> for *mut wire_cst_list_record_string_string {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> Vec<(String, String)> {
             let vec = unsafe {
                 let wrap = flutter_rust_bridge::for_generated::box_from_leak_ptr(self);
                 flutter_rust_bridge::for_generated::vec_from_leak_ptr(wrap.ptr, wrap.len)
@@ -11125,6 +11784,37 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::NwcEvent> for wire_cst_nwc_event {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::NwcEvent {
+            match self.tag {
+                0 => crate::model::NwcEvent::ConnectedHandled,
+                1 => crate::model::NwcEvent::DisconnectedHandled,
+                2 => {
+                    let ans = unsafe { self.kind.PayInvoiceHandled };
+                    crate::model::NwcEvent::PayInvoiceHandled {
+                        success: ans.success.cst_decode(),
+                        preimage: ans.preimage.cst_decode(),
+                        fees_sat: ans.fees_sat.cst_decode(),
+                        error: ans.error.cst_decode(),
+                    }
+                }
+                3 => crate::model::NwcEvent::ListTransactionsHandled,
+                4 => crate::model::NwcEvent::GetBalanceHandled,
+                _ => unreachable!(),
+            }
+        }
+    }
+    impl CstDecode<crate::model::NwcOptions> for wire_cst_nwc_options {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::NwcOptions {
+            crate::model::NwcOptions {
+                enabled: self.enabled.cst_decode(),
+                relay_urls: self.relay_urls.cst_decode(),
+                secret_key: self.secret_key.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::model::OnchainPaymentLimitsResponse>
         for wire_cst_onchain_payment_limits_response
     {
@@ -11519,6 +12209,12 @@ mod io {
             }
         }
     }
+    impl CstDecode<(String, String)> for wire_cst_record_string_string {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> (String, String) {
+            (self.field0.cst_decode(), self.field1.cst_decode())
+        }
+    }
     impl CstDecode<crate::model::RefundRequest> for wire_cst_refund_request {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::RefundRequest {
@@ -11657,6 +12353,13 @@ mod io {
                     let ans = unsafe { self.kind.DataSynced };
                     crate::model::SdkEvent::DataSynced {
                         did_pull_new_records: ans.did_pull_new_records.cst_decode(),
+                    }
+                }
+                10 => {
+                    let ans = unsafe { self.kind.NWC };
+                    crate::model::SdkEvent::NWC {
+                        details: ans.details.cst_decode(),
+                        event_id: ans.event_id.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -12047,6 +12750,7 @@ mod io {
                 asset_metadata: core::ptr::null_mut(),
                 sideswap_api_key: core::ptr::null_mut(),
                 use_magic_routing_hints: Default::default(),
+                nwc_options: core::ptr::null_mut(),
             }
         }
     }
@@ -12612,6 +13316,33 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_nwc_event {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: NwcEventKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_nwc_event {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_nwc_options {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                enabled: Default::default(),
+                relay_urls: core::ptr::null_mut(),
+                secret_key: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_nwc_options {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_onchain_payment_limits_response {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -12941,6 +13672,19 @@ mod io {
             Self::new_with_null_ptr()
         }
     }
+    impl NewWithNullPtr for wire_cst_record_string_string {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                field0: core::ptr::null_mut(),
+                field1: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_record_string_string {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
     impl NewWithNullPtr for wire_cst_refund_request {
         fn new_with_null_ptr() -> Self {
             Self {
@@ -13205,6 +13949,15 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_add_nwc_uri(
+        port_: i64,
+        that: usize,
+        name: *mut wire_cst_list_prim_u_8_strict,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_add_nwc_uri_impl(port_, that, name)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_backup(
         that: usize,
         req: *mut wire_cst_backup_request,
@@ -13312,6 +14065,22 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_nwc_uris(
+        port_: i64,
+        that: usize,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_list_fiat_currencies_impl(port_, that)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_nwc_uris(
+        port_: i64,
+        that: usize,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_list_nwc_uris_impl(port_, that)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_list_payments(
         port_: i64,
         that: usize,
@@ -13353,6 +14122,15 @@ mod io {
         req: *mut wire_cst_ln_url_withdraw_request,
     ) {
         wire__crate__bindings__BindingLiquidSdk_lnurl_withdraw_impl(port_, that, req)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_new_nwc_uri(
+        port_: i64,
+        that: usize,
+        name: *mut wire_cst_list_prim_u_8_strict,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_new_nwc_uri_impl(port_, that, name)
     }
 
     #[unsafe(no_mangle)]
@@ -13463,6 +14241,15 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_remove_nwc_uri(
+        port_: i64,
+        that: usize,
+        name: *mut wire_cst_list_prim_u_8_strict,
+    ) {
+        wire__crate__bindings__BindingLiquidSdk_remove_nwc_uri_impl(port_, that, name)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__BindingLiquidSdk_rescan_onchain_swaps(
         port_: i64,
         that: usize,
@@ -13532,8 +14319,9 @@ mod io {
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__connect(
         port_: i64,
         req: *mut wire_cst_connect_request,
+        plugins: *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin,
     ) {
-        wire__crate__bindings__connect_impl(port_, req)
+        wire__crate__bindings__connect_impl(port_, req, plugins)
     }
 
     #[unsafe(no_mangle)]
@@ -13549,6 +14337,24 @@ mod io {
         input: *mut wire_cst_list_prim_u_8_strict,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__bindings__parse_invoice_impl(input)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin(
+        ptr: *const std::ffi::c_void,
+    ) {
+        unsafe {
+            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Plugin >>>::increment_strong_count(ptr as _);
+        }
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin(
+        ptr: *const std::ffi::c_void,
+    ) {
+        unsafe {
+            StdArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Plugin >>>::decrement_strong_count(ptr as _);
+        }
     }
 
     #[unsafe(no_mangle)]
@@ -13827,6 +14633,20 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_nwc_event() -> *mut wire_cst_nwc_event
+    {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_nwc_event::new_with_null_ptr())
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_nwc_options(
+    ) -> *mut wire_cst_nwc_options {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(
+            wire_cst_nwc_options::new_with_null_ptr(),
+        )
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_amount(
     ) -> *mut wire_cst_pay_amount {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -13986,6 +14806,12 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_url_success_action_data::new_with_null_ptr(),
         )
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin(len: i32) -> *mut wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin{
+        let wrap = wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin { ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(Default::default(), len), len };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
     }
 
     #[unsafe(no_mangle)]
@@ -14152,6 +14978,20 @@ mod io {
         let wrap = wire_cst_list_rate {
             ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
                 <wire_cst_rate>::new_with_null_ptr(),
+                len,
+            ),
+            len,
+        };
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wrap)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_list_record_string_string(
+        len: i32,
+    ) -> *mut wire_cst_list_record_string_string {
+        let wrap = wire_cst_list_record_string_string {
+            ptr: flutter_rust_bridge::for_generated::new_leak_vec_ptr(
+                <wire_cst_record_string_string>::new_with_null_ptr(),
                 len,
             ),
             len,
@@ -14376,6 +15216,7 @@ mod io {
         asset_metadata: *mut wire_cst_list_asset_metadata,
         sideswap_api_key: *mut wire_cst_list_prim_u_8_strict,
         use_magic_routing_hints: bool,
+        nwc_options: *mut wire_cst_nwc_options,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -14561,6 +15402,13 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcdynPlugin
+    {
+        ptr: *mut usize,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_list_String {
         ptr: *mut *mut wire_cst_list_prim_u_8_strict,
         len: i32,
@@ -14671,6 +15519,12 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_list_rate {
         ptr: *mut wire_cst_rate,
+        len: i32,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_list_record_string_string {
+        ptr: *mut wire_cst_record_string_string,
         len: i32,
     }
     #[repr(C)]
@@ -15059,6 +15913,33 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_nwc_event {
+        tag: i32,
+        kind: NwcEventKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union NwcEventKind {
+        PayInvoiceHandled: wire_cst_NwcEvent_PayInvoiceHandled,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_NwcEvent_PayInvoiceHandled {
+        success: bool,
+        preimage: *mut wire_cst_list_prim_u_8_strict,
+        fees_sat: *mut u64,
+        error: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_nwc_options {
+        enabled: bool,
+        relay_urls: *mut wire_cst_list_String,
+        secret_key: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_onchain_payment_limits_response {
         send: wire_cst_limits,
         receive: wire_cst_limits,
@@ -15389,6 +16270,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_record_string_string {
+        field0: *mut wire_cst_list_prim_u_8_strict,
+        field1: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_refund_request {
         swap_address: *mut wire_cst_list_prim_u_8_strict,
         refund_address: *mut wire_cst_list_prim_u_8_strict,
@@ -15469,6 +16356,7 @@ mod io {
         PaymentWaitingConfirmation: wire_cst_SdkEvent_PaymentWaitingConfirmation,
         PaymentWaitingFeeAcceptance: wire_cst_SdkEvent_PaymentWaitingFeeAcceptance,
         DataSynced: wire_cst_SdkEvent_DataSynced,
+        NWC: wire_cst_SdkEvent_NWC,
         nil__: (),
     }
     #[repr(C)]
@@ -15515,6 +16403,12 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SdkEvent_DataSynced {
         did_pull_new_records: bool,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SdkEvent_NWC {
+        details: *mut wire_cst_nwc_event,
+        event_id: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

@@ -72,6 +72,8 @@ open class SDKNotificationService: UNNotificationServiceExtension {
             return LnurlPayInvoiceTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
         case Constants.MESSAGE_TYPE_LNURL_PAY_VERIFY:
             return LnurlPayVerifyTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
+        case Constants.MESSAGE_TYPE_NWC_EVENT:
+            return NwcEventTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
         default:
             return nil
         }

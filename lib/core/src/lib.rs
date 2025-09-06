@@ -182,6 +182,7 @@ pub mod logger;
 pub mod model;
 pub(crate) mod payjoin;
 pub mod persist;
+pub mod plugin;
 pub mod receive_swap;
 pub(crate) mod recover;
 pub mod sdk;
@@ -209,6 +210,7 @@ pub mod prelude {
     pub use crate::*;
     pub use crate::model::*;
     pub use crate::sdk::*;
+    pub use crate::plugin::*;
     pub use crate::signer::SdkSigner;
     pub use sdk_common::utils::Arc;
 }

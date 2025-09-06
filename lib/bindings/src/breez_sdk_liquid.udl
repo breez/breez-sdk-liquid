@@ -332,6 +332,12 @@ interface BlockchainExplorer {
     Esplora(string url, boolean use_waterfalls);
 };
 
+dictionary NwcOptions {
+    boolean enabled;
+    sequence<string>? relay_urls = null;
+    string? secret_key = null;
+};
+
 dictionary Config {
     BlockchainExplorer liquid_explorer;
     BlockchainExplorer bitcoin_explorer;
@@ -347,6 +353,7 @@ dictionary Config {
     u64? onchain_fee_rate_leeway_sat = null;
     sequence<AssetMetadata>? asset_metadata = null;
     string? sideswap_api_key = null;
+    NwcOptions? nwc_options = null;
 };
 
 enum LiquidNetwork {
@@ -717,6 +724,16 @@ interface SdkEvent {
     PaymentWaitingFeeAcceptance(Payment details);
     Synced();
     DataSynced(boolean did_pull_new_records);
+    NWC(NwcEvent details, string event_id);
+};
+
+[Enum]
+interface NwcEvent {
+    Connected();
+    Disconnected();
+    PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
+    ListTransactions();
+    GetBalance();
 };
 
 callback interface EventListener {
@@ -746,12 +763,17 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
+callback interface BindingPlugin {
+    void on_start(BindingLiquidSdk sdk);
+    void on_stop();
+};
+
 namespace breez_sdk_liquid {
     [Throws=SdkError]
-    BindingLiquidSdk connect(ConnectRequest req);
+    BindingLiquidSdk connect(ConnectRequest req, sequence<BindingPlugin>? plugins);
 
     [Throws=SdkError]
-    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer);
+    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer, sequence<BindingPlugin>? plugins);
 
     [Throws=SdkError]
     void set_logger(Logger logger);
@@ -908,4 +930,13 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
+
+    [Throws=SdkError]
+    string add_nwc_uri(string name);
+
+    [Throws=SdkError]
+    record<string, string> list_nwc_uris();
+
+    [Throws=SdkError]
+    void remove_nwc_uri(string name);
 };

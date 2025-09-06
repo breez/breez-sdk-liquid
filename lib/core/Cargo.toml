@@ -30,7 +30,8 @@ lwk_common = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b" }
 lwk_signer = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b", default-features = false }
 mockall = "0.13.1"
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
-tokio_with_wasm = { version = "=0.8.2", features = [
+tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
+tokio_with_wasm = { version = "0.8.2", features = [
     "macros",
     "rt",
     "sync",
@@ -64,6 +65,8 @@ esplora-client = { git = "https://github.com/breez/rust-esplora-client", branch 
     "async-https-rustls",
 ] }
 sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "2c3c4312d8fe" }
+
+nostr-sdk = { version = "0.43.0", features = ["nip44", "nip47"] }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]

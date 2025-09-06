@@ -79,6 +79,7 @@ impl SdkNodeHandle {
                 config.clone(),
                 sdk_common::prelude::PRODUCTION_BREEZSERVER_URL.to_string(),
                 signer.clone(),
+                None,
             )?;
             let persister =
                 std::sync::Arc::new(breez_sdk_liquid::persist::Persister::new_in_memory(

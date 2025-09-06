@@ -15,8 +15,8 @@ part 'bindings.freezed.dart';
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DartBindingLogger`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `enabled`, `flush`, `log`
 
-Future<BindingLiquidSdk> connect({required ConnectRequest req}) =>
-    RustLib.instance.api.crateBindingsConnect(req: req);
+Future<BindingLiquidSdk> connect({required ConnectRequest req, List<ArcPlugin>? plugins}) =>
+    RustLib.instance.api.crateBindingsConnect(req: req, plugins: plugins);
 
 /// If used, this must be called before `connect`. It can only be called once.
 Stream<LogEntry> breezLogStream() => RustLib.instance.api.crateBindingsBreezLogStream();
@@ -27,11 +27,16 @@ Config defaultConfig({required LiquidNetwork network, String? breezApiKey}) =>
 LNInvoice parseInvoice({required String input}) =>
     RustLib.instance.api.crateBindingsParseInvoice(input: input);
 
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < dyn Plugin >>>
+abstract class ArcPlugin implements RustOpaqueInterface {}
+
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BindingLiquidSdk>>
 abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<void> acceptPaymentProposedFees({required AcceptPaymentProposedFeesRequest req});
 
   Stream<SdkEvent> addEventListener();
+
+  Future<String> addNwcUri({required String name});
 
   void backup({required BackupRequest req});
 
@@ -61,6 +66,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
 
   Future<List<FiatCurrency>> listFiatCurrencies();
 
+  Future<Map<String, String>> listNwcUris();
+
   Future<List<Payment>> listPayments({required ListPaymentsRequest req});
 
   Future<List<RefundableSwap>> listRefundables();
@@ -70,6 +77,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<LnUrlPayResult> lnurlPay({required LnUrlPayRequest req});
 
   Future<LnUrlWithdrawResult> lnurlWithdraw({required LnUrlWithdrawRequest req});
+
+  Future<String> newNwcUri({required String name});
 
   Future<InputType> parse({required String input});
 
@@ -94,6 +103,8 @@ abstract class BindingLiquidSdk implements RustOpaqueInterface {
   Future<RefundResponse> refund({required RefundRequest req});
 
   Future<void> registerWebhook({required String webhookUrl});
+
+  Future<void> removeNwcUri({required String name});
 
   Future<void> rescanOnchainSwaps();
 
