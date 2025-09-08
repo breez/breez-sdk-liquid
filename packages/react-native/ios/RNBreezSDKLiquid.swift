@@ -533,6 +533,40 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(setItem:value:resolve:reject:)
+    func setItem(_ key: String, value: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try getBindingLiquidSdk().setItem(key: key, value: value)
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(getItem:resolve:reject:)
+    func getItem(_ key: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            var res = try getBindingLiquidSdk().getItem(key: key)
+            if res != nil {
+                resolve(res!)
+            } else {
+                resolve(nil)
+            }
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(removeItem:resolve:reject:)
+    func removeItem(_ key: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            try getBindingLiquidSdk().removeItem(key: key)
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

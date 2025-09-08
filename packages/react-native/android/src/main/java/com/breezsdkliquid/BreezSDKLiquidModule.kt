@@ -725,4 +725,50 @@ class BreezSDKLiquidModule(
             }
         }
     }
+
+    @ReactMethod
+    fun setItem(
+        key: String,
+        value: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().setItem(key, value)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun getItem(
+        key: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val res = getBindingLiquidSdk().getItem(key)
+                promise.resolve(res?.let { res })
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun removeItem(
+        key: String,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                getBindingLiquidSdk().removeItem(key)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

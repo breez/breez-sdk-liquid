@@ -746,8 +746,19 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
+interface PluginStorage {
+    [Throws=SdkError]
+    void set_item(string key, string value);
+
+    [Throws=SdkError]
+    string? get_item(string key);
+
+    [Throws=SdkError]
+    void remove_item(string key);
+};
+
 callback interface BindingPlugin {
-    void on_start(BindingLiquidSdk sdk);
+    void on_start(BindingLiquidSdk sdk, PluginStorage storage);
     void on_stop();
 };
 

@@ -56,7 +56,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::model::Signer;
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
-use crate::plugin::Plugin;
+use crate::plugin::{Plugin, PluginStorage};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::SubscriptionHandler;
@@ -560,7 +560,7 @@ impl LiquidSdk {
             });
         }
         for plugin in &self.plugins {
-            plugin.on_start(self.clone());
+            plugin.on_start(self.clone(), PluginStorage::new(self.persister.clone()));
         }
 
         Ok(())

@@ -42,7 +42,7 @@ impl log::Log for UniffiBindingLogger {
 }
 
 pub trait BindingPlugin: Send + Sync {
-    fn on_start(&self, sdk: Arc<BindingLiquidSdk>);
+    fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>);
     fn on_stop(&self);
 }
 
@@ -51,8 +51,9 @@ struct SdkBindingPlugin {
 }
 
 impl Plugin for SdkBindingPlugin {
-    fn on_start(&self, sdk: Arc<LiquidSdk>) {
-        self.inner.on_start(BindingLiquidSdk { sdk }.into());
+    fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage) {
+        self.inner
+            .on_start(BindingLiquidSdk { sdk }.into(), storage.into());
     }
 
     fn on_stop(&self) {
