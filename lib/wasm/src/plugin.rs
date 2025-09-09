@@ -46,6 +46,10 @@ impl PluginStorage {
 
 #[sdk_macros::async_trait]
 impl breez_sdk_liquid::prelude::Plugin for WasmPlugin {
+    fn id(&self) -> String {
+        self.plugin.id()
+    }
+
     async fn on_start(&self, sdk: Rc<LiquidSdk>, storage: breez_sdk_liquid::plugin::PluginStorage) {
         self.plugin
             .on_start(BindingLiquidSdk { sdk }, PluginStorage::new(storage));
@@ -58,6 +62,7 @@ impl breez_sdk_liquid::prelude::Plugin for WasmPlugin {
 
 #[wasm_bindgen(typescript_custom_section)]
 const PLUGIN_INTERFACE: &'static str = r#"export interface Plugin {
+    id: () => string;
     on_start: (sdk: BindingLiquidSdk, storage: PluginStorage) => void;
     on_stop: () => void;
 }"#;
@@ -66,6 +71,9 @@ const PLUGIN_INTERFACE: &'static str = r#"export interface Plugin {
 extern "C" {
     #[wasm_bindgen(typescript_type = "Plugin")]
     pub type Plugin;
+
+    #[wasm_bindgen(structural, method, js_name = id)]
+    fn id(this: &Plugin) -> String;
 
     #[wasm_bindgen(structural, method, js_name = on_start)]
     fn on_start(this: &Plugin, sdk: BindingLiquidSdk, storage: PluginStorage);

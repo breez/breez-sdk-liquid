@@ -561,7 +561,10 @@ impl LiquidSdk {
         }
         for plugin in &self.plugins {
             plugin
-                .on_start(self.clone(), PluginStorage::new(self.persister.clone()))
+                .on_start(
+                    self.clone(),
+                    PluginStorage::new(self.persister.clone(), plugin.id())?,
+                )
                 .await;
         }
 

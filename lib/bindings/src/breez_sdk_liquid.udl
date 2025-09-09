@@ -758,6 +758,7 @@ interface PluginStorage {
 };
 
 callback interface BindingPlugin {
+    string id();
     void on_start(BindingLiquidSdk sdk, PluginStorage storage);
     void on_stop();
 };
