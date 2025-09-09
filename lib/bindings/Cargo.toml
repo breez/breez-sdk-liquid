@@ -25,6 +25,8 @@ thiserror = { workspace = true }
 tokio = { version = "1", features = ["rt"] }
 once_cell = { workspace = true }
 sdk-common = { workspace = true }
+sdk-macros = { workspace = true }
+async-trait = "0.1.86"
 
 [build-dependencies]
 uniffi = { package = "uniffi", version = "0.28.0", features = [ "build" ] }

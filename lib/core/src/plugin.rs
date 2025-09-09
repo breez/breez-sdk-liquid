@@ -27,7 +27,8 @@ impl PluginStorage {
     }
 }
 
+#[sdk_macros::async_trait]
 pub trait Plugin: MaybeSend + MaybeSync {
-    fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage);
-    fn on_stop(&self);
+    async fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage);
+    async fn on_stop(&self);
 }

@@ -50,13 +50,14 @@ struct SdkBindingPlugin {
     inner: Box<dyn BindingPlugin>,
 }
 
+#[sdk_macros::async_trait]
 impl Plugin for SdkBindingPlugin {
-    fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage) {
+    async fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage) {
         self.inner
             .on_start(BindingLiquidSdk { sdk }.into(), storage.into());
     }
 
-    fn on_stop(&self) {
+    async fn on_stop(&self) {
         self.inner.on_stop();
     }
 }

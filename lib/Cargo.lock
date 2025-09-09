@@ -851,12 +851,14 @@ name = "breez-sdk-liquid-bindings"
 version = "0.10.3"
 dependencies = [
  "anyhow",
+ "async-trait",
  "breez-sdk-liquid",
  "camino",
  "glob",
  "log",
  "once_cell",
  "sdk-common",
+ "sdk-macros",
  "thiserror 1.0.69",
  "tokio",
  "uniffi 0.28.3",

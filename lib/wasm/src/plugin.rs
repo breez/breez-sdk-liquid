@@ -44,13 +44,14 @@ impl PluginStorage {
     }
 }
 
+#[sdk_macros::async_trait]
 impl breez_sdk_liquid::prelude::Plugin for WasmPlugin {
-    fn on_start(&self, sdk: Rc<LiquidSdk>, storage: breez_sdk_liquid::plugin::PluginStorage) {
+    async fn on_start(&self, sdk: Rc<LiquidSdk>, storage: breez_sdk_liquid::plugin::PluginStorage) {
         self.plugin
             .on_start(BindingLiquidSdk { sdk }, PluginStorage::new(storage));
     }
 
-    fn on_stop(&self) {
+    async fn on_stop(&self) {
         self.plugin.on_stop();
     }
 }

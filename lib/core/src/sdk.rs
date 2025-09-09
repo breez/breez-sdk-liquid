@@ -560,7 +560,9 @@ impl LiquidSdk {
             });
         }
         for plugin in &self.plugins {
-            plugin.on_start(self.clone(), PluginStorage::new(self.persister.clone()));
+            plugin
+                .on_start(self.clone(), PluginStorage::new(self.persister.clone()))
+                .await;
         }
 
         Ok(())
@@ -611,7 +613,7 @@ impl LiquidSdk {
             }
         }
         for plugin in &self.plugins {
-            plugin.on_stop();
+            plugin.on_stop().await;
         }
 
         #[cfg(all(target_family = "wasm", target_os = "unknown"))]
