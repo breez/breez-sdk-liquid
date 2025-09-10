@@ -108,6 +108,7 @@ class BreezSDKLiquidModule(
     @ReactMethod
     fun connect(
         req: ReadableMap,
+        plugins: Vec<Plugin>?,
         promise: Promise,
     ) {
         if (bindingLiquidSdk != null) {
@@ -122,7 +123,7 @@ class BreezSDKLiquidModule(
 
                 ensureWorkingDir(connectRequest.config.workingDir)
 
-                bindingLiquidSdk = connect(connectRequest)
+                bindingLiquidSdk = connect(connectRequest, plugins)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -720,52 +721,6 @@ class BreezSDKLiquidModule(
             try {
                 val res = getBindingLiquidSdk().listFiatCurrencies()
                 promise.resolve(readableArrayOf(res))
-            } catch (e: Exception) {
-                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun setItem(
-        key: String,
-        value: String,
-        promise: Promise,
-    ) {
-        executor.execute {
-            try {
-                getBindingLiquidSdk().setItem(key, value)
-                promise.resolve(readableMapOf("status" to "ok"))
-            } catch (e: Exception) {
-                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun getItem(
-        key: String,
-        promise: Promise,
-    ) {
-        executor.execute {
-            try {
-                val res = getBindingLiquidSdk().getItem(key)
-                promise.resolve(res?.let { res })
-            } catch (e: Exception) {
-                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
-            }
-        }
-    }
-
-    @ReactMethod
-    fun removeItem(
-        key: String,
-        promise: Promise,
-    ) {
-        executor.execute {
-            try {
-                getBindingLiquidSdk().removeItem(key)
-                promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
             }

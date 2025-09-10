@@ -77,7 +77,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
-    fun connect(req: ReadableMap, promise: Promise) {
+    fun connect(req: ReadableMap, plugins: Vec<Plugin>?, promise: Promise) {
         if (bindingLiquidSdk != null) {
             promise.reject("Generic", "Already initialized")
             return
@@ -89,7 +89,7 @@ class BreezSDKLiquidModule(reactContext: ReactApplicationContext) : ReactContext
 
                 ensureWorkingDir(connectRequest.config.workingDir)
 
-                bindingLiquidSdk = connect(connectRequest)
+                bindingLiquidSdk = connect(connectRequest, plugins)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
