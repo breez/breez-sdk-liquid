@@ -18,7 +18,15 @@ A new Flutter FFI plugin project.
   # paths, so Classes contains a forwarder C file that relatively imports
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files     = 'Classes/**/*'
+  s.public_header_files = 'Classes/**/*.h'
+  s.on_demand_resources = { 
+    'BreezSDKLiquid' => [
+      'Sources/BreezSDKLiquid/*.swift', 
+      'Sources/BreezSDKLiquid/**/*.swift'
+    ]
+  }
+
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
   s.swift_version = '5.0'
