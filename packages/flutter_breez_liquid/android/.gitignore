@@ -7,3 +7,8 @@
 /build
 /captures
 .cxx
+
+# Ignore Rust binaries
+src/main/jniLibs/
+src/main/kotlin/breez_sdk_liquid*
+*.tar.gz
