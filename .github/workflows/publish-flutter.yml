@@ -29,12 +29,15 @@ on:
       CARGOKIT_PRIVATE_KEY:
         description: 'Cargokit private key for signing precompiled binaries'
         required: true
+
 env:
   FLUTTER_VERSION: '3.35.3'
   PROTOC_VERSION: '30.2'
   NDK_VERSION: '23.2.8568313'
   ANDROID_MIN_SDK: '24'
   IPHONEOS_DEPLOYMENT_TARGET: '13.0'
+  CARGO_MANIFEST_DIR: '../../rust'
+  FLUTTER_PACKAGE_REPO: 'breez/breez-sdk-liquid-flutter'
 
 jobs:
   build-package:
@@ -53,7 +56,7 @@ jobs:
       - name: Checkout Flutter Package Repository
         uses: actions/checkout@v4
         with:
-          repository: breez/breez-sdk-liquid-flutter
+          repository: ${{ env.FLUTTER_PACKAGE_REPO }}
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
           path: dist
@@ -211,7 +214,7 @@ jobs:
       - name: Checkout Flutter Package Repository
         uses: actions/checkout@v4
         with:
-          repository: breez/breez-sdk-liquid-flutter
+          repository: ${{ env.FLUTTER_PACKAGE_REPO }}
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
 
@@ -253,8 +256,8 @@ jobs:
         run: |
           dart run build_tool precompile-binaries \
             --verbose \
-            --manifest-dir=../../rust \
-            --repository=breez/breez-sdk-liquid-flutter \
+            --manifest-dir=${{ env.CARGO_MANIFEST_DIR }} \
+            --repository=${{ env.FLUTTER_PACKAGE_REPO }} \
             --android-sdk-location=$ANDROID_HOME \
             --android-ndk-version=${{ env.NDK_VERSION }} \
             --android-min-sdk-version=${{ env.ANDROID_MIN_SDK }}
@@ -268,8 +271,8 @@ jobs:
         run: |
           dart run build_tool precompile-binaries \
             --verbose \
-            --manifest-dir=../../rust \
-            --repository=breez/breez-sdk-liquid-flutter
+            --manifest-dir=${{ env.CARGO_MANIFEST_DIR }} \
+            --repository=${{ env.FLUTTER_PACKAGE_REPO }}
         env:
           GITHUB_TOKEN: ${{ secrets.FLUTTER_RELEASE_TOKEN }}
           PRIVATE_KEY: ${{ secrets.CARGOKIT_PRIVATE_KEY }}
