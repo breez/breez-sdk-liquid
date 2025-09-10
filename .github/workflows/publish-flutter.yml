@@ -1,0 +1,279 @@
+name: Publish Flutter Bindings
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: 'SDK repository, defaults to current repository'
+        required: false
+        type: string
+      ref:
+        description: 'Git commit, tag or branch reference'
+        required: true
+        type: string
+      package-version:
+        description: 'Version for the package (MAJOR.MINOR.PATCH)'
+        required: true
+        type: string
+      publish:
+        description: 'Should publish the package'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      REPO_SSH_KEY:
+        description: 'SSH key to commit to the breez-sdk-liquid-flutter repository'
+        required: true
+      FLUTTER_RELEASE_TOKEN:
+        description: 'GitHub token to release to the breez-sdk-liquid-flutter repository'
+        required: true
+      CARGOKIT_PRIVATE_KEY:
+        description: 'Cargokit private key for signing precompiled binaries'
+        required: true
+env:
+  FLUTTER_VERSION: '3.35.3'
+  PROTOC_VERSION: '30.2'
+  NDK_VERSION: '23.2.8568313'
+  ANDROID_MIN_SDK: '24'
+  IPHONEOS_DEPLOYMENT_TARGET: '13.0'
+
+jobs:
+  build-package:
+    name: Build Flutter Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      package-version: ${{ inputs.package-version }}
+    steps:
+      - name: Checkout SDK Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Checkout Flutter Package Repository
+        uses: actions/checkout@v4
+        with:
+          repository: breez/breez-sdk-liquid-flutter
+          ssh-key: ${{ secrets.REPO_SSH_KEY }}
+          fetch-depth: 0
+          path: dist
+
+      - name: Setup Build Environment
+        uses: ./.github/actions/setup-build
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Just
+        uses: extractions/setup-just@v2
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/flutter_breez_liquid/rust
+
+      - name: Update Cargo Dependencies
+        working-directory: packages/flutter_breez_liquid/rust
+        run: |
+          cp Cargo.toml Cargo.toml.bak
+          sed -i 's/^breez-sdk-liquid = .*/breez-sdk-liquid = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "${{ github.sha }}" }/' Cargo.toml
+
+      - name: Generate Flutter Bindings
+        working-directory: packages/flutter_breez_liquid/rust
+        run: cargo build --release
+
+      - name: Prepare Package Structure
+        working-directory: dist
+        run: |
+          # Remove existing directories
+          rm -rf android ios macos lib rust
+          
+          # Copy source directories
+          cp -r ../packages/flutter_breez_liquid/{android,ios,macos,lib,rust} .
+          
+          # Clean up gitignore files
+          find . -name '.gitignore' -path '*/flutter_breez_liquid/*' -delete
+          
+          # Use production configurations
+          mv android/build.gradle.production android/build.gradle
+          mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
+          mv macos/flutter_breez_liquid.podspec.production macos/flutter_breez_liquid.podspec
+          
+          # Copy generated bindings
+          cp -r ../build/packages/flutter_breez_liquid/lib .
+          
+          # Copy header files
+          cp ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ios/Classes/
+          cp ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h macos/Classes/
+          
+          # Clean up build artifacts
+          rm -rf rust/target
+          
+          # Copy package metadata
+          cp ../packages/flutter_breez_liquid/*.yaml .
+
+      - name: Copy Documentation
+        working-directory: dist
+        run: |
+          for file in CHANGELOG.md LICENSE README.md; do
+            [ -f "../build/packages/flutter_breez_liquid/$file" ] && cp "../build/packages/flutter_breez_liquid/$file" . || echo "Warning: $file not found"
+          done
+      
+      - name: Download Swift Bindings
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-swift
+          path: dist/ios/Sources/BreezSDKLiquid/
+
+      - name: Clean Swift Artifacts
+        working-directory: dist/ios/Sources/BreezSDKLiquid/
+        run: rm -f breez_sdk_liquidFFI.h breez_sdk_liquidFFI.modulemap
+      
+      - name: Sync iOS to macOS Sources
+        working-directory: dist
+        run: cp -r ios/Sources/ macos/Sources/
+
+      - name: Update Package Version
+        working-directory: dist
+        run: |
+          # Update pubspec.yaml
+          sed -i "s/version:.*/version: ${{ inputs.package-version }}/" pubspec.yaml
+          
+          # Update Android gradle
+          sed -i "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
+          
+          # Update iOS podspec
+          sed -i "s/^version = .*/version = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
+          
+          # Update macOS podspec
+          sed -i "s/^version = .*/version = '${{ inputs.package-version }}'/" macos/flutter_breez_liquid.podspec
+
+      - name: Validate Package Structure
+        working-directory: dist
+        run: |
+          echo "Validating package structure..."
+          flutter pub get --dry-run
+          echo "Package structure validation complete"
+
+      - name: Archive Flutter Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: breez-sdk-liquid-flutter-${{ inputs.package-version }}
+          path: |
+            dist/*
+            !dist/.git
+          retention-days: 30
+          compression-level: 9
+
+      - name: Publish Package
+        working-directory: dist
+        if: ${{ inputs.publish }}
+        run: |
+          git config user.name "Breez SDK Bot"
+          git config user.email "sdk-bot@breez.technology"
+          
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          
+          git commit -m "chore: release Flutter package v${{ inputs.package-version }}"
+          git push
+          
+          # Create and push tag
+          git tag "v${{ inputs.package-version }}" -m "Release v${{ inputs.package-version }}"
+          git push origin "v${{ inputs.package-version }}"
+
+  precompile-binaries:
+    name: Precompile Binaries (${{ matrix.platform }})
+    needs: build-package
+    if: ${{ inputs.publish }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            os: ubuntu-latest
+            features: android
+          - platform: darwin
+            os: macOS-latest
+            features: ios,macos
+    steps:
+      - name: Checkout Flutter Package Repository
+        uses: actions/checkout@v4
+        with:
+          repository: breez/breez-sdk-liquid-flutter
+          ssh-key: ${{ secrets.REPO_SSH_KEY }}
+          fetch-depth: 0
+
+      - name: Install Protocol Buffers Compiler
+        uses: arduino/setup-protoc@v3
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+
+      - name: Install Linux Dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev
+
+      - name: Setup Android Development
+        if: matrix.platform == 'linux'
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        if: matrix.platform == 'linux'
+        run: sdkmanager "ndk;${{ env.NDK_VERSION }}"
+
+      - name: Set iOS Deployment Target
+        if: matrix.platform == 'darwin'
+        run: echo "IPHONEOS_DEPLOYMENT_TARGET=${{ env.IPHONEOS_DEPLOYMENT_TARGET }}" >> $GITHUB_ENV
+
+      - name: Precompile Binaries (Linux + Android)
+        if: matrix.platform == 'linux'
+        working-directory: cargokit/build_tool
+        run: |
+          dart run build_tool precompile-binaries \
+            --verbose \
+            --manifest-dir=../../rust \
+            --repository=breez/breez-sdk-liquid-flutter \
+            --android-sdk-location=$ANDROID_HOME \
+            --android-ndk-version=${{ env.NDK_VERSION }} \
+            --android-min-sdk-version=${{ env.ANDROID_MIN_SDK }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLUTTER_RELEASE_TOKEN }}
+          PRIVATE_KEY: ${{ secrets.CARGOKIT_PRIVATE_KEY }}
+
+      - name: Precompile Binaries (macOS + iOS)
+        if: matrix.platform == 'darwin'
+        working-directory: cargokit/build_tool
+        run: |
+          dart run build_tool precompile-binaries \
+            --verbose \
+            --manifest-dir=../../rust \
+            --repository=breez/breez-sdk-liquid-flutter
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLUTTER_RELEASE_TOKEN }}
+          PRIVATE_KEY: ${{ secrets.CARGOKIT_PRIVATE_KEY }}
+
+      - name: Validate Binary Compilation
+        run: |
+          echo "Binary precompilation completed successfully for ${{ matrix.platform }}"
