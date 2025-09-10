@@ -449,6 +449,75 @@ jobs:
             echo "No changes in git status"
           fi
 
+  flutter:
+    name: Check Flutter bindings
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.35.3
+      - run: flutter --version
+
+      - name: Set up just
+        uses: extractions/setup-just@v2
+
+      - name: Initialize the workspace
+        working-directory: packages/flutter_breez_liquid/
+        run: just init-sdk
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "27.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Install flutter_rust_bridge_codegen dependencies
+        working-directory: packages/flutter_breez_liquid/
+        run: just frb
+
+      - name: Generate Dart/Flutter bindings & Softlink C Headers
+        working-directory: packages/flutter_breez_liquid/
+        run: just codegen
+
+      - name: Build iOS Framework & Softlink C Headers
+        working-directory: packages/flutter_breez_liquid/
+        if: ${{ success() || failure() }}
+        run: just build-ios-framework
+
+      - name: Static Analysis
+        working-directory: packages/flutter_breez_liquid/
+        if: ${{ success() || failure() }}
+        run: dart analyze
+
+      - name: Check Formatting
+        working-directory: packages/flutter_breez_liquid/
+        run: dart format -o none --set-exit-if-changed -l 110 lib
+
+      # This step is added to ensure version recipe was run to update podspec files & CMake script.
+      # It does not catch the case where 'packages/flutter/pubspec.yaml' wasn't updated properly.
+      - name: Update version number on podspec files & CMake scripts
+        working-directory: packages/flutter_breez_liquid/
+        run: just version
+
+      - name: Check git status
+        env:
+          GIT_PAGER: cat
+        run: |
+          status=$(git status --porcelain)
+          if [[ -n "$status" ]]; then
+            echo "Git status has changes"
+            echo "$status"
+            git diff
+            exit 1
+          else
+            echo "No changes in git status"
+          fi
+
   # Create a new plain Rust project, add the Liquid SDK as single dependency and try to compile it.
   # This tests whether the SDK compiles with the latest version of the dependencies that can be updated.
   #
