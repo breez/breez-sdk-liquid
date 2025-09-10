@@ -80,6 +80,7 @@ use self::sync::SyncService;
 pub const DEFAULT_DATA_DIR: &str = ".data";
 /// Number of blocks to monitor a swap after its timeout block height (~14 days)
 pub const CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS: u32 = 6 * 24 * 14; // ~blocks/hour * hours/day * n_days
+pub const CHAIN_SWAP_MONITORING_PERIOD_LIQUID_BLOCKS: u32 = 60 * 24 * 14; // ~blocks/hour * hours/day * n_days
 
 /// A list of external input parsers that are used by default.
 /// To opt-out, set `use_default_external_input_parsers` in [Config] to false.
@@ -2637,6 +2638,7 @@ impl LiquidSdk {
             lockup_address: create_response.lockup_details.lockup_address,
             refund_address: None,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
+            claim_timeout_block_height: create_response.claim_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat,
@@ -2960,6 +2962,8 @@ impl LiquidSdk {
                 {
                     Some(bolt12_offer) => Ok(ReceivePaymentResponse {
                         destination: bolt12_offer.id,
+                        liquid_expiration_blockheight: None,
+                        bitcoin_expiration_blockheight: None,
                     }),
                     None => self.create_bolt12_offer(description).await,
                 }
@@ -3011,6 +3015,8 @@ impl LiquidSdk {
 
                 Ok(ReceivePaymentResponse {
                     destination: receive_destination,
+                    liquid_expiration_blockheight: None,
+                    bitcoin_expiration_blockheight: None,
                 })
             }
         }
@@ -3157,6 +3163,8 @@ impl LiquidSdk {
 
         Ok(ReceivePaymentResponse {
             destination: invoice.to_string(),
+            liquid_expiration_blockheight: Some(create_response.timeout_block_height),
+            bitcoin_expiration_blockheight: None,
         })
     }
 
@@ -3434,6 +3442,8 @@ impl LiquidSdk {
 
         Ok(ReceivePaymentResponse {
             destination: offer_str,
+            liquid_expiration_blockheight: None,
+            bitcoin_expiration_blockheight: None,
         })
     }
 
@@ -3513,6 +3523,7 @@ impl LiquidSdk {
             lockup_address: create_response.lockup_details.lockup_address,
             refund_address: None,
             timeout_block_height: create_response.lockup_details.timeout_block_height,
+            claim_timeout_block_height: create_response.claim_details.timeout_block_height,
             preimage: preimage_str,
             description: Some("Bitcoin transfer".to_string()),
             payer_amount_sat: user_lockup_amount_sat.unwrap_or(0),
@@ -3563,7 +3574,11 @@ impl LiquidSdk {
             "bitcoin:{address}?amount={amount}&label=Send%20to%20L-BTC%20address"
         ));
 
-        Ok(ReceivePaymentResponse { destination: bip21 })
+        Ok(ReceivePaymentResponse {
+            destination: bip21,
+            liquid_expiration_blockheight: Some(swap.claim_timeout_block_height),
+            bitcoin_expiration_blockheight: Some(swap.timeout_block_height),
+        })
     }
 
     /// List all failed chain swaps that need to be refunded.
@@ -3846,13 +3861,18 @@ impl LiquidSdk {
                         bitcoin_tip
                             <= swap.timeout_block_height
                                 + CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS
+                            && chain_tips.liquid_tip
+                                <= swap.claim_timeout_block_height
+                                    + CHAIN_SWAP_MONITORING_PERIOD_LIQUID_BLOCKS
                     } else {
                         bitcoin_tip <= swap.timeout_block_height
+                            && chain_tips.liquid_tip <= swap.claim_timeout_block_height
                     }
                 }
                 Direction::Outgoing => {
                     !final_swap_states.contains(&swap.state)
                         && chain_tips.liquid_tip <= swap.timeout_block_height
+                        && bitcoin_tip <= swap.claim_timeout_block_height
                 }
             })
             .map(Into::into)

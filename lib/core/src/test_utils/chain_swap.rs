@@ -70,6 +70,7 @@ pub(crate) fn new_chain_swap(
                 .to_string(),
             refund_address: None,
             timeout_block_height: 2868778,
+            claim_timeout_block_height: 1484562,
             preimage: "bbce422d96c0386c3a6c1b1fe11fc7be3fdd871c6855db6ab2e319e96ec19c78"
                 .to_string(),
             description: Some("Bitcoin transfer".to_string()),
@@ -160,6 +161,7 @@ pub(crate) fn new_chain_swap(
             lockup_address: "bc1ppavr8a6y2mnpgkv9sppphht4n6w4t6l9h8vm9lka0ej2tm0u5hjse2hkwg".to_string(),
             refund_address: None,
             timeout_block_height: 879692,
+            claim_timeout_block_height: 3211203,
             preimage: "7b9c67470e18c2cb6eadb8c78a9d4e64905ad780245d5a7015c55d378fdea782".to_string(),
             description: Some("Bitcoin transfer".to_string()),
             create_response_json: r#"{
@@ -244,6 +246,7 @@ pub(crate) fn new_chain_swap(
             lockup_address: "lq1pqv5jgrzshx2fxtfj2heael9lp0a7pkzk09v30yzgk9z8x6xjyw0hdk25fvxzs6rmhck3sty3ttn79mzrx5dp05wtfercqn29z4zquu6kp85kaqs620am".to_string(),
             refund_address: None,
             timeout_block_height: 3211648,
+            claim_timeout_block_height: 879668,
             preimage: "22e45767b017782b4d9e72dcc22031b01059b3d76338132ac877f87877930230".to_string(),
             description: Some("Bitcoin transfer".to_string()),
             create_response_json: r#"{

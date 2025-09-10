@@ -997,12 +997,10 @@ sealed class PaymentDetails with _$PaymentDetails {
     required bool autoAcceptedFees,
 
     /// The height of the Liquid block at which the swap will no longer be valid
-    /// It should always be populated in case of an outgoing chain swap
-    int? liquidExpirationBlockheight,
+    required int liquidExpirationBlockheight,
 
     /// The height of the Bitcoin block at which the swap will no longer be valid
-    /// It should always be populated in case of an incoming chain swap
-    int? bitcoinExpirationBlockheight,
+    required int bitcoinExpirationBlockheight,
 
     /// The lockup tx id that initiates the swap
     String? lockupTxId,
@@ -1552,15 +1550,30 @@ class ReceivePaymentResponse {
   /// or an invoice, depending on the [PrepareReceiveResponse] parameters
   final String destination;
 
-  const ReceivePaymentResponse({required this.destination});
+  /// The Liquid block height at which the payment will expire
+  final int? liquidExpirationBlockheight;
+
+  /// The Bitcoin block height at which the payment will expire
+  final int? bitcoinExpirationBlockheight;
+
+  const ReceivePaymentResponse({
+    required this.destination,
+    this.liquidExpirationBlockheight,
+    this.bitcoinExpirationBlockheight,
+  });
 
   @override
-  int get hashCode => destination.hashCode;
+  int get hashCode =>
+      destination.hashCode ^ liquidExpirationBlockheight.hashCode ^ bitcoinExpirationBlockheight.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ReceivePaymentResponse && runtimeType == other.runtimeType && destination == other.destination;
+      other is ReceivePaymentResponse &&
+          runtimeType == other.runtimeType &&
+          destination == other.destination &&
+          liquidExpirationBlockheight == other.liquidExpirationBlockheight &&
+          bitcoinExpirationBlockheight == other.bitcoinExpirationBlockheight;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::recommended_fees].

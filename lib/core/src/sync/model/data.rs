@@ -103,6 +103,10 @@ impl From<ChainSyncData> for ChainSwap {
             direction: val.direction,
             lockup_address: val.lockup_address,
             timeout_block_height: val.timeout_block_height,
+            claim_timeout_block_height: extract_claim_timeout_block_height(
+                &val.create_response_json,
+            )
+            .unwrap_or_default(),
             preimage: val.preimage,
             description: val.description,
             payer_amount_sat: val.payer_amount_sat,
@@ -127,6 +131,15 @@ impl From<ChainSyncData> for ChainSwap {
             metadata: Default::default(),
         }
     }
+}
+
+fn extract_claim_timeout_block_height(create_response_json: &str) -> Option<u32> {
+    let value: serde_json::Value = serde_json::from_str(create_response_json).ok()?;
+    let timeout = value
+        .get("claim_details")?
+        .get("timeoutBlockHeight")?
+        .as_u64()?;
+    u32::try_from(timeout).ok()
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -508,5 +521,27 @@ impl TryInto<Swap> for SyncData {
 fn clone_if_set<T: Clone>(s: &mut Option<T>, other: &Option<T>) {
     if other.is_some() {
         s.clone_from(other)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::chain_swap::new_chain_swap;
+
+    use super::*;
+
+    #[cfg(feature = "browser-tests")]
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[sdk_macros::test_all]
+    fn test_extract_claim_timeout_block_height() {
+        let chain_swap = new_chain_swap(Direction::Incoming, None, true, None, false, false, None);
+
+        let claim_timeout_block_height =
+            extract_claim_timeout_block_height(&chain_swap.create_response_json).unwrap();
+        assert_eq!(
+            claim_timeout_block_height,
+            chain_swap.claim_timeout_block_height
+        );
     }
 }
