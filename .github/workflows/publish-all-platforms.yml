@@ -14,7 +14,7 @@ on:
         description: 'array of packages to publish (remove what you do not want)'
         required: true
         type: string
-        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "react-native", "python", "swift", "wasm"]'
+        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "flutter", "react-native", "python", "swift", "wasm"]'
       csharp-ref:
         description: 'optional commit/tag/branch reference for the C# project. Defaults to ref.'
         required: false
@@ -47,7 +47,7 @@ on:
         description: 'array of packages to publish (remove what you do not want)'
         required: true
         type: string
-        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "react-native", "python", "swift", "wasm"]'
+        default: '["csharp", "golang", "maven", "kotlin-multiplatform", "flutter", "react-native", "python", "swift", "wasm"]'
       csharp-ref:
         description: 'optional commit/tag/branch reference for the C# project. Defaults to ref.'
         required: false
@@ -75,6 +75,7 @@ jobs:
       golang-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'golang') && inputs.package-version) || '' }}
       maven-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'maven') && inputs.package-version) || ''}}
       kotlin-multiplatform-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'kotlin-multiplatform') && inputs.package-version) || '' }}
+      flutter-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'flutter') && inputs.package-version) || '' }}
       react-native-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'react-native') && inputs.package-version) || '' }}
       python-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'python') && inputs.package-version) || '' }}
       swift-package-version: ${{ (contains(fromJSON(inputs.packages-to-publish), 'swift') && inputs.package-version) || '' }}
@@ -102,12 +103,13 @@ jobs:
       bindings-ios: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version || !!needs.pre-setup.outputs.swift-package-version }}
       bindings-wasm: ${{ !!needs.pre-setup.outputs.wasm-package-version }}
       kotlin: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version || !!needs.pre-setup.outputs.maven-package-version }}
-      swift: ${{ !!needs.pre-setup.outputs.swift-package-version }}
+      swift: ${{ !!needs.pre-setup.outputs.swift-package-version  || !!needs.pre-setup.outputs.flutter-package-version }}
       python: ${{ !!needs.pre-setup.outputs.python-package-version }}
       csharp: ${{ !!needs.pre-setup.outputs.csharp-package-version }}
       golang: ${{ !!needs.pre-setup.outputs.golang-package-version }}
       maven: ${{ !!needs.pre-setup.outputs.maven-package-version }}
       kotlin-multiplatform: ${{ !!needs.pre-setup.outputs.kotlin-multiplatform-package-version }}
+      flutter: ${{ !!needs.pre-setup.outputs.flutter-package-version }}
       react-native: ${{ !!needs.pre-setup.outputs.react-native-package-version }}
       wasm: ${{ !!needs.pre-setup.outputs.wasm-package-version }}
       ref: ${{ needs.pre-setup.outputs.ref }}
@@ -116,6 +118,7 @@ jobs:
       golang-package-version: ${{ needs.pre-setup.outputs.golang-package-version || '0.0.2' }}
       maven-package-version: ${{ needs.pre-setup.outputs.maven-package-version || '0.0.2' }}
       kotlin-multiplatform-package-version: ${{ needs.pre-setup.outputs.kotlin-multiplatform-package-version || '0.0.2' }}
+      flutter-package-version: ${{ needs.pre-setup.outputs.flutter-package-version || '0.0.2' }}
       react-native-package-version: ${{ needs.pre-setup.outputs.react-native-package-version || '0.0.2' }}
       python-package-version: ${{ needs.pre-setup.outputs.python-package-version || '0.0.2' }}
       swift-package-version: ${{ needs.pre-setup.outputs.swift-package-version || '0.0.2' }}
@@ -258,6 +261,21 @@ jobs:
     secrets:
       BREEZ_MVN_USERNAME: ${{ secrets.BREEZ_MVN_USERNAME }}
       BREEZ_MVN_PASSWORD: ${{ secrets.BREEZ_MVN_PASSWORD }}
+
+  publish-flutter:
+    needs:
+      - setup
+      - build-language-bindings
+    if: ${{ needs.setup.outputs.flutter == 'true' }}
+    uses: ./.github/workflows/publish-flutter.yml
+    with:
+      repository: ${{ needs.setup.outputs.repository }}
+      ref: ${{ needs.setup.outputs.ref }}
+      package-version: ${{ needs.setup.outputs.flutter-package-version }}
+      publish: ${{ needs.setup.outputs.publish == 'true' }}
+    secrets:
+      REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
+      SWIFT_RELEASE_TOKEN: ${{ secrets.SWIFT_RELEASE_TOKEN }}
 
   # react native version x.y.z will at runtime require
   # ios and android packages x.y.z being published already.
