@@ -40,14 +40,52 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
+pub trait Plugin: Send + Sync {
+    fn id(&self) -> String;
+    fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>);
+    fn on_stop(&self);
+}
+
+struct PluginWrapper {
+    inner: Box<dyn Plugin>,
+}
+
+#[sdk_macros::async_trait]
+impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
+    fn id(&self) -> String {
+        self.inner.id()
+    }
+
+    async fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage) {
+        self.inner
+            .on_start(BindingLiquidSdk { sdk }.into(), storage.into());
+    }
+
+    async fn on_stop(&self) {
+        self.inner.on_stop();
+    }
+}
+
 /// If used, this must be called before `connect`
 pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
     UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
 }
 
-pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
+pub fn connect(
+    req: ConnectRequest,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
+) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let sdk = LiquidSdk::connect(req).await?;
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| {
+                    Arc::new(PluginWrapper { inner: p })
+                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+                })
+                .collect()
+        });
+        let sdk = LiquidSdk::connect(req, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
 }
@@ -55,9 +93,19 @@ pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let sdk = LiquidSdk::connect_with_signer(req, signer).await?;
+        let plugins = plugins.map(|plugins| {
+            plugins
+                .into_iter()
+                .map(|p| {
+                    Arc::new(PluginWrapper { inner: p })
+                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+                })
+                .collect()
+        });
+        let sdk = LiquidSdk::connect_with_signer(req, signer, plugins).await?;
         Ok(Arc::from(BindingLiquidSdk { sdk }))
     })
 }
