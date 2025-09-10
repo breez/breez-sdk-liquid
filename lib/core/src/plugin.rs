@@ -1,12 +1,26 @@
 use anyhow::{bail, Result};
 use maybe_sync::{MaybeSend, MaybeSync};
 
-use crate::{error::SdkResult, persist::Persister, sdk::LiquidSdk};
+use crate::{persist::Persister, sdk::LiquidSdk};
 use sdk_common::utils::Arc;
 
 pub struct PluginStorage {
     plugin_id: String,
     persister: std::sync::Arc<Persister>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum PluginStorageError {
+    #[error("Could not write to plugin storage: {err}")]
+    Generic { err: String },
+}
+
+impl From<anyhow::Error> for PluginStorageError {
+    fn from(value: anyhow::Error) -> Self {
+        Self::Generic {
+            err: value.to_string(),
+        }
+    }
 }
 
 impl PluginStorage {
@@ -26,21 +40,21 @@ impl PluginStorage {
         format!("{}-{}", self.plugin_id, key)
     }
 
-    pub fn set_item(&self, key: String, value: String) -> SdkResult<()> {
+    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
         let scoped_key = self.scoped_key(key);
         self.persister
             .update_cached_item(&scoped_key, value)
             .map_err(Into::into)
     }
 
-    pub fn get_item(&self, key: String) -> SdkResult<Option<String>> {
+    pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
         let scoped_key = self.scoped_key(key);
         self.persister
             .get_cached_item(&scoped_key)
             .map_err(Into::into)
     }
 
-    pub fn remove_item(&self, key: String) -> SdkResult<()> {
+    pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
         let scoped_key = self.scoped_key(key);
         self.persister
             .delete_cached_item(&scoped_key)

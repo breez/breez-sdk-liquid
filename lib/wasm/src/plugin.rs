@@ -1,9 +1,9 @@
 use std::rc::Rc;
 
-use breez_sdk_liquid::sdk::LiquidSdk;
+use breez_sdk_liquid::{plugin::PluginStorageError, sdk::LiquidSdk};
 use wasm_bindgen::prelude::*;
 
-use crate::{model::WasmResult, BindingLiquidSdk};
+use crate::{error::WasmError, model::WasmResult, BindingLiquidSdk};
 
 pub struct WasmPlugin {
     pub plugin: Plugin,
@@ -23,6 +23,12 @@ pub struct PluginStorage {
 impl PluginStorage {
     fn new(inner: breez_sdk_liquid::plugin::PluginStorage) -> Self {
         Self { inner }
+    }
+}
+
+impl From<PluginStorageError> for WasmError {
+    fn from(value: PluginStorageError) -> Self {
+        Self::new(value.to_string())
     }
 }
 
