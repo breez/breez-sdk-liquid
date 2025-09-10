@@ -41,18 +41,18 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
-pub trait BindingPlugin: Send + Sync {
+pub trait Plugin: Send + Sync {
     fn id(&self) -> String;
     fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>);
     fn on_stop(&self);
 }
 
-struct SdkBindingPlugin {
-    inner: Box<dyn BindingPlugin>,
+struct PluginWrapper {
+    inner: Box<dyn Plugin>,
 }
 
 #[sdk_macros::async_trait]
-impl Plugin for SdkBindingPlugin {
+impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
     fn id(&self) -> String {
         self.inner.id()
     }
@@ -74,13 +74,16 @@ pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
 
 pub fn connect(
     req: ConnectRequest,
-    plugins: Option<Vec<Box<dyn BindingPlugin>>>,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
         let plugins = plugins.map(|plugins| {
             plugins
                 .into_iter()
-                .map(|p| Arc::new(SdkBindingPlugin { inner: p }) as Arc<dyn Plugin>)
+                .map(|p| {
+                    Arc::new(PluginWrapper { inner: p })
+                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+                })
                 .collect()
         });
         let sdk = LiquidSdk::connect(req, plugins).await?;
@@ -91,13 +94,16 @@ pub fn connect(
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
-    plugins: Option<Vec<Box<dyn BindingPlugin>>>,
+    plugins: Option<Vec<Box<dyn Plugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
         let plugins = plugins.map(|plugins| {
             plugins
                 .into_iter()
-                .map(|p| Arc::new(SdkBindingPlugin { inner: p }) as Arc<dyn Plugin>)
+                .map(|p| {
+                    Arc::new(PluginWrapper { inner: p })
+                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+                })
                 .collect()
         });
         let sdk = LiquidSdk::connect_with_signer(req, signer, plugins).await?;

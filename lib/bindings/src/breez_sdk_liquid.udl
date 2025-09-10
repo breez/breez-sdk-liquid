@@ -757,7 +757,7 @@ interface PluginStorage {
     void remove_item(string key);
 };
 
-callback interface BindingPlugin {
+callback interface Plugin {
     string id();
     void on_start(BindingLiquidSdk sdk, PluginStorage storage);
     void on_stop();
@@ -765,10 +765,10 @@ callback interface BindingPlugin {
 
 namespace breez_sdk_liquid {
     [Throws=SdkError]
-    BindingLiquidSdk connect(ConnectRequest req, sequence<BindingPlugin>? plugins);
+    BindingLiquidSdk connect(ConnectRequest req, sequence<Plugin>? plugins);
 
     [Throws=SdkError]
-    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer, sequence<BindingPlugin>? plugins);
+    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer, sequence<Plugin>? plugins);
 
     [Throws=SdkError]
     void set_logger(Logger logger);
