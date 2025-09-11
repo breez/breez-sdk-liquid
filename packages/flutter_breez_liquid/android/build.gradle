@@ -1,7 +1,5 @@
 version '0.10.3' // generated; do not edit
-
 group 'com.flutter_rust_bridge.flutter_breez_liquid'
-version '1.0'
 
 buildscript {
     repositories {
