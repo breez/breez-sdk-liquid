@@ -4,7 +4,7 @@ version = '0.10.3' # generated; do not edit
 #
 Pod::Spec.new do |s|
   s.name             = 'flutter_breez_liquid'
-  s.version          = '0.0.1'
+  s.version          = "#{version}"
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
