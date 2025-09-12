@@ -59,6 +59,12 @@ pub enum BlockchainExplorer {
     },
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum WalletPolicy {
+    Singlesig,
+    Multisig { threshold: u32, xpubs: Vec<String> },
+}
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
@@ -103,6 +109,8 @@ pub struct Config {
     pub sideswap_api_key: Option<String>,
     /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
     pub use_magic_routing_hints: bool,
+
+    pub wallet_policy: WalletPolicy,
 }
 
 impl Config {
@@ -127,6 +135,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -152,6 +161,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -176,6 +186,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -201,6 +212,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -225,6 +237,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: None,
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -250,6 +263,7 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: None,
             use_magic_routing_hints: true,
+            wallet_policy: WalletPolicy::Singlesig,
         }
     }
 
@@ -562,6 +576,18 @@ pub trait Signer: MaybeSend + MaybeSync {
 
     /// Decrypts a message using (ECIES)[ecies::decrypt]
     fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
+}
+
+pub trait GenericSigner: Signer {
+    fn sign(&self, pset: String) -> Result<(String, u32), SignerError>;
+
+    fn clone_box(&self) -> Box<dyn GenericSigner>;
+}
+
+impl Clone for Box<dyn GenericSigner> {
+    fn clone(&self) -> Box<dyn GenericSigner> {
+        self.clone_box()
+    }
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
@@ -954,7 +980,9 @@ impl WalletInfo {
         if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
             ensure_sdk!(
                 amount_sat + fees_sat <= self.balance_sat,
-                PaymentError::InsufficientFunds
+                PaymentError::InsufficientFunds {
+                    missing_sats: (amount_sat + fees_sat) - self.balance_sat
+                }
             );
         } else {
             match self
@@ -964,9 +992,15 @@ impl WalletInfo {
             {
                 Some(asset_balance) => ensure_sdk!(
                     amount_sat <= asset_balance.balance_sat && fees_sat <= self.balance_sat,
-                    PaymentError::InsufficientFunds
+                    PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat - asset_balance.balance_sat
+                    }
                 ),
-                None => return Err(PaymentError::InsufficientFunds),
+                None => {
+                    return Err(PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat,
+                    })
+                }
             }
         }
         Ok(())
