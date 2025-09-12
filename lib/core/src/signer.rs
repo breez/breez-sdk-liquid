@@ -24,7 +24,7 @@ use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
 use lwk_wollet::secp256k1::Message;
 
-use crate::model::{Signer, SignerError};
+use crate::model::{PsbtSigner, Signer, SignerError};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SignError {
@@ -66,6 +66,7 @@ pub enum NewError {
 /// A software signer
 pub struct SdkLwkSigner {
     sdk_signer: Arc<Box<dyn Signer>>,
+    psbt_sdk_signer: Option<Arc<Box<dyn PsbtSigner>>>,
 }
 
 impl SdkLwkSigner {
@@ -73,8 +74,14 @@ impl SdkLwkSigner {
     ///
     /// Takes also a flag if the network is mainnet so that generated extended keys are in the
     /// correct form xpub/tpub (there is no need to discriminate between regtest and testnet)
-    pub fn new(sdk_signer: Arc<Box<dyn Signer>>) -> Result<Self, NewError> {
-        Ok(Self { sdk_signer })
+    pub fn new(
+        sdk_signer: Arc<Box<dyn Signer>>,
+        psbt_sdk_signer: Option<Arc<Box<dyn PsbtSigner>>>,
+    ) -> Result<Self, NewError> {
+        Ok(Self {
+            sdk_signer,
+            psbt_sdk_signer,
+        })
     }
 
     pub(crate) fn xpub(&self) -> Result<Xpub, SignError> {
@@ -315,7 +322,7 @@ mod tests {
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {
         let sw_signer = SwSigner::new(mnemonic, false).unwrap();
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
-        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
+        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer), None).unwrap();
         (sw_signer, sdk_signer)
     }
 
@@ -485,7 +492,7 @@ mod tests {
 
         // 2. Create a wallet using SdkLwkSigner
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
-        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
+        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer), None).unwrap();
         let sdk_wallet = Wollet::new(
             network,
             NoPersist::new(),

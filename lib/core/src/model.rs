@@ -544,6 +544,11 @@ pub trait Signer: Send + Sync {
     fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
+pub trait PsbtSigner: MaybeSend + MaybeSync {
+    fn sign(&self, pset: String) -> Result<(String, u32), SignerError>;
+    fn sign_policy(&self) -> SignerPolicy;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
 /// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
 pub struct ConnectRequest {
