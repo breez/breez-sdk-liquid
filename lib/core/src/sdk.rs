@@ -103,6 +103,7 @@ pub(crate) const NETWORK_PROPAGATION_GRACE_PERIOD: Duration = Duration::from_sec
 pub struct LiquidSdkBuilder {
     config: Config,
     signer: Arc<Box<dyn Signer>>,
+    psbt_signer: Option<Arc<Box<dyn PsbtSigner>>>,
     breez_server: Arc<BreezServer>,
     bitcoin_chain_service: Option<Arc<dyn BitcoinChainService>>,
     liquid_chain_service: Option<Arc<dyn LiquidChainService>>,
@@ -123,11 +124,13 @@ impl LiquidSdkBuilder {
         config: Config,
         server_url: String,
         signer: Arc<Box<dyn Signer>>,
+        psbt_signer: Option<Arc<Box<dyn PsbtSigner>>>,
     ) -> Result<LiquidSdkBuilder> {
         let breez_server = Arc::new(BreezServer::new(server_url, None)?);
         Ok(LiquidSdkBuilder {
             config,
             signer,
+            psbt_signer,
             breez_server,
             bitcoin_chain_service: None,
             liquid_chain_service: None,
@@ -257,6 +260,7 @@ impl LiquidSdkBuilder {
                     self.config.clone(),
                     persister.clone(),
                     self.signer.clone(),
+                    self.psbt_signer.clone(),
                 )
                 .await?,
             ),
@@ -441,6 +445,7 @@ impl LiquidSdk {
             ConnectWithSignerRequest { config: req.config },
             Box::new(signer),
             plugins,
+            None,
         )
         .inspect_err(|e| error!("Failed to connect: {e:?}"))
         .await
@@ -463,16 +468,23 @@ impl LiquidSdk {
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
         plugins: Option<Vec<Arc<dyn Plugin>>>,
+        psbt_signer: Option<Box<dyn PsbtSigner>>,
     ) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
 
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
 
+        let psbt_signer = match psbt_signer {
+            Some(signer) => Some(Arc::new(signer)),
+            None => None,
+        };
+
         let mut builder = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
+            psbt_signer,
         )?;
 
         if let Some(plugins) = plugins {
