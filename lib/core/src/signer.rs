@@ -24,7 +24,7 @@ use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
 use lwk_wollet::secp256k1::Message;
 
-use crate::model::{PsbtSigner, Signer, SignerError};
+use crate::model::{PsbtSigner, Signer, SignerError, SignerPolicy};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SignError {
@@ -101,6 +101,13 @@ impl SdkLwkSigner {
             .sdk_signer
             .sign_ecdsa_recoverable(msg.as_ref().to_vec())?;
         Ok(sig_bytes)
+    }
+
+    pub fn sign_policy(&self) -> SignerPolicy {
+        match &self.psbt_sdk_signer {
+            Some(signer) => signer.sign_policy(),
+            None => SignerPolicy::Singlesig,
+        }
     }
 }
 
@@ -290,6 +297,8 @@ impl Signer for SdkSigner {
 
 #[cfg(test)]
 mod tests {
+    use crate::model::SignerPolicy;
+
     use super::*;
     use bip32::KeySource;
     use bip39::rand::{self, RngCore};
@@ -298,24 +307,60 @@ mod tests {
         pset::{Input, Output, PartiallySignedTransaction},
         AssetId, TxOut, Txid,
     };
-    use lwk_common::{singlesig_desc, Singlesig};
+    use lwk_common::{multisig_desc, singlesig_desc, DescriptorBlindingKey, Multisig, Singlesig};
     use lwk_signer::SwSigner;
     use lwk_wollet::{
         elements::{self, Script},
         ElementsNetwork, NoPersist, Wollet, WolletDescriptor,
     };
-    use std::collections::BTreeMap;
+    use std::{collections::BTreeMap, str::FromStr};
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    fn get_descriptor<S: LwkSigner>(signer: &S) -> Result<WolletDescriptor, anyhow::Error> {
-        let descriptor_str = singlesig_desc(
-            signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Slip77,
-        )
-        .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?;
+    fn get_descriptor<S: LwkSigner>(
+        signer: &S,
+        signer_policy: SignerPolicy,
+    ) -> Result<WolletDescriptor, anyhow::Error> {
+        let descriptor_str = match signer_policy {
+            SignerPolicy::Singlesig => singlesig_desc(
+                signer,
+                Singlesig::Wpkh,
+                lwk_common::DescriptorBlindingKey::Slip77,
+            )
+            .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?,
+            SignerPolicy::Multisig { threshold, xpubs } => {
+                if xpubs.len() < (threshold as usize) || threshold == 0 {
+                    return Err(anyhow!(
+                        "Invalid multisig policy: threshold={}, xpubs={}",
+                        threshold,
+                        xpubs.len()
+                    )
+                    .into());
+                }
+
+                let xpubs = xpubs
+                    .into_iter()
+                    .map(|xpub| {
+                        (
+                            None,
+                            Xpub::from_str(&xpub)
+                                .map_err(|e| anyhow!("Invalid Xpub: {e}"))
+                                .unwrap(),
+                        )
+                    })
+                    .collect();
+
+                multisig_desc(
+                    threshold,
+                    xpubs,
+                    Multisig::Wsh,
+                    DescriptorBlindingKey::Elip151,
+                )
+                .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
+            }
+        };
+
         Ok(descriptor_str.parse()?)
     }
 
@@ -486,7 +531,7 @@ mod tests {
         let sw_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sw_signer).unwrap(),
+            get_descriptor(&sw_signer, SignerPolicy::Singlesig).unwrap(),
         )
         .unwrap();
 
@@ -496,7 +541,7 @@ mod tests {
         let sdk_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sdk_signer).unwrap(),
+            get_descriptor(&sdk_signer, SignerPolicy::Singlesig).unwrap(),
         )
         .unwrap();
 
