@@ -60,6 +60,12 @@ pub enum BlockchainExplorer {
     },
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum SignerPolicy {
+    Singlesig,
+    Multisig { threshold: u32, xpubs: Vec<String> },
+}
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
