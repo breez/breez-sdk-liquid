@@ -23,7 +23,7 @@ use sdk_common::lightning::util::message_signing::verify;
 use tokio::sync::Mutex;
 use web_time::Instant;
 
-use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
+use crate::model::{BlockchainExplorer, PsbtSigner, Signer, BREEZ_LIQUID_ESPLORA_URL};
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{ensure_sdk, error::PaymentError, model::Config};
@@ -195,8 +195,9 @@ impl LiquidOnchainWallet {
         config: Config,
         persister: std::sync::Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
+        psbt_signer: Option<Arc<Box<dyn PsbtSigner>>>,
     ) -> Result<Self> {
-        let signer = SdkLwkSigner::new(user_signer.clone())?;
+        let signer = SdkLwkSigner::new(user_signer.clone(), psbt_signer)?;
 
         let wallet_cache_persister: Arc<dyn WalletCachePersister> =
             Arc::new(SqliteWalletCachePersister::new(
@@ -607,7 +608,7 @@ mod tests {
         create_persister!(storage);
 
         let wallet: Arc<dyn OnchainWallet> = Arc::new(
-            LiquidOnchainWallet::new(config, storage, sdk_signer.clone())
+            LiquidOnchainWallet::new(config, storage, sdk_signer.clone(), None)
                 .await
                 .unwrap(),
         );
