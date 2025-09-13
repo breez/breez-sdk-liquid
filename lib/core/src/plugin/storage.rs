@@ -4,6 +4,7 @@ use std::sync::{Arc, Weak};
 
 use crate::persist::Persister;
 
+#[derive(Clone)]
 pub struct PluginStorage {
     plugin_id: String,
     persister: Weak<Persister>,

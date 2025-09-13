@@ -470,6 +470,7 @@ pub(crate) async fn handle_command(
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
                     amount,
+                    disable_mrh: None,
                 })
                 .await?;
 

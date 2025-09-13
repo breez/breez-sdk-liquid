@@ -508,6 +508,24 @@ pub enum SdkEvent {
         /// Indicates new data was pulled from other instances.
         did_pull_new_records: bool,
     },
+    NWC {
+        event_id: String,
+        details: NwcEvent,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum NwcEvent {
+    ConnectedHandled,
+    DisconnectedHandled,
+    PayInvoiceHandled {
+        success: bool,
+        preimage: Option<String>,
+        fees_sat: Option<u64>,
+        error: Option<String>,
+    },
+    ListTransactionsHandled,
+    GetBalanceHandled,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -728,6 +746,8 @@ pub struct PrepareSendRequest {
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
+    /// If set to true, the payment will be sent without magic routing hints
+    pub disable_mrh: Option<bool>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -767,6 +787,8 @@ pub struct PrepareSendResponse {
     /// The amount of funds required (in satoshi) to execute a SideSwap payment, excluding fees.
     /// Only present when [PayAmount::Asset::pay_with_bitcoin] is set to `true`.
     pub exchange_amount_sat: Option<u64>,
+    /// If set to true, the payment will be sent without magic routing hints
+    pub disable_mrh: Option<bool>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

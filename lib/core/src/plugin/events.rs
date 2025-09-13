@@ -2,6 +2,7 @@ use crate::{event::EventManager, model::SdkEvent};
 use log::warn;
 use sdk_common::utils::Weak;
 
+#[derive(Clone)]
 pub struct PluginEventEmitter {
     event_manager: Weak<EventManager>,
 }

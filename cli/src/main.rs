@@ -1,10 +1,12 @@
 mod commands;
 mod persist;
 
+use std::sync::Arc;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::{NwcConfig, SdkNwcService};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
@@ -105,6 +107,10 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
+    let nwc_plugin = Arc::new(SdkNwcService::new(NwcConfig {
+        relay_urls: None,
+        secret_key_hex: None,
+    }));
     let sdk = LiquidSdk::connect(
         ConnectRequest {
             config,
@@ -112,7 +118,7 @@ async fn main() -> Result<()> {
             passphrase,
             seed: None,
         },
-        None,
+        Some(vec![nwc_plugin]),
     )
     .await?;
     let listener_id = sdk
