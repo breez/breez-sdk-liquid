@@ -744,6 +744,22 @@ class LogEntry {
       other is LogEntry && runtimeType == other.runtimeType && line == other.line && level == other.level;
 }
 
+@freezed
+sealed class NwcEvent with _$NwcEvent {
+  const NwcEvent._();
+
+  const factory NwcEvent.connectedHandled() = NwcEvent_ConnectedHandled;
+  const factory NwcEvent.disconnectedHandled() = NwcEvent_DisconnectedHandled;
+  const factory NwcEvent.payInvoiceHandled({
+    required bool success,
+    String? preimage,
+    BigInt? feesSat,
+    String? error,
+  }) = NwcEvent_PayInvoiceHandled;
+  const factory NwcEvent.listTransactionsHandled() = NwcEvent_ListTransactionsHandled;
+  const factory NwcEvent.getBalanceHandled() = NwcEvent_GetBalanceHandled;
+}
+
 /// Returned when calling [crate::sdk::LiquidSdk::fetch_onchain_limits].
 class OnchainPaymentLimitsResponse {
   /// Amount limits for a Send Onchain Payment to be valid
@@ -1715,6 +1731,7 @@ sealed class SdkEvent with _$SdkEvent {
     /// Indicates new data was pulled from other instances.
     required bool didPullNewRecords,
   }) = SdkEvent_DataSynced;
+  const factory SdkEvent.nwc({required String eventId, required NwcEvent details}) = SdkEvent_NWC;
 }
 
 @freezed

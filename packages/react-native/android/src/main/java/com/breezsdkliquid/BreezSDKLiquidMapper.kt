@@ -3502,6 +3502,68 @@ fun asNetworkList(arr: ReadableArray): List<Network> {
     return list
 }
 
+fun asNwcEvent(nwcEvent: ReadableMap): NwcEvent? {
+    val type = nwcEvent.getString("type")
+
+    if (type == "connectedHandled") {
+        return NwcEvent.ConnectedHandled
+    }
+    if (type == "disconnectedHandled") {
+        return NwcEvent.DisconnectedHandled
+    }
+    if (type == "payInvoiceHandled") {
+        val success = nwcEvent.getBoolean("success")
+        val preimage = if (hasNonNullKey(nwcEvent, "preimage")) nwcEvent.getString("preimage") else null
+        val feesSat = if (hasNonNullKey(nwcEvent, "feesSat")) nwcEvent.getDouble("feesSat").toULong() else null
+        val error = if (hasNonNullKey(nwcEvent, "error")) nwcEvent.getString("error") else null
+        return NwcEvent.PayInvoiceHandled(success, preimage, feesSat, error)
+    }
+    if (type == "listTransactionsHandled") {
+        return NwcEvent.ListTransactionsHandled
+    }
+    if (type == "getBalanceHandled") {
+        return NwcEvent.GetBalanceHandled
+    }
+    return null
+}
+
+fun readableMapOf(nwcEvent: NwcEvent): ReadableMap? {
+    val map = Arguments.createMap()
+    when (nwcEvent) {
+        is NwcEvent.ConnectedHandled -> {
+            pushToMap(map, "type", "connectedHandled")
+        }
+        is NwcEvent.DisconnectedHandled -> {
+            pushToMap(map, "type", "disconnectedHandled")
+        }
+        is NwcEvent.PayInvoiceHandled -> {
+            pushToMap(map, "type", "payInvoiceHandled")
+            pushToMap(map, "success", nwcEvent.success)
+            pushToMap(map, "preimage", nwcEvent.preimage)
+            pushToMap(map, "feesSat", nwcEvent.feesSat)
+            pushToMap(map, "error", nwcEvent.error)
+        }
+        is NwcEvent.ListTransactionsHandled -> {
+            pushToMap(map, "type", "listTransactionsHandled")
+        }
+        is NwcEvent.GetBalanceHandled -> {
+            pushToMap(map, "type", "getBalanceHandled")
+        }
+    }
+    return map
+}
+
+fun asNwcEventList(arr: ReadableArray): List<NwcEvent> {
+    val list = ArrayList<NwcEvent>()
+    for (value in arr.toList()) {
+        when (value) {
+            is ReadableMap -> list.add(asNwcEvent(value)!!)
+            else -> throw SdkException.Generic(errUnexpectedType(value))
+        }
+    }
+    return list
+}
+
 fun asPayAmount(payAmount: ReadableMap): PayAmount? {
     val type = payAmount.getString("type")
 
@@ -3879,6 +3941,11 @@ fun asSdkEvent(sdkEvent: ReadableMap): SdkEvent? {
         val didPullNewRecords = sdkEvent.getBoolean("didPullNewRecords")
         return SdkEvent.DataSynced(didPullNewRecords)
     }
+    if (type == "nwc") {
+        val eventId = sdkEvent.getString("eventId")!!
+        val details = sdkEvent.getMap("details")?.let { asNwcEvent(it) }!!
+        return SdkEvent.NWC(eventId, details)
+    }
     return null
 }
 
@@ -3923,6 +3990,11 @@ fun readableMapOf(sdkEvent: SdkEvent): ReadableMap? {
         is SdkEvent.DataSynced -> {
             pushToMap(map, "type", "dataSynced")
             pushToMap(map, "didPullNewRecords", sdkEvent.didPullNewRecords)
+        }
+        is SdkEvent.NWC -> {
+            pushToMap(map, "type", "nwc")
+            pushToMap(map, "eventId", sdkEvent.eventId)
+            pushToMap(map, "details", readableMapOf(sdkEvent.details))
         }
     }
     return map

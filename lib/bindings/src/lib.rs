@@ -40,9 +40,65 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
+pub struct PluginEventEmitter {
+    event_emitter: breez_sdk_liquid::prelude::PluginEventEmitter,
+}
+
+impl PluginEventEmitter {
+    pub fn broadcast(&self, e: SdkEvent) {
+        rt().block_on(async {
+            self.event_emitter.broadcast(e).await;
+        })
+    }
+}
+
+pub trait EventListener: Send + Sync {
+    fn on_event(&self, e: SdkEvent);
+}
+
+struct EventListenerWrapper {
+    inner: Box<dyn EventListener>,
+}
+
+impl EventListenerWrapper {
+    pub(crate) fn new(inner: Box<dyn EventListener>) -> Self {
+        Self { inner }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl breez_sdk_liquid::prelude::EventListener for EventListenerWrapper {
+    async fn on_event(&self, e: SdkEvent) {
+        self.inner.on_event(e);
+    }
+}
+
+pub struct PluginStorage {
+    pub(crate) storage: breez_sdk_liquid::prelude::PluginStorage,
+}
+
+impl PluginStorage {
+    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
+        self.storage.set_item(&key, value)
+    }
+
+    pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
+        self.storage.get_item(&key)
+    }
+
+    pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
+        self.storage.remove_item(&key)
+    }
+}
+
 pub trait Plugin: Send + Sync {
     fn id(&self) -> String;
-    fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>);
+    fn on_start(
+        &self,
+        sdk: Arc<BindingLiquidSdk>,
+        storage: Arc<PluginStorage>,
+        event_emitter: Arc<PluginEventEmitter>,
+    );
     fn on_stop(&self);
 }
 
@@ -56,9 +112,17 @@ impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
         self.inner.id()
     }
 
-    async fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage) {
-        self.inner
-            .on_start(BindingLiquidSdk { sdk }.into(), storage.into());
+    async fn on_start(
+        &self,
+        sdk: Arc<LiquidSdk>,
+        storage: breez_sdk_liquid::prelude::PluginStorage,
+        event_emitter: breez_sdk_liquid::prelude::PluginEventEmitter,
+    ) {
+        self.inner.on_start(
+            BindingLiquidSdk { sdk }.into(),
+            PluginStorage { storage }.into(),
+            PluginEventEmitter { event_emitter }.into(),
+        );
     }
 
     async fn on_stop(&self) {
@@ -127,6 +191,8 @@ pub struct BindingLiquidSdk {
 
 impl BindingLiquidSdk {
     pub fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {
+        let listener: Box<dyn breez_sdk_liquid::prelude::EventListener> =
+            Box::new(EventListenerWrapper::new(listener));
         rt().block_on(self.sdk.add_event_listener(listener))
     }
 

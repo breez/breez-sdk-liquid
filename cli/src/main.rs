@@ -57,8 +57,9 @@ fn show_results(result: Result<String>) -> Result<()> {
 
 struct CliEventListener {}
 
+#[async_trait::async_trait]
 impl EventListener for CliEventListener {
-    fn on_event(&self, e: SdkEvent) {
+    async fn on_event(&self, e: SdkEvent) {
         info!("Received event: {e:?}");
     }
 }

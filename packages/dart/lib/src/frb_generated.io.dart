@@ -94,9 +94,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BackupRequest dco_decode_backup_request(dynamic raw);
 
   @protected
-  BindingEventListener dco_decode_binding_event_listener(dynamic raw);
-
-  @protected
   BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw);
 
   @protected
@@ -128,9 +125,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw);
-
-  @protected
-  BindingEventListener dco_decode_box_autoadd_binding_event_listener(dynamic raw);
 
   @protected
   BitcoinAddressData dco_decode_box_autoadd_bitcoin_address_data(dynamic raw);
@@ -211,6 +205,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MessageSuccessActionData dco_decode_box_autoadd_message_success_action_data(dynamic raw);
 
   @protected
+  NwcEvent dco_decode_box_autoadd_nwc_event(dynamic raw);
+
+  @protected
   PayAmount dco_decode_box_autoadd_pay_amount(dynamic raw);
 
   @protected
@@ -248,9 +245,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RestoreRequest dco_decode_box_autoadd_restore_request(dynamic raw);
-
-  @protected
-  SdkEvent dco_decode_box_autoadd_sdk_event(dynamic raw);
 
   @protected
   SendPaymentRequest dco_decode_box_autoadd_send_payment_request(dynamic raw);
@@ -476,6 +470,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Network dco_decode_network(dynamic raw);
+
+  @protected
+  NwcEvent dco_decode_nwc_event(dynamic raw);
 
   @protected
   OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw);
@@ -765,9 +762,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BackupRequest sse_decode_backup_request(SseDeserializer deserializer);
 
   @protected
-  BindingEventListener sse_decode_binding_event_listener(SseDeserializer deserializer);
-
-  @protected
   BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer);
 
   @protected
@@ -805,9 +799,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer);
-
-  @protected
-  BindingEventListener sse_decode_box_autoadd_binding_event_listener(SseDeserializer deserializer);
 
   @protected
   BitcoinAddressData sse_decode_box_autoadd_bitcoin_address_data(SseDeserializer deserializer);
@@ -892,6 +883,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   MessageSuccessActionData sse_decode_box_autoadd_message_success_action_data(SseDeserializer deserializer);
 
   @protected
+  NwcEvent sse_decode_box_autoadd_nwc_event(SseDeserializer deserializer);
+
+  @protected
   PayAmount sse_decode_box_autoadd_pay_amount(SseDeserializer deserializer);
 
   @protected
@@ -929,9 +923,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RestoreRequest sse_decode_box_autoadd_restore_request(SseDeserializer deserializer);
-
-  @protected
-  SdkEvent sse_decode_box_autoadd_sdk_event(SseDeserializer deserializer);
 
   @protected
   SendPaymentRequest sse_decode_box_autoadd_send_payment_request(SseDeserializer deserializer);
@@ -1161,6 +1152,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Network sse_decode_network(SseDeserializer deserializer);
+
+  @protected
+  NwcEvent sse_decode_nwc_event(SseDeserializer deserializer);
 
   @protected
   OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer);
@@ -1480,16 +1474,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  ffi.Pointer<wire_cst_binding_event_listener> cst_encode_box_autoadd_binding_event_listener(
-    BindingEventListener raw,
-  ) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_binding_event_listener();
-    cst_api_fill_to_wire_binding_event_listener(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
   ffi.Pointer<wire_cst_bitcoin_address_data> cst_encode_box_autoadd_bitcoin_address_data(
     BitcoinAddressData raw,
   ) {
@@ -1725,6 +1709,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_nwc_event> cst_encode_box_autoadd_nwc_event(NwcEvent raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_nwc_event();
+    cst_api_fill_to_wire_nwc_event(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_pay_amount> cst_encode_box_autoadd_pay_amount(PayAmount raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_pay_amount();
@@ -1841,14 +1833,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ptr = wire.cst_new_box_autoadd_restore_request();
     cst_api_fill_to_wire_restore_request(raw, ptr.ref);
-    return ptr;
-  }
-
-  @protected
-  ffi.Pointer<wire_cst_sdk_event> cst_encode_box_autoadd_sdk_event(SdkEvent raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    final ptr = wire.cst_new_box_autoadd_sdk_event();
-    cst_api_fill_to_wire_sdk_event(raw, ptr.ref);
     return ptr;
   }
 
@@ -2364,14 +2348,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
-  void cst_api_fill_to_wire_binding_event_listener(
-    BindingEventListener apiObj,
-    wire_cst_binding_event_listener wireObj,
-  ) {
-    wireObj.stream = cst_encode_StreamSink_sdk_event_Dco(apiObj.stream);
-  }
-
-  @protected
   void cst_api_fill_to_wire_bitcoin_address_data(
     BitcoinAddressData apiObj,
     wire_cst_bitcoin_address_data wireObj,
@@ -2461,14 +2437,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ffi.Pointer<wire_cst_backup_request> wireObj,
   ) {
     cst_api_fill_to_wire_backup_request(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_binding_event_listener(
-    BindingEventListener apiObj,
-    ffi.Pointer<wire_cst_binding_event_listener> wireObj,
-  ) {
-    cst_api_fill_to_wire_binding_event_listener(apiObj, wireObj.ref);
   }
 
   @protected
@@ -2653,6 +2621,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_box_autoadd_nwc_event(NwcEvent apiObj, ffi.Pointer<wire_cst_nwc_event> wireObj) {
+    cst_api_fill_to_wire_nwc_event(apiObj, wireObj.ref);
+  }
+
+  @protected
   void cst_api_fill_to_wire_box_autoadd_pay_amount(
     PayAmount apiObj,
     ffi.Pointer<wire_cst_pay_amount> wireObj,
@@ -2751,11 +2724,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ffi.Pointer<wire_cst_restore_request> wireObj,
   ) {
     cst_api_fill_to_wire_restore_request(apiObj, wireObj.ref);
-  }
-
-  @protected
-  void cst_api_fill_to_wire_box_autoadd_sdk_event(SdkEvent apiObj, ffi.Pointer<wire_cst_sdk_event> wireObj) {
-    cst_api_fill_to_wire_sdk_event(apiObj, wireObj.ref);
   }
 
   @protected
@@ -3451,6 +3419,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_nwc_event(NwcEvent apiObj, wire_cst_nwc_event wireObj) {
+    if (apiObj is NwcEvent_ConnectedHandled) {
+      wireObj.tag = 0;
+      return;
+    }
+    if (apiObj is NwcEvent_DisconnectedHandled) {
+      wireObj.tag = 1;
+      return;
+    }
+    if (apiObj is NwcEvent_PayInvoiceHandled) {
+      var pre_success = cst_encode_bool(apiObj.success);
+      var pre_preimage = cst_encode_opt_String(apiObj.preimage);
+      var pre_fees_sat = cst_encode_opt_box_autoadd_u_64(apiObj.feesSat);
+      var pre_error = cst_encode_opt_String(apiObj.error);
+      wireObj.tag = 2;
+      wireObj.kind.PayInvoiceHandled.success = pre_success;
+      wireObj.kind.PayInvoiceHandled.preimage = pre_preimage;
+      wireObj.kind.PayInvoiceHandled.fees_sat = pre_fees_sat;
+      wireObj.kind.PayInvoiceHandled.error = pre_error;
+      return;
+    }
+    if (apiObj is NwcEvent_ListTransactionsHandled) {
+      wireObj.tag = 3;
+      return;
+    }
+    if (apiObj is NwcEvent_GetBalanceHandled) {
+      wireObj.tag = 4;
+      return;
+    }
+  }
+
+  @protected
   void cst_api_fill_to_wire_onchain_payment_limits_response(
     OnchainPaymentLimitsResponse apiObj,
     wire_cst_onchain_payment_limits_response wireObj,
@@ -4007,6 +4007,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.DataSynced.did_pull_new_records = pre_did_pull_new_records;
       return;
     }
+    if (apiObj is SdkEvent_NWC) {
+      var pre_event_id = cst_encode_String(apiObj.eventId);
+      var pre_details = cst_encode_box_autoadd_nwc_event(apiObj.details);
+      wireObj.tag = 10;
+      wireObj.kind.NWC.event_id = pre_event_id;
+      wireObj.kind.NWC.details = pre_details;
+      return;
+    }
   }
 
   @protected
@@ -4286,9 +4294,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_backup_request(BackupRequest self, SseSerializer serializer);
 
   @protected
-  void sse_encode_binding_event_listener(BindingEventListener self, SseSerializer serializer);
-
-  @protected
   void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer);
 
   @protected
@@ -4329,9 +4334,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_binding_event_listener(BindingEventListener self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer);
@@ -4427,6 +4429,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_nwc_event(NwcEvent self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_pay_amount(PayAmount self, SseSerializer serializer);
 
   @protected
@@ -4473,9 +4478,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_box_autoadd_restore_request(RestoreRequest self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_sdk_event(SdkEvent self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_send_payment_request(SendPaymentRequest self, SseSerializer serializer);
@@ -4710,6 +4712,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_network(Network self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nwc_event(NwcEvent self, SseSerializer serializer);
 
   @protected
   void sse_encode_onchain_payment_limits_response(
@@ -5513,29 +5518,6 @@ class RustLibWire implements BaseWire {
   late final _wire__crate__bindings__BindingLiquidSdk_unregister_webhook =
       _wire__crate__bindings__BindingLiquidSdk_unregister_webhookPtr.asFunction<void Function(int, int)>();
 
-  void wire__crate__bindings__binding_event_listener_on_event(
-    int port_,
-    ffi.Pointer<wire_cst_binding_event_listener> that,
-    ffi.Pointer<wire_cst_sdk_event> e,
-  ) {
-    return _wire__crate__bindings__binding_event_listener_on_event(port_, that, e);
-  }
-
-  late final _wire__crate__bindings__binding_event_listener_on_eventPtr = _lookup<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Int64,
-        ffi.Pointer<wire_cst_binding_event_listener>,
-        ffi.Pointer<wire_cst_sdk_event>,
-      )
-    >
-  >('frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event');
-  late final _wire__crate__bindings__binding_event_listener_on_event =
-      _wire__crate__bindings__binding_event_listener_on_eventPtr
-          .asFunction<
-            void Function(int, ffi.Pointer<wire_cst_binding_event_listener>, ffi.Pointer<wire_cst_sdk_event>)
-          >();
-
   void wire__crate__bindings__breez_log_stream(int port_, ffi.Pointer<wire_cst_list_prim_u_8_strict> s) {
     return _wire__crate__bindings__breez_log_stream(port_, s);
   }
@@ -5760,18 +5742,6 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_backup_request =
       _cst_new_box_autoadd_backup_requestPtr.asFunction<ffi.Pointer<wire_cst_backup_request> Function()>();
-
-  ffi.Pointer<wire_cst_binding_event_listener> cst_new_box_autoadd_binding_event_listener() {
-    return _cst_new_box_autoadd_binding_event_listener();
-  }
-
-  late final _cst_new_box_autoadd_binding_event_listenerPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_binding_event_listener> Function()>>(
-        'frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener',
-      );
-  late final _cst_new_box_autoadd_binding_event_listener =
-      _cst_new_box_autoadd_binding_event_listenerPtr
-          .asFunction<ffi.Pointer<wire_cst_binding_event_listener> Function()>();
 
   ffi.Pointer<wire_cst_bitcoin_address_data> cst_new_box_autoadd_bitcoin_address_data() {
     return _cst_new_box_autoadd_bitcoin_address_data();
@@ -6079,6 +6049,17 @@ class RustLibWire implements BaseWire {
       _cst_new_box_autoadd_message_success_action_dataPtr
           .asFunction<ffi.Pointer<wire_cst_message_success_action_data> Function()>();
 
+  ffi.Pointer<wire_cst_nwc_event> cst_new_box_autoadd_nwc_event() {
+    return _cst_new_box_autoadd_nwc_event();
+  }
+
+  late final _cst_new_box_autoadd_nwc_eventPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_nwc_event> Function()>>(
+        'frbgen_breez_liquid_cst_new_box_autoadd_nwc_event',
+      );
+  late final _cst_new_box_autoadd_nwc_event =
+      _cst_new_box_autoadd_nwc_eventPtr.asFunction<ffi.Pointer<wire_cst_nwc_event> Function()>();
+
   ffi.Pointer<wire_cst_pay_amount> cst_new_box_autoadd_pay_amount() {
     return _cst_new_box_autoadd_pay_amount();
   }
@@ -6229,17 +6210,6 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_restore_request =
       _cst_new_box_autoadd_restore_requestPtr.asFunction<ffi.Pointer<wire_cst_restore_request> Function()>();
-
-  ffi.Pointer<wire_cst_sdk_event> cst_new_box_autoadd_sdk_event() {
-    return _cst_new_box_autoadd_sdk_event();
-  }
-
-  late final _cst_new_box_autoadd_sdk_eventPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_sdk_event> Function()>>(
-        'frbgen_breez_liquid_cst_new_box_autoadd_sdk_event',
-      );
-  late final _cst_new_box_autoadd_sdk_event =
-      _cst_new_box_autoadd_sdk_eventPtr.asFunction<ffi.Pointer<wire_cst_sdk_event> Function()>();
 
   ffi.Pointer<wire_cst_send_payment_request> cst_new_box_autoadd_send_payment_request() {
     return _cst_new_box_autoadd_send_payment_request();
@@ -7186,267 +7156,6 @@ final class wire_cst_sign_message_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
 }
 
-final class wire_cst_binding_event_listener extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> stream;
-}
-
-final class wire_cst_aes_success_action_data_decrypted extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> plaintext;
-}
-
-final class wire_cst_AesSuccessActionDataResult_Decrypted extends ffi.Struct {
-  external ffi.Pointer<wire_cst_aes_success_action_data_decrypted> data;
-}
-
-final class wire_cst_AesSuccessActionDataResult_ErrorStatus extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
-}
-
-final class AesSuccessActionDataResultKind extends ffi.Union {
-  external wire_cst_AesSuccessActionDataResult_Decrypted Decrypted;
-
-  external wire_cst_AesSuccessActionDataResult_ErrorStatus ErrorStatus;
-}
-
-final class wire_cst_aes_success_action_data_result extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external AesSuccessActionDataResultKind kind;
-}
-
-final class wire_cst_SuccessActionProcessed_Aes extends ffi.Struct {
-  external ffi.Pointer<wire_cst_aes_success_action_data_result> result;
-}
-
-final class wire_cst_SuccessActionProcessed_Message extends ffi.Struct {
-  external ffi.Pointer<wire_cst_message_success_action_data> data;
-}
-
-final class wire_cst_SuccessActionProcessed_Url extends ffi.Struct {
-  external ffi.Pointer<wire_cst_url_success_action_data> data;
-}
-
-final class SuccessActionProcessedKind extends ffi.Union {
-  external wire_cst_SuccessActionProcessed_Aes Aes;
-
-  external wire_cst_SuccessActionProcessed_Message Message;
-
-  external wire_cst_SuccessActionProcessed_Url Url;
-}
-
-final class wire_cst_success_action_processed extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external SuccessActionProcessedKind kind;
-}
-
-final class wire_cst_ln_url_info extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_pay_comment;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_pay_domain;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_pay_metadata;
-
-  external ffi.Pointer<wire_cst_success_action_processed> lnurl_pay_success_action;
-
-  external ffi.Pointer<wire_cst_success_action> lnurl_pay_unprocessed_success_action;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_withdraw_endpoint;
-}
-
-final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  @ffi.Uint32()
-  external int liquid_expiration_blockheight;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination_pubkey;
-
-  external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
-
-  external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
-}
-
-final class wire_cst_asset_info extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
-
-  @ffi.Double()
-  external double amount;
-
-  external ffi.Pointer<ffi.Double> fees;
-}
-
-final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
-
-  external ffi.Pointer<wire_cst_asset_info> asset_info;
-
-  external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
-}
-
-final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_address;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
-
-  @ffi.Bool()
-  external bool auto_accepted_fees;
-
-  external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
-
-  external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lockup_tx_id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
-
-  external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
-}
-
-final class PaymentDetailsKind extends ffi.Union {
-  external wire_cst_PaymentDetails_Lightning Lightning;
-
-  external wire_cst_PaymentDetails_Liquid Liquid;
-
-  external wire_cst_PaymentDetails_Bitcoin Bitcoin;
-}
-
-final class wire_cst_payment_details extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external PaymentDetailsKind kind;
-}
-
-final class wire_cst_payment extends ffi.Struct {
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> tx_id;
-
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> unblinding_data;
-
-  @ffi.Uint32()
-  external int timestamp;
-
-  @ffi.Uint64()
-  external int amount_sat;
-
-  @ffi.Uint64()
-  external int fees_sat;
-
-  external ffi.Pointer<ffi.Uint64> swapper_fees_sat;
-
-  @ffi.Int32()
-  external int payment_type;
-
-  @ffi.Int32()
-  external int status;
-
-  external wire_cst_payment_details details;
-}
-
-final class wire_cst_SdkEvent_PaymentFailed extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentPending extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentRefundable extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentRefunded extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentRefundPending extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentSucceeded extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
-  external ffi.Pointer<wire_cst_payment> details;
-}
-
-final class wire_cst_SdkEvent_DataSynced extends ffi.Struct {
-  @ffi.Bool()
-  external bool did_pull_new_records;
-}
-
-final class SdkEventKind extends ffi.Union {
-  external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
-
-  external wire_cst_SdkEvent_PaymentPending PaymentPending;
-
-  external wire_cst_SdkEvent_PaymentRefundable PaymentRefundable;
-
-  external wire_cst_SdkEvent_PaymentRefunded PaymentRefunded;
-
-  external wire_cst_SdkEvent_PaymentRefundPending PaymentRefundPending;
-
-  external wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
-
-  external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
-
-  external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
-
-  external wire_cst_SdkEvent_DataSynced DataSynced;
-}
-
-final class wire_cst_sdk_event extends ffi.Struct {
-  @ffi.Int32()
-  external int tag;
-
-  external SdkEventKind kind;
-}
-
 final class wire_cst_BlockchainExplorer_Electrum extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
 }
@@ -7558,6 +7267,44 @@ final class wire_cst_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generated
   external int len;
 }
 
+final class wire_cst_aes_success_action_data_decrypted extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> plaintext;
+}
+
+final class wire_cst_AesSuccessActionDataResult_Decrypted extends ffi.Struct {
+  external ffi.Pointer<wire_cst_aes_success_action_data_decrypted> data;
+}
+
+final class wire_cst_AesSuccessActionDataResult_ErrorStatus extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
+}
+
+final class AesSuccessActionDataResultKind extends ffi.Union {
+  external wire_cst_AesSuccessActionDataResult_Decrypted Decrypted;
+
+  external wire_cst_AesSuccessActionDataResult_ErrorStatus ErrorStatus;
+}
+
+final class wire_cst_aes_success_action_data_result extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external AesSuccessActionDataResultKind kind;
+}
+
+final class wire_cst_asset_info extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ticker;
+
+  @ffi.Double()
+  external double amount;
+
+  external ffi.Pointer<ffi.Double> fees;
+}
+
 final class wire_cst_bitcoin_address_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> address;
 
@@ -7575,10 +7322,165 @@ final class wire_cst_ln_url_error_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
 }
 
+final class wire_cst_SuccessActionProcessed_Aes extends ffi.Struct {
+  external ffi.Pointer<wire_cst_aes_success_action_data_result> result;
+}
+
+final class wire_cst_SuccessActionProcessed_Message extends ffi.Struct {
+  external ffi.Pointer<wire_cst_message_success_action_data> data;
+}
+
+final class wire_cst_SuccessActionProcessed_Url extends ffi.Struct {
+  external ffi.Pointer<wire_cst_url_success_action_data> data;
+}
+
+final class SuccessActionProcessedKind extends ffi.Union {
+  external wire_cst_SuccessActionProcessed_Aes Aes;
+
+  external wire_cst_SuccessActionProcessed_Message Message;
+
+  external wire_cst_SuccessActionProcessed_Url Url;
+}
+
+final class wire_cst_success_action_processed extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external SuccessActionProcessedKind kind;
+}
+
+final class wire_cst_ln_url_info extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ln_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_pay_comment;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_pay_domain;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_pay_metadata;
+
+  external ffi.Pointer<wire_cst_success_action_processed> lnurl_pay_success_action;
+
+  external ffi.Pointer<wire_cst_success_action> lnurl_pay_unprocessed_success_action;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lnurl_withdraw_endpoint;
+}
+
 final class wire_cst_ln_url_pay_error_data extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> reason;
+}
+
+final class wire_cst_PaymentDetails_Lightning extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  @ffi.Uint32()
+  external int liquid_expiration_blockheight;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> invoice;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bolt12_offer;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payment_hash;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination_pubkey;
+
+  external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
+
+  external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
+}
+
+final class wire_cst_PaymentDetails_Liquid extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> asset_id;
+
+  external ffi.Pointer<wire_cst_asset_info> asset_info;
+
+  external ffi.Pointer<wire_cst_ln_url_info> lnurl_info;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bip353_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
+}
+
+final class wire_cst_PaymentDetails_Bitcoin extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> swap_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> bitcoin_address;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  @ffi.Bool()
+  external bool auto_accepted_fees;
+
+  external ffi.Pointer<ffi.Uint32> liquid_expiration_blockheight;
+
+  external ffi.Pointer<ffi.Uint32> bitcoin_expiration_blockheight;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> lockup_tx_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> claim_tx_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> refund_tx_id;
+
+  external ffi.Pointer<ffi.Uint64> refund_tx_amount_sat;
+}
+
+final class PaymentDetailsKind extends ffi.Union {
+  external wire_cst_PaymentDetails_Lightning Lightning;
+
+  external wire_cst_PaymentDetails_Liquid Liquid;
+
+  external wire_cst_PaymentDetails_Bitcoin Bitcoin;
+}
+
+final class wire_cst_payment_details extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external PaymentDetailsKind kind;
+}
+
+final class wire_cst_payment extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> tx_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> unblinding_data;
+
+  @ffi.Uint32()
+  external int timestamp;
+
+  @ffi.Uint64()
+  external int amount_sat;
+
+  @ffi.Uint64()
+  external int fees_sat;
+
+  external ffi.Pointer<ffi.Uint64> swapper_fees_sat;
+
+  @ffi.Int32()
+  external int payment_type;
+
+  @ffi.Int32()
+  external int status;
+
+  external wire_cst_payment_details details;
 }
 
 final class wire_cst_ln_url_pay_success_data extends ffi.Struct {
@@ -7589,6 +7491,28 @@ final class wire_cst_ln_url_pay_success_data extends ffi.Struct {
 
 final class wire_cst_ln_url_withdraw_success_data extends ffi.Struct {
   external wire_cst_ln_invoice invoice;
+}
+
+final class wire_cst_NwcEvent_PayInvoiceHandled extends ffi.Struct {
+  @ffi.Bool()
+  external bool success;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> preimage;
+
+  external ffi.Pointer<ffi.Uint64> fees_sat;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> error;
+}
+
+final class NwcEventKind extends ffi.Union {
+  external wire_cst_NwcEvent_PayInvoiceHandled PayInvoiceHandled;
+}
+
+final class wire_cst_nwc_event extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external NwcEventKind kind;
 }
 
 final class wire_cst_symbol extends ffi.Struct {
@@ -8218,6 +8142,78 @@ final class wire_cst_sdk_error extends ffi.Struct {
   external int tag;
 
   external SdkErrorKind kind;
+}
+
+final class wire_cst_SdkEvent_PaymentFailed extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentPending extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentRefundable extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentRefunded extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentRefundPending extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentSucceeded extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentWaitingConfirmation extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_PaymentWaitingFeeAcceptance extends ffi.Struct {
+  external ffi.Pointer<wire_cst_payment> details;
+}
+
+final class wire_cst_SdkEvent_DataSynced extends ffi.Struct {
+  @ffi.Bool()
+  external bool did_pull_new_records;
+}
+
+final class wire_cst_SdkEvent_NWC extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> event_id;
+
+  external ffi.Pointer<wire_cst_nwc_event> details;
+}
+
+final class SdkEventKind extends ffi.Union {
+  external wire_cst_SdkEvent_PaymentFailed PaymentFailed;
+
+  external wire_cst_SdkEvent_PaymentPending PaymentPending;
+
+  external wire_cst_SdkEvent_PaymentRefundable PaymentRefundable;
+
+  external wire_cst_SdkEvent_PaymentRefunded PaymentRefunded;
+
+  external wire_cst_SdkEvent_PaymentRefundPending PaymentRefundPending;
+
+  external wire_cst_SdkEvent_PaymentSucceeded PaymentSucceeded;
+
+  external wire_cst_SdkEvent_PaymentWaitingConfirmation PaymentWaitingConfirmation;
+
+  external wire_cst_SdkEvent_PaymentWaitingFeeAcceptance PaymentWaitingFeeAcceptance;
+
+  external wire_cst_SdkEvent_DataSynced DataSynced;
+
+  external wire_cst_SdkEvent_NWC NWC;
+}
+
+final class wire_cst_sdk_event extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external SdkEventKind kind;
 }
 
 final class wire_cst_send_payment_response extends ffi.Struct {

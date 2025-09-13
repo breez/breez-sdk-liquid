@@ -43,7 +43,7 @@ impl EventManager {
                 let _ = self.notifier.send(e.clone());
 
                 for listener in (*self.listeners.read().await).values() {
-                    listener.on_event(e.clone());
+                    listener.on_event(e.clone()).await;
                 }
             }
         }
