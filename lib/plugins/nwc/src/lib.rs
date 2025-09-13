@@ -1,0 +1,452 @@
+use std::{collections::HashMap, str::FromStr as _};
+
+use crate::{
+    context::RuntimeContext,
+    error::NwcResult,
+    handler::{RelayMessageHandler, SdkRelayMessageHandler},
+    persist::Persister,
+    sdk_event::SdkEventListener,
+};
+use anyhow::{bail, Result};
+use breez_sdk_liquid::prelude::*;
+use log::{debug, error, info, warn};
+use maybe_sync::{MaybeSend, MaybeSync};
+use nostr_sdk::{
+    nips::nip44::{decrypt, encrypt, Version},
+    nips::nip47::{
+        ErrorCode, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
+        ResponseResult,
+    },
+    Client as NostrClient, EventBuilder, Keys, Kind, RelayPoolNotification, RelayUrl, Tag,
+    Timestamp,
+};
+use sdk_common::utils::{Arc, Weak};
+use tokio::sync::{mpsc, Mutex, OnceCell};
+use tokio_with_wasm::alias as tokio;
+
+pub(crate) mod context;
+pub mod error;
+pub(crate) mod handler;
+mod persist;
+pub(crate) mod sdk_event;
+
+pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
+
+#[sdk_macros::async_trait]
+pub trait NwcService: MaybeSend + MaybeSync {
+    /// Creates a Nostr Wallet Connect connection string for this service.
+    ///
+    /// Generates a unique connection URI that external applications can use
+    /// to connect to this wallet service. The URI includes the wallet's public key,
+    /// relay information, and a randomly generated secret for secure communication.
+    ///
+    /// # Arguments
+    /// * `name` - The unique identifier for the connection string
+    async fn add_connection_string(&self, name: String) -> NwcResult<String>;
+
+    /// Lists the active Nostr Wallet Connect connections for this service.
+    async fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>>;
+
+    /// Removes a Nostr Wallet Connect connection string
+    ///
+    /// Removes a previously set connection string. Returns error if unset.
+    ///
+    /// # Arguments
+    /// * `name` - The unique identifier for the connection string
+    async fn remove_connection_string(&self, name: String) -> NwcResult<()>;
+}
+
+pub struct NwcConfig {
+    pub relay_urls: Option<Vec<String>>,
+    pub secret_key_hex: Option<String>,
+}
+
+impl NwcConfig {
+    pub fn relays(&self) -> Vec<String> {
+        self.relay_urls
+            .clone()
+            .unwrap_or(DEFAULT_RELAY_URLS.iter().map(|s| s.to_string()).collect())
+    }
+}
+
+pub struct SdkNwcService {
+    config: NwcConfig,
+    runtime_ctx: Mutex<Option<Arc<RuntimeContext>>>,
+}
+
+impl SdkNwcService {
+    /// Creates a new SdkNwcService instance.
+    ///
+    /// Initializes the service with the provided cryptographic keys
+    /// and connects to the specified Nostr relays.
+    ///
+    /// # Arguments
+    /// * `config` - Configuration containing the relay URLs and secret key
+    ///
+    /// # Returns
+    /// * `Arc<SdkNwcService>` - Successfully initialized service
+    /// * `Err(anyhow::Error)` - Error adding relays or initializing
+    pub fn new(config: NwcConfig) -> Self {
+        Self {
+            config,
+            runtime_ctx: Default::default(),
+        }
+    }
+
+    async fn init_ctx(
+        &self,
+        sdk: Weak<LiquidSdk>,
+        storage: PluginStorage,
+        event_emitter: PluginEventEmitter,
+        resub_tx: mpsc::Sender<()>,
+    ) -> Result<Arc<RuntimeContext>> {
+        let mut ctx_lock = self.runtime_ctx.lock().await;
+        if ctx_lock.is_some() {
+            bail!("NWC service is already running.");
+        }
+
+        let persister = Persister::new(storage);
+        let client = NostrClient::default();
+        for relay in self.config.relays() {
+            if let Err(err) = client.add_relay(&relay).await {
+                warn!("Could not add nwc relay {relay}: {err:?}");
+            }
+        }
+        let our_keys = match self.get_or_create_keypair(&persister).await {
+            Ok(keypair) => keypair,
+            Err(err) => {
+                bail!("Could not fetch/create Nostr secret key: {err:?}");
+            }
+        };
+        let handler: Box<dyn RelayMessageHandler> =
+            Box::new(SdkRelayMessageHandler::new(sdk.clone()));
+        let ctx = Arc::new(RuntimeContext {
+            sdk,
+            client,
+            our_keys,
+            persister,
+            event_emitter,
+            handler,
+            resubscription_trigger: resub_tx,
+            event_loop_handle: OnceCell::new(),
+            sdk_listener_id: Mutex::new(None),
+        });
+        *ctx_lock = Some(ctx.clone());
+        Ok(ctx)
+    }
+
+    async fn runtime_ctx(&self) -> Result<Arc<RuntimeContext>> {
+        match *self.runtime_ctx.lock().await {
+            Some(ref ctx) => Ok(ctx.clone()),
+            None => bail!("NW C service is not running."),
+        }
+    }
+
+    async fn get_or_create_keypair(&self, persister: &Persister) -> Result<Keys> {
+        let get_secret_key = async || -> Result<String> {
+            // If we have a key from the configuration, use it
+            if let Some(key) = &self.config.secret_key_hex {
+                return Ok(key.clone());
+            }
+
+            // Otherwise, try restoring it from the previous session
+            if let Ok(Some(key)) = persister.get_nwc_seckey() {
+                return Ok(key);
+            }
+
+            // If none exists, generate a new one
+            let key = nostr_sdk::key::SecretKey::generate().to_secret_hex();
+            persister.set_nwc_seckey(key.clone())?;
+            Ok(key)
+        };
+        let secret_key = get_secret_key().await?;
+        Ok(Keys::parse(&secret_key)?)
+    }
+
+    async fn handle_event(ctx: &RuntimeContext, notification: &RelayPoolNotification) {
+        let RelayPoolNotification::Event { event, .. } = notification else {
+            return;
+        };
+        info!("Received NWC event: {event:?}");
+
+        let client_pubkey = event.pubkey;
+
+        // Verify the event has not expired
+        if event
+            .tags
+            .expiration()
+            .is_some_and(|t| *t > Timestamp::now())
+        {
+            warn!("Event {} has expired. Skipping.", event.id);
+            return;
+        }
+
+        // Verify the event signature and event id
+        if let Err(e) = event.verify() {
+            warn!("Event signature verification failed: {e:?}");
+            return;
+        }
+
+        // Decrypt the event content
+        let decrypted_content =
+            match decrypt(ctx.our_keys.secret_key(), &client_pubkey, &event.content) {
+                Ok(content) => content,
+                Err(e) => {
+                    warn!("Failed to decrypt event content: {e:?}");
+                    return;
+                }
+            };
+
+        info!("Decrypted NWC notification: {decrypted_content}");
+
+        let req = match serde_json::from_str::<Request>(&decrypted_content) {
+            Ok(r) => r,
+            Err(e) => {
+                warn!("Received unexpected request from relay pool: {decrypted_content} err {e:?}");
+                return;
+            }
+        };
+
+        let (result, error) = match req.params {
+            RequestParams::PayInvoice(req) => match ctx.handler.pay_invoice(req).await {
+                Ok(res) => (Some(ResponseResult::PayInvoice(res)), None),
+                Err(e) => (None, Some(e)),
+            },
+            RequestParams::ListTransactions(req) => {
+                match ctx.handler.list_transactions(req).await {
+                    Ok(res) => (Some(ResponseResult::ListTransactions(res)), None),
+                    Err(e) => (None, Some(e)),
+                }
+            }
+            RequestParams::GetBalance => match ctx.handler.get_balance().await {
+                Ok(res) => (Some(ResponseResult::GetBalance(res)), None),
+                Err(e) => (None, Some(e)),
+            },
+            _ => {
+                info!("Received unhandled request: {req:?}");
+                return;
+            }
+        };
+
+        Self::handle_local_notification(ctx, &result, &error, &event.id.to_string()).await;
+
+        let content = match serde_json::to_string(&Response {
+            result_type: req.method,
+            result,
+            error,
+        }) {
+            Ok(c) => c,
+            Err(e) => {
+                warn!("Could not serialize Nostr response: {e:?}");
+                return;
+            }
+        };
+        info!("NWC Response content: {content}");
+        info!("encrypting NWC response");
+        let encrypted_content = match encrypt(
+            ctx.our_keys.secret_key(),
+            &client_pubkey,
+            &content,
+            Version::V2,
+        ) {
+            Ok(encrypted) => encrypted,
+            Err(e) => {
+                warn!("Could not encrypt response content: {e:?}");
+                return;
+            }
+        };
+
+        let event_builder = EventBuilder::new(Kind::WalletConnectResponse, encrypted_content)
+            .tags([Tag::event(event.id), Tag::public_key(client_pubkey)]);
+        if let Err(e) = ctx.send_event(event_builder).await {
+            warn!("Could not send response event to relay pool: {e:?}");
+        }
+        info!("sent encrypted NWC response");
+    }
+
+    async fn handle_local_notification(
+        ctx: &RuntimeContext,
+        result: &Option<ResponseResult>,
+        error: &Option<NIP47Error>,
+        event_id: &str,
+    ) {
+        debug!("Handling notification: {result:?} {error:?}");
+        let event: SdkEvent = match (result, error) {
+            (Some(ResponseResult::PayInvoice(response)), None) => SdkEvent::NWC {
+                details: NwcEvent::PayInvoiceHandled {
+                    success: true,
+                    preimage: Some(response.preimage.clone()),
+                    fees_sat: response.fees_paid.map(|f| f / 1000),
+                    error: None,
+                },
+                event_id: event_id.to_string(),
+            },
+            (None, Some(error)) => match error.code {
+                ErrorCode::PaymentFailed => SdkEvent::NWC {
+                    details: NwcEvent::PayInvoiceHandled {
+                        success: false,
+                        preimage: None,
+                        fees_sat: None,
+                        error: Some(error.message.clone()),
+                    },
+                    event_id: event_id.to_string(),
+                },
+                _ => {
+                    warn!("Unhandled error code: {:?}", error.code);
+                    return;
+                }
+            },
+            (Some(ResponseResult::ListTransactions(_)), None) => SdkEvent::NWC {
+                details: NwcEvent::ListTransactionsHandled,
+                event_id: event_id.to_string(),
+            },
+            (Some(ResponseResult::GetBalance(_)), None) => SdkEvent::NWC {
+                details: NwcEvent::GetBalanceHandled,
+                event_id: event_id.to_string(),
+            },
+            _ => {
+                warn!("Unexpected combination");
+                return;
+            }
+        };
+        info!("Sending event: {event:?}");
+        ctx.event_emitter.broadcast(event).await;
+    }
+}
+
+#[sdk_macros::async_trait]
+impl NwcService for SdkNwcService {
+    async fn add_connection_string(&self, name: String) -> NwcResult<String> {
+        let random_secret_key = nostr_sdk::SecretKey::generate();
+        let relays = self
+            .config
+            .relays()
+            .into_iter()
+            .filter_map(|r| RelayUrl::from_str(&r).ok())
+            .collect();
+
+        let ctx = self.runtime_ctx().await?;
+        let uri =
+            NostrWalletConnectURI::new(ctx.our_keys.public_key, relays, random_secret_key, None);
+        ctx.persister.set_nwc_uri(name.clone(), uri.to_string())?;
+        ctx.trigger_resubscription().await;
+        Ok(uri.to_string())
+    }
+
+    async fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>> {
+        self.runtime_ctx().await?.persister.list_nwc_uris()
+    }
+
+    async fn remove_connection_string(&self, name: String) -> NwcResult<()> {
+        let ctx = self.runtime_ctx().await?;
+        ctx.persister.remove_nwc_uri(name)?;
+        ctx.trigger_resubscription().await;
+        Ok(())
+    }
+}
+
+#[sdk_macros::async_trait]
+impl Plugin for SdkNwcService {
+    fn id(&self) -> String {
+        "breez-nwc-plugin".to_string()
+    }
+
+    async fn on_start(
+        &self,
+        sdk: Weak<LiquidSdk>,
+        storage: PluginStorage,
+        event_emitter: PluginEventEmitter,
+    ) {
+        let (resub_tx, mut resub_rx) = mpsc::channel::<()>(10);
+        let ctx = match self
+            .init_ctx(sdk.clone(), storage, event_emitter, resub_tx)
+            .await
+        {
+            Ok(ctx) => ctx,
+            Err(err) => {
+                error!("Could not create NWC service runtime context: {err:?}");
+                return;
+            }
+        };
+
+        let event_loop_handle = tokio::spawn(async move {
+            ctx.client.connect().await;
+            let _ = ctx
+                .event_emitter
+                .broadcast(SdkEvent::NWC {
+                    details: NwcEvent::ConnectedHandled,
+                    event_id: "".to_string(),
+                })
+                .await;
+            info!("Successfully connected NWC client");
+
+            ctx.send_info_event().await;
+
+            loop {
+                let clients = match ctx.list_clients().await {
+                    Ok(clients) => clients,
+                    Err(err) => {
+                        warn!("Could not retreive active clients from database: {err:?}");
+                        return;
+                    }
+                };
+                if let Err(err) = ctx.resubscribe(&clients).await {
+                    warn!("Could not resubscribe to events: {err:?}");
+                    return;
+                };
+
+                let sdk_listener_id = match sdk.upgrade() {
+                    Some(sdk) => match sdk
+                        .add_event_listener(Box::new(SdkEventListener::new(ctx.clone(), clients)))
+                        .await
+                    {
+                        Ok(listener_id) => {
+                            *ctx.sdk_listener_id.lock().await = Some(listener_id.clone());
+                            Some(listener_id)
+                        }
+                        Err(err) => {
+                            warn!("Could not set payment event listener: {err:?}");
+                            None
+                        }
+                    },
+                    None => {
+                        warn!("SDK is not running. Exiting NWC service loop.");
+                        return;
+                    }
+                };
+
+                let mut notifications_listener = ctx.client.notifications();
+                loop {
+                    tokio::select! {
+                        Ok(notification) = notifications_listener.recv() => Self::handle_event(&ctx, &notification).await,
+                        Some(_) = resub_rx.recv() => {
+                            info!("Resubscribing to notifications.");
+                            if let Some(listener_id) = sdk_listener_id {
+                                if let Some(sdk) = sdk.upgrade() {
+                                    if let Err(err) = sdk.remove_event_listener(listener_id).await {
+                                        warn!("Could not remove payment event listener: {err:?}");
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+        if let Some(ref mut ctx) = *self.runtime_ctx.lock().await {
+            if let Err(err) = ctx.event_loop_handle.set(event_loop_handle) {
+                error!("Could not set NWC service event loop handle: {err:?}");
+            }
+        }
+    }
+
+    async fn on_stop(&self) {
+        let mut ctx_lock = self.runtime_ctx.lock().await;
+        if let Some(ref ctx) = *ctx_lock {
+            ctx.clear().await;
+            *ctx_lock = None;
+        }
+    }
+}

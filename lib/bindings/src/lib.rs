@@ -1,5 +1,7 @@
 use std::sync::{Arc, Weak};
 
+mod nwc;
+
 use anyhow::Result;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
 use log::{warn, Metadata, Record, SetLoggerError};
@@ -7,9 +9,11 @@ use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 use uniffi::deps::log::{Level, LevelFilter};
 
+pub use nwc::*;
+
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
-fn rt() -> &'static Runtime {
+pub(crate) fn rt() -> &'static Runtime {
     &RT
 }
 

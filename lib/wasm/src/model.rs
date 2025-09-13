@@ -337,6 +337,21 @@ pub enum SdkEvent {
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
     DataSynced { did_pull_new_records: bool },
+    NWC { event_id: String, details: NwcEvent },
+}
+
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NwcEvent)]
+pub enum NwcEvent {
+    ConnectedHandled,
+    DisconnectedHandled,
+    PayInvoiceHandled {
+        success: bool,
+        preimage: Option<String>,
+        fees_sat: Option<u64>,
+        error: Option<String>,
+    },
+    ListTransactionsHandled,
+    GetBalanceHandled,
 }
 
 #[derive(Clone)]
@@ -438,6 +453,7 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
+    pub disable_mrh: Option<bool>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendDestination)]
@@ -464,6 +480,7 @@ pub struct PrepareSendResponse {
     pub fees_sat: Option<u64>,
     pub estimated_asset_fees: Option<f64>,
     pub exchange_amount_sat: Option<u64>,
+    pub disable_mrh: Option<bool>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentRequest)]
