@@ -688,6 +688,30 @@ export enum Network {
     REGTEST = "regtest"
 }
 
+export enum NwcEventVariant {
+    CONNECTED_HANDLED = "connectedHandled",
+    DISCONNECTED_HANDLED = "disconnectedHandled",
+    PAY_INVOICE_HANDLED = "payInvoiceHandled",
+    LIST_TRANSACTIONS_HANDLED = "listTransactionsHandled",
+    GET_BALANCE_HANDLED = "getBalanceHandled"
+}
+
+export type NwcEvent = {
+    type: NwcEventVariant.CONNECTED_HANDLED
+} | {
+    type: NwcEventVariant.DISCONNECTED_HANDLED
+} | {
+    type: NwcEventVariant.PAY_INVOICE_HANDLED,
+    success: boolean
+    preimage?: string
+    feesSat?: number
+    error?: string
+} | {
+    type: NwcEventVariant.LIST_TRANSACTIONS_HANDLED
+} | {
+    type: NwcEventVariant.GET_BALANCE_HANDLED
+}
+
 export enum PayAmountVariant {
     BITCOIN = "bitcoin",
     ASSET = "asset",
@@ -800,7 +824,8 @@ export enum SdkEventVariant {
     PAYMENT_WAITING_CONFIRMATION = "paymentWaitingConfirmation",
     PAYMENT_WAITING_FEE_ACCEPTANCE = "paymentWaitingFeeAcceptance",
     SYNCED = "synced",
-    DATA_SYNCED = "dataSynced"
+    DATA_SYNCED = "dataSynced",
+    NWC = "nwc"
 }
 
 export type SdkEvent = {
@@ -832,6 +857,10 @@ export type SdkEvent = {
 } | {
     type: SdkEventVariant.DATA_SYNCED,
     didPullNewRecords: boolean
+} | {
+    type: SdkEventVariant.NWC,
+    eventId: string
+    details: NwcEvent
 }
 
 export enum SendDestinationVariant {
@@ -1100,6 +1129,11 @@ export const fetchFiatRates = async (): Promise<Rate[]> => {
 export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
     const response = await BreezSDKLiquid.listFiatCurrencies()
     return response
+}
+
+
+export const broadcast = async (event: SdkEvent): Promise<void> => {
+    await BreezSDKLiquid.broadcast(event)
 }
 
 

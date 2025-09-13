@@ -717,6 +717,16 @@ interface SdkEvent {
     PaymentWaitingFeeAcceptance(Payment details);
     Synced();
     DataSynced(boolean did_pull_new_records);
+    NWC(string event_id, NwcEvent details);
+};
+
+[Enum]
+interface NwcEvent {
+    ConnectedHandled();
+    DisconnectedHandled();
+    PayInvoiceHandled(boolean success, string? preimage, u64? fees_sat, string? error);
+    ListTransactionsHandled();
+    GetBalanceHandled();
 };
 
 callback interface EventListener {
@@ -762,9 +772,13 @@ interface PluginStorage {
     void remove_item(string key);
 };
 
+interface PluginEventEmitter {
+    void broadcast(SdkEvent event);
+};
+
 callback interface Plugin {
     string id();
-    void on_start(BindingLiquidSdk sdk, PluginStorage storage);
+    void on_start(BindingLiquidSdk sdk, PluginStorage storage, PluginEventEmitter event_emitter);
     void on_stop();
 };
 

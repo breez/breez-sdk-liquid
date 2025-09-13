@@ -1,8 +1,6 @@
 use anyhow::{bail, Result};
-use maybe_sync::{MaybeSend, MaybeSync};
 
-use crate::{persist::Persister, sdk::LiquidSdk};
-use sdk_common::utils::Arc;
+use crate::persist::Persister;
 
 pub struct PluginStorage {
     plugin_id: String,
@@ -36,35 +34,28 @@ impl PluginStorage {
         })
     }
 
-    pub(crate) fn scoped_key(&self, key: String) -> String {
+    pub(crate) fn scoped_key(&self, key: &str) -> String {
         format!("{}-{}", self.plugin_id, key)
     }
 
-    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
+    pub fn set_item(&self, key: &str, value: String) -> Result<(), PluginStorageError> {
         let scoped_key = self.scoped_key(key);
         self.persister
             .update_cached_item(&scoped_key, value)
             .map_err(Into::into)
     }
 
-    pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
+    pub fn get_item(&self, key: &str) -> Result<Option<String>, PluginStorageError> {
         let scoped_key = self.scoped_key(key);
         self.persister
             .get_cached_item(&scoped_key)
             .map_err(Into::into)
     }
 
-    pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
+    pub fn remove_item(&self, key: &str) -> Result<(), PluginStorageError> {
         let scoped_key = self.scoped_key(key);
         self.persister
             .delete_cached_item(&scoped_key)
             .map_err(Into::into)
     }
-}
-
-#[sdk_macros::async_trait]
-pub trait Plugin: MaybeSend + MaybeSync {
-    fn id(&self) -> String;
-    async fn on_start(&self, sdk: Arc<LiquidSdk>, storage: PluginStorage);
-    async fn on_stop(&self);
 }

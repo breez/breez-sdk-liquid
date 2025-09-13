@@ -26,7 +26,6 @@
 // Section: imports
 
 use crate::bindings::*;
-use crate::model::EventListener;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
@@ -39,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 464449310;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 168485793;
 
 // Section: executor
 
@@ -1802,31 +1801,6 @@ fn wire__crate__bindings__BindingLiquidSdk_unregister_webhook_impl(
         },
     )
 }
-fn wire__crate__bindings__binding_event_listener_on_event_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    that: impl CstDecode<crate::bindings::BindingEventListener>,
-    e: impl CstDecode<crate::model::SdkEvent>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "binding_event_listener_on_event",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            let api_e = e.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok({
-                        crate::bindings::BindingEventListener::on_event(&api_that, api_e);
-                    })?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__bindings__breez_log_stream_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     s: impl CstDecode<StreamSink<crate::model::LogEntry, flutter_rust_bridge::for_generated::DcoCodec>>,
@@ -2521,17 +2495,6 @@ impl SseDecode for crate::model::BackupRequest {
         return crate::model::BackupRequest {
             backup_path: var_backupPath,
         };
-    }
-}
-
-impl SseDecode for crate::bindings::BindingEventListener {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_stream = <StreamSink<
-            crate::model::SdkEvent,
-            flutter_rust_bridge::for_generated::DcoCodec,
-        >>::sse_decode(deserializer);
-        return crate::bindings::BindingEventListener { stream: var_stream };
     }
 }
 
@@ -3743,6 +3706,42 @@ impl SseDecode for crate::bindings::Network {
     }
 }
 
+impl SseDecode for crate::model::NwcEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                return crate::model::NwcEvent::ConnectedHandled;
+            }
+            1 => {
+                return crate::model::NwcEvent::DisconnectedHandled;
+            }
+            2 => {
+                let mut var_success = <bool>::sse_decode(deserializer);
+                let mut var_preimage = <Option<String>>::sse_decode(deserializer);
+                let mut var_feesSat = <Option<u64>>::sse_decode(deserializer);
+                let mut var_error = <Option<String>>::sse_decode(deserializer);
+                return crate::model::NwcEvent::PayInvoiceHandled {
+                    success: var_success,
+                    preimage: var_preimage,
+                    fees_sat: var_feesSat,
+                    error: var_error,
+                };
+            }
+            3 => {
+                return crate::model::NwcEvent::ListTransactionsHandled;
+            }
+            4 => {
+                return crate::model::NwcEvent::GetBalanceHandled;
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4732,6 +4731,14 @@ impl SseDecode for crate::model::SdkEvent {
                     did_pull_new_records: var_didPullNewRecords,
                 };
             }
+            10 => {
+                let mut var_eventId = <String>::sse_decode(deserializer);
+                let mut var_details = <crate::model::NwcEvent>::sse_decode(deserializer);
+                return crate::model::SdkEvent::NWC {
+                    event_id: var_eventId,
+                    details: var_details,
+                };
+            }
             _ => {
                 unimplemented!("");
             }
@@ -5212,23 +5219,6 @@ impl flutter_rust_bridge::IntoIntoDart<crate::model::BackupRequest>
     for crate::model::BackupRequest
 {
     fn into_into_dart(self) -> crate::model::BackupRequest {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::bindings::BindingEventListener {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [self.stream.into_into_dart().into_dart()].into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::bindings::BindingEventListener
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::bindings::BindingEventListener>
-    for crate::bindings::BindingEventListener
-{
-    fn into_into_dart(self) -> crate::bindings::BindingEventListener {
         self
     }
 }
@@ -6434,6 +6424,39 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::bindings::Network>>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::model::NwcEvent {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::model::NwcEvent::ConnectedHandled => [0.into_dart()].into_dart(),
+            crate::model::NwcEvent::DisconnectedHandled => [1.into_dart()].into_dart(),
+            crate::model::NwcEvent::PayInvoiceHandled {
+                success,
+                preimage,
+                fees_sat,
+                error,
+            } => [
+                2.into_dart(),
+                success.into_into_dart().into_dart(),
+                preimage.into_into_dart().into_dart(),
+                fees_sat.into_into_dart().into_dart(),
+                error.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::model::NwcEvent::ListTransactionsHandled => [3.into_dart()].into_dart(),
+            crate::model::NwcEvent::GetBalanceHandled => [4.into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::model::NwcEvent {}
+impl flutter_rust_bridge::IntoIntoDart<crate::model::NwcEvent> for crate::model::NwcEvent {
+    fn into_into_dart(self) -> crate::model::NwcEvent {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::model::OnchainPaymentLimitsResponse {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -7312,6 +7335,12 @@ impl flutter_rust_bridge::IntoDart for crate::model::SdkEvent {
                 did_pull_new_records.into_into_dart().into_dart(),
             ]
             .into_dart(),
+            crate::model::SdkEvent::NWC { event_id, details } => [
+                10.into_dart(),
+                event_id.into_into_dart().into_dart(),
+                details.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             _ => {
                 unimplemented!("");
             }
@@ -7740,13 +7769,6 @@ impl SseEncode for crate::model::BackupRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Option<String>>::sse_encode(self.backup_path, serializer);
-    }
-}
-
-impl SseEncode for crate::bindings::BindingEventListener {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <StreamSink<crate::model::SdkEvent,flutter_rust_bridge::for_generated::DcoCodec>>::sse_encode(self.stream, serializer);
     }
 }
 
@@ -8675,6 +8697,41 @@ impl SseEncode for crate::bindings::Network {
     }
 }
 
+impl SseEncode for crate::model::NwcEvent {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::model::NwcEvent::ConnectedHandled => {
+                <i32>::sse_encode(0, serializer);
+            }
+            crate::model::NwcEvent::DisconnectedHandled => {
+                <i32>::sse_encode(1, serializer);
+            }
+            crate::model::NwcEvent::PayInvoiceHandled {
+                success,
+                preimage,
+                fees_sat,
+                error,
+            } => {
+                <i32>::sse_encode(2, serializer);
+                <bool>::sse_encode(success, serializer);
+                <Option<String>>::sse_encode(preimage, serializer);
+                <Option<u64>>::sse_encode(fees_sat, serializer);
+                <Option<String>>::sse_encode(error, serializer);
+            }
+            crate::model::NwcEvent::ListTransactionsHandled => {
+                <i32>::sse_encode(3, serializer);
+            }
+            crate::model::NwcEvent::GetBalanceHandled => {
+                <i32>::sse_encode(4, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::model::OnchainPaymentLimitsResponse {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -9484,6 +9541,11 @@ impl SseEncode for crate::model::SdkEvent {
                 <i32>::sse_encode(9, serializer);
                 <bool>::sse_encode(did_pull_new_records, serializer);
             }
+            crate::model::SdkEvent::NWC { event_id, details } => {
+                <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(event_id, serializer);
+                <crate::model::NwcEvent>::sse_encode(details, serializer);
+            }
             _ => {
                 unimplemented!("");
             }
@@ -9687,7 +9749,6 @@ mod io {
 
     use super::*;
     use crate::bindings::*;
-    use crate::model::EventListener;
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
@@ -9908,14 +9969,6 @@ mod io {
             }
         }
     }
-    impl CstDecode<crate::bindings::BindingEventListener> for wire_cst_binding_event_listener {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::bindings::BindingEventListener {
-            crate::bindings::BindingEventListener {
-                stream: self.stream.cst_decode(),
-            }
-        }
-    }
     impl CstDecode<crate::bindings::BitcoinAddressData> for wire_cst_bitcoin_address_data {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::bindings::BitcoinAddressData {
@@ -10011,13 +10064,6 @@ mod io {
         fn cst_decode(self) -> crate::model::BackupRequest {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::model::BackupRequest>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::bindings::BindingEventListener> for *mut wire_cst_binding_event_listener {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::bindings::BindingEventListener {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::bindings::BindingEventListener>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::bindings::BitcoinAddressData> for *mut wire_cst_bitcoin_address_data {
@@ -10210,6 +10256,13 @@ mod io {
             CstDecode::<crate::bindings::MessageSuccessActionData>::cst_decode(*wrap).into()
         }
     }
+    impl CstDecode<crate::model::NwcEvent> for *mut wire_cst_nwc_event {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::NwcEvent {
+            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
+            CstDecode::<crate::model::NwcEvent>::cst_decode(*wrap).into()
+        }
+    }
     impl CstDecode<crate::model::PayAmount> for *mut wire_cst_pay_amount {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::model::PayAmount {
@@ -10303,13 +10356,6 @@ mod io {
         fn cst_decode(self) -> crate::model::RestoreRequest {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::model::RestoreRequest>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<crate::model::SdkEvent> for *mut wire_cst_sdk_event {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> crate::model::SdkEvent {
-            let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
-            CstDecode::<crate::model::SdkEvent>::cst_decode(*wrap).into()
         }
     }
     impl CstDecode<crate::model::SendPaymentRequest> for *mut wire_cst_send_payment_request {
@@ -11258,6 +11304,27 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::model::NwcEvent> for wire_cst_nwc_event {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::model::NwcEvent {
+            match self.tag {
+                0 => crate::model::NwcEvent::ConnectedHandled,
+                1 => crate::model::NwcEvent::DisconnectedHandled,
+                2 => {
+                    let ans = unsafe { self.kind.PayInvoiceHandled };
+                    crate::model::NwcEvent::PayInvoiceHandled {
+                        success: ans.success.cst_decode(),
+                        preimage: ans.preimage.cst_decode(),
+                        fees_sat: ans.fees_sat.cst_decode(),
+                        error: ans.error.cst_decode(),
+                    }
+                }
+                3 => crate::model::NwcEvent::ListTransactionsHandled,
+                4 => crate::model::NwcEvent::GetBalanceHandled,
+                _ => unreachable!(),
+            }
+        }
+    }
     impl CstDecode<crate::model::OnchainPaymentLimitsResponse>
         for wire_cst_onchain_payment_limits_response
     {
@@ -11792,6 +11859,13 @@ mod io {
                         did_pull_new_records: ans.did_pull_new_records.cst_decode(),
                     }
                 }
+                10 => {
+                    let ans = unsafe { self.kind.NWC };
+                    crate::model::SdkEvent::NWC {
+                        event_id: ans.event_id.cst_decode(),
+                        details: ans.details.cst_decode(),
+                    }
+                }
                 _ => unreachable!(),
             }
         }
@@ -12066,18 +12140,6 @@ mod io {
         }
     }
     impl Default for wire_cst_backup_request {
-        fn default() -> Self {
-            Self::new_with_null_ptr()
-        }
-    }
-    impl NewWithNullPtr for wire_cst_binding_event_listener {
-        fn new_with_null_ptr() -> Self {
-            Self {
-                stream: core::ptr::null_mut(),
-            }
-        }
-    }
-    impl Default for wire_cst_binding_event_listener {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -12741,6 +12803,19 @@ mod io {
         }
     }
     impl Default for wire_cst_message_success_action_data {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_nwc_event {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                tag: -1,
+                kind: NwcEventKind { nil__: () },
+            }
+        }
+    }
+    impl Default for wire_cst_nwc_event {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -13645,15 +13720,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__binding_event_listener_on_event(
-        port_: i64,
-        that: *mut wire_cst_binding_event_listener,
-        e: *mut wire_cst_sdk_event,
-    ) {
-        wire__crate__bindings__binding_event_listener_on_event_impl(port_, that, e)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_wire__crate__bindings__breez_log_stream(
         port_: i64,
         s: *mut wire_cst_list_prim_u_8_strict,
@@ -13771,14 +13837,6 @@ mod io {
     ) -> *mut wire_cst_backup_request {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_backup_request::new_with_null_ptr(),
-        )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_binding_event_listener(
-    ) -> *mut wire_cst_binding_event_listener {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(
-            wire_cst_binding_event_listener::new_with_null_ptr(),
         )
     }
 
@@ -13979,6 +14037,12 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_nwc_event() -> *mut wire_cst_nwc_event
+    {
+        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_nwc_event::new_with_null_ptr())
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_pay_amount(
     ) -> *mut wire_cst_pay_amount {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
@@ -14077,12 +14141,6 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_restore_request::new_with_null_ptr(),
         )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_breez_liquid_cst_new_box_autoadd_sdk_event() -> *mut wire_cst_sdk_event
-    {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(wire_cst_sdk_event::new_with_null_ptr())
     }
 
     #[unsafe(no_mangle)]
@@ -14454,11 +14512,6 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_backup_request {
         backup_path: *mut wire_cst_list_prim_u_8_strict,
-    }
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub struct wire_cst_binding_event_listener {
-        stream: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15224,6 +15277,26 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_nwc_event {
+        tag: i32,
+        kind: NwcEventKind,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub union NwcEventKind {
+        PayInvoiceHandled: wire_cst_NwcEvent_PayInvoiceHandled,
+        nil__: (),
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_NwcEvent_PayInvoiceHandled {
+        success: bool,
+        preimage: *mut wire_cst_list_prim_u_8_strict,
+        fees_sat: *mut u64,
+        error: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_onchain_payment_limits_response {
         send: wire_cst_limits,
         receive: wire_cst_limits,
@@ -15634,6 +15707,7 @@ mod io {
         PaymentWaitingConfirmation: wire_cst_SdkEvent_PaymentWaitingConfirmation,
         PaymentWaitingFeeAcceptance: wire_cst_SdkEvent_PaymentWaitingFeeAcceptance,
         DataSynced: wire_cst_SdkEvent_DataSynced,
+        NWC: wire_cst_SdkEvent_NWC,
         nil__: (),
     }
     #[repr(C)]
@@ -15680,6 +15754,12 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_SdkEvent_DataSynced {
         did_pull_new_records: bool,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_SdkEvent_NWC {
+        event_id: *mut wire_cst_list_prim_u_8_strict,
+        details: *mut wire_cst_nwc_event,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

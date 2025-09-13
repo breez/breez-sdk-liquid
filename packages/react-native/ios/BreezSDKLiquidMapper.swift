@@ -4317,6 +4317,88 @@ enum BreezSDKLiquidMapper {
         return list
     }
 
+    static func asNwcEvent(nwcEvent: [String: Any?]) throws -> NwcEvent {
+        let type = nwcEvent["type"] as! String
+        if type == "connectedHandled" {
+            return NwcEvent.connectedHandled
+        }
+        if type == "disconnectedHandled" {
+            return NwcEvent.disconnectedHandled
+        }
+        if type == "payInvoiceHandled" {
+            guard let _success = nwcEvent["success"] as? Bool else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "success", typeName: "NwcEvent"))
+            }
+            let _preimage = nwcEvent["preimage"] as? String
+
+            let _feesSat = nwcEvent["feesSat"] as? UInt64
+
+            let _error = nwcEvent["error"] as? String
+
+            return NwcEvent.payInvoiceHandled(success: _success, preimage: _preimage, feesSat: _feesSat, error: _error)
+        }
+        if type == "listTransactionsHandled" {
+            return NwcEvent.listTransactionsHandled
+        }
+        if type == "getBalanceHandled" {
+            return NwcEvent.getBalanceHandled
+        }
+
+        throw SdkError.Generic(message: "Unexpected type \(type) for enum NwcEvent")
+    }
+
+    static func dictionaryOf(nwcEvent: NwcEvent) -> [String: Any?] {
+        switch nwcEvent {
+        case .connectedHandled:
+            return [
+                "type": "connectedHandled",
+            ]
+
+        case .disconnectedHandled:
+            return [
+                "type": "disconnectedHandled",
+            ]
+
+        case let .payInvoiceHandled(
+            success, preimage, feesSat, error
+        ):
+            return [
+                "type": "payInvoiceHandled",
+                "success": success,
+                "preimage": preimage == nil ? nil : preimage,
+                "feesSat": feesSat == nil ? nil : feesSat,
+                "error": error == nil ? nil : error,
+            ]
+
+        case .listTransactionsHandled:
+            return [
+                "type": "listTransactionsHandled",
+            ]
+
+        case .getBalanceHandled:
+            return [
+                "type": "getBalanceHandled",
+            ]
+        }
+    }
+
+    static func arrayOf(nwcEventList: [NwcEvent]) -> [Any] {
+        return nwcEventList.map { v -> [String: Any?] in return dictionaryOf(nwcEvent: v) }
+    }
+
+    static func asNwcEventList(arr: [Any]) throws -> [NwcEvent] {
+        var list = [NwcEvent]()
+        for value in arr {
+            if let val = value as? [String: Any?] {
+                var nwcEvent = try asNwcEvent(nwcEvent: val)
+                list.append(nwcEvent)
+            } else {
+                throw SdkError.Generic(message: errUnexpectedType(typeName: "NwcEvent"))
+            }
+        }
+        return list
+    }
+
     static func asPayAmount(payAmount: [String: Any?]) throws -> PayAmount {
         let type = payAmount["type"] as! String
         if type == "bitcoin" {
@@ -4863,6 +4945,17 @@ enum BreezSDKLiquidMapper {
             }
             return SdkEvent.dataSynced(didPullNewRecords: _didPullNewRecords)
         }
+        if type == "nwc" {
+            guard let _eventId = sdkEvent["eventId"] as? String else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "eventId", typeName: "SdkEvent"))
+            }
+            guard let detailsTmp = sdkEvent["details"] as? [String: Any?] else {
+                throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "details", typeName: "SdkEvent"))
+            }
+            let _details = try asNwcEvent(nwcEvent: detailsTmp)
+
+            return SdkEvent.nwc(eventId: _eventId, details: _details)
+        }
 
         throw SdkError.Generic(message: "Unexpected type \(type) for enum SdkEvent")
     }
@@ -4944,6 +5037,15 @@ enum BreezSDKLiquidMapper {
             return [
                 "type": "dataSynced",
                 "didPullNewRecords": didPullNewRecords,
+            ]
+
+        case let .nwc(
+            eventId, details
+        ):
+            return [
+                "type": "nwc",
+                "eventId": eventId,
+                "details": dictionaryOf(nwcEvent: details),
             ]
         }
     }

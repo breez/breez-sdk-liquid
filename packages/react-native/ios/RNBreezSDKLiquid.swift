@@ -533,6 +533,17 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         }
     }
 
+    @objc(broadcast:resolve:reject:)
+    func broadcast(_ event: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let eventTmp = try BreezSDKLiquidMapper.asSdkEvent(sdkEvent: event)
+            try getBindingLiquidSdk().broadcast(event: eventTmp)
+            resolve(["status": "ok"])
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
     func rejectErr(err: Error, reject: @escaping RCTPromiseRejectBlock) {
         var errorName = "Generic"
         var message = "\(err)"

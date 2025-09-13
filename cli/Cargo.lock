@@ -662,6 +662,7 @@ name = "breez-liquid-cli"
 version = "0.3.3"
 dependencies = [
  "anyhow",
+ "async-trait",
  "bip39",
  "breez-sdk-liquid",
  "clap",

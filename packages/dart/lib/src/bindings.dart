@@ -12,7 +12,8 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'bindings.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `init`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DartBindingLogger`
+// These functions are ignored because they have generic arguments: `on_event`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `BindingEventListener`, `DartBindingLogger`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `enabled`, `flush`, `log`
 
 Future<BindingLiquidSdk> connect({required ConnectRequest req, List<ArcPlugin>? plugins}) =>
@@ -166,23 +167,6 @@ sealed class Amount with _$Amount {
   const factory Amount.bitcoin({required BigInt amountMsat}) = Amount_Bitcoin;
   const factory Amount.currency({required String iso4217Code, required BigInt fractionalAmount}) =
       Amount_Currency;
-}
-
-class BindingEventListener {
-  final RustStreamSink<SdkEvent> stream;
-
-  const BindingEventListener({required this.stream});
-
-  Future<void> onEvent({required SdkEvent e}) =>
-      RustLib.instance.api.crateBindingsBindingEventListenerOnEvent(that: this, e: e);
-
-  @override
-  int get hashCode => stream.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BindingEventListener && runtimeType == other.runtimeType && stream == other.stream;
 }
 
 class BitcoinAddressData {

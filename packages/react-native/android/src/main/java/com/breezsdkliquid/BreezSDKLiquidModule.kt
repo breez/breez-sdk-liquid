@@ -726,4 +726,20 @@ class BreezSDKLiquidModule(
             }
         }
     }
+
+    @ReactMethod
+    fun broadcast(
+        event: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val eventTmp = asSdkEvent(event) ?: run { throw SdkException.Generic(errMissingMandatoryField("event", "SdkEvent")) }
+                getBindingLiquidSdk().broadcast(eventTmp)
+                promise.resolve(readableMapOf("status" to "ok"))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
 }

@@ -53,7 +53,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 464449310;
+  int get rustContentHash => 168485793;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'breez_sdk_liquid',
@@ -213,11 +213,6 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateBindingsBindingLiquidSdkSync({required BindingLiquidSdk that});
 
   Future<void> crateBindingsBindingLiquidSdkUnregisterWebhook({required BindingLiquidSdk that});
-
-  Future<void> crateBindingsBindingEventListenerOnEvent({
-    required BindingEventListener that,
-    required SdkEvent e,
-  });
 
   Stream<LogEntry> crateBindingsBreezLogStream();
 
@@ -1271,29 +1266,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BindingLiquidSdk_unregister_webhook", argNames: ["that"]);
 
   @override
-  Future<void> crateBindingsBindingEventListenerOnEvent({
-    required BindingEventListener that,
-    required SdkEvent e,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          var arg0 = cst_encode_box_autoadd_binding_event_listener(that);
-          var arg1 = cst_encode_box_autoadd_sdk_event(e);
-          return wire.wire__crate__bindings__binding_event_listener_on_event(port_, arg0, arg1);
-        },
-        codec: DcoCodec(decodeSuccessData: dco_decode_unit, decodeErrorData: null),
-        constMeta: kCrateBindingsBindingEventListenerOnEventConstMeta,
-        argValues: [that, e],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateBindingsBindingEventListenerOnEventConstMeta =>
-      const TaskConstMeta(debugName: "binding_event_listener_on_event", argNames: ["that", "e"]);
-
-  @override
   Stream<LogEntry> crateBindingsBreezLogStream() {
     final s = RustStreamSink<LogEntry>();
     unawaited(
@@ -1574,14 +1546,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BindingEventListener dco_decode_binding_event_listener(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 1) throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
-    return BindingEventListener(stream: dco_decode_StreamSink_sdk_event_Dco(arr[0]));
-  }
-
-  @protected
   BitcoinAddressData dco_decode_bitcoin_address_data(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1665,12 +1629,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BackupRequest dco_decode_box_autoadd_backup_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_backup_request(raw);
-  }
-
-  @protected
-  BindingEventListener dco_decode_box_autoadd_binding_event_listener(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_binding_event_listener(raw);
   }
 
   @protected
@@ -1830,6 +1788,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  NwcEvent dco_decode_box_autoadd_nwc_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_nwc_event(raw);
+  }
+
+  @protected
   PayAmount dco_decode_box_autoadd_pay_amount(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_pay_amount(raw);
@@ -1905,12 +1869,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RestoreRequest dco_decode_box_autoadd_restore_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_restore_request(raw);
-  }
-
-  @protected
-  SdkEvent dco_decode_box_autoadd_sdk_event(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_sdk_event(raw);
   }
 
   @protected
@@ -2691,6 +2649,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  NwcEvent dco_decode_nwc_event(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return NwcEvent_ConnectedHandled();
+      case 1:
+        return NwcEvent_DisconnectedHandled();
+      case 2:
+        return NwcEvent_PayInvoiceHandled(
+          success: dco_decode_bool(raw[1]),
+          preimage: dco_decode_opt_String(raw[2]),
+          feesSat: dco_decode_opt_box_autoadd_u_64(raw[3]),
+          error: dco_decode_opt_String(raw[4]),
+        );
+      case 3:
+        return NwcEvent_ListTransactionsHandled();
+      case 4:
+        return NwcEvent_GetBalanceHandled();
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
   OnchainPaymentLimitsResponse dco_decode_onchain_payment_limits_response(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3320,6 +3302,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return SdkEvent_Synced();
       case 9:
         return SdkEvent_DataSynced(didPullNewRecords: dco_decode_bool(raw[1]));
+      case 10:
+        return SdkEvent_NWC(
+          eventId: dco_decode_String(raw[1]),
+          details: dco_decode_box_autoadd_nwc_event(raw[2]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -3686,13 +3673,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BindingEventListener sse_decode_binding_event_listener(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_stream = sse_decode_StreamSink_sdk_event_Dco(deserializer);
-    return BindingEventListener(stream: var_stream);
-  }
-
-  @protected
   BitcoinAddressData sse_decode_bitcoin_address_data(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_address = sse_decode_String(deserializer);
@@ -3787,12 +3767,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   BackupRequest sse_decode_box_autoadd_backup_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_backup_request(deserializer));
-  }
-
-  @protected
-  BindingEventListener sse_decode_box_autoadd_binding_event_listener(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_binding_event_listener(deserializer));
   }
 
   @protected
@@ -3956,6 +3930,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  NwcEvent sse_decode_box_autoadd_nwc_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_nwc_event(deserializer));
+  }
+
+  @protected
   PayAmount sse_decode_box_autoadd_pay_amount(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_pay_amount(deserializer));
@@ -4031,12 +4011,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RestoreRequest sse_decode_box_autoadd_restore_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_restore_request(deserializer));
-  }
-
-  @protected
-  SdkEvent sse_decode_box_autoadd_sdk_event(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_sdk_event(deserializer));
   }
 
   @protected
@@ -5003,6 +4977,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  NwcEvent sse_decode_nwc_event(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return NwcEvent_ConnectedHandled();
+      case 1:
+        return NwcEvent_DisconnectedHandled();
+      case 2:
+        var var_success = sse_decode_bool(deserializer);
+        var var_preimage = sse_decode_opt_String(deserializer);
+        var var_feesSat = sse_decode_opt_box_autoadd_u_64(deserializer);
+        var var_error = sse_decode_opt_String(deserializer);
+        return NwcEvent_PayInvoiceHandled(
+          success: var_success,
+          preimage: var_preimage,
+          feesSat: var_feesSat,
+          error: var_error,
+        );
+      case 3:
+        return NwcEvent_ListTransactionsHandled();
+      case 4:
+        return NwcEvent_GetBalanceHandled();
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
   OnchainPaymentLimitsResponse sse_decode_onchain_payment_limits_response(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_send = sse_decode_limits(deserializer);
@@ -5831,6 +5835,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 9:
         var var_didPullNewRecords = sse_decode_bool(deserializer);
         return SdkEvent_DataSynced(didPullNewRecords: var_didPullNewRecords);
+      case 10:
+        var var_eventId = sse_decode_String(deserializer);
+        var var_details = sse_decode_box_autoadd_nwc_event(deserializer);
+        return SdkEvent_NWC(eventId: var_eventId, details: var_details);
       default:
         throw UnimplementedError('');
     }
@@ -6305,12 +6313,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_binding_event_listener(BindingEventListener self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_StreamSink_sdk_event_Dco(self.stream, serializer);
-  }
-
-  @protected
   void sse_encode_bitcoin_address_data(BitcoinAddressData self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.address, serializer);
@@ -6396,12 +6398,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_backup_request(BackupRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_backup_request(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_binding_event_listener(BindingEventListener self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_binding_event_listener(self, serializer);
   }
 
   @protected
@@ -6576,6 +6572,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_nwc_event(NwcEvent self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_nwc_event(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_pay_amount(PayAmount self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_pay_amount(self, serializer);
@@ -6660,12 +6662,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_box_autoadd_restore_request(RestoreRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_restore_request(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_sdk_event(SdkEvent self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_sdk_event(self, serializer);
   }
 
   @protected
@@ -7421,6 +7417,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_nwc_event(NwcEvent self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case NwcEvent_ConnectedHandled():
+        sse_encode_i_32(0, serializer);
+      case NwcEvent_DisconnectedHandled():
+        sse_encode_i_32(1, serializer);
+      case NwcEvent_PayInvoiceHandled(
+        success: final success,
+        preimage: final preimage,
+        feesSat: final feesSat,
+        error: final error,
+      ):
+        sse_encode_i_32(2, serializer);
+        sse_encode_bool(success, serializer);
+        sse_encode_opt_String(preimage, serializer);
+        sse_encode_opt_box_autoadd_u_64(feesSat, serializer);
+        sse_encode_opt_String(error, serializer);
+      case NwcEvent_ListTransactionsHandled():
+        sse_encode_i_32(3, serializer);
+      case NwcEvent_GetBalanceHandled():
+        sse_encode_i_32(4, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_onchain_payment_limits_response(
     OnchainPaymentLimitsResponse self,
     SseSerializer serializer,
@@ -8108,6 +8130,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case SdkEvent_DataSynced(didPullNewRecords: final didPullNewRecords):
         sse_encode_i_32(9, serializer);
         sse_encode_bool(didPullNewRecords, serializer);
+      case SdkEvent_NWC(eventId: final eventId, details: final details):
+        sse_encode_i_32(10, serializer);
+        sse_encode_String(eventId, serializer);
+        sse_encode_box_autoadd_nwc_event(details, serializer);
     }
   }
 
