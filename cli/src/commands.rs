@@ -4,8 +4,9 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::NwcService;
 use clap::{arg, ArgAction, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
@@ -17,7 +18,7 @@ use rustyline::{hint::HistoryHinter, Completer, Helper, Hinter, Validator};
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
-use crate::Args;
+use crate::{Args, NWC_SERVICE};
 
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum Command {
@@ -277,6 +278,12 @@ pub(crate) enum Command {
     ListFiat {},
     /// Fetch available fiat rates
     FetchFiatRates {},
+    /// Creates and saves an NWC connection string
+    AddConnectionString { name: String },
+    /// Lists the available NWC connection strings
+    ListConnectionStrings {},
+    /// Removes a saved NWC connection string
+    RemoveConnectionString { name: String },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -470,6 +477,7 @@ pub(crate) async fn handle_command(
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
                     amount,
+                    disable_mrh: None,
                 })
                 .await?;
 
@@ -862,6 +870,18 @@ pub(crate) async fn handle_command(
         Command::ListFiat {} => {
             let res = sdk.list_fiat_currencies().await?;
             command_result!(res)
+        }
+        Command::AddConnectionString { name } => {
+            let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
+            command_result!(nwc_service.add_connection_string(name).await?)
+        }
+        Command::ListConnectionStrings {} => {
+            let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
+            command_result!(nwc_service.list_connection_strings().await?)
+        }
+        Command::RemoveConnectionString { name } => {
+            let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
+            command_result!(nwc_service.remove_connection_string(name).await?)
         }
     })
 }

@@ -1322,6 +1322,11 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let use_mrh = match req.disable_mrh {
+            Some(disable_mrh) => !disable_mrh,
+            None => self.config.use_magic_routing_hints,
+        };
+
         let get_info_res = self.get_info().await?;
         let fees_sat;
         let estimated_asset_fees;
@@ -1523,7 +1528,7 @@ impl LiquidSdk {
                 }
 
                 let lbtc_pair = self.validate_submarine_pairs(invoice_amount_sat).await?;
-                let mrh_address = if self.config.use_magic_routing_hints {
+                let mrh_address = if use_mrh {
                     self.swapper
                         .check_for_mrh(&invoice.bolt11)
                         .await?
@@ -1671,6 +1676,7 @@ impl LiquidSdk {
             estimated_asset_fees,
             amount: req.amount.clone(),
             exchange_amount_sat,
+            disable_mrh: req.disable_mrh,
         })
     }
 
@@ -1703,6 +1709,11 @@ impl LiquidSdk {
         req: &SendPaymentRequest,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
+
+        let use_mrh = match req.prepare_response.disable_mrh {
+            Some(disable_mrh) => !disable_mrh,
+            None => self.config.use_magic_routing_hints,
+        };
 
         let PrepareSendResponse {
             fees_sat,
@@ -1779,7 +1790,7 @@ impl LiquidSdk {
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let mut response = self
-                    .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain)
+                    .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain, use_mrh)
                     .await?;
                 self.insert_payment_details(&req.payer_note, bip353_address, &mut response)?;
                 Ok(response)
@@ -1805,6 +1816,7 @@ impl LiquidSdk {
                         bolt12_info,
                         fees_sat,
                         is_drain,
+                        use_mrh,
                     )
                     .await?;
                 self.insert_payment_details(&req.payer_note, bip353_address, &mut response)?;
@@ -1845,6 +1857,7 @@ impl LiquidSdk {
         invoice: &str,
         fees_sat: u64,
         is_drain: bool,
+        use_mrh: bool,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_send_is_not_self_transfer(invoice)?;
         let bolt11_invoice = self.validate_bolt11_invoice(invoice)?;
@@ -1867,7 +1880,7 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Hash(_) => None,
         };
 
-        let mrh_address = if self.config.use_magic_routing_hints {
+        let mrh_address = if use_mrh {
             self.swapper
                 .check_for_mrh(invoice)
                 .await?
@@ -1929,6 +1942,7 @@ impl LiquidSdk {
         bolt12_info: GetBolt12FetchResponse,
         fees_sat: u64,
         is_drain: bool,
+        use_mrh: bool,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let invoice = self.validate_bolt12_invoice(
             offer,
@@ -1944,10 +1958,7 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        match (
-            bolt12_info.magic_routing_hint,
-            self.config.use_magic_routing_hints,
-        ) {
+        match (bolt12_info.magic_routing_hint, use_mrh) {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
             (Some(MagicRoutingHint { bip21, signature }), true) => {
                 info!(
@@ -4639,6 +4650,7 @@ impl LiquidSdk {
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
                         amount: Some(req.amount.clone()),
+                        disable_mrh: None,
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
@@ -4697,6 +4709,7 @@ impl LiquidSdk {
                     estimated_asset_fees: None,
                     exchange_amount_sat: None,
                     amount: Some(prepare_response.amount),
+                    disable_mrh: None,
                 },
                 use_asset_fees: None,
                 payer_note: prepare_response.comment.clone(),
