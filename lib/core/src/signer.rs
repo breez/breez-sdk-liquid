@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::str::FromStr;
 
 use anyhow::anyhow;
 use bip39::Mnemonic;
@@ -115,6 +116,14 @@ impl LwkSigner for SdkLwkSigner {
     type Error = SignError;
 
     fn sign(&self, pset: &mut PartiallySignedTransaction) -> Result<u32, Self::Error> {
+        if let Some(psbt_signer) = &self.psbt_sdk_signer {
+            let (signed_psbt, signature_added) = psbt_signer.sign(pset.to_string())?;
+            let signed_psbt = PartiallySignedTransaction::from_str(&signed_psbt)?;
+            pset.merge(signed_psbt)?;
+
+            return Ok(signature_added);
+        }
+
         let tx = pset.extract_tx()?;
         let mut sighash_cache = SighashCache::new(&tx);
         let mut signature_added = 0;
