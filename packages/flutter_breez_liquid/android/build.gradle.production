@@ -18,12 +18,11 @@ rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url("https://mvn.breez.technology/releases") }
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlinx-serialization'
 
 android {
     if (project.android.hasProperty("namespace")) {
@@ -36,7 +35,7 @@ android {
 
     // Use the NDK version
     // declared in /android/app/build.gradle file of the Flutter project.
-    // Replace it with a version number if this plugin requires a specific NDK version.
+    // Replace it with a version number if this plugin requires a specfic NDK version.
     // (e.g. ndkVersion "23.1.7779620")
     ndkVersion android.ndkVersion
 
@@ -56,24 +55,17 @@ android {
     sourceSets {
         main {
             java.srcDirs = [
-                    'src/main/java',
-                    'src/main/kotlin',
-                    'src/main/kotlin/breez_sdk_liquid_notification'
+                'src/main/java',
+                'src/main/kotlin',
+                'src/main/kotlin/breez_sdk_liquid_notification'
             ]
         }
     }
 }
 
 dependencies {
-    // NSE dependencies
-    implementation 'net.java.dev.jna:jna:5.14.0@aar'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    /* JSON serialization */
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0'
-    /* Kotlin bindgen dependencies */
-    implementation 'org.jetbrains.kotlinx:atomicfu:0.29.0'
-    implementation 'com.squareup.okio:okio:3.16.0'
+    api "breez_sdk_liquid:bindings-android:$version"
+    implementation "net.java.dev.jna:jna:5.14.0@aar"
 }
 
 apply from: "../cargokit/gradle/plugin.gradle"

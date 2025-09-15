@@ -1,1 +1,8 @@
 rootProject.name = 'flutter_breez_liquid'
+
+dependencyResolutionManagement {
+    repositories {
+        maven { url("https://mvn.breez.technology/releases") }
+    }
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+}
