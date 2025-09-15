@@ -1,4 +1,4 @@
-name: Publish Flutter Bindings
+name: Publish Flutter Package
 on:
   workflow_call:
     inputs:
@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       package-version:
-        description: 'Version for the package (MAJOR.MINOR.PATCH)'
+        description: 'Version for the Flutter package (MAJOR.MINOR.PATCH) // (no v prefix)'
         required: true
         type: string
       publish:
@@ -47,12 +47,6 @@ jobs:
     outputs:
       package-version: ${{ inputs.package-version }}
     steps:
-      - name: Checkout SDK Repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ inputs.repository || github.repository }}
-          ref: ${{ inputs.ref || github.sha }}
-
       - name: Checkout Flutter Package Repository
         uses: actions/checkout@v4
         with:
@@ -60,6 +54,12 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_KEY }}
           fetch-depth: 0
           path: dist
+
+      - name: Checkout SDK Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Setup Just
         uses: extractions/setup-just@v2
@@ -91,28 +91,28 @@ jobs:
         run: |
           # Remove existing directories
           rm -rf android ios macos lib rust
-          
+
           # Copy source directories
           cp -r ../packages/flutter_breez_liquid/{android,ios,macos,lib,rust} .
-          
+
           # Clean up gitignore files
           find . -name '.gitignore' -path '*/flutter_breez_liquid/*' -delete
-          
+
           # Use production configurations
           mv android/build.gradle.production android/build.gradle
           mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
           mv macos/flutter_breez_liquid.podspec.production macos/flutter_breez_liquid.podspec
-          
+
           # Copy generated bindings
           cp -r ../build/packages/flutter_breez_liquid/lib .
-          
+
           # Copy header files
           cp ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ios/Classes/
           cp ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h macos/Classes/
-          
+
           # Clean up build artifacts
           rm -rf rust/target
-          
+
           # Copy package metadata
           cp ../packages/flutter_breez_liquid/*.yaml .
 
@@ -122,7 +122,7 @@ jobs:
           for file in CHANGELOG.md LICENSE README.md; do
             [ -f "../build/packages/flutter_breez_liquid/$file" ] && cp "../build/packages/flutter_breez_liquid/$file" . || echo "Warning: $file not found"
           done
-      
+
       - name: Download Swift Bindings
         uses: actions/download-artifact@v4
         with:
@@ -132,7 +132,7 @@ jobs:
       - name: Clean Swift Artifacts
         working-directory: dist/ios/Sources/BreezSDKLiquid/
         run: rm -f breez_sdk_liquidFFI.h breez_sdk_liquidFFI.modulemap
-      
+
       - name: Sync iOS to macOS Sources
         working-directory: dist
         run: cp -r ios/Sources/ macos/Sources/
@@ -141,16 +141,16 @@ jobs:
         working-directory: dist
         run: |
           # Update pubspec.yaml
-          sed -i "s/version:.*/version: ${{ inputs.package-version }}/" pubspec.yaml
-          
+          sed -i.bak -e "s/version:.*/version: ${{ inputs.package-version }}/" pubspec.yaml
+
           # Update Android gradle
-          sed -i "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
-          
+          sed -i.bak -e "s/^version .*/version '${{ inputs.package-version }}'/" android/build.gradle
+
           # Update iOS podspec
-          sed -i "s/^version = .*/version = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
-          
+          sed -i.bak -e "s/^version = .*/version = '${{ inputs.package-version }}'/" ios/flutter_breez_liquid.podspec
+
           # Update macOS podspec
-          sed -i "s/^version = .*/version = '${{ inputs.package-version }}'/" macos/flutter_breez_liquid.podspec
+          sed -i.bak -e "s/^version = .*/version = '${{ inputs.package-version }}'/" macos/flutter_breez_liquid.podspec
 
       - name: Validate Package Structure
         working-directory: dist
@@ -175,16 +175,16 @@ jobs:
         run: |
           git config user.name "Breez SDK Bot"
           git config user.email "sdk-bot@breez.technology"
-          
+
           git add .
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
-          
+
           git commit -m "chore: release Flutter package v${{ inputs.package-version }}"
           git push
-          
+
           # Create and push tag
           git tag "v${{ inputs.package-version }}" -m "Release v${{ inputs.package-version }}"
           git push origin "v${{ inputs.package-version }}"
