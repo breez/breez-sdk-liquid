@@ -9,6 +9,13 @@ When developing, you can work with locally built versions of all components inst
 
 All the following commands can be run in the `packages/flutter_breez_liquid` directory.
 
+## Prerequisites
+### Required
+This guide assumes you have the following tools installed on any development machines:
+- [Flutter](https://docs.flutter.dev/get-started/install)
+- [rustup](https://rustup.rs)
+- [just](https://github.com/casey/just?tab=readme-ov-file#installation) command runner.
+
 ## Building and setup
 
 To install all requirements and build everything, simply run:
@@ -40,7 +47,7 @@ The command generates the following artifacts:
 
 ## Available commands
 
-You can also run individual build steps:
+You can also run individual build steps. To see all available recipes, run `just`:
 
 ```bash
 just init                    # Install dependencies only
