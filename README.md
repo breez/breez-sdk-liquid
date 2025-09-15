@@ -68,7 +68,7 @@ When receiving a payment, the SDK performs a reverse submarine swap, converting 
 - **lib**: Contains the root Rust cargo workspace.
     - **bindings**: The ffi bindings for Kotlin, Python, React Native, and Swift.
     - **core**: The core SDK - *Liquid* rust library.
-- **packages**: Contains the plugin packages for React Native.
+- **packages**: Contains the plugin packages for Flutter & React Native.
 
 Within each sub-project readme, there are instructions on how to build, test, and run.
 
