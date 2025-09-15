@@ -79,8 +79,8 @@ jobs:
       - name: Update Cargo Dependencies
         working-directory: packages/flutter_breez_liquid/rust
         run: |
-          cp Cargo.toml Cargo.toml.bak
-          sed -i 's/^breez-sdk-liquid = .*/breez-sdk-liquid = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "${{ github.sha }}" }/' Cargo.toml
+          HASH=$(git rev-parse HEAD)
+          sed -i.bak -e 's/^breez-sdk-liquid = .*/breez-sdk-liquid = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "'"$HASH"'"}/' Cargo.toml
 
       - name: Generate Flutter Bindings
         working-directory: packages/flutter_breez_liquid/rust
