@@ -38,6 +38,10 @@ __*[lib/wasm](lib/wasm)*__
 * [model.rs](lib/wasm/src/model.rs) - Update the structs/enums exported.
 * [lib.rs](lib/wasm/src/lib.rs) - Update the Rust interface for the Wasm bindings.
 
+__*[packages/flutter_breez_liquid/rust](packages/flutter_breez_liquid/rust)*__
+* [models.rs](packages/flutter_breez_liquid/rust/src/models.rs) - Update the structs/enums mirrored.
+* [sdk.rs](packages/flutter_breez_liquid/rust/src/sdk.rs) - Update the Rust interface for the Flutter bindings.
+
 After making these changes the [React Native](packages/react-native) bindings code also need to be regenerated and included in your pull request. You can regenerate these from the project root using `make codegen`. [React Native](packages/react-native/DEVELOPMENT.md) and [Wasm](lib/wasm/DEVELOPMENT.md) if this is your first time generating code.
 
 #### Testing
