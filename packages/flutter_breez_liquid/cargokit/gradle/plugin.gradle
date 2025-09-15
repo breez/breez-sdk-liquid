@@ -1,5 +1,7 @@
 /// This is copied from Cargokit (which is the official way to use it currently)
 /// Details: https://fzyzcjy.github.io/flutter_rust_bridge/manual/integrate/builtin
+/// Updated to  
+/// - support new Flutter Gradle Plugin
 
 import java.nio.file.Paths
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -95,7 +97,12 @@ class CargoKitPlugin implements Plugin<Project> {
    private Plugin _findFlutterPlugin(Map projects) {
         for (project in projects) {
             for (plugin in project.value.getPlugins()) {
-                if (plugin.class.name == "FlutterPlugin") {
+                def pluginClassName = plugin.class.name
+
+                // Support both old and new Flutter plugins
+                if (pluginClassName == "FlutterPlugin" || 
+                    pluginClassName.contains("FlutterPlugin") ||
+                    pluginClassName.contains("flutter.gradle.plugin")) {
                     return plugin;
                 }
             }
@@ -121,8 +128,23 @@ class CargoKitPlugin implements Plugin<Project> {
         def cargoBuildDir = "${project.buildDir}/build"
         
         // Determine if the project is an application or library
-        def isApplication = plugin.project.plugins.hasPlugin('com.android.application')
-        def variants = isApplication ? plugin.project.android.applicationVariants : plugin.project.android.libraryVariants
+        def isApplication = false
+        def variants = null
+        
+        // Try to find the app project for new Flutter plugin structure
+        def appProject = project.rootProject.childProjects['app']
+        if (appProject != null) {
+            isApplication = appProject.plugins.hasPlugin('com.android.application')
+            if (isApplication) {
+                variants = appProject.android.applicationVariants
+            }
+        }
+        
+        // Fallback to old method if app project not found
+        if (variants == null) {
+            isApplication = plugin.project.plugins.hasPlugin('com.android.application')
+            variants = isApplication ? plugin.project.android.applicationVariants : plugin.project.android.libraryVariants
+        }
 
         variants.all { variant ->
 
@@ -132,7 +154,7 @@ class CargoKitPlugin implements Plugin<Project> {
             def jniLibs = project.android.sourceSets.maybeCreate(buildType).jniLibs;
             jniLibs.srcDir(new File(cargoOutputDir))
 
-            def platforms = plugin.getTargetPlatforms().collect()
+            def platforms = com.flutter.gradle.FlutterPluginUtils.getTargetPlatforms(project).collect()
 
             // Same thing addFlutterDependencies does in flutter.gradle
             if (buildType == "debug") {
