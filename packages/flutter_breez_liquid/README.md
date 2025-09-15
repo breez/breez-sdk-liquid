@@ -9,6 +9,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Documentation](#documentation)
+- [License](#license)
 
 ## Platform Support
 
@@ -56,3 +57,7 @@ Please refer to Dart examples on our official documentation for more information
 ## Documentation
 
 - [Official Breez SDK - Nodeless (*Liquid Implementation*) documentation](https://sdk-doc-liquid.breez.technology/)
+
+## License
+
+Dual-licensed under Apache 2.0 and MIT.
