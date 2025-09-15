@@ -54,7 +54,7 @@ gen ios='true':
 
 # Generate Dart/Flutter bindings
 codegen:
-	mkdir -p ../lib/src/rust
+	mkdir -p lib/src/rust
 	{{frb_bin}}
 
 # Builds the uniFFI framework & copy C headers
