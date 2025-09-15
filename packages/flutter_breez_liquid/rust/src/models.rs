@@ -563,6 +563,8 @@ pub struct _ReceivePaymentRequest {
 #[frb(mirror(ReceivePaymentResponse))]
 pub struct _ReceivePaymentResponse {
     pub destination: String,
+    pub liquid_expiration_blockheight: Option<u32>,
+    pub bitcoin_expiration_blockheight: Option<u32>,
 }
 
 #[frb(mirror(RecommendedFees))]
@@ -711,8 +713,8 @@ pub enum _PaymentDetails {
         bitcoin_address: String,
         description: String,
         auto_accepted_fees: bool,
-        liquid_expiration_blockheight: Option<u32>,
-        bitcoin_expiration_blockheight: Option<u32>,
+        liquid_expiration_blockheight: u32,
+        bitcoin_expiration_blockheight: u32,
         lockup_tx_id: Option<String>,
         claim_tx_id: Option<String>,
         refund_tx_id: Option<String>,
