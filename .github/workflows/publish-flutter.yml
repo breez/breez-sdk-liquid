@@ -61,11 +61,6 @@ jobs:
           fetch-depth: 0
           path: dist
 
-      - name: Setup Build Environment
-        uses: ./.github/actions/setup-build
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Just
         uses: extractions/setup-just@v2
 
