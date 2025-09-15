@@ -301,7 +301,12 @@ class CargokitUserOptions {
       }
       userProjectDir = userProjectDir.parent;
     }
-    return CargokitUserOptions._();
+    // Use precompiled binaries by default so it's not necessary to create a cargokit_options.yaml file on host app.
+    // Note: This fallbacks to building from source if precompiled binaries not available for crate hash.
+    return CargokitUserOptions(
+      usePrecompiledBinaries: true,
+      verboseLogging: false,
+    );
   }
 
   final bool usePrecompiledBinaries;
