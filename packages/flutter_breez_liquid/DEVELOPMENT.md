@@ -87,3 +87,6 @@ For faster iteration, you can build only the platform you're testing:
 **Android specific issues:**
 - Ensure Android SDK and NDK are properly configured
 - Try `flutter clean && ./gradlew clean` and rebuild if encountering JNI issues
+
+**flutter_rust_bridge specific issues:**
+- [flutter_rust_bridge > Troubleshooting](https://cjycode.com/flutter_rust_bridge/manual/troubleshooting)
