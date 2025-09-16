@@ -117,10 +117,6 @@ jobs:
           # Copy generated bindings
           cp -r ../build/packages/flutter_breez_liquid/lib .
 
-          # Copy header files
-          cp ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h ios/Classes/
-          cp ../build/lib/bindings/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h macos/Classes/
-
           # Clean up build artifacts
           rm -rf rust/target
 
@@ -139,6 +135,12 @@ jobs:
         with:
           name: bindings-swift
           path: dist/ios/Sources/BreezSDKLiquid/
+
+      - name: Copy Header Files
+        working-directory: dist
+        run: |
+          cp ios/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h ios/Classes/
+          cp ios/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h macos/Classes/
 
       - name: Clean Swift Artifacts
         working-directory: dist/ios/Sources/BreezSDKLiquid/
