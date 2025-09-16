@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ============================================================
+# WARNING: UniFFI bindings must be built via:
+# ./build_uniffi_swift.sh
+# before running this script.
+# ============================================================
+
+echo "WARNING: Run ./build_uniffi_swift.sh before this script."
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$SCRIPT_DIR/../../.."
 LIB_DIR="$ROOT/lib/bindings"
@@ -18,7 +26,7 @@ log() {
 log "Building iOS/macOS frameworks..."
 (
   cd "$LIB_DIR"
-  make init ios-universal build-ios-framework
+  make build-ios-framework
 )
 
 # Clean existing frameworks and sources
