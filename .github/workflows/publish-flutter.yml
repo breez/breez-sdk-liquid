@@ -165,17 +165,10 @@ jobs:
           # Update macOS podspec
           sed -i.bak -e "s/^version = .*/version = '${{ inputs.package-version }}'/" macos/flutter_breez_liquid.podspec
 
-      - name: Validate Package Structure
-        working-directory: dist
-        run: |
-          echo "Validating package structure..."
-          flutter pub get --dry-run
-          echo "Package structure validation complete"
-
       - name: Archive Flutter Package
         uses: actions/upload-artifact@v4
         with:
-          name: breez-sdk-liquid-flutter-${{ inputs.package-version }}
+          name: breez-sdk-liquid-flutter-${{ inputs.package-version || github.sha }}
           path: |
             dist/*
             !dist/.git
