@@ -10,7 +10,6 @@ default:
 # Initializes the workspace
 bootstrap frb='true' build='false':
 	@if {{frb}} == true; then just frb; fi
-	just init
 	@if {{build}} == true; then just build; fi
 
 # Install flutter_rust_bridge_codegen dependencies
@@ -21,13 +20,6 @@ frb:
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
-
-init:
-	just init-sdk
-
-# Install Breez Liquid SDK dependencies
-init-sdk:
-	brew install protobuf
 
 # Builds the uniFFI library & Generates Dart/Flutter bindings
 build:
