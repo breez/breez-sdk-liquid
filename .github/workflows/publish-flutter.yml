@@ -61,6 +61,12 @@ jobs:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
 
+      - name: Install Protocol Buffers Compiler
+        uses: arduino/setup-protoc@v3
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Just
         uses: extractions/setup-just@v2
 
