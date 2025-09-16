@@ -486,11 +486,6 @@ jobs:
         working-directory: packages/flutter_breez_liquid/
         run: just codegen
 
-      - name: Build iOS Framework & Softlink C Headers
-        working-directory: packages/flutter_breez_liquid/
-        if: ${{ success() || failure() }}
-        run: just build-ios-framework
-
       - name: Static Analysis
         working-directory: packages/flutter_breez_liquid/
         if: ${{ success() || failure() }}
