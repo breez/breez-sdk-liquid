@@ -20,7 +20,7 @@ This guide assumes you have the following tools installed on any development mac
 
 To install all requirements and build everything, simply run:
 ```bash
-just bootstrap true true
+just setup build
 ```
 
 This single command will:
@@ -50,7 +50,8 @@ The command generates the following artifacts:
 You can also run individual build steps. To see all available recipes, run `just`:
 
 ```bash
-just init                    # Install dependencies only
+just setup                   # Install required dependencies
+just check-deps              # Check system dependencies
 just build                   # Build UniFFI library and generate bindings
 just build-uniffi            # Build UniFFI library for all platforms
 just build-uniffi-android    # Build UniFFI library for Android only
@@ -58,6 +59,7 @@ just build-uniffi-swift      # Build UniFFI library for iOS/macOS only
 just gen                     # Generate Dart bindings and iOS frameworks
 just codegen                 # Generate Dart bindings only
 just version                 # Update version across all platform files
+just clean                   # Clean all build artifacts
 ```
 
 ## Development workflow
@@ -65,7 +67,7 @@ just version                 # Update version across all platform files
 For iterative development:
 
 1. Make changes to the Rust core or bindings
-2. Rebuild with `just build` (or `just bootstrap true true` for full rebuild)
+2. Rebuild with `just build`
 3. Test changes on [Misty Breez](https://github.com/breez/misty-breez) app with `flutter run`
 
 For faster iteration, you can build only the platform you're testing:

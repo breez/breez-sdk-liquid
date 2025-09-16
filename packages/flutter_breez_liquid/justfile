@@ -7,19 +7,79 @@ export CARGO_TERM_COLOR := "always"
 default:
   just --list --unsorted
 
-# Initializes the workspace
-bootstrap frb='true' build='false':
-	@if {{frb}} == true; then just frb; fi
-	@if {{build}} == true; then just build; fi
+# Initializes the workspace (run this first)
+setup: install-protobuf frb
+	flutter pub get
+	just check-deps
+	@echo "🎉 Setup complete! You can now run 'just build' to build the project."
+
+# Install protobuf compiler based on OS
+install-protobuf:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	
+	if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+		echo "Installing protobuf on Linux..."
+		sudo apt-get update && sudo apt-get install -y protobuf-compiler
+	elif [[ "$OSTYPE" == "darwin"* ]]; then
+		echo "Installing protobuf on macOS..."
+		brew install protobuf
+	else
+		echo "Unsupported OS. Please install protobuf compiler manually."
+		exit 1
+	fi
+	
+	# Verify installation
+	if command -v protoc &> /dev/null; then
+		echo "✅ protobuf installed: $(protoc --version)"
+	else
+		echo "❌ protobuf installation failed"
+		exit 1
+	fi
 
 # Install flutter_rust_bridge_codegen dependencies
 frb:
-	# This is locked plist PR https://github.com/ebarnard/rust-plist/pull/152 is merged/released
+	# This is locked until plist PR https://github.com/ebarnard/rust-plist/pull/152 is merged/released
 	cargo install cargo-expand --locked
 	cargo install flutter_rust_bridge_codegen --version 2.9.0 --locked
 	dart pub global activate ffigen
 	dart pub global activate ffi
 	cargo install cargo-xcode
+
+# Check system dependencies
+check-deps:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	
+	echo "🔍 Checking system dependencies..."
+	
+	# Check protobuf
+	if command -v protoc &> /dev/null; then
+		echo "✅ protoc: $(protoc --version)"
+	else
+		echo "❌ protoc not found. Run 'just install-protobuf' to install."
+	fi
+	
+	# Check Rust
+	if command -v cargo &> /dev/null; then
+		echo "✅ cargo: $(cargo --version)"
+	else
+		echo "❌ cargo not found. Please install Rust."
+	fi
+	
+	# Check Flutter
+	if command -v flutter &> /dev/null; then
+		echo "✅ flutter: $(flutter --version | head -n1)"
+	else
+		echo "❌ flutter not found. Please install Flutter."
+	fi
+	
+	# Check Dart
+	if command -v dart &> /dev/null; then
+		echo "✅ dart: $(dart --version)"
+	else
+		echo "❌ dart not found (should come with Flutter)."
+	fi
 
 # Builds the uniFFI library & Generates Dart/Flutter bindings
 build:
@@ -58,3 +118,13 @@ build-ios-framework:
 # Update version number on podspec files & CMake scripts
 version:
 	bash scripts/version.sh
+
+# Clean all build artifacts
+clean:
+	flutter clean
+	cd rust && cargo clean
+	rm -rf lib/src/rust
+	rm -rf rust/target/
+	find . -name "*.so" -delete
+	find . -name "*.dylib" -delete
+	find . -name "*.a" -delete
