@@ -60,6 +60,7 @@ jobs:
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
+          path: build
 
       - name: Install Protocol Buffers Compiler
         uses: arduino/setup-protoc@v3
@@ -80,20 +81,20 @@ jobs:
       - name: Setup Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: packages/flutter_breez_liquid/rust
+          workspaces: build/packages/flutter_breez_liquid/rust
 
       - name: Update Cargo Dependencies
-        working-directory: packages/flutter_breez_liquid/rust
+        working-directory: build/packages/flutter_breez_liquid/rust
         run: |
           HASH=$(git rev-parse HEAD)
           sed -i.bak -e 's/^breez-sdk-liquid = .*/breez-sdk-liquid = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "'"$HASH"'"}/' Cargo.toml
 
       - name: Install flutter_rust_bridge_codegen
-        working-directory: packages/flutter_breez_liquid
+        working-directory: build/packages/flutter_breez_liquid
         run: just frb
 
       - name: Generate Flutter Bindings
-        working-directory: packages/flutter_breez_liquid
+        working-directory: build/packages/flutter_breez_liquid
         run: just codegen
 
       - name: Prepare Package Structure
@@ -103,7 +104,7 @@ jobs:
           rm -rf android ios macos lib rust
 
           # Copy source directories
-          cp -r ../packages/flutter_breez_liquid/{android,ios,macos,lib,rust} .
+          cp -r ../build/packages/flutter_breez_liquid/{android,ios,macos,lib,rust} .
 
           # Clean up gitignore files
           find . -name '.gitignore' -path '*/flutter_breez_liquid/*' -delete
@@ -124,7 +125,7 @@ jobs:
           rm -rf rust/target
 
           # Copy package metadata
-          cp ../packages/flutter_breez_liquid/*.yaml .
+          cp ../build/packages/flutter_breez_liquid/*.yaml .
 
       - name: Copy Documentation
         working-directory: dist
@@ -216,12 +217,11 @@ jobs:
             os: macOS-latest
             features: ios,macos
     steps:
-      - name: Checkout Flutter Package Repository
+      - name: Checkout SDK Repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ env.FLUTTER_PACKAGE_REPO }}
-          ssh-key: ${{ secrets.REPO_SSH_KEY }}
-          fetch-depth: 0
+          repository: ${{ inputs.repository || github.repository }}
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Protocol Buffers Compiler
         uses: arduino/setup-protoc@v3
@@ -257,7 +257,7 @@ jobs:
 
       - name: Precompile Binaries (Linux + Android)
         if: matrix.platform == 'linux'
-        working-directory: cargokit/build_tool
+        working-directory: packages/flutter_breez_liquid/cargokit/build_tool
         run: |
           dart run build_tool precompile-binaries \
             --verbose \
@@ -272,7 +272,7 @@ jobs:
 
       - name: Precompile Binaries (macOS + iOS)
         if: matrix.platform == 'darwin'
-        working-directory: cargokit/build_tool
+        working-directory: packages/flutter_breez_liquid/cargokit/build_tool
         run: |
           dart run build_tool precompile-binaries \
             --verbose \
