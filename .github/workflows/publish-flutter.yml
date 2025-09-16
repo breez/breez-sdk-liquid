@@ -88,6 +88,10 @@ jobs:
           HASH=$(git rev-parse HEAD)
           sed -i.bak -e 's/^breez-sdk-liquid = .*/breez-sdk-liquid = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "'"$HASH"'"}/' Cargo.toml
 
+      - name: Install flutter_rust_bridge_codegen
+        working-directory: packages/flutter_breez_liquid
+        run: just frb
+
       - name: Generate Flutter Bindings
         working-directory: packages/flutter_breez_liquid
         run: just codegen
