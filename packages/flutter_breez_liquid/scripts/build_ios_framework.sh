@@ -18,7 +18,7 @@ log() {
 log "Building iOS/macOS frameworks..."
 (
   cd "$LIB_DIR"
-  make init build-ios-framework
+  make init ios-universal build-ios-framework
 )
 
 # Clean existing frameworks and sources
