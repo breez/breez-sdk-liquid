@@ -90,7 +90,7 @@ jobs:
 
       - name: Generate Flutter Bindings
         working-directory: packages/flutter_breez_liquid
-        run: just bootstrap true true
+        run: just codegen
 
       - name: Prepare Package Structure
         working-directory: dist
