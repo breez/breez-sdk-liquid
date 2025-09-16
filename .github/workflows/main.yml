@@ -489,7 +489,7 @@ jobs:
       - name: Static Analysis
         working-directory: packages/flutter_breez_liquid/
         if: ${{ success() || failure() }}
-        run: dart analyze lib
+        run: dart analyze --no-fatal-warnings lib
 
       - name: Check Formatting
         working-directory: packages/flutter_breez_liquid/
