@@ -250,7 +250,7 @@ jobs:
 
       - name: Precompile Binaries (Linux + Android)
         if: matrix.platform == 'linux'
-        working-directory: packages/flutter_breez_liquid/cargokit/build_tool
+        working-directory: cargokit/build_tool
         run: |
           dart run build_tool precompile-binaries \
             --verbose \
@@ -265,7 +265,7 @@ jobs:
 
       - name: Precompile Binaries (macOS + iOS)
         if: matrix.platform == 'darwin'
-        working-directory: packages/flutter_breez_liquid/cargokit/build_tool
+        working-directory: cargokit/build_tool
         run: |
           dart run build_tool precompile-binaries \
             --verbose \
