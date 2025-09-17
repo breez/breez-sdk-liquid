@@ -915,18 +915,22 @@ dependencies = [
  "anyhow",
  "async-trait",
  "breez-sdk-liquid",
+ "breez-sdk-liquid-bindings",
  "electrum-client",
  "log",
  "lwk_wollet",
  "maybe-sync",
  "nostr-sdk",
+ "once_cell",
  "rusqlite",
  "sdk-common",
  "sdk-macros",
  "serde",
  "serde_json",
+ "thiserror 1.0.69",
  "tokio",
  "tokio_with_wasm",
+ "uniffi 0.28.3",
 ]
 
 [[package]]

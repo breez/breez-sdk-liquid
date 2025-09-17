@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use breez_sdk_liquid::model::{EventListener, SdkEvent};
+use breez_sdk_liquid::model::{EventListener, PaymentDetails, PaymentType, SdkEvent};
 use log::{info, warn};
 use nostr_sdk::{
     nips::nip44::{encrypt, Version},
@@ -33,7 +33,7 @@ impl EventListener for SdkEventListener {
         };
 
         let (invoice, description, preimage, payment_hash) = match &payment.details {
-            crate::model::PaymentDetails::Lightning {
+            PaymentDetails::Lightning {
                 invoice,
                 description,
                 preimage,
@@ -51,7 +51,7 @@ impl EventListener for SdkEventListener {
         };
 
         let payment_notification = PaymentNotification {
-            transaction_type: Some(if payment.payment_type == crate::model::PaymentType::Send {
+            transaction_type: Some(if payment.payment_type == PaymentType::Send {
                 TransactionType::Outgoing
             } else {
                 TransactionType::Incoming
@@ -69,7 +69,7 @@ impl EventListener for SdkEventListener {
             metadata: None,
         };
 
-        let notification = if payment.payment_type == crate::model::PaymentType::Send {
+        let notification = if payment.payment_type == PaymentType::Send {
             Notification {
                 notification_type: NotificationType::PaymentSent,
                 notification: NotificationResult::PaymentSent(payment_notification),

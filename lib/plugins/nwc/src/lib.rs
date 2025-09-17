@@ -1,13 +1,17 @@
 use std::{collections::HashMap, str::FromStr as _};
 
-use crate::{
     context::RuntimeContext,
+    error::NwcResult,
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
     persist::Persister,
     sdk_event::SdkEventListener,
 };
 use anyhow::{bail, Result};
-use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid::{
+pub use breez_sdk_liquid::prelude::*;
+    model::{NwcEvent, SdkEvent},
+    sdk::LiquidSdk,
+};
 use log::{debug, error, info, warn};
 use maybe_sync::{MaybeSend, MaybeSync};
 use nostr_sdk::{
@@ -24,11 +28,13 @@ use tokio::sync::{mpsc, Mutex, OnceCell};
 use tokio_with_wasm::alias as tokio;
 
 pub(crate) mod context;
+pub mod error;
 pub(crate) mod handler;
 mod persist;
 pub(crate) mod sdk_event;
 
 pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
+pub use error::*;
 
 #[sdk_macros::async_trait]
 pub trait NwcService: MaybeSend + MaybeSync {
@@ -40,10 +46,10 @@ pub trait NwcService: MaybeSend + MaybeSync {
     ///
     /// # Arguments
     /// * `name` - The unique identifier for the connection string
-    async fn add_connection_string(&self, name: String) -> Result<String>;
+    async fn add_connection_string(&self, name: String) -> NwcResult<String>;
 
     /// Lists the active Nostr Wallet Connect connections for this service.
-    async fn list_connection_strings(&self) -> Result<HashMap<String, String>>;
+    async fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>>;
 
     /// Removes a Nostr Wallet Connect connection string
     ///
@@ -51,7 +57,7 @@ pub trait NwcService: MaybeSend + MaybeSync {
     ///
     /// # Arguments
     /// * `name` - The unique identifier for the connection string
-    async fn remove_connection_string(&self, name: String) -> Result<()>;
+    async fn remove_connection_string(&self, name: String) -> NwcResult<()>;
 }
 
 pub struct NwcConfig {
@@ -80,22 +86,18 @@ impl SdkNwcService {
     ///
     /// # Arguments
     /// * `config` - Configuration containing the relay URLs and secret key
-    ///
-    /// # Returns
-    /// * `Arc<SdkNwcService>` - Successfully initialized service
-    /// * `Err(anyhow::Error)` - Error adding relays or initializing
-    pub async fn new(config: NwcConfig) -> Result<Arc<Self>> {
-        Ok(Arc::new(Self {
+    pub(crate) fn new(config: NwcConfig) -> Self {
+        Self {
             config,
             runtime_ctx: Default::default(),
-        }))
+        }
     }
 
     async fn init_ctx(
         &self,
         sdk: Arc<LiquidSdk>,
-        storage: PluginStorage,
-        event_emitter: PluginEventEmitter,
+        storage: Arc<breez_sdk_liquid::plugin::PluginStorage>,
+        event_emitter: Arc<breez_sdk_liquid::plugin::PluginEventEmitter>,
         resub_tx: mpsc::Sender<()>,
     ) -> Result<Arc<RuntimeContext>> {
         let mut ctx_lock = self.runtime_ctx.lock().await;
@@ -315,7 +317,7 @@ impl SdkNwcService {
 
 #[sdk_macros::async_trait]
 impl NwcService for SdkNwcService {
-    async fn add_connection_string(&self, name: String) -> Result<String> {
+    async fn add_connection_string(&self, name: String) -> NwcResult<String> {
         let random_secret_key = nostr_sdk::SecretKey::generate();
         let relays = self
             .config
@@ -332,11 +334,11 @@ impl NwcService for SdkNwcService {
         Ok(uri.to_string())
     }
 
-    async fn list_connection_strings(&self) -> Result<HashMap<String, String>> {
+    async fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>> {
         self.runtime_ctx().await?.persister.list_nwc_uris()
     }
 
-    async fn remove_connection_string(&self, name: String) -> Result<()> {
+    async fn remove_connection_string(&self, name: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
         ctx.persister.remove_nwc_uri(name)?;
         ctx.trigger_resubscription().await;
@@ -345,7 +347,7 @@ impl NwcService for SdkNwcService {
 }
 
 #[sdk_macros::async_trait]
-impl Plugin for SdkNwcService {
+impl breez_sdk_liquid::plugin::Plugin for SdkNwcService {
     fn id(&self) -> String {
         "breez-nwc-plugin".to_string()
     }
@@ -353,8 +355,8 @@ impl Plugin for SdkNwcService {
     async fn on_start(
         &self,
         sdk: Arc<LiquidSdk>,
-        storage: PluginStorage,
-        event_emitter: PluginEventEmitter,
+        storage: Arc<breez_sdk_liquid::plugin::PluginStorage>,
+        event_emitter: Arc<breez_sdk_liquid::plugin::PluginEventEmitter>,
     ) {
         let (resub_tx, mut resub_rx) = mpsc::channel::<()>(10);
         let ctx = match self
@@ -441,3 +443,79 @@ impl Plugin for SdkNwcService {
         }
     }
 }
+
+pub mod bindings {
+    use std::{collections::HashMap, sync::Arc};
+
+    use once_cell::sync::Lazy;
+    use tokio::runtime::Runtime;
+
+    use crate::{error::NwcResult, NwcConfig, NwcService, SdkNwcService};
+    use breez_sdk_liquid::plugin::Plugin as _;
+
+    use breez_sdk_liquid_bindings::{BindingLiquidSdk, Plugin, PluginEventEmitter, PluginStorage};
+
+    static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
+
+    fn rt() -> &'static Runtime {
+        &RT
+    }
+
+    pub struct BindingNwcService {
+        inner: SdkNwcService,
+    }
+
+    impl BindingNwcService {
+        pub fn new(config: NwcConfig) -> Self {
+            Self {
+                inner: SdkNwcService::new(config),
+            }
+        }
+    }
+
+    #[sdk_macros::async_trait]
+    impl NwcService for BindingNwcService {
+        async fn add_connection_string(&self, name: String) -> NwcResult<String> {
+            rt().block_on(async { self.inner.add_connection_string(name).await })
+        }
+
+        async fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>> {
+            rt().block_on(async { self.inner.list_connection_strings().await })
+        }
+
+        async fn remove_connection_string(&self, name: String) -> NwcResult<()> {
+            rt().block_on(async { self.inner.remove_connection_string(name).await })
+        }
+    }
+
+    impl Plugin for BindingNwcService {
+        fn id(&self) -> String {
+            self.inner.id()
+        }
+
+        fn on_start(
+            &self,
+            sdk: Arc<BindingLiquidSdk>,
+            storage: Arc<PluginStorage>,
+            event_emitter: Arc<PluginEventEmitter>,
+        ) {
+            rt().block_on(async {
+                self.inner
+                    .on_start(
+                        sdk.sdk.clone(),
+                        storage.storage.clone(),
+                        event_emitter.event_emitter.clone(),
+                    )
+                    .await
+            })
+        }
+
+        fn on_stop(&self) {
+            rt().block_on(async {
+                self.inner.on_stop().await;
+            })
+        }
+    }
+}
+
+uniffi::include_scaffolding!("breez_sdk_liquid_nwc");
