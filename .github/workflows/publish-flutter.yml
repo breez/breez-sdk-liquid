@@ -101,10 +101,10 @@ jobs:
         working-directory: dist
         run: |
           # Remove existing directories
-          rm -rf android ios macos lib rust
+          rm -rf android cargokit ios macos lib rust
 
           # Copy source directories
-          cp -r ../build/packages/flutter_breez_liquid/{android,ios,macos,lib,rust} .
+          cp -r ../build/packages/flutter_breez_liquid/{android,cargokit,ios,macos,lib,rust} .
 
           # Clean up gitignore files
           rm -f {ios,macos,lib,rust/src}/.gitignore
@@ -209,11 +209,12 @@ jobs:
             os: macOS-latest
             features: ios,macos
     steps:
-      - name: Checkout SDK Repository
+      - name: Checkout Flutter Package Repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.repository || github.repository }}
-          ref: ${{ inputs.ref || github.sha }}
+          repository: ${{ env.FLUTTER_PACKAGE_REPO }}
+          ssh-key: ${{ secrets.REPO_SSH_KEY }}
+          fetch-depth: 0
 
       - name: Install Protocol Buffers Compiler
         uses: arduino/setup-protoc@v3
