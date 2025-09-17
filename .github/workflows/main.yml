@@ -470,7 +470,7 @@ jobs:
 
       - name: Initialize the workspace
         working-directory: packages/flutter_breez_liquid/
-        run: just init-sdk
+        run: just setup
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
