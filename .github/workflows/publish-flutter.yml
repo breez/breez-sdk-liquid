@@ -107,7 +107,7 @@ jobs:
           cp -r ../build/packages/flutter_breez_liquid/{android,ios,macos,lib,rust} .
 
           # Clean up gitignore files
-          find . -name '.gitignore' -path '*/flutter_breez_liquid/*' -delete
+          rm -f {ios,macos,lib,rust}/.gitignore
 
           # Use production configurations
           mv android/build.gradle.production android/build.gradle
