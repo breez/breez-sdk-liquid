@@ -5,13 +5,10 @@ version = '0.10.3' # generated; do not edit
 Pod::Spec.new do |s|
   s.name             = 'flutter_breez_liquid'
   s.version          = "#{version}"
-  s.summary          = 'A new Flutter FFI plugin project.'
-  s.description      = <<-DESC
-A new Flutter FFI plugin project.
-                       DESC
-  s.homepage         = 'http://example.com'
-  s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.summary          = 'iOS/macOS Flutter bindings for Breez SDK Nodeless(Liquid Implementation)'
+  s.homepage         = 'https://breez.technology'
+  s.license          = { :file => '../LICENSE', :type => 'MIT License' }
+  s.author           = { 'Breez' => 'contact@breez.technology' }
 
   # This will ensure the source files in Classes/ are included in the native
   # builds of apps using this FFI plugin. Podspec does not support relative
