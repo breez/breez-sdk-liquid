@@ -1,8 +1,10 @@
-use crate::model::{
-    ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
-    PrepareSendRequest, SendPaymentRequest,
+use breez_sdk_liquid::{
+    model::{
+        ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
+        PrepareSendRequest, SendPaymentRequest,
+    },
+    sdk::LiquidSdk,
 };
-use crate::sdk::LiquidSdk;
 use log::info;
 use maybe_sync::{MaybeSend, MaybeSync};
 use nostr_sdk::nips::nip47::{

@@ -20,7 +20,7 @@ pub(crate) struct RuntimeContext {
     pub client: NostrClient,
     pub our_keys: Keys,
     pub persister: Persister,
-    pub event_emitter: PluginEventEmitter,
+    pub event_emitter: Arc<PluginEventEmitter>,
     pub handler: Box<dyn RelayMessageHandler>,
     pub resubscription_trigger: mpsc::Sender<()>,
     pub event_loop_handle: OnceCell<JoinHandle<()>>,

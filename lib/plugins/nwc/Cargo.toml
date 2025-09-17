@@ -3,6 +3,14 @@ name = "breez-sdk-liquid-nwc"
 edition = "2021"
 version.workspace = true
 
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+name = "breez_sdk_liquid_nwc"
+
 [lints]
 workspace = true
 
@@ -11,7 +19,11 @@ log = { workspace = true }
 anyhow = { workspace = true }
 sdk-common = { workspace = true }
 sdk-macros = { workspace = true }
+thiserror = { workspace = true }
+once_cell = { workspace = true }
+uniffi = { version = "0.28.0" }
 breez-sdk-liquid = { path = "../../core" }
+breez-sdk-liquid-bindings = { path = "../../bindings" }
 async-trait = "0.1.86"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
@@ -45,3 +57,6 @@ rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "8e53118a3e1807dc9a
     "serialize",
 ] }
 maybe-sync = "0.1.1"
+
+[build-dependencies]
+uniffi = { version = "0.28.0", features = [ "build" ] }

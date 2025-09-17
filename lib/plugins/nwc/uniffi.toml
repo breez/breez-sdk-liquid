@@ -1,0 +1,9 @@
+# https://github.com/NordSecurity/uniffi-bindgen-go/blob/main/docs/CONFIGURATION.md
+[bindings.go]
+package_name = "breez_sdk_liquid_nwc"
+cdylib_name = "breez_sdk_liquid_nwc"
+
+# https://mozilla.github.io/uniffi-rs/python/configuration.html
+[bindings.python]
+cdylib_name = "breez_sdk_liquid_nwc"
+external_packages = { "breez_sdk_liquid_bindings" = "breez_sdk_liquid" }

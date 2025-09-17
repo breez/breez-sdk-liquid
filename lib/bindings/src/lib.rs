@@ -41,7 +41,7 @@ impl log::Log for UniffiBindingLogger {
 }
 
 pub struct PluginEventEmitter {
-    event_emitter: breez_sdk_liquid::prelude::PluginEventEmitter,
+    pub event_emitter: Arc<breez_sdk_liquid::prelude::PluginEventEmitter>,
 }
 
 impl PluginEventEmitter {
@@ -74,7 +74,7 @@ impl breez_sdk_liquid::prelude::EventListener for EventListenerWrapper {
 }
 
 pub struct PluginStorage {
-    pub(crate) storage: breez_sdk_liquid::prelude::PluginStorage,
+    pub storage: Arc<breez_sdk_liquid::prelude::PluginStorage>,
 }
 
 impl PluginStorage {
@@ -115,8 +115,8 @@ impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
     async fn on_start(
         &self,
         sdk: Arc<LiquidSdk>,
-        storage: breez_sdk_liquid::prelude::PluginStorage,
-        event_emitter: breez_sdk_liquid::prelude::PluginEventEmitter,
+        storage: Arc<breez_sdk_liquid::prelude::PluginStorage>,
+        event_emitter: Arc<breez_sdk_liquid::prelude::PluginEventEmitter>,
     ) {
         self.inner.on_start(
             BindingLiquidSdk { sdk }.into(),
@@ -186,7 +186,7 @@ pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
 }
 
 pub struct BindingLiquidSdk {
-    sdk: Arc<LiquidSdk>,
+    pub sdk: Arc<LiquidSdk>,
 }
 
 impl BindingLiquidSdk {

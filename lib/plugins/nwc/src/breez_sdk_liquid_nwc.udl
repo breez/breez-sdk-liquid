@@ -1,0 +1,38 @@
+[ExternalInterface="breez_sdk_liquid_bindings"]
+typedef extern BindingLiquidSdk;
+[ExternalInterface="breez_sdk_liquid_bindings"]
+typedef extern PluginStorage;
+[ExternalInterface="breez_sdk_liquid_bindings"]
+typedef extern PluginEventEmitter;
+
+namespace breez_sdk_liquid_nwc {};
+
+[Error]
+enum NwcError {
+    "Generic",
+    "Persist",
+};
+
+dictionary NwcConfig {
+  sequence<string>? relay_urls;
+  string? secret_key_hex;
+};
+
+interface BindingNwcService {
+  constructor(NwcConfig config);
+
+  [Throws=NwcError]
+  string add_connection_string(string name);
+
+  [Throws=NwcError]
+  record<string,string> list_connection_strings();
+
+  [Throws=NwcError]
+  void remove_connection_string(string name);
+
+  string id();
+
+  void on_start(BindingLiquidSdk sdk, PluginStorage storage, PluginEventEmitter event_emitter);
+
+  void on_stop();
+};

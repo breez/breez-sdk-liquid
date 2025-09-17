@@ -15,8 +15,8 @@ pub trait Plugin: MaybeSend + MaybeSync {
     async fn on_start(
         &self,
         sdk: Arc<LiquidSdk>,
-        storage: PluginStorage,
-        events: PluginEventEmitter,
+        storage: Arc<PluginStorage>,
+        events: Arc<PluginEventEmitter>,
     );
     async fn on_stop(&self);
 }
