@@ -114,9 +114,6 @@ jobs:
           mv ios/flutter_breez_liquid.podspec.production ios/flutter_breez_liquid.podspec
           mv macos/flutter_breez_liquid.podspec.production macos/flutter_breez_liquid.podspec
 
-          # Copy generated bindings
-          cp -r ../build/packages/flutter_breez_liquid/lib .
-
           # Clean up build artifacts
           rm -rf rust/target
 
