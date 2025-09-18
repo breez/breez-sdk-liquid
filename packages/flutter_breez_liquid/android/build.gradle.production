@@ -2,6 +2,13 @@ version '0.10.3' // generated; do not edit
 group 'com.flutter_rust_bridge.flutter_breez_liquid'
 
 buildscript {
+    ext.versions = [
+        'agp': '7.3.0',
+        'kotlin': '1.9.21',
+        'serialization': '1.9.0',
+        'jna': '5.14.0'
+    ]
+    
     repositories {
         google()
         mavenCentral()
@@ -9,8 +16,9 @@ buildscript {
 
     dependencies {
         // The Android Gradle Plugin knows how to build native code with the NDK.
-        classpath 'com.android.tools.build:gradle:7.3.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.21"
+        classpath "com.android.tools.build:gradle:${versions.agp}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:${versions.kotlin}"
     }
 }
 
@@ -67,7 +75,7 @@ android {
 
 dependencies {
     api "breez_sdk_liquid:bindings-android:$version"
-    implementation "net.java.dev.jna:jna:5.14.0@aar"
+    implementation "net.java.dev.jna:jna:${versions.jna}@aar"
 }
 
 apply from: "../cargokit/gradle/plugin.gradle"
