@@ -21,9 +21,9 @@
 
 - Flutter >=3.3.0
 - Dart ^3.8.1
-- iOS >=11.0
-- MacOS >=10.11
-- Android `compileSdkVersion` 36
+- iOS >=13.0
+- MacOS >=15.0
+- Android `compileSdkVersion` 35
 - Java 17
 - Android Gradle Plugin >=7.3.0
 
