@@ -33,7 +33,7 @@ wasm-test:
 codegen: flutter-codegen react-native-codegen
 
 flutter-codegen:
-	cd lib/bindings/langs/flutter && just gen
+	cd packages/flutter_breez_liquid && just gen
 
 react-native-codegen:
 	make -C ./packages/react-native react-native

@@ -161,10 +161,6 @@
 //! ## Support
 //!
 //! Join this [telegram group](https://t.me/breezsdk).
-
-#[cfg(feature = "frb")]
-#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-pub(crate) mod bindings;
 pub(crate) mod buy;
 pub(crate) mod chain;
 pub(crate) mod chain_swap;
@@ -172,9 +168,6 @@ pub mod error;
 pub(crate) mod event;
 #[allow(deprecated)]
 #[allow(clippy::all)]
-#[cfg(feature = "frb")]
-#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-pub(crate) mod frb_generated;
 pub(crate) mod lnurl;
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 pub mod logger;
