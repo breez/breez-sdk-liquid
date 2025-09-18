@@ -76,6 +76,9 @@ android {
 dependencies {
     api "breez_sdk_liquid:bindings-android:$version"
     implementation "net.java.dev.jna:jna:${versions.jna}@aar"
+    /* JSON serialization */
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${versions.serialization}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlin}"
 }
 
 apply from: "../cargokit/gradle/plugin.gradle"
