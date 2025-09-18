@@ -162,6 +162,9 @@ jobs:
           # Update macOS podspec
           sed -i.bak -e "s/^version = .*/version = '${{ inputs.package-version }}'/" macos/flutter_breez_liquid.podspec
 
+          # Remove backup files
+          rm *.bak */*.bak 2>/dev/null || true
+
       - name: Archive Flutter Package
         uses: actions/upload-artifact@v4
         with:
