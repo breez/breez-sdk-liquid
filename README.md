@@ -2,18 +2,18 @@
 
 ## **Overview**
 
-The Breez SDK provides developers with a end-to-end solution for integrating self-custodial Lightning payments into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of peer-to-peer payments.
+The Breez SDK provides developers with a end-to-end solution for integrating self-custodial Lightning into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of peer-to-peer.
 
 To provide the best experience for their end-users, developers can choose between the following implementations:
 
 - [Breez SDK -  Nodeless *(Liquid Implementation)*](https://sdk-doc-liquid.breez.technology/)
-- [Breez SDK - Native *(Greenlight Implementation)*](https://sdk-doc.breez.technology/)
+- [Breez SDK - Nodeless *(Spark Implementation)*](https://breez.technology/spark)
 
 **The Breez SDK is free for developers.**
 
 ## **What Is the Breez SDK - Nodeless *(Liquid Implementation)*?**
 
-It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll able to:
+It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating Lightning, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll able to:
 
 - **Send payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Pay, Lightning address, BTC address
 - **Receive payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
