@@ -1,0 +1,738 @@
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs
+index 4578e88..1dbf263 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs
+@@ -52,6 +52,9 @@ pub(crate) struct AndroidConfig {
+
+     #[serde(default = "AndroidConfig::default_codegen_output_dir")]
+     pub(crate) codegen_output_dir: String,
++
++    #[serde(default = "AndroidConfig::default_use_shared_library")]
++    pub(crate) use_shared_library: bool,
+ }
+
+ impl Default for AndroidConfig {
+@@ -99,6 +102,10 @@ impl AndroidConfig {
+     fn default_codegen_output_dir() -> String {
+         workspace::package_json().android_codegen_output_dir()
+     }
++
++    fn default_use_shared_library() -> bool {
++        false
++    }
+ }
+
+ impl AndroidConfig {
+@@ -176,7 +183,11 @@ impl AndroidArgs {
+         let target_list = &android.targets;
+         let crate_ = &config.crate_;
+         let target_files = if self.common_args.no_cargo {
+-            let files = self.find_existing(&crate_.metadata()?, target_list);
++            let files = self.find_existing(
++                &crate_.metadata()?,
++                target_list,
++                Some(android.use_shared_library),
++            );
+             if !files.is_empty() {
+                 files
+             } else {
+@@ -185,6 +196,7 @@ impl AndroidArgs {
+                     target_list,
+                     &android.cargo_extras,
+                     android.api_level,
++                    android.use_shared_library,
+                 )?
+             }
+         } else {
+@@ -193,6 +205,7 @@ impl AndroidArgs {
+                 target_list,
+                 &android.cargo_extras,
+                 android.api_level,
++                android.use_shared_library,
+             )?
+         };
+
+@@ -202,6 +215,7 @@ impl AndroidArgs {
+                 &crate_.metadata()?,
+                 &android.jni_libs(project_root),
+                 &target_files,
++                android.use_shared_library,
+             )?;
+             if self.native_bindings {
+                 self.generate_native_bindings(&config, &target_files)?;
+@@ -217,16 +231,19 @@ impl AndroidArgs {
+         targets: &[Target],
+         cargo_extras: &ExtraArgs,
+         api_level: usize,
++        use_shared_library: bool,
+     ) -> Result<HashMap<Target, Utf8PathBuf>> {
+         let manifest_path = crate_.manifest_path()?;
+         let rust_dir = crate_.crate_dir()?;
+         let metadata = crate_.metadata()?;
++
+         let mut target_files = HashMap::new();
+         let profile = self.common_args.profile();
+         for target in targets {
+             let target =
+                 self.cargo_build(target, &manifest_path, cargo_extras, api_level, &rust_dir)?;
+-            let library = metadata.library_path(Some(target.triple()), profile);
++            let library =
++                metadata.library_path(Some(target.triple()), profile, Some(use_shared_library));
+             metadata.library_path_exists(&library)?;
+             target_files.insert(target, library);
+         }
+@@ -266,12 +283,14 @@ impl AndroidArgs {
+         &self,
+         metadata: &CrateMetadata,
+         targets: &[Target],
++        use_shared_library: Option<bool>,
+     ) -> HashMap<Target, Utf8PathBuf> {
+         let profile = self.common_args.profile();
+         targets
+             .iter()
+             .filter_map(|target| {
+-                let library = metadata.library_path(Some(target.triple()), profile);
++                let library =
++                    metadata.library_path(Some(target.triple()), profile, use_shared_library);
+                 if library.exists() {
+                     Some((target.clone(), library))
+                 } else {
+@@ -286,6 +305,7 @@ impl AndroidArgs {
+         metadata: &CrateMetadata,
+         jni_libs: &Utf8Path,
+         target_files: &HashMap<Target, Utf8PathBuf>,
++        use_shared_library: bool,
+     ) -> Result<()> {
+         println!("-- Copying into jniLibs directory");
+         println!("rm -Rf {jni_libs}");
+@@ -294,7 +314,8 @@ impl AndroidArgs {
+             let dst_dir = jni_libs.join(target.to_string());
+             mk_dir(&dst_dir)?;
+
+-            let dst_lib = dst_dir.join(metadata.library_file(Some(target.triple())));
++            let dst_lib = dst_dir
++                .join(metadata.library_file(Some(target.triple()), Some(use_shared_library)));
+             println!("cp {library} {dst_lib}");
+             fs::copy(library, &dst_lib)?;
+         }
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs
+index 5b63f2d..ae9d244 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs
+@@ -471,6 +471,7 @@ mod tests {
+                 api_level: 21,
+                 package_name: "com.tester".to_string(),
+                 codegen_output_dir: "android/generated".to_string(),
++                use_shared_library: false,
+             };
+             let ios = IOsConfig {
+                 directory: "ios".to_string(),
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/CMakeLists.txt b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/CMakeLists.txt
+index 3a8d733..f4b2079 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/CMakeLists.txt
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/CMakeLists.txt
+@@ -7,6 +7,8 @@ project({{ self.config.project.module_cpp() }})
+ {%- let bindings_dir = self.relative_to(root, dir) %}
+ {%- let dir = self.config.project.tm.cpp_path(root) %}
+ {%- let tm_dir = self.relative_to(root, dir) %}
++{%- let is_so_lib = self.config.project.android.use_shared_library %}
++{%- let is_static_lib = !is_so_lib %}
+
+ set (CMAKE_VERBOSE_MAKEFILE ON)
+ set (CMAKE_CXX_STANDARD 17)
+@@ -51,11 +53,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+
+ cmake_path(
+   SET MY_RUST_LIB
+-  ${CMAKE_SOURCE_DIR}/{{ jni_libs_dir }}/${ANDROID_ABI}/{{ self.config.rust_crate.library_file(Some("android")) }}
++{%- if is_static_lib %}
++  ${CMAKE_SOURCE_DIR}/{{ jni_libs_dir }}/${ANDROID_ABI}/{{ self.config.rust_crate.library_file(Some("android"), Some(false)) }}
++{%- endif %}
++{%- if is_so_lib %}
++  ${CMAKE_SOURCE_DIR}/{{ jni_libs_dir }}/${ANDROID_ABI}/{{ self.config.rust_crate.library_file(Some("android"), Some(true)) }}
++{%- endif %}
+   NORMALIZE
+ )
++
++{%- if is_static_lib %}
+ add_library(my_rust_lib STATIC IMPORTED)
+ set_target_properties(my_rust_lib PROPERTIES IMPORTED_LOCATION ${MY_RUST_LIB})
++{%- endif %}
++{%- if is_so_lib %}
++add_library(my_rust_lib SHARED IMPORTED)
++set_target_properties(my_rust_lib PROPERTIES IMPORTED_LOCATION ${MY_RUST_LIB} IMPORTED_NO_SONAME ON)
++{%- endif %}
+
+ # Add ReactAndroid libraries, being careful to account for different versions.
+ find_package(ReactAndroid REQUIRED CONFIG)
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
+index 42d21cf..72113f6 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
+@@ -209,7 +209,8 @@ impl IOsArgs {
+             self.cargo_build(&manifest_path, target, cargo_extras, &rust_dir)?;
+
+             // Now we need to get the path to the lib.a file, to feed to xcodebuild.
+-            let library = metadata.library_path(Some(&target.triple), self.common_args.profile());
++            let library =
++                metadata.library_path(Some(&target.triple), self.common_args.profile(), None);
+             metadata.library_path_exists(&library)?;
+             target_files.insert(target.clone(), library);
+         }
+@@ -257,7 +258,7 @@ impl IOsArgs {
+             } else {
+                 let dir = metadata.target_dir().join("lipo").join(p.lib_folder_name());
+                 mk_dir(&dir)?;
+-                let output = dir.join(metadata.library_file(Some("ios")));
++                let output = dir.join(metadata.library_file(Some("ios"), None));
+                 let mut cmd = Command::new("lipo");
+                 cmd.arg("-create");
+                 for f in files {
+@@ -369,7 +370,7 @@ impl IOsArgs {
+         targets
+             .iter()
+             .filter_map(|target| {
+-                let library = metadata.library_path(Some(&target.triple), profile);
++                let library = metadata.library_path(Some(&target.triple), profile, None);
+                 if library.exists() {
+                     Some((target.clone(), library))
+                 } else {
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_common/src/rust_crate.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_common/src/rust_crate.rs
+index 6427034..b6e02e1 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_common/src/rust_crate.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_common/src/rust_crate.rs
+@@ -25,8 +25,13 @@ impl CrateMetadata {
+         profile.unwrap_or(if release { "release" } else { "debug" })
+     }
+
+-    pub fn library_path(&self, target: Option<&str>, profile: &str) -> Utf8PathBuf {
+-        let library_name = self.library_file(target);
++    pub fn library_path(
++        &self,
++        target: Option<&str>,
++        profile: &str,
++        use_shared_library: Option<bool>,
++    ) -> Utf8PathBuf {
++        let library_name = self.library_file(target, use_shared_library);
+         match target {
+             Some(t) => self.target_dir.join(t).join(profile).join(library_name),
+             None => self.target_dir.join(profile).join(library_name),
+@@ -40,8 +45,8 @@ impl CrateMetadata {
+         Ok(())
+     }
+
+-    pub fn library_file(&self, target: Option<&str>) -> String {
+-        let ext = so_extension(target);
++    pub fn library_file(&self, target: Option<&str>, use_shared_library: Option<bool>) -> String {
++        let ext = so_extension(target, use_shared_library);
+         format!("lib{}.{ext}", &self.library_name)
+     }
+
+@@ -113,22 +118,25 @@ impl CrateMetadata {
+     }
+ }
+
+-pub fn so_extension<'a>(target: Option<&str>) -> &'a str {
++pub fn so_extension<'a>(target: Option<&str>, use_shared_library: Option<bool>) -> &'a str {
+     match target {
+-        Some(t) => so_extension_from_target(t),
++        Some(t) => so_extension_from_target(t, use_shared_library),
+         _ => so_extension_from_cfg(),
+     }
+ }
+
+-fn so_extension_from_target<'a>(target: &str) -> &'a str {
++fn so_extension_from_target<'a>(target: &str, use_shared_library: Option<bool>) -> &'a str {
+     if target.contains("windows") {
+         "dll"
+     } else if target.contains("darwin") {
+         "dylib"
+     } else if target.contains("ios") {
+         "a"
++    } else if target.contains("android")
++        && use_shared_library.expect("By default we use static libs on android")
++    {
++        "so"
+     } else if target.contains("android") {
+-        // We're using staticlib files here. cargo ndk use .so files.
+         "a"
+     } else {
+         unimplemented!("Building targeting only on android and ios supported right now")
+diff --git a/node_modules/uniffi-bindgen-react-native/fixtures/coverall2/tests/bindings/test_coverall2.ts b/node_modules/uniffi-bindgen-react-native/fixtures/coverall2/tests/bindings/test_coverall2.ts
+index ce1a8d0..2e612e5 100644
+--- a/node_modules/uniffi-bindgen-react-native/fixtures/coverall2/tests/bindings/test_coverall2.ts
++++ b/node_modules/uniffi-bindgen-react-native/fixtures/coverall2/tests/bindings/test_coverall2.ts
+@@ -10,7 +10,7 @@ import {
+   matchNestedOptional,
+   wellKnownArrayBuffer,
+ } from "../../generated/uniffi_coverall2";
+-import { test } from "@/asserts";
++import { test, xtest } from "@/asserts";
+ import "@/polyfills";
+
+ test("well known array buffer returned", (t) => {
+@@ -83,7 +83,7 @@ test("array buffer roundtrip with ArrayBufferView", (t) => {
+   function rt(ab: ArrayBuffer) {
+     t.assertEqual(
+       ab,
+-      identityArrayBuffer(new Uint32Array(ab)),
++      identityArrayBuffer(new Uint32Array(ab).buffer),
+       undefined,
+       abEquals,
+     );
+@@ -93,11 +93,14 @@ test("array buffer roundtrip with ArrayBufferView", (t) => {
+   }
+ });
+
+-test("array buffer roundtrip with ArrayBufferView of different sizes", (t) => {
+-  function rt(viewName: string, ta: ArrayBuffer, slice: ArrayBuffer) {
++xtest("array buffer roundtrip with ArrayBufferView of different sizes", (t) => {
++  // Typescript before 5.7, accepted typed arrays as ArrayBuffer.
++  // This is no longer the case.
++  // Now: ArrayBufferView is a distinct union type.
++  function rt(viewName: string, ta: ArrayBufferView, slice: ArrayBuffer) {
+     t.assertEqual(
+       slice,
+-      identityArrayBuffer(ta),
++      identityArrayBuffer(slice),
+       `${viewName} didn't match`,
+       abEquals,
+     );
+diff --git a/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-converters.ts b/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-converters.ts
+index b757e3d..351a9eb 100644
+--- a/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-converters.ts
++++ b/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-converters.ts
+@@ -328,21 +328,6 @@ export class FfiConverterMap<K, V> extends AbstractFfiConverterByteArray<
+ }
+
+ export const FfiConverterArrayBuffer = (() => {
+-  function unwrapBuffer(value: ArrayBuffer): ArrayBuffer {
+-    // Typed arrays are accepted by TS as array buffers,
+-    // even though they are really ArrayBufferViews.
+-    if (ArrayBuffer.isView(value)) {
+-      const ab = value.buffer;
+-      const start = value.byteOffset;
+-      const length = value.byteLength;
+-      if (start === 0 && ab.byteLength === length) {
+-        return ab;
+-      }
+-      const end = start + length;
+-      return ab.slice(start, end);
+-    }
+-    return value;
+-  }
+   const lengthConverter = FfiConverterInt32;
+   class FFIConverter extends AbstractFfiConverterByteArray<ArrayBuffer> {
+     read(from: RustBuffer): ArrayBuffer {
+@@ -352,7 +337,7 @@ export const FfiConverterArrayBuffer = (() => {
+     write(value: ArrayBuffer, into: RustBuffer): void {
+       const length = value.byteLength;
+       lengthConverter.write(length, into);
+-      into.writeByteArray(new Uint8Array(unwrapBuffer(value)));
++      into.writeByteArray(new Uint8Array(value));
+     }
+     allocationSize(value: ArrayBuffer): number {
+       return lengthConverter.allocationSize(0) + value.byteLength;
+diff --git a/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-types.ts b/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-types.ts
+index d4612b4..abb7edc 100644
+--- a/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-types.ts
++++ b/node_modules/uniffi-bindgen-react-native/typescript/src/ffi-types.ts
+@@ -32,7 +32,7 @@ export class RustBuffer {
+   }
+
+   static fromByteArray(buf: UniffiByteArray): RustBuffer {
+-    return new RustBuffer(buf.buffer);
++    return new RustBuffer(buf.buffer as ArrayBuffer);
+   }
+
+   get length(): number {
+@@ -43,7 +43,7 @@ export class RustBuffer {
+     return new Uint8Array(this.arrayBuffer);
+   }
+
+-  readArrayBuffer(numBytes: number): ArrayBufferLike {
++  readArrayBuffer(numBytes: number): ArrayBuffer {
+     const start = this.readOffset;
+     const end = this.checkOverflow(start, numBytes);
+     const value = this.arrayBuffer.slice(start, end);
+diff --git a/node_modules/uniffi-bindgen-react-native/typescript/testing/polyfills.ts b/node_modules/uniffi-bindgen-react-native/typescript/testing/polyfills.ts
+index 1a3d9a9..d233cc9 100644
+--- a/node_modules/uniffi-bindgen-react-native/typescript/testing/polyfills.ts
++++ b/node_modules/uniffi-bindgen-react-native/typescript/testing/polyfills.ts
+@@ -9,10 +9,10 @@ import { Console as HermesConsole, URL as HermesURL } from "./hermes";
+ export type RuntimeContext = "nodejs" | "hermes" | "browser";
+
+ export function __runtimeContext(): RuntimeContext {
+-  if (globalThis.print !== undefined) {
++  if ((globalThis as any).print !== undefined) {
+     return "hermes";
+   }
+-  if (globalThis.document !== undefined) {
++  if ((globalThis as any).document !== undefined) {
+     return "browser";
+   }
+   return "nodejs";
+diff --git a/node_modules/uniffi-bindgen-react-native/typescript/tsconfig.template.json b/node_modules/uniffi-bindgen-react-native/typescript/tsconfig.template.json
+index f50d653..c7b32a2 100644
+--- a/node_modules/uniffi-bindgen-react-native/typescript/tsconfig.template.json
++++ b/node_modules/uniffi-bindgen-react-native/typescript/tsconfig.template.json
+@@ -12,7 +12,7 @@
+
+     /* Language and Environment */
+     "target": "es5",                                     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+-    // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
++    "lib": ["ES2024"],                                   /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+     // "jsx": "preserve",                                /* Specify what JSX code is generated. */
+     // "experimentalDecorators": true,                   /* Enable experimental support for legacy experimental decorators. */
+     // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
+diff --git a/node_modules/uniffi-bindgen-react-native/xtask/src/run/cpp_bindings.rs b/node_modules/uniffi-bindgen-react-native/xtask/src/run/cpp_bindings.rs
+index a1134f9..9eef69f 100644
+--- a/node_modules/uniffi-bindgen-react-native/xtask/src/run/cpp_bindings.rs
++++ b/node_modules/uniffi-bindgen-react-native/xtask/src/run/cpp_bindings.rs
+@@ -81,7 +81,7 @@ impl CppBindingArg {
+         let mut cmd = Command::new("ninja");
+         run_cmd_quietly(cmd.current_dir(&build_dir))?;
+
+-        Ok(build_dir.join(format!("lib{extension_name}.{}", so_extension(None))))
++        Ok(build_dir.join(format!("lib{extension_name}.{}", so_extension(None, None))))
+     }
+
+     pub(crate) fn compile_without_crate(&self, clean: bool) -> Result<Utf8PathBuf> {
+@@ -123,6 +123,6 @@ impl CppBindingArg {
+         let mut cmd = Command::new("ninja");
+         run_cmd_quietly(cmd.current_dir(&build_dir))?;
+
+-        Ok(build_dir.join(format!("lib{extension_name}.{}", so_extension(None))))
++        Ok(build_dir.join(format!("lib{extension_name}.{}", so_extension(None, None))))
+     }
+ }
+diff --git a/node_modules/uniffi-bindgen-react-native/xtask/src/run/jsi.rs b/node_modules/uniffi-bindgen-react-native/xtask/src/run/jsi.rs
+index 23ed37d..b31745f 100644
+--- a/node_modules/uniffi-bindgen-react-native/xtask/src/run/jsi.rs
++++ b/node_modules/uniffi-bindgen-react-native/xtask/src/run/jsi.rs
+@@ -40,7 +40,7 @@ impl Jsi {
+             (Some(crate_), None, Some(bindings)) => {
+                 let profile = crate_.profile();
+                 let crate_ = crate_.cargo_build(clean)?;
+-                let crate_lib = crate_.library_path(None, profile);
++                let crate_lib = crate_.library_path(None, profile, None);
+                 let target_dir = crate_.target_dir();
+                 let lib_name = crate_.library_name();
+                 let modules =
+diff --git a/node_modules/uniffi-bindgen-react-native/xtask/src/run/rust_crate.rs b/node_modules/uniffi-bindgen-react-native/xtask/src/run/rust_crate.rs
+index 3d6f01a..f353dfd 100644
+--- a/node_modules/uniffi-bindgen-react-native/xtask/src/run/rust_crate.rs
++++ b/node_modules/uniffi-bindgen-react-native/xtask/src/run/rust_crate.rs
+@@ -37,7 +37,7 @@ pub(crate) struct CrateArg {
+ impl CrateArg {
+     pub(crate) fn cargo_build(&self, clean: bool) -> Result<CrateMetadata> {
+         let metadata = CrateMetadata::try_from(self.crate_dir.clone().expect("crate has no path"))?;
+-        let lib_path = metadata.library_path(None, self.profile());
++        let lib_path = metadata.library_path(None, self.profile(), None);
+         if lib_path.exists() && clean {
+             metadata.cargo_clean()?;
+         }
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs
+index 4578e88..f5e5aa5 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/android.rs
+@@ -166,7 +166,7 @@ pub(crate) struct AndroidArgs {
+
+     /// Generate native Kotlin Bindings together with the JNI libraries
+     #[clap(long, conflicts_with_all = ["no_jni_libs"], default_value = "false")]
+-    native_bindings: bool,
++    pub(crate) native_bindings: bool,
+ }
+
+ impl AndroidArgs {
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/building.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/building.rs
+index dc9423d..e770ab6 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/building.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/building.rs
+@@ -48,6 +48,7 @@ impl BuildArgs {
+             lib_file,
+             self.cmd.project_config()?,
+             Platform::from(&self.cmd),
++            self.cmd.native_bindings(),
+         )
+         .run()
+     }
+@@ -85,6 +86,13 @@ impl BuildCmd {
+     pub(crate) fn and_generate(&self) -> bool {
+         self.common_args().and_generate
+     }
++
++    pub(crate) fn native_bindings(&self) -> bool {
++        match self {
++            BuildCmd::Android(a) => a.native_bindings,
++            BuildCmd::Ios(a) => a.native_bindings,
++        }
++    }
+ }
+
+ #[derive(Args, Debug, Clone)]
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs
+index 5b63f2d..f490f76 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/mod.rs
+@@ -22,6 +22,9 @@ pub(crate) struct TurboModuleArgs {
+
+     /// The namespaces that are generated by `generate bindings`.
+     namespaces: Vec<String>,
++
++    /// Whether to generate native bindings or not.
++    native_bindings: bool,
+ }
+
+ impl TurboModuleArgs {
+@@ -33,7 +36,7 @@ impl TurboModuleArgs {
+             .map(|s| ModuleMetadata::new(s))
+             .collect();
+         let rust_crate = project.crate_.metadata()?;
+-        render_files(None, project, rust_crate, modules)?;
++        render_files(None, project, rust_crate, modules, self.native_bindings)?;
+         Ok(())
+     }
+ }
+@@ -72,6 +75,7 @@ pub(crate) struct TemplateConfig {
+     pub(crate) rust_crate: CrateMetadata,
+     pub(crate) modules: Vec<ModuleMetadata>,
+     pub(crate) uses_kotlin: OnceCell<bool>,
++    pub(crate) native_bindings: bool,
+ }
+
+ impl TemplateConfig {
+@@ -79,6 +83,7 @@ impl TemplateConfig {
+         project: ProjectConfig,
+         rust_crate: CrateMetadata,
+         modules: Vec<ModuleMetadata>,
++        native_bindings: bool,
+     ) -> Self {
+         let mut modules = modules;
+         modules.sort_by_key(|m| m.ts());
+@@ -87,6 +92,7 @@ impl TemplateConfig {
+             rust_crate,
+             modules,
+             uses_kotlin: OnceCell::new(),
++            native_bindings,
+         }
+     }
+ }
+@@ -96,8 +102,14 @@ pub(crate) fn render_files(
+     project: ProjectConfig,
+     rust_crate: CrateMetadata,
+     modules: Vec<ModuleMetadata>,
++    native_bindings: bool,
+ ) -> Result<()> {
+-    let config = Rc::new(TemplateConfig::new(project, rust_crate, modules));
++    let config = Rc::new(TemplateConfig::new(
++        project,
++        rust_crate,
++        modules,
++        native_bindings,
++    ));
+     let files = files::get_files(config.clone());
+     let files = files.iter().filter(|f| f.filter_by(&platform)).cloned();
+
+@@ -199,6 +211,7 @@ mod files {
+             CMakeLists::rc_new(config.clone()),
+             CppAdapter::rc_new(config.clone()),
+             AndroidManifest::rc_new(config.clone()),
++            ProguardRules::rc_new(config.clone()),
+             // Android with Java
+             JavaModule::rc_new(config.clone()),
+             JavaPackage::rc_new(config.clone()),
+@@ -446,6 +459,21 @@ mod files {
+             Some(Platform::Android)
+         }
+     }
++
++    templated_file!(ProguardRules, "proguard-rules.pro");
++    impl RenderedFile for ProguardRules {
++        fn path(&self, project_root: &Utf8Path) -> Utf8PathBuf {
++            let filename = "proguard-rules.pro";
++            self.config
++                .project
++                .android
++                .directory(project_root)
++                .join(filename)
++        }
++        fn filter_by(&self, _: &Option<Platform>) -> bool {
++            self.config.native_bindings
++        }
++    }
+ }
+
+ #[cfg(test)]
+@@ -518,7 +546,7 @@ mod tests {
+
+         let project_config = config::ProjectConfig::empty(name, crate_config);
+         let modules = modules.iter().map(|s| ModuleMetadata::new(s)).collect();
+-        let template = TemplateConfig::new(project_config, crate_metadata, modules);
++        let template = TemplateConfig::new(project_config, crate_metadata, modules, false);
+         Ok(Rc::new(template))
+     }
+
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.gradle b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.gradle
+index 7cc4b8d..11281de 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.gradle
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.gradle
+@@ -1,6 +1,7 @@
+ // Generated by uniffi-bindgen-react-native
+ {%- let name = self.config.project.module_cpp() %}
+ {%- let package_name = self.config.project.android.package_name() %}
++{%- let jna_required = self.config.native_bindings %}
+
+ buildscript {
+   repositories {
+@@ -58,6 +59,7 @@ android {
+     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
+     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
++    consumerProguardFiles 'proguard-rules.pro'
+
+     buildFeatures {
+       prefab true
+@@ -123,6 +125,9 @@ dependencies {
+   // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
+   //noinspection GradleDynamicVersion
+   implementation "com.facebook.react:react-native:+"
++  {%- if jna_required %}
++  implementation "net.java.dev.jna:jna:5.17.0@aar"
++  {%- endif %}
+ }
+
+ if (isNewArchitectureEnabled()) {
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.kt.gradle b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.kt.gradle
+index ad9d0a8..b73d93f 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.kt.gradle
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/build.kt.gradle
+@@ -1,6 +1,7 @@
+ // Generated by uniffi-bindgen-react-native
+ {%- let name = self.config.project.module_cpp() %}
+ {%- let package_name = self.config.project.android.package_name() %}
++{%- let jna_required = self.config.native_bindings %}
+
+ buildscript {
+   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
+@@ -69,6 +70,7 @@ android {
+     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
+     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
++    consumerProguardFiles 'proguard-rules.pro
+
+     buildFeatures {
+       prefab true
+@@ -141,6 +143,9 @@ dependencies {
+   //noinspection GradleDynamicVersion
+   implementation "com.facebook.react:react-native:+"
+   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
++  {%- if jna_required %}
++  implementation "net.java.dev.jna:jna:5.17.0@aar"
++  {%- endif %}
+ }
+
+ if (isNewArchitectureEnabled()) {
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/proguard-rules.pro b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/proguard-rules.pro
+new file mode 100644
+index 0000000..93f4739
+--- /dev/null
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/proguard-rules.pro
+@@ -0,0 +1,4 @@
++# Generated by uniffi-bindgen-react-native
++-dontwarn java.awt.*
++-keep class com.sun.jna.* { *; }
++-keepclassmembers class * extends com.sun.jna.* { public *; }
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/generate.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/generate.rs
+index b56f884..42923cc 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/generate.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/generate.rs
+@@ -68,6 +68,9 @@ pub(crate) struct GenerateAllArgs {
+
+     /// A path to staticlib file.
+     lib_file: Utf8PathBuf,
++
++    /// Whether to generate native bindings or not.
++    native_bindings: bool,
+ }
+
+ #[derive(Debug)]
+@@ -79,14 +82,22 @@ pub(crate) struct GenerateAllCommand {
+     lib_file: Utf8PathBuf,
+
+     platform: Option<Platform>,
++
++    /// Whether to generate native bindings or not.
++    native_bindings: bool,
+ }
+
+ impl GenerateAllCommand {
+-    pub(crate) fn new(lib_file: Utf8PathBuf, project_config: ProjectConfig) -> Self {
++    pub(crate) fn new(
++        lib_file: Utf8PathBuf,
++        project_config: ProjectConfig,
++        native_bindings: bool,
++    ) -> Self {
+         Self {
+             lib_file,
+             project_config,
+             platform: None,
++            native_bindings,
+         }
+     }
+
+@@ -94,11 +105,13 @@ impl GenerateAllCommand {
+         lib_file: Utf8PathBuf,
+         project_config: ProjectConfig,
+         platform: Platform,
++        native_bindings: bool,
+     ) -> Self {
+         Self {
+             lib_file,
+             project_config,
+             platform: Some(platform),
++            native_bindings,
+         }
+     }
+
+@@ -134,7 +147,14 @@ impl GenerateAllCommand {
+         };
+         ubrn_common::cd(&pwd)?;
+         let rust_crate = project.crate_.metadata()?;
+-        crate::codegen::render_files(self.platform.clone(), project, rust_crate, modules)?;
++        let native_bindings = self.native_bindings;
++        crate::codegen::render_files(
++            self.platform.clone(),
++            project,
++            rust_crate,
++            modules,
++            native_bindings,
++        )?;
+         Ok(())
+     }
+
+@@ -148,9 +168,11 @@ impl TryFrom<&GenerateAllArgs> for GenerateAllCommand {
+
+     fn try_from(value: &GenerateAllArgs) -> Result<Self> {
+         let project_config = value.config.clone().try_into()?;
++        let native_bindings = value.native_bindings;
+         Ok(GenerateAllCommand::new(
+             value.lib_file.clone(),
+             project_config,
++            native_bindings,
+         ))
+     }
+ }
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
+index 42d21cf..e8e4d0d 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
+@@ -135,7 +135,7 @@ pub(crate) struct IOsArgs {
+
+     /// Generate native Swift Bindings together with the xcframework
+     #[clap(long, conflicts_with_all = ["no_xcodebuild"], default_value = "false")]
+-    native_bindings: bool,
++    pub(crate) native_bindings: bool,
+
+     /// Comma separated list of targets, that override the values in
+     /// the `config.yaml` file.

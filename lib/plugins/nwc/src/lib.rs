@@ -488,7 +488,6 @@ pub mod bindings {
         }
     }
 
-    // #[sdk_macros::async_trait]
     impl Plugin for BindingNwcService {
         fn id(&self) -> String {
             self.inner.id()
