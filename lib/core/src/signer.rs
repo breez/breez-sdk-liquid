@@ -364,7 +364,7 @@ mod tests {
                     threshold,
                     xpubs,
                     Multisig::Wsh,
-                    DescriptorBlindingKey::Elip151,
+                    DescriptorBlindingKey::Slip77,
                 )
                 .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
             }

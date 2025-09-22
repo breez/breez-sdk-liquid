@@ -6,15 +6,16 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
-use boltz_client::ElementsAddress;
+use boltz_client::{ElementsAddress, Secp256k1};
 use log::{debug, error, info, warn};
 use lwk_common::{multisig_desc, DescriptorBlindingKey, Multisig, Signer as LwkSigner};
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
-use lwk_wollet::bitcoin::bip32::Xpub;
+use lwk_wollet::bitcoin::bip32::{DerivationPath, KeySource, Xpub};
 use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
+use lwk_wollet::elements_miniscript::descriptor::checksum::desc_checksum;
 use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{ElementsNetwork, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use persister::SqliteWalletCachePersister;
@@ -275,6 +276,41 @@ impl LiquidOnchainWallet {
     }
 }
 
+pub fn test_multisig_desc(
+    threshold: u32,
+    xpubs: Vec<(Option<KeySource>, Xpub)>,
+    script_variant: Multisig,
+    blinding_key: Vec<u8>,
+) -> Result<String, String> {
+    if threshold == 0 {
+        return Err("Threshold cannot be 0".into());
+    } else if threshold as usize > xpubs.len() {
+        return Err("Threshold cannot be greater than the number of xpubs".into());
+    }
+
+    let (prefix, suffix) = match script_variant {
+        Multisig::Wsh => ("elwsh(multi", ")"),
+    };
+
+    let blinding_key = format!("slip77({})", blinding_key.to_hex());
+
+    let xpubs = xpubs
+        .iter()
+        .map(|(keyorigin, xpub)| {
+            let prefix = if let Some((fingerprint, path)) = keyorigin {
+                format!("[{fingerprint}/{}]", path.to_string().replace("m/", "").replace('\'', "h"))
+            } else {
+                "".to_string()
+            };
+            format!("{prefix}{xpub}/<0;1>/*")
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let desc = format!("ct({blinding_key},{prefix}({threshold},{xpubs}){suffix})");
+    let checksum = desc_checksum(&desc).map_err(|e| format!("{:?}", e))?;
+    Ok(format!("{desc}#{checksum}"))
+}
+
 pub fn get_descriptor(
     signer: &SdkLwkSigner,
     signer_policy: SignerPolicy,
@@ -308,11 +344,17 @@ pub fn get_descriptor(
                 })
                 .collect();
 
-            multisig_desc(
+            // multisig_desc(
+            //     threshold,
+            //     xpubs,
+            //     Multisig::Wsh,
+            //     DescriptorBlindingKey::Slip77Rand,
+            // )
+            test_multisig_desc(
                 threshold,
                 xpubs,
                 Multisig::Wsh,
-                DescriptorBlindingKey::Elip151,
+                signer.slip77_master_blinding_key().unwrap().as_bytes().to_vec(),
             )
             .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
         }
