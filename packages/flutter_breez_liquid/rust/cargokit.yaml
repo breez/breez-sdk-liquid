@@ -1,0 +1,12 @@
+cargo:
+  debug:
+    toolchain: stable
+  release:
+    toolchain: stable
+
+precompiled_binaries:
+  # Uri prefix used when downloading precompiled binaries.
+  url_prefix: https://github.com/breez/breez-sdk-liquid-flutter/releases/download/precompiled_
+
+  # Public key for verifying downloaded precompiled binaries.
+  public_key: 37cb40a375d28c6f0ac37eddb709ee53bf0af4d8088c2456fb8da483d94bcba0

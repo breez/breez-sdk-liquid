@@ -413,6 +413,7 @@ jobs:
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/Headers
+          mkdir -p langs/flutter/breez_sdk_liquidFFI/include/
           cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_sdk_liquidFFI/include/
           rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
           rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
@@ -451,7 +452,7 @@ jobs:
           fi
 
   flutter:
-    name: Check Dart/Flutter bindings
+    name: Check Flutter bindings
     runs-on: macOS-latest
     steps:
       - name: Checkout
@@ -461,22 +462,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.29.0
+          flutter-version: 3.35.3
       - run: flutter --version
 
       - name: Set up just
         uses: extractions/setup-just@v2
-      
-      - name: Set up Melos
-        uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: false
 
       - name: Initialize the workspace
-        working-directory: lib/bindings/langs/flutter/
-        run: |
-          just clean
-          just init
+        working-directory: packages/flutter_breez_liquid/
+        run: just setup
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
@@ -485,36 +479,26 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Install flutter_rust_bridge_codegen dependencies
-        working-directory: lib/bindings/langs/flutter/
+        working-directory: packages/flutter_breez_liquid/
         run: just frb
 
       - name: Generate Dart/Flutter bindings & Softlink C Headers
-        working-directory: lib/bindings/langs/flutter/
+        working-directory: packages/flutter_breez_liquid/
         run: just codegen
 
-      - name: Build iOS Framework & Softlink C Headers
-        working-directory: lib/bindings/langs/flutter/
-        if: ${{ success() || failure() }}
-        run: just build-ios-framework
-
-      - name: Generate FFI bindings
-        working-directory: lib/bindings/langs/flutter/
-        if: ${{ success() || failure() }}
-        run: just ffigen
-
       - name: Static Analysis
-        working-directory: lib/bindings/langs/flutter/
+        working-directory: packages/flutter_breez_liquid/
         if: ${{ success() || failure() }}
-        run: melos analyze
+        run: dart analyze --no-fatal-warnings lib
 
       - name: Check Formatting
-        working-directory: lib/bindings/langs/flutter/
-        run: melos check-format
+        working-directory: packages/flutter_breez_liquid/
+        run: dart format -o none --set-exit-if-changed -l 110 lib
 
       # This step is added to ensure version recipe was run to update podspec files & CMake script.
       # It does not catch the case where 'packages/flutter/pubspec.yaml' wasn't updated properly.
       - name: Update version number on podspec files & CMake scripts
-        working-directory: lib/bindings/langs/flutter/
+        working-directory: packages/flutter_breez_liquid/
         run: just version
 
       - name: Check git status
