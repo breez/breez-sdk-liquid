@@ -108,6 +108,7 @@ class BreezSDKLiquidModule(
     @ReactMethod
     fun connect(
         req: ReadableMap,
+        plugins: Vec<Plugin>?,
         promise: Promise,
     ) {
         if (bindingLiquidSdk != null) {
@@ -122,7 +123,7 @@ class BreezSDKLiquidModule(
 
                 ensureWorkingDir(connectRequest.config.workingDir)
 
-                bindingLiquidSdk = connect(connectRequest)
+                bindingLiquidSdk = connect(connectRequest, plugins)
                 promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
@@ -720,6 +721,22 @@ class BreezSDKLiquidModule(
             try {
                 val res = getBindingLiquidSdk().listFiatCurrencies()
                 promise.resolve(readableArrayOf(res))
+            } catch (e: Exception) {
+                promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun broadcast(
+        event: ReadableMap,
+        promise: Promise,
+    ) {
+        executor.execute {
+            try {
+                val eventTmp = asSdkEvent(event) ?: run { throw SdkException.Generic(errMissingMandatoryField("event", "SdkEvent")) }
+                getBindingLiquidSdk().broadcast(eventTmp)
+                promise.resolve(readableMapOf("status" to "ok"))
             } catch (e: Exception) {
                 promise.reject(e.javaClass.simpleName.replace("Exception", "Error"), e.message, e)
             }

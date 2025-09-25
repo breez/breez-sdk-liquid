@@ -1103,3 +1103,22 @@ export const listFiatCurrencies = async (): Promise<FiatCurrency[]> => {
     const response = await BreezSDKLiquid.listFiatCurrencies()
     return response
 }
+
+
+export const broadcast = async (event: SdkEvent): Promise<void> => {
+    await BreezSDKLiquid.broadcast(event)
+}
+
+
+export const setItem = async (key: string, value: string): Promise<void> => {
+    await BreezSDKLiquid.setItem(key, value)
+}
+
+export const getItem = async (key: string): Promise<string | null> => {
+    const response = await BreezSDKLiquid.getItem(key)
+    return response
+}
+
+export const removeItem = async (key: string): Promise<void> => {
+    await BreezSDKLiquid.removeItem(key)
+}
