@@ -11,7 +11,7 @@ mod test {
         swapper::MockSwapper,
     };
     use elements::{Address as ElementsAddress, Script, Txid};
-    use lwk_wollet::WalletTx;
+    use lwk_wollet::{elements::AssetId, WalletTx};
     use sdk_common::utils::Arc;
     use std::{collections::HashMap, str::FromStr};
 
@@ -62,6 +62,7 @@ mod test {
     async fn test_recover_with_mrh_tx() {
         // Setup mock data
         let (mut receive_swap, recovery_context) = setup_test_data();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
 
         // Setup an MRH tx in the history
         let mrh_script = ElementsAddress::from_str(&receive_swap.mrh_address)
@@ -72,8 +73,9 @@ mod test {
             recovery_context,
             &mrh_script,
             mrh_tx_id,
-            102,    // Confirmed
-            150000, // Amount
+            102,   // Confirmed
+            95000, // Amount
+            asset_id,
         );
 
         // Test recover swap
@@ -88,6 +90,108 @@ mod test {
         assert!(result.is_ok());
         assert_eq!(receive_swap.state, PaymentState::Complete);
         assert_eq!(receive_swap.mrh_tx_id, Some(mrh_tx_id.to_string()));
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_recover_with_mrh_tx_overpay() {
+        // Setup mock data
+        let (mut receive_swap, recovery_context) = setup_test_data();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
+
+        // Setup an MRH tx in the history
+        let mrh_script = ElementsAddress::from_str(&receive_swap.mrh_address)
+            .unwrap()
+            .script_pubkey();
+        let mrh_tx_id = "3333333333333333333333333333333333333333333333333333333333333333";
+        let (recovery_context, _) = add_mrh_tx_to_context(
+            recovery_context,
+            &mrh_script,
+            mrh_tx_id,
+            102,    // Confirmed
+            110000, // Amount
+            asset_id,
+        );
+
+        // Test recover swap
+        let result = ReceiveSwapHandler::recover_swap(
+            &mut receive_swap,
+            &recovery_context,
+            false, // Not within grace period
+        )
+        .await;
+
+        // Verify results
+        assert!(result.is_ok());
+        assert_eq!(receive_swap.state, PaymentState::Complete);
+        assert_eq!(receive_swap.mrh_tx_id, Some(mrh_tx_id.to_string()));
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_recover_with_mrh_tx_underpay() {
+        // Setup mock data
+        let (mut receive_swap, recovery_context) = setup_test_data();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
+
+        // Setup an MRH tx in the history
+        let mrh_script = ElementsAddress::from_str(&receive_swap.mrh_address)
+            .unwrap()
+            .script_pubkey();
+        let mrh_tx_id = "3333333333333333333333333333333333333333333333333333333333333333";
+        let (recovery_context, _) = add_mrh_tx_to_context(
+            recovery_context,
+            &mrh_script,
+            mrh_tx_id,
+            102,   // Confirmed
+            90000, // Amount
+            asset_id,
+        );
+
+        // Test recover swap
+        let result = ReceiveSwapHandler::recover_swap(
+            &mut receive_swap,
+            &recovery_context,
+            false, // Not within grace period
+        )
+        .await;
+
+        // Verify results
+        assert!(result.is_ok());
+        assert_eq!(receive_swap.state, PaymentState::Created);
+        assert_eq!(receive_swap.mrh_tx_id, None);
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_recover_with_mrh_tx_wrong_asset() {
+        // Setup mock data
+        let (mut receive_swap, recovery_context) = setup_test_data();
+        let asset_id = AssetId::from_slice(&[1; 32]).unwrap();
+
+        // Setup an MRH tx in the history
+        let mrh_script = ElementsAddress::from_str(&receive_swap.mrh_address)
+            .unwrap()
+            .script_pubkey();
+        let mrh_tx_id = "3333333333333333333333333333333333333333333333333333333333333333";
+        let (recovery_context, _) = add_mrh_tx_to_context(
+            recovery_context,
+            &mrh_script,
+            mrh_tx_id,
+            102,   // Confirmed
+            95000, // Amount
+            asset_id,
+        );
+
+        // Test recover swap
+        let result = ReceiveSwapHandler::recover_swap(
+            &mut receive_swap,
+            &recovery_context,
+            false, // Not within grace period
+        )
+        .await;
+
+        // Verify results
+        assert!(result.is_ok());
+        assert_eq!(receive_swap.state, PaymentState::Created);
+        assert_eq!(receive_swap.mrh_tx_id, None);
     }
 
     #[sdk_macros::async_test_all]
@@ -306,6 +410,7 @@ mod test {
             liquid_tip_height: 900, // Below timeout height
             swapper: Arc::new(MockSwapper::new()),
             liquid_chain_service: Arc::new(MockLiquidChainService::new()),
+            lbtc_asset_id: AssetId::from_slice(&[0; 32]).unwrap(),
         };
 
         (receive_swap, recovery_context)
@@ -320,6 +425,7 @@ mod test {
         amount: u64,
     ) -> (ReceiveOrSendSwapRecoveryContext, WalletTx) {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
 
         // Create history tx
         let history_tx = LBtcHistory {
@@ -339,7 +445,7 @@ mod test {
             .insert(claim_script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64);
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64, asset_id);
 
         // Add to incoming tx map
         context
@@ -385,6 +491,7 @@ mod test {
         tx_id_hex: &str,
         height: u32,
         amount: u64,
+        asset_id: AssetId,
     ) -> (ReceiveOrSendSwapRecoveryContext, WalletTx) {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
@@ -406,7 +513,7 @@ mod test {
             .insert(mrh_script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64);
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64, asset_id);
 
         // Add to incoming tx map
         context

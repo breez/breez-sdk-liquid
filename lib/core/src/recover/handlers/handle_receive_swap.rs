@@ -1,7 +1,7 @@
 use anyhow::Result;
 use boltz_client::ElementsAddress;
 use log::{debug, warn};
-use lwk_wollet::elements::Txid;
+use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::WalletTx;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -86,8 +86,13 @@ impl ReceiveSwapHandler {
         };
 
         // First obtain recovered data from the history
-        let recovered_data =
-            Self::recover_onchain_data(&context.tx_map, &history, receive_swap.created_at)?;
+        let recovered_data = Self::recover_onchain_data(
+            &context.tx_map,
+            &history,
+            receive_swap.created_at,
+            receive_swap.receiver_amount_sat,
+            &context.lbtc_asset_id,
+        )?;
 
         // Update the swap with recovered data
         Self::update_swap(
@@ -148,13 +153,24 @@ impl ReceiveSwapHandler {
         tx_map: &TxMap,
         history: &ReceiveSwapHistory,
         swap_timestamp: u32,
+        receiver_amount_sat: u64,
+        lbtc_asset_id: &AssetId,
     ) -> Result<RecoveredOnchainDataReceive> {
         // The MRH script history txs filtered by the swap timestamp
         let mrh_txs: HashMap<Txid, WalletTx> = history
             .lbtc_mrh_script_history
             .iter()
             .filter_map(|h| tx_map.incoming_tx_map.get(&h.txid))
-            .filter(|tx| tx.timestamp.map(|t| t > swap_timestamp).unwrap_or(true))
+            .filter(|tx| {
+                // Only consider transactions after the swap was created
+                // and that have at least the receiver amount in LBTC
+                tx.timestamp.map(|t| t > swap_timestamp).unwrap_or(true)
+                    && tx
+                        .balance
+                        .get(lbtc_asset_id)
+                        .map(|amount| amount.unsigned_abs() >= receiver_amount_sat)
+                        .unwrap_or_default()
+            })
             .map(|tx| (tx.txid, tx.clone()))
             .collect();
 
@@ -167,7 +183,12 @@ impl ReceiveSwapHandler {
         let mrh_amount_sat = mrh_tx_id
             .clone()
             .and_then(|h| mrh_txs.get(&h.txid))
-            .map(|tx| tx.balance.values().sum::<i64>().unsigned_abs());
+            .and_then(|tx| {
+                // Get the absolute value of the LBTC amount received in the MRH tx
+                tx.balance
+                    .get(lbtc_asset_id)
+                    .map(|amount| amount.unsigned_abs())
+            });
 
         let (lockup_tx_id, claim_tx_id) =
             determine_incoming_lockup_and_claim_txs(&history.lbtc_claim_script_history, tx_map);

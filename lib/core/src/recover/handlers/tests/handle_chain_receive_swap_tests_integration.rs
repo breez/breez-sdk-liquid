@@ -10,7 +10,7 @@ mod test {
     };
     use bitcoin::{transaction::Version, Sequence};
     use boltz_client::{Amount, LockTime};
-    use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+    use lwk_wollet::{elements::AssetId, elements_miniscript::slip77::MasterBlindingKey};
     use std::{collections::HashMap, str::FromStr};
 
     #[cfg(feature = "browser-tests")]
@@ -537,6 +537,8 @@ mod test {
         claim_tx_id_hex: &str,
         amount: u64,
     ) -> ChainSwapRecoveryContext {
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
+
         // Add history txs
         let mut history = Vec::new();
         for (tx_id_hex, height) in tx_ids {
@@ -548,7 +550,8 @@ mod test {
 
             // If this is the claim tx, add it to the incoming tx map
             if *tx_id_hex == claim_tx_id_hex {
-                let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, *height, amount as i64);
+                let wallet_tx =
+                    create_mock_lbtc_wallet_tx(tx_id_hex, *height, amount as i64, asset_id);
                 context.tx_map.incoming_tx_map.insert(tx_id, wallet_tx);
             }
         }

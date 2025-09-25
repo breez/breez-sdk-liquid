@@ -275,6 +275,7 @@ impl LiquidSdkBuilder {
             Some(recoverer) => recoverer,
             None => Arc::new(Recoverer::new(
                 self.signer.slip77_master_blinding_key()?,
+                utils::lbtc_asset_id(self.config.network),
                 swapper.clone(),
                 onchain_wallet.clone(),
                 liquid_chain_service.clone(),

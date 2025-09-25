@@ -1,4 +1,5 @@
 use anyhow::Result;
+use lwk_wollet::elements::AssetId;
 use sdk_common::utils::Arc;
 
 use super::chain::{MockBitcoinChainService, MockLiquidChainService};
@@ -8,6 +9,7 @@ use crate::{
 };
 
 pub(crate) fn new_recoverer(
+    lbtc_asset_id: AssetId,
     signer: Arc<Box<dyn Signer>>,
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
@@ -18,6 +20,7 @@ pub(crate) fn new_recoverer(
 
     Recoverer::new(
         signer.slip77_master_blinding_key()?,
+        lbtc_asset_id,
         swapper,
         onchain_wallet,
         liquid_chain_service,
