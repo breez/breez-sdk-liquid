@@ -1,0 +1,19 @@
+rust:
+  directory: ../../
+  manifestPath: lib/bindings/Cargo.toml
+bindings:
+  cpp: cpp/generated
+  ts: src/generated
+android:
+  useSharedLibrary: true
+ios:
+  targets:
+    - aarch64-apple-ios
+    - aarch64-apple-ios-sim
+    - x86_64-apple-ios
+  frameworkName: build/RnBreezSdkLiquid
+turboModule:
+  cpp: cpp
+  ts: src
+noOverwrite:
+  - "android/src/main/AndroidManifest.xml"
