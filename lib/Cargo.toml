@@ -6,7 +6,7 @@ panic = "abort"   # Abort on panic, as unwinding code does require extra binary 
 rpath = true
 
 [workspace]
-members = ["bindings", "bindings/langs/react-native", "core", "wasm"]
+members = ["bindings", "core", "wasm"]
 resolver = "2"
 
 [workspace.package]
