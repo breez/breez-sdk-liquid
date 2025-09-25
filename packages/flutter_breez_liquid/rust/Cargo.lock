@@ -687,8 +687,8 @@ dependencies = [
  "reqwest 0.12.18",
  "rusqlite",
  "rusqlite_migration",
- "sdk-common",
- "sdk-macros",
+ "sdk-common 0.7.1 (git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52)",
+ "sdk-macros 0.7.1 (git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52)",
  "security-framework",
  "security-framework-sys",
  "semver",
@@ -1611,7 +1611,7 @@ dependencies = [
  "flutter_rust_bridge",
  "flutter_rust_bridge_codegen",
  "log",
- "sdk-common",
+ "sdk-common 0.7.1 (git+https://github.com/breez/breez-sdk?rev=5d96541a4cb03f30b8c4197a619ea52a98bc0bfe)",
  "serde",
  "thiserror 1.0.69",
 ]
@@ -4453,7 +4453,52 @@ dependencies = [
  "querystring",
  "regex",
  "reqwest 0.12.18",
- "sdk-macros",
+ "sdk-macros 0.7.1 (git+https://github.com/breez/breez-sdk?rev=5d96541a4cb03f30b8c4197a619ea52a98bc0bfe)",
+ "serde",
+ "serde_json",
+ "strum_macros 0.25.3",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic 0.12.3",
+ "tonic 0.8.3",
+ "tonic-build 0.12.3",
+ "tonic-build 0.8.4",
+ "tonic-web-wasm-client",
+ "url",
+ "urlencoding",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "sdk-common"
+version = "0.7.1"
+source = "git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52#7c3577f260e6a197161d4c389ed9b75659623b52"
+dependencies = [
+ "aes",
+ "anyhow",
+ "async-trait",
+ "base64 0.13.1",
+ "bip21",
+ "bitcoin 0.29.2",
+ "cbc",
+ "dns-parser",
+ "elements",
+ "getrandom 0.2.16",
+ "hex",
+ "hickory-resolver",
+ "lazy_static",
+ "lightning 0.0.118",
+ "lightning 0.1.5",
+ "lightning-invoice 0.26.0",
+ "log",
+ "maybe-sync",
+ "percent-encoding",
+ "prost 0.11.9",
+ "prost 0.13.5",
+ "querystring",
+ "regex",
+ "reqwest 0.12.18",
+ "sdk-macros 0.7.1 (git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52)",
  "serde",
  "serde_json",
  "strum_macros 0.25.3",
@@ -4473,6 +4518,16 @@ dependencies = [
 name = "sdk-macros"
 version = "0.7.1"
 source = "git+https://github.com/breez/breez-sdk?rev=5d96541a4cb03f30b8c4197a619ea52a98bc0bfe#5d96541a4cb03f30b8c4197a619ea52a98bc0bfe"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
+name = "sdk-macros"
+version = "0.7.1"
+source = "git+https://github.com/breez/breez-sdk?rev=7c3577f260e6a197161d4c389ed9b75659623b52#7c3577f260e6a197161d4c389ed9b75659623b52"
 dependencies = [
  "proc-macro2",
  "quote",
