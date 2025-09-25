@@ -23,7 +23,7 @@
 - Dart ^3.8.1
 - iOS >=13.0
 - MacOS >=15.0
-- Android `compileSdkVersion` 35
+- Android `compileSdkVersion` 36
 - Java 17
 - Android Gradle Plugin >=7.3.0
 
