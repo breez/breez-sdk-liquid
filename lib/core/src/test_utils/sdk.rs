@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use sdk_common::prelude::{MockRestClient, RestClient, STAGING_BREEZSERVER_URL};
 use sdk_common::utils::Arc;
 
+use crate::utils;
 use crate::{
     model::{Config, Signer},
     persist::Persister,
@@ -57,6 +58,7 @@ pub(crate) async fn new_liquid_sdk_with_chain_services(
     let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
     let recoverer = Arc::new(Recoverer::new(
         signer.slip77_master_blinding_key()?,
+        utils::lbtc_asset_id(config.network),
         swapper.clone(),
         onchain_wallet.clone(),
         liquid_chain_service.clone(),

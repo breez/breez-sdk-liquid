@@ -10,7 +10,7 @@ mod test {
     use crate::recover::model::*;
     use crate::swapper::MockSwapper;
     use lwk_wollet::elements::script::Script;
-    use lwk_wollet::elements::Txid;
+    use lwk_wollet::elements::{AssetId, Txid};
     use lwk_wollet::WalletTx;
     use mockall::predicate::*;
     use sdk_common::utils::Arc;
@@ -355,6 +355,7 @@ mod test {
             liquid_tip_height: 900, // Below timeout height
             swapper: Arc::new(MockSwapper::new()),
             liquid_chain_service: Arc::new(MockLiquidChainService::new()),
+            lbtc_asset_id: AssetId::LIQUID_BTC,
         };
 
         (send_swap, recovery_context)
@@ -368,6 +369,7 @@ mod test {
         height: u32,
     ) -> ReceiveOrSendSwapRecoveryContext {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
 
         // Create history tx
         let history_tx = LBtcHistory {
@@ -387,7 +389,7 @@ mod test {
             .insert(script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, -100000); // Negative amount for outgoing
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, -100000, asset_id); // Negative amount for outgoing
 
         // Add to outgoing tx map
         context.tx_map.outgoing_tx_map.insert(tx_id, wallet_tx);
@@ -433,6 +435,7 @@ mod test {
         amount: u64,
     ) -> (ReceiveOrSendSwapRecoveryContext, WalletTx) {
         let tx_id = Txid::from_str(tx_id_hex).unwrap();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
 
         // Create history tx
         let history_tx = LBtcHistory {
@@ -452,7 +455,7 @@ mod test {
             .insert(script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64); // Positive amount for incoming
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64, asset_id); // Positive amount for incoming
 
         // Add to incoming tx map
         context
