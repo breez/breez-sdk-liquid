@@ -32,7 +32,7 @@ clean:
 test:
 	cargo test
 
-all: bindings-swift bindings-android python-darwin react-native
+all: bindings-swift bindings-android python-darwin
 
 ## Android 
 .PHONY: android
@@ -177,8 +177,3 @@ python-linux: $(SOURCES)
 python-darwin: darwin-universal
 	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language python -o ffi/python
 	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/python
-
-## React Native
-.PHONY: react-native
-react-native:
-	make -C langs/react-native codegen
