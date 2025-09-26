@@ -3,6 +3,7 @@ use crate::{
     persist::Persister,
     recover::recoverer::Recoverer,
     send_swap::SendSwapHandler,
+    utils,
 };
 use anyhow::Result;
 use sdk_common::utils::Arc;
@@ -25,6 +26,7 @@ pub(crate) fn new_send_swap_handler(
     let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
     let recoverer = Arc::new(Recoverer::new(
         signer.slip77_master_blinding_key()?,
+        utils::lbtc_asset_id(config.network),
         swapper.clone(),
         onchain_wallet.clone(),
         liquid_chain_service.clone(),

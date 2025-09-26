@@ -11,7 +11,7 @@ mod test {
     use bitcoin::OutPoint;
     use bitcoin::{transaction::Version, ScriptBuf, Sequence};
     use boltz_client::{Amount, LockTime};
-    use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
+    use lwk_wollet::{elements::AssetId, elements_miniscript::slip77::MasterBlindingKey};
 
     use std::{collections::HashMap, str::FromStr};
 
@@ -355,6 +355,7 @@ mod test {
         height: u32,
     ) -> ChainSwapRecoveryContext {
         let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
 
         // Create history tx
         let history_tx = LBtcHistory {
@@ -374,7 +375,7 @@ mod test {
             .insert(script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, -100000); // Negative amount for outgoing
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, -100000, asset_id); // Negative amount for outgoing
 
         // Add to outgoing tx map
         context.tx_map.outgoing_tx_map.insert(tx_id, wallet_tx);
@@ -391,6 +392,7 @@ mod test {
         amount: u64,
     ) -> ChainSwapRecoveryContext {
         let tx_id = elements::Txid::from_str(tx_id_hex).unwrap();
+        let asset_id = AssetId::from_slice(&[0; 32]).unwrap();
 
         // Create history tx
         let history_tx = LBtcHistory {
@@ -410,7 +412,7 @@ mod test {
             .insert(script.clone(), script_history);
 
         // Create wallet tx
-        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64); // Positive for incoming
+        let wallet_tx = create_mock_lbtc_wallet_tx(tx_id_hex, height, amount as i64, asset_id); // Positive for incoming
 
         // Add to incoming tx map
         context.tx_map.incoming_tx_map.insert(tx_id, wallet_tx);

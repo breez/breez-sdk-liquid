@@ -57,7 +57,12 @@ pub(crate) fn create_empty_lbtc_transaction() -> Transaction {
 }
 
 // Create a mock LBTC wallet transaction
-pub(crate) fn create_mock_lbtc_wallet_tx(tx_id_hex: &str, height: u32, amount: i64) -> WalletTx {
+pub(crate) fn create_mock_lbtc_wallet_tx(
+    tx_id_hex: &str,
+    height: u32,
+    amount: i64,
+    asset_id: AssetId,
+) -> WalletTx {
     let tx_id = Txid::from_str(tx_id_hex).unwrap();
 
     WalletTx {
@@ -68,10 +73,7 @@ pub(crate) fn create_mock_lbtc_wallet_tx(tx_id_hex: &str, height: u32, amount: i
         timestamp: Some(1001), // Just after swap creation time
         balance: {
             let mut map = BTreeMap::new();
-            map.insert(
-                AssetId::from_slice(&[0; 32]).unwrap(), // Default asset ID
-                amount,
-            );
+            map.insert(asset_id, amount);
             map
         },
         outputs: vec![],

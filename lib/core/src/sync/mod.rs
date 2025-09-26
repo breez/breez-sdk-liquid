@@ -668,6 +668,7 @@ impl SyncService {
 #[cfg(test)]
 mod tests {
     use anyhow::{anyhow, Result};
+    use lwk_wollet::elements::AssetId;
     use sdk_common::utils::Arc;
     use std::collections::HashMap;
 
@@ -699,6 +700,7 @@ mod tests {
         let swapper = Arc::new(MockSwapper::new());
         let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
         let recoverer = Arc::new(new_recoverer(
+            AssetId::LIQUID_BTC,
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
@@ -800,6 +802,7 @@ mod tests {
         let swapper = Arc::new(MockSwapper::new());
         let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
         let recoverer = Arc::new(new_recoverer(
+            AssetId::LIQUID_BTC,
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
@@ -921,6 +924,7 @@ mod tests {
         let swapper = Arc::new(MockSwapper::new());
         let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
         let recoverer = Arc::new(new_recoverer(
+            AssetId::LIQUID_BTC,
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),
@@ -989,6 +993,7 @@ mod tests {
         let swapper = Arc::new(MockSwapper::new());
         let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
         let recoverer = Arc::new(new_recoverer(
+            AssetId::LIQUID_BTC,
             signer.clone(),
             swapper.clone(),
             onchain_wallet.clone(),

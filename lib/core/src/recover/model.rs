@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::WalletTx;
 use sdk_common::utils::Arc;
@@ -148,6 +149,7 @@ pub(crate) struct ReceiveOrSendSwapRecoveryContext {
     pub(crate) swapper: Arc<dyn Swapper>,
     pub(crate) tx_map: TxMap,
     pub(crate) liquid_tip_height: u32,
+    pub(crate) lbtc_asset_id: AssetId,
 }
 
 pub(crate) struct ChainSwapRecoveryContext {

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, ensure, Result};
 use log::{debug, error, info, warn};
+use lwk_wollet::elements::AssetId;
 
 use super::handlers::{
     ChainReceiveSwapHandler, ChainSendSwapHandler, ReceiveSwapHandler, SendSwapHandler,
@@ -32,6 +33,7 @@ const LIQUID_TIP_LEEWAY: u32 = 3;
 
 pub struct Recoverer {
     master_blinding_key: MasterBlindingKey,
+    lbtc_asset_id: AssetId,
     swapper: Arc<dyn Swapper>,
     onchain_wallet: Arc<dyn OnchainWallet>,
     liquid_chain_service: Arc<dyn LiquidChainService>,
@@ -42,6 +44,7 @@ pub struct Recoverer {
 impl Recoverer {
     pub(crate) fn new(
         master_blinding_key: Vec<u8>,
+        lbtc_asset_id: AssetId,
         swapper: Arc<dyn Swapper>,
         onchain_wallet: Arc<dyn OnchainWallet>,
         liquid_chain_service: Arc<dyn LiquidChainService>,
@@ -52,6 +55,7 @@ impl Recoverer {
             master_blinding_key: MasterBlindingKey::from_hex(
                 &master_blinding_key.to_lower_hex_string(),
             )?,
+            lbtc_asset_id,
             swapper,
             onchain_wallet,
             liquid_chain_service,
@@ -262,6 +266,7 @@ impl Recoverer {
                 liquid_tip_height,
                 liquid_chain_service: self.liquid_chain_service.clone(),
                 swapper: self.swapper.clone(),
+                lbtc_asset_id: self.lbtc_asset_id,
             },
             chain_swap_recovery_context,
         ))
