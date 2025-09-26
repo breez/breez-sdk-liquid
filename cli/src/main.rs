@@ -57,8 +57,9 @@ fn show_results(result: Result<String>) -> Result<()> {
 
 struct CliEventListener {}
 
+#[async_trait::async_trait]
 impl EventListener for CliEventListener {
-    fn on_event(&self, e: SdkEvent) {
+    async fn on_event(&self, e: SdkEvent) {
         info!("Received event: {e:?}");
     }
 }
@@ -104,12 +105,15 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
-    let sdk = LiquidSdk::connect(ConnectRequest {
-        config,
-        mnemonic: Some(mnemonic.to_string()),
-        passphrase,
-        seed: None,
-    })
+    let sdk = LiquidSdk::connect(
+        ConnectRequest {
+            config,
+            mnemonic: Some(mnemonic.to_string()),
+            passphrase,
+            seed: None,
+        },
+        None,
+    )
     .await?;
     let listener_id = sdk
         .add_event_listener(Box::new(CliEventListener {}))

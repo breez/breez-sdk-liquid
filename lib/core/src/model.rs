@@ -26,9 +26,10 @@ use tokio_with_wasm::alias as tokio;
 
 use crate::{
     bitcoin,
-    chain::bitcoin::esplora::EsploraBitcoinChainService,
-    chain::liquid::esplora::EsploraLiquidChainService,
-    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    chain::{
+        bitcoin::{esplora::EsploraBitcoinChainService, BitcoinChainService},
+        liquid::{esplora::EsploraLiquidChainService, LiquidChainService},
+    },
     elements,
     error::{PaymentError, SdkError, SdkResult},
     persist::model::PaymentTxBalance,
@@ -467,8 +468,9 @@ impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
 }
 
 /// Trait that can be used to react to various [SdkEvent]s emitted by the SDK.
+#[sdk_macros::async_trait]
 pub trait EventListener: MaybeSend + MaybeSync {
-    fn on_event(&self, e: SdkEvent);
+    async fn on_event(&self, e: SdkEvent);
 }
 
 /// Event emitted by the SDK. Add an [EventListener] by calling [crate::sdk::LiquidSdk::add_event_listener]
