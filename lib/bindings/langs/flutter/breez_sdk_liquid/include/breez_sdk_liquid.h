@@ -434,6 +434,7 @@ typedef struct wire_cst_prepare_refund_request {
 typedef struct wire_cst_prepare_send_request {
   struct wire_cst_list_prim_u_8_strict *destination;
   struct wire_cst_pay_amount *amount;
+  bool *disable_mrh;
 } wire_cst_prepare_send_request;
 
 typedef struct wire_cst_prepare_receive_response {
@@ -474,6 +475,7 @@ typedef struct wire_cst_send_payment_request {
   struct wire_cst_prepare_send_response prepare_response;
   bool *use_asset_fees;
   struct wire_cst_list_prim_u_8_strict *payer_note;
+  bool *disable_mrh;
 } wire_cst_send_payment_request;
 
 typedef struct wire_cst_sign_message_request {

@@ -75,6 +75,7 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
             amount: req.amount.map(|a| PayAmount::Bitcoin {
                 receiver_amount_sat: a / 1000,
             }),
+            disable_mrh: Some(true),
         };
 
         // Prepare the payment
@@ -92,6 +93,7 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
             prepare_response: prepare_resp,
             use_asset_fees: None,
             payer_note: None,
+            disable_mrh: Some(true),
         };
 
         // Send the payment
@@ -148,9 +150,18 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
         info!("NWC List transactions is called");
         let states = req.unpaid.and_then(|unpaid| {
             if unpaid {
-                return Some(vec![PaymentState::Pending]);
+                return Some(vec![
+                    PaymentState::Created,
+                    PaymentState::Pending,
+                    PaymentState::Failed,
+                    PaymentState::TimedOut,
+                    PaymentState::Refundable,
+                    PaymentState::RefundPending,
+                    PaymentState::WaitingFeeAcceptance,
+                ]);
+            } else {
+                Some(vec![PaymentState::Complete])
             }
-            None
         });
 
         // Get payments from SDK

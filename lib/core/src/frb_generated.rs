@@ -4455,9 +4455,11 @@ impl SseDecode for crate::model::PrepareSendRequest {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_destination = <String>::sse_decode(deserializer);
         let mut var_amount = <Option<crate::model::PayAmount>>::sse_decode(deserializer);
+        let mut var_disableMrh = <Option<bool>>::sse_decode(deserializer);
         return crate::model::PrepareSendRequest {
             destination: var_destination,
             amount: var_amount,
+            disable_mrh: var_disableMrh,
         };
     }
 }
@@ -4791,10 +4793,12 @@ impl SseDecode for crate::model::SendPaymentRequest {
         let mut var_prepareResponse = <crate::model::PrepareSendResponse>::sse_decode(deserializer);
         let mut var_useAssetFees = <Option<bool>>::sse_decode(deserializer);
         let mut var_payerNote = <Option<String>>::sse_decode(deserializer);
+        let mut var_disableMrh = <Option<bool>>::sse_decode(deserializer);
         return crate::model::SendPaymentRequest {
             prepare_response: var_prepareResponse,
             use_asset_fees: var_useAssetFees,
             payer_note: var_payerNote,
+            disable_mrh: var_disableMrh,
         };
     }
 }
@@ -7011,6 +7015,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::PrepareSendRequest {
         [
             self.destination.into_into_dart().into_dart(),
             self.amount.into_into_dart().into_dart(),
+            self.disable_mrh.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7407,6 +7412,7 @@ impl flutter_rust_bridge::IntoDart for crate::model::SendPaymentRequest {
             self.prepare_response.into_into_dart().into_dart(),
             self.use_asset_fees.into_into_dart().into_dart(),
             self.payer_note.into_into_dart().into_dart(),
+            self.disable_mrh.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -9345,6 +9351,7 @@ impl SseEncode for crate::model::PrepareSendRequest {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.destination, serializer);
         <Option<crate::model::PayAmount>>::sse_encode(self.amount, serializer);
+        <Option<bool>>::sse_encode(self.disable_mrh, serializer);
     }
 }
 
@@ -9596,6 +9603,7 @@ impl SseEncode for crate::model::SendPaymentRequest {
         <crate::model::PrepareSendResponse>::sse_encode(self.prepare_response, serializer);
         <Option<bool>>::sse_encode(self.use_asset_fees, serializer);
         <Option<String>>::sse_encode(self.payer_note, serializer);
+        <Option<bool>>::sse_encode(self.disable_mrh, serializer);
     }
 }
 
@@ -11643,6 +11651,7 @@ mod io {
             crate::model::PrepareSendRequest {
                 destination: self.destination.cst_decode(),
                 amount: self.amount.cst_decode(),
+                disable_mrh: self.disable_mrh.cst_decode(),
             }
         }
     }
@@ -11907,6 +11916,7 @@ mod io {
                 prepare_response: self.prepare_response.cst_decode(),
                 use_asset_fees: self.use_asset_fees.cst_decode(),
                 payer_note: self.payer_note.cst_decode(),
+                disable_mrh: self.disable_mrh.cst_decode(),
             }
         }
     }
@@ -13056,6 +13066,7 @@ mod io {
             Self {
                 destination: core::ptr::null_mut(),
                 amount: core::ptr::null_mut(),
+                disable_mrh: core::ptr::null_mut(),
             }
         }
     }
@@ -13277,6 +13288,7 @@ mod io {
                 prepare_response: Default::default(),
                 use_asset_fees: core::ptr::null_mut(),
                 payer_note: core::ptr::null_mut(),
+                disable_mrh: core::ptr::null_mut(),
             }
         }
     }
@@ -15563,6 +15575,7 @@ mod io {
     pub struct wire_cst_prepare_send_request {
         destination: *mut wire_cst_list_prim_u_8_strict,
         amount: *mut wire_cst_pay_amount,
+        disable_mrh: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -15800,6 +15813,7 @@ mod io {
         prepare_response: wire_cst_prepare_send_response,
         use_asset_fees: *mut bool,
         payer_note: *mut wire_cst_list_prim_u_8_strict,
+        disable_mrh: *mut bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

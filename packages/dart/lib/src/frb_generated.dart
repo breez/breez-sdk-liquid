@@ -3116,10 +3116,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PrepareSendRequest dco_decode_prepare_send_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return PrepareSendRequest(
       destination: dco_decode_String(arr[0]),
       amount: dco_decode_opt_box_autoadd_pay_amount(arr[1]),
+      disableMrh: dco_decode_opt_box_autoadd_bool(arr[2]),
     );
   }
 
@@ -3341,11 +3342,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SendPaymentRequest dco_decode_send_payment_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return SendPaymentRequest(
       prepareResponse: dco_decode_prepare_send_response(arr[0]),
       useAssetFees: dco_decode_opt_box_autoadd_bool(arr[1]),
       payerNote: dco_decode_opt_String(arr[2]),
+      disableMrh: dco_decode_opt_box_autoadd_bool(arr[3]),
     );
   }
 
@@ -5624,7 +5626,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_destination = sse_decode_String(deserializer);
     var var_amount = sse_decode_opt_box_autoadd_pay_amount(deserializer);
-    return PrepareSendRequest(destination: var_destination, amount: var_amount);
+    var var_disableMrh = sse_decode_opt_box_autoadd_bool(deserializer);
+    return PrepareSendRequest(destination: var_destination, amount: var_amount, disableMrh: var_disableMrh);
   }
 
   @protected
@@ -5878,10 +5881,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_prepareResponse = sse_decode_prepare_send_response(deserializer);
     var var_useAssetFees = sse_decode_opt_box_autoadd_bool(deserializer);
     var var_payerNote = sse_decode_opt_String(deserializer);
+    var var_disableMrh = sse_decode_opt_box_autoadd_bool(deserializer);
     return SendPaymentRequest(
       prepareResponse: var_prepareResponse,
       useAssetFees: var_useAssetFees,
       payerNote: var_payerNote,
+      disableMrh: var_disableMrh,
     );
   }
 
@@ -7975,6 +7980,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.destination, serializer);
     sse_encode_opt_box_autoadd_pay_amount(self.amount, serializer);
+    sse_encode_opt_box_autoadd_bool(self.disableMrh, serializer);
   }
 
   @protected
@@ -8167,6 +8173,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_prepare_send_response(self.prepareResponse, serializer);
     sse_encode_opt_box_autoadd_bool(self.useAssetFees, serializer);
     sse_encode_opt_String(self.payerNote, serializer);
+    sse_encode_opt_box_autoadd_bool(self.disableMrh, serializer);
   }
 
   @protected

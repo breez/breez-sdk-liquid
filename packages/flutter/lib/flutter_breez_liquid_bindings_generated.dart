@@ -2579,6 +2579,158 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhookPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
 
+  ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitter(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitter(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitterPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<RustCallStatus>)>>('uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitter');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitter =
+      _uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitterPtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitter(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitter(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitterPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitter');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitter =
+      _uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitterPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcast(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer event,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcast(
+      ptr,
+      event,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcastPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcast');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcast =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcastPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstorage(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstorage(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstoragePtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>,
+              ffi.Pointer<RustCallStatus>)>>('uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstorage');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstorage =
+      _uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstoragePtr
+          .asFunction<ffi.Pointer<ffi.Void> Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_free_pluginstorage(
+    ffi.Pointer<ffi.Void> ptr,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_free_pluginstorage(
+      ptr,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_free_pluginstoragePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_free_pluginstorage');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_free_pluginstorage =
+      _uniffi_breez_sdk_liquid_bindings_fn_free_pluginstoragePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>)>();
+
+  RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_item(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer key,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_item(
+      ptr,
+      key,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_itemPtr = _lookup<
+          ffi.NativeFunction<
+              RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_item');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_item =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_itemPtr
+          .asFunction<RustBuffer Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_item(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer key,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_item(
+      ptr,
+      key,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_itemPtr = _lookup<
+          ffi
+          .NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_item');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_item =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_itemPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
+  void uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_item(
+    ffi.Pointer<ffi.Void> ptr,
+    RustBuffer key,
+    RustBuffer value,
+    ffi.Pointer<RustCallStatus> out_status,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_item(
+      ptr,
+      key,
+      value,
+      out_status,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_itemPtr = _lookup<
+          ffi.NativeFunction<
+              ffi.Void Function(ffi.Pointer<ffi.Void>, RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>>(
+      'uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_item');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_item =
+      _uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_itemPtr.asFunction<
+          void Function(ffi.Pointer<ffi.Void>, RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>();
+
   void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener(
     ffi.Pointer<UniffiVTableCallbackInterfaceEventListener> vtable,
   ) {
@@ -2609,6 +2761,21 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_loggerPtr
           .asFunction<void Function(ffi.Pointer<UniffiVTableCallbackInterfaceLogger>)>();
 
+  void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_plugin(
+    ffi.Pointer<UniffiVTableCallbackInterfacePlugin> vtable,
+  ) {
+    return _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_plugin(
+      vtable,
+    );
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_pluginPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<UniffiVTableCallbackInterfacePlugin>)>>(
+          'uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_plugin');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_plugin =
+      _uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_pluginPtr
+          .asFunction<void Function(ffi.Pointer<UniffiVTableCallbackInterfacePlugin>)>();
+
   void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer(
     ffi.Pointer<UniffiVTableCallbackInterfaceSigner> vtable,
   ) {
@@ -2626,40 +2793,45 @@ class FlutterBreezLiquidBindings {
 
   ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_func_connect(
     RustBuffer req,
+    RustBuffer plugins,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _uniffi_breez_sdk_liquid_bindings_fn_func_connect(
       req,
+      plugins,
       out_status,
     );
   }
 
-  late final _uniffi_breez_sdk_liquid_bindings_fn_func_connectPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Pointer<RustCallStatus>)>>(
-          'uniffi_breez_sdk_liquid_bindings_fn_func_connect');
+  late final _uniffi_breez_sdk_liquid_bindings_fn_func_connectPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Pointer<ffi.Void> Function(RustBuffer, RustBuffer,
+              ffi.Pointer<RustCallStatus>)>>('uniffi_breez_sdk_liquid_bindings_fn_func_connect');
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect =
       _uniffi_breez_sdk_liquid_bindings_fn_func_connectPtr
-          .asFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Pointer<RustCallStatus>)>();
+          .asFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   ffi.Pointer<ffi.Void> uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(
     RustBuffer req,
     int signer,
+    RustBuffer plugins,
     ffi.Pointer<RustCallStatus> out_status,
   ) {
     return _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(
       req,
       signer,
+      plugins,
       out_status,
     );
   }
 
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signerPtr = _lookup<
       ffi.NativeFunction<
-          ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Uint64,
+          ffi.Pointer<ffi.Void> Function(RustBuffer, ffi.Uint64, RustBuffer,
               ffi.Pointer<RustCallStatus>)>>('uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer');
   late final _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer =
-      _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signerPtr
-          .asFunction<ffi.Pointer<ffi.Void> Function(RustBuffer, int, ffi.Pointer<RustCallStatus>)>();
+      _uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signerPtr.asFunction<
+          ffi.Pointer<ffi.Void> Function(RustBuffer, int, RustBuffer, ffi.Pointer<RustCallStatus>)>();
 
   RustBuffer uniffi_breez_sdk_liquid_bindings_fn_func_default_config(
     RustBuffer network,
@@ -4096,6 +4268,50 @@ class FlutterBreezLiquidBindings {
       _uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unregister_webhookPtr
           .asFunction<int Function()>();
 
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcast() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcast();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcastPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcast');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcast =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcastPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_item() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_item();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_itemPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_item');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_item =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_itemPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_item() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_item();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_itemPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_item');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_item =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_itemPtr
+          .asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_item() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_item();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_itemPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_item');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_item =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_itemPtr
+          .asFunction<int Function()>();
+
   int uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event();
   }
@@ -4116,6 +4332,36 @@ class FlutterBreezLiquidBindings {
           'uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log');
   late final _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log =
       _uniffi_breez_sdk_liquid_bindings_checksum_method_logger_logPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_id() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_id();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_idPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_id');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_id =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_idPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_start() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_start();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_startPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_start');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_start =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_startPtr.asFunction<int Function()>();
+
+  int uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stop() {
+    return _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stop();
+  }
+
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stopPtr =
+      _lookup<ffi.NativeFunction<ffi.Uint16 Function()>>(
+          'uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stop');
+  late final _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stop =
+      _uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stopPtr.asFunction<int Function()>();
 
   int uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub() {
     return _uniffi_breez_sdk_liquid_bindings_checksum_method_signer_xpub();
@@ -4791,6 +5037,8 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
+
+  external ffi.Pointer<ffi.Bool> disable_mrh;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -4850,6 +5098,8 @@ final class wire_cst_send_payment_request extends ffi.Struct {
   external ffi.Pointer<ffi.Bool> use_asset_fees;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
+
+  external ffi.Pointer<ffi.Bool> disable_mrh;
 }
 
 final class wire_cst_sign_message_request extends ffi.Struct {
@@ -6135,6 +6385,24 @@ typedef DartUniffiCallbackInterfaceLoggerMethod0Function = void Function(
     int, RustBuffer, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
 typedef UniffiCallbackInterfaceLoggerMethod0
     = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfaceLoggerMethod0Function>>;
+typedef UniffiCallbackInterfacePluginMethod0Function = ffi.Void Function(
+    ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfacePluginMethod0Function = void Function(
+    int, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfacePluginMethod0
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfacePluginMethod0Function>>;
+typedef UniffiCallbackInterfacePluginMethod1Function = ffi.Void Function(ffi.Uint64, ffi.Pointer<ffi.Void>,
+    ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfacePluginMethod1Function = void Function(int, ffi.Pointer<ffi.Void>,
+    ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfacePluginMethod1
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfacePluginMethod1Function>>;
+typedef UniffiCallbackInterfacePluginMethod2Function = ffi.Void Function(
+    ffi.Uint64, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef DartUniffiCallbackInterfacePluginMethod2Function = void Function(
+    int, ffi.Pointer<ffi.Void>, ffi.Pointer<RustCallStatus>);
+typedef UniffiCallbackInterfacePluginMethod2
+    = ffi.Pointer<ffi.NativeFunction<UniffiCallbackInterfacePluginMethod2Function>>;
 typedef UniffiCallbackInterfaceSignerMethod0Function = ffi.Void Function(
     ffi.Uint64, ffi.Pointer<RustBuffer>, ffi.Pointer<RustCallStatus>);
 typedef DartUniffiCallbackInterfaceSignerMethod0Function = void Function(
@@ -6192,6 +6460,16 @@ final class UniffiVTableCallbackInterfaceEventListener extends ffi.Struct {
 
 final class UniffiVTableCallbackInterfaceLogger extends ffi.Struct {
   external UniffiCallbackInterfaceLoggerMethod0 log;
+
+  external UniffiCallbackInterfaceFree uniffiFree;
+}
+
+final class UniffiVTableCallbackInterfacePlugin extends ffi.Struct {
+  external UniffiCallbackInterfacePluginMethod0 id;
+
+  external UniffiCallbackInterfacePluginMethod1 onStart;
+
+  external UniffiCallbackInterfacePluginMethod2 onStop;
 
   external UniffiCallbackInterfaceFree uniffiFree;
 }

@@ -435,6 +435,7 @@ dictionary LnUrlPayRequest {
 dictionary PrepareSendRequest {
     string destination;
     PayAmount? amount = null;
+    boolean? disable_mrh = null;
 };
 
 [Enum]
@@ -456,6 +457,7 @@ dictionary SendPaymentRequest {
     PrepareSendResponse prepare_response;
     boolean? use_asset_fees = null;
     string? payer_note = null;
+    boolean? disable_mrh = null;
 };
 
 dictionary SendPaymentResponse {

@@ -451,6 +451,7 @@ pub struct OnchainPaymentLimitsResponse {
 pub struct PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
+    pub disable_mrh: Option<bool>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendDestination)]
@@ -484,6 +485,7 @@ pub struct SendPaymentRequest {
     pub prepare_response: PrepareSendResponse,
     pub use_asset_fees: Option<bool>,
     pub payer_note: Option<String>,
+    pub disable_mrh: Option<bool>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentResponse)]

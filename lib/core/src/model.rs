@@ -742,6 +742,8 @@ pub struct PrepareSendRequest {
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
+    /// If set to true, the payment will be sent without magic routing hints
+    pub disable_mrh: Option<bool>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -791,6 +793,8 @@ pub struct SendPaymentRequest {
     pub use_asset_fees: Option<bool>,
     /// An optional payer note, which is to be included in a BOLT12 invoice request
     pub payer_note: Option<String>,
+    /// If set to true, the payment will be sent without magic routing hints
+    pub disable_mrh: Option<bool>,
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

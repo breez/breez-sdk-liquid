@@ -1454,10 +1454,13 @@ class PrepareSendRequest {
   /// where no amount is specified, or when the caller wishes to drain
   final PayAmount? amount;
 
-  const PrepareSendRequest({required this.destination, this.amount});
+  /// If set to true, the payment will be sent without magic routing hints
+  final bool? disableMrh;
+
+  const PrepareSendRequest({required this.destination, this.amount, this.disableMrh});
 
   @override
-  int get hashCode => destination.hashCode ^ amount.hashCode;
+  int get hashCode => destination.hashCode ^ amount.hashCode ^ disableMrh.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1465,7 +1468,8 @@ class PrepareSendRequest {
       other is PrepareSendRequest &&
           runtimeType == other.runtimeType &&
           destination == other.destination &&
-          amount == other.amount;
+          amount == other.amount &&
+          disableMrh == other.disableMrh;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::prepare_send_payment].
@@ -1769,10 +1773,19 @@ class SendPaymentRequest {
   /// An optional payer note, which is to be included in a BOLT12 invoice request
   final String? payerNote;
 
-  const SendPaymentRequest({required this.prepareResponse, this.useAssetFees, this.payerNote});
+  /// If set to true, the payment will be sent without magic routing hints
+  final bool? disableMrh;
+
+  const SendPaymentRequest({
+    required this.prepareResponse,
+    this.useAssetFees,
+    this.payerNote,
+    this.disableMrh,
+  });
 
   @override
-  int get hashCode => prepareResponse.hashCode ^ useAssetFees.hashCode ^ payerNote.hashCode;
+  int get hashCode =>
+      prepareResponse.hashCode ^ useAssetFees.hashCode ^ payerNote.hashCode ^ disableMrh.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1781,7 +1794,8 @@ class SendPaymentRequest {
           runtimeType == other.runtimeType &&
           prepareResponse == other.prepareResponse &&
           useAssetFees == other.useAssetFees &&
-          payerNote == other.payerNote;
+          payerNote == other.payerNote &&
+          disableMrh == other.disableMrh;
 }
 
 /// Returned when calling [crate::sdk::LiquidSdk::send_payment].

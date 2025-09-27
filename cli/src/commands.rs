@@ -470,6 +470,7 @@ pub(crate) async fn handle_command(
                 .prepare_send_payment(&PrepareSendRequest {
                     destination,
                     amount,
+                    disable_mrh: None,
                 })
                 .await?;
 
@@ -502,6 +503,7 @@ pub(crate) async fn handle_command(
                 prepare_response: prepare_response.clone(),
                 use_asset_fees,
                 payer_note,
+                disable_mrh: None,
             };
 
             if let Some(delay) = delay {

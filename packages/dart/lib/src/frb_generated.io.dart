@@ -3816,6 +3816,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.destination = cst_encode_String(apiObj.destination);
     wireObj.amount = cst_encode_opt_box_autoadd_pay_amount(apiObj.amount);
+    wireObj.disable_mrh = cst_encode_opt_box_autoadd_bool(apiObj.disableMrh);
   }
 
   @protected
@@ -4055,6 +4056,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     cst_api_fill_to_wire_prepare_send_response(apiObj.prepareResponse, wireObj.prepare_response);
     wireObj.use_asset_fees = cst_encode_opt_box_autoadd_bool(apiObj.useAssetFees);
     wireObj.payer_note = cst_encode_opt_String(apiObj.payerNote);
+    wireObj.disable_mrh = cst_encode_opt_box_autoadd_bool(apiObj.disableMrh);
   }
 
   @protected
@@ -7091,6 +7093,8 @@ final class wire_cst_prepare_send_request extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> destination;
 
   external ffi.Pointer<wire_cst_pay_amount> amount;
+
+  external ffi.Pointer<ffi.Bool> disable_mrh;
 }
 
 final class wire_cst_prepare_receive_response extends ffi.Struct {
@@ -7150,6 +7154,8 @@ final class wire_cst_send_payment_request extends ffi.Struct {
   external ffi.Pointer<ffi.Bool> use_asset_fees;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> payer_note;
+
+  external ffi.Pointer<ffi.Bool> disable_mrh;
 }
 
 final class wire_cst_sign_message_request extends ffi.Struct {

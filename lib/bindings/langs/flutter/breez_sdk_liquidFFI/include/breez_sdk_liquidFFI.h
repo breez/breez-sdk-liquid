@@ -265,6 +265,27 @@ typedef void (*UniffiCallbackInterfaceLoggerMethod0)(uint64_t, RustBuffer, void*
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_PLUGIN_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_PLUGIN_METHOD0
+typedef void (*UniffiCallbackInterfacePluginMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_PLUGIN_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_PLUGIN_METHOD1
+typedef void (*UniffiCallbackInterfacePluginMethod1)(uint64_t, void*_Nonnull, void*_Nonnull, void*_Nonnull, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_PLUGIN_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_PLUGIN_METHOD2
+typedef void (*UniffiCallbackInterfacePluginMethod2)(uint64_t, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD0
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_SIGNER_METHOD0
 typedef void (*UniffiCallbackInterfaceSignerMethod0)(uint64_t, RustBuffer* _Nonnull, 
@@ -335,6 +356,16 @@ typedef struct UniffiVTableCallbackInterfaceLogger {
     UniffiCallbackInterfaceLoggerMethod0 _Nonnull log;
     UniffiCallbackInterfaceFree _Nonnull uniffiFree;
 } UniffiVTableCallbackInterfaceLogger;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_PLUGIN
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_PLUGIN
+typedef struct UniffiVTableCallbackInterfacePlugin {
+    UniffiCallbackInterfacePluginMethod0 _Nonnull id;
+    UniffiCallbackInterfacePluginMethod1 _Nonnull onStart;
+    UniffiCallbackInterfacePluginMethod2 _Nonnull onStop;
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+} UniffiVTableCallbackInterfacePlugin;
 
 #endif
 #ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_SIGNER
@@ -552,6 +583,46 @@ void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_sync(void*_Nonn
 void uniffi_breez_sdk_liquid_bindings_fn_method_bindingliquidsdk_unregister_webhook(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_CLONE_PLUGINEVENTEMITTER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_CLONE_PLUGINEVENTEMITTER
+void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_clone_plugineventemitter(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FREE_PLUGINEVENTEMITTER
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FREE_PLUGINEVENTEMITTER
+void uniffi_breez_sdk_liquid_bindings_fn_free_plugineventemitter(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINEVENTEMITTER_BROADCAST
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINEVENTEMITTER_BROADCAST
+void uniffi_breez_sdk_liquid_bindings_fn_method_plugineventemitter_broadcast(void*_Nonnull ptr, RustBuffer event, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_CLONE_PLUGINSTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_CLONE_PLUGINSTORAGE
+void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_clone_pluginstorage(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FREE_PLUGINSTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FREE_PLUGINSTORAGE
+void uniffi_breez_sdk_liquid_bindings_fn_free_pluginstorage(void*_Nonnull ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINSTORAGE_GET_ITEM
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINSTORAGE_GET_ITEM
+RustBuffer uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_get_item(void*_Nonnull ptr, RustBuffer key, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINSTORAGE_REMOVE_ITEM
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINSTORAGE_REMOVE_ITEM
+void uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_remove_item(void*_Nonnull ptr, RustBuffer key, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINSTORAGE_SET_ITEM
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_METHOD_PLUGINSTORAGE_SET_ITEM
+void uniffi_breez_sdk_liquid_bindings_fn_method_pluginstorage_set_item(void*_Nonnull ptr, RustBuffer key, RustBuffer value, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_EVENTLISTENER
 #define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_EVENTLISTENER
 void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener(UniffiVTableCallbackInterfaceEventListener* _Nonnull vtable
@@ -562,6 +633,11 @@ void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_eventlistener(Unif
 void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_logger(UniffiVTableCallbackInterfaceLogger* _Nonnull vtable
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_PLUGIN
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_PLUGIN
+void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_plugin(UniffiVTableCallbackInterfacePlugin* _Nonnull vtable
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_SIGNER
 #define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_INIT_CALLBACK_VTABLE_SIGNER
 void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer(UniffiVTableCallbackInterfaceSigner* _Nonnull vtable
@@ -569,12 +645,12 @@ void uniffi_breez_sdk_liquid_bindings_fn_init_callback_vtable_signer(UniffiVTabl
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT
 #define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT
-void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect(RustBuffer req, RustCallStatus *_Nonnull out_status
+void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect(RustBuffer req, RustBuffer plugins, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT_WITH_SIGNER
 #define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_CONNECT_WITH_SIGNER
-void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(RustBuffer req, uint64_t signer, RustCallStatus *_Nonnull out_status
+void*_Nonnull uniffi_breez_sdk_liquid_bindings_fn_func_connect_with_signer(RustBuffer req, uint64_t signer, RustBuffer plugins, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_FN_FUNC_DEFAULT_CONFIG
@@ -1130,6 +1206,30 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_bindingliquidsdk_unreg
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINEVENTEMITTER_BROADCAST
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINEVENTEMITTER_BROADCAST
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_plugineventemitter_broadcast(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINSTORAGE_GET_ITEM
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINSTORAGE_GET_ITEM
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_get_item(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINSTORAGE_REMOVE_ITEM
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINSTORAGE_REMOVE_ITEM
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_remove_item(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINSTORAGE_SET_ITEM
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGINSTORAGE_SET_ITEM
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_pluginstorage_set_item(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 #define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_EVENTLISTENER_ON_EVENT
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event(void
@@ -1139,6 +1239,24 @@ uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_eventlistener_on_event
 #ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_LOGGER_LOG
 #define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_LOGGER_LOG
 uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_logger_log(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGIN_ID
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGIN_ID
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGIN_ON_START
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGIN_ON_START
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_start(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGIN_ON_STOP
+#define UNIFFI_FFIDEF_UNIFFI_BREEZ_SDK_LIQUID_BINDINGS_CHECKSUM_METHOD_PLUGIN_ON_STOP
+uint16_t uniffi_breez_sdk_liquid_bindings_checksum_method_plugin_on_stop(void
     
 );
 #endif
