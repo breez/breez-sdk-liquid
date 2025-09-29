@@ -13,9 +13,9 @@ TAG_NAME=$(awk -F' = ' '/^version =/{gsub(/"/,"",$2); print $2}' "$ROOT/lib/Carg
 
 log "Detected version: $TAG_NAME"
 
-# Update Flutter plugin pubspec.yaml ref
-log "Updating pubspec.yaml ref..."
-sed -i.bak -E "/flutter_breez_liquid:/,/ref:/s|(ref: ).*|\1v$TAG_NAME|" \
+# Update Flutter plugin pubspec.yaml version
+log "Updating pubspec.yaml version..."
+sed -i.bak -E "s/^(version: ).*/\1$TAG_NAME/" \
   "$ROOT/packages/flutter_breez_liquid/pubspec.yaml"
 rm "$ROOT/packages/flutter_breez_liquid/pubspec.yaml.bak"
 
