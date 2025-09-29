@@ -1,0 +1,12 @@
+# Support for 16KB page sizes on Android 15+ 64-bit architectures
+[target.aarch64-linux-android]
+rustflags = [
+    "-C", "link-arg=-Wl,--hash-style=both",
+    "-C", "link-arg=-Wl,-z,max-page-size=16384",
+]
+
+[target.x86_64-linux-android]
+rustflags = [
+    "-C", "link-arg=-Wl,--hash-style=both",
+    "-C", "link-arg=-Wl,-z,max-page-size=16384",
+]
