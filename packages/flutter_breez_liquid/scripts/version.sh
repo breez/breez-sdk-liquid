@@ -25,6 +25,8 @@ for platform in ios macos; do
   log "Updating $platform podspec..."
   sed -i.bak "1s|.*|$APPLE_HEADER|" \
     "$ROOT/packages/flutter_breez_liquid/$platform/flutter_breez_liquid.podspec"
+  sed -i.bak "1s|.*|$APPLE_HEADER|" \
+    "$ROOT/packages/flutter_breez_liquid/$platform/flutter_breez_liquid.podspec.production"
   rm "$ROOT/packages/flutter_breez_liquid/$platform/"*.bak
 done
 
@@ -33,6 +35,8 @@ GRADLE_HEADER="version '$TAG_NAME' // generated; do not edit"
 log "Updating Android Gradle build.gradle..."
 sed -i.bak "1s|.*|$GRADLE_HEADER|" \
   "$ROOT/packages/flutter_breez_liquid/android/build.gradle"
+sed -i.bak "1s|.*|$GRADLE_HEADER|" \
+  "$ROOT/packages/flutter_breez_liquid/android/build.gradle.production"
 rm "$ROOT/packages/flutter_breez_liquid/android/"*.bak
 
 # Plugin Rust crate Cargo.toml
