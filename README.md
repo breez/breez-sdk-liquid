@@ -7,7 +7,7 @@ The Breez SDK provides developers with a end-to-end solution for integrating sel
 To provide the best experience for their end-users, developers can choose between the following implementations:
 
 - [Breez SDK -  Nodeless *(Liquid Implementation)*](https://sdk-doc-liquid.breez.technology/)
-- [Breez SDK - Nodeless *(Spark Implementation)*](https://breez.technology/spark)
+- [Breez SDK - Nodeless *(Spark Implementation)*](https://sdk-doc-spark.breez.technology/)
 
 **The Breez SDK is free for developers.**
 
