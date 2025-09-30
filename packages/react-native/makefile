@@ -21,3 +21,4 @@ endif
 react-native:
 	yarn ubrn:build
 	yarn prepare
+	patch -p3 < patches/working-dir.patch
