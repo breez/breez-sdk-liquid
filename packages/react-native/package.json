@@ -76,6 +76,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "react-native-fs": "^2.20.0",
     "uniffi-bindgen-react-native": "=0.28.3-5"
   },
   "devDependencies": {
