@@ -518,7 +518,7 @@ dependencies = [
 
 [[package]]
 name = "bindings-react-native"
-version = "0.11.4"
+version = "0.11.5"
 dependencies = [
  "anyhow",
  "askama 0.11.1",
@@ -746,7 +746,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.11.4"
+version = "0.11.5"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -811,7 +811,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-bindings"
-version = "0.11.4"
+version = "0.11.5"
 dependencies = [
  "anyhow",
  "breez-sdk-liquid",
@@ -827,7 +827,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-wasm"
-version = "0.11.4"
+version = "0.11.5"
 dependencies = [
  "anyhow",
  "async-trait",
