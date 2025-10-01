@@ -64,14 +64,14 @@ kotlin {
         val jvmMain by getting {
             dependsOn(commonMain)
             dependencies {
-                implementation("net.java.dev.jna:jna:5.13.0")
+                implementation("net.java.dev.jna:jna:5.18.0")
             }
         }
 
         val androidMain by getting {
             dependsOn(commonMain)
             dependencies {
-                implementation("net.java.dev.jna:jna:5.13.0@aar")
+                implementation("net.java.dev.jna:jna:5.18.0@aar")
                 implementation("org.jetbrains.kotlinx:atomicfu:0.23.1")
                 implementation("androidx.annotation:annotation:1.7.1")
             }

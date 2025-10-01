@@ -40,7 +40,7 @@ android {
 
 dependencies {
     implementation("com.squareup.okio:okio:3.6.0")
-    implementation("net.java.dev.jna:jna:5.14.0@aar")
+    implementation("net.java.dev.jna:jna:5.18.0@aar")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
