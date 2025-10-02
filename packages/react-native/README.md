@@ -8,10 +8,10 @@ It’s a nodeless integration that offers a self-custodial, end-to-end solution 
 
 - **Send payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Pay, Lightning address, BTC address
 - **Receive payments** via various protocols such as: Bolt11, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
-  
+
 **Key Features**
 
-- [x] Send and receive Lightning payments 
+- [x] Send and receive Lightning payments
 - [x] On-chain interoperability
 - [x] Complete LNURL functionality
 - [x] Multi-app support
@@ -22,14 +22,14 @@ It’s a nodeless integration that offers a self-custodial, end-to-end solution 
 - [x] Built-in fiat on-ramp
 - [x] Free open-source solution
 
-## Getting Started 
+## Getting Started
 ```bash
-npm install @breeztech/react-native-breez-sdk-liquid
+npm install @breeztech/breez-sdk-liquid-react-native
 ```
 or
 
 ```bash
-yarn add @breeztech/react-native-breez-sdk-liquid
+yarn add @breeztech/breez-sdk-liquid-react-native
 ```
 
 ## Usage
@@ -43,8 +43,8 @@ import {
     addEventListener,
     connect,
     defaultConfig,
-    LiquidNetwork,   
-    NodeConfigVariant, 
+    LiquidNetwork,
+    NodeConfigVariant,
     prepareSendPayment,
     SdkEvent,
     sendPayment
@@ -85,22 +85,7 @@ const App = () => (
 export default App
 ```
 
-## Example
-
-In the `example` folder of the [Breez SDK repository](https://github.com/breez/breez-sdk-liquid/tree/main/packages/react-native/example) you will find a basic application for using Breez SDK. Change directory into the folder and install the dependencies:
-```bash
-yarn
-```
-Then to run on android:
-```bash
-yarn android
-```
-or for iOS:
-```bash
-yarn pods && yarn ios
-```
-
-## Troubleshooting 
+## Troubleshooting
 ### Important fix for React Native versions below 0.71.0
 
 If your project uses a React Native version less < 0.71.0, and you want to build your app for Android, you might run into an error like this:

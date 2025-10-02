@@ -25,43 +25,187 @@ on:
         required: true
 
 jobs:
-  build-package:
-    runs-on: ubuntu-latest
+  build-language-bindings:
+    name: Build language bindings
+    runs-on: macos-latest
     steps:
-      - name: Checkout breez-sdk-liquid repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository || github.repository }}
           ref: ${{ inputs.ref || github.sha }}
+  
+      - name: Setup build
+        uses: ./.github/actions/setup-build
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup node
+      - name: Install rust dependencies
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+          rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --version 3.5.4
+
+      - name: Install clang-format
+        run: brew install clang-format
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: packages/react-native/.nvmrc
           registry-url: 'https://registry.npmjs.org'
           scope: '@breeztech'
 
-      - name: Make sure we publish the version as specified
-        working-directory: packages/react-native
-        run: npm --no-git-tag-version --allow-same-version version ${{ inputs.package-version || '0.0.2' }}
-
       - name: Install dependencies
         working-directory: packages/react-native
-        run: yarn
+        run: yarn --mode=skip-build
 
-      - name: Pack for archival
+      - name: Apply patches
         working-directory: packages/react-native
-        run: yarn pack --filename breez-sdk-liquid-react-native.tgz
+        run: npx patch-package
 
-      - name: Archive the package
+      - name: Build and generate native bindings
+        working-directory: packages/react-native
+        run: make react-native
+
+      - name: Set cargo version
+        working-directory: packages/react-native
+        run: |
+          HASH=$(git rev-parse HEAD)
+          sed -i.bak -e 's/directory: .*/repo: https:\/\/github.com\/breez\/breez-sdk-liquid\n  rev: '"$HASH"'/' ubrn.config.yaml
+          rm ubrn.config.yaml.bak
+
+      - name: Archive React Native bindings
         uses: actions/upload-artifact@v4
         with:
-          name: react-native-${{ inputs.package-version || '0.0.2' }}
-          path: packages/react-native/breez-sdk-liquid-react-native.tgz
+          name: bindings-react-native
+          path: |
+            packages/react-native/ubrn.config.yaml
+            packages/react-native/android/generated
+            packages/react-native/cpp/generated
+            packages/react-native/lib
+            packages/react-native/src/generated
+
+      - name: Compress Android binaries
+        working-directory: packages/react-native
+        run: zip -9 -r android-artifacts.zip android/src/main/jniLibs
+
+      - name: Compress iOS binaries
+        working-directory: packages/react-native
+        run: zip -9 -r ios-artifacts.zip build
+
+      - name: Archive Android binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-native-android-artifacts
+          path: packages/react-native/android-artifacts.zip
+          retention-days: 5
+
+      - name: Archive iOS binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-native-ios-artifacts
+          path: packages/react-native/ios-artifacts.zip
+          retention-days: 5
+
+  build-package:
+    name: Build package
+    runs-on: macos-latest
+    needs: build-language-bindings
+    steps:
+      - name: Checkout breez-sdk-liquid-react-native repo
+        uses: actions/checkout@v4
+        with:
+          repository: breez/breez-sdk-liquid-react-native
+          ref: main
+          ssh-key: ${{ secrets.REPO_SSH_KEY }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@breeztech'
+
+      - name: Download React Native bindings
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-react-native
+
+      - name: Set publish version
+        run: npm --no-git-tag-version --allow-same-version version ${{ inputs.package-version || '0.10.3' }}
+
+      - name: Pack for archival
+        if: ${{ !inputs.publish }}
+        run: yarn pack --filename breez-sdk-liquid-react-native.tgz
+
+      - name: Archive package
+        if: ${{ !inputs.publish }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-native-${{ inputs.package-version || '0.10.3' }}
+          path: breez-sdk-liquid-react-native.tgz
+
+      - name: Tag the React Native bindings
+        if: ${{ inputs.publish }}
+        run: |
+          git config --global user.name "SDK release tagger"
+          git config --global user.email "no-reply@breez.technology"
+          git add .
+          git commit -m "Update React Native bindings to version ${{ inputs.package-version || '0.10.3' }}"
+          git push
+          git tag ${{ inputs.package-version || '0.10.3' }} -m "${{ inputs.package-version || '0.10.3' }}"
+          git push --tags
+
+      - name: Install dependencies
+        if: ${{ inputs.publish }}
+        run: yarn --mode=skip-build
+
+      - name: Apply patches
+        if: ${{ inputs.publish }}
+        run: npx patch-package
 
       - name: Publish package to npm
         if: ${{ inputs.publish }}
-        working-directory: packages/react-native
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: yarn publish
+        run: npm publish
+
+  publish-artifacts:
+    name: Publish artifacts
+    if: ${{ inputs.publish }}
+    runs-on: macos-latest
+    needs: build-package
+    steps:
+      - name: Checkout breez-sdk-liquid-react-native repo
+        uses: actions/checkout@v4
+        with:
+          repository: breez/breez-sdk-liquid-react-native
+          ref: main
+          ssh-key: ${{ secrets.REPO_SSH_KEY }}
+          fetch-depth: 0
+
+      - name: Download Android binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: react-native-android-artifacts
+
+      - name: Download iOS binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: react-native-ios-artifacts
+
+      - name: Release and attach binary artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: breez/breez-sdk-liquid-react-native
+          files: |
+            android-artifacts.zip
+            ios-artifacts.zip
+          tag_name: ${{ inputs.package-version || '0.10.3' }}
+          generate_release_notes: false
+          token: ${{ secrets.RN_RELEASE_TOKEN }}
+          prerelease: true

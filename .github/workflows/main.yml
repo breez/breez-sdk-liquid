@@ -433,9 +433,7 @@ jobs:
       - name: React native codegen
         working-directory: packages/react-native
         run: |
-          yarn global add tslint typescript
-          brew install kotlin ktlint swiftformat
-          make react-native
+          make init react-native
 
       - name: Check git status
         env:
