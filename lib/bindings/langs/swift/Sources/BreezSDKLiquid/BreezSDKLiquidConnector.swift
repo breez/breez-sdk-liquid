@@ -42,7 +42,7 @@ class BreezSDKLiquidConnector {
     static func connectSDK(connectRequest: ConnectRequest) throws -> BindingLiquidSdk? {
         // Connect to the Breez Liquid SDK make it ready for use
         os_log("Connecting to Breez Liquid SDK", log: logger, type: .debug)
-        let liquidSDK = try connect(req: connectRequest)
+        let liquidSDK = try connect(req: connectRequest, plugins: nil)
         os_log("Connected to Breez Liquid SDK", log: logger, type: .debug)
         let _ = try liquidSDK.addEventListener(listener: BreezSDKEventListener())
         return liquidSDK

@@ -105,7 +105,7 @@ class RNBreezSDKLiquid: RCTEventEmitter {
     }
 
     @objc(connect:resolve:reject:)
-    func connect(_ req: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func connect(_ req: [String: Any], plugins: [Plugin]!, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         if bindingLiquidSdk != nil {
             reject("Generic", "Already initialized", nil)
             return
@@ -115,7 +115,7 @@ class RNBreezSDKLiquid: RCTEventEmitter {
             var connectRequest = try BreezSDKLiquidMapper.asConnectRequest(connectRequest: req)
             try ensureWorkingDir(workingDir: connectRequest.config.workingDir)
 
-            bindingLiquidSdk = try BreezSDKLiquid.connect(req: connectRequest)
+            bindingLiquidSdk = try BreezSDKLiquid.connect(req: connectRequest, plugins: plugins)
             resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
@@ -528,6 +528,17 @@ class RNBreezSDKLiquid: RCTEventEmitter {
         do {
             var res = try getBindingLiquidSdk().listFiatCurrencies()
             resolve(BreezSDKLiquidMapper.arrayOf(fiatCurrencyList: res))
+        } catch let err {
+            rejectErr(err: err, reject: reject)
+        }
+    }
+
+    @objc(broadcast:resolve:reject:)
+    func broadcast(_ event: [String: Any], resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let eventTmp = try BreezSDKLiquidMapper.asSdkEvent(sdkEvent: event)
+            try getBindingLiquidSdk().broadcast(event: eventTmp)
+            resolve(["status": "ok"])
         } catch let err {
             rejectErr(err: err, reject: reject)
         }
