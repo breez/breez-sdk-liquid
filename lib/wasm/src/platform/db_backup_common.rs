@@ -15,8 +15,9 @@ impl ForwardingEventListener {
     }
 }
 
+#[sdk_macros::async_trait]
 impl EventListener for ForwardingEventListener {
-    fn on_event(&self, e: SdkEvent) {
+    async fn on_event(&self, e: SdkEvent) {
         if let Err(e) = self.sender.try_send(e) {
             log::error!("Failed to forward event: {e:?}");
         }

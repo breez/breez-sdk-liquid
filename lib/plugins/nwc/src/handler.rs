@@ -44,24 +44,6 @@ impl SdkRelayMessageHandler {
     }
 }
 
-// impl From<TransactionType> for PaymentType {
-//     fn from(value: TransactionType) -> Self {
-//         match value {
-//             TransactionType::Incoming => Self::Receive,
-//             TransactionType::Outgoing => Self::Send,
-//         }
-//     }
-// }
-//
-// impl From<PaymentType> for TransactionType {
-//     fn from(val: PaymentType) -> Self {
-//         match val {
-//             PaymentType::Receive => TransactionType::Incoming,
-//             PaymentType::Send => TransactionType::Outgoing,
-//         }
-//     }
-// }
-
 #[sdk_macros::async_trait]
 impl RelayMessageHandler for SdkRelayMessageHandler {
     /// Processes a Lightning invoice payment request.

@@ -3,6 +3,7 @@ use std::{collections::HashMap, str::FromStr as _};
 use crate::{
     context::RuntimeContext,
     error::NwcResult,
+    event::{EventManager, NwcEvent, NwcEventDetails, NwcEventListener},
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
     persist::Persister,
     sdk_event::SdkEventListener,
@@ -26,6 +27,7 @@ use tokio_with_wasm::alias as tokio;
 
 pub(crate) mod context;
 pub mod error;
+pub mod event;
 pub(crate) mod handler;
 mod persist;
 pub(crate) mod sdk_event;
@@ -54,6 +56,21 @@ pub trait NwcService: MaybeSend + MaybeSync {
     /// # Arguments
     /// * `name` - The unique identifier for the connection string
     async fn remove_connection_string(&self, name: String) -> NwcResult<()>;
+
+    /// Adds an event listener to the service, where all [NwcEvent]s will be emitted to.
+    /// The event listener can be removed be calling [NwcService::remove_event_listener].
+    ///
+    /// # Arguments
+    ///
+    /// * `listener` - The listener which is an implementation of the [NwcEventListener] trait
+    async fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String;
+
+    /// Removes an event listener from the service
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - the event listener id returned by [NwcService::add_event_listener]
+    async fn remove_event_listener(&self, id: &str);
 }
 
 pub struct NwcConfig {
@@ -71,6 +88,7 @@ impl NwcConfig {
 
 pub struct SdkNwcService {
     config: NwcConfig,
+    event_manager: Arc<EventManager>,
     runtime_ctx: Mutex<Option<Arc<RuntimeContext>>>,
 }
 
@@ -90,6 +108,7 @@ impl SdkNwcService {
         Self {
             config,
             runtime_ctx: Default::default(),
+            event_manager: Arc::new(EventManager::new()),
         }
     }
 
@@ -97,7 +116,6 @@ impl SdkNwcService {
         &self,
         sdk: Weak<LiquidSdk>,
         storage: PluginStorage,
-        event_emitter: PluginEventEmitter,
         resub_tx: mpsc::Sender<()>,
     ) -> Result<Arc<RuntimeContext>> {
         let mut ctx_lock = self.runtime_ctx.lock().await;
@@ -125,13 +143,14 @@ impl SdkNwcService {
             client,
             our_keys,
             persister,
-            event_emitter,
             handler,
             resubscription_trigger: resub_tx,
             event_loop_handle: OnceCell::new(),
             sdk_listener_id: Mutex::new(None),
+            event_manager: self.event_manager.clone(),
         });
         *ctx_lock = Some(ctx.clone());
+        self.event_manager.resume_notifications();
         Ok(ctx)
     }
 
@@ -271,38 +290,38 @@ impl SdkNwcService {
         event_id: &str,
     ) {
         debug!("Handling notification: {result:?} {error:?}");
-        let event: SdkEvent = match (result, error) {
-            (Some(ResponseResult::PayInvoice(response)), None) => SdkEvent::NWC {
-                details: NwcEvent::PayInvoiceHandled {
+        let event = match (result, error) {
+            (Some(ResponseResult::PayInvoice(response)), None) => NwcEvent {
+                details: NwcEventDetails::PayInvoiceHandled {
                     success: true,
                     preimage: Some(response.preimage.clone()),
                     fees_sat: response.fees_paid.map(|f| f / 1000),
                     error: None,
                 },
-                event_id: event_id.to_string(),
+                event_id: Some(event_id.to_string()),
             },
             (None, Some(error)) => match error.code {
-                ErrorCode::PaymentFailed => SdkEvent::NWC {
-                    details: NwcEvent::PayInvoiceHandled {
+                ErrorCode::PaymentFailed => NwcEvent {
+                    details: NwcEventDetails::PayInvoiceHandled {
                         success: false,
                         preimage: None,
                         fees_sat: None,
                         error: Some(error.message.clone()),
                     },
-                    event_id: event_id.to_string(),
+                    event_id: Some(event_id.to_string()),
                 },
                 _ => {
                     warn!("Unhandled error code: {:?}", error.code);
                     return;
                 }
             },
-            (Some(ResponseResult::ListTransactions(_)), None) => SdkEvent::NWC {
-                details: NwcEvent::ListTransactionsHandled,
-                event_id: event_id.to_string(),
+            (Some(ResponseResult::ListTransactions(_)), None) => NwcEvent {
+                details: NwcEventDetails::ListTransactionsHandled,
+                event_id: Some(event_id.to_string()),
             },
-            (Some(ResponseResult::GetBalance(_)), None) => SdkEvent::NWC {
-                details: NwcEvent::GetBalanceHandled,
-                event_id: event_id.to_string(),
+            (Some(ResponseResult::GetBalance(_)), None) => NwcEvent {
+                details: NwcEventDetails::GetBalanceHandled,
+                event_id: Some(event_id.to_string()),
             },
             _ => {
                 warn!("Unexpected combination");
@@ -310,7 +329,7 @@ impl SdkNwcService {
             }
         };
         info!("Sending event: {event:?}");
-        ctx.event_emitter.broadcast(event).await;
+        ctx.event_manager.notify(event).await;
     }
 }
 
@@ -343,6 +362,14 @@ impl NwcService for SdkNwcService {
         ctx.trigger_resubscription().await;
         Ok(())
     }
+
+    async fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {
+        self.event_manager.add(listener).await
+    }
+
+    async fn remove_event_listener(&self, id: &str) {
+        self.event_manager.remove(id).await
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -351,17 +378,9 @@ impl Plugin for SdkNwcService {
         "breez-nwc-plugin".to_string()
     }
 
-    async fn on_start(
-        &self,
-        sdk: Weak<LiquidSdk>,
-        storage: PluginStorage,
-        event_emitter: PluginEventEmitter,
-    ) {
+    async fn on_start(&self, sdk: Weak<LiquidSdk>, storage: PluginStorage) {
         let (resub_tx, mut resub_rx) = mpsc::channel::<()>(10);
-        let ctx = match self
-            .init_ctx(sdk.clone(), storage, event_emitter, resub_tx)
-            .await
-        {
+        let ctx = match self.init_ctx(sdk.clone(), storage, resub_tx).await {
             Ok(ctx) => ctx,
             Err(err) => {
                 error!("Could not create NWC service runtime context: {err:?}");
@@ -371,11 +390,10 @@ impl Plugin for SdkNwcService {
 
         let event_loop_handle = tokio::spawn(async move {
             ctx.client.connect().await;
-            let _ = ctx
-                .event_emitter
-                .broadcast(SdkEvent::NWC {
-                    details: NwcEvent::ConnectedHandled,
-                    event_id: "".to_string(),
+            ctx.event_manager
+                .notify(NwcEvent {
+                    details: NwcEventDetails::ConnectedHandled,
+                    event_id: None,
                 })
                 .await;
             info!("Successfully connected NWC client");

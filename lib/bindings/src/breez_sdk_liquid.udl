@@ -722,16 +722,6 @@ interface SdkEvent {
     Synced();
     SyncFailed(string error);
     DataSynced(boolean did_pull_new_records);
-    NWC(string event_id, NwcEvent details);
-};
-
-[Enum]
-interface NwcEvent {
-    ConnectedHandled();
-    DisconnectedHandled();
-    PayInvoiceHandled(boolean success, string? preimage, u64? fees_sat, string? error);
-    ListTransactionsHandled();
-    GetBalanceHandled();
 };
 
 callback interface EventListener {
@@ -961,6 +951,24 @@ dictionary NwcConfig {
   string? secret_key_hex;
 };
 
+[Enum]
+interface NwcEventDetails {
+    ConnectedHandled();
+    DisconnectedHandled();
+    PayInvoiceHandled(boolean success, string? preimage, u64? fees_sat, string? error);
+    ListTransactionsHandled();
+    GetBalanceHandled();
+};
+
+dictionary NwcEvent {
+    string? event_id;
+    NwcEventDetails details;
+};
+
+callback interface NwcEventListener {
+    void on_event(NwcEvent event);
+};
+
 interface BindingNwcService {
   constructor(NwcConfig config);
 
@@ -973,9 +981,13 @@ interface BindingNwcService {
   [Throws=NwcError]
   void remove_connection_string(string name);
 
+  string add_event_listener(NwcEventListener listener);
+
+  void remove_event_listener(string listener_id);
+
   string id();
 
-  void on_start(BindingLiquidSdk sdk, PluginStorage storage, PluginEventEmitter event_emitter);
+  void on_start(BindingLiquidSdk sdk, PluginStorage storage);
 
   void on_stop();
 };

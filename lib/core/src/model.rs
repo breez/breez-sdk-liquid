@@ -466,8 +466,9 @@ impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
 }
 
 /// Trait that can be used to react to various [SdkEvent]s emitted by the SDK.
+#[sdk_macros::async_trait]
 pub trait EventListener: Send + Sync {
-    fn on_event(&self, e: SdkEvent);
+    async fn on_event(&self, e: SdkEvent);
 }
 
 /// Event emitted by the SDK. Add an [EventListener] by calling [crate::sdk::LiquidSdk::add_event_listener]
@@ -509,24 +510,6 @@ pub enum SdkEvent {
         /// Indicates new data was pulled from other instances.
         did_pull_new_records: bool,
     },
-    NWC {
-        event_id: String,
-        details: NwcEvent,
-    },
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum NwcEvent {
-    ConnectedHandled,
-    DisconnectedHandled,
-    PayInvoiceHandled {
-        success: bool,
-        preimage: Option<String>,
-        fees_sat: Option<u64>,
-        error: Option<String>,
-    },
-    ListTransactionsHandled,
-    GetBalanceHandled,
 }
 
 #[derive(thiserror::Error, Debug)]
