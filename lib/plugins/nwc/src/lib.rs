@@ -292,7 +292,7 @@ impl SdkNwcService {
         debug!("Handling notification: {result:?} {error:?}");
         let event = match (result, error) {
             (Some(ResponseResult::PayInvoice(response)), None) => NwcEvent {
-                details: NwcEventDetails::PayInvoiceHandled {
+                details: NwcEventDetails::PayInvoice {
                     success: true,
                     preimage: Some(response.preimage.clone()),
                     fees_sat: response.fees_paid.map(|f| f / 1000),
@@ -302,7 +302,7 @@ impl SdkNwcService {
             },
             (None, Some(error)) => match error.code {
                 ErrorCode::PaymentFailed => NwcEvent {
-                    details: NwcEventDetails::PayInvoiceHandled {
+                    details: NwcEventDetails::PayInvoice {
                         success: false,
                         preimage: None,
                         fees_sat: None,
@@ -316,11 +316,11 @@ impl SdkNwcService {
                 }
             },
             (Some(ResponseResult::ListTransactions(_)), None) => NwcEvent {
-                details: NwcEventDetails::ListTransactionsHandled,
+                details: NwcEventDetails::ListTransactions,
                 event_id: Some(event_id.to_string()),
             },
             (Some(ResponseResult::GetBalance(_)), None) => NwcEvent {
-                details: NwcEventDetails::GetBalanceHandled,
+                details: NwcEventDetails::GetBalance,
                 event_id: Some(event_id.to_string()),
             },
             _ => {
@@ -392,7 +392,7 @@ impl Plugin for SdkNwcService {
             ctx.client.connect().await;
             ctx.event_manager
                 .notify(NwcEvent {
-                    details: NwcEventDetails::ConnectedHandled,
+                    details: NwcEventDetails::Connected,
                     event_id: None,
                 })
                 .await;

@@ -1,24 +1,26 @@
-use std::{collections::HashMap, sync::atomic::Ordering};
+use std::collections::HashMap;
 
 use log::{debug, info};
-use maybe_sync::{AtomicBool, MaybeSend, MaybeSync};
+use maybe_sync::{MaybeSend, MaybeSync};
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::{broadcast, RwLock};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum NwcEventDetails {
-    ConnectedHandled,
-    DisconnectedHandled,
-    PayInvoiceHandled {
+    Connected,
+    Disconnected,
+    PayInvoice {
         success: bool,
         preimage: Option<String>,
         fees_sat: Option<u64>,
         error: Option<String>,
     },
-    ListTransactionsHandled,
-    GetBalanceHandled,
+    ListTransactions,
+    GetBalance,
 }
 
+/// The event emitted when an NWC operation has been handled
 #[derive(Clone, Debug, PartialEq)]
 pub struct NwcEvent {
     pub event_id: Option<String>,

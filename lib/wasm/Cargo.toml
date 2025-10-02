@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }
+breez-sdk-liquid-nwc = { path = "../plugins/nwc" }
 console_log = "1"
 js-sys = "0.3.77"
 log = { workspace = true }
