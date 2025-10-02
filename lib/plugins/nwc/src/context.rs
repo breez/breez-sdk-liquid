@@ -50,7 +50,7 @@ impl RuntimeContext {
         self.event_manager
             .notify(NwcEvent {
                 event_id: None,
-                details: NwcEventDetails::DisconnectedHandled,
+                details: NwcEventDetails::Disconnected,
             })
             .await;
         self.event_manager.pause_notifications();

@@ -838,6 +838,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "breez-sdk-liquid",
+ "breez-sdk-liquid-nwc",
  "console_log",
  "getrandom 0.2.16",
  "indexed_db_futures",

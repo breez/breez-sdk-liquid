@@ -953,11 +953,11 @@ dictionary NwcConfig {
 
 [Enum]
 interface NwcEventDetails {
-    ConnectedHandled();
-    DisconnectedHandled();
-    PayInvoiceHandled(boolean success, string? preimage, u64? fees_sat, string? error);
-    ListTransactionsHandled();
-    GetBalanceHandled();
+    Connected();
+    Disconnected();
+    PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
+    ListTransactions();
+    GetBalance();
 };
 
 dictionary NwcEvent {

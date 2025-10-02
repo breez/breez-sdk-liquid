@@ -1,8 +1,10 @@
 use breez_sdk_liquid::{
     error::{PaymentError, SdkError},
+    plugin::PluginStorageError,
     signer::{NewError, SignError},
     LnUrlAuthError, LnUrlPayError, LnUrlWithdrawError,
 };
+use breez_sdk_liquid_nwc::error::NwcError;
 use std::fmt::Display;
 use wasm_bindgen::{JsError, JsValue};
 
@@ -49,6 +51,8 @@ wasm_error_wrapper!(
     SdkError,
     NewError,
     SignError,
+    PluginStorageError,
+    NwcError,
     &str,
     String
 );
