@@ -3,7 +3,11 @@ use std::{
     str::FromStr as _,
 };
 
-use crate::{handler::RelayMessageHandler, persist::Persister};
+use crate::{
+    event::{EventManager, NwcEvent, NwcEventDetails},
+    handler::RelayMessageHandler,
+    persist::Persister,
+};
 use anyhow::Result;
 use breez_sdk_liquid::prelude::*;
 use log::{info, warn};
@@ -21,7 +25,7 @@ pub(crate) struct RuntimeContext {
     pub client: NostrClient,
     pub our_keys: Keys,
     pub persister: Persister,
-    pub event_emitter: PluginEventEmitter,
+    pub event_manager: Arc<EventManager>,
     pub handler: Box<dyn RelayMessageHandler>,
     pub resubscription_trigger: mpsc::Sender<()>,
     pub event_loop_handle: OnceCell<JoinHandle<()>>,
@@ -43,12 +47,13 @@ impl RuntimeContext {
             }
         }
         self.client.disconnect().await;
-        self.event_emitter
-            .broadcast(SdkEvent::NWC {
-                details: NwcEvent::DisconnectedHandled,
-                event_id: "".to_string(),
+        self.event_manager
+            .notify(NwcEvent {
+                event_id: None,
+                details: NwcEventDetails::DisconnectedHandled,
             })
             .await;
+        self.event_manager.pause_notifications();
     }
 
     pub async fn list_clients(&self) -> Result<HashMap<String, NostrWalletConnectURI>> {

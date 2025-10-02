@@ -24,26 +24,14 @@ tokio_with_wasm = { version = "=0.8.2", features = [
     "sync",
     "time",
 ] }
-rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "8e53118a3e1807dc9a9f59c5969fdff7e0416400", features = [
-    "backup",
-    "bundled",
-] }
 nostr-sdk = { version = "0.43.0", features = ["nip44", "nip47"] }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
-electrum-client = { version = "0.21.0", default-features = false, features = [
-    "use-rustls-ring",
-    "proxy",
-] }
-lwk_wollet = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b" }
 maybe-sync = { version = "0.1.1", features = ["sync"] }
+uuid = { version = "1.8.0", features = ["v4"] }
 
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
-rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "8e53118a3e1807dc9a9f59c5969fdff7e0416400", features = [
-    "backup",
-    "bundled",
-    "serialize",
-] }
 maybe-sync = "0.1.1"
+uuid = { version = "1.8.0", features = ["v4", "js"] }

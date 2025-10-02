@@ -3,10 +3,32 @@ use std::{collections::HashMap, sync::Arc};
 use breez_sdk_liquid::plugin::Plugin as _;
 pub use breez_sdk_liquid_nwc::{
     error::{NwcError, NwcResult},
+    event::{NwcEvent, NwcEventDetails},
     NwcConfig, NwcService, SdkNwcService,
 };
 
-use crate::{rt, BindingLiquidSdk, Plugin, PluginEventEmitter, PluginStorage};
+use crate::{rt, BindingLiquidSdk, Plugin, PluginStorage};
+
+pub trait NwcEventListener: Send + Sync {
+    fn on_event(&self, event: NwcEvent);
+}
+
+struct NwcEventListenerWrapper {
+    inner: Box<dyn NwcEventListener>,
+}
+
+impl NwcEventListenerWrapper {
+    pub(crate) fn new(inner: Box<dyn NwcEventListener>) -> Self {
+        Self { inner }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl breez_sdk_liquid_nwc::event::NwcEventListener for NwcEventListenerWrapper {
+    async fn on_event(&self, e: NwcEvent) {
+        self.inner.on_event(e);
+    }
+}
 
 pub struct BindingNwcService {
     inner: Arc<SdkNwcService>,
@@ -32,6 +54,16 @@ impl BindingNwcService {
     pub fn remove_connection_string(&self, name: String) -> NwcResult<()> {
         rt().block_on(async { self.inner.remove_connection_string(name).await })
     }
+
+    pub fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {
+        let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =
+            Box::new(NwcEventListenerWrapper::new(listener));
+        rt().block_on(async { self.inner.add_event_listener(listener).await })
+    }
+
+    pub fn remove_event_listener(&self, listener_id: String) {
+        rt().block_on(async { self.inner.remove_event_listener(&listener_id).await })
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -40,20 +72,11 @@ impl Plugin for BindingNwcService {
         self.inner.id()
     }
 
-    fn on_start(
-        &self,
-        sdk: Arc<BindingLiquidSdk>,
-        storage: Arc<PluginStorage>,
-        event_emitter: Arc<PluginEventEmitter>,
-    ) {
+    fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>) {
         let cloned = self.inner.clone();
         rt().spawn(async move {
             cloned
-                .on_start(
-                    Arc::downgrade(&sdk.sdk),
-                    storage.storage.clone(),
-                    event_emitter.event_emitter.clone(),
-                )
+                .on_start(Arc::downgrade(&sdk.sdk), storage.storage.clone())
                 .await;
         });
     }

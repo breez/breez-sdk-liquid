@@ -19,6 +19,7 @@ serde_json = "1.0.115"
 tokio = { version = "1", features = ["macros"] }
 shellwords = "1.1.0"
 lazy_static = "1.5.0"
+async-trait = "0.1.86"
 
 [patch.crates-io]
 # https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits and rebased on secp256k1-zkp 0.11.0

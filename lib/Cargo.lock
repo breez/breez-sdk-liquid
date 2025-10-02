@@ -818,13 +818,10 @@ dependencies = [
  "anyhow",
  "async-trait",
  "breez-sdk-liquid",
- "electrum-client",
  "log",
- "lwk_wollet",
  "maybe-sync",
  "nostr-sdk",
  "once_cell",
- "rusqlite",
  "sdk-common",
  "sdk-macros",
  "serde",
@@ -832,6 +829,7 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tokio_with_wasm",
+ "uuid",
 ]
 
 [[package]]
