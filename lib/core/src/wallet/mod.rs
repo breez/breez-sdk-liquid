@@ -420,11 +420,16 @@ impl OnchainWallet for LiquidOnchainWallet {
             tx_builder = tx_builder.add_recipient(&address, amount_sat, asset)?;
         }
         let mut pset = tx_builder.finish(&lwk_wollet)?;
-        self.signer
-            .sign(&mut pset)
-            .map_err(|e| PaymentError::Generic {
-                err: format!("Failed to sign transaction: {e:?}"),
-            })?;
+        let signer = self.signer.clone();
+        let mut pset = tokio::task::spawn_blocking(move || {
+            signer
+                .sign(&mut pset)
+                .map_err(|e| PaymentError::Generic {
+                    err: format!("Failed to sign transaction: {e:?}"),
+                }).unwrap();
+            
+            pset
+        }).await.unwrap();
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -466,12 +471,16 @@ impl OnchainWallet for LiquidOnchainWallet {
                 }
             );
         }
-
-        self.signer
-            .sign(&mut pset)
-            .map_err(|e| PaymentError::Generic {
-                err: format!("Failed to sign transaction: {e:?}"),
-            })?;
+        let signer = self.signer.clone();
+        let mut pset = tokio::task::spawn_blocking(move || {
+            signer
+                .sign(&mut pset)
+                .map_err(|e| PaymentError::Generic {
+                    err: format!("Failed to sign transaction: {e:?}"),
+                }).unwrap();
+            
+            pset
+        }).await.unwrap();
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -525,9 +534,18 @@ impl OnchainWallet for LiquidOnchainWallet {
 
         lwk_wollet.add_details(pset)?;
 
-        self.signer.sign(pset).map_err(|e| PaymentError::Generic {
-            err: format!("Failed to sign transaction: {e:?}"),
-        })?;
+        let signer = self.signer.clone();
+        let mut pset2 = pset.clone();
+        *pset = tokio::task::spawn_blocking(move || {
+            signer.sign(&mut pset2).map_err(|e| PaymentError::Generic {
+                err: format!("Failed to sign transaction: {e:?}"),
+            }).unwrap();
+
+            pset2
+        }).await.unwrap();
+        // self.signer.sign(pset).map_err(|e| PaymentError::Generic {
+        //     err: format!("Failed to sign transaction: {e:?}"),
+        // })?;
 
         // Set the final script witness for each input adding the signature and any missing public key
         for input in pset.inputs_mut() {
