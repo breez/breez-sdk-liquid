@@ -65,6 +65,7 @@ pub enum NewError {
 }
 
 /// A software signer
+#[derive(Clone)]
 pub struct SdkLwkSigner {
     sdk_signer: Arc<Box<dyn Signer>>,
     psbt_sdk_signer: Option<Arc<Box<dyn PsbtSigner>>>,
