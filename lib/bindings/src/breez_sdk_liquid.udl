@@ -718,6 +718,7 @@ interface SdkEvent {
     PaymentWaitingConfirmation(Payment details);
     PaymentWaitingFeeAcceptance(Payment details);
     Synced();
+    SyncFailed(string error);
     DataSynced(boolean did_pull_new_records);
 };
 
