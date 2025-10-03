@@ -26,9 +26,10 @@ use tokio_with_wasm::alias as tokio;
 
 use crate::{
     bitcoin,
-    chain::bitcoin::esplora::EsploraBitcoinChainService,
-    chain::liquid::esplora::EsploraLiquidChainService,
-    chain::{bitcoin::BitcoinChainService, liquid::LiquidChainService},
+    chain::{
+        bitcoin::{esplora::EsploraBitcoinChainService, BitcoinChainService},
+        liquid::{esplora::EsploraLiquidChainService, LiquidChainService},
+    },
     elements,
     error::{PaymentError, SdkError, SdkResult},
     persist::model::PaymentTxBalance,
@@ -501,6 +502,10 @@ pub enum SdkEvent {
     },
     /// Synced with mempool and onchain data
     Synced,
+    /// Failed to sync with mempool
+    SyncFailed {
+        error: String,
+    },
     /// Synced with real-time data sync
     DataSynced {
         /// Indicates new data was pulled from other instances.

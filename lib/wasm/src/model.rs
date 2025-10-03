@@ -336,6 +336,7 @@ pub enum SdkEvent {
     PaymentWaitingConfirmation { details: Payment },
     PaymentWaitingFeeAcceptance { details: Payment },
     Synced,
+    SyncFailed { error: String },
     DataSynced { did_pull_new_records: bool },
 }
 
