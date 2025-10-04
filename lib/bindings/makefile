@@ -3,6 +3,7 @@ SOURCES=$(sort $(wildcard ./src/*.rs ./src/**/*.rs))
 SHELL := /bin/bash
 OS_NAME=$(shell uname | tr '[:upper:]' '[:lower:]')
 TARGET ?= aarch64-unknown-linux-gnu
+export IPHONEOS_DEPLOYMENT_TARGET := 13.0
 
 .PHONY: init
 init:

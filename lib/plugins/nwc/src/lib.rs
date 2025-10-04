@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr as _};
+use std::{collections::HashMap, str::FromStr as _, time::Duration};
 
 use crate::{
     context::RuntimeContext,
@@ -112,17 +112,12 @@ impl SdkNwcService {
         }
     }
 
-    async fn init_ctx(
+    async fn new_ctx(
         &self,
         sdk: Weak<LiquidSdk>,
         storage: PluginStorage,
         resub_tx: mpsc::Sender<()>,
-    ) -> Result<Arc<RuntimeContext>> {
-        let mut ctx_lock = self.runtime_ctx.lock().await;
-        if ctx_lock.is_some() {
-            bail!("NWC service is already running.");
-        }
-
+    ) -> Result<RuntimeContext> {
         let persister = Persister::new(storage);
         let client = NostrClient::default();
         for relay in self.config.relays() {
@@ -138,7 +133,7 @@ impl SdkNwcService {
         };
         let handler: Box<dyn RelayMessageHandler> =
             Box::new(SdkRelayMessageHandler::new(sdk.clone()));
-        let ctx = Arc::new(RuntimeContext {
+        let ctx = RuntimeContext {
             sdk,
             client,
             our_keys,
@@ -148,17 +143,18 @@ impl SdkNwcService {
             event_loop_handle: OnceCell::new(),
             sdk_listener_id: Mutex::new(None),
             event_manager: self.event_manager.clone(),
-        });
-        *ctx_lock = Some(ctx.clone());
-        self.event_manager.resume_notifications();
+        };
         Ok(ctx)
     }
 
     async fn runtime_ctx(&self) -> Result<Arc<RuntimeContext>> {
-        match *self.runtime_ctx.lock().await {
-            Some(ref ctx) => Ok(ctx.clone()),
-            None => bail!("NW C service is not running."),
+        for _ in 0..3 {
+            match *self.runtime_ctx.lock().await {
+                Some(ref ctx) => return Ok(ctx.clone()),
+                None => tokio::time::sleep(Duration::from_millis(500)).await,
+            };
         }
+        bail!("NWC service is not running.")
     }
 
     async fn get_or_create_keypair(&self, persister: &Persister) -> Result<Keys> {
@@ -379,18 +375,27 @@ impl Plugin for SdkNwcService {
     }
 
     async fn on_start(&self, sdk: Weak<LiquidSdk>, storage: PluginStorage) {
+        let mut ctx_lock = self.runtime_ctx.lock().await;
+        if ctx_lock.is_some() {
+            warn!("Called on_start when service was already running.");
+            return;
+        }
+
         let (resub_tx, mut resub_rx) = mpsc::channel::<()>(10);
-        let ctx = match self.init_ctx(sdk.clone(), storage, resub_tx).await {
-            Ok(ctx) => ctx,
+        let ctx = match self.new_ctx(sdk.clone(), storage, resub_tx).await {
+            Ok(ctx) => Arc::new(ctx),
             Err(err) => {
                 error!("Could not create NWC service runtime context: {err:?}");
                 return;
             }
         };
+        self.event_manager.resume_notifications();
 
+        let thread_ctx = ctx.clone();
         let event_loop_handle = tokio::spawn(async move {
-            ctx.client.connect().await;
-            ctx.event_manager
+            thread_ctx.client.connect().await;
+            thread_ctx
+                .event_manager
                 .notify(NwcEvent {
                     details: NwcEventDetails::Connected,
                     event_id: None,
@@ -398,28 +403,31 @@ impl Plugin for SdkNwcService {
                 .await;
             info!("Successfully connected NWC client");
 
-            ctx.send_info_event().await;
+            thread_ctx.send_info_event().await;
 
             loop {
-                let clients = match ctx.list_clients().await {
+                let clients = match thread_ctx.list_clients().await {
                     Ok(clients) => clients,
                     Err(err) => {
                         warn!("Could not retreive active clients from database: {err:?}");
                         return;
                     }
                 };
-                if let Err(err) = ctx.resubscribe(&clients).await {
+                if let Err(err) = thread_ctx.resubscribe(&clients).await {
                     warn!("Could not resubscribe to events: {err:?}");
                     return;
                 };
 
                 let sdk_listener_id = match sdk.upgrade() {
                     Some(sdk) => match sdk
-                        .add_event_listener(Box::new(SdkEventListener::new(ctx.clone(), clients)))
+                        .add_event_listener(Box::new(SdkEventListener::new(
+                            thread_ctx.clone(),
+                            clients,
+                        )))
                         .await
                     {
                         Ok(listener_id) => {
-                            *ctx.sdk_listener_id.lock().await = Some(listener_id.clone());
+                            *thread_ctx.sdk_listener_id.lock().await = Some(listener_id.clone());
                             Some(listener_id)
                         }
                         Err(err) => {
@@ -433,10 +441,10 @@ impl Plugin for SdkNwcService {
                     }
                 };
 
-                let mut notifications_listener = ctx.client.notifications();
+                let mut notifications_listener = thread_ctx.client.notifications();
                 loop {
                     tokio::select! {
-                        Ok(notification) = notifications_listener.recv() => Self::handle_event(&ctx, &notification).await,
+                        Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &notification).await,
                         Some(_) = resub_rx.recv() => {
                             info!("Resubscribing to notifications.");
                             if let Some(listener_id) = sdk_listener_id {
@@ -453,11 +461,10 @@ impl Plugin for SdkNwcService {
             }
         });
 
-        if let Some(ref mut ctx) = *self.runtime_ctx.lock().await {
-            if let Err(err) = ctx.event_loop_handle.set(event_loop_handle) {
-                error!("Could not set NWC service event loop handle: {err:?}");
-            }
+        if let Err(err) = ctx.event_loop_handle.set(event_loop_handle) {
+            error!("Could not set NWC service event loop handle: {err:?}");
         }
+        *ctx_lock = Some(ctx);
     }
 
     async fn on_stop(&self) {
