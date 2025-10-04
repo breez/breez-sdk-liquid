@@ -6,8 +6,9 @@ pub struct WasmEventListener {
     pub listener: EventListener,
 }
 
+#[sdk_macros::async_trait]
 impl breez_sdk_liquid::prelude::EventListener for WasmEventListener {
-    fn on_event(&self, e: breez_sdk_liquid::prelude::SdkEvent) {
+    async fn on_event(&self, e: breez_sdk_liquid::prelude::SdkEvent) {
         self.listener.on_event(e.into());
     }
 }

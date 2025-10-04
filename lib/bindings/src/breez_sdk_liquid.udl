@@ -435,6 +435,7 @@ dictionary LnUrlPayRequest {
 dictionary PrepareSendRequest {
     string destination;
     PayAmount? amount = null;
+    boolean? disable_mrh = null;
 };
 
 [Enum]
@@ -450,6 +451,7 @@ dictionary PrepareSendResponse {
     u64? fees_sat;
     f64? estimated_asset_fees;
     u64? exchange_amount_sat;
+    boolean? disable_mrh;
 };
 
 dictionary SendPaymentRequest {
@@ -932,4 +934,59 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
+};
+
+/// PLUGINS
+
+// NWC
+[Error]
+enum NwcError {
+    "Generic",
+    "Persist",
+};
+
+dictionary NwcConfig {
+  sequence<string>? relay_urls;
+  string? secret_key_hex;
+};
+
+[Enum]
+interface NwcEventDetails {
+    Connected();
+    Disconnected();
+    PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
+    ListTransactions();
+    GetBalance();
+};
+
+dictionary NwcEvent {
+    string? event_id;
+    NwcEventDetails details;
+};
+
+callback interface NwcEventListener {
+    void on_event(NwcEvent event);
+};
+
+interface BindingNwcService {
+  constructor(NwcConfig config);
+
+  [Throws=NwcError]
+  string add_connection_string(string name);
+
+  [Throws=NwcError]
+  record<string,string> list_connection_strings();
+
+  [Throws=NwcError]
+  void remove_connection_string(string name);
+
+  string add_event_listener(NwcEventListener listener);
+
+  void remove_event_listener(string listener_id);
+
+  string id();
+
+  void on_start(BindingLiquidSdk sdk, PluginStorage storage);
+
+  void on_stop();
 };

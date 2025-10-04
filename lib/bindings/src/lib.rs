@@ -1,5 +1,7 @@
 use std::sync::{Arc, Weak};
 
+mod nwc;
+
 use anyhow::Result;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
 use log::{warn, Metadata, Record, SetLoggerError};
@@ -7,9 +9,11 @@ use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 use uniffi::deps::log::{Level, LevelFilter};
 
+pub use nwc::*;
+
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
-fn rt() -> &'static Runtime {
+pub(crate) fn rt() -> &'static Runtime {
     &RT
 }
 
@@ -55,6 +59,27 @@ impl PluginStorage {
 
     pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
         self.storage.remove_item(&key)
+    }
+}
+
+pub trait EventListener: Send + Sync {
+    fn on_event(&self, e: SdkEvent);
+}
+
+struct EventListenerWrapper {
+    inner: Box<dyn EventListener>,
+}
+
+impl EventListenerWrapper {
+    pub(crate) fn new(inner: Box<dyn EventListener>) -> Self {
+        Self { inner }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl breez_sdk_liquid::prelude::EventListener for EventListenerWrapper {
+    async fn on_event(&self, e: SdkEvent) {
+        self.inner.on_event(e);
     }
 }
 
@@ -158,6 +183,8 @@ pub struct BindingLiquidSdk {
 
 impl BindingLiquidSdk {
     pub fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {
+        let listener: Box<dyn breez_sdk_liquid::prelude::EventListener> =
+            Box::new(EventListenerWrapper::new(listener));
         rt().block_on(self.sdk.add_event_listener(listener))
     }
 

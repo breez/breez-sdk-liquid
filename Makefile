@@ -14,6 +14,7 @@ clippy: cargo-clippy wasm-clippy
 cargo-clippy:
 	cd lib/bindings && cargo clippy --all-targets -- -A deprecated -D warnings
 	cd lib/core && cargo clippy --all-targets -- -D warnings
+	cd lib/plugins/nwc && cargo clippy -- -D warnings
 	cd cli && cargo clippy -- -D warnings
 
 wasm-clippy:
