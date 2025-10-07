@@ -679,6 +679,11 @@ impl LiquidSdk {
                 .await
             {
                 error!("Failed to sync while tracking new blocks: {e}");
+                self.event_manager
+                    .notify(SdkEvent::SyncFailed {
+                        error: e.to_string(),
+                    })
+                    .await;
             }
         }
 
@@ -3745,7 +3750,7 @@ impl LiquidSdk {
         );
         // The Moonpay API defines BTC amounts as having precision = 5, so only 5 decimals are considered
         ensure_sdk!(
-            amount_sat % 1_000 == 0,
+            amount_sat.is_multiple_of(1_000),
             PaymentError::generic("Can only buy sat amounts that are multiples of 1000")
         );
         Ok(())
