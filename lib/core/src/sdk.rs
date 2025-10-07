@@ -4130,7 +4130,7 @@ impl LiquidSdk {
                     }
                 },
                 PaymentType::Receive => {
-                    if is_lbtc_asset_id {
+                    if is_lbtc_asset_id && payment.status != RefundPending {
                         pending_receive_sat += payment.amount_sat;
                     }
                 }
