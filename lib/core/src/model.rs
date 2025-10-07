@@ -502,7 +502,7 @@ pub enum SdkEvent {
     },
     /// Synced with mempool and onchain data
     Synced,
-    /// Failed to sync with mempool
+    /// Failed to sync with mempool and onchain data
     SyncFailed {
         error: String,
     },
