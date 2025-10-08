@@ -42,7 +42,7 @@ use crate::{
 pub const LIQUID_FEE_RATE_SAT_PER_VBYTE: f64 = 0.1;
 pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE * 1000.0) as f32;
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
-pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
+pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1-staging.breez.technology";
 pub const BREEZ_SWAP_PROXY_URL: &str = "https://swap.breez.technology/v2";
 pub const DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT: u64 = 500;
 
