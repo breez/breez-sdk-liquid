@@ -31,6 +31,10 @@ pub enum _SdkEvent {
     },
     /// Synced with mempool and onchain data
     Synced,
+    /// Failed to sync with mempool and onchain data
+    SyncFailed {
+        error: String,
+    },
     /// Synced with real-time data sync
     DataSynced {
         /// Indicates new data was pulled from other instances.
