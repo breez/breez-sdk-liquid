@@ -69,6 +69,7 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
                 receiver_amount_sat: a / 1000,
             }),
             disable_mrh: Some(true),
+            payment_timeout_sec: Some(180), // 3 minutes timeout
         };
 
         // Prepare the payment

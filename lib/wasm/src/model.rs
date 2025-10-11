@@ -440,6 +440,7 @@ pub struct PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
     pub disable_mrh: Option<bool>,
+    pub payment_timeout_sec: Option<u64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendDestination)]
@@ -467,6 +468,7 @@ pub struct PrepareSendResponse {
     pub estimated_asset_fees: Option<f64>,
     pub exchange_amount_sat: Option<u64>,
     pub disable_mrh: Option<bool>,
+    pub payment_timeout_sec: Option<u64>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::SendPaymentRequest)]

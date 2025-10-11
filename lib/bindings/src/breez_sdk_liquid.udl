@@ -436,6 +436,7 @@ dictionary PrepareSendRequest {
     string destination;
     PayAmount? amount = null;
     boolean? disable_mrh = null;
+    u64? payment_timeout_sec = null;
 };
 
 [Enum]
@@ -452,6 +453,7 @@ dictionary PrepareSendResponse {
     f64? estimated_asset_fees;
     u64? exchange_amount_sat;
     boolean? disable_mrh;
+    u64? payment_timeout_sec;
 };
 
 dictionary SendPaymentRequest {

@@ -95,6 +95,8 @@ async fn liquid(mut handle: SdkNodeHandle) {
             amount: Some(PayAmount::Bitcoin {
                 receiver_amount_sat,
             }),
+            disable_mrh: None,
+            custom_timeout_sec: None,
         })
         .await
         .unwrap();

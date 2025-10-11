@@ -732,6 +732,9 @@ pub struct PrepareSendRequest {
     pub amount: Option<PayAmount>,
     /// If set to true, the payment will be sent without magic routing hints
     pub disable_mrh: Option<bool>,
+    /// Custom payment timeout in seconds. If not set, uses the (configuration
+    /// timeout)[Config::payment_timeout_sec]
+    pub payment_timeout_sec: Option<u64>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -773,6 +776,8 @@ pub struct PrepareSendResponse {
     pub exchange_amount_sat: Option<u64>,
     /// If set to true, the payment will be sent without magic routing hints
     pub disable_mrh: Option<bool>,
+    /// Custom timeout in seconds. If not set, uses the default config timeout.
+    pub payment_timeout_sec: Option<u64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

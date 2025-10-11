@@ -478,6 +478,7 @@ pub(crate) async fn handle_command(
                     destination,
                     amount,
                     disable_mrh: None,
+                    payment_timeout_sec: None,
                 })
                 .await?;
 
