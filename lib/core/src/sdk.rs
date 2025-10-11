@@ -561,13 +561,22 @@ impl LiquidSdk {
                 handle,
             });
         }
+
         for plugin in &self.plugins {
-            plugin
-                .on_start(
-                    Arc::downgrade(self),
-                    PluginStorage::new(std::sync::Arc::downgrade(&self.persister), plugin.id())?,
-                )
-                .await;
+            // We create a seed-dependent passphrase using the plugin id as HMAC input
+            let plugin_id = plugin.id();
+            let plugin_passphrase = self
+                .signer
+                .hmac_sha256(plugin_id.as_bytes().to_vec(), "m/49'/1'/0'/0/0".to_string())
+                .map_err(|err| {
+                    SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
+                })?;
+            let storage = PluginStorage::new(
+                Arc::downgrade(&self.persister),
+                &plugin_passphrase,
+                plugin.id(),
+            )?;
+            plugin.on_start(Arc::downgrade(self), storage).await;
         }
 
         Ok(())

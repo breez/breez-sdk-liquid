@@ -5,13 +5,19 @@ pub enum NwcError {
     #[error("Generic error: {err}")]
     Generic { err: String },
 
-    #[error("Could not persist data: {err}")]
+    #[error("Plugin storage operation failed: {err}")]
     Persist { err: String },
 }
 
 impl NwcError {
     pub fn generic<T: ToString>(err: T) -> Self {
         Self::Generic {
+            err: err.to_string(),
+        }
+    }
+
+    pub fn persist<T: ToString>(err: T) -> Self {
+        Self::Persist {
             err: err.to_string(),
         }
     }

@@ -9,7 +9,6 @@ workspace = true
 [dependencies]
 log = { workspace = true }
 anyhow = { workspace = true }
-sdk-common = { workspace = true }
 sdk-macros = { workspace = true }
 thiserror = { workspace = true }
 once_cell = { workspace = true }
@@ -28,10 +27,8 @@ nostr-sdk = { version = "0.43.0", features = ["nip44", "nip47"] }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
-maybe-sync = { version = "0.1.1", features = ["sync"] }
 uuid = { version = "1.8.0", features = ["v4"] }
 
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
-maybe-sync = "0.1.1"
 uuid = { version = "1.8.0", features = ["v4", "js"] }

@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use log::{debug, info};
-use maybe_sync::{MaybeSend, MaybeSync};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::{broadcast, RwLock};
 use uuid::Uuid;
@@ -28,7 +27,7 @@ pub struct NwcEvent {
 }
 
 #[sdk_macros::async_trait]
-pub trait NwcEventListener: MaybeSend + MaybeSync {
+pub trait NwcEventListener: Send + Sync {
     async fn on_event(&self, event: NwcEvent);
 }
 

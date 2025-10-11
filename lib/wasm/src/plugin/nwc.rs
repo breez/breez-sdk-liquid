@@ -1,6 +1,6 @@
 use breez_sdk_liquid::plugin::Plugin as _;
 use breez_sdk_liquid_nwc::{NwcService as _, SdkNwcService};
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 use wasm_bindgen::prelude::*;
 
 use crate::{
@@ -34,6 +34,9 @@ mod model {
         pub listener: NwcEventListener,
     }
 
+    unsafe impl Send for WasmNwcEventListener {}
+    unsafe impl Sync for WasmNwcEventListener {}
+
     #[sdk_macros::async_trait]
     impl breez_sdk_liquid_nwc::event::NwcEventListener for WasmNwcEventListener {
         async fn on_event(&self, e: breez_sdk_liquid_nwc::event::NwcEvent) {
@@ -57,6 +60,13 @@ mod model {
 }
 pub use model::*;
 
+#[derive(Clone)]
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::NwcConfig)]
+pub struct NwcConfig {
+    pub relay_urls: Option<Vec<String>>,
+    pub secret_key_hex: Option<String>,
+}
+
 #[wasm_bindgen]
 pub struct BindingNwcService {
     inner: Rc<SdkNwcService>,
@@ -64,6 +74,12 @@ pub struct BindingNwcService {
 
 #[wasm_bindgen]
 impl BindingNwcService {
+    #[wasm_bindgen(constructor)]
+    pub fn new(config: NwcConfig) -> Self {
+        let inner = Rc::new(SdkNwcService::new(config.into()));
+        Self { inner }
+    }
+
     // NWC
     #[wasm_bindgen(js_name = "addConnectionString")]
     pub async fn add_connection_string(&self, name: String) -> WasmResult<String> {
@@ -116,7 +132,7 @@ impl BindingNwcService {
     #[wasm_bindgen(js_name = "onStart")]
     pub async fn on_start(&self, sdk: &BindingLiquidSdk, storage: PluginStorage) {
         self.inner
-            .on_start(Rc::downgrade(&sdk.sdk), storage.storage())
+            .on_start(Arc::downgrade(&sdk.sdk), storage.storage())
             .await;
     }
 

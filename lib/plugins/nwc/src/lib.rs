@@ -1,4 +1,9 @@
-use std::{collections::HashMap, str::FromStr as _, time::Duration};
+use std::{
+    collections::HashMap,
+    str::FromStr as _,
+    sync::{Arc, Weak},
+    time::Duration,
+};
 
 use crate::{
     context::RuntimeContext,
@@ -11,7 +16,6 @@ use crate::{
 use anyhow::{bail, Result};
 use breez_sdk_liquid::prelude::*;
 use log::{debug, error, info, warn};
-use maybe_sync::{MaybeSend, MaybeSync};
 use nostr_sdk::{
     nips::nip44::{decrypt, encrypt, Version},
     nips::nip47::{
@@ -21,7 +25,6 @@ use nostr_sdk::{
     Client as NostrClient, EventBuilder, Keys, Kind, RelayPoolNotification, RelayUrl, Tag,
     Timestamp,
 };
-use sdk_common::utils::{Arc, Weak};
 use tokio::sync::{mpsc, Mutex, OnceCell};
 use tokio_with_wasm::alias as tokio;
 
@@ -35,7 +38,7 @@ pub(crate) mod sdk_event;
 pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
 
 #[sdk_macros::async_trait]
-pub trait NwcService: MaybeSend + MaybeSync {
+pub trait NwcService: Send + Sync {
     /// Creates a Nostr Wallet Connect connection string for this service.
     ///
     /// Generates a unique connection URI that external applications can use
@@ -74,7 +77,9 @@ pub trait NwcService: MaybeSend + MaybeSync {
 }
 
 pub struct NwcConfig {
+    /// Custom relays urls to be used
     pub relay_urls: Option<Vec<String>>,
+    /// Custom Nostr secret key for the wallet node, hex-encoded
     pub secret_key_hex: Option<String>,
 }
 

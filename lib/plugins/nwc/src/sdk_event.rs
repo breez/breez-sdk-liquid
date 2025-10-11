@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use breez_sdk_liquid::model::{EventListener, SdkEvent};
 use log::{info, warn};
@@ -10,7 +10,6 @@ use nostr_sdk::{
     },
     EventBuilder, Keys, Kind, Tag, Timestamp,
 };
-use sdk_common::utils::Arc;
 
 use crate::context::RuntimeContext;
 

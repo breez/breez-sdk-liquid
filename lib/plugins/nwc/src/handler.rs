@@ -1,21 +1,21 @@
+use std::sync::{Arc, Weak};
+
 use crate::model::{
     ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
     PrepareSendRequest, SendPaymentRequest,
 };
 use crate::sdk::LiquidSdk;
 use log::info;
-use maybe_sync::{MaybeSend, MaybeSync};
 use nostr_sdk::nips::nip47::{
     ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse, NIP47Error,
     PayInvoiceRequest, PayInvoiceResponse, TransactionType,
 };
 use nostr_sdk::Timestamp;
-use sdk_common::utils::{Arc, Weak};
 
 type Result<T> = std::result::Result<T, NIP47Error>;
 
 #[sdk_macros::async_trait]
-pub trait RelayMessageHandler: MaybeSend + MaybeSync {
+pub trait RelayMessageHandler: Send + Sync {
     async fn pay_invoice(&self, req: PayInvoiceRequest) -> Result<PayInvoiceResponse>;
     async fn list_transactions(
         &self,

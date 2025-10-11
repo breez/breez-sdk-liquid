@@ -1,6 +1,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     str::FromStr as _,
+    sync::{Arc, Weak},
 };
 
 use crate::{
@@ -15,7 +16,6 @@ use nostr_sdk::{
     nips::nip47::NostrWalletConnectURI, Alphabet, Client as NostrClient, EventBuilder, Filter,
     Keys, Kind, SingleLetterTag, Tag,
 };
-use sdk_common::utils::Weak;
 use tokio::sync::{mpsc, Mutex, OnceCell};
 use tokio::task::JoinHandle;
 use tokio_with_wasm::alias as tokio;
