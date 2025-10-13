@@ -478,6 +478,10 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Unignore frb_generated.rs
+        working-directory: packages/flutter_breez_liquid/rust/src
+        run: sed -i '' '/frb_generated\.rs/d' .gitignore || true
+
       - name: Install flutter_rust_bridge_codegen dependencies
         working-directory: packages/flutter_breez_liquid/
         run: just frb
