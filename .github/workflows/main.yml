@@ -478,10 +478,6 @@ jobs:
           version: "27.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check flutter_breez_liquid Rust package for errors
-        working-directory: packages/flutter_breez_liquid/rust
-        run: cargo check
-
       - name: Install flutter_rust_bridge_codegen dependencies
         working-directory: packages/flutter_breez_liquid/
         run: just frb
@@ -489,6 +485,10 @@ jobs:
       - name: Generate Dart/Flutter bindings & Softlink C Headers
         working-directory: packages/flutter_breez_liquid/
         run: just codegen
+
+      - name: Check flutter_breez_liquid Rust package for errors
+        working-directory: packages/flutter_breez_liquid/rust
+        run: cargo check
 
       - name: Static Analysis
         working-directory: packages/flutter_breez_liquid/
