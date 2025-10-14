@@ -1,5 +1,7 @@
 tonic::include_proto!("sync");
 
+use std::sync::Arc;
+
 use self::data::SyncData;
 use crate::prelude::{Signer, SignerError};
 use anyhow::Result;
@@ -11,7 +13,6 @@ use rusqlite::{
     ToSql,
 };
 use sdk_common::bitcoin::hashes::{sha256, Hash};
-use sdk_common::utils::Arc;
 use semver::Version;
 
 pub(crate) mod client;

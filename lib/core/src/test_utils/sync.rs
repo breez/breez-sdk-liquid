@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use crate::{
     persist::Persister,
@@ -15,7 +15,6 @@ use crate::{
     },
 };
 use anyhow::Result;
-use sdk_common::utils::Arc;
 use tokio::sync::{
     mpsc::{self, Receiver, Sender},
     Mutex,

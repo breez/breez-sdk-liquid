@@ -1,4 +1,4 @@
-use std::rc::{Rc, Weak};
+use std::sync::{Arc, Weak};
 
 use breez_sdk_liquid::sdk::LiquidSdk;
 use log::warn;
@@ -12,9 +12,13 @@ pub struct WasmPlugin {
     pub plugin: Plugin,
 }
 
-impl From<Plugin> for Rc<dyn breez_sdk_liquid::plugin::Plugin> {
+// This assumes that we'll always be running in a single thread (true for Wasm environments)
+unsafe impl Send for WasmPlugin {}
+unsafe impl Sync for WasmPlugin {}
+
+impl From<Plugin> for Arc<dyn breez_sdk_liquid::plugin::Plugin> {
     fn from(val: Plugin) -> Self {
-        Rc::new(WasmPlugin { plugin: val })
+        Arc::new(WasmPlugin { plugin: val })
     }
 }
 

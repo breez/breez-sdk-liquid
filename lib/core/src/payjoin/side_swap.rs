@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, str::FromStr, sync::Arc};
 
 use super::{
     error::{PayjoinError, PayjoinResult},
@@ -25,7 +25,6 @@ use lwk_wollet::{
 use sdk_common::{
     ensure_sdk,
     prelude::{parse_json, FiatAPI, RestClient},
-    utils::Arc,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::OnceCell;

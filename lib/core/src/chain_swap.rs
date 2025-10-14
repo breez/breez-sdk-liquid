@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 use std::str::FromStr;
 use std::time::Duration;
+use std::{collections::HashSet, sync::Arc};
 
 use anyhow::{anyhow, bail, Context, Result};
 use boltz_client::{
@@ -12,7 +12,6 @@ use elements::{hex::FromHex, Script, Transaction};
 use futures_util::TryFutureExt;
 use log::{debug, error, info, warn};
 use lwk_wollet::hashes::hex::DisplayHex;
-use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, Mutex};
 use tokio_with_wasm::alias as tokio;
 
