@@ -12,8 +12,7 @@ mod test {
     };
     use elements::{Address as ElementsAddress, Script, Txid};
     use lwk_wollet::{elements::AssetId, WalletTx};
-    use sdk_common::utils::Arc;
-    use std::{collections::HashMap, str::FromStr};
+    use std::{collections::HashMap, str::FromStr, sync::Arc};
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

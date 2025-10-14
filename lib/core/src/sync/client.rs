@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 
 use log::debug;
-use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::grpc::transport::{GrpcClient, Transport};
 use tokio::sync::Mutex;
 use tonic::{
@@ -16,7 +15,7 @@ use super::model::{
 };
 
 #[sdk_macros::async_trait]
-pub(crate) trait SyncerClient: MaybeSend + MaybeSync {
+pub(crate) trait SyncerClient: Send + Sync {
     async fn connect(&self, connect_url: String) -> Result<()>;
     async fn push(&self, req: SetRecordRequest) -> Result<SetRecordReply>;
     async fn pull(&self, req: ListChangesRequest) -> Result<ListChangesReply>;

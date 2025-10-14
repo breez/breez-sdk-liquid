@@ -1,7 +1,8 @@
+use std::sync::Arc;
+
 use sdk_common::{
     bitcoin::util::bip32::{ChildNumber, DerivationPath},
     prelude::{LnUrlResult, LnurlAuthSigner},
-    utils::Arc,
 };
 
 use crate::model::Signer;

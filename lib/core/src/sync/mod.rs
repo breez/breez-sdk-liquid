@@ -1,10 +1,10 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use log::{info, trace, warn};
 use model::{PullError, PushError};
-use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 use tokio::time::sleep;
 use tokio_stream::StreamExt as _;
@@ -669,8 +669,7 @@ impl SyncService {
 mod tests {
     use anyhow::{anyhow, Result};
     use lwk_wollet::elements::AssetId;
-    use sdk_common::utils::Arc;
-    use std::collections::HashMap;
+    use std::{collections::HashMap, sync::Arc};
 
     use crate::{
         persist::{cache::KEY_LAST_DERIVATION_INDEX, Persister},

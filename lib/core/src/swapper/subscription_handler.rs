@@ -1,14 +1,14 @@
+use std::sync::Arc;
+
 use log::{error, info};
-use maybe_sync::{MaybeSend, MaybeSync};
 use sdk_common::bitcoin::hashes::hex::ToHex;
-use sdk_common::utils::Arc;
 
 use crate::{persist::Persister, utils};
 
 use super::SwapperStatusStream;
 
 #[sdk_macros::async_trait]
-pub trait SubscriptionHandler: MaybeSend + MaybeSync {
+pub trait SubscriptionHandler: Send + Sync {
     async fn track_subscriptions(&self);
 }
 

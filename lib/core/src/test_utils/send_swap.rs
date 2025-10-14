@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     model::{Config, Signer},
     persist::Persister,
@@ -6,7 +8,6 @@ use crate::{
     utils,
 };
 use anyhow::Result;
-use sdk_common::utils::Arc;
 
 use super::{
     chain::{MockBitcoinChainService, MockLiquidChainService},

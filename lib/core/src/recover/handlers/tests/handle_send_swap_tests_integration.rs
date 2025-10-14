@@ -13,9 +13,9 @@ mod test {
     use lwk_wollet::elements::{AssetId, Txid};
     use lwk_wollet::WalletTx;
     use mockall::predicate::*;
-    use sdk_common::utils::Arc;
     use std::collections::HashMap;
     use std::str::FromStr;
+    use std::sync::Arc;
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

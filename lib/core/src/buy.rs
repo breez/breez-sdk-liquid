@@ -1,6 +1,7 @@
+use std::sync::Arc;
+
 use anyhow::{anyhow, Result};
-use maybe_sync::{MaybeSend, MaybeSync};
-use sdk_common::prelude::{utils::Arc, BreezServer, BuyBitcoinProviderApi, MoonpayProvider};
+use sdk_common::prelude::{BreezServer, BuyBitcoinProviderApi, MoonpayProvider};
 
 use crate::{
     model::{BuyBitcoinProvider, ChainSwap, Config},
@@ -8,7 +9,7 @@ use crate::{
 };
 
 #[sdk_macros::async_trait]
-pub(crate) trait BuyBitcoinApi: MaybeSend + MaybeSync {
+pub(crate) trait BuyBitcoinApi: Send + Sync {
     /// Initiate buying Bitcoin and return a URL to the selected third party provider
     async fn buy_bitcoin(
         &self,

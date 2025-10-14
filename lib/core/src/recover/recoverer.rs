@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use anyhow::{anyhow, ensure, Result};
 use log::{debug, error, info, warn};
@@ -16,7 +17,6 @@ use lwk_wollet::{
     hashes::hex::{DisplayHex, FromHex},
     WalletTx,
 };
-use sdk_common::utils::Arc;
 
 use crate::sdk::NETWORK_PROPAGATION_GRACE_PERIOD;
 use crate::swapper::Swapper;

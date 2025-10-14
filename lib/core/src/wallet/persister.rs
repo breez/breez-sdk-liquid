@@ -1,7 +1,6 @@
 use anyhow::Result;
 use log::debug;
 use lwk_wollet::{PersistError, Update, WolletDescriptor};
-use maybe_sync::{MaybeSend, MaybeSync};
 use std::sync::{Arc, Mutex};
 
 pub use lwk_wollet;
@@ -11,7 +10,7 @@ use crate::persist::Persister;
 pub type LwkPersister = Arc<dyn lwk_wollet::Persister + Send + Sync>;
 
 #[sdk_macros::async_trait]
-pub trait WalletCachePersister: MaybeSend + MaybeSync {
+pub trait WalletCachePersister: Send + Sync {
     fn get_lwk_persister(&self) -> Result<LwkPersister>;
 
     async fn clear_cache(&self) -> Result<()>;

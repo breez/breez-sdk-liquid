@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
+use std::sync::Arc;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Context as _, Result};
@@ -39,7 +40,6 @@ use sdk_common::lightning_with_bolt12::types::payment::PaymentHash;
 use sdk_common::lightning_with_bolt12::util::string::UntrustedString;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
-use sdk_common::utils::Arc;
 use side_swap::api::SideSwapService;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
@@ -5055,8 +5055,8 @@ fn extract_description_from_metadata(request_data: &LnUrlPayRequestData) -> Opti
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use std::time::Duration;
+    use std::{str::FromStr, sync::Arc};
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
@@ -5073,7 +5073,6 @@ mod tests {
             sign::RandomBytes,
             util::ser::Writeable,
         },
-        utils::Arc,
     };
     use tokio_with_wasm::alias as tokio;
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use boltz_client::{
     boltz::{
@@ -10,10 +12,8 @@ use boltz_client::{
     network::Chain,
     Amount,
 };
-use maybe_sync::{MaybeSend, MaybeSync};
 use mockall::automock;
 use sdk_common::prelude::BoltzSwapperUrls;
-use sdk_common::utils::Arc;
 use tokio::sync::{broadcast, watch};
 
 use crate::{
@@ -26,7 +26,7 @@ pub(crate) mod subscription_handler;
 
 #[automock]
 #[sdk_macros::async_trait]
-pub trait Swapper: MaybeSend + MaybeSync {
+pub trait Swapper: Send + Sync {
     /// Create a new chain swap
     async fn create_chain_swap(
         &self,
@@ -143,7 +143,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
     async fn get_nodes(&self) -> Result<GetNodesResponse, PaymentError>;
 }
 
-pub trait SwapperStatusStream: MaybeSend + MaybeSync {
+pub trait SwapperStatusStream: Send + Sync {
     fn start(
         self: Arc<Self>,
         callback: Box<dyn SubscriptionHandler>,
@@ -163,6 +163,6 @@ pub trait SwapperStatusStream: MaybeSend + MaybeSync {
 }
 
 #[sdk_macros::async_trait]
-pub(crate) trait ProxyUrlFetcher: MaybeSend + MaybeSync + 'static {
+pub(crate) trait ProxyUrlFetcher: Send + Sync + 'static {
     async fn fetch(&self) -> Result<&Option<BoltzSwapperUrls>>;
 }
