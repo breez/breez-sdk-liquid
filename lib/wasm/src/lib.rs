@@ -3,10 +3,10 @@ mod event;
 mod logger;
 pub mod model;
 mod platform;
+mod plugin;
 mod signer;
 
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::str::FromStr;
 use std::sync::Arc;
 
@@ -21,6 +21,7 @@ use breez_sdk_liquid::signer::SdkLwkSigner;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
+use plugin::Plugin;
 use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
 
@@ -28,39 +29,48 @@ pub const BREEZ_WASM_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology
 
 #[wasm_bindgen]
 pub struct BindingLiquidSdk {
-    sdk: Rc<LiquidSdk>,
-    persister: Arc<Persister>,
+    sdk: Arc<LiquidSdk>,
 }
 
 #[wasm_bindgen(js_name = "connect")]
-pub async fn connect(req: ConnectRequest) -> WasmResult<BindingLiquidSdk> {
+pub async fn connect(
+    req: ConnectRequest,
+    plugins: Option<Vec<Plugin>>,
+) -> WasmResult<BindingLiquidSdk> {
     let signer = Box::new(LiquidSdk::default_signer(&req.clone().into())?);
-    connect_inner(req.config, signer).await
+    let plugins = plugins.map(|p| p.into_iter().map(Into::into).collect());
+    connect_inner(req.config, signer, plugins).await
 }
 
 #[wasm_bindgen(js_name = "connectWithSigner")]
 pub async fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Signer,
+    plugins: Option<Vec<Plugin>>,
 ) -> WasmResult<BindingLiquidSdk> {
     let signer: Box<dyn breez_sdk_liquid::model::Signer> = Box::new(WasmSigner { signer });
-    connect_inner(req.config, signer).await
+    let plugins = plugins.map(|p| p.into_iter().map(Into::into).collect());
+    connect_inner(req.config, signer, plugins).await
 }
 
 async fn connect_inner(
     config: Config,
     signer: Box<dyn breez_sdk_liquid::model::Signer>,
+    plugins: Option<Vec<Arc<dyn breez_sdk_liquid::plugin::Plugin>>>,
 ) -> WasmResult<BindingLiquidSdk> {
     let config: breez_sdk_liquid::model::Config = config.into();
-    let signer = Rc::new(signer);
+    let signer = Arc::new(signer);
 
     let mut sdk_builder = LiquidSdkBuilder::new(
         config.clone(),
         PRODUCTION_BREEZSERVER_URL.to_string(),
-        Rc::clone(&signer),
+        Arc::clone(&signer),
     )?;
+    if let Some(plugins) = plugins {
+        sdk_builder.plugins(plugins);
+    }
 
-    let sdk_lwk_signer = SdkLwkSigner::new(Rc::clone(&signer))?;
+    let sdk_lwk_signer = SdkLwkSigner::new(Arc::clone(&signer))?;
     let fingerprint = sdk_lwk_signer.fingerprint()?;
     let fingerprint = fingerprint.to_hex();
 
@@ -97,7 +107,7 @@ async fn connect_inner(
         db_backup_persister.start_backup_task(persister.clone(), receiver);
     }
 
-    Ok(BindingLiquidSdk { sdk, persister })
+    Ok(BindingLiquidSdk { sdk })
 }
 
 #[wasm_bindgen(js_name = "defaultConfig")]
@@ -391,8 +401,6 @@ impl BindingLiquidSdk {
     #[wasm_bindgen(js_name = "disconnect")]
     pub async fn disconnect(&self) -> WasmResult<()> {
         self.sdk.disconnect().await?;
-
-        self.persister.clear_in_memory_db()?;
         Ok(())
     }
 }

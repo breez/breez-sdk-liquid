@@ -69,7 +69,6 @@ electrum-client = { version = "0.21.0", default-features = false, features = [
     "proxy",
 ] }
 lwk_wollet = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b" }
-maybe-sync = { version = "0.1.1", features = ["sync"] }
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
@@ -88,7 +87,6 @@ console_log = "1"
 lwk_wollet = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b", default-features = false, features = [
     "esplora",
 ] }
-maybe-sync = "0.1.1"
 prost = "^0.13"
 uuid = { version = "1.8.0", features = ["v4", "js"] }
 tonic = { version = "0.12", default-features = false, features = [

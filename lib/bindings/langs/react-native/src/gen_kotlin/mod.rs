@@ -15,6 +15,9 @@ static IGNORED_FUNCTIONS: Lazy<HashSet<String>> = Lazy::new(|| {
         "add_event_listener",
         "set_logger",
         "connect_with_signer",
+        "set_item",
+        "get_item",
+        "remove_item",
     ];
     HashSet::from_iter(list.into_iter().map(|s| s.to_string()))
 });

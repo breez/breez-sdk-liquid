@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::Not as _;
+use std::sync::Arc;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::{anyhow, ensure, Context as _, Result};
@@ -39,7 +40,6 @@ use sdk_common::lightning_with_bolt12::types::payment::PaymentHash;
 use sdk_common::lightning_with_bolt12::util::string::UntrustedString;
 use sdk_common::liquid::LiquidAddressData;
 use sdk_common::prelude::{FiatAPI, FiatCurrency, LnUrlPayError, LnUrlWithdrawError, Rate};
-use sdk_common::utils::Arc;
 use side_swap::api::SideSwapService;
 use signer::SdkSigner;
 use swapper::boltz::proxy::BoltzProxyFetcher;
@@ -56,6 +56,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::model::Signer;
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
+use crate::plugin::{Plugin, PluginStorage};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::SubscriptionHandler;
@@ -113,6 +114,7 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
+    plugins: Option<Vec<Arc<dyn Plugin>>>,
 }
 
 #[allow(dead_code)]
@@ -137,6 +139,7 @@ impl LiquidSdkBuilder {
             status_stream: None,
             swapper: None,
             sync_service: None,
+            plugins: None,
         })
     }
 
@@ -196,6 +199,11 @@ impl LiquidSdkBuilder {
         self
     }
 
+    pub fn plugins(&mut self, plugins: Vec<Arc<dyn Plugin>>) -> &mut Self {
+        self.plugins = Some(plugins);
+        self
+    }
+
     fn get_working_dir(&self) -> Result<String> {
         let fingerprint_hex: String =
             Xpub::decode(self.signer.xpub()?.as_slice())?.identifier()[0..4].to_hex();
@@ -203,7 +211,7 @@ impl LiquidSdkBuilder {
             .get_wallet_dir(&self.config.working_dir, &fingerprint_hex)
     }
 
-    pub async fn build(&self) -> Result<Arc<LiquidSdk>> {
+    pub async fn build(self) -> Result<Arc<LiquidSdk>> {
         if let Some(breez_api_key) = &self.config.breez_api_key {
             LiquidSdk::validate_breez_api_key(breez_api_key)?
         }
@@ -378,6 +386,7 @@ impl LiquidSdkBuilder {
             buy_bitcoin_service,
             external_input_parsers,
             background_task_handles: Mutex::new(vec![]),
+            plugins: self.plugins.unwrap_or_default(),
         });
         Ok(sdk)
     }
@@ -407,6 +416,7 @@ pub struct LiquidSdk {
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
     pub(crate) background_task_handles: Mutex<Vec<TaskHandle>>,
+    pub(crate) plugins: Vec<Arc<dyn Plugin>>,
 }
 
 impl LiquidSdk {
@@ -420,12 +430,17 @@ impl LiquidSdk {
     ///     * `mnemonic` - the optional Liquid wallet mnemonic
     ///     * `passphrase` - the optional passphrase for the mnemonic
     ///     * `seed` - the optional Liquid wallet seed
-    pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
+    /// * `plugins` - the [Plugin]s which should be loaded by the SDK at startup
+    pub async fn connect(
+        req: ConnectRequest,
+        plugins: Option<Vec<Arc<dyn Plugin>>>,
+    ) -> Result<Arc<LiquidSdk>> {
         let signer = Self::default_signer(&req)?;
 
         Self::connect_with_signer(
             ConnectWithSignerRequest { config: req.config },
             Box::new(signer),
+            plugins,
         )
         .inspect_err(|e| error!("Failed to connect: {e:?}"))
         .await
@@ -447,19 +462,24 @@ impl LiquidSdk {
     pub async fn connect_with_signer(
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
+        plugins: Option<Vec<Arc<dyn Plugin>>>,
     ) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
 
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
 
-        let sdk = LiquidSdkBuilder::new(
+        let mut builder = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
-        )?
-        .build()
-        .await?;
+        )?;
+
+        if let Some(plugins) = plugins {
+            builder.plugins(plugins);
+        }
+
+        let sdk = builder.build().await?;
         sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);
@@ -541,6 +561,14 @@ impl LiquidSdk {
                 handle,
             });
         }
+        for plugin in &self.plugins {
+            plugin
+                .on_start(
+                    Arc::downgrade(self),
+                    PluginStorage::new(std::sync::Arc::downgrade(&self.persister), plugin.id())?,
+                )
+                .await;
+        }
 
         Ok(())
     }
@@ -589,6 +617,13 @@ impl LiquidSdk {
                 handle.handle.abort();
             }
         }
+        for plugin in &self.plugins {
+            plugin.on_stop().await;
+        }
+
+        #[cfg(all(target_family = "wasm", target_os = "unknown"))]
+        // Clear the database if we're on WASM
+        self.persister.clear_in_memory_db()?;
 
         *is_started = false;
         Ok(())
@@ -5025,8 +5060,8 @@ fn extract_description_from_metadata(request_data: &LnUrlPayRequestData) -> Opti
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use std::time::Duration;
+    use std::{str::FromStr, sync::Arc};
 
     use anyhow::{anyhow, Result};
     use boltz_client::{
@@ -5043,7 +5078,6 @@ mod tests {
             sign::RandomBytes,
             util::ser::Writeable,
         },
-        utils::Arc,
     };
     use tokio_with_wasm::alias as tokio;
 

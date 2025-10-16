@@ -3,7 +3,6 @@ pub(crate) mod esplora;
 
 use anyhow::Result;
 use bitcoin::{Address, Script, Transaction, Txid};
-use maybe_sync::{MaybeSend, MaybeSync};
 
 use crate::{
     bitcoin,
@@ -14,7 +13,7 @@ pub(crate) type History = BtcHistory;
 
 /// Trait implemented by types that can fetch data from a blockchain data source.
 #[sdk_macros::async_trait]
-pub trait BitcoinChainService: MaybeSend + MaybeSync {
+pub trait BitcoinChainService: Send + Sync {
     /// Get the blockchain latest block
     async fn tip(&self) -> Result<u32>;
 

@@ -1,8 +1,9 @@
+use std::sync::Arc;
+
 use anyhow::Result;
 use hex::FromHex;
 use lazy_static::lazy_static;
 use sdk_common::bitcoin::{consensus::deserialize, Transaction};
-use sdk_common::utils::Arc;
 
 use crate::{
     chain_swap::ChainSwapHandler,

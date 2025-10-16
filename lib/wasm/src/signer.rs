@@ -5,6 +5,10 @@ pub struct WasmSigner {
     pub signer: Signer,
 }
 
+// This assumes that we'll always be running in a single thread (true for Wasm environments)
+unsafe impl Send for WasmSigner {}
+unsafe impl Sync for WasmSigner {}
+
 impl breez_sdk_liquid::prelude::Signer for WasmSigner {
     fn xpub(&self) -> Result<Vec<u8>, SignerError> {
         self.signer.xpub().map_err(|e| SignerError::Generic {

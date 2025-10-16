@@ -3,6 +3,7 @@ pub mod persister;
 use std::collections::HashMap;
 use std::io::Write;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
 use boltz_client::ElementsAddress;
@@ -15,7 +16,6 @@ use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
 use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{ElementsNetwork, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
-use maybe_sync::{MaybeSend, MaybeSync};
 use persister::SqliteWalletCachePersister;
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -27,7 +27,6 @@ use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{ensure_sdk, error::PaymentError, model::Config};
-use sdk_common::utils::Arc;
 
 use crate::wallet::persister::WalletCachePersister;
 #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -36,7 +35,7 @@ use lwk_wollet::blocking::BlockchainBackend;
 static LN_MESSAGE_PREFIX: &[u8] = b"Lightning Signed Message:";
 
 #[sdk_macros::async_trait]
-pub trait OnchainWallet: MaybeSend + MaybeSync {
+pub trait OnchainWallet: Send + Sync {
     /// List all transactions in the wallet
     async fn transactions(&self) -> Result<Vec<WalletTx>, PaymentError>;
 

@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::{sync::OnceLock, time::Duration};
 
 use super::{ProxyUrlFetcher, Swapper};
@@ -26,7 +27,6 @@ use client::{BitcoinClient, LiquidClient};
 use log::{info, warn};
 use proxy::split_boltz_url;
 use rand::Rng;
-use sdk_common::utils::Arc;
 use tokio::sync::broadcast;
 use tokio::time::sleep;
 use tokio_with_wasm::alias as tokio;

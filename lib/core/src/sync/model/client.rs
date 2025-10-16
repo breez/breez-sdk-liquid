@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
     prelude::{Signer, SignerError},
     utils,
@@ -6,7 +8,6 @@ use anyhow::Result;
 use log::trace;
 use lwk_wollet::hashes::hex::DisplayHex as _;
 use sdk_common::bitcoin::hashes::{sha256, Hash};
-use sdk_common::utils::Arc;
 
 use super::{
     ListChangesRequest, ListenChangesRequest, Record, SetRecordRequest, CURRENT_SCHEMA_VERSION,
