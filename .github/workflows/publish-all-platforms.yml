@@ -283,7 +283,6 @@ jobs:
   publish-react-native:
     needs:
       - setup
-      - build-language-bindings
     if: ${{ needs.setup.outputs.react-native == 'true' }}
     uses: ./.github/workflows/publish-react-native.yml
     with:
@@ -292,6 +291,8 @@ jobs:
       package-version: ${{ needs.setup.outputs.react-native-package-version }}
       publish: ${{ needs.setup.outputs.publish == 'true' }}
     secrets:
+      REPO_SSH_KEY: ${{ secrets.REPO_SSH_KEY }}
+      RN_RELEASE_TOKEN: ${{ secrets.RN_RELEASE_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-python:

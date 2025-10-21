@@ -1,0 +1,17 @@
+name: 'Setup build environment'
+description: 'Sets up dependencies for the build environment'
+inputs:
+  github-token:
+    description: 'github token'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v3
+      with:
+        version: "30.2"
+        repo-token: ${{ inputs.github-token }}
+
+    - name: Setup rust cache
+      uses: Swatinem/rust-cache@v2
