@@ -529,6 +529,38 @@ impl LiquidSdk {
         Ok(())
     }
 
+    async fn init_plugins(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+        // Before setting the plugins, we ensure there are no naming conflicts
+        let mut ids = HashSet::new();
+        for plugin in &self.plugins {
+            let id = plugin.id();
+            if ids.contains(&id) {
+                return Err(SdkError::generic(format!(
+                    "Attempted to start SDK with two plugins with equal ID: `{id}`"
+                )));
+            }
+            ids.insert(id);
+        }
+
+        for plugin in &self.plugins {
+            // We create a seed-dependent passphrase using the plugin id as HMAC input
+            let plugin_id = plugin.id();
+            let plugin_passphrase = self
+                .signer
+                .hmac_sha256(plugin_id.as_bytes().to_vec(), "m/49'/1'/0'/0/0".to_string())
+                .map_err(|err| {
+                    SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
+                })?;
+            let storage = PluginStorage::new(
+                Arc::downgrade(&self.persister),
+                &plugin_passphrase,
+                plugin.id(),
+            )?;
+            plugin.on_start(Arc::downgrade(self), storage).await;
+        }
+        Ok(())
+    }
+
     /// Starts background tasks.
     ///
     /// Internal method. Should only be used as part of [LiquidSdk::start].
@@ -561,24 +593,7 @@ impl LiquidSdk {
                 handle,
             });
         }
-
-        for plugin in &self.plugins {
-            // We create a seed-dependent passphrase using the plugin id as HMAC input
-            let plugin_id = plugin.id();
-            let plugin_passphrase = self
-                .signer
-                .hmac_sha256(plugin_id.as_bytes().to_vec(), "m/49'/1'/0'/0/0".to_string())
-                .map_err(|err| {
-                    SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
-                })?;
-            let storage = PluginStorage::new(
-                Arc::downgrade(&self.persister),
-                &plugin_passphrase,
-                plugin.id(),
-            )?;
-            plugin.on_start(Arc::downgrade(self), storage).await;
-        }
-
+        self.init_plugins().await?;
         Ok(())
     }
 
