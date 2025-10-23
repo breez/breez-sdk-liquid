@@ -14,7 +14,10 @@ use crate::{
     sdk_event::SdkEventListener,
 };
 use anyhow::{bail, Result};
-use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid::{
+    plugin::{Plugin, PluginStorage},
+    prelude::*,
+};
 use log::{debug, error, info, warn};
 use nostr_sdk::{
     nips::nip44::{decrypt, encrypt, Version},
