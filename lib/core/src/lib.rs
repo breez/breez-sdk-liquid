@@ -203,6 +203,5 @@ pub mod prelude {
     pub use crate::*;
     pub use crate::model::*;
     pub use crate::sdk::*;
-    pub use crate::plugin::*;
     pub use crate::signer::SdkSigner;
 }

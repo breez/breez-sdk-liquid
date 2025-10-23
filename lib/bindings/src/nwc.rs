@@ -76,7 +76,7 @@ impl Plugin for BindingNwcService {
         let cloned = self.inner.clone();
         rt().spawn(async move {
             cloned
-                .on_start(Arc::downgrade(&sdk.sdk), storage.storage.clone())
+                .on_start(sdk.sdk.clone(), storage.storage.clone())
                 .await;
         });
     }
