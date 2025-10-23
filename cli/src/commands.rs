@@ -278,6 +278,15 @@ pub(crate) enum Command {
     ListFiat {},
     /// Fetch available fiat rates
     FetchFiatRates {},
+    /// NWC related commands
+    Nwc {
+        #[command(subcommand)]
+        nwc: NwcCommand,
+    },
+}
+
+#[derive(Parser, Debug, Clone, PartialEq)]
+pub(crate) enum NwcCommand {
     /// Creates and saves an NWC connection string
     AddConnectionString { name: String },
     /// Lists the available NWC connection strings
@@ -872,17 +881,19 @@ pub(crate) async fn handle_command(
             let res = sdk.list_fiat_currencies().await?;
             command_result!(res)
         }
-        Command::AddConnectionString { name } => {
+        Command::Nwc { nwc } => {
             let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
-            command_result!(nwc_service.add_connection_string(name).await?)
-        }
-        Command::ListConnectionStrings {} => {
-            let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
-            command_result!(nwc_service.list_connection_strings().await?)
-        }
-        Command::RemoveConnectionString { name } => {
-            let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
-            command_result!(nwc_service.remove_connection_string(name).await?)
+            match nwc {
+                NwcCommand::AddConnectionString { name } => {
+                    command_result!(nwc_service.add_connection_string(name).await?)
+                }
+                NwcCommand::ListConnectionStrings {} => {
+                    command_result!(nwc_service.list_connection_strings().await?)
+                }
+                NwcCommand::RemoveConnectionString { name } => {
+                    command_result!(nwc_service.remove_connection_string(name).await?)
+                }
+            }
         }
     })
 }
