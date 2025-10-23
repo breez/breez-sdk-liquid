@@ -1,15 +1,22 @@
 mod commands;
 mod persist;
 
+use std::sync::Arc;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::{NwcConfig, SdkNwcService};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
 use persist::CliPersistence;
 use rustyline::{error::ReadlineError, hint::HistoryHinter, Editor};
+use tokio::sync::OnceCell;
+
+lazy_static::lazy_static! {
+    pub(crate) static ref NWC_SERVICE: OnceCell<Arc<SdkNwcService>> = OnceCell::new();
+}
 
 #[derive(Parser, Debug)]
 pub(crate) struct Args {
@@ -36,6 +43,9 @@ pub(crate) struct Args {
 
     #[clap(long, default_value = "false")]
     pub(crate) no_qrs: bool,
+
+    #[clap(long, default_value = "false")]
+    pub(crate) nwc: bool,
 }
 
 fn parse_network_arg(s: &str) -> Result<LiquidNetwork, String> {
@@ -57,8 +67,9 @@ fn show_results(result: Result<String>) -> Result<()> {
 
 struct CliEventListener {}
 
+#[async_trait::async_trait]
 impl EventListener for CliEventListener {
-    fn on_event(&self, e: SdkEvent) {
+    async fn on_event(&self, e: SdkEvent) {
         info!("Received event: {e:?}");
     }
 }
@@ -104,6 +115,17 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
+    let mut plugins: Vec<Arc<dyn Plugin>> = vec![];
+    if args.nwc {
+        let nwc_service = Arc::new(SdkNwcService::new(NwcConfig {
+            relay_urls: None,
+            secret_key_hex: None,
+        }));
+        NWC_SERVICE.set(nwc_service.clone()).unwrap_or_else(|_| {
+            panic!("Could not set NWC service");
+        });
+        plugins.push(nwc_service);
+    };
     let sdk = LiquidSdk::connect(
         ConnectRequest {
             config,
@@ -111,7 +133,7 @@ async fn main() -> Result<()> {
             passphrase,
             seed: None,
         },
-        None,
+        Some(plugins),
     )
     .await?;
     let listener_id = sdk

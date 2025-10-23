@@ -466,8 +466,9 @@ impl From<LiquidNetwork> for boltz_client::bitcoin::Network {
 }
 
 /// Trait that can be used to react to various [SdkEvent]s emitted by the SDK.
+#[sdk_macros::async_trait]
 pub trait EventListener: Send + Sync {
-    fn on_event(&self, e: SdkEvent);
+    async fn on_event(&self, e: SdkEvent);
 }
 
 /// Event emitted by the SDK. Add an [EventListener] by calling [crate::sdk::LiquidSdk::add_event_listener]
@@ -729,6 +730,11 @@ pub struct PrepareSendRequest {
     /// Should only be set when paying directly onchain or to a BIP21 URI
     /// where no amount is specified, or when the caller wishes to drain
     pub amount: Option<PayAmount>,
+    /// If set to true, the payment will be sent without magic routing hints
+    pub disable_mrh: Option<bool>,
+    /// Custom payment timeout in seconds. If not set, uses the (configuration
+    /// timeout)[Config::payment_timeout_sec]
+    pub payment_timeout_sec: Option<u64>,
 }
 
 /// Specifies the supported destinations which can be payed by the SDK
@@ -768,6 +774,10 @@ pub struct PrepareSendResponse {
     /// The amount of funds required (in satoshi) to execute a SideSwap payment, excluding fees.
     /// Only present when [PayAmount::Asset::pay_with_bitcoin] is set to `true`.
     pub exchange_amount_sat: Option<u64>,
+    /// If set to true, the payment will be sent without magic routing hints
+    pub disable_mrh: Option<bool>,
+    /// Custom timeout in seconds. If not set, uses the default config timeout.
+    pub payment_timeout_sec: Option<u64>,
 }
 
 /// An argument when calling [crate::sdk::LiquidSdk::send_payment].

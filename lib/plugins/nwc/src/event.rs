@@ -1,22 +1,45 @@
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, Ordering};
 
-use anyhow::Result;
 use log::{debug, info};
+use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::{broadcast, RwLock};
 use uuid::Uuid;
 
-use crate::model::{EventListener, SdkEvent};
+#[derive(Clone, Debug, PartialEq)]
+pub enum NwcEventDetails {
+    Connected,
+    Disconnected,
+    PayInvoice {
+        success: bool,
+        preimage: Option<String>,
+        fees_sat: Option<u64>,
+        error: Option<String>,
+    },
+    ListTransactions,
+    GetBalance,
+}
+
+/// The event emitted when an NWC operation has been handled
+#[derive(Clone, Debug, PartialEq)]
+pub struct NwcEvent {
+    pub event_id: Option<String>,
+    pub details: NwcEventDetails,
+}
+
+#[sdk_macros::async_trait]
+pub trait NwcEventListener: Send + Sync {
+    async fn on_event(&self, event: NwcEvent);
+}
 
 pub(crate) struct EventManager {
-    listeners: RwLock<HashMap<String, Box<dyn EventListener>>>,
-    notifier: broadcast::Sender<SdkEvent>,
+    listeners: RwLock<HashMap<String, Box<dyn NwcEventListener>>>,
+    notifier: broadcast::Sender<NwcEvent>,
     is_paused: AtomicBool,
 }
 
 impl EventManager {
     pub fn new() -> Self {
-        let (notifier, _) = broadcast::channel::<SdkEvent>(100);
+        let (notifier, _) = broadcast::channel::<NwcEvent>(100);
 
         Self {
             listeners: Default::default(),
@@ -25,17 +48,17 @@ impl EventManager {
         }
     }
 
-    pub async fn add(&self, listener: Box<dyn EventListener>) -> Result<String> {
+    pub async fn add(&self, listener: Box<dyn NwcEventListener>) -> String {
         let id = Uuid::new_v4().to_string();
         (*self.listeners.write().await).insert(id.clone(), listener);
-        Ok(id)
+        id
     }
 
-    pub async fn remove(&self, id: String) {
-        (*self.listeners.write().await).remove(&id);
+    pub async fn remove(&self, id: &str) {
+        (*self.listeners.write().await).remove(id);
     }
 
-    pub async fn notify(&self, e: SdkEvent) {
+    pub async fn notify(&self, e: NwcEvent) {
         match self.is_paused.load(Ordering::SeqCst) {
             true => info!("Event notifications are paused, not emitting event {e:?}"),
             false => {
@@ -47,10 +70,6 @@ impl EventManager {
                 }
             }
         }
-    }
-
-    pub(crate) fn subscribe(&self) -> broadcast::Receiver<SdkEvent> {
-        self.notifier.subscribe()
     }
 
     pub(crate) fn pause_notifications(&self) {

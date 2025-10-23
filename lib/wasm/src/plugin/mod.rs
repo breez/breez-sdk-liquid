@@ -6,6 +6,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{plugin::storage::PluginStorage, BindingLiquidSdk};
 
+pub mod nwc;
 pub mod storage;
 
 pub struct WasmPlugin {
@@ -40,6 +41,7 @@ impl breez_sdk_liquid::prelude::Plugin for WasmPlugin {
             );
             return;
         };
+
         self.plugin
             .on_start(BindingLiquidSdk { sdk }, PluginStorage::new(storage));
     }

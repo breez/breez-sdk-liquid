@@ -529,6 +529,38 @@ impl LiquidSdk {
         Ok(())
     }
 
+    async fn init_plugins(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+        // Before setting the plugins, we ensure there are no naming conflicts
+        let mut ids = HashSet::new();
+        for plugin in &self.plugins {
+            let id = plugin.id();
+            if ids.contains(&id) {
+                return Err(SdkError::generic(format!(
+                    "Attempted to start SDK with two plugins with equal ID: `{id}`"
+                )));
+            }
+            ids.insert(id);
+        }
+
+        for plugin in &self.plugins {
+            // We create a seed-dependent passphrase using the plugin id as HMAC input
+            let plugin_id = plugin.id();
+            let plugin_passphrase = self
+                .signer
+                .hmac_sha256(plugin_id.as_bytes().to_vec(), "m/49'/1'/0'/0/0".to_string())
+                .map_err(|err| {
+                    SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
+                })?;
+            let storage = PluginStorage::new(
+                Arc::downgrade(&self.persister),
+                &plugin_passphrase,
+                plugin.id(),
+            )?;
+            plugin.on_start(Arc::downgrade(self), storage).await;
+        }
+        Ok(())
+    }
+
     /// Starts background tasks.
     ///
     /// Internal method. Should only be used as part of [LiquidSdk::start].
@@ -561,15 +593,7 @@ impl LiquidSdk {
                 handle,
             });
         }
-        for plugin in &self.plugins {
-            plugin
-                .on_start(
-                    Arc::downgrade(self),
-                    PluginStorage::new(std::sync::Arc::downgrade(&self.persister), plugin.id())?,
-                )
-                .await;
-        }
-
+        self.init_plugins().await?;
         Ok(())
     }
 
@@ -1322,6 +1346,15 @@ impl LiquidSdk {
     ) -> Result<PrepareSendResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let use_mrh = match req.disable_mrh {
+            Some(disable_mrh) => !disable_mrh,
+            None => self.config.use_magic_routing_hints,
+        };
+
+        let timeout_sec = req
+            .payment_timeout_sec
+            .unwrap_or(self.config.payment_timeout_sec);
+
         let get_info_res = self.get_info().await?;
         let fees_sat;
         let estimated_asset_fees;
@@ -1523,7 +1556,7 @@ impl LiquidSdk {
                 }
 
                 let lbtc_pair = self.validate_submarine_pairs(invoice_amount_sat).await?;
-                let mrh_address = if self.config.use_magic_routing_hints {
+                let mrh_address = if use_mrh {
                     self.swapper
                         .check_for_mrh(&invoice.bolt11)
                         .await?
@@ -1671,6 +1704,8 @@ impl LiquidSdk {
             estimated_asset_fees,
             amount: req.amount.clone(),
             exchange_amount_sat,
+            disable_mrh: req.disable_mrh,
+            payment_timeout_sec: Some(timeout_sec),
         })
     }
 
@@ -1704,13 +1739,21 @@ impl LiquidSdk {
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_is_started().await?;
 
+        let use_mrh = match req.prepare_response.disable_mrh {
+            Some(disable_mrh) => !disable_mrh,
+            None => self.config.use_magic_routing_hints,
+        };
+
         let PrepareSendResponse {
             fees_sat,
             destination: payment_destination,
             amount,
+            payment_timeout_sec,
             ..
         } = &req.prepare_response;
         let is_drain = matches!(amount, Some(PayAmount::Drain));
+
+        let timeout_sec = payment_timeout_sec.unwrap_or(self.config.payment_timeout_sec);
 
         match payment_destination {
             SendDestination::LiquidAddress {
@@ -1779,7 +1822,7 @@ impl LiquidSdk {
             } => {
                 let fees_sat = fees_sat.ok_or(PaymentError::InsufficientFunds)?;
                 let mut response = self
-                    .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain)
+                    .pay_bolt11_invoice(&invoice.bolt11, fees_sat, is_drain, use_mrh, timeout_sec)
                     .await?;
                 self.insert_payment_details(&req.payer_note, bip353_address, &mut response)?;
                 Ok(response)
@@ -1805,6 +1848,8 @@ impl LiquidSdk {
                         bolt12_info,
                         fees_sat,
                         is_drain,
+                        use_mrh,
+                        timeout_sec,
                     )
                     .await?;
                 self.insert_payment_details(&req.payer_note, bip353_address, &mut response)?;
@@ -1845,6 +1890,8 @@ impl LiquidSdk {
         invoice: &str,
         fees_sat: u64,
         is_drain: bool,
+        use_mrh: bool,
+        timeout_sec: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
         self.ensure_send_is_not_self_transfer(invoice)?;
         let bolt11_invoice = self.validate_bolt11_invoice(invoice)?;
@@ -1867,7 +1914,7 @@ impl LiquidSdk {
             Bolt11InvoiceDescription::Hash(_) => None,
         };
 
-        let mrh_address = if self.config.use_magic_routing_hints {
+        let mrh_address = if use_mrh {
             self.swapper
                 .check_for_mrh(invoice)
                 .await?
@@ -1909,19 +1956,23 @@ impl LiquidSdk {
 
             // If no MRH found (or MRH is disabled), perform usual swap
             None => {
-                self.send_payment_via_swap(SendPaymentViaSwapRequest {
-                    invoice: invoice.to_string(),
-                    bolt12_offer: None,
-                    payment_hash: bolt11_invoice.payment_hash().to_string(),
-                    description,
-                    receiver_amount_sat: amount_sat,
-                    fees_sat,
-                })
+                self.send_payment_via_swap(
+                    SendPaymentViaSwapRequest {
+                        invoice: invoice.to_string(),
+                        bolt12_offer: None,
+                        payment_hash: bolt11_invoice.payment_hash().to_string(),
+                        description,
+                        receiver_amount_sat: amount_sat,
+                        fees_sat,
+                    },
+                    timeout_sec,
+                )
                 .await
             }
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     async fn pay_bolt12_invoice(
         &self,
         offer: &LNOffer,
@@ -1929,6 +1980,8 @@ impl LiquidSdk {
         bolt12_info: GetBolt12FetchResponse,
         fees_sat: u64,
         is_drain: bool,
+        use_mrh: bool,
+        timeout_sec: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let invoice = self.validate_bolt12_invoice(
             offer,
@@ -1944,10 +1997,7 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        match (
-            bolt12_info.magic_routing_hint,
-            self.config.use_magic_routing_hints,
-        ) {
+        match (bolt12_info.magic_routing_hint, use_mrh) {
             // If we find a valid MRH, extract the BIP21 address and pay to it via onchain tx
             (Some(MagicRoutingHint { bip21, signature }), true) => {
                 info!(
@@ -1984,14 +2034,17 @@ impl LiquidSdk {
 
             // If no MRH found (or MRH is disabled), perform usual swap
             _ => {
-                self.send_payment_via_swap(SendPaymentViaSwapRequest {
-                    invoice: bolt12_info.invoice,
-                    bolt12_offer: Some(offer.offer.clone()),
-                    payment_hash: invoice.payment_hash().to_string(),
-                    description: invoice.description().map(|desc| desc.to_string()),
-                    receiver_amount_sat,
-                    fees_sat,
-                })
+                self.send_payment_via_swap(
+                    SendPaymentViaSwapRequest {
+                        invoice: bolt12_info.invoice,
+                        bolt12_offer: Some(offer.offer.clone()),
+                        payment_hash: invoice.payment_hash().to_string(),
+                        description: invoice.description().map(|desc| desc.to_string()),
+                        receiver_amount_sat,
+                        fees_sat,
+                    },
+                    timeout_sec,
+                )
                 .await
             }
         }
@@ -2292,6 +2345,7 @@ impl LiquidSdk {
     async fn send_payment_via_swap(
         &self,
         req: SendPaymentViaSwapRequest,
+        timeout_sec: u64,
     ) -> Result<SendPaymentResponse, PaymentError> {
         let SendPaymentViaSwapRequest {
             invoice,
@@ -2409,9 +2463,13 @@ impl LiquidSdk {
             .try_lockup(&swap, &create_response)
             .await?;
 
-        self.wait_for_payment_with_timeout(Swap::Send(swap), create_response.accept_zero_conf)
-            .await
-            .map(|payment| SendPaymentResponse { payment })
+        self.wait_for_payment_with_timeout(
+            Swap::Send(swap),
+            create_response.accept_zero_conf,
+            timeout_sec,
+        )
+        .await
+        .map(|payment| SendPaymentResponse { payment })
     }
 
     /// Fetch the current payment limits for [LiquidSdk::send_payment] and [LiquidSdk::receive_payment].
@@ -2590,6 +2648,8 @@ impl LiquidSdk {
         self.ensure_is_started().await?;
         info!("Paying onchain, request = {req:?}");
 
+        let timeout_sec = self.config.payment_timeout_sec;
+
         let claim_address = self.validate_bitcoin_address(&req.address).await?;
         let balance_sat = self.get_info().await?.wallet_info.balance_sat;
         let receiver_amount_sat = req.prepare_response.receiver_amount_sat;
@@ -2706,7 +2766,7 @@ impl LiquidSdk {
         self.persister.insert_or_update_chain_swap(&swap)?;
         self.status_stream.track_swap_id(&swap_id)?;
 
-        self.wait_for_payment_with_timeout(Swap::Chain(swap), accept_zero_conf)
+        self.wait_for_payment_with_timeout(Swap::Chain(swap), accept_zero_conf, timeout_sec)
             .await
             .map(|payment| SendPaymentResponse { payment })
     }
@@ -2715,8 +2775,9 @@ impl LiquidSdk {
         &self,
         swap: Swap,
         accept_zero_conf: bool,
+        timeout_sec: u64,
     ) -> Result<Payment, PaymentError> {
-        let timeout_fut = tokio::time::sleep(Duration::from_secs(self.config.payment_timeout_sec));
+        let timeout_fut = tokio::time::sleep(Duration::from_secs(timeout_sec));
         tokio::pin!(timeout_fut);
 
         let expected_swap_id = swap.id();
@@ -4639,6 +4700,8 @@ impl LiquidSdk {
                     .prepare_send_payment(&PrepareSendRequest {
                         destination: data.pr.clone(),
                         amount: Some(req.amount.clone()),
+                        disable_mrh: None,
+                        payment_timeout_sec: None,
                     })
                     .await
                     .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
@@ -4697,6 +4760,8 @@ impl LiquidSdk {
                     estimated_asset_fees: None,
                     exchange_amount_sat: None,
                     amount: Some(prepare_response.amount),
+                    disable_mrh: None,
+                    payment_timeout_sec: None,
                 },
                 use_asset_fees: None,
                 payer_note: prepare_response.comment.clone(),

@@ -17,6 +17,7 @@ workspace = true
 [dependencies]
 anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }
+breez-sdk-liquid-nwc = { path = "../plugins/nwc" }
 log = { workspace = true }
 uniffi = { package = "uniffi", version = "0.28.0", features = [ "bindgen-tests", "cli" ] }
 uniffi_bindgen = { package = "uniffi_bindgen", version = "0.28.0" }

@@ -61,6 +61,8 @@ esplora-client = { git = "https://github.com/breez/rust-esplora-client", branch 
     "async-https-rustls",
 ] }
 sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "2c3c4312d8fe" }
+aes = "0.8.4"
+aes-gcm = "0.10.3"
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
