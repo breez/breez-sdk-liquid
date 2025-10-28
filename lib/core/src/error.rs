@@ -108,7 +108,7 @@ pub enum PaymentError {
     #[error("Boltz did not return any pairs from the request")]
     PairsNotFound,
 
-    #[error("The payment timed out")]
+    #[error("Payment start could not be verified within the configured timeout")]
     PaymentTimeout,
 
     #[error("Could not store the swap details locally")]
