@@ -857,6 +857,26 @@ impl ChainSwapHandler {
         let swap = self.fetch_chain_swap_by_id(swap_id)?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
+        // Make sure the claim timeout block height has not been reached (with 10 blocks margin for incoming, 2 blocks margin for outgoing)
+        match swap.direction {
+            Direction::Incoming => {
+                let liquid_tip = self.liquid_chain_service.tip().await?;
+                if liquid_tip > swap.claim_timeout_block_height - 10 {
+                    return Err(PaymentError::Generic {
+                        err: format!("Preventing claim for incoming chain swap {swap_id} as timeout block height {} has been/will soon be reached (liquid tip: {liquid_tip})", swap.claim_timeout_block_height),
+                    });
+                }
+            }
+            Direction::Outgoing => {
+                let bitcoin_tip = self.bitcoin_chain_service.tip().await?;
+                if bitcoin_tip > swap.claim_timeout_block_height - 2 {
+                    return Err(PaymentError::Generic {
+                        err: format!("Preventing claim for outgoing chain swap {swap_id} as timeout block height {} has been/will soon be reached (bitcoin tip: {bitcoin_tip})", swap.claim_timeout_block_height),
+                    });
+                }
+            }
+        }
+
         debug!("Initiating claim for Chain Swap {swap_id}");
         // Derive a new Liquid address if one is not already set for an incoming swap,
         // or use the set Bitcoin address for an outgoing swap
