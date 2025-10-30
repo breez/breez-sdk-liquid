@@ -7,7 +7,7 @@ pub use breez_sdk_liquid_nwc::{
     NwcConfig, NwcService, SdkNwcService,
 };
 
-use crate::{rt, BindingLiquidSdk, Plugin, PluginStorage};
+use crate::{plugin::PluginSdk, rt, Plugin, PluginStorage};
 
 pub trait NwcEventListener: Send + Sync {
     fn on_event(&self, event: NwcEvent);
@@ -44,25 +44,25 @@ impl BindingNwcService {
 
 impl BindingNwcService {
     pub fn add_connection_string(&self, name: String) -> NwcResult<String> {
-        rt().block_on(async { self.inner.add_connection_string(name).await })
+        rt().block_on(self.inner.add_connection_string(name))
     }
 
     pub fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>> {
-        rt().block_on(async { self.inner.list_connection_strings().await })
+        rt().block_on(self.inner.list_connection_strings())
     }
 
     pub fn remove_connection_string(&self, name: String) -> NwcResult<()> {
-        rt().block_on(async { self.inner.remove_connection_string(name).await })
+        rt().block_on(self.inner.remove_connection_string(name))
     }
 
     pub fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {
         let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =
             Box::new(NwcEventListenerWrapper::new(listener));
-        rt().block_on(async { self.inner.add_event_listener(listener).await })
+        rt().block_on(self.inner.add_event_listener(listener))
     }
 
     pub fn remove_event_listener(&self, listener_id: String) {
-        rt().block_on(async { self.inner.remove_event_listener(&listener_id).await })
+        rt().block_on(self.inner.remove_event_listener(&listener_id))
     }
 }
 
@@ -72,11 +72,11 @@ impl Plugin for BindingNwcService {
         self.inner.id()
     }
 
-    fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>) {
+    fn on_start(&self, plugin_sdk: Arc<PluginSdk>, storage: Arc<PluginStorage>) {
         let cloned = self.inner.clone();
         rt().spawn(async move {
             cloned
-                .on_start(Arc::downgrade(&sdk.sdk), storage.storage.clone())
+                .on_start(plugin_sdk.plugin_sdk.clone(), storage.storage.clone())
                 .await;
         });
     }

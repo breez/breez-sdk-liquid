@@ -46,8 +46,9 @@ pub struct BreezEventListener {
     pub stream: StreamSink<SdkEvent>,
 }
 
+#[async_trait::async_trait]
 impl EventListener for BreezEventListener {
-    fn on_event(&self, e: SdkEvent) {
+    async fn on_event(&self, e: SdkEvent) {
         let _ = self.stream.add(e);
     }
 }

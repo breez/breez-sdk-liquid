@@ -1,4 +1,5 @@
 pub use breez_sdk_liquid::error::*;
+pub use breez_sdk_liquid::plugin::PluginStorageError;
 use flutter_rust_bridge::frb;
 
 #[frb(mirror(PaymentError))]
@@ -32,4 +33,10 @@ pub enum _SdkError {
     Generic { err: String },
     NotStarted,
     ServiceConnectivity { err: String },
+}
+
+#[frb(mirror(PluginStorageError))]
+pub enum _PluginStorageError {
+    Encryption { err: String },
+    Generic { err: String },
 }

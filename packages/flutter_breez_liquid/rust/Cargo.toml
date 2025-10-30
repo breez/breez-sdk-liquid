@@ -11,7 +11,8 @@ flutter_rust_bridge = "=2.9.0"
 
 # Replaced with release commit during publishing
 breez-sdk-liquid = { path = "../../../lib/core" }
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "5d96541a4cb03f30b8c4197a619ea52a98bc0bfe", features = ["liquid"] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "5e60ae519b23d618e1ffb3d9899205fb1638d02d", features = ["liquid"] }
+async-trait = "0.1.86"
 
 anyhow = { version = "1.0.79", features = ["backtrace"] }
 log = "0.4.20"

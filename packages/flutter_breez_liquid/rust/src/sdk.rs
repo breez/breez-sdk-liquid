@@ -6,9 +6,21 @@ use flutter_rust_bridge::frb;
 use crate::errors::*;
 use crate::events::BreezEventListener;
 use crate::models::*;
+pub use crate::plugin::*;
 
-pub async fn connect(req: ConnectRequest) -> Result<BreezSdkLiquid, SdkError> {
-    let ln_sdk = LiquidSdk::connect(req).await?;
+pub async fn connect(
+    req: ConnectRequest,
+    plugins: Option<Vec<Arc<dyn Plugin>>>,
+) -> Result<BreezSdkLiquid, SdkError> {
+    let plugins = plugins.map(|plugins| {
+        plugins
+            .into_iter()
+            .map(|plugin| {
+                Arc::new(PluginWrapper { plugin }) as Arc<dyn breez_sdk_liquid::plugin::Plugin>
+            })
+            .collect()
+    });
+    let ln_sdk = LiquidSdk::connect(req, plugins).await?;
     Ok(BreezSdkLiquid { sdk: ln_sdk })
 }
 

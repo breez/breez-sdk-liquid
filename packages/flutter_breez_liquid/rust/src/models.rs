@@ -541,6 +541,8 @@ pub struct _PrepareRefundResponse {
 pub struct _PrepareSendRequest {
     pub destination: String,
     pub amount: Option<PayAmount>,
+    pub disable_mrh: Option<bool>,
+    pub payment_timeout_sec: Option<u64>,
 }
 
 #[frb(mirror(PrepareSendResponse))]
@@ -550,6 +552,8 @@ pub struct _PrepareSendResponse {
     pub fees_sat: Option<u64>,
     pub estimated_asset_fees: Option<f64>,
     pub exchange_amount_sat: Option<u64>,
+    pub disable_mrh: Option<bool>,
+    pub payment_timeout_sec: Option<u64>,
 }
 
 #[frb(mirror(ReceivePaymentRequest))]
