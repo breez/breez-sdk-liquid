@@ -1,7 +1,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     str::FromStr as _,
-    sync::{Arc, Weak},
+    sync::Arc,
 };
 
 use crate::{
@@ -10,7 +10,7 @@ use crate::{
     persist::Persister,
 };
 use anyhow::Result;
-use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid::plugin::PluginSdk;
 use log::{info, warn};
 use nostr_sdk::{
     nips::nip47::NostrWalletConnectURI, Alphabet, Client as NostrClient, EventBuilder, Filter,
@@ -21,7 +21,7 @@ use tokio::task::JoinHandle;
 use tokio_with_wasm::alias as tokio;
 
 pub(crate) struct RuntimeContext {
-    pub sdk: Weak<LiquidSdk>,
+    pub sdk: PluginSdk,
     pub client: NostrClient,
     pub our_keys: Keys,
     pub persister: Persister,
@@ -42,9 +42,7 @@ impl RuntimeContext {
             handle.abort();
         }
         if let Some(ref listener_id) = *self.sdk_listener_id.lock().await {
-            if let Some(sdk) = self.sdk.upgrade() {
-                let _ = sdk.remove_event_listener(listener_id.clone()).await;
-            }
+            let _ = self.sdk.remove_event_listener(listener_id.clone()).await;
         }
         self.client.disconnect().await;
         self.event_manager
