@@ -4703,8 +4703,7 @@ impl LiquidSdk {
                         disable_mrh: None,
                         payment_timeout_sec: None,
                     })
-                    .await
-                    .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?;
+                    .await?;
 
                 let destination = match prepare_response.destination {
                     SendDestination::Bolt11 { invoice, .. } => SendDestination::Bolt11 {
@@ -4766,8 +4765,7 @@ impl LiquidSdk {
                 use_asset_fees: None,
                 payer_note: prepare_response.comment.clone(),
             })
-            .await
-            .map_err(|e| LnUrlPayError::Generic { err: e.to_string() })?
+            .await?
             .payment;
 
         let maybe_sa_processed: Option<SuccessActionProcessed> = match prepare_response
