@@ -283,8 +283,21 @@ impl From<PaymentError> for LnUrlAuthError {
 
 impl From<PaymentError> for LnUrlPayError {
     fn from(err: PaymentError) -> Self {
-        Self::Generic {
-            err: err.to_string(),
+        match err {
+            PaymentError::AlreadyPaid => Self::AlreadyPaid,
+            PaymentError::AmountOutOfRange { min, max } => Self::InvalidAmount {
+                err: format!("Amount must be between {min} and {max}"),
+            },
+            PaymentError::AmountMissing { err } => Self::InvalidAmount {
+                err: format!("Amount is missing: {err}"),
+            },
+            PaymentError::InvalidNetwork { err } => Self::InvalidNetwork { err },
+            PaymentError::InsufficientFunds => Self::InsufficientBalance { err: String::new() },
+            PaymentError::InvalidInvoice { err } => Self::InvalidInvoice { err },
+            PaymentError::PaymentTimeout => Self::PaymentTimeout { err: String::new() },
+            _ => Self::Generic {
+                err: err.to_string(),
+            },
         }
     }
 }
