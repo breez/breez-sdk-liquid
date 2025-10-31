@@ -4,7 +4,7 @@ name: CI
 on:
   # Triggers the workflow on push events but only for the "main" branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
@@ -15,7 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   fmt:
     name: Cargo Format
     runs-on: ubuntu-latest
@@ -47,15 +46,15 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clippy bindings
-        working-directory: lib/bindings 
+        working-directory: lib/bindings
         run: cargo clippy --all-targets -- -A deprecated -D warnings
 
       - name: Clippy core
-        working-directory: lib/core 
+        working-directory: lib/core
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Clippy cli
-        working-directory: cli 
+        working-directory: cli
         run: cargo clippy -- -D warnings
 
   clippy-wasm:
@@ -221,6 +220,11 @@ jobs:
         working-directory: regtest
         run: sh start.sh
 
+      - name: Fix file permissions for regtest files
+        run: |
+          sudo chmod -R a+rX regtest/boltz/data/lnd1
+          sudo chmod -R a+rX regtest/boltz/data/bitcoind
+
       - name: Run regtest tests
         working-directory: lib/core
         run: make cargo-regtest-test
@@ -247,31 +251,31 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: "7.0.x"
 
       - name: Setup go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.19.9'
+          go-version: "1.19.9"
 
       - name: Setup python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      
+          python-version: "3.11"
+
       - name: Build bindings
         working-directory: lib/bindings
         run: cargo build
 
       - name: Build C# bindings
-        working-directory: lib/bindings       
+        working-directory: lib/bindings
         run: |
           cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.9.1+v0.28.3
           uniffi-bindgen-cs src/breez_sdk_liquid.udl -o ffi/csharp -c ./uniffi.toml
           cp ../target/debug/libbreez_sdk_liquid_bindings.so ffi/csharp
 
       - name: Build golang bindings
-        working-directory: lib/bindings       
+        working-directory: lib/bindings
         run: |
           cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.3.0+v0.28.3
           uniffi-bindgen-go src/breez_sdk_liquid.udl -o ffi/golang -c ./uniffi.toml
@@ -314,14 +318,14 @@ jobs:
 
       - name: Test Wasm
         run: make wasm-test
-  
+
   regtest-tests-wasm:
     name: Regtest sdk-core Wasm tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-            submodules: true
+          submodules: true
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
@@ -334,7 +338,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install Wasm target
         run: rustup target add wasm32-unknown-unknown
@@ -356,10 +360,15 @@ jobs:
 
       - name: Setup emsdk
         uses: mymindstorm/setup-emsdk@v14
-      
+
       - name: Start regtest environment
         working-directory: regtest
         run: sh start.sh
+
+      - name: Fix file permissions for regtest files
+        run: |
+          sudo chmod -R a+rX regtest/boltz/data/lnd1
+          sudo chmod -R a+rX regtest/boltz/data/bitcoind
 
       - name: Run Wasm regtest tests
         working-directory: lib/core
@@ -395,18 +404,18 @@ jobs:
         run: cargo build
 
       - name: Build Android bindings
-        working-directory: lib/bindings       
+        working-directory: lib/bindings
         run: |
           cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
           gobley-uniffi-bindgen -c ./uniffi.toml -o langs/android/lib/src src/breez_sdk_liquid.udl
 
       - name: Run Android build
-        working-directory: lib/bindings/langs/android  
+        working-directory: lib/bindings/langs/android
         run: |
           ./gradlew build
 
       - name: Build Swift bindings
-        working-directory: lib/bindings       
+        working-directory: lib/bindings
         run: |
           cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
           mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
@@ -419,7 +428,7 @@ jobs:
           rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
 
       - name: Run Swift build
-        working-directory: lib/bindings/langs/swift  
+        working-directory: lib/bindings/langs/swift
         run: |
           swift build
 
@@ -547,18 +556,18 @@ jobs:
           mkdir new-project
           cd new-project
           cargo init --name test_project --vcs none
-          
+
           # A project might reference our SDK as a git repository
           # cargo add --git https://github.com/breez/breez-sdk-liquid breez-sdk-liquid
-          
+
           # In this test, we reference the checked out repo (e.g. this PR branch)
           cargo add --path ../lib/core breez-sdk-liquid
-          
+
           # Add the secp256k1-zkp patch: https://github.com/BlockstreamResearch/rust-secp256k1-zkp/pull/48/commits and rebased on secp256k1-zkp 0.11.0
           echo "[patch.crates-io]" >> Cargo.toml
           echo "secp256k1-zkp = { git = 'https://github.com/breez/rust-secp256k1-zkp.git', rev = 'eac2e479255a6e32b5588bc25ee53c642fdd8395' }" >> Cargo.toml
           # Propagate the patch in Cargo.lock
           rm Cargo.lock
           cargo update --package secp256k1-zkp
-          
+
           cargo clippy -- -D warnings
