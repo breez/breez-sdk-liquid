@@ -753,29 +753,6 @@ dictionary AssetMetadata {
     string? fiat_id = null;
 };
 
-[Error]
-interface PluginStorageError {
-    Encryption(string err);
-    Generic(string err);
-};
-
-interface PluginStorage {
-    [Throws=PluginStorageError]
-    void set_item(string key, string value);
-
-    [Throws=PluginStorageError]
-    string? get_item(string key);
-
-    [Throws=PluginStorageError]
-    void remove_item(string key);
-};
-
-callback interface Plugin {
-    string id();
-    void on_start(BindingLiquidSdk sdk, PluginStorage storage);
-    void on_stop();
-};
-
 namespace breez_sdk_liquid {
     [Throws=SdkError]
     BindingLiquidSdk connect(ConnectRequest req, sequence<Plugin>? plugins);
@@ -942,6 +919,56 @@ interface BindingLiquidSdk {
 
 /// PLUGINS
 
+// Interface
+interface PluginSdk {
+    [Throws=SdkError]
+    GetInfoResponse get_info();
+
+    [Throws=PaymentError]
+    PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
+
+    [Throws=PaymentError]
+    SendPaymentResponse send_payment(SendPaymentRequest req);
+
+    [Throws=PaymentError]
+    PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
+
+    [Throws=PaymentError]
+    ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
+
+    [Throws=PaymentError]
+    sequence<Payment> list_payments(ListPaymentsRequest req);
+
+    [Throws=SdkError]
+    string add_event_listener(EventListener listener);
+
+    [Throws=SdkError]
+    void remove_event_listener(string id);
+};
+
+[Error]
+interface PluginStorageError {
+    Encryption(string err);
+    Generic(string err);
+};
+
+interface PluginStorage {
+    [Throws=PluginStorageError]
+    void set_item(string key, string value);
+
+    [Throws=PluginStorageError]
+    string? get_item(string key);
+
+    [Throws=PluginStorageError]
+    void remove_item(string key);
+};
+
+callback interface Plugin {
+    string id();
+    void on_start(PluginSdk plugin_sdk, PluginStorage storage);
+    void on_stop();
+};
+
 // NWC
 [Error]
 enum NwcError {
@@ -990,7 +1017,7 @@ interface BindingNwcService {
 
   string id();
 
-  void on_start(BindingLiquidSdk sdk, PluginStorage storage);
+  void on_start(PluginSdk plugin_sdk, PluginStorage storage);
 
   void on_stop();
 };

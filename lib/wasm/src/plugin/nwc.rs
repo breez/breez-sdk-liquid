@@ -1,10 +1,12 @@
 use breez_sdk_liquid::plugin::Plugin as _;
 use breez_sdk_liquid_nwc::{NwcService as _, SdkNwcService};
-use std::{rc::Rc, sync::Arc};
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 use crate::{
-    error::WasmError, model::WasmResult, plugin::storage::PluginStorage, BindingLiquidSdk,
+    error::WasmError,
+    model::WasmResult,
+    plugin::{storage::PluginStorage, PluginSdk},
 };
 
 mod model {
@@ -130,9 +132,9 @@ impl BindingNwcService {
     }
 
     #[wasm_bindgen(js_name = "onStart")]
-    pub async fn on_start(&self, sdk: &BindingLiquidSdk, storage: PluginStorage) {
+    pub async fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
         self.inner
-            .on_start(Arc::downgrade(&sdk.sdk), storage.storage())
+            .on_start(plugin_sdk.sdk(), storage.storage())
             .await;
     }
 

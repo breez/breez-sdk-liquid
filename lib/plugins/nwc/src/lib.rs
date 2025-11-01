@@ -1,9 +1,4 @@
-use std::{
-    collections::HashMap,
-    str::FromStr as _,
-    sync::{Arc, Weak},
-    time::Duration,
-};
+use std::{collections::HashMap, str::FromStr as _, sync::Arc, time::Duration};
 
 use crate::{
     context::RuntimeContext,
@@ -14,7 +9,10 @@ use crate::{
     sdk_event::SdkEventListener,
 };
 use anyhow::{bail, Result};
-use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid::{
+    plugin::{Plugin, PluginSdk, PluginStorage},
+    prelude::*,
+};
 use log::{debug, error, info, warn};
 use nostr_sdk::{
     nips::nip44::{decrypt, encrypt, Version},
@@ -119,7 +117,7 @@ impl SdkNwcService {
 
     async fn new_ctx(
         &self,
-        sdk: Weak<LiquidSdk>,
+        sdk: PluginSdk,
         storage: PluginStorage,
         resub_tx: mpsc::Sender<()>,
     ) -> Result<RuntimeContext> {
@@ -379,7 +377,7 @@ impl Plugin for SdkNwcService {
         "breez-nwc-plugin".to_string()
     }
 
-    async fn on_start(&self, sdk: Weak<LiquidSdk>, storage: PluginStorage) {
+    async fn on_start(&self, sdk: PluginSdk, storage: PluginStorage) {
         let mut ctx_lock = self.runtime_ctx.lock().await;
         if ctx_lock.is_some() {
             warn!("Called on_start when service was already running.");
@@ -423,26 +421,20 @@ impl Plugin for SdkNwcService {
                     return;
                 };
 
-                let sdk_listener_id = match sdk.upgrade() {
-                    Some(sdk) => match sdk
-                        .add_event_listener(Box::new(SdkEventListener::new(
-                            thread_ctx.clone(),
-                            clients,
-                        )))
-                        .await
-                    {
-                        Ok(listener_id) => {
-                            *thread_ctx.sdk_listener_id.lock().await = Some(listener_id.clone());
-                            Some(listener_id)
-                        }
-                        Err(err) => {
-                            warn!("Could not set payment event listener: {err:?}");
-                            None
-                        }
-                    },
-                    None => {
-                        warn!("SDK is not running. Exiting NWC service loop.");
-                        return;
+                let sdk_listener_id = match sdk
+                    .add_event_listener(Box::new(SdkEventListener::new(
+                        thread_ctx.clone(),
+                        clients,
+                    )))
+                    .await
+                {
+                    Ok(listener_id) => {
+                        *thread_ctx.sdk_listener_id.lock().await = Some(listener_id.clone());
+                        Some(listener_id)
+                    }
+                    Err(err) => {
+                        warn!("Could not set payment event listener: {err:?}");
+                        None
                     }
                 };
 
@@ -453,10 +445,8 @@ impl Plugin for SdkNwcService {
                         Some(_) = resub_rx.recv() => {
                             info!("Resubscribing to notifications.");
                             if let Some(listener_id) = sdk_listener_id {
-                                if let Some(sdk) = sdk.upgrade() {
-                                    if let Err(err) = sdk.remove_event_listener(listener_id).await {
-                                        warn!("Could not remove payment event listener: {err:?}");
-                                    }
+                                if let Err(err) = sdk.remove_event_listener(listener_id).await {
+                                    warn!("Could not remove payment event listener: {err:?}");
                                 }
                             }
                             break;

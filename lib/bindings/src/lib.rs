@@ -1,15 +1,15 @@
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
-mod nwc;
+mod plugin;
 
 use anyhow::Result;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
-use log::{warn, Metadata, Record, SetLoggerError};
+use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 use uniffi::deps::log::{Level, LevelFilter};
 
-pub use nwc::*;
+pub use plugin::*;
 
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
@@ -44,24 +44,6 @@ impl log::Log for UniffiBindingLogger {
     fn flush(&self) {}
 }
 
-pub struct PluginStorage {
-    pub(crate) storage: breez_sdk_liquid::prelude::PluginStorage,
-}
-
-impl PluginStorage {
-    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
-        self.storage.set_item(&key, value)
-    }
-
-    pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
-        self.storage.get_item(&key)
-    }
-
-    pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
-        self.storage.remove_item(&key)
-    }
-}
-
 pub trait EventListener: Send + Sync {
     fn on_event(&self, e: SdkEvent);
 }
@@ -80,45 +62,6 @@ impl EventListenerWrapper {
 impl breez_sdk_liquid::prelude::EventListener for EventListenerWrapper {
     async fn on_event(&self, e: SdkEvent) {
         self.inner.on_event(e);
-    }
-}
-
-pub trait Plugin: Send + Sync {
-    fn id(&self) -> String;
-    fn on_start(&self, sdk: Arc<BindingLiquidSdk>, storage: Arc<PluginStorage>);
-    fn on_stop(&self);
-}
-
-struct PluginWrapper {
-    inner: Box<dyn Plugin>,
-}
-
-#[sdk_macros::async_trait]
-impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
-    fn id(&self) -> String {
-        self.inner.id()
-    }
-
-    async fn on_start(
-        &self,
-        sdk: Weak<LiquidSdk>,
-        storage: breez_sdk_liquid::prelude::PluginStorage,
-    ) {
-        let Some(sdk) = sdk.upgrade() else {
-            warn!(
-                "Tried to start plugin {} while SDK was unavailable",
-                self.id()
-            );
-            return;
-        };
-        self.inner.on_start(
-            BindingLiquidSdk { sdk }.into(),
-            PluginStorage { storage }.into(),
-        );
-    }
-
-    async fn on_stop(&self) {
-        self.inner.on_stop();
     }
 }
 
