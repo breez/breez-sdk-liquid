@@ -1,11 +1,16 @@
 use std::sync::Arc;
 
-use crate::{errors::*, events::BreezEventListener, frb_generated::StreamSink, BreezSdkLiquid};
+use crate::{errors::*, events::BreezEventListener, frb_generated::StreamSink};
 use breez_sdk_liquid::prelude::*;
+use flutter_rust_bridge::frb;
+
+pub use breez_sdk_liquid::plugin::{
+    Plugin as _Plugin, PluginSdk as _PluginSdk, PluginStorage as _PluginStorage,
+};
 
 #[derive(Clone)]
 pub struct PluginSdk {
-    plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
+    pub(crate) plugin_sdk: _PluginSdk,
 }
 
 impl PluginSdk {
@@ -48,7 +53,10 @@ impl PluginSdk {
         self.plugin_sdk.list_payments(&req).await
     }
 
-    pub async fn add_event_listener(&self, listener: StreamSink<SdkEvent>) -> SdkResult<String> {
+    pub async fn add_event_listener(
+        &self,
+        listener: StreamSink<SdkEvent>,
+    ) -> Result<String, SdkError> {
         self.plugin_sdk
             .add_event_listener(Box::new(BreezEventListener { stream: listener }))
             .await
@@ -56,18 +64,21 @@ impl PluginSdk {
 }
 
 pub struct PluginStorage {
-    storage: breez_sdk_liquid::plugin::PluginStorage,
+    pub(crate) storage: _PluginStorage,
 }
 
 impl PluginStorage {
+    #[frb(sync)]
     pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
         self.storage.set_item(&key, value)
     }
 
+    #[frb(sync)]
     pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
         self.storage.get_item(&key)
     }
 
+    #[frb(sync)]
     pub fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
         self.storage.remove_item(&key)
     }
@@ -84,21 +95,17 @@ pub(crate) struct PluginWrapper {
 }
 
 #[async_trait::async_trait]
-impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
+impl _Plugin for PluginWrapper {
     fn id(&self) -> String {
         self.plugin.id()
     }
 
-    async fn on_start(
-        &self,
-        plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
-        storage: breez_sdk_liquid::plugin::PluginStorage,
-    ) {
+    async fn on_start(&self, plugin_sdk: _PluginSdk, storage: _PluginStorage) {
         self.plugin
-            .on_start(PluginSdk { plugin_sdk }, PluginStorage { storage })
+            .on_start(PluginSdk { plugin_sdk }, PluginStorage { storage });
     }
 
     async fn on_stop(&self) {
-        self.plugin.on_stop()
+        self.plugin.on_stop();
     }
 }
