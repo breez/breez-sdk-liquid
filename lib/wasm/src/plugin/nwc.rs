@@ -12,6 +12,52 @@ use crate::{
 mod model {
     use wasm_bindgen::prelude::*;
 
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::PeriodicBudget)]
+    pub struct PeriodicBudget {
+        pub used_budget_sat: u64,
+        pub max_budget_sat: u64,
+        pub reset_time_sec: u32,
+        pub updated_at: u32,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::PeriodicBudgetRequest)]
+    pub struct PeriodicBudgetRequest {
+        pub max_budget_sat: u64,
+        pub reset_time_sec: u32,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NwcConnection)]
+    pub struct NwcConnection {
+        pub connection_string: String,
+        pub created_at: u32,
+        pub expiry_time_sec: Option<u32>,
+        pub periodic_budget: Option<PeriodicBudget>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::AddConnectionRequest)]
+    pub struct AddConnectionRequest {
+        pub name: String,
+        pub expiry_time_sec: Option<u32>,
+        pub periodic_budget_req: Option<PeriodicBudgetRequest>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::AddConnectionResponse)]
+    pub struct AddConnectionResponse {
+        pub connection: NwcConnection,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::EditConnectionRequest)]
+    pub struct EditConnectionRequest {
+        pub name: String,
+        pub expiry_time_sec: Option<u32>,
+        pub periodic_budget_req: Option<PeriodicBudgetRequest>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::EditConnectionResponse)]
+    pub struct EditConnectionResponse {
+        pub connection: NwcConnection,
+    }
+
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEventDetails)]
     pub enum NwcEventDetails {
         Connected,
@@ -63,7 +109,7 @@ mod model {
 pub use model::*;
 
 #[derive(Clone)]
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::NwcConfig)]
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NwcConfig)]
 pub struct NwcConfig {
     pub relay_urls: Option<Vec<String>>,
     pub secret_key_hex: Option<String>,
@@ -83,34 +129,48 @@ impl BindingNwcService {
     }
 
     // NWC
-    #[wasm_bindgen(js_name = "addConnectionString")]
-    pub async fn add_connection_string(&self, name: String) -> WasmResult<String> {
+    #[wasm_bindgen(js_name = "addConnection")]
+    pub async fn add_connection(
+        &self,
+        req: AddConnectionRequest,
+    ) -> WasmResult<AddConnectionResponse> {
         self.inner
-            .add_connection_string(name)
+            .add_connection(req.into())
             .await
+            .map(Into::into)
             .map_err(Into::into)
     }
 
-    #[wasm_bindgen(js_name = "listConnectionStrings")]
-    pub async fn list_connection_strings(&self) -> WasmResult<js_sys::Map> {
-        let uris = self
+    #[wasm_bindgen(js_name = "editConnection")]
+    pub async fn edit_connection(
+        &self,
+        req: EditConnectionRequest,
+    ) -> WasmResult<EditConnectionResponse> {
+        self.inner
+            .edit_connection(req.into())
+            .await
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
+    #[wasm_bindgen(js_name = "listConnections")]
+    pub async fn list_connections(&self) -> WasmResult<js_sys::Map> {
+        let connections = self
             .inner
-            .list_connection_strings()
+            .list_connections()
             .await
             .map_err(Into::<WasmError>::into)?;
         let mut result = js_sys::Map::new();
-        for (key, value) in uris.into_iter() {
-            result = result.set(&JsValue::from_str(&key), &JsValue::from_str(&value));
+        for (name, con) in connections.into_iter() {
+            let con: NwcConnection = con.into();
+            result = result.set(&JsValue::from_str(&name), &JsValue::from(con));
         }
         Ok(result)
     }
 
-    #[wasm_bindgen(js_name = "removeConnectionString")]
-    pub async fn remove_connection_string(&self, name: String) -> WasmResult<()> {
-        self.inner
-            .remove_connection_string(name)
-            .await
-            .map_err(Into::into)
+    #[wasm_bindgen(js_name = "removeConnection")]
+    pub async fn remove_connection(&self, name: String) -> WasmResult<()> {
+        self.inner.remove_connection(name).await.map_err(Into::into)
     }
 
     #[wasm_bindgen(js_name = "addEventListener")]

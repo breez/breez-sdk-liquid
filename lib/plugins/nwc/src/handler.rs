@@ -1,19 +1,23 @@
-use crate::model::{
-    ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
-    PrepareSendRequest, SendPaymentRequest,
+use breez_sdk_liquid::model::{
+    ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentMethod, PaymentState,
+    PaymentType, PrepareReceiveRequest, PrepareSendRequest, ReceiveAmount, ReceivePaymentRequest,
+    SendPaymentRequest,
 };
 use breez_sdk_liquid::plugin::PluginSdk;
 use log::info;
 use nostr_sdk::nips::nip47::{
-    ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse, NIP47Error,
-    PayInvoiceRequest, PayInvoiceResponse, TransactionType,
+    ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse,
+    MakeInvoiceRequest, MakeInvoiceResponse, NIP47Error, PayInvoiceRequest, PayInvoiceResponse,
+    TransactionType,
 };
 use nostr_sdk::Timestamp;
+use sdk_common::prelude::InputType;
 
 type Result<T> = std::result::Result<T, NIP47Error>;
 
 #[sdk_macros::async_trait]
 pub trait RelayMessageHandler: Send + Sync {
+    async fn make_invoice(&self, req: MakeInvoiceRequest) -> Result<MakeInvoiceResponse>;
     async fn pay_invoice(&self, req: PayInvoiceRequest) -> Result<PayInvoiceResponse>;
     async fn list_transactions(
         &self,
@@ -34,6 +38,52 @@ impl SdkRelayMessageHandler {
 
 #[sdk_macros::async_trait]
 impl RelayMessageHandler for SdkRelayMessageHandler {
+    async fn make_invoice(&self, req: MakeInvoiceRequest) -> Result<MakeInvoiceResponse> {
+        info!("NWC Make invoice is called");
+
+        let prepare_req = PrepareReceiveRequest {
+            payment_method: PaymentMethod::Bolt11Invoice,
+            amount: Some(ReceiveAmount::Bitcoin {
+                payer_amount_sat: req.amount.div_ceil(1000),
+            }),
+        };
+
+        let prepare_response = self
+            .sdk
+            .prepare_receive_payment(&prepare_req)
+            .await
+            .map_err(|e| NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: format!("Failed to prepare receive: {e}"),
+            })?;
+        let receive_response = self
+            .sdk
+            .receive_payment(&ReceivePaymentRequest {
+                prepare_response,
+                description: req.description,
+                use_description_hash: Some(req.description_hash.is_some()),
+                payer_note: None,
+            })
+            .await
+            .map_err(|e| NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: format!("Failed to create invoice: {e}"),
+            })?;
+
+        let Ok(InputType::Bolt11 { invoice }) = self.sdk.parse(&receive_response.destination).await
+        else {
+            return Err(NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: "Could not parse SDK invoice".to_string(),
+            });
+        };
+
+        Ok(MakeInvoiceResponse {
+            invoice: invoice.bolt11,
+            payment_hash: invoice.payment_hash,
+        })
+    }
+
     /// Processes a Lightning invoice payment request.
     ///
     /// This method handles the complete payment flow:
