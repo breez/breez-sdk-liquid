@@ -6,7 +6,7 @@ mod bolt12;
 mod liquid;
 mod utils;
 
-use std::{fs, path::PathBuf, time::Duration};
+use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::Result;
 use breez_sdk_liquid::model::Config;
@@ -17,7 +17,6 @@ use breez_sdk_liquid::{
         PrepareReceiveResponse, PrepareSendRequest, PrepareSendResponse, ReceivePaymentRequest,
         ReceivePaymentResponse, SdkEvent, SendPaymentRequest, SendPaymentResponse,
     },
-    prelude::Arc,
     sdk::LiquidSdk,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -29,8 +28,9 @@ struct ForwardingEventListener {
     sender: Sender<SdkEvent>,
 }
 
+#[async_trait::async_trait]
 impl EventListener for ForwardingEventListener {
-    fn on_event(&self, e: SdkEvent) {
+    async fn on_event(&self, e: SdkEvent) {
         self.sender.try_send(e).unwrap();
     }
 }

@@ -1,10 +1,12 @@
-use std::sync::{Arc, Weak};
+use std::sync::Arc;
 
-use breez_sdk_liquid::sdk::LiquidSdk;
-use log::warn;
+use crate::{
+    event::{EventListener, WasmEventListener},
+    model::*,
+};
 use wasm_bindgen::prelude::*;
 
-use crate::{plugin::storage::PluginStorage, BindingLiquidSdk};
+use crate::plugin::storage::PluginStorage;
 
 pub mod nwc;
 pub mod storage;
@@ -24,26 +26,18 @@ impl From<Plugin> for Arc<dyn breez_sdk_liquid::plugin::Plugin> {
 }
 
 #[sdk_macros::async_trait]
-impl breez_sdk_liquid::prelude::Plugin for WasmPlugin {
+impl breez_sdk_liquid::plugin::Plugin for WasmPlugin {
     fn id(&self) -> String {
         self.plugin.id()
     }
 
     async fn on_start(
         &self,
-        sdk: Weak<LiquidSdk>,
+        plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
         storage: breez_sdk_liquid::plugin::PluginStorage,
     ) {
-        let Some(sdk) = sdk.upgrade() else {
-            warn!(
-                "Tried to start plugin {} while SDK was unavailable",
-                self.id()
-            );
-            return;
-        };
-
         self.plugin
-            .on_start(BindingLiquidSdk { sdk }, PluginStorage::new(storage));
+            .on_start(PluginSdk { plugin_sdk }, PluginStorage::new(storage));
     }
 
     async fn on_stop(&self) {
@@ -54,7 +48,7 @@ impl breez_sdk_liquid::prelude::Plugin for WasmPlugin {
 #[wasm_bindgen(typescript_custom_section)]
 const PLUGIN_INTERFACE: &'static str = r#"export interface Plugin {
     id: () => string;
-    onStart: (sdk: BindingLiquidSdk, storage: PluginStorage) => void;
+    onStart: (plugin_sdk: PluginSdk, storage: PluginStorage) => void;
     onStop: () => void;
 }"#;
 
@@ -67,8 +61,78 @@ extern "C" {
     fn id(this: &Plugin) -> String;
 
     #[wasm_bindgen(structural, method, js_name = onStart)]
-    fn on_start(this: &Plugin, sdk: BindingLiquidSdk, storage: PluginStorage);
+    fn on_start(this: &Plugin, plugin_sdk: PluginSdk, storage: PluginStorage);
 
     #[wasm_bindgen(structural, method, js_name = onStop)]
     fn on_stop(this: &Plugin);
+}
+
+#[wasm_bindgen]
+pub struct PluginSdk {
+    plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
+}
+
+impl PluginSdk {
+    pub(crate) fn sdk(&self) -> breez_sdk_liquid::plugin::PluginSdk {
+        self.plugin_sdk.clone()
+    }
+}
+
+#[wasm_bindgen]
+impl PluginSdk {
+    #[wasm_bindgen(js_name = "getInfo")]
+    pub async fn get_info(&self) -> WasmResult<GetInfoResponse> {
+        Ok(self.plugin_sdk.get_info().await?.into())
+    }
+
+    #[wasm_bindgen(js_name = "prepareSendPayment")]
+    pub async fn prepare_send_payment(
+        &self,
+        req: PrepareSendRequest,
+    ) -> WasmResult<PrepareSendResponse> {
+        Ok(self
+            .plugin_sdk
+            .prepare_send_payment(&req.into())
+            .await?
+            .into())
+    }
+
+    #[wasm_bindgen(js_name = "sendPayment")]
+    pub async fn send_payment(&self, req: SendPaymentRequest) -> WasmResult<SendPaymentResponse> {
+        Ok(self.plugin_sdk.send_payment(&req.into()).await?.into())
+    }
+
+    #[wasm_bindgen(js_name = "prepareReceivePayment")]
+    pub async fn prepare_receive_payment(
+        &self,
+        req: PrepareReceiveRequest,
+    ) -> WasmResult<PrepareReceiveResponse> {
+        Ok(self
+            .plugin_sdk
+            .prepare_receive_payment(&req.into())
+            .await?
+            .into())
+    }
+
+    #[wasm_bindgen(js_name = "receivePayment")]
+    pub async fn receive_payment(
+        &self,
+        req: ReceivePaymentRequest,
+    ) -> WasmResult<ReceivePaymentResponse> {
+        Ok(self.plugin_sdk.receive_payment(&req.into()).await?.into())
+    }
+
+    #[wasm_bindgen(js_name = "addEventListener")]
+    pub async fn add_event_listener(&self, listener: EventListener) -> WasmResult<String> {
+        Ok(self
+            .plugin_sdk
+            .add_event_listener(Box::new(WasmEventListener { listener }))
+            .await?)
+    }
+
+    #[wasm_bindgen(js_name = "removeEventListener")]
+    pub async fn remove_event_listener(&self, id: String) -> WasmResult<()> {
+        self.plugin_sdk.remove_event_listener(id).await?;
+        Ok(())
+    }
 }

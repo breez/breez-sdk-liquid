@@ -96,7 +96,7 @@ async fn liquid(mut handle: SdkNodeHandle) {
                 receiver_amount_sat,
             }),
             disable_mrh: None,
-            custom_timeout_sec: None,
+            payment_timeout_sec: None,
         })
         .await
         .unwrap();
