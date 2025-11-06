@@ -118,7 +118,7 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
             destination: invoice,
             amount: None,
             disable_mrh: None,
-            custom_timeout_sec: None,
+            payment_timeout_sec: None,
         })
         .await
         .unwrap();
@@ -185,7 +185,7 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
             destination: invoice,
             amount: None,
             disable_mrh: None,
-            custom_timeout_sec: None,
+            payment_timeout_sec: None,
         })
         .await
         .unwrap();
