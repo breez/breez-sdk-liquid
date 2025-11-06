@@ -4,7 +4,8 @@ pub mod events;
 mod frb_generated;
 pub mod logger;
 pub mod models;
-pub mod sdk;
+pub mod nwc;
 pub mod plugin;
+pub mod sdk;
 
 pub use sdk::BreezSdkLiquid;

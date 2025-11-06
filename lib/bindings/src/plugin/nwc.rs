@@ -4,7 +4,8 @@ use breez_sdk_liquid::plugin::Plugin as _;
 pub use breez_sdk_liquid_nwc::{
     error::{NwcError, NwcResult},
     event::{NwcEvent, NwcEventDetails},
-    NwcConfig, NwcService, SdkNwcService,
+    model::*,
+    NwcService, SdkNwcService,
 };
 
 use crate::{plugin::PluginSdk, rt, Plugin, PluginStorage};
@@ -43,16 +44,20 @@ impl BindingNwcService {
 }
 
 impl BindingNwcService {
-    pub fn add_connection_string(&self, name: String) -> NwcResult<String> {
-        rt().block_on(self.inner.add_connection_string(name))
+    pub fn add_connection(&self, req: AddConnectionRequest) -> NwcResult<AddConnectionResponse> {
+        rt().block_on(self.inner.add_connection(req))
     }
 
-    pub fn list_connection_strings(&self) -> NwcResult<HashMap<String, String>> {
-        rt().block_on(self.inner.list_connection_strings())
+    pub fn edit_connection(&self, req: EditConnectionRequest) -> NwcResult<EditConnectionResponse> {
+        rt().block_on(self.inner.edit_connection(req))
     }
 
-    pub fn remove_connection_string(&self, name: String) -> NwcResult<()> {
-        rt().block_on(self.inner.remove_connection_string(name))
+    pub fn list_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
+        rt().block_on(self.inner.list_connections())
+    }
+
+    pub fn remove_connection(&self, name: String) -> NwcResult<()> {
+        rt().block_on(self.inner.remove_connection(name))
     }
 
     pub fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {
