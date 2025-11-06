@@ -47,6 +47,10 @@ impl PluginSdk {
         rt().block_on(self.plugin_sdk.receive_payment(&req))
     }
 
+    pub fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        rt().block_on(self.plugin_sdk.parse(&input))
+    }
+
     pub fn list_payments(&self, req: ListPaymentsRequest) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.plugin_sdk.list_payments(&req))
     }

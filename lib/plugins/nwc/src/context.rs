@@ -7,6 +7,7 @@ use std::{
 use crate::{
     event::{EventManager, NwcEvent, NwcEventDetails},
     handler::RelayMessageHandler,
+    model::ActiveConnection,
     persist::Persister,
 };
 use anyhow::Result;
@@ -54,14 +55,14 @@ impl RuntimeContext {
         self.event_manager.pause_notifications();
     }
 
-    pub async fn list_clients(&self) -> Result<HashMap<String, NostrWalletConnectURI>> {
+    pub fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
         Ok(self
             .persister
-            .list_nwc_uris()?
+            .list_nwc_connections()?
             .into_iter()
-            .filter_map(|(name, uri)| {
-                NostrWalletConnectURI::from_str(&uri)
-                    .map(|uri| (name, uri))
+            .filter_map(|(name, connection)| {
+                NostrWalletConnectURI::from_str(&connection.connection_string)
+                    .map(|uri| (name, ActiveConnection { uri, connection }))
                     .ok()
             })
             .collect())
@@ -69,11 +70,11 @@ impl RuntimeContext {
 
     pub async fn resubscribe(
         &self,
-        clients: &HashMap<String, NostrWalletConnectURI>,
+        active_connections: &HashMap<String, ActiveConnection>,
     ) -> Result<()> {
-        let pubkeys = clients
+        let pubkeys = active_connections
             .values()
-            .map(|uri| uri.public_key.to_string())
+            .map(|con| con.uri.public_key.to_string())
             .collect();
         self.client
             .subscribe(

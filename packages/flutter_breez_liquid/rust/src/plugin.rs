@@ -46,6 +46,10 @@ impl PluginSdk {
         self.plugin_sdk.receive_payment(&req).await
     }
 
+    pub async fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        self.plugin_sdk.parse(&input).await
+    }
+
     pub async fn list_payments(
         &self,
         req: ListPaymentsRequest,

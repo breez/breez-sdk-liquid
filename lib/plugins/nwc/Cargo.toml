@@ -10,6 +10,7 @@ workspace = true
 log = { workspace = true }
 anyhow = { workspace = true }
 sdk-macros = { workspace = true }
+sdk-common = { workspace = true }
 thiserror = { workspace = true }
 once_cell = { workspace = true }
 breez-sdk-liquid = { path = "../../core" }

@@ -936,6 +936,9 @@ interface PluginSdk {
     ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
 
     [Throws=PaymentError]
+    InputType parse(string input);
+
+    [Throws=PaymentError]
     sequence<Payment> list_payments(ListPaymentsRequest req);
 
     [Throws=SdkError]
@@ -998,17 +1001,59 @@ callback interface NwcEventListener {
     void on_event(NwcEvent event);
 };
 
+dictionary PeriodicBudget {
+    u64 used_budget_sat;
+    u64 max_budget_sat;
+    u32 reset_time_sec;
+    u32 updated_at;
+};
+
+dictionary PeriodicBudgetRequest {
+    u64 max_budget_sat;
+    u32 reset_time_sec;
+};
+
+dictionary NwcConnection {
+    string connection_string;
+    u32 created_at;
+    u32? expiry_time_sec;
+    PeriodicBudget? periodic_budget;
+};
+
+dictionary AddConnectionRequest {
+    string name;
+    u32? expiry_time_sec;
+    PeriodicBudgetRequest? periodic_budget_req;
+};
+
+dictionary AddConnectionResponse {
+    NwcConnection connection;
+};
+
+dictionary EditConnectionRequest {
+    string name;
+    u32? expiry_time_sec;
+    PeriodicBudgetRequest? periodic_budget_req;
+};
+
+dictionary EditConnectionResponse {
+    NwcConnection connection;
+};
+
 interface BindingNwcService {
   constructor(NwcConfig config);
 
   [Throws=NwcError]
-  string add_connection_string(string name);
+  AddConnectionResponse add_connection(AddConnectionRequest req);
 
   [Throws=NwcError]
-  record<string,string> list_connection_strings();
+  EditConnectionResponse edit_connection(EditConnectionRequest req);
 
   [Throws=NwcError]
-  void remove_connection_string(string name);
+  record<string,NwcConnection> list_connections();
+
+  [Throws=NwcError]
+  void remove_connection(string name);
 
   string add_event_listener(NwcEventListener listener);
 

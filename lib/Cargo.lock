@@ -822,6 +822,7 @@ dependencies = [
  "log",
  "nostr-sdk",
  "once_cell",
+ "sdk-common",
  "sdk-macros",
  "serde",
  "serde_json",

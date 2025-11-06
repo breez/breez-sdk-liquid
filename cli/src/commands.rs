@@ -6,6 +6,9 @@ use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::model::{
+    AddConnectionRequest, EditConnectionRequest, PeriodicBudgetRequest,
+};
 use breez_sdk_liquid_nwc::NwcService;
 use clap::{arg, ArgAction, Parser};
 use qrcode_rs::render::unicode;
@@ -288,11 +291,29 @@ pub(crate) enum Command {
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum NwcCommand {
     /// Creates and saves an NWC connection string
-    AddConnectionString { name: String },
+    AddConnection {
+        name: String,
+        #[arg(short, long)]
+        expiry_time_sec: Option<u32>,
+        #[arg(short, long)]
+        max_budget_sat: Option<u64>,
+        #[arg(short = 'r', long)]
+        budget_reset_sec: Option<u32>,
+    },
+    /// Edits an existing NWC connection string
+    EditConnection {
+        name: String,
+        #[arg(short, long)]
+        expiry_time_sec: Option<u32>,
+        #[arg(short, long)]
+        max_budget_sat: Option<u64>,
+        #[arg(short, long)]
+        budget_reset_sec: Option<u32>,
+    },
     /// Lists the available NWC connection strings
-    ListConnectionStrings {},
+    ListConnections {},
     /// Removes a saved NWC connection string
-    RemoveConnectionString { name: String },
+    RemoveConnection { name: String },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -883,15 +904,64 @@ pub(crate) async fn handle_command(
         }
         Command::Nwc { nwc } => {
             let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
+            let get_periodic_budget_req =
+                |max_budget_sat: Option<u64>, budget_reset_sec: Option<u32>| match (
+                    max_budget_sat,
+                    budget_reset_sec,
+                ) {
+                    (Some(max_budget_sat), Some(reset_time_sec)) => {
+                        Ok(Some(PeriodicBudgetRequest {
+                            max_budget_sat,
+                            reset_time_sec,
+                        }))
+                    }
+                    (Some(_), None) | (None, Some(_)) => {
+                        bail!("Both `max_budget_sat` and `period_time_sec` must be set at once.")
+                    }
+                    _ => Ok(None),
+                };
             match nwc {
-                NwcCommand::AddConnectionString { name } => {
-                    command_result!(nwc_service.add_connection_string(name).await?)
+                NwcCommand::AddConnection {
+                    name,
+                    expiry_time_sec,
+                    max_budget_sat,
+                    budget_reset_sec,
+                } => {
+                    let periodic_budget_req =
+                        get_periodic_budget_req(max_budget_sat, budget_reset_sec)?;
+                    command_result!(
+                        nwc_service
+                            .add_connection(AddConnectionRequest {
+                                name,
+                                expiry_time_sec,
+                                periodic_budget_req
+                            })
+                            .await?
+                    )
                 }
-                NwcCommand::ListConnectionStrings {} => {
-                    command_result!(nwc_service.list_connection_strings().await?)
+                NwcCommand::EditConnection {
+                    name,
+                    expiry_time_sec,
+                    max_budget_sat,
+                    budget_reset_sec,
+                } => {
+                    let periodic_budget_req =
+                        get_periodic_budget_req(max_budget_sat, budget_reset_sec)?;
+                    command_result!(
+                        nwc_service
+                            .edit_connection(EditConnectionRequest {
+                                name,
+                                expiry_time_sec,
+                                periodic_budget_req
+                            })
+                            .await?
+                    )
                 }
-                NwcCommand::RemoveConnectionString { name } => {
-                    command_result!(nwc_service.remove_connection_string(name).await?)
+                NwcCommand::ListConnections {} => {
+                    command_result!(nwc_service.list_connections().await?)
+                }
+                NwcCommand::RemoveConnection { name } => {
+                    command_result!(nwc_service.remove_connection(name).await?)
                 }
             }
         }
