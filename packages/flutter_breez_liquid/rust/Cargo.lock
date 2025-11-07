@@ -1662,9 +1662,11 @@ dependencies = [
  "flutter_rust_bridge",
  "flutter_rust_bridge_codegen",
  "log",
+ "once_cell",
  "sdk-common",
  "serde",
  "thiserror 1.0.69",
+ "tokio",
 ]
 
 [[package]]
