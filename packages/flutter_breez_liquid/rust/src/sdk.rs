@@ -10,13 +10,14 @@ pub use crate::plugin::*;
 
 pub async fn connect(
     req: ConnectRequest,
-    plugin_configs: PluginConfigs,
+    plugin_configs: Option<PluginConfigs>,
 ) -> Result<ConnectResponse, SdkError> {
-    let plugins: PluginServices = plugin_configs.into();
-    let ln_sdk = LiquidSdk::connect(req, Some(plugins.as_plugins())).await?;
+    let plugin_services: PluginServices = plugin_configs.unwrap_or_default().into();
+    let plugins = plugin_services.as_plugins();
+    let ln_sdk = LiquidSdk::connect(req, (!plugins.is_empty()).then_some(plugins)).await?;
     Ok(ConnectResponse {
         sdk: BreezSdkLiquid { sdk: ln_sdk },
-        plugins,
+        plugins: plugin_services,
     })
 }
 
