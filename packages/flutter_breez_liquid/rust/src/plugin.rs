@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use crate::{errors::*, events::BreezEventListener, frb_generated::StreamSink};
+use crate::{
+    errors::*,
+    events::BreezEventListener,
+    frb_generated::StreamSink,
+    nwc::{BreezNwcService, NwcConfig},
+};
 use breez_sdk_liquid::prelude::*;
 use flutter_rust_bridge::frb;
 
@@ -112,4 +117,9 @@ impl _Plugin for PluginWrapper {
     async fn on_stop(&self) {
         self.plugin.on_stop();
     }
+}
+
+pub(crate) fn to_plugin(cfg: NwcConfig) -> Arc<dyn breez_sdk_liquid::plugin::Plugin> {
+    let plugin = Arc::new(BreezNwcService::new(cfg));
+    Arc::new(PluginWrapper { plugin })
 }
