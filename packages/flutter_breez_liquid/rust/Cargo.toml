@@ -14,6 +14,7 @@ breez-sdk-liquid = { path = "../../../lib/core" }
 breez-sdk-liquid-nwc = { path = "../../../lib/plugins/nwc" }
 sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "5e60ae519b23d618e1ffb3d9899205fb1638d02d", features = ["liquid"] }
 async-trait = "0.1.86"
+futures = "0.3"
 
 anyhow = { version = "1.0.79", features = ["backtrace"] }
 log = "0.4.20"
