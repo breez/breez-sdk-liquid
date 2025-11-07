@@ -752,7 +752,7 @@ mod tests {
             SyncData::Send(new_send_sync_data(new_preimage.clone())),
             SyncData::Chain(new_chain_sync_data(Some(new_accept_zero_conf))),
         ];
-        let incoming_records = vec![
+        let incoming_records = [
             Record::new(sync_data[0].clone(), 4, signer.clone())?,
             Record::new(sync_data[1].clone(), 5, signer.clone())?,
         ];
