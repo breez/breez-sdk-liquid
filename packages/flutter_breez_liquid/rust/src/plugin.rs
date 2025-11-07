@@ -107,7 +107,7 @@ pub struct PluginServices {
 
 impl Into<PluginServices> for PluginConfigs {
     fn into(self) -> PluginServices {
-        let nwc = self.nwc.map(|config| BreezNwcService::new(config));
+        let nwc = self.nwc.map(BreezNwcService::new);
         PluginServices { nwc }
     }
 }
