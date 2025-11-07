@@ -95,11 +95,12 @@ pub trait Plugin: Send + Sync {
     fn on_stop(&self);
 }
 
+#[derive(Default)]
 pub struct PluginConfigs {
     pub nwc: Option<NwcConfig>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct PluginServices {
     pub nwc: Option<BreezNwcService>,
 }
@@ -110,4 +111,3 @@ impl Into<PluginServices> for PluginConfigs {
         PluginServices { nwc }
     }
 }
-
