@@ -70,7 +70,9 @@ pub mod model {
 }
 
 pub mod event {
-    pub use breez_sdk_liquid_nwc::event::{NwcEvent, NwcEventDetails};
+    pub use breez_sdk_liquid_nwc::event::{
+        NwcEvent, NwcEventDetails, NwcEventListener as _NwcEventListener,
+    };
     use flutter_rust_bridge::frb;
 
     use crate::frb_generated::StreamSink;
@@ -110,8 +112,7 @@ pub mod event {
     }
 
     #[async_trait::async_trait]
-    impl breez_sdk_liquid_nwc::event::NwcEventListener for BreezNwcEventListener {
-        #[frb(ignore)]
+    impl _NwcEventListener for BreezNwcEventListener {
         async fn on_event(&self, e: NwcEvent) {
             NwcEventListener::on_event(self, e);
         }
@@ -119,20 +120,21 @@ pub mod event {
 }
 use event::BreezNwcEventListener;
 
-pub struct NwcService {
+#[derive(Clone)]
+pub struct BreezNwcService {
     inner: Arc<SdkNwcService>,
 }
 
-impl NwcService {
+impl BreezNwcService {
     #[frb(sync)]
-    pub fn new(config: NwcConfig) -> Self {
+    pub fn new(config: NwcConfig) -> BreezNwcService {
         Self {
             inner: Arc::new(SdkNwcService::new(config)),
         }
     }
 }
 
-impl NwcService {
+impl BreezNwcService {
     pub async fn add_connection(
         &self,
         req: AddConnectionRequest,
@@ -162,18 +164,19 @@ impl NwcService {
     }
 }
 
-impl Plugin for NwcService {
+impl Plugin for BreezNwcService {
     fn id(&self) -> String {
         self.inner.id()
     }
 
     fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
-        let _ = self
-            .inner
-            .on_start(plugin_sdk.plugin_sdk.clone(), storage.storage.clone());
+        futures::executor::block_on(
+            self.inner
+                .on_start(plugin_sdk.plugin_sdk.clone(), storage.storage.clone()),
+        );
     }
 
     fn on_stop(&self) {
-        let _ = self.inner.on_stop();
+        futures::executor::block_on(self.inner.on_stop());
     }
 }

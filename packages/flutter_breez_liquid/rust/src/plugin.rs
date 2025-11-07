@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
-use crate::{errors::*, events::BreezEventListener, frb_generated::StreamSink};
+use crate::{
+    errors::*, events::BreezEventListener, frb_generated::StreamSink, nwc::BreezNwcService,
+};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::model::NwcConfig;
 use flutter_rust_bridge::frb;
 
 pub use breez_sdk_liquid::plugin::{
@@ -95,7 +98,7 @@ pub trait Plugin: Send + Sync {
 }
 
 pub(crate) struct PluginWrapper {
-    pub(crate) plugin: Arc<dyn Plugin>,
+    pub(crate) plugin: Box<dyn Plugin>,
 }
 
 #[async_trait::async_trait]
@@ -111,5 +114,32 @@ impl _Plugin for PluginWrapper {
 
     async fn on_stop(&self) {
         self.plugin.on_stop();
+    }
+}
+
+pub struct PluginConfigs {
+    pub nwc: Option<NwcConfig>,
+}
+
+#[derive(Clone)]
+pub struct PluginServices {
+    pub nwc: Option<BreezNwcService>,
+}
+
+impl Into<PluginServices> for PluginConfigs {
+    fn into(self) -> PluginServices {
+        let nwc = self.nwc.map(|config| BreezNwcService::new(config));
+        PluginServices { nwc }
+    }
+}
+
+impl PluginServices {
+    pub(crate) fn as_plugins(&self) -> Vec<Arc<dyn _Plugin>> {
+        let mut plugins = vec![];
+        if let Some(nwc_service) = self.nwc.clone() {
+            let plugin = Box::new(nwc_service) as Box<dyn Plugin>;
+            plugins.push(Arc::new(PluginWrapper { plugin }) as Arc<dyn _Plugin>);
+        }
+        plugins
     }
 }
