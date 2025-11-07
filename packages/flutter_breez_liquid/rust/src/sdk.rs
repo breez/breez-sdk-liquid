@@ -6,22 +6,23 @@ use flutter_rust_bridge::frb;
 use crate::errors::*;
 use crate::events::BreezEventListener;
 use crate::models::*;
+use crate::nwc::{BreezNwcService, NwcConfig};
 pub use crate::plugin::*;
 
 pub async fn connect(
     req: ConnectRequest,
-    plugins: Option<Vec<Arc<dyn Plugin>>>,
+    plugin_configs: Option<Vec<NwcConfig>>,
 ) -> Result<BreezSdkLiquid, SdkError> {
-    let plugins = plugins.map(|plugins| {
-        plugins
-            .into_iter()
-            .map(|plugin| {
-                Arc::new(PluginWrapper { plugin }) as Arc<dyn breez_sdk_liquid::plugin::Plugin>
-            })
-            .collect()
-    });
+    let plugins =
+        plugin_configs.map(|configs| configs.into_iter().map(to_rust_plugin).collect::<Vec<_>>());
+
     let ln_sdk = LiquidSdk::connect(req, plugins).await?;
     Ok(BreezSdkLiquid { sdk: ln_sdk })
+}
+
+fn to_rust_plugin(cfg: NwcConfig) -> Arc<dyn breez_sdk_liquid::plugin::Plugin> {
+    let plugin = Arc::new(BreezNwcService::new(cfg));
+    Arc::new(PluginWrapper { plugin })
 }
 
 #[frb(sync)]
