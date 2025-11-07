@@ -706,7 +706,7 @@ mod tests {
             persister.clone(),
         )?);
 
-        let sync_data = vec![
+        let sync_data = [
             SyncData::Receive(new_receive_sync_data()),
             SyncData::Send(new_send_sync_data(None)),
             SyncData::Chain(new_chain_sync_data(None)),
@@ -748,11 +748,11 @@ mod tests {
 
         let new_preimage = Some("preimage".to_string());
         let new_accept_zero_conf = false;
-        let sync_data = vec![
+        let sync_data = [
             SyncData::Send(new_send_sync_data(new_preimage.clone())),
             SyncData::Chain(new_chain_sync_data(Some(new_accept_zero_conf))),
         ];
-        let incoming_records = vec![
+        let incoming_records = [
             Record::new(sync_data[0].clone(), 4, signer.clone())?,
             Record::new(sync_data[1].clone(), 5, signer.clone())?,
         ];
