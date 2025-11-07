@@ -2,6 +2,7 @@ use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
 
 pub use breez_sdk_liquid::model::{Payment, SdkEvent};
+pub use breez_sdk_liquid::prelude::EventListener as _EventListener;
 
 #[frb(mirror(SdkEvent))]
 pub enum _SdkEvent {
@@ -57,8 +58,7 @@ impl EventListener for BreezEventListener {
 }
 
 #[async_trait::async_trait]
-impl breez_sdk_liquid::prelude::EventListener for BreezEventListener {
-    #[frb(ignore)]
+impl _EventListener for BreezEventListener {
     async fn on_event(&self, e: SdkEvent) {
         EventListener::on_event(self, e);
     }

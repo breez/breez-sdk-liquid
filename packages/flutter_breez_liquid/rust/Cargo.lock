@@ -1661,6 +1661,7 @@ dependencies = [
  "breez-sdk-liquid-nwc",
  "flutter_rust_bridge",
  "flutter_rust_bridge_codegen",
+ "futures",
  "log",
  "sdk-common",
  "serde",
