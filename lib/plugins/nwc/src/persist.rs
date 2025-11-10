@@ -63,6 +63,9 @@ impl Persister {
         if let Some(new_expiry_time) = req.expiry_time_sec {
             connection.expiry_time_sec = Some(new_expiry_time);
         }
+        if let Some(new_receive_only) = req.receive_only {
+            connection.receive_only = new_receive_only;
+        }
         let connection = connection.clone();
         self.storage
             .set_item(KEY_NWC_CONNECTIONS, serde_json::to_string(&connections)?)?;

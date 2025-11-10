@@ -293,6 +293,8 @@ pub(crate) enum NwcCommand {
     /// Creates and saves an NWC connection string
     AddConnection {
         name: String,
+        #[arg(long)]
+        receive_only: Option<bool>,
         #[arg(short, long)]
         expiry_time_sec: Option<u32>,
         #[arg(short, long)]
@@ -303,6 +305,8 @@ pub(crate) enum NwcCommand {
     /// Edits an existing NWC connection string
     EditConnection {
         name: String,
+        #[arg(long)]
+        receive_only: Option<bool>,
         #[arg(short, long)]
         expiry_time_sec: Option<u32>,
         #[arg(short, long)]
@@ -923,6 +927,7 @@ pub(crate) async fn handle_command(
             match nwc {
                 NwcCommand::AddConnection {
                     name,
+                    receive_only,
                     expiry_time_sec,
                     max_budget_sat,
                     budget_reset_sec,
@@ -933,6 +938,7 @@ pub(crate) async fn handle_command(
                         nwc_service
                             .add_connection(AddConnectionRequest {
                                 name,
+                                receive_only,
                                 expiry_time_sec,
                                 periodic_budget_req
                             })
@@ -941,6 +947,7 @@ pub(crate) async fn handle_command(
                 }
                 NwcCommand::EditConnection {
                     name,
+                    receive_only,
                     expiry_time_sec,
                     max_budget_sat,
                     budget_reset_sec,
@@ -951,6 +958,7 @@ pub(crate) async fn handle_command(
                         nwc_service
                             .edit_connection(EditConnectionRequest {
                                 name,
+                                receive_only,
                                 expiry_time_sec,
                                 periodic_budget_req
                             })

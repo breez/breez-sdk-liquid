@@ -30,6 +30,7 @@ mod model {
     pub struct NwcConnection {
         pub connection_string: String,
         pub created_at: u32,
+        pub receive_only: bool,
         pub expiry_time_sec: Option<u32>,
         pub periodic_budget: Option<PeriodicBudget>,
     }
@@ -37,6 +38,7 @@ mod model {
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::AddConnectionRequest)]
     pub struct AddConnectionRequest {
         pub name: String,
+        pub receive_only: Option<bool>,
         pub expiry_time_sec: Option<u32>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
     }
@@ -49,6 +51,7 @@ mod model {
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::EditConnectionRequest)]
     pub struct EditConnectionRequest {
         pub name: String,
+        pub receive_only: Option<bool>,
         pub expiry_time_sec: Option<u32>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
     }

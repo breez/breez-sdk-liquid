@@ -61,6 +61,8 @@ pub struct NwcConnection {
     pub connection_string: String,
     /// The creation time of the connection
     pub created_at: u32,
+    /// Specifies whether this is a receive-only connection. Defaults to false.
+    pub receive_only: bool,
     /// The expiry time of the connection
     /// ## Dev Note:
     /// If the expiry time is less than [crate::EXPIRY_CHECK_INTERVAL_SEC] seconds,
@@ -77,6 +79,8 @@ pub struct AddConnectionRequest {
     pub name: String,
     /// See [NwcConnection::expiry_time_sec]
     pub expiry_time_sec: Option<u32>,
+    /// See [NwcConnection::receive_only]
+    pub receive_only: Option<bool>,
     pub periodic_budget_req: Option<PeriodicBudgetRequest>,
 }
 
@@ -89,7 +93,10 @@ pub struct AddConnectionResponse {
 pub struct EditConnectionRequest {
     /// The **unique** name for the new connection
     pub name: String,
+    /// See [NwcConnection::expiry_time_sec]
     pub expiry_time_sec: Option<u32>,
+    /// See [NwcConnection::receive_only]
+    pub receive_only: Option<bool>,
     pub periodic_budget_req: Option<PeriodicBudgetRequest>,
 }
 
