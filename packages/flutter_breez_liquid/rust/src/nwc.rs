@@ -40,6 +40,7 @@ pub mod model {
     pub struct _NwcConnection {
         pub connection_string: String,
         pub created_at: u32,
+        pub receive_only: bool,
         pub expiry_time_sec: Option<u32>,
         pub periodic_budget: Option<PeriodicBudget>,
     }
@@ -47,6 +48,7 @@ pub mod model {
     #[frb(mirror(AddConnectionRequest))]
     pub struct _AddConnectionRequest {
         pub name: String,
+        pub receive_only: Option<bool>,
         pub expiry_time_sec: Option<u32>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
     }
@@ -59,6 +61,7 @@ pub mod model {
     #[frb(mirror(EditConnectionRequest))]
     pub struct _EditConnectionRequest {
         pub name: String,
+        pub receive_only: Option<bool>,
         pub expiry_time_sec: Option<u32>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
     }

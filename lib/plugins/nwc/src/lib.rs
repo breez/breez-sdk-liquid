@@ -259,6 +259,14 @@ impl SdkNwcService {
             }
         };
 
+        if client.connection.receive_only && !matches!(req.params, RequestParams::MakeInvoice(_)) {
+            warn!(
+                "Could not execute command: {:?}: connection is receive-only. Skipping.",
+                req.params
+            );
+            return;
+        }
+
         let (result, error) = match req.params {
             RequestParams::PayInvoice(req) => {
                 let Ok(InputType::Bolt11 { invoice }) =
@@ -452,6 +460,7 @@ impl NwcService for SdkNwcService {
             .to_string(),
             created_at: now,
             expiry_time_sec: req.expiry_time_sec,
+            receive_only: req.receive_only.unwrap_or(false),
             periodic_budget: req
                 .periodic_budget_req
                 .map(|req| PeriodicBudget::from_budget_request(req, now)),
