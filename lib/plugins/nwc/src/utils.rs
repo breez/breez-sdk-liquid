@@ -1,4 +1,4 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::{SystemTime, UNIX_EPOCH};
 
 pub(crate) fn now() -> u32 {
     SystemTime::now()

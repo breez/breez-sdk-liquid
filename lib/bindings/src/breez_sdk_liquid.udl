@@ -1017,15 +1017,15 @@ dictionary NwcConnection {
     string connection_string;
     u32 created_at;
     boolean receive_only;
-    u32? expiry_time_sec;
-    PeriodicBudget? periodic_budget;
+    u32? expiry_time_sec = null;
+    PeriodicBudget? periodic_budget = null;
 };
 
 dictionary AddConnectionRequest {
     string name;
-    boolean? receive_only;
-    u32? expiry_time_sec;
-    PeriodicBudgetRequest? periodic_budget_req;
+    boolean? receive_only = null;
+    u32? expiry_time_sec = null;
+    PeriodicBudgetRequest? periodic_budget_req = null;
 };
 
 dictionary AddConnectionResponse {
@@ -1034,9 +1034,9 @@ dictionary AddConnectionResponse {
 
 dictionary EditConnectionRequest {
     string name;
-    boolean? receive_only;
-    u32? expiry_time_sec;
-    PeriodicBudgetRequest? periodic_budget_req;
+    boolean? receive_only = null;
+    u32? expiry_time_sec = null;
+    PeriodicBudgetRequest? periodic_budget_req = null;
 };
 
 dictionary EditConnectionResponse {
