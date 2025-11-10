@@ -40,7 +40,7 @@ pub(crate) mod sdk_event;
 pub(crate) mod utils;
 
 pub const DEFAULT_EXPIRY_CHECK_INTERVAL_SEC: u64 = 60; // 1 minute
-pub const DEFAULT_PERIODIC_BALANCE_TIME_SEC: u32 = 60 * 60 * 24 * 30; // 30 days
+pub const DEFAULT_PERIODIC_BUDGET_TIME_SEC: u32 = 60 * 60 * 24 * 30; // 30 days
 pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
 
 #[sdk_macros::async_trait]
@@ -205,7 +205,7 @@ impl SdkNwcService {
 
     async fn handle_event(
         ctx: &RuntimeContext,
-        active_connections: &HashMap<String, ActiveConnection>,
+        active_connections: &mut HashMap<String, ActiveConnection>,
         notification: &RelayPoolNotification,
     ) {
         let RelayPoolNotification::Event { event, .. } = notification else {
@@ -215,9 +215,9 @@ impl SdkNwcService {
 
         let client_pubkey = event.pubkey;
 
-        let Some(client) = active_connections
-            .values()
-            .find(|con| con.uri.public_key == client_pubkey)
+        let Some((connection_name, client)) = active_connections
+            .iter_mut()
+            .find(|(_, con)| con.uri.public_key == client_pubkey)
         else {
             info!("Received event from unrecognized public key: {client_pubkey:?}. Skipping.");
             return;
@@ -290,17 +290,40 @@ impl SdkNwcService {
                     return;
                 };
 
-                if let Some(periodic_balance) = client.connection.periodic_budget.as_ref() {
-                    if periodic_balance.used_budget_sat + req_amount_sat
-                        > periodic_balance.max_budget_sat
+                if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
+                    if periodic_budget.used_budget_sat + req_amount_sat
+                        > periodic_budget.max_budget_sat
                     {
-                        warn!("Cannot pay invoice: max periodic balance exceeded.");
+                        warn!("Cannot pay invoice: max periodic budget exceeded on connection \"{connection_name}\".");
+                        return;
+                    }
+                    // We modify the connection's budget before executing the payment to avoid any race
+                    // conditions
+                    periodic_budget.used_budget_sat += req_amount_sat;
+                    if let Err(err) = ctx
+                        .persister
+                        .update_periodic_budget(connection_name, periodic_budget.clone())
+                    {
+                        warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
                         return;
                     }
                 }
                 match ctx.handler.pay_invoice(req).await {
                     Ok(res) => (Some(ResponseResult::PayInvoice(res)), None),
-                    Err(e) => (None, Some(e)),
+                    Err(e) => {
+                        // In case of payment failure, we want to undo the periodic budget changes
+                        if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
+                            periodic_budget.used_budget_sat -= req_amount_sat;
+                            if let Err(err) = ctx
+                                .persister
+                                .update_periodic_budget(connection_name, periodic_budget.clone())
+                            {
+                                warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
+                                return;
+                            }
+                        }
+                        (None, Some(e))
+                    }
                 }
             }
             RequestParams::MakeInvoice(req) => match ctx.handler.make_invoice(req).await {
@@ -475,11 +498,14 @@ impl NwcService for SdkNwcService {
         &self,
         req: EditConnectionRequest,
     ) -> NwcResult<EditConnectionResponse> {
-        let connection = self
-            .runtime_ctx()
-            .await?
-            .persister
-            .edit_nwc_connection(req)?;
+        let connection = self.runtime_ctx().await?.persister.edit_nwc_connection(
+            &req.name,
+            req.expiry_time_sec,
+            req.receive_only,
+            req.periodic_budget_req
+                .map(|req| PeriodicBudget::from_budget_request(req, utils::now())),
+        )?;
+        self.runtime_ctx().await?.trigger_resubscription().await;
         Ok(EditConnectionResponse { connection })
     }
 
@@ -579,7 +605,7 @@ impl Plugin for SdkNwcService {
                 let mut notifications_listener = thread_ctx.client.notifications();
                 loop {
                     tokio::select! {
-                        Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &active_connections, &notification).await,
+                        Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &mut active_connections, &notification).await,
                         _ = expiry_interval.tick() => {
                             if Self::connections_have_changed(&mut active_connections) {
                                 let connections = active_connections.into_iter().map(|(name, con)| (name, con.connection)).collect();

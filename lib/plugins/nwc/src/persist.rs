@@ -4,7 +4,7 @@ use breez_sdk_liquid::plugin::PluginStorage;
 
 use crate::{
     error::{NwcError, NwcResult},
-    model::{EditConnectionRequest, NwcConnection, PeriodicBudget},
+    model::{NwcConnection, PeriodicBudget},
     DEFAULT_EXPIRY_CHECK_INTERVAL_SEC,
 };
 
@@ -48,25 +48,35 @@ impl Persister {
         Ok(())
     }
 
+    // Helper method to update a connection's used budget directly
+    pub(crate) fn update_periodic_budget(
+        &self,
+        name: &str,
+        periodic_budget: PeriodicBudget,
+    ) -> NwcResult<()> {
+        self.edit_nwc_connection(name, None, None, Some(periodic_budget))?;
+        Ok(())
+    }
+
     pub(crate) fn edit_nwc_connection(
         &self,
-        req: EditConnectionRequest,
+        name: &str,
+        expiry_time_sec: Option<u32>,
+        receive_only: Option<bool>,
+        periodic_budget: Option<PeriodicBudget>,
     ) -> NwcResult<NwcConnection> {
         let mut connections = self.list_nwc_connections()?;
-        let Some(connection) = connections.get_mut(&req.name) else {
+        let Some(connection) = connections.get_mut(name) else {
             return Err(NwcError::generic("Connection not found."));
         };
-        if let Some(new_periodic_balance) = req.periodic_budget_req {
-            connection.periodic_budget = Some(PeriodicBudget::from_budget_request(
-                new_periodic_balance,
-                connection.created_at,
-            ));
-        }
-        if let Some(new_expiry_time) = req.expiry_time_sec {
+        if let Some(new_expiry_time) = expiry_time_sec {
             connection.expiry_time_sec = Some(new_expiry_time);
         }
-        if let Some(new_receive_only) = req.receive_only {
+        if let Some(new_receive_only) = receive_only {
             connection.receive_only = new_receive_only;
+        }
+        if let Some(new_periodic_budget) = periodic_budget {
+            connection.periodic_budget = Some(new_periodic_budget);
         }
         let connection = connection.clone();
         self.storage
@@ -92,7 +102,7 @@ impl Persister {
             .max(Some(DEFAULT_EXPIRY_CHECK_INTERVAL_SEC))
             .unwrap_or(DEFAULT_EXPIRY_CHECK_INTERVAL_SEC)
             // We add a grace period to avoid races between the interval tick and the connection
-            // expiry/balance refresh
+            // expiry/budget refresh
             + EXPIRY_INTERVAL_GRACE_PERIOD
     }
 
