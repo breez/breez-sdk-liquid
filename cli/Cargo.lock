@@ -759,6 +759,7 @@ dependencies = [
  "tokio",
  "tokio_with_wasm",
  "uuid",
+ "web-time",
 ]
 
 [[package]]
