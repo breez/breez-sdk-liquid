@@ -39,7 +39,7 @@ mod persist;
 pub(crate) mod sdk_event;
 pub(crate) mod utils;
 
-pub const EXPIRY_CHECK_INTERVAL_SEC: u64 = 60; // 1 minute
+pub const DEFAULT_EXPIRY_CHECK_INTERVAL_SEC: u64 = 60; // 1 minute
 pub const DEFAULT_PERIODIC_BALANCE_TIME_SEC: u32 = 60 * 60 * 24 * 30; // 30 days
 pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
 
@@ -539,10 +539,10 @@ impl Plugin for SdkNwcService {
             info!("Successfully connected NWC client");
 
             thread_ctx.send_info_event().await;
-
-            let mut expiry_interval =
-                tokio::time::interval(Duration::from_secs(EXPIRY_CHECK_INTERVAL_SEC));
             loop {
+                let mut expiry_interval = tokio::time::interval(Duration::from_secs(
+                    thread_ctx.persister.get_min_interval(),
+                ));
                 let mut active_connections = match thread_ctx.list_active_connections() {
                     Ok(clients) => clients,
                     Err(err) => {

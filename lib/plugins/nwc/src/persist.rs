@@ -5,8 +5,10 @@ use breez_sdk_liquid::plugin::PluginStorage;
 use crate::{
     error::{NwcError, NwcResult},
     model::{EditConnectionRequest, NwcConnection, PeriodicBudget},
+    DEFAULT_EXPIRY_CHECK_INTERVAL_SEC,
 };
 
+const EXPIRY_INTERVAL_GRACE_PERIOD: u64 = 3;
 const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
 
@@ -70,6 +72,28 @@ impl Persister {
         self.storage
             .set_item(KEY_NWC_CONNECTIONS, serde_json::to_string(&connections)?)?;
         Ok(connection)
+    }
+
+    pub(crate) fn get_min_interval(&self) -> u64 {
+        let get_min_connection_interval = || -> NwcResult<Option<u64>> {
+            let mut min_interval = None;
+            for connection in self.list_nwc_connections()?.into_values() {
+                min_interval = min_interval
+                    .min(connection.expiry_time_sec)
+                    .min(connection.periodic_budget.map(|b| b.reset_time_sec));
+            }
+            Ok(min_interval.map(u64::from))
+        };
+        get_min_connection_interval()
+            .ok()
+            .flatten()
+            // If the min interval is less than DEFAULT_EXPIRY_CHECK_INTERVAL_SEC, use that one
+            // instead (things may break at too low intervals)
+            .max(Some(DEFAULT_EXPIRY_CHECK_INTERVAL_SEC))
+            .unwrap_or(DEFAULT_EXPIRY_CHECK_INTERVAL_SEC)
+            // We add a grace period to avoid races between the interval tick and the connection
+            // expiry/balance refresh
+            + EXPIRY_INTERVAL_GRACE_PERIOD
     }
 
     pub(crate) fn set_connections_raw(
