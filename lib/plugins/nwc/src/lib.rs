@@ -27,7 +27,10 @@ use nostr_sdk::{
     Client as NostrClient, EventBuilder, Keys, Kind, RelayPoolNotification, RelayUrl, Tag,
     Timestamp,
 };
-use tokio::sync::{mpsc, Mutex, OnceCell};
+use tokio::{
+    sync::{mpsc, Mutex, OnceCell},
+    time::Interval,
+};
 use tokio_with_wasm::alias as tokio;
 
 pub(crate) mod context;
@@ -39,7 +42,7 @@ mod persist;
 pub(crate) mod sdk_event;
 pub(crate) mod utils;
 
-pub const DEFAULT_EXPIRY_CHECK_INTERVAL_SEC: u64 = 60; // 1 minute
+pub const MIN_REFRESH_INTERVAL_SEC: u64 = 60; // 1 minute
 pub const DEFAULT_PERIODIC_BUDGET_TIME_SEC: u32 = 60 * 60 * 24 * 30; // 30 days
 pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
 
@@ -458,6 +461,22 @@ impl SdkNwcService {
         }
         !to_delete.is_empty() || updated
     }
+
+    fn new_maybe_interval(ctx: &RuntimeContext) -> Option<Interval> {
+        ctx.persister
+            .get_min_interval()
+            .map(|interval| tokio::time::interval(Duration::from_secs(interval)))
+    }
+
+    async fn min_refresh_interval(maybe_interval: &mut Option<Interval>) -> Option<()> {
+        match maybe_interval {
+            Some(interval) => {
+                interval.tick().await;
+                Some(())
+            }
+            None => None,
+        }
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -565,10 +584,9 @@ impl Plugin for SdkNwcService {
             info!("Successfully connected NWC client");
 
             thread_ctx.send_info_event().await;
+
+            let mut maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx);
             loop {
-                let mut expiry_interval = tokio::time::interval(Duration::from_secs(
-                    thread_ctx.persister.get_min_interval(),
-                ));
                 let mut active_connections = match thread_ctx.list_active_connections() {
                     Ok(clients) => clients,
                     Err(err) => {
@@ -606,7 +624,7 @@ impl Plugin for SdkNwcService {
                 loop {
                     tokio::select! {
                         Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &mut active_connections, &notification).await,
-                        _ = expiry_interval.tick() => {
+                        Some(_) = Self::min_refresh_interval(&mut maybe_expiry_interval) => {
                             if Self::connections_have_changed(&mut active_connections) {
                                 let connections = active_connections.into_iter().map(|(name, con)| (name, con.connection)).collect();
                                 if let Err(err) = thread_ctx.persister.set_connections_raw(connections) {
@@ -622,6 +640,13 @@ impl Plugin for SdkNwcService {
                                 if let Err(err) = sdk.remove_event_listener(listener_id).await {
                                     warn!("Could not remove payment event listener: {err:?}");
                                 }
+                            }
+                            // We update the interval in case any connections have been
+                            // added/removed
+                            maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx);
+                            if let Some(ref mut interval) = maybe_expiry_interval {
+                                // First time ticks instantly
+                                interval.tick().await;
                             }
                             break;
                         }
