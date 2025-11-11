@@ -5,10 +5,10 @@ use breez_sdk_liquid::plugin::PluginStorage;
 use crate::{
     error::{NwcError, NwcResult},
     model::{NwcConnection, PeriodicBudget},
-    DEFAULT_EXPIRY_CHECK_INTERVAL_SEC,
+    MIN_REFRESH_INTERVAL_SEC,
 };
 
-const EXPIRY_INTERVAL_GRACE_PERIOD: u64 = 3;
+const REFRESH_INTERVAL_GRACE_PERIOD: u64 = 3;
 const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
 
@@ -84,26 +84,33 @@ impl Persister {
         Ok(connection)
     }
 
-    pub(crate) fn get_min_interval(&self) -> u64 {
+    pub(crate) fn get_min_interval(&self) -> Option<u64> {
         let get_min_connection_interval = || -> NwcResult<Option<u64>> {
-            let mut min_interval = None;
-            for connection in self.list_nwc_connections()?.into_values() {
+            let connections = self.list_nwc_connections()?;
+            if connections.is_empty() {
+                return Ok(None);
+            }
+            let mut min_interval = Some(u32::MAX);
+            for connection in connections.into_values() {
                 min_interval = min_interval
                     .min(connection.expiry_time_sec)
                     .min(connection.periodic_budget.map(|b| b.reset_time_sec));
             }
             Ok(min_interval.map(u64::from))
         };
-        get_min_connection_interval()
-            .ok()
-            .flatten()
-            // If the min interval is less than DEFAULT_EXPIRY_CHECK_INTERVAL_SEC, use that one
-            // instead (things may break at too low intervals)
-            .max(Some(DEFAULT_EXPIRY_CHECK_INTERVAL_SEC))
-            .unwrap_or(DEFAULT_EXPIRY_CHECK_INTERVAL_SEC)
-            // We add a grace period to avoid races between the interval tick and the connection
-            // expiry/budget refresh
-            + EXPIRY_INTERVAL_GRACE_PERIOD
+        match get_min_connection_interval() {
+            Ok(Some(mut interval)) => {
+                // We set a minimum of MIN_REFRESH_INTERVAL_SEC to avoid breaking the service by
+                // refreshing too frequently
+                if interval < MIN_REFRESH_INTERVAL_SEC {
+                    interval = MIN_REFRESH_INTERVAL_SEC;
+                }
+                // We add a grace period to avoid races between the interval tick and the connection
+                // expiry/budget refresh
+                Some(interval + REFRESH_INTERVAL_GRACE_PERIOD)
+            }
+            _ => None,
+        }
     }
 
     pub(crate) fn set_connections_raw(

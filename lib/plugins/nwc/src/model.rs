@@ -28,8 +28,8 @@ pub struct PeriodicBudget {
     pub max_budget_sat: u64,
     /// The duration of the budget's period
     /// ## Dev Note:
-    /// If the reset time is less than [crate::EXPIRY_CHECK_INTERVAL_SEC] seconds,
-    /// then it will take at most [crate::EXPIRY_CHECK_INTERVAL_SEC] seconds in order for the
+    /// If the reset time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
+    /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
     /// reset to take effect.
     pub reset_time_sec: u32,
     /// The latest budget update time (last reset time)
@@ -65,8 +65,8 @@ pub struct NwcConnection {
     pub receive_only: bool,
     /// The expiry time of the connection
     /// ## Dev Note:
-    /// If the expiry time is less than [crate::EXPIRY_CHECK_INTERVAL_SEC] seconds,
-    /// then it will take at most [crate::EXPIRY_CHECK_INTERVAL_SEC] seconds in order for the
+    /// If the expiry time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
+    /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
     /// connection to be deleted.
     pub expiry_time_sec: Option<u32>,
     /// An optional [PeriodicBudget] for the connection
