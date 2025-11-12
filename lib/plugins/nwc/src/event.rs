@@ -17,6 +17,12 @@ pub enum NwcEventDetails {
     },
     ListTransactions,
     GetBalance,
+    ConnectionExpired {
+        name: String,
+    },
+    ConnectionRefreshed {
+        name: String,
+    },
 }
 
 /// The event emitted when an NWC operation has been handled

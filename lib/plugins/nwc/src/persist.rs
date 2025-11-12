@@ -125,11 +125,18 @@ impl Persister {
             if connections.is_empty() {
                 return Ok(None);
             }
-            let mut min_interval = Some(u32::MAX);
+            let mut min_interval = None;
             for connection in connections.into_values() {
-                min_interval = min_interval
-                    .min(connection.expiry_time_sec)
-                    .min(connection.periodic_budget.map(|b| b.reset_time_sec));
+                if let Some(expiry_time_sec) = connection.expiry_time_sec {
+                    if expiry_time_sec < min_interval.unwrap_or(u32::MAX) {
+                        min_interval = Some(expiry_time_sec);
+                    }
+                }
+                if let Some(reset_time_sec) = connection.periodic_budget.map(|b| b.reset_time_sec) {
+                    if reset_time_sec < min_interval.unwrap_or(u32::MAX) {
+                        min_interval = Some(reset_time_sec);
+                    }
+                }
             }
             Ok(min_interval.map(u64::from))
         };
