@@ -73,6 +73,12 @@ mod model {
         },
         ListTransactions,
         GetBalance,
+        ConnectionExpired {
+            name: String,
+        },
+        ConnectionRefreshed {
+            name: String,
+        },
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEvent)]

@@ -438,15 +438,16 @@ impl SdkNwcService {
 
     fn connections_have_changed(
         active_connections: &mut HashMap<String, ActiveConnection>,
-    ) -> bool {
+    ) -> (bool, Vec<String>, Vec<String>) {
         let now = utils::now();
         let mut to_delete = vec![];
-        let mut updated = false;
+        let mut to_refresh = vec![];
         for (name, ActiveConnection { connection, .. }) in active_connections.iter_mut() {
             // If the connection has expired, mark it for deletion
             if let Some(expiry) = connection.expiry_time_sec {
                 if now >= connection.created_at + expiry {
                     to_delete.push(name.clone());
+                    continue;
                 }
             }
             // If the connection's periodic budget has to be updated
@@ -454,14 +455,18 @@ impl SdkNwcService {
                 if now >= budget.updated_at + budget.reset_time_sec {
                     budget.used_budget_sat = 0;
                     budget.updated_at = now;
-                    updated = true;
+                    to_refresh.push(name.clone());
                 }
             }
         }
         for name in &to_delete {
             active_connections.remove(name);
         }
-        !to_delete.is_empty() || updated
+        (
+            !to_delete.is_empty() || !to_refresh.is_empty(),
+            to_delete,
+            to_refresh,
+        )
     }
 
     async fn new_maybe_interval(ctx: &RuntimeContext) -> Option<Interval> {
@@ -638,11 +643,18 @@ impl Plugin for SdkNwcService {
                     tokio::select! {
                         Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &mut active_connections, &notification).await,
                         Some(_) = Self::min_refresh_interval(&mut maybe_expiry_interval) => {
-                            if Self::connections_have_changed(&mut active_connections) {
+                            let (have_changed, deleted, refreshed) = Self::connections_have_changed(&mut active_connections);
+                            if have_changed {
                                 let connections = active_connections.into_iter().map(|(name, con)| (name, con.connection)).collect();
                                 if let Err(err) = thread_ctx.persister.set_connections_raw(connections) {
                                     warn!("Could not save active connections: {err:?}");
                                     return;
+                                }
+                                for name in deleted {
+                                    thread_ctx.event_manager.notify(NwcEvent { event_id: None, details: NwcEventDetails::ConnectionExpired { name } }).await;
+                                }
+                                for name in refreshed {
+                                    thread_ctx.event_manager.notify(NwcEvent { event_id: None, details: NwcEventDetails::ConnectionRefreshed { name } }).await;
                                 }
                                 break;
                             }

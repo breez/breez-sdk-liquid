@@ -92,6 +92,12 @@ pub mod event {
         },
         ListTransactions,
         GetBalance,
+        ConnectionExpired {
+            name: String,
+        },
+        ConnectionRefreshed {
+            name: String,
+        },
     }
 
     #[frb(mirror(NwcEvent))]
