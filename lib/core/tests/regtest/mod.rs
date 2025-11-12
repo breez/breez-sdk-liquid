@@ -28,7 +28,7 @@ struct ForwardingEventListener {
     sender: Sender<SdkEvent>,
 }
 
-#[async_trait::async_trait]
+#[sdk_macros::async_trait]
 impl EventListener for ForwardingEventListener {
     async fn on_event(&self, e: SdkEvent) {
         self.sender.try_send(e).unwrap();
@@ -79,7 +79,6 @@ impl SdkNodeHandle {
                 config.clone(),
                 sdk_common::prelude::PRODUCTION_BREEZSERVER_URL.to_string(),
                 signer.clone(),
-                None,
             )?;
             let persister =
                 std::sync::Arc::new(breez_sdk_liquid::persist::Persister::new_in_memory(
