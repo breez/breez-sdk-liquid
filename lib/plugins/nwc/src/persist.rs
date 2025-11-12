@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use breez_sdk_liquid::plugin::PluginStorage;
 
@@ -7,13 +7,25 @@ use crate::{
     model::{NwcConnection, PeriodicBudget},
     MIN_REFRESH_INTERVAL_SEC,
 };
+use tokio_with_wasm::alias as tokio;
 
 const REFRESH_INTERVAL_GRACE_PERIOD: u64 = 3;
 const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
+const KEY_NWC_LOCK: &str = "nwc_lock";
 
 pub(crate) struct Persister {
-    storage: PluginStorage,
+    pub(crate) storage: PluginStorage,
+}
+
+struct Lock<'a> {
+    p: &'a Persister,
+}
+
+impl<'a> Drop for Lock<'a> {
+    fn drop(&mut self) {
+        let _ = self.p.storage.set_item(KEY_NWC_LOCK, 0.to_string());
+    }
 }
 
 impl Persister {
@@ -31,12 +43,32 @@ impl Persister {
         self.storage.get_item(KEY_NWC_SECKEY).map_err(Into::into)
     }
 
-    pub(crate) fn add_nwc_connection(
+    async fn lock<'a>(&'a self) -> NwcResult<Lock<'a>> {
+        let mut is_locked = true;
+        for _ in 0..3 {
+            is_locked = self
+                .storage
+                .get_item(KEY_NWC_LOCK)?
+                .is_some_and(|lock| lock == "1");
+            if !is_locked {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+        if is_locked {
+            return Err(NwcError::generic("Could not acquire database lock"));
+        }
+        self.storage.set_item(KEY_NWC_LOCK, 1.to_string())?;
+        Ok(Lock { p: self })
+    }
+
+    pub(crate) async fn add_nwc_connection(
         &self,
         name: String,
         connection: NwcConnection,
     ) -> NwcResult<()> {
-        let mut connections = self.list_nwc_connections()?;
+        let _ = self.lock().await?;
+        let mut connections = self.list_nwc_connections_inner()?;
         if connections.contains_key(&name) {
             return Err(NwcError::generic(format!(
                 "Could not insert connection: `{name}` already exists"
@@ -49,23 +81,25 @@ impl Persister {
     }
 
     // Helper method to update a connection's used budget directly
-    pub(crate) fn update_periodic_budget(
+    pub(crate) async fn update_periodic_budget(
         &self,
         name: &str,
         periodic_budget: PeriodicBudget,
     ) -> NwcResult<()> {
-        self.edit_nwc_connection(name, None, None, Some(periodic_budget))?;
+        self.edit_nwc_connection(name, None, None, Some(periodic_budget))
+            .await?;
         Ok(())
     }
 
-    pub(crate) fn edit_nwc_connection(
+    pub(crate) async fn edit_nwc_connection(
         &self,
         name: &str,
         expiry_time_sec: Option<u32>,
         receive_only: Option<bool>,
         periodic_budget: Option<PeriodicBudget>,
     ) -> NwcResult<NwcConnection> {
-        let mut connections = self.list_nwc_connections()?;
+        let _ = self.lock().await?;
+        let mut connections = self.list_nwc_connections_inner()?;
         let Some(connection) = connections.get_mut(name) else {
             return Err(NwcError::generic("Connection not found."));
         };
@@ -84,9 +118,10 @@ impl Persister {
         Ok(connection)
     }
 
-    pub(crate) fn get_min_interval(&self) -> Option<u64> {
-        let get_min_connection_interval = || -> NwcResult<Option<u64>> {
-            let connections = self.list_nwc_connections()?;
+    pub(crate) async fn get_min_interval(&self) -> Option<u64> {
+        let get_min_connection_interval = async || -> NwcResult<Option<u64>> {
+            let _ = self.lock().await?;
+            let connections = self.list_nwc_connections_inner()?;
             if connections.is_empty() {
                 return Ok(None);
             }
@@ -98,7 +133,7 @@ impl Persister {
             }
             Ok(min_interval.map(u64::from))
         };
-        match get_min_connection_interval() {
+        match get_min_connection_interval().await {
             Ok(Some(mut interval)) => {
                 // We set a minimum of MIN_REFRESH_INTERVAL_SEC to avoid breaking the service by
                 // refreshing too frequently
@@ -122,7 +157,7 @@ impl Persister {
         Ok(())
     }
 
-    pub(crate) fn list_nwc_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
+    fn list_nwc_connections_inner(&self) -> NwcResult<HashMap<String, NwcConnection>> {
         let connections = self
             .storage
             .get_item(KEY_NWC_CONNECTIONS)?
@@ -131,8 +166,14 @@ impl Persister {
         Ok(connections)
     }
 
-    pub(crate) fn remove_nwc_connection(&self, name: String) -> NwcResult<()> {
-        let mut connections = self.list_nwc_connections()?;
+    pub(crate) async fn list_nwc_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
+        let _ = self.lock().await?;
+        self.list_nwc_connections_inner()
+    }
+
+    pub(crate) async fn remove_nwc_connection(&self, name: String) -> NwcResult<()> {
+        let _ = self.lock().await?;
+        let mut connections = self.list_nwc_connections_inner()?;
         if connections.remove(&name).is_none() {
             return Err(NwcError::generic("Connection not found."));
         }

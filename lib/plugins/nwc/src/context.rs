@@ -55,10 +55,11 @@ impl RuntimeContext {
         self.event_manager.pause_notifications();
     }
 
-    pub fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
+    pub async fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
         Ok(self
             .persister
-            .list_nwc_connections()?
+            .list_nwc_connections()
+            .await?
             .into_iter()
             .filter_map(|(name, connection)| {
                 NostrWalletConnectURI::from_str(&connection.connection_string)
