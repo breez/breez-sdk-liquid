@@ -306,6 +306,7 @@ impl SdkNwcService {
                     if let Err(err) = ctx
                         .persister
                         .update_periodic_budget(connection_name, periodic_budget.clone())
+                        .await
                     {
                         warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
                         return;
@@ -320,6 +321,7 @@ impl SdkNwcService {
                             if let Err(err) = ctx
                                 .persister
                                 .update_periodic_budget(connection_name, periodic_budget.clone())
+                                .await
                             {
                                 warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
                                 return;
@@ -462,9 +464,10 @@ impl SdkNwcService {
         !to_delete.is_empty() || updated
     }
 
-    fn new_maybe_interval(ctx: &RuntimeContext) -> Option<Interval> {
+    async fn new_maybe_interval(ctx: &RuntimeContext) -> Option<Interval> {
         ctx.persister
             .get_min_interval()
+            .await
             .map(|interval| tokio::time::interval(Duration::from_secs(interval)))
     }
 
@@ -508,7 +511,8 @@ impl NwcService for SdkNwcService {
                 .map(|req| PeriodicBudget::from_budget_request(req, now)),
         };
         ctx.persister
-            .add_nwc_connection(req.name.clone(), connection.clone())?;
+            .add_nwc_connection(req.name.clone(), connection.clone())
+            .await?;
         ctx.trigger_resubscription().await;
         Ok(AddConnectionResponse { connection })
     }
@@ -517,24 +521,33 @@ impl NwcService for SdkNwcService {
         &self,
         req: EditConnectionRequest,
     ) -> NwcResult<EditConnectionResponse> {
-        let connection = self.runtime_ctx().await?.persister.edit_nwc_connection(
-            &req.name,
-            req.expiry_time_sec,
-            req.receive_only,
-            req.periodic_budget_req
-                .map(|req| PeriodicBudget::from_budget_request(req, utils::now())),
-        )?;
+        let connection = self
+            .runtime_ctx()
+            .await?
+            .persister
+            .edit_nwc_connection(
+                &req.name,
+                req.expiry_time_sec,
+                req.receive_only,
+                req.periodic_budget_req
+                    .map(|req| PeriodicBudget::from_budget_request(req, utils::now())),
+            )
+            .await?;
         self.runtime_ctx().await?.trigger_resubscription().await;
         Ok(EditConnectionResponse { connection })
     }
 
     async fn list_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
-        self.runtime_ctx().await?.persister.list_nwc_connections()
+        self.runtime_ctx()
+            .await?
+            .persister
+            .list_nwc_connections()
+            .await
     }
 
     async fn remove_connection(&self, name: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
-        ctx.persister.remove_nwc_connection(name)?;
+        ctx.persister.remove_nwc_connection(name).await?;
         ctx.trigger_resubscription().await;
         Ok(())
     }
@@ -585,9 +598,9 @@ impl Plugin for SdkNwcService {
 
             thread_ctx.send_info_event().await;
 
-            let mut maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx);
+            let mut maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx).await;
             loop {
-                let mut active_connections = match thread_ctx.list_active_connections() {
+                let mut active_connections = match thread_ctx.list_active_connections().await {
                     Ok(clients) => clients,
                     Err(err) => {
                         warn!("Could not retreive active connections from database: {err:?}");
@@ -643,7 +656,7 @@ impl Plugin for SdkNwcService {
                             }
                             // We update the interval in case any connections have been
                             // added/removed
-                            maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx);
+                            maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx).await;
                             if let Some(ref mut interval) = maybe_expiry_interval {
                                 // First time ticks instantly
                                 interval.tick().await;
