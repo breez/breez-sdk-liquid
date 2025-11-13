@@ -1,4 +1,4 @@
-const { connect, defaultConfig, setLogger } = require('@breeztech/breez-sdk-liquid/node')
+const { connect, defaultConfig, setLogger, BindingNwcService } = require('@breeztech/breez-sdk-liquid/node')
 const { confirm, question } = require('./prompt.js')
 const fs = require('fs')
 const qrcode = require('qrcode')
@@ -27,8 +27,9 @@ class JsEventListener {
 const eventListener = new JsEventListener()
 
 let sdk = null
+let plugins = null
 
-const initSdk = async () => {
+const initSdk = async (plugins) => {
     if (sdk) return sdk
 
     // Set the logger to trace
@@ -42,10 +43,17 @@ const initSdk = async () => {
     let config = defaultConfig('mainnet', breezApiKey)
     config.workingDir = './.data'
 
-    sdk = await connect({ config, mnemonic })
+    sdk = await connect({ config, mnemonic }, plugins)
 
     await sdk.addEventListener(eventListener)
     return sdk
+}
+
+const initPlugins = () => {
+    if (plugins) return plugins
+    const nwcService = new BindingNwcService({})
+    plugins = [nwcService]
+    return plugins
 }
 
 const disconnect = () => {
@@ -88,8 +96,8 @@ const getPayment = async (options) => {
     const req = options.paymentHash
         ? { type: 'paymentHash', paymentHash: options.paymentHash }
         : options.swapId
-        ? { type: 'swapId', swapId: options.swapId }
-        : undefined
+            ? { type: 'swapId', swapId: options.swapId }
+            : undefined
     if (!req) {
         console.error('Please provide either a payment hash or swap id')
         return
@@ -135,8 +143,8 @@ const listPayments = async (options) => {
             options.asset || options.destination
                 ? { type: 'liquid', assetId: options.asset, destination: options.destination }
                 : options.address
-                ? { type: 'bitcoin', address: options.address }
-                : undefined,
+                    ? { type: 'bitcoin', address: options.address }
+                    : undefined,
         sortAscending: options.ascending
     })
     console.log(JSON.stringify(res, null, 2))
@@ -282,8 +290,8 @@ const sendOnchainPayment = async (address, options) => {
     const amount = options.drain
         ? { type: 'drain' }
         : options.receiverAmountSat
-        ? { type: 'bitcoin', receiverAmountSat: options.receiverAmountSat }
-        : undefined
+            ? { type: 'bitcoin', receiverAmountSat: options.receiverAmountSat }
+            : undefined
     if (!amount) {
         console.error('Must specify a receiver amount if not draining')
         return
@@ -306,16 +314,16 @@ const sendPayment = async (options) => {
     const amount = options.drain
         ? { type: 'drain' }
         : options.asset
-        ? {
-              type: 'asset',
-              toAsset: options.asset,
-              fromAsset: options.fromAsset,
-              receiverAmount: options.amount,
-              estimateAssetFees: useAssetFees
-          }
-        : options.amountSat
-        ? { type: 'bitcoin', receiverAmountSat: options.amountSat }
-        : undefined
+            ? {
+                type: 'asset',
+                toAsset: options.asset,
+                fromAsset: options.fromAsset,
+                receiverAmount: options.amount,
+                estimateAssetFees: useAssetFees
+            }
+            : options.amountSat
+                ? { type: 'bitcoin', receiverAmountSat: options.amountSat }
+                : undefined
     if (!destination) {
         console.error('Please provide either an invoice, offer or address')
         return
@@ -367,6 +375,45 @@ const unregisterWebhook = async (url) => {
     console.log(JSON.stringify(res, null, 2))
 }
 
+const addNwcConnection = async (name, options) => {
+    const { receiveOnly, expiry: expiryTimeSec, periodTime: resetTimeSec, maxBudget: maxBudgetSat } = options
+    const plugins = initPlugins()
+    await initSdk(plugins)
+    const nwcService = plugins[0]
+
+    if ((maxBudgetSat != null && resetTimeSec == null) || (resetTimeSec != null && maxBudgetSat == null)) {
+        console.log(`Both "maxBudgetSat" and "resetTimeSec" must be provided at once when used.`)
+        return
+    }
+
+    let periodicBudgetReq = (maxBudgetSat != null && resetTimeSec != null) ? {
+        maxBudgetSat,
+        resetTimeSec,
+    } : null
+
+    console.log(JSON.stringify(await nwcService.addConnection({
+        name,
+        receiveOnly,
+        expiryTimeSec,
+        periodicBudgetReq,
+    })))
+}
+
+const listNwcConnections = async () => {
+    const plugins = initPlugins()
+    await initSdk(plugins)
+    const nwcService = plugins[0]
+    console.log(JSON.stringify(Object.fromEntries(await nwcService.listConnections()), null, 2))
+}
+
+const removeNwcConnection = async (name) => {
+    const plugins = initPlugins()
+    await initSdk(plugins)
+    const nwcService = plugins[0]
+    await nwcService.removeConnection(name)
+    console.log("Connection removed successfully.")
+}
+
 module.exports = {
     buyBitcoin,
     checkMessage,
@@ -394,5 +441,8 @@ module.exports = {
     sendPayment,
     signMessage,
     sync,
-    unregisterWebhook
+    unregisterWebhook,
+    addNwcConnection,
+    listNwcConnections,
+    removeNwcConnection,
 }

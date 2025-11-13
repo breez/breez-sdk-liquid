@@ -309,6 +309,8 @@ pub use breez_sdk_liquid::{
     sdk::LiquidSdk,
 };
 
+use crate::{sdk::PluginServices, BreezSdkLiquid};
+
 #[frb(mirror(AcceptPaymentProposedFeesRequest))]
 pub struct _AcceptPaymentProposedFeesRequest {
     pub response: FetchPaymentProposedFeesResponse,
@@ -361,6 +363,11 @@ pub struct _ConnectRequest {
     pub mnemonic: Option<String>,
     pub passphrase: Option<String>,
     pub seed: Option<Vec<u8>>,
+}
+
+pub struct ConnectResponse {
+    pub sdk: BreezSdkLiquid,
+    pub plugins: PluginServices,
 }
 
 #[frb(mirror(CreateBolt12InvoiceRequest))]

@@ -822,6 +822,7 @@ dependencies = [
  "log",
  "nostr-sdk",
  "once_cell",
+ "sdk-common",
  "sdk-macros",
  "serde",
  "serde_json",
@@ -829,6 +830,7 @@ dependencies = [
  "tokio",
  "tokio_with_wasm",
  "uuid",
+ "web-time",
 ]
 
 [[package]]

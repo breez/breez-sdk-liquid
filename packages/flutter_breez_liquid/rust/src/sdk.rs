@@ -10,18 +10,15 @@ pub use crate::plugin::*;
 
 pub async fn connect(
     req: ConnectRequest,
-    plugins: Option<Vec<Arc<dyn Plugin>>>,
-) -> Result<BreezSdkLiquid, SdkError> {
-    let plugins = plugins.map(|plugins| {
-        plugins
-            .into_iter()
-            .map(|plugin| {
-                Arc::new(PluginWrapper { plugin }) as Arc<dyn breez_sdk_liquid::plugin::Plugin>
-            })
-            .collect()
-    });
-    let ln_sdk = LiquidSdk::connect(req, plugins).await?;
-    Ok(BreezSdkLiquid { sdk: ln_sdk })
+    plugin_configs: Option<PluginConfigs>,
+) -> Result<ConnectResponse, SdkError> {
+    let plugin_services: PluginServices = plugin_configs.unwrap_or_default().into();
+    let plugins = plugin_services.as_plugins();
+    let ln_sdk = LiquidSdk::connect(req, (!plugins.is_empty()).then_some(plugins)).await?;
+    Ok(ConnectResponse {
+        sdk: BreezSdkLiquid { sdk: ln_sdk },
+        plugins: plugin_services,
+    })
 }
 
 #[frb(sync)]
@@ -37,6 +34,7 @@ pub fn parse_invoice(input: String) -> Result<LNInvoice, PaymentError> {
     LiquidSdk::parse_invoice(&input)
 }
 
+#[derive(Clone)]
 pub struct BreezSdkLiquid {
     pub(crate) sdk: Arc<LiquidSdk>,
 }
