@@ -4,8 +4,8 @@ use breez_sdk_liquid::plugin::PluginStorage;
 
 use crate::{
     error::{NwcError, NwcResult},
-    model::{NwcConnection, PeriodicBudget},
-    MIN_REFRESH_INTERVAL_SEC,
+    model::{NwcConnection, PeriodicBudget, RefreshResult},
+    utils, MIN_REFRESH_INTERVAL_SEC,
 };
 use tokio_with_wasm::alias as tokio;
 
@@ -24,7 +24,7 @@ struct Lock<'a> {
 
 impl<'a> Drop for Lock<'a> {
     fn drop(&mut self) {
-        let _ = self.p.storage.set_item(KEY_NWC_LOCK, 0.to_string());
+        let _ = self.p.unlock();
     }
 }
 
@@ -60,6 +60,10 @@ impl Persister {
         }
         self.storage.set_item(KEY_NWC_LOCK, 1.to_string())?;
         Ok(Lock { p: self })
+    }
+
+    pub(crate) fn unlock(&self) -> NwcResult<()> {
+        Ok(self.storage.set_item(KEY_NWC_LOCK, 0.to_string())?)
     }
 
     pub(crate) async fn add_nwc_connection(
@@ -155,13 +159,40 @@ impl Persister {
         }
     }
 
-    pub(crate) fn set_connections_raw(
-        &self,
-        connections: HashMap<String, NwcConnection>,
-    ) -> NwcResult<()> {
-        let connections = serde_json::to_string(&connections)?;
-        self.storage.set_item(KEY_NWC_CONNECTIONS, connections)?;
-        Ok(())
+    /// Refreshes the active connections (expiry and budget) returning two arrays of the
+    /// corresponding connection names
+    pub(crate) async fn refresh_connections(&self) -> NwcResult<RefreshResult> {
+        let _ = self.lock().await?;
+        let now = utils::now();
+        let mut active_connections = self.list_nwc_connections_inner()?;
+        let mut result = RefreshResult::default();
+        for (name, connection) in active_connections.iter_mut() {
+            // If the connection has expired, mark it for deletion
+            if let Some(expiry) = connection.expiry_time_sec {
+                if now >= connection.created_at + expiry {
+                    result.deleted.push(name.clone());
+                    continue;
+                }
+            }
+            // If the connection's periodic budget has to be updated
+            if let Some(ref mut budget) = connection.periodic_budget {
+                if now >= budget.updated_at + budget.reset_time_sec {
+                    budget.used_budget_sat = 0;
+                    budget.updated_at = now;
+                    result.refreshed.push(name.clone());
+                }
+            }
+        }
+        for name in &result.deleted {
+            active_connections.remove(name);
+        }
+        if !result.refreshed.is_empty() || !result.deleted.is_empty() {
+            self.storage.set_item(
+                KEY_NWC_CONNECTIONS,
+                serde_json::to_string(&active_connections)?,
+            )?;
+        }
+        Ok(result)
     }
 
     fn list_nwc_connections_inner(&self) -> NwcResult<HashMap<String, NwcConnection>> {

@@ -109,3 +109,9 @@ pub(crate) struct ActiveConnection {
     pub connection: NwcConnection,
     pub uri: NostrWalletConnectURI,
 }
+
+#[derive(Default)]
+pub(crate) struct RefreshResult {
+    pub refreshed: Vec<String>,
+    pub deleted: Vec<String>,
+}
