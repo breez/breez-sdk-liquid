@@ -147,7 +147,6 @@ impl SdkNwcService {
         resub_tx: mpsc::Sender<()>,
     ) -> Result<RuntimeContext> {
         let persister = Persister::new(storage);
-        persister.unlock()?; // We unlock the database in case it was left in a locked state
         let client = NostrClient::default();
         for relay in self.config.relays() {
             if let Err(err) = client.add_relay(&relay).await {
@@ -307,7 +306,6 @@ impl SdkNwcService {
                     if let Err(err) = ctx
                         .persister
                         .update_periodic_budget(connection_name, periodic_budget.clone())
-                        .await
                     {
                         warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
                         return;
@@ -322,7 +320,6 @@ impl SdkNwcService {
                             if let Err(err) = ctx
                                 .persister
                                 .update_periodic_budget(connection_name, periodic_budget.clone())
-                                .await
                             {
                                 warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
                                 return;
@@ -440,7 +437,6 @@ impl SdkNwcService {
     async fn new_maybe_interval(ctx: &RuntimeContext) -> Option<Interval> {
         ctx.persister
             .get_min_interval()
-            .await
             .map(|interval| tokio::time::interval(Duration::from_secs(interval)))
     }
 
@@ -484,8 +480,7 @@ impl NwcService for SdkNwcService {
                 .map(|req| PeriodicBudget::from_budget_request(req, now)),
         };
         ctx.persister
-            .add_nwc_connection(req.name.clone(), connection.clone())
-            .await?;
+            .add_nwc_connection(req.name.clone(), connection.clone())?;
         ctx.trigger_resubscription().await;
         Ok(AddConnectionResponse { connection })
     }
@@ -494,33 +489,24 @@ impl NwcService for SdkNwcService {
         &self,
         req: EditConnectionRequest,
     ) -> NwcResult<EditConnectionResponse> {
-        let connection = self
-            .runtime_ctx()
-            .await?
-            .persister
-            .edit_nwc_connection(
-                &req.name,
-                req.expiry_time_sec,
-                req.receive_only,
-                req.periodic_budget_req
-                    .map(|req| PeriodicBudget::from_budget_request(req, utils::now())),
-            )
-            .await?;
+        let connection = self.runtime_ctx().await?.persister.edit_nwc_connection(
+            &req.name,
+            req.expiry_time_sec,
+            req.receive_only,
+            req.periodic_budget_req
+                .map(|req| PeriodicBudget::from_budget_request(req, utils::now())),
+        )?;
         self.runtime_ctx().await?.trigger_resubscription().await;
         Ok(EditConnectionResponse { connection })
     }
 
     async fn list_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
-        self.runtime_ctx()
-            .await?
-            .persister
-            .list_nwc_connections()
-            .await
+        self.runtime_ctx().await?.persister.list_nwc_connections()
     }
 
     async fn remove_connection(&self, name: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
-        ctx.persister.remove_nwc_connection(name).await?;
+        ctx.persister.remove_nwc_connection(name)?;
         ctx.trigger_resubscription().await;
         Ok(())
     }
@@ -611,7 +597,7 @@ impl Plugin for SdkNwcService {
                     tokio::select! {
                         Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &mut active_connections, &notification).await,
                         Some(_) = Self::min_refresh_interval(&mut maybe_expiry_interval) => {
-                            let result = match thread_ctx.persister.refresh_connections().await {
+                            let result = match thread_ctx.persister.refresh_connections() {
                                 Ok(result) => result,
                                 Err(err) => {
                                     warn!("Could not refresh connections: {err}");

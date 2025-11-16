@@ -950,13 +950,14 @@ interface PluginSdk {
 
 [Error]
 interface PluginStorageError {
+    DataTooOld();
     Encryption(string err);
     Generic(string err);
 };
 
 interface PluginStorage {
     [Throws=PluginStorageError]
-    void set_item(string key, string value);
+    void set_item(string key, string value, string? old_value);
 
     [Throws=PluginStorageError]
     string? get_item(string key);
