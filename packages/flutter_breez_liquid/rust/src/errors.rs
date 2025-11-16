@@ -38,6 +38,7 @@ pub enum _SdkError {
 
 #[frb(mirror(PluginStorageError))]
 pub enum _PluginStorageError {
+    DataTooOld,
     Encryption { err: String },
     Generic { err: String },
 }

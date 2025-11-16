@@ -12,7 +12,7 @@ use crate::{
 };
 use anyhow::Result;
 use breez_sdk_liquid::plugin::PluginSdk;
-use log::{error, info, warn};
+use log::{info, warn};
 use nostr_sdk::{
     nips::nip47::NostrWalletConnectURI, Alphabet, Client as NostrClient, EventBuilder, Filter,
     Keys, Kind, SingleLetterTag, Tag,
@@ -52,17 +52,13 @@ impl RuntimeContext {
                 details: NwcEventDetails::Disconnected,
             })
             .await;
-        if let Err(err) = self.persister.unlock() {
-            error!("Could not unlock database: {err}");
-        };
         self.event_manager.pause_notifications();
     }
 
     pub async fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
         Ok(self
             .persister
-            .list_nwc_connections()
-            .await?
+            .list_nwc_connections()?
             .into_iter()
             .filter_map(|(name, connection)| {
                 NostrWalletConnectURI::from_str(&connection.connection_string)

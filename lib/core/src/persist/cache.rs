@@ -16,7 +16,7 @@ pub(crate) const KEY_LAST_DERIVATION_INDEX: &str = "last_derivation_index";
 const KEY_LAST_SCANNED_DERIVATION_INDEX: &str = "last_scanned_derivation_index";
 
 impl Persister {
-    fn get_cached_item_inner(tx: &Transaction, key: &str) -> Result<Option<String>> {
+    pub(crate) fn get_cached_item_inner(tx: &Transaction, key: &str) -> Result<Option<String>> {
         let res = tx.query_row(
             "SELECT value FROM cached_items WHERE key = ?1",
             [key],
