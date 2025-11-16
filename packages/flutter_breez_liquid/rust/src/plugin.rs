@@ -74,8 +74,13 @@ pub struct PluginStorage {
 
 impl PluginStorage {
     #[frb(sync)]
-    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
-        self.storage.set_item(&key, value)
+    pub fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> Result<(), PluginStorageError> {
+        self.storage.set_item(&key, value, old_value)
     }
 
     #[frb(sync)]

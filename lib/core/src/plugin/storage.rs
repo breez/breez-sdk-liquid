@@ -18,6 +18,9 @@ pub struct PluginStorage {
 
 #[derive(Debug, thiserror::Error)]
 pub enum PluginStorageError {
+    #[error("Could not write to storage: value has changed since last read.")]
+    DataTooOld,
+
     #[error("Could not encrypt storage data: {err}")]
     Encryption { err: String },
 
@@ -28,6 +31,14 @@ pub enum PluginStorageError {
 impl From<aes_gcm::Error> for PluginStorageError {
     fn from(value: aes_gcm::Error) -> Self {
         Self::Encryption {
+            err: value.to_string(),
+        }
+    }
+}
+
+impl From<rusqlite::Error> for PluginStorageError {
+    fn from(value: rusqlite::Error) -> Self {
+        Self::Generic {
             err: value.to_string(),
         }
     }
@@ -93,11 +104,35 @@ impl PluginStorage {
         format!("{}-{}", self.plugin_id, key)
     }
 
-    pub fn set_item(&self, key: &str, value: String) -> Result<(), PluginStorageError> {
+    /// Writes/updates a value in the database
+    ///
+    /// # Arguments
+    ///   - key: The name of the database key to write into
+    ///   - value: The value to write
+    ///   - old_value (optional): The previous value of that field (if any). When provided, it
+    ///     will ensure that the value that's being written has not been modified, throwing a
+    ///     [PluginStorageError::DataTooOld] error otherwise
+    pub fn set_item(
+        &self,
+        key: &str,
+        value: String,
+        old_value: Option<String>,
+    ) -> Result<(), PluginStorageError> {
         let scoped_key = self.scoped_key(key);
-        self.get_persister()?
-            .update_cached_item(&scoped_key, self.encrypt(value)?)
-            .map_err(Into::into)
+        let persister = self.get_persister()?;
+        let mut con = persister.get_connection()?;
+        let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+        if let Some(old_value) = old_value {
+            if let Some(current_value) = Persister::get_cached_item_inner(&tx, &scoped_key)? {
+                let current_value = self.decrypt(current_value)?;
+                if old_value != current_value {
+                    return Err(PluginStorageError::DataTooOld);
+                }
+            }
+        }
+        Persister::update_cached_item_inner(&tx, &scoped_key, self.encrypt(value)?)?;
+        tx.commit()?;
+        Ok(())
     }
 
     pub fn get_item(&self, key: &str) -> Result<Option<String>, PluginStorageError> {
