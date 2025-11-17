@@ -92,17 +92,14 @@ pub mod event {
         },
         ListTransactions,
         GetBalance,
-        ConnectionExpired {
-            name: String,
-        },
-        ConnectionRefreshed {
-            name: String,
-        },
+        ConnectionExpired,
+        ConnectionRefreshed,
     }
 
     #[frb(mirror(NwcEvent))]
     pub struct _NwcEvent {
         pub event_id: Option<String>,
+        pub connection_name: Option<String>,
         pub details: NwcEventDetails,
     }
 
