@@ -349,7 +349,14 @@ impl SdkNwcService {
             }
         };
 
-        Self::handle_local_notification(ctx, &result, &error, &event.id.to_string()).await;
+        Self::handle_local_notification(
+            ctx,
+            connection_name.clone(),
+            &result,
+            &error,
+            &event.id.to_string(),
+        )
+        .await;
 
         let content = match serde_json::to_string(&Response {
             result_type: req.method,
@@ -387,6 +394,7 @@ impl SdkNwcService {
 
     async fn handle_local_notification(
         ctx: &RuntimeContext,
+        connection_name: String,
         result: &Option<ResponseResult>,
         error: &Option<NIP47Error>,
         event_id: &str,
@@ -400,6 +408,7 @@ impl SdkNwcService {
                     fees_sat: response.fees_paid.map(|f| f / 1000),
                     error: None,
                 },
+                connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
             (None, Some(error)) => match error.code {
@@ -410,6 +419,7 @@ impl SdkNwcService {
                         fees_sat: None,
                         error: Some(error.message.clone()),
                     },
+                    connection_name: Some(connection_name),
                     event_id: Some(event_id.to_string()),
                 },
                 _ => {
@@ -419,10 +429,12 @@ impl SdkNwcService {
             },
             (Some(ResponseResult::ListTransactions(_)), None) => NwcEvent {
                 details: NwcEventDetails::ListTransactions,
+                connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
             (Some(ResponseResult::GetBalance(_)), None) => NwcEvent {
                 details: NwcEventDetails::GetBalance,
+                connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
             _ => {
@@ -550,6 +562,7 @@ impl Plugin for SdkNwcService {
                 .event_manager
                 .notify(NwcEvent {
                     details: NwcEventDetails::Connected,
+                    connection_name: None,
                     event_id: None,
                 })
                 .await;
@@ -604,11 +617,11 @@ impl Plugin for SdkNwcService {
                                     continue;
                                 }
                             };
-                            for name in result.deleted {
-                                thread_ctx.event_manager.notify(NwcEvent { event_id: None, details: NwcEventDetails::ConnectionExpired { name } }).await;
+                            for connection_name in result.deleted {
+                                thread_ctx.event_manager.notify(NwcEvent { event_id: None, connection_name: Some(connection_name) , details: NwcEventDetails::ConnectionExpired }).await;
                             }
-                            for name in result.refreshed {
-                                thread_ctx.event_manager.notify(NwcEvent { event_id: None, details: NwcEventDetails::ConnectionRefreshed { name } }).await;
+                            for connection_name in result.refreshed {
+                                thread_ctx.event_manager.notify(NwcEvent { event_id: None, connection_name: Some(connection_name), details: NwcEventDetails::ConnectionRefreshed  }).await;
                             }
                         }
                         Some(_) = resub_rx.recv() => {

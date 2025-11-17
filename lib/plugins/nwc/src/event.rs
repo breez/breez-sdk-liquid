@@ -17,17 +17,14 @@ pub enum NwcEventDetails {
     },
     ListTransactions,
     GetBalance,
-    ConnectionExpired {
-        name: String,
-    },
-    ConnectionRefreshed {
-        name: String,
-    },
+    ConnectionExpired,
+    ConnectionRefreshed,
 }
 
 /// The event emitted when an NWC operation has been handled
 #[derive(Clone, Debug, PartialEq)]
 pub struct NwcEvent {
+    pub connection_name: Option<String>,
     pub event_id: Option<String>,
     pub details: NwcEventDetails,
 }

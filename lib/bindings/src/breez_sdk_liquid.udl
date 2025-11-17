@@ -1000,12 +1000,13 @@ interface NwcEventDetails {
     PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
     ListTransactions();
     GetBalance();
-    ConnectionExpired(string name);
-    ConnectionRefreshed(string name);
+    ConnectionExpired();
+    ConnectionRefreshed();
 };
 
 dictionary NwcEvent {
     string? event_id;
+    string? connection_name;
     NwcEventDetails details;
 };
 

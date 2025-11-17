@@ -49,6 +49,7 @@ impl RuntimeContext {
         self.event_manager
             .notify(NwcEvent {
                 event_id: None,
+                connection_name: None,
                 details: NwcEventDetails::Disconnected,
             })
             .await;
