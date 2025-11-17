@@ -90,9 +90,11 @@ jobs:
           path: |
             packages/react-native/ubrn.config.yaml
             packages/react-native/android/generated
-            packages/react-native/cpp/generated
+            packages/react-native/android/CMakeLists.txt
+            packages/react-native/cpp
             packages/react-native/lib
-            packages/react-native/src/generated
+            packages/react-native/src
+            packages/react-native/*.podspec
 
       - name: Compress Android binaries
         working-directory: packages/react-native
@@ -135,6 +137,15 @@ jobs:
           node-version-file: .nvmrc
           registry-url: 'https://registry.npmjs.org'
           scope: '@breeztech'
+
+      - name: Remove existing bindings
+        run: |
+          git rm -r android/generated || true
+          git rm android/CMakeLists.txt || true
+          git rm -r cpp || true
+          git rm -r lib || true
+          git rm -r src || true
+          git rm *.podspec || true
 
       - name: Download React Native bindings
         uses: actions/download-artifact@v4

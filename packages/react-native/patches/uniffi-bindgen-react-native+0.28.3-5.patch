@@ -210,6 +210,19 @@ index d8d1c1a..41172a0 100644
      return {{ ns }}::installRustCrate(*runtime, jsCallInvoker);
  }
  
+diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/module-template.podspec b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/module-template.podspec
+index 3d1f9d4..831116d 100644
+--- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/module-template.podspec
++++ b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/codegen/templates/module-template.podspec
+@@ -30,7 +30,7 @@ Pod::Spec.new do |s|
+   {%- let tm = self.relative_to(root, dir) %}
+   {%- let dir = self.config.project.bindings.cpp_path(root) %}
+   {%- let bindings = self.relative_to(root, dir) -%}
+-  s.source_files = "{{ ios }}/**/*.{h,m,mm,swift}", "{{ codegen }}/**/*.{h,m,mm}", "{{ tm }}/**/*.{hpp,cpp,c,h}", "{{ bindings }}/**/*.{hpp,cpp,c,h}"
++  s.source_files = "{{ ios }}/*.{h,m,mm,swift}", "{{ codegen }}/**/*.{h}", "{{ tm }}/**/*.{hpp,cpp,c,h}", "{{ bindings }}/**/*.{hpp,cpp,c,h}"
+   s.vendored_frameworks = "{{ framework }}"
+   s.dependency    "uniffi-bindgen-react-native", "{{ self.config.project.ubrn_version() }}"
+ 
 diff --git a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs b/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
 index 42d21cf..72113f6 100644
 --- a/node_modules/uniffi-bindgen-react-native/crates/ubrn_cli/src/ios.rs
