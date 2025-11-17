@@ -78,6 +78,14 @@ pub struct LNOffer {
     pub paths: Vec<LnOfferBlindedPath>,
 }
 
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NostrWalletConnectUri)]
+pub struct NostrWalletConnectUri {
+    pub public_key: String,
+    pub secret: String,
+    pub relays: Vec<String>,
+    pub lud16: Option<String>,
+}
+
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::InputType)]
 pub enum InputType {
     BitcoinAddress {
@@ -111,6 +119,9 @@ pub enum InputType {
     },
     LnUrlError {
         data: LnUrlErrorData,
+    },
+    NostrWalletConnectUri {
+        data: NostrWalletConnectUri,
     },
 }
 
