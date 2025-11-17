@@ -13,8 +13,8 @@ pub use sdk_common::prelude::{
     BitcoinAddressData, CurrencyInfo, ExternalInputParser, FiatCurrency, InputType, LNInvoice,
     LNOffer, LiquidAddressData, LnOfferBlindedPath, LnUrlAuthRequestData, LnUrlErrorData,
     LnUrlPayErrorData, LnUrlPayRequestData, LnUrlWithdrawRequest, LnUrlWithdrawRequestData,
-    LocaleOverrides, LocalizedName, MessageSuccessActionData, Network, Rate, RouteHint,
-    RouteHintHop, SuccessAction, SuccessActionProcessed, Symbol, UrlSuccessActionData,
+    LocaleOverrides, LocalizedName, MessageSuccessActionData, Network, NostrWalletConnectUri, Rate,
+    RouteHint, RouteHintHop, SuccessAction, SuccessActionProcessed, Symbol, UrlSuccessActionData,
 };
 
 #[frb(mirror(Network))]
@@ -92,6 +92,14 @@ pub struct _LNOffer {
     pub paths: Vec<LnOfferBlindedPath>,
 }
 
+#[frb(mirror(NostrWalletConnectUri))]
+pub struct _NostrWalletConnectUri {
+    pub public_key: String,
+    pub secret: String,
+    pub relays: Vec<String>,
+    pub lud16: Option<String>,
+}
+
 #[frb(mirror(InputType))]
 pub enum _InputType {
     BitcoinAddress {
@@ -125,6 +133,9 @@ pub enum _InputType {
     },
     LnUrlError {
         data: LnUrlErrorData,
+    },
+    NostrWalletConnectUri {
+        data: NostrWalletConnectUri,
     },
 }
 
