@@ -3,6 +3,7 @@ use std::sync::Arc;
 mod plugin;
 
 use anyhow::Result;
+pub use breez_sdk_liquid::NostrWalletConnectUri as NostrConnectionUri;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;

@@ -59,6 +59,13 @@ dictionary LNOffer {
     string? issuer;
 };
 
+dictionary NostrConnectionUri {
+    string public_key;
+    string secret;
+    sequence<string> relays;
+    string? lud16;
+};
+
 [Enum]
 interface InputType {
     BitcoinAddress(BitcoinAddressData address);
@@ -71,6 +78,7 @@ interface InputType {
     LnUrlWithdraw(LnUrlWithdrawRequestData data);
     LnUrlAuth(LnUrlAuthRequestData data);
     LnUrlError(LnUrlErrorData data);
+    NostrWalletConnectUri(NostrConnectionUri data);
 };
 
 dictionary BitcoinAddressData {
