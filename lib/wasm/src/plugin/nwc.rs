@@ -84,6 +84,7 @@ mod model {
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEvent)]
     pub struct NwcEvent {
         pub event_id: Option<String>,
+        pub connection_name: Option<String>,
         pub details: NwcEventDetails,
     }
 

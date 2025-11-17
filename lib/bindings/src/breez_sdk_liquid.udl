@@ -1005,6 +1005,7 @@ interface NwcEventDetails {
 
 dictionary NwcEvent {
     string? event_id;
+    string? connection_name;
     NwcEventDetails details;
 };
 

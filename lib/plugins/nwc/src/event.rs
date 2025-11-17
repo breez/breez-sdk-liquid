@@ -28,6 +28,7 @@ pub enum NwcEventDetails {
 /// The event emitted when an NWC operation has been handled
 #[derive(Clone, Debug, PartialEq)]
 pub struct NwcEvent {
+    pub connection_name: Option<String>,
     pub event_id: Option<String>,
     pub details: NwcEventDetails,
 }
