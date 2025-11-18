@@ -2858,7 +2858,7 @@ impl LiquidSdk {
 
         match req.payment_method.clone() {
             #[allow(deprecated)]
-            PaymentMethod::Bolt11Invoice | PaymentMethod::Lightning => {
+            PaymentMethod::Bolt11Invoice => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(
@@ -3020,7 +3020,7 @@ impl LiquidSdk {
 
         match payment_method {
             #[allow(deprecated)]
-            PaymentMethod::Bolt11Invoice | PaymentMethod::Lightning => {
+            PaymentMethod::Bolt11Invoice => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
                         return Err(PaymentError::asset_error(

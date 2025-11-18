@@ -728,7 +728,6 @@ pub enum _PaymentDetails {
 
 #[frb(mirror(PaymentMethod))]
 pub enum _PaymentMethod {
-    Lightning,
     Bolt11Invoice,
     Bolt12Offer,
     BitcoinAddress,

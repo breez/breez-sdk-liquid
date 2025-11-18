@@ -467,7 +467,6 @@ dictionary SendPaymentResponse {
 };
 
 enum PaymentMethod {
-    "Lightning",
     "Bolt11Invoice",
     "Bolt12Offer",
     "BitcoinAddress",
