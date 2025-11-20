@@ -1,7 +1,8 @@
-use std::sync::Arc;
-
-use crate::{errors::*, events::BreezEventListener, frb_generated::StreamSink};
+use crate::{
+    errors::*, events::BreezEventListener, frb_generated::StreamSink, nwc::BreezNwcService,
+};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::model::NwcConfig;
 use flutter_rust_bridge::frb;
 
 pub use breez_sdk_liquid::plugin::{
@@ -46,6 +47,10 @@ impl PluginSdk {
         self.plugin_sdk.receive_payment(&req).await
     }
 
+    pub async fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        self.plugin_sdk.parse(&input).await
+    }
+
     pub async fn list_payments(
         &self,
         req: ListPaymentsRequest,
@@ -69,8 +74,13 @@ pub struct PluginStorage {
 
 impl PluginStorage {
     #[frb(sync)]
-    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
-        self.storage.set_item(&key, value)
+    pub fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> Result<(), PluginStorageError> {
+        self.storage.set_item(&key, value, old_value)
     }
 
     #[frb(sync)]
@@ -90,22 +100,19 @@ pub trait Plugin: Send + Sync {
     fn on_stop(&self);
 }
 
-pub(crate) struct PluginWrapper {
-    pub(crate) plugin: Arc<dyn Plugin>,
+#[derive(Default)]
+pub struct PluginConfigs {
+    pub nwc: Option<NwcConfig>,
 }
 
-#[async_trait::async_trait]
-impl _Plugin for PluginWrapper {
-    fn id(&self) -> String {
-        self.plugin.id()
-    }
+#[derive(Clone, Default)]
+pub struct PluginServices {
+    pub nwc: Option<BreezNwcService>,
+}
 
-    async fn on_start(&self, plugin_sdk: _PluginSdk, storage: _PluginStorage) {
-        self.plugin
-            .on_start(PluginSdk { plugin_sdk }, PluginStorage { storage });
-    }
-
-    async fn on_stop(&self) {
-        self.plugin.on_stop();
+impl Into<PluginServices> for PluginConfigs {
+    fn into(self) -> PluginServices {
+        let nwc = self.nwc.map(BreezNwcService::new);
+        PluginServices { nwc }
     }
 }

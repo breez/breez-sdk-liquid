@@ -20,8 +20,15 @@ impl PluginStorage {
 #[wasm_bindgen]
 impl PluginStorage {
     #[wasm_bindgen(js_name = "setItem")]
-    pub fn set_item(&self, key: String, value: String) -> WasmResult<()> {
-        self.storage.set_item(&key, value).map_err(Into::into)
+    pub fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> WasmResult<()> {
+        self.storage
+            .set_item(&key, value, old_value)
+            .map_err(Into::into)
     }
 
     #[wasm_bindgen(js_name = "getItem")]

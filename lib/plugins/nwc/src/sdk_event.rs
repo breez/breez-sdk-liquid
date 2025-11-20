@@ -1,6 +1,6 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
-use breez_sdk_liquid::model::{EventListener, SdkEvent};
+use breez_sdk_liquid::model::{EventListener, PaymentDetails, PaymentType, SdkEvent};
 use log::{info, warn};
 use nostr_sdk::{
     nips::nip44::{encrypt, Version},
@@ -15,12 +15,12 @@ use crate::context::RuntimeContext;
 
 pub(crate) struct SdkEventListener {
     ctx: Arc<RuntimeContext>,
-    clients: HashMap<String, NostrWalletConnectURI>,
+    active_uris: Vec<NostrWalletConnectURI>,
 }
 
 impl SdkEventListener {
-    pub fn new(ctx: Arc<RuntimeContext>, clients: HashMap<String, NostrWalletConnectURI>) -> Self {
-        Self { ctx, clients }
+    pub fn new(ctx: Arc<RuntimeContext>, active_uris: Vec<NostrWalletConnectURI>) -> Self {
+        Self { ctx, active_uris }
     }
 }
 
@@ -32,7 +32,7 @@ impl EventListener for SdkEventListener {
         };
 
         let (invoice, description, preimage, payment_hash) = match &payment.details {
-            crate::model::PaymentDetails::Lightning {
+            PaymentDetails::Lightning {
                 invoice,
                 description,
                 preimage,
@@ -50,7 +50,7 @@ impl EventListener for SdkEventListener {
         };
 
         let payment_notification = PaymentNotification {
-            transaction_type: Some(if payment.payment_type == crate::model::PaymentType::Send {
+            transaction_type: Some(if payment.payment_type == PaymentType::Send {
                 TransactionType::Outgoing
             } else {
                 TransactionType::Incoming
@@ -68,7 +68,7 @@ impl EventListener for SdkEventListener {
             metadata: None,
         };
 
-        let notification = if payment.payment_type == crate::model::PaymentType::Send {
+        let notification = if payment.payment_type == PaymentType::Send {
             Notification {
                 notification_type: NotificationType::PaymentSent,
                 notification: NotificationResult::PaymentSent(payment_notification),
@@ -88,7 +88,7 @@ impl EventListener for SdkEventListener {
             }
         };
 
-        for uri in self.clients.values() {
+        for uri in self.active_uris.iter() {
             let nwc_client_keypair = Keys::new(uri.secret.clone());
             let encrypted_content = match encrypt(
                 self.ctx.our_keys.secret_key(),

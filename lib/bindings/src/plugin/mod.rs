@@ -47,6 +47,10 @@ impl PluginSdk {
         rt().block_on(self.plugin_sdk.receive_payment(&req))
     }
 
+    pub fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        rt().block_on(self.plugin_sdk.parse(&input))
+    }
+
     pub fn list_payments(&self, req: ListPaymentsRequest) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.plugin_sdk.list_payments(&req))
     }
@@ -67,8 +71,13 @@ pub struct PluginStorage {
 }
 
 impl PluginStorage {
-    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
-        self.storage.set_item(&key, value)
+    pub fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> Result<(), PluginStorageError> {
+        self.storage.set_item(&key, value, old_value)
     }
 
     pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
