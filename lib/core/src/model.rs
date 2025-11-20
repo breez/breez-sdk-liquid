@@ -598,8 +598,6 @@ pub(crate) struct ReservedAddress {
 /// The send/receive methods supported by the SDK
 #[derive(Clone, Debug, Serialize)]
 pub enum PaymentMethod {
-    #[deprecated(since = "0.8.1", note = "Use `Bolt11Invoice` instead")]
-    Lightning,
     Bolt11Invoice,
     Bolt12Offer,
     BitcoinAddress,

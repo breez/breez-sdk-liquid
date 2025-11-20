@@ -76,7 +76,7 @@ class LnurlPayInvoiceJob(
                 )
             val prepareReceivePaymentRes =
                 liquidSDK.prepareReceivePayment(
-                    PrepareReceiveRequest(PaymentMethod.LIGHTNING, ReceiveAmount.Bitcoin(amountSat)),
+                    PrepareReceiveRequest(PaymentMethod.BOLT11_INVOICE, ReceiveAmount.Bitcoin(amountSat)),
                 )
             val receivePaymentResponse =
                 liquidSDK.receivePayment(
