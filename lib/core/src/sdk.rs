@@ -56,7 +56,7 @@ use crate::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use crate::model::PaymentState::*;
 use crate::model::Signer;
 use crate::payjoin::{side_swap::SideSwapPayjoinService, PayjoinService};
-use crate::plugin::{Plugin, PluginSdk, PluginStorage};
+use crate::plugin::{BreezPluginSdk, BreezPluginStorage, Plugin};
 use crate::receive_swap::ReceiveSwapHandler;
 use crate::send_swap::SendSwapHandler;
 use crate::swapper::SubscriptionHandler;
@@ -551,14 +551,13 @@ impl LiquidSdk {
                 .map_err(|err| {
                     SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
                 })?;
-            let storage = PluginStorage::new(
+            let plugin_sdk = Arc::new(BreezPluginSdk::new(Arc::downgrade(self)));
+            let plugin_storage = Arc::new(BreezPluginStorage::new(
                 Arc::downgrade(&self.persister),
                 &plugin_passphrase,
                 plugin.id(),
-            )?;
-            plugin
-                .on_start(PluginSdk::new(Arc::downgrade(self)), storage)
-                .await;
+            )?);
+            plugin.on_start(plugin_sdk, plugin_storage).await;
         }
         Ok(())
     }

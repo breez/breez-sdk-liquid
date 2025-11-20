@@ -142,8 +142,8 @@ impl SdkNwcService {
 
     async fn new_ctx(
         &self,
-        sdk: PluginSdk,
-        storage: PluginStorage,
+        sdk: Arc<dyn PluginSdk>,
+        storage: Arc<dyn PluginStorage>,
         resub_tx: mpsc::Sender<()>,
     ) -> Result<RuntimeContext> {
         let persister = Persister::new(storage);
@@ -538,7 +538,7 @@ impl Plugin for SdkNwcService {
         "breez-nwc-plugin".to_string()
     }
 
-    async fn on_start(&self, sdk: PluginSdk, storage: PluginStorage) {
+    async fn on_start(&self, sdk: Arc<dyn PluginSdk>, storage: Arc<dyn PluginStorage>) {
         let mut ctx_lock = self.runtime_ctx.lock().await;
         if ctx_lock.is_some() {
             warn!("Called on_start when service was already running.");

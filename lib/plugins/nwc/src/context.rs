@@ -22,7 +22,7 @@ use tokio::task::JoinHandle;
 use tokio_with_wasm::alias as tokio;
 
 pub(crate) struct RuntimeContext {
-    pub sdk: PluginSdk,
+    pub sdk: Arc<dyn PluginSdk>,
     pub client: NostrClient,
     pub our_keys: Keys,
     pub persister: Persister,

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
 
@@ -14,22 +14,24 @@ const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
 
 pub(crate) struct Persister {
-    pub(crate) storage: PluginStorage,
+    pub(crate) storage: Arc<dyn PluginStorage>,
 }
 
 impl Persister {
-    pub(crate) fn new(storage: PluginStorage) -> Self {
+    pub(crate) fn new(storage: Arc<dyn PluginStorage>) -> Self {
         Self { storage }
     }
 
     pub(crate) fn set_nwc_seckey(&self, key: String) -> NwcResult<()> {
         self.storage
-            .set_item(KEY_NWC_SECKEY, key, None)
+            .set_item(KEY_NWC_SECKEY.to_string(), key, None)
             .map_err(Into::into)
     }
 
     pub(crate) fn get_nwc_seckey(&self) -> NwcResult<Option<String>> {
-        self.storage.get_item(KEY_NWC_SECKEY).map_err(Into::into)
+        self.storage
+            .get_item(KEY_NWC_SECKEY.to_string())
+            .map_err(Into::into)
     }
 
     fn set_connections_safe<F, R>(&self, f: F) -> NwcResult<R>
@@ -42,7 +44,7 @@ impl Persister {
             let (changed, result) = f(&mut new_connections)?;
             if changed {
                 let set_result = self.storage.set_item(
-                    KEY_NWC_CONNECTIONS,
+                    KEY_NWC_CONNECTIONS.to_string(),
                     serde_json::to_string(&new_connections)?,
                     Some(serde_json::to_string(&connections)?),
                 );
@@ -180,7 +182,7 @@ impl Persister {
     pub(crate) fn list_nwc_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
         let connections = self
             .storage
-            .get_item(KEY_NWC_CONNECTIONS)?
+            .get_item(KEY_NWC_CONNECTIONS.to_string())?
             .unwrap_or("{}".to_string());
         let connections = serde_json::from_str(&connections)?;
         Ok(connections)

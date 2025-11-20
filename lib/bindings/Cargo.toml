@@ -19,8 +19,8 @@ anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }
 breez-sdk-liquid-nwc = { path = "../plugins/nwc" }
 log = { workspace = true }
-uniffi = { package = "uniffi", version = "0.28.0", features = [ "bindgen-tests", "cli" ] }
-uniffi_bindgen = { package = "uniffi_bindgen", version = "0.28.0" }
+uniffi = { package = "uniffi", version = "0.28.3", features = [ "bindgen-tests", "cli" ] }
+uniffi_bindgen = { package = "uniffi_bindgen", version = "0.28.3" }
 camino = "1.1.1"
 thiserror = { workspace = true }
 tokio = { version = "1", features = ["rt"] }

@@ -9,13 +9,6 @@ use std::sync::{Arc, Weak};
 
 use crate::persist::Persister;
 
-#[derive(Clone)]
-pub struct PluginStorage {
-    plugin_id: String,
-    persister: Weak<Persister>,
-    cipher: Aes256Gcm,
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum PluginStorageError {
     #[error("Could not write to storage: value has changed since last read.")]
@@ -52,7 +45,33 @@ impl From<anyhow::Error> for PluginStorageError {
     }
 }
 
-impl PluginStorage {
+pub trait PluginStorage: Send + Sync {
+    /// Writes/updates a value in the database
+    ///
+    /// # Arguments
+    ///   - key: The name of the database key to write into
+    ///   - value: The value to write
+    ///   - old_value (optional): The previous value of that field (if any). When provided, it
+    ///     will ensure that the value that's being written has not been modified, throwing a
+    ///     [PluginStorageError::DataTooOld] error otherwise
+    fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> Result<(), PluginStorageError>;
+    fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError>;
+    fn remove_item(&self, key: String) -> Result<(), PluginStorageError>;
+}
+
+#[derive(Clone)]
+pub(crate) struct BreezPluginStorage {
+    plugin_id: String,
+    persister: Weak<Persister>,
+    cipher: Aes256Gcm,
+}
+
+impl BreezPluginStorage {
     pub(crate) fn new(
         persister: Weak<Persister>,
         passphrase: &[u8],
@@ -100,10 +119,12 @@ impl PluginStorage {
         Ok(result)
     }
 
-    pub(crate) fn scoped_key(&self, key: &str) -> String {
+    fn scoped_key(&self, key: &str) -> String {
         format!("{}-{}", self.plugin_id, key)
     }
+}
 
+impl PluginStorage for BreezPluginStorage {
     /// Writes/updates a value in the database
     ///
     /// # Arguments
@@ -112,13 +133,13 @@ impl PluginStorage {
     ///   - old_value (optional): The previous value of that field (if any). When provided, it
     ///     will ensure that the value that's being written has not been modified, throwing a
     ///     [PluginStorageError::DataTooOld] error otherwise
-    pub fn set_item(
+    fn set_item(
         &self,
-        key: &str,
+        key: String,
         value: String,
         old_value: Option<String>,
     ) -> Result<(), PluginStorageError> {
-        let scoped_key = self.scoped_key(key);
+        let scoped_key = self.scoped_key(&key);
         let persister = self.get_persister()?;
         let mut con = persister.get_connection()?;
         let tx = con.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
@@ -135,8 +156,8 @@ impl PluginStorage {
         Ok(())
     }
 
-    pub fn get_item(&self, key: &str) -> Result<Option<String>, PluginStorageError> {
-        let scoped_key = self.scoped_key(key);
+    fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
+        let scoped_key = self.scoped_key(&key);
         let value = self
             .get_persister()?
             .get_cached_item(&scoped_key)
@@ -147,8 +168,8 @@ impl PluginStorage {
         Ok(None)
     }
 
-    pub fn remove_item(&self, key: &str) -> Result<(), PluginStorageError> {
-        let scoped_key = self.scoped_key(key);
+    fn remove_item(&self, key: String) -> Result<(), PluginStorageError> {
+        let scoped_key = self.scoped_key(&key);
         self.get_persister()?
             .delete_cached_item(&scoped_key)
             .map_err(Into::into)

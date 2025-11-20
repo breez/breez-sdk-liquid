@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use breez_sdk_liquid::model::{
     ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentMethod, PaymentState,
     PaymentType, PrepareReceiveRequest, PrepareSendRequest, ReceiveAmount, ReceivePaymentRequest,
@@ -27,11 +29,11 @@ pub trait RelayMessageHandler: Send + Sync {
 }
 
 pub struct SdkRelayMessageHandler {
-    sdk: PluginSdk,
+    sdk: Arc<dyn PluginSdk>,
 }
 
 impl SdkRelayMessageHandler {
-    pub fn new(sdk: PluginSdk) -> Self {
+    pub fn new(sdk: Arc<dyn PluginSdk>) -> Self {
         Self { sdk }
     }
 }

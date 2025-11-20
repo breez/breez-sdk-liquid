@@ -77,12 +77,10 @@ impl Plugin for BindingNwcService {
         self.inner.id()
     }
 
-    fn on_start(&self, plugin_sdk: Arc<PluginSdk>, storage: Arc<PluginStorage>) {
+    fn on_start(&self, plugin_sdk: Arc<dyn PluginSdk>, storage: Arc<dyn PluginStorage>) {
         let cloned = self.inner.clone();
         rt().spawn(async move {
-            cloned
-                .on_start(plugin_sdk.plugin_sdk.clone(), storage.storage.clone())
-                .await;
+            cloned.on_start(plugin_sdk.get_inner(), storage).await;
         });
     }
 

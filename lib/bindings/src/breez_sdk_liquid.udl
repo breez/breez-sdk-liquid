@@ -305,6 +305,7 @@ dictionary LnUrlPaySuccessData {
 // BEGIN plugin interfaces
 
 // Interface
+[Trait]
 interface PluginSdk {
     [Throws=SdkError]
     GetInfoResponse get_info();
@@ -341,6 +342,7 @@ interface PluginStorageError {
     Generic(string err);
 };
 
+[Trait]
 interface PluginStorage {
     [Throws=PluginStorageError]
     void set_item(string key, string value, string? old_value);
@@ -352,7 +354,8 @@ interface PluginStorage {
     void remove_item(string key);
 };
 
-callback interface Plugin {
+[Trait,WithForeign]
+interface Plugin {
     string id();
     void on_start(PluginSdk plugin_sdk, PluginStorage storage);
     void on_stop();
