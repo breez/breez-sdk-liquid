@@ -304,7 +304,14 @@ dictionary LnUrlPaySuccessData {
 //////////////////////////////////
 // BEGIN plugin interfaces
 
-// Interface
+dictionary PluginServices {
+    BindingNwcService? nwc = null;
+};
+
+dictionary PluginConfigs {
+    NwcConfig? nwc = null;
+};
+
 interface PluginSdk {
     [Throws=SdkError]
     GetInfoResponse get_info();
@@ -371,8 +378,8 @@ enum NwcError {
 };
 
 dictionary NwcConfig {
-  sequence<string>? relay_urls;
-  string? secret_key_hex;
+  sequence<string>? relay_urls = null;
+  string? secret_key_hex = null;
 };
 
 [Enum]
@@ -534,6 +541,11 @@ dictionary ConnectRequest {
     string? mnemonic = null;
     string? passphrase = null;
     sequence<u8>? seed = null;
+};
+
+dictionary ConnectResponse {
+    BindingLiquidSdk sdk;
+    PluginServices plugins;
 };
 
 dictionary ConnectWithSignerRequest {
@@ -928,10 +940,10 @@ dictionary AssetMetadata {
 
 namespace breez_sdk_liquid {
     [Throws=SdkError]
-    BindingLiquidSdk connect(ConnectRequest req, sequence<Plugin>? plugins);
+    ConnectResponse connect(ConnectRequest req, PluginConfigs? plugin_configs);
 
     [Throws=SdkError]
-    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer, sequence<Plugin>? plugins);
+    ConnectResponse connect_with_signer(ConnectWithSignerRequest req, Signer signer, PluginConfigs? plugin_configs);
 
     [Throws=SdkError]
     void set_logger(Logger logger);

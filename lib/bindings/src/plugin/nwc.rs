@@ -31,6 +31,7 @@ impl breez_sdk_liquid_nwc::event::NwcEventListener for NwcEventListenerWrapper {
     }
 }
 
+#[derive(Clone)]
 pub struct BindingNwcService {
     inner: Arc<SdkNwcService>,
 }

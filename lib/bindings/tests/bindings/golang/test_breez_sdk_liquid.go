@@ -15,7 +15,7 @@ func main() {
 		log.Fatalf("Config creation failed: %#v", err)
 	}
 
-	sdk, err := breez_sdk_liquid.Connect(breez_sdk_liquid.ConnectRequest{
+	connectResponse, err := breez_sdk_liquid.Connect(breez_sdk_liquid.ConnectRequest{
 		Config:   config,
 		Mnemonic: &mnemonic,
 	}, nil)
@@ -24,6 +24,7 @@ func main() {
 		log.Fatalf("Connect failed: %#v", err)
 	}
 
+	sdk := connectResponse.Sdk
 	info, err := sdk.GetInfo()
 
 	if err != nil {

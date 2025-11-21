@@ -10,7 +10,8 @@ let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon 
 var config = try breez_sdk_liquid.defaultConfig(network: .testnet, breezApiKey: nil);
 config.syncServiceUrl = nil
 let connectRequest = breez_sdk_liquid.ConnectRequest(config: config, mnemonic: mnemonic);
-let sdk = try breez_sdk_liquid.connect(req: connectRequest, plugins: nil);
+let connectResponse = try breez_sdk_liquid.connect(req: connectRequest, pluginConfigs: nil);
+let sdk = connectResponse.sdk;
 
 let listenerId = try sdk.addEventListener(listener: SDKListener());
 

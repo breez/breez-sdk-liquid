@@ -96,7 +96,7 @@ pub trait Plugin: Send + Sync {
 }
 
 pub(crate) struct PluginWrapper {
-    pub(crate) inner: Box<dyn Plugin>,
+    pub(crate) inner: Arc<dyn Plugin>,
 }
 
 #[sdk_macros::async_trait]
@@ -118,5 +118,33 @@ impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
 
     async fn on_stop(&self) {
         self.inner.on_stop();
+    }
+}
+
+#[derive(Default)]
+pub struct PluginConfigs {
+    pub nwc: Option<NwcConfig>,
+}
+
+#[derive(Clone, Default)]
+pub struct PluginServices {
+    pub nwc: Option<Arc<BindingNwcService>>,
+}
+
+impl PluginServices {
+    pub(crate) fn as_plugins(&self) -> Vec<Arc<dyn breez_sdk_liquid::plugin::Plugin>> {
+        let mut plugins = vec![];
+        if let Some(nwc_service) = self.nwc.clone() {
+            plugins.push(Arc::new(PluginWrapper { inner: nwc_service })
+                as Arc<dyn breez_sdk_liquid::plugin::Plugin>);
+        }
+        plugins
+    }
+}
+
+impl From<PluginConfigs> for PluginServices {
+    fn from(c: PluginConfigs) -> Self {
+        let nwc = c.nwc.map(BindingNwcService::new).map(Arc::new);
+        PluginServices { nwc }
     }
 }
