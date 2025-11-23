@@ -63,7 +63,16 @@ impl RuntimeContext {
             .into_iter()
             .filter_map(|(name, connection)| {
                 NostrWalletConnectURI::from_str(&connection.connection_string)
-                    .map(|uri| (name, ActiveConnection { uri, connection }))
+                    .map(|uri| {
+                        (
+                            name,
+                            ActiveConnection {
+                                pubkey: Keys::new(uri.secret.clone()).public_key,
+                                uri,
+                                connection,
+                            },
+                        )
+                    })
                     .ok()
             })
             .collect())
@@ -105,7 +114,8 @@ impl RuntimeContext {
 
     pub async fn send_info_event(&self) {
         // Broadcast info event
-        let content = "pay_invoice list_transactions get_balance notifications".to_string();
+        let content =
+            "pay_invoice make_invoice list_transactions get_balance notifications".to_string();
         if let Err(err) = self
             .send_event(
                 EventBuilder::new(Kind::WalletConnectInfo, content)

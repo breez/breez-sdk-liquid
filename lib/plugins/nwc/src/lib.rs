@@ -24,8 +24,8 @@ use nostr_sdk::{
         ErrorCode, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
         ResponseResult,
     },
-    Client as NostrClient, EventBuilder, Keys, Kind, RelayPoolNotification, RelayUrl, Tag,
-    Timestamp,
+    Client as NostrClient, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification,
+    RelayUrl, Tag, Timestamp,
 };
 use tokio::{
     sync::{mpsc, Mutex, OnceCell},
@@ -206,6 +206,22 @@ impl SdkNwcService {
         Ok(Keys::parse(&secret_key)?)
     }
 
+    async fn check_event_reply(
+        ctx: &RuntimeContext,
+        event: &Event,
+    ) -> Result<bool, nostr_sdk::client::Error> {
+        let events = ctx
+            .client
+            .fetch_events(
+                Filter::new()
+                    .pubkey(ctx.our_keys.public_key)
+                    .event(event.id),
+                Duration::from_secs(3),
+            )
+            .await?;
+        Ok(!events.is_empty())
+    }
+
     async fn handle_event(
         ctx: &RuntimeContext,
         active_connections: &mut HashMap<String, ActiveConnection>,
@@ -220,7 +236,7 @@ impl SdkNwcService {
 
         let Some((connection_name, client)) = active_connections
             .iter_mut()
-            .find(|(_, con)| con.uri.public_key == client_pubkey)
+            .find(|(_, con)| con.pubkey == client_pubkey)
         else {
             info!("Received event from unrecognized public key: {client_pubkey:?}. Skipping.");
             return;
@@ -240,6 +256,23 @@ impl SdkNwcService {
         if let Err(e) = event.verify() {
             warn!("Event signature verification failed: {e:?}");
             return;
+        }
+
+        // Verify that we haven't already replied to this event
+        match Self::check_event_reply(ctx, event).await {
+            Ok(have_replied) => {
+                if have_replied {
+                    warn!("Reply for event {} already found, skipping.", event.id);
+                    return;
+                }
+            }
+            Err(err) => {
+                warn!(
+                    "Could not check for event {} reply history: {err}",
+                    event.id
+                );
+                return;
+            }
         }
 
         // Decrypt the event content

@@ -1,4 +1,4 @@
-use nostr_sdk::nips::nip47::NostrWalletConnectURI;
+use nostr_sdk::{nips::nip47::NostrWalletConnectURI, PublicKey};
 use serde::{Deserialize, Serialize};
 
 use crate::DEFAULT_RELAY_URLS;
@@ -19,7 +19,7 @@ impl NwcConfig {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PeriodicBudget {
     /// The amount of budget used (in satoshi) for the period
     /// Resets once every period ([PeriodicBudget::reset_time_sec])
@@ -55,7 +55,7 @@ pub struct PeriodicBudgetRequest {
     pub reset_time_sec: u32,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NwcConnection {
     /// The NWC uri for the connection
     pub connection_string: String,
@@ -108,6 +108,7 @@ pub struct EditConnectionResponse {
 pub(crate) struct ActiveConnection {
     pub connection: NwcConnection,
     pub uri: NostrWalletConnectURI,
+    pub pubkey: PublicKey,
 }
 
 #[derive(Default)]

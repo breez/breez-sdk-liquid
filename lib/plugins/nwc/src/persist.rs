@@ -52,10 +52,9 @@ impl Persister {
                     Err(err) => return Err(err.into()),
                 }
             }
+            return Ok(result);
         }
-        Err(NwcError::persist(
-            "Could not write to database: maximum write attempts reached",
-        ))
+        Err(NwcError::persist("Maximum write attempts reached"))
     }
 
     pub(crate) fn add_nwc_connection(
