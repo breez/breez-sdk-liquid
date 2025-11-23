@@ -159,6 +159,10 @@ impl BreezNwcService {
         self.inner.list_connections().await
     }
 
+    pub async fn handle_event(&self, event_id: String) -> Result<(), NwcError> {
+        self.inner.handle_event(event_id).await
+    }
+
     pub async fn remove_connection(&self, name: String) -> Result<(), NwcError> {
         self.inner.remove_connection(name).await
     }

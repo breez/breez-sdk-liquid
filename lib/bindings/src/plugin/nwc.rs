@@ -61,6 +61,10 @@ impl BindingNwcService {
         rt().block_on(self.inner.remove_connection(name))
     }
 
+    pub fn handle_event(&self, event_id: String) -> NwcResult<()> {
+        rt().block_on(self.inner.handle_event(event_id))
+    }
+
     pub fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {
         let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =
             Box::new(NwcEventListenerWrapper::new(listener));

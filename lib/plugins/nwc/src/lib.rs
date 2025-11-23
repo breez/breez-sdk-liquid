@@ -2,7 +2,7 @@ use std::{collections::HashMap, str::FromStr as _, sync::Arc, time::Duration};
 
 use crate::{
     context::RuntimeContext,
-    error::NwcResult,
+    error::{NwcError, NwcResult},
     event::{EventManager, NwcEvent, NwcEventDetails, NwcEventListener},
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
     model::{
@@ -24,7 +24,7 @@ use nostr_sdk::{
         ErrorCode, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
         ResponseResult,
     },
-    Client as NostrClient, Event, EventBuilder, Filter, Keys, Kind, RelayPoolNotification,
+    Client as NostrClient, Event, EventBuilder, EventId, Filter, Keys, Kind, RelayPoolNotification,
     RelayUrl, Tag, Timestamp,
 };
 use tokio::{
@@ -97,6 +97,12 @@ pub trait NwcService: Send + Sync {
     /// # Arguments
     /// * `name` - The unique identifier for the connection string
     async fn remove_connection(&self, name: String) -> NwcResult<()>;
+
+    /// Fetches and handles a Nostr WalletRequest event
+    ///
+    /// # Arguments
+    /// * `id` - the ID of the Nostr event
+    async fn handle_event(&self, event_id: String) -> NwcResult<()>;
 
     /// Adds an event listener to the service, where all [NwcEvent]s will be emitted to.
     /// The event listener can be removed be calling [NwcService::remove_event_listener].
@@ -206,40 +212,20 @@ impl SdkNwcService {
         Ok(Keys::parse(&secret_key)?)
     }
 
-    async fn check_event_reply(
-        ctx: &RuntimeContext,
-        event: &Event,
-    ) -> Result<bool, nostr_sdk::client::Error> {
-        let events = ctx
-            .client
-            .fetch_events(
-                Filter::new()
-                    .pubkey(ctx.our_keys.public_key)
-                    .event(event.id),
-                Duration::from_secs(3),
-            )
-            .await?;
-        Ok(!events.is_empty())
-    }
-
-    async fn handle_event(
+    async fn handle_event_inner(
         ctx: &RuntimeContext,
         active_connections: &mut HashMap<String, ActiveConnection>,
-        notification: &RelayPoolNotification,
-    ) {
-        let RelayPoolNotification::Event { event, .. } = notification else {
-            return;
-        };
-        info!("Received NWC event: {event:?}");
-
+        event: &Event,
+    ) -> NwcResult<()> {
+        // Verify client belongs in active connections list
         let client_pubkey = event.pubkey;
-
         let Some((connection_name, client)) = active_connections
             .iter_mut()
             .find(|(_, con)| con.pubkey == client_pubkey)
         else {
-            info!("Received event from unrecognized public key: {client_pubkey:?}. Skipping.");
-            return;
+            return Err(NwcError::PubkeyNotFound {
+                pubkey: client_pubkey.to_string(),
+            });
         };
 
         // Verify the event has not expired
@@ -248,90 +234,52 @@ impl SdkNwcService {
             .expiration()
             .is_some_and(|t| *t > Timestamp::now())
         {
-            warn!("Event {} has expired. Skipping.", event.id);
-            return;
+            return Err(NwcError::EventExpired);
         }
 
         // Verify the event signature and event id
-        if let Err(e) = event.verify() {
-            warn!("Event signature verification failed: {e:?}");
-            return;
-        }
-
-        // Verify that we haven't already replied to this event
-        match Self::check_event_reply(ctx, event).await {
-            Ok(have_replied) => {
-                if have_replied {
-                    warn!("Reply for event {} already found, skipping.", event.id);
-                    return;
-                }
-            }
-            Err(err) => {
-                warn!(
-                    "Could not check for event {} reply history: {err}",
-                    event.id
-                );
-                return;
-            }
-        }
+        event.verify().map_err(|err| NwcError::InvalidSignature {
+            err: err.to_string(),
+        })?;
 
         // Decrypt the event content
-        let decrypted_content =
-            match decrypt(ctx.our_keys.secret_key(), &client_pubkey, &event.content) {
-                Ok(content) => content,
-                Err(e) => {
-                    warn!("Failed to decrypt event content: {e:?}");
-                    return;
-                }
-            };
+        let decrypted_content = decrypt(ctx.our_keys.secret_key(), &client_pubkey, &event.content)
+            .map_err(|err| NwcError::Encryption {
+                err: err.to_string(),
+            })?;
+        info!("Decrypted NWC notification");
 
-        info!("Decrypted NWC notification: {decrypted_content}");
-
-        let req = match serde_json::from_str::<Request>(&decrypted_content) {
-            Ok(r) => r,
-            Err(e) => {
-                warn!("Received unexpected request from relay pool: {decrypted_content} err {e:?}");
-                return;
-            }
-        };
-
+        // Build response
+        let req = serde_json::from_str::<Request>(&decrypted_content)?;
         if client.connection.receive_only && !matches!(req.params, RequestParams::MakeInvoice(_)) {
-            warn!(
-                "Could not execute command: {:?}: connection is receive-only. Skipping.",
-                req.params
-            );
-            return;
+            return Err(NwcError::generic(format!(
+                "Could not execute command: {:?}: connection is receive-only.",
+                req.params,
+            )));
         }
-
         let (result, error) = match req.params {
             RequestParams::PayInvoice(req) => {
                 let Ok(InputType::Bolt11 { invoice }) =
                     sdk_common::input_parser::parse(&req.invoice, None).await
                 else {
-                    warn!(
-                        "Could not parse pay_invoice invoice: {}. Skipping command.",
+                    return Err(NwcError::generic(format!(
+                        "Could not parse pay_invoice invoice: {}",
                         req.invoice
-                    );
-                    return;
+                    )));
                 };
                 let Some(req_amount_sat) = req
                     .amount
                     .or(invoice.amount_msat)
                     .map(|amount| amount.div_ceil(1000))
                 else {
-                    warn!(
-                        "Cannot pay an amountless invoice: {}. Skipping.",
-                        req.invoice
-                    );
-                    return;
+                    return Err(NwcError::InvoiceWithoutAmount);
                 };
 
                 if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
                     if periodic_budget.used_budget_sat + req_amount_sat
                         > periodic_budget.max_budget_sat
                     {
-                        warn!("Cannot pay invoice: max periodic budget exceeded on connection \"{connection_name}\".");
-                        return;
+                        return Err(NwcError::MaxBudgetExceeded);
                     }
                     // We modify the connection's budget before executing the payment to avoid any race
                     // conditions
@@ -340,8 +288,9 @@ impl SdkNwcService {
                         .persister
                         .update_periodic_budget(connection_name, periodic_budget.clone())
                     {
-                        warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
-                        return;
+                        return Err(NwcError::generic(format!(
+                            "Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}"
+                        )));
                     }
                 }
                 match ctx.handler.pay_invoice(req).await {
@@ -354,8 +303,9 @@ impl SdkNwcService {
                                 .persister
                                 .update_periodic_budget(connection_name, periodic_budget.clone())
                             {
-                                warn!("Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}.");
-                                return;
+                                return Err(NwcError::generic(format!(
+                                    "Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}."
+                                )));
                             }
                         }
                         (None, Some(e))
@@ -377,11 +327,13 @@ impl SdkNwcService {
                 Err(e) => (None, Some(e)),
             },
             _ => {
-                info!("Received unhandled request: {req:?}");
-                return;
+                return Err(NwcError::generic(format!(
+                    "Received unhandled request: {req:?}"
+                )));
             }
         };
 
+        // Notify SDK
         Self::handle_local_notification(
             ctx,
             connection_name.clone(),
@@ -391,38 +343,36 @@ impl SdkNwcService {
         )
         .await;
 
-        let content = match serde_json::to_string(&Response {
+        // Serialize and encrypt the response
+        let content = serde_json::to_string(&Response {
             result_type: req.method,
             result,
             error,
-        }) {
-            Ok(c) => c,
-            Err(e) => {
-                warn!("Could not serialize Nostr response: {e:?}");
-                return;
-            }
-        };
-        info!("NWC Response content: {content}");
-        info!("encrypting NWC response");
-        let encrypted_content = match encrypt(
+        })
+        .map_err(|err| NwcError::generic(format!("Could not serialize Nostr response: {err:?}")))?;
+
+        let encrypted_content = encrypt(
             ctx.our_keys.secret_key(),
             &client_pubkey,
             &content,
             Version::V2,
-        ) {
-            Ok(encrypted) => encrypted,
-            Err(e) => {
-                warn!("Could not encrypt response content: {e:?}");
-                return;
-            }
-        };
-
+        )
+        .map_err(|err| NwcError::Encryption {
+            err: err.to_string(),
+        })?;
+        info!("Encrypted NWC response");
         let event_builder = EventBuilder::new(Kind::WalletConnectResponse, encrypted_content)
             .tags([Tag::event(event.id), Tag::public_key(client_pubkey)]);
-        if let Err(e) = ctx.send_event(event_builder).await {
-            warn!("Could not send response event to relay pool: {e:?}");
-        }
-        info!("sent encrypted NWC response");
+
+        // Broadcast the response
+        ctx.send_event(event_builder)
+            .await
+            .map_err(|err| NwcError::Network {
+                err: err.to_string(),
+            })?;
+        info!("Sent encrypted NWC response");
+
+        Ok(())
     }
 
     async fn handle_local_notification(
@@ -563,6 +513,21 @@ impl NwcService for SdkNwcService {
     async fn remove_event_listener(&self, id: &str) {
         self.event_manager.remove(id).await
     }
+
+    async fn handle_event(&self, event_id: String) -> NwcResult<()> {
+        let ctx = self.runtime_ctx().await?;
+        let mut active_connections = ctx.list_active_connections().await?;
+        let event_id = EventId::from_str(&event_id)?;
+        let events = ctx
+            .client
+            .fetch_events(Filter::new().id(event_id), Duration::from_secs(3))
+            .await?;
+        let Some(event) = events.first() else {
+            return Err(NwcError::EventNotFound);
+        };
+        Self::handle_event_inner(&ctx, &mut active_connections, event).await?;
+        Ok(())
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -641,7 +606,12 @@ impl Plugin for SdkNwcService {
                 let mut notifications_listener = thread_ctx.client.notifications();
                 loop {
                     tokio::select! {
-                        Ok(notification) = notifications_listener.recv() => Self::handle_event(&thread_ctx, &mut active_connections, &notification).await,
+                        Ok(RelayPoolNotification::Event { event, .. } ) = notifications_listener.recv() => {
+                            info!("Received NWC event: {event:?}");
+                            if let Err(err) = Self::handle_event_inner(&thread_ctx, &mut active_connections, &event).await {
+                                warn!("Could not handle NWC event {}: {}", event.id, err);
+                            }
+                        }
                         Some(_) = Self::min_refresh_interval(&mut maybe_expiry_interval) => {
                             let result = match thread_ctx.persister.refresh_connections() {
                                 Ok(result) => result,

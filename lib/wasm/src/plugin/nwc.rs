@@ -179,6 +179,11 @@ impl BindingNwcService {
         self.inner.remove_connection(name).await.map_err(Into::into)
     }
 
+    #[wasm_bindgen(js_name = "handleEvent")]
+    pub async fn handle_event(&self, event_id: String) -> WasmResult<()> {
+        self.inner.handle_event(event_id).await.map_err(Into::into)
+    }
+
     #[wasm_bindgen(js_name = "addEventListener")]
     pub async fn add_event_listener(&self, listener: model::NwcEventListener) -> String {
         let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =

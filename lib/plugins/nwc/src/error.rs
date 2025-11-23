@@ -7,6 +7,36 @@ pub enum NwcError {
 
     #[error("Plugin storage operation failed: {err}")]
     Persist { err: String },
+
+    #[error("Could not contact relays: {err}")]
+    Network { err: String },
+
+    #[error("Event is from an unrecognized public key: {pubkey:?}")]
+    PubkeyNotFound { pubkey: String },
+
+    #[error("Invalid event signature: {err}")]
+    InvalidSignature { err: String },
+
+    #[error("Could not encrypt/decrypt event: {err}")]
+    Encryption { err: String },
+
+    #[error("Event not found")]
+    EventNotFound,
+
+    #[error("Event has expired")]
+    EventExpired,
+
+    #[error("A reply for this event has already been broadcast")]
+    AlreadyReplied,
+
+    #[error("Invoice has expired")]
+    InvoiceExpired,
+
+    #[error("Cannot pay an amountless invoice")]
+    InvoiceWithoutAmount,
+
+    #[error("Could not pay invoice: max budget has been exceeded")]
+    MaxBudgetExceeded,
 }
 
 impl NwcError {
@@ -25,6 +55,20 @@ impl NwcError {
 
 impl From<anyhow::Error> for NwcError {
     fn from(err: anyhow::Error) -> Self {
+        Self::generic(err)
+    }
+}
+
+impl From<nostr_sdk::client::Error> for NwcError {
+    fn from(err: nostr_sdk::client::Error) -> Self {
+        Self::Network {
+            err: err.to_string(),
+        }
+    }
+}
+
+impl From<nostr_sdk::event::Error> for NwcError {
+    fn from(err: nostr_sdk::event::Error) -> Self {
         Self::generic(err)
     }
 }

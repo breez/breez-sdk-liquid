@@ -372,9 +372,19 @@ callback interface Plugin {
 // BEGIN NWC interfaces
 
 [Error]
-enum NwcError {
-    "Generic",
-    "Persist",
+interface NwcError {
+    Generic(string err);
+    Persist(string err);
+    Network(string err);
+    PubkeyNotFound(string pubkey);
+    InvalidSignature(string err);
+    Encryption(string err);
+    EventNotFound();
+    EventExpired();
+    AlreadyReplied();
+    InvoiceExpired();
+    InvoiceWithoutAmount();
+    MaxBudgetExceeded();
 };
 
 dictionary NwcConfig {
@@ -459,6 +469,9 @@ interface BindingNwcService {
 
   [Throws=NwcError]
   void remove_connection(string name);
+
+  [Throws=NwcError]
+  void handle_event(string event_id);
 
   string add_event_listener(NwcEventListener listener);
 

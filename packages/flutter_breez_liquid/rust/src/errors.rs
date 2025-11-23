@@ -47,4 +47,14 @@ pub enum _PluginStorageError {
 pub enum _NwcError {
     Persist { err: String },
     Generic { err: String },
+    Network { err: String },
+    PubkeyNotFound { pubkey: String },
+    InvalidSignature { err: String },
+    Encryption { err: String },
+    EventNotFound,
+    EventExpired,
+    AlreadyReplied,
+    InvoiceExpired,
+    InvoiceWithoutAmount,
+    MaxBudgetExceeded,
 }
