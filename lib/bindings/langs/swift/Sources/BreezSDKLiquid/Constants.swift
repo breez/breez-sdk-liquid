@@ -22,6 +22,7 @@ struct Constants {
     static let MESSAGE_TYPE_LNURL_PAY_INFO = "lnurlpay_info"
     static let MESSAGE_TYPE_LNURL_PAY_INVOICE = "lnurlpay_invoice"
     static let MESSAGE_TYPE_LNURL_PAY_VERIFY = "lnurlpay_verify"
+    static let MESSAGE_TYPE_NWC_EVENT = "nwc_event"
     
     // Resource Identifiers
     static let INVOICE_REQUEST_NOTIFICATION_TITLE = "invoice_request_notification_title"
@@ -38,6 +39,8 @@ struct Constants {
     static let PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT = "payment_waiting_fee_acceptance_text"
     static let SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT = "swap_confirmed_notification_failure_text"
     static let SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE = "swap_confirmed_notification_failure_title"
+    static let NWC_SUCCESS_NOTIFICATION_TITLE = "nwc_success_notification_title"
+    static let NWC_FAILURE_NOTIFICATION_TITLE = "nwc_failure_notification_title"
     
     // Resource Identifier Defaults
     static let DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE = "Fetching Invoice"
@@ -54,4 +57,6 @@ struct Constants {
     static let DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT = "Tap to review updated fees"
     static let DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TEXT = "Tap to complete payment"
     static let DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE = "Payment Pending"
+    static let DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE = "NWC %s command completed successfully"
+    static let DEFAULT_NWC_FAILURE_NOTIFICATION_TITLE = "Failed to run NWC command"
 }
