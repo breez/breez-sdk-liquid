@@ -6,12 +6,12 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
-use boltz_client::{ElementsAddress, Secp256k1};
+use boltz_client::{ElementsAddress};
 use log::{debug, error, info, warn};
-use lwk_common::{multisig_desc, DescriptorBlindingKey, Multisig, Signer as LwkSigner};
+use lwk_common::{Multisig, Signer as LwkSigner};
 use lwk_common::{singlesig_desc, Singlesig};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
-use lwk_wollet::bitcoin::bip32::{DerivationPath, KeySource, Xpub};
+use lwk_wollet::bitcoin::bip32::{KeySource, Xpub};
 use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
