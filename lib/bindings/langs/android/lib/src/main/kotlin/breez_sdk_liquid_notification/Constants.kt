@@ -36,6 +36,7 @@ object Constants {
     const val MESSAGE_TYPE_LNURL_PAY_INVOICE = "lnurlpay_invoice"
     const val MESSAGE_TYPE_LNURL_PAY_VERIFY = "lnurlpay_verify"
     const val MESSAGE_TYPE_SWAP_UPDATED = "swap_updated"
+    const val MESSAGE_TYPE_NWC_EVENT = "nwc_event"
 
     // Resource Identifiers
     const val DISMISSIBLE_NOTIFICATION_CHANNEL_DESCRIPTION =
@@ -95,6 +96,8 @@ object Constants {
         "swap_confirmed_notification_failure_title"
     const val SWAP_CONFIRMED_NOTIFICATION_TITLE =
         "swap_confirmed_notification_title"
+    const val NWC_SUCCESS_NOTIFICATION_TITLE = "nwc_success_notification_title"
+    const val NWC_FAILURE_NOTIFICATION_TITLE = "nwc_failure_notification_title"
 
     // Resource Identifier Defaults
     const val DEFAULT_DISMISSIBLE_NOTIFICATION_CHANNEL_DESCRIPTION =
@@ -149,4 +152,6 @@ object Constants {
         "Tap to complete payment"
     const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE =
         "Payment Pending"
+    const val DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE = "NWC %s command completed successfully"
+    const val DEFAULT_NWC_FAILURE_NOTIFICATION_TITLE = "Failed to run NWC command"
 }

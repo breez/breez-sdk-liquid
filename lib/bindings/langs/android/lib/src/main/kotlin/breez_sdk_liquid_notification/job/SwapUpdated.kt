@@ -8,6 +8,7 @@ import breez_sdk_liquid.PaymentDetails
 import breez_sdk_liquid.PaymentState
 import breez_sdk_liquid.PaymentType
 import breez_sdk_liquid.SdkEvent
+import breez_sdk_liquid.NwcEvent
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TEXT
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
+import Plugins
 
 @Serializable
 data class SwapUpdatedRequest(
@@ -60,7 +62,7 @@ class SwapUpdatedJob(
         private const val TAG = "SwapUpdatedJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk) {
+    override fun start(liquidSDK: BindingLiquidSdk, plugins: Plugins) {
         try {
             val decoder = Json { ignoreUnknownKeys = true }
             val request = decoder.decodeFromString(SwapUpdatedRequest.serializer(), payload)
@@ -132,6 +134,8 @@ class SwapUpdatedJob(
             }
         }
     }
+
+    override fun onEvent(event: NwcEvent) {}
 
     override fun onShutdown() {
         notifyFailure()
