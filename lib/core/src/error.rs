@@ -306,7 +306,7 @@ impl From<PaymentError> for LnUrlPayError {
                 err: format!("Amount is missing: {err}"),
             },
             PaymentError::InvalidNetwork { err } => Self::InvalidNetwork { err },
-            PaymentError::InsufficientFunds => Self::InsufficientBalance { err: String::new() },
+            PaymentError::InsufficientFunds { missing_sats: _ } => Self::InsufficientBalance { err: String::new() },
             PaymentError::InvalidInvoice { err } => Self::InvalidInvoice { err },
             PaymentError::PaymentTimeout => Self::PaymentTimeout { err: String::new() },
             _ => Self::Generic {
