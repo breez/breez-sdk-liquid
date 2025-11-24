@@ -32,7 +32,7 @@ class InvoiceRequestTask : ReplyableTask {
         super.init(payload: payload, logger: logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent, successNotificationTitle: successNotificationTitle, failNotificationTitle: failNotificationTitle)
     }
     
-    override func start(liquidSDK: BindingLiquidSdk) throws {
+    override func start(liquidSDK: BindingLiquidSdk, plugins: SDKPlugins) throws {
         var request: InvoiceRequestRequest? = nil
         do {
             request = try JSONDecoder().decode(InvoiceRequestRequest.self, from: self.payload.data(using: .utf8)!)
