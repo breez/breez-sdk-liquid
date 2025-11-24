@@ -489,7 +489,7 @@ impl LiquidSdk {
         )?
         .build()
         .await?;
-        
+
         sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);

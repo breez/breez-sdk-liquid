@@ -8,12 +8,12 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
-use boltz_client::{ElementsAddress, Secp256k1};
+use boltz_client::ElementsAddress;
 use log::{debug, error, info, warn};
-use lwk_common::{multisig_desc, DescriptorBlindingKey, Multisig, Signer as LwkSigner};
 use lwk_common::{singlesig_desc, Singlesig};
+use lwk_common::{Multisig, Signer as LwkSigner};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
-use lwk_wollet::bitcoin::bip32::{DerivationPath, KeySource, Xpub};
+use lwk_wollet::bitcoin::bip32::{KeySource, Xpub};
 use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
@@ -428,7 +428,10 @@ pub fn test_multisig_desc(
         .iter()
         .map(|(keyorigin, xpub)| {
             let prefix = if let Some((fingerprint, path)) = keyorigin {
-                format!("[{fingerprint}/{}]", path.to_string().replace("m/", "").replace('\'', "h"))
+                format!(
+                    "[{fingerprint}/{}]",
+                    path.to_string().replace("m/", "").replace('\'', "h")
+                )
             } else {
                 "".to_string()
             };
@@ -484,7 +487,11 @@ pub fn get_descriptor(
                 threshold,
                 xpubs,
                 Multisig::Wsh,
-                signer.slip77_master_blinding_key().unwrap().as_bytes().to_vec(),
+                signer
+                    .slip77_master_blinding_key()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
             )
             .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
         }
@@ -592,10 +599,13 @@ impl OnchainWallet for LiquidOnchainWallet {
                 .sign(&mut pset)
                 .map_err(|e| PaymentError::Generic {
                     err: format!("Failed to sign transaction: {e:?}"),
-                }).unwrap();
-            
+                })
+                .unwrap();
+
             pset
-        }).await.unwrap();
+        })
+        .await
+        .unwrap();
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -643,10 +653,13 @@ impl OnchainWallet for LiquidOnchainWallet {
                 .sign(&mut pset)
                 .map_err(|e| PaymentError::Generic {
                     err: format!("Failed to sign transaction: {e:?}"),
-                }).unwrap();
-            
+                })
+                .unwrap();
+
             pset
-        }).await.unwrap();
+        })
+        .await
+        .unwrap();
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -703,12 +716,17 @@ impl OnchainWallet for LiquidOnchainWallet {
         let signer = self.signer.clone();
         let mut pset2 = pset.clone();
         *pset = tokio::task::spawn_blocking(move || {
-            signer.sign(&mut pset2).map_err(|e| PaymentError::Generic {
-                err: format!("Failed to sign transaction: {e:?}"),
-            }).unwrap();
+            signer
+                .sign(&mut pset2)
+                .map_err(|e| PaymentError::Generic {
+                    err: format!("Failed to sign transaction: {e:?}"),
+                })
+                .unwrap();
 
             pset2
-        }).await.unwrap();
+        })
+        .await
+        .unwrap();
         // self.signer.sign(pset).map_err(|e| PaymentError::Generic {
         //     err: format!("Failed to sign transaction: {e:?}"),
         // })?;

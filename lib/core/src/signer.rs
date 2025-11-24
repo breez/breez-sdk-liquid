@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use anyhow::anyhow;
 use bip39::Mnemonic;
