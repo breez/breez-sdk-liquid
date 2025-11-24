@@ -544,7 +544,7 @@ pub trait Signer: Send + Sync {
     fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
-pub trait PsbtSigner: MaybeSend + MaybeSync {
+pub trait PsbtSigner: Send + Sync {
     fn sign(&self, pset: String) -> Result<(String, u32), SignerError>;
     fn sign_policy(&self) -> SignerPolicy;
 }
