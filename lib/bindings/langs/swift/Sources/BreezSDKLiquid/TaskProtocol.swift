@@ -1,11 +1,11 @@
 import UserNotifications
 
-public protocol TaskProtocol : EventListener {
+public protocol TaskProtocol : EventListener, NwcEventListener {
     var payload: String { get set }
     var contentHandler: ((UNNotificationContent) -> Void)? { get set }
     var bestAttemptContent: UNMutableNotificationContent? { get set }
     
-    func start(liquidSDK: BindingLiquidSdk) throws
+    func start(liquidSDK: BindingLiquidSdk, plugins: SDKPlugins) throws
     func onShutdown()
 }
 
@@ -77,9 +77,10 @@ class ReplyableTask : TaskProtocol {
         self.failNotificationTitle = failNotificationTitle;
     }
     
-    func start(liquidSDK: BindingLiquidSdk) throws {}
+    func start(liquidSDK: BindingLiquidSdk, plugins: SDKPlugins) throws {}
 
     public func onEvent(e: SdkEvent) {}
+    public func onEvent(event: NwcEvent) {}
     
     func onShutdown() {
         displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
