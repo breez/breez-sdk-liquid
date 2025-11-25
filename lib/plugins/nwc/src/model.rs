@@ -1,7 +1,7 @@
 use nostr_sdk::{nips::nip47::NostrWalletConnectURI, PublicKey};
 use serde::{Deserialize, Serialize};
 
-use crate::DEFAULT_RELAY_URLS;
+use crate::{utils, DEFAULT_RELAY_URLS};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct NwcConfig {
@@ -20,29 +20,49 @@ impl NwcConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PeriodicBudget {
-    /// The amount of budget used (in satoshi) for the period
-    /// Resets once every period ([PeriodicBudget::reset_time_sec])
+pub(crate) struct PeriodicBudgetInner {
     pub used_budget_sat: u64,
-    /// The maximum budget amount allowed (in satoshi) for the period
     pub max_budget_sat: u64,
     /// The duration of the budget's period
     /// ## Dev Note:
-    /// If the reset time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
+    /// If the renewal time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
     /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
-    /// reset to take effect.
-    pub reset_time_sec: u32,
+    /// renewal to take effect.
+    pub renewal_time_sec: u32,
+    pub updated_at: u32,
+}
+
+impl PeriodicBudgetInner {
+    pub(crate) fn from_budget_request(req: PeriodicBudgetRequest, updated_at: u32) -> Self {
+        Self {
+            used_budget_sat: 0,
+            max_budget_sat: req.max_budget_sat,
+            renewal_time_sec: utils::mins_to_seconds(req.renewal_time_mins),
+            updated_at,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PeriodicBudget {
+    /// The amount of budget used (in satoshi) for the period
+    /// Resets once every period ([PeriodicBudget::renews_at])
+    pub used_budget_sat: u64,
+    /// The maximum budget amount allowed (in satoshi) for the period
+    pub max_budget_sat: u64,
+    /// The budget's renewal time
+    pub renews_at: u32,
     /// The latest budget update time (last reset time)
     pub updated_at: u32,
 }
 
 impl PeriodicBudget {
-    pub(crate) fn from_budget_request(req: PeriodicBudgetRequest, updated_at: u32) -> Self {
+    fn from_budget_inner(b: PeriodicBudgetInner, created_at: u32) -> Self {
         Self {
-            used_budget_sat: 0,
-            max_budget_sat: req.max_budget_sat,
-            reset_time_sec: req.reset_time_sec,
-            updated_at,
+            used_budget_sat: b.used_budget_sat,
+            max_budget_sat: b.max_budget_sat,
+            renews_at: created_at + b.renewal_time_sec,
+            updated_at: b.updated_at,
         }
     }
 }
@@ -51,8 +71,22 @@ impl PeriodicBudget {
 pub struct PeriodicBudgetRequest {
     /// See [PeriodicBudget::max_budget_sat]
     pub max_budget_sat: u64,
-    /// See [PeriodicBudget::reset_time_sec]
-    pub reset_time_sec: u32,
+    /// See [PeriodicBudget::renews_at]
+    pub renewal_time_mins: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) struct NwcConnectionInner {
+    pub connection_string: String,
+    pub created_at: u32,
+    pub receive_only: bool,
+    /// The expiry timestamp of the connection
+    /// ## Dev Note:
+    /// If the expiry time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
+    /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
+    /// connection to be deleted.
+    pub expiry_time_sec: Option<u32>,
+    pub periodic_budget: Option<PeriodicBudgetInner>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -64,21 +98,31 @@ pub struct NwcConnection {
     /// Specifies whether this is a receive-only connection. Defaults to false.
     pub receive_only: bool,
     /// The expiry time of the connection
-    /// ## Dev Note:
-    /// If the expiry time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
-    /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
-    /// connection to be deleted.
-    pub expiry_time_sec: Option<u32>,
+    pub expires_at: Option<u32>,
     /// An optional [PeriodicBudget] for the connection
     pub periodic_budget: Option<PeriodicBudget>,
+}
+
+impl From<NwcConnectionInner> for NwcConnection {
+    fn from(c: NwcConnectionInner) -> Self {
+        Self {
+            connection_string: c.connection_string,
+            created_at: c.created_at,
+            receive_only: c.receive_only,
+            expires_at: c.expiry_time_sec.map(|expiry| c.created_at + expiry),
+            periodic_budget: c
+                .periodic_budget
+                .map(|b| PeriodicBudget::from_budget_inner(b, c.created_at)),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AddConnectionRequest {
     /// The **unique** name for the new connection
     pub name: String,
-    /// See [NwcConnection::expiry_time_sec]
-    pub expiry_time_sec: Option<u32>,
+    /// The expiry time of the connection, in minutes
+    pub expiry_time_mins: Option<u32>,
     /// See [NwcConnection::receive_only]
     pub receive_only: Option<bool>,
     pub periodic_budget_req: Option<PeriodicBudgetRequest>,
@@ -93,8 +137,8 @@ pub struct AddConnectionResponse {
 pub struct EditConnectionRequest {
     /// The **unique** name for the new connection
     pub name: String,
-    /// See [NwcConnection::expiry_time_sec]
-    pub expiry_time_sec: Option<u32>,
+    /// The expiry time of the connection, in minutes
+    pub expiry_time_mins: Option<u32>,
     /// See [NwcConnection::receive_only]
     pub receive_only: Option<bool>,
     pub periodic_budget_req: Option<PeriodicBudgetRequest>,
@@ -106,7 +150,7 @@ pub struct EditConnectionResponse {
 }
 
 pub(crate) struct ActiveConnection {
-    pub connection: NwcConnection,
+    pub connection: NwcConnectionInner,
     pub uri: NostrWalletConnectURI,
     pub pubkey: PublicKey,
 }

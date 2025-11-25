@@ -7,7 +7,7 @@ use crate::{
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
     model::{
         ActiveConnection, AddConnectionRequest, AddConnectionResponse, EditConnectionRequest,
-        EditConnectionResponse, NwcConfig, NwcConnection, PeriodicBudget,
+        EditConnectionResponse, NwcConfig, NwcConnection, NwcConnectionInner, PeriodicBudgetInner,
     },
     persist::Persister,
     sdk_event::SdkEventListener,
@@ -57,11 +57,11 @@ pub trait NwcService: Send + Sync {
     /// # Arguments
     /// * `req` - The [add connection request](AddConnectionRequest), including:
     ///     * `name` - the **unique** identifier of the connection
-    ///     * `expiry_time_sec` - the expiry time of the connection string. If None, it will **not**
+    ///     * `expiry_time_min` - the expiry time of the connection string. If None, it will **not**
     ///     expire
     ///     * `periodic_budget_req` - the periodic budget paremeters of the connection if any.
-    ///     You can specify the [maximum amount \(in satoshi\) per period](crate::model::PeriodicBudget::max_budget_sat)
-    ///     and the [period reset time \(in seconds\)](crate::model::PeriodicBudget::reset_time_sec)
+    ///     You can specify the [maximum amount \(in satoshi\) per period](crate::model::PeriodicBudgetRequest::max_budget_sat)
+    ///     and the [period renewal time \(in minutes\)](crate::model::PeriodicBudgetRequest::renewal_time_mins)
     ///
     /// # Returns
     /// * `res` - The [AddConnectionResponse], including:
@@ -73,11 +73,11 @@ pub trait NwcService: Send + Sync {
     /// # Arguments
     /// * `req` - The [edit connection request](EditConnectionRequest), including:
     ///     * `name` - the already existing identifier of the connection
-    ///     * `expiry_time_sec` - the expiry time of the connection string. If None, it will **not**
+    ///     * `expiry_time_min` - the expiry time of the connection string. If None, it will **not**
     ///     expire
     ///     * `periodic_budget_req` - the periodic budget paremeters of the connection if any.
-    ///     You can specify the [maximum amount \(in satoshi\) per period](crate::model::PeriodicBudget::max_budget_sat)
-    ///     and the [period reset time \(in seconds\)](crate::model::PeriodicBudget::reset_time_sec)
+    ///     You can specify the [maximum amount \(in satoshi\) per period](crate::model::PeriodicBudgetRequest::max_budget_sat)
+    ///     and the [period renewal time \(in minutes\)](crate::model::PeriodicBudgetRequest::renewal_time_mins)
     ///
     /// # Returns
     /// * `res` - The [EditConnectionResponse], including:
@@ -459,7 +459,7 @@ impl NwcService for SdkNwcService {
 
         let ctx = self.runtime_ctx().await?;
         let now = utils::now();
-        let connection = NwcConnection {
+        let connection = NwcConnectionInner {
             connection_string: NostrWalletConnectURI::new(
                 ctx.our_keys.public_key,
                 relays,
@@ -468,16 +468,18 @@ impl NwcService for SdkNwcService {
             )
             .to_string(),
             created_at: now,
-            expiry_time_sec: req.expiry_time_sec,
+            expiry_time_sec: req.expiry_time_mins.map(utils::mins_to_seconds),
             receive_only: req.receive_only.unwrap_or(false),
             periodic_budget: req
                 .periodic_budget_req
-                .map(|req| PeriodicBudget::from_budget_request(req, now)),
+                .map(|req| PeriodicBudgetInner::from_budget_request(req, now)),
         };
         ctx.persister
             .add_nwc_connection(req.name.clone(), connection.clone())?;
         ctx.trigger_resubscription().await;
-        Ok(AddConnectionResponse { connection })
+        Ok(AddConnectionResponse {
+            connection: connection.into(),
+        })
     }
 
     async fn edit_connection(
@@ -486,17 +488,23 @@ impl NwcService for SdkNwcService {
     ) -> NwcResult<EditConnectionResponse> {
         let connection = self.runtime_ctx().await?.persister.edit_nwc_connection(
             &req.name,
-            req.expiry_time_sec,
+            req.expiry_time_mins.map(utils::mins_to_seconds),
             req.receive_only,
             req.periodic_budget_req
-                .map(|req| PeriodicBudget::from_budget_request(req, utils::now())),
+                .map(|req| PeriodicBudgetInner::from_budget_request(req, utils::now())),
         )?;
         self.runtime_ctx().await?.trigger_resubscription().await;
-        Ok(EditConnectionResponse { connection })
+        Ok(EditConnectionResponse {
+            connection: connection.into(),
+        })
     }
 
     async fn list_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
-        self.runtime_ctx().await?.persister.list_nwc_connections()
+        let connections = self.runtime_ctx().await?.persister.list_nwc_connections()?;
+        Ok(connections
+            .into_iter()
+            .map(|(k, v)| (k, v.into()))
+            .collect())
     }
 
     async fn remove_connection(&self, name: String) -> NwcResult<()> {

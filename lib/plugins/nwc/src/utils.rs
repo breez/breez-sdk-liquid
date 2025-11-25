@@ -6,3 +6,7 @@ pub(crate) fn now() -> u32 {
         .unwrap()
         .as_secs() as u32
 }
+
+pub(crate) fn mins_to_seconds(mins: u32) -> u32 {
+    mins.div_ceil(60)
+}

@@ -4,7 +4,7 @@ use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
 
 use crate::{
     error::{NwcError, NwcResult},
-    model::{NwcConnection, PeriodicBudget, RefreshResult},
+    model::{NwcConnectionInner, PeriodicBudgetInner, RefreshResult},
     utils, MIN_REFRESH_INTERVAL_SEC,
 };
 
@@ -34,7 +34,7 @@ impl Persister {
 
     fn set_connections_safe<F, R>(&self, f: F) -> NwcResult<R>
     where
-        F: Fn(&mut HashMap<String, NwcConnection>) -> NwcResult<(bool, R)>,
+        F: Fn(&mut HashMap<String, NwcConnectionInner>) -> NwcResult<(bool, R)>,
     {
         for _ in 0..MAX_SAFE_WRITE_RETRIES {
             let connections = self.list_nwc_connections()?;
@@ -60,7 +60,7 @@ impl Persister {
     pub(crate) fn add_nwc_connection(
         &self,
         name: String,
-        connection: NwcConnection,
+        connection: NwcConnectionInner,
     ) -> NwcResult<()> {
         self.set_connections_safe(|connections| {
             if connections.contains_key(&name) {
@@ -77,7 +77,7 @@ impl Persister {
     pub(crate) fn update_periodic_budget(
         &self,
         name: &str,
-        periodic_budget: PeriodicBudget,
+        periodic_budget: PeriodicBudgetInner,
     ) -> NwcResult<()> {
         self.edit_nwc_connection(name, None, None, Some(periodic_budget))?;
         Ok(())
@@ -88,8 +88,8 @@ impl Persister {
         name: &str,
         expiry_time_sec: Option<u32>,
         receive_only: Option<bool>,
-        periodic_budget: Option<PeriodicBudget>,
-    ) -> NwcResult<NwcConnection> {
+        periodic_budget: Option<PeriodicBudgetInner>,
+    ) -> NwcResult<NwcConnectionInner> {
         self.set_connections_safe(|connections| {
             let Some(connection) = connections.get_mut(name) else {
                 return Err(NwcError::generic("Connection not found."));
@@ -120,9 +120,11 @@ impl Persister {
                         min_interval = Some(expiry_time_sec);
                     }
                 }
-                if let Some(reset_time_sec) = connection.periodic_budget.map(|b| b.reset_time_sec) {
-                    if reset_time_sec < min_interval.unwrap_or(u32::MAX) {
-                        min_interval = Some(reset_time_sec);
+                if let Some(renewal_time_sec) =
+                    connection.periodic_budget.map(|b| b.renewal_time_sec)
+                {
+                    if renewal_time_sec < min_interval.unwrap_or(u32::MAX) {
+                        min_interval = Some(renewal_time_sec);
                     }
                 }
             }
@@ -159,7 +161,7 @@ impl Persister {
                 }
                 // If the connection's periodic budget has to be updated
                 if let Some(ref mut budget) = connection.periodic_budget {
-                    if now >= budget.updated_at + budget.reset_time_sec {
+                    if now >= budget.updated_at + budget.renewal_time_sec {
                         budget.used_budget_sat = 0;
                         budget.updated_at = now;
                         result.refreshed.push(name.clone());
@@ -176,7 +178,7 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_nwc_connections(&self) -> NwcResult<HashMap<String, NwcConnection>> {
+    pub(crate) fn list_nwc_connections(&self) -> NwcResult<HashMap<String, NwcConnectionInner>> {
         let connections = self
             .storage
             .get_item(KEY_NWC_CONNECTIONS)?

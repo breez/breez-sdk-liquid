@@ -26,14 +26,14 @@ pub mod model {
     pub struct _PeriodicBudget {
         pub used_budget_sat: u64,
         pub max_budget_sat: u64,
-        pub reset_time_sec: u32,
+        pub renews_at: u32,
         pub updated_at: u32,
     }
 
     #[frb(mirror(PeriodicBudgetRequest))]
     pub struct _PeriodicBudgetRequest {
         pub max_budget_sat: u64,
-        pub reset_time_sec: u32,
+        pub renewal_time_mins: u32,
     }
 
     #[frb(mirror(NwcConnection))]
@@ -41,7 +41,7 @@ pub mod model {
         pub connection_string: String,
         pub created_at: u32,
         pub receive_only: bool,
-        pub expiry_time_sec: Option<u32>,
+        pub expires_at: Option<u32>,
         pub periodic_budget: Option<PeriodicBudget>,
     }
 
@@ -49,7 +49,7 @@ pub mod model {
     pub struct _AddConnectionRequest {
         pub name: String,
         pub receive_only: Option<bool>,
-        pub expiry_time_sec: Option<u32>,
+        pub expiry_time_mins: Option<u32>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
     }
 
@@ -62,7 +62,7 @@ pub mod model {
     pub struct _EditConnectionRequest {
         pub name: String,
         pub receive_only: Option<bool>,
-        pub expiry_time_sec: Option<u32>,
+        pub expiry_time_mins: Option<u32>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
     }
 
