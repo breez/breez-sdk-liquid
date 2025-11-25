@@ -302,73 +302,6 @@ dictionary LnUrlPaySuccessData {
 ////////////////////////////////
 
 //////////////////////////////////
-// BEGIN plugin interfaces
-
-dictionary PluginServices {
-    BindingNwcService? nwc = null;
-};
-
-dictionary PluginConfigs {
-    NwcConfig? nwc = null;
-};
-
-interface PluginSdk {
-    [Throws=SdkError]
-    GetInfoResponse get_info();
-
-    [Throws=PaymentError]
-    PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
-
-    [Throws=PaymentError]
-    SendPaymentResponse send_payment(SendPaymentRequest req);
-
-    [Throws=PaymentError]
-    PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
-
-    [Throws=PaymentError]
-    ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
-
-    [Throws=PaymentError]
-    InputType parse(string input);
-
-    [Throws=PaymentError]
-    sequence<Payment> list_payments(ListPaymentsRequest req);
-
-    [Throws=SdkError]
-    string add_event_listener(EventListener listener);
-
-    [Throws=SdkError]
-    void remove_event_listener(string id);
-};
-
-[Error]
-interface PluginStorageError {
-    DataTooOld();
-    Encryption(string err);
-    Generic(string err);
-};
-
-interface PluginStorage {
-    [Throws=PluginStorageError]
-    void set_item(string key, string value, string? old_value);
-
-    [Throws=PluginStorageError]
-    string? get_item(string key);
-
-    [Throws=PluginStorageError]
-    void remove_item(string key);
-};
-
-callback interface Plugin {
-    string id();
-    void on_start(PluginSdk plugin_sdk, PluginStorage storage);
-    void on_stop();
-};
-
-// END plugin interfaces
-////////////////////////////////
-
-//////////////////////////////////
 // BEGIN NWC interfaces
 
 [Error]
@@ -476,12 +409,8 @@ interface BindingNwcService {
   string add_event_listener(NwcEventListener listener);
 
   void remove_event_listener(string listener_id);
-
-  string id();
-
-  void on_start(PluginSdk plugin_sdk, PluginStorage storage);
-
-  void on_stop();
+  
+  void stop();
 };
 
 // END NWC interfaces
@@ -554,11 +483,6 @@ dictionary ConnectRequest {
     string? mnemonic = null;
     string? passphrase = null;
     sequence<u8>? seed = null;
-};
-
-dictionary ConnectResponse {
-    BindingLiquidSdk sdk;
-    PluginServices plugins;
 };
 
 dictionary ConnectWithSignerRequest {
@@ -953,10 +877,10 @@ dictionary AssetMetadata {
 
 namespace breez_sdk_liquid {
     [Throws=SdkError]
-    ConnectResponse connect(ConnectRequest req, PluginConfigs? plugin_configs);
+    BindingLiquidSdk connect(ConnectRequest req);
 
     [Throws=SdkError]
-    ConnectResponse connect_with_signer(ConnectWithSignerRequest req, Signer signer, PluginConfigs? plugin_configs);
+    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer);
 
     [Throws=SdkError]
     void set_logger(Logger logger);
@@ -1113,4 +1037,7 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
+
+    [Throws=SdkError]
+    BindingNwcService use_nwc_service(NwcConfig config);
 };

@@ -71,43 +71,20 @@ pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
     UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
 }
 
-pub struct ConnectResponse {
-    pub sdk: Arc<BindingLiquidSdk>,
-    pub plugins: PluginServices,
-}
-
-pub fn connect(
-    req: ConnectRequest,
-    plugin_configs: Option<PluginConfigs>,
-) -> Result<ConnectResponse, SdkError> {
+pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let plugin_services: PluginServices = plugin_configs.unwrap_or_default().into();
-        let plugins = plugin_services.as_plugins();
-        let sdk = LiquidSdk::connect(req, (!plugins.is_empty()).then_some(plugins)).await?;
-        let binding_sdk = Arc::new(BindingLiquidSdk { sdk });
-        Ok(ConnectResponse {
-            sdk: binding_sdk,
-            plugins: plugin_services,
-        })
+        let sdk = LiquidSdk::connect(req).await?;
+        Ok(Arc::new(BindingLiquidSdk { sdk }))
     })
 }
 
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
-    plugin_configs: Option<PluginConfigs>,
-) -> Result<ConnectResponse, SdkError> {
+) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let plugin_services: PluginServices = plugin_configs.unwrap_or_default().into();
-        let plugins = plugin_services.as_plugins();
-        let sdk =
-            LiquidSdk::connect_with_signer(req, signer, (!plugins.is_empty()).then_some(plugins))
-                .await?;
-        let binding_sdk = Arc::new(BindingLiquidSdk { sdk });
-        Ok(ConnectResponse {
-            sdk: binding_sdk,
-            plugins: plugin_services,
-        })
+        let sdk = LiquidSdk::connect_with_signer(req, signer).await?;
+        Ok(Arc::new(BindingLiquidSdk { sdk }))
     })
 }
 
@@ -319,6 +296,15 @@ impl BindingLiquidSdk {
 
     pub fn disconnect(&self) -> SdkResult<()> {
         rt().block_on(self.sdk.disconnect())
+    }
+
+    pub fn use_nwc_service(&self, config: NwcConfig) -> SdkResult<Arc<BindingNwcService>> {
+        rt().block_on(async {
+            let nwc_service = Arc::new(BindingNwcService::new(config));
+            let nwc_plugin = PluginWrapper::new_plugin(nwc_service.clone());
+            self.sdk.start_plugin(nwc_plugin).await?;
+            Ok(nwc_service)
+        })
     }
 }
 

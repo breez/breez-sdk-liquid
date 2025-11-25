@@ -7,6 +7,7 @@ pub struct PluginStorage {
     storage: breez_sdk_liquid::plugin::PluginStorage,
 }
 
+#[allow(dead_code)]
 impl PluginStorage {
     pub(crate) fn new(storage: breez_sdk_liquid::plugin::PluginStorage) -> Self {
         Self { storage }

@@ -18,7 +18,7 @@ log() {
 log "Initializing Rust/FFI build..."
 (
   cd "$LIB_DIR"
-  make init android
+  make android
 )
 
 # Clean existing Kotlin bindings

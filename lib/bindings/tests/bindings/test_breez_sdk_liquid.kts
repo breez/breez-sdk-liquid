@@ -10,8 +10,7 @@ try {
     var config = breez_sdk_liquid.defaultConfig(breez_sdk_liquid.LiquidNetwork.TESTNET, null)
     config.syncServiceUrl = null
     var connectRequest = breez_sdk_liquid.ConnectRequest(config, mnemonic)
-    var connectResponse = breez_sdk_liquid.connect(connectRequest, null)
-    var sdk = connectResponse.sdk
+    var sdk = breez_sdk_liquid.connect(connectRequest)
 
     var listenerId = sdk.addEventListener(SDKListener())
 

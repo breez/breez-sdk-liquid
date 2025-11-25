@@ -114,7 +114,7 @@ pub struct LiquidSdkBuilder {
     status_stream: Option<Arc<dyn SwapperStatusStream>>,
     swapper: Option<Arc<dyn Swapper>>,
     sync_service: Option<Arc<SyncService>>,
-    plugins: Option<Vec<Arc<dyn Plugin>>>,
+    plugins: Option<HashMap<String, Arc<dyn Plugin>>>,
 }
 
 #[allow(dead_code)]
@@ -199,8 +199,9 @@ impl LiquidSdkBuilder {
         self
     }
 
-    pub fn plugins(&mut self, plugins: Vec<Arc<dyn Plugin>>) -> &mut Self {
-        self.plugins = Some(plugins);
+    pub fn use_plugin(&mut self, plugin: Arc<dyn Plugin>) -> &mut Self {
+        let plugins = self.plugins.get_or_insert(HashMap::new());
+        plugins.insert(plugin.id(), plugin);
         self
     }
 
@@ -386,7 +387,7 @@ impl LiquidSdkBuilder {
             buy_bitcoin_service,
             external_input_parsers,
             background_task_handles: Mutex::new(vec![]),
-            plugins: self.plugins.unwrap_or_default(),
+            plugins: Mutex::new(self.plugins.unwrap_or_default()),
         });
         Ok(sdk)
     }
@@ -416,7 +417,7 @@ pub struct LiquidSdk {
     pub(crate) buy_bitcoin_service: Arc<dyn BuyBitcoinApi>,
     pub(crate) external_input_parsers: Vec<ExternalInputParser>,
     pub(crate) background_task_handles: Mutex<Vec<TaskHandle>>,
-    pub(crate) plugins: Vec<Arc<dyn Plugin>>,
+    pub(crate) plugins: Mutex<HashMap<String, Arc<dyn Plugin>>>,
 }
 
 impl LiquidSdk {
@@ -431,16 +432,12 @@ impl LiquidSdk {
     ///     * `passphrase` - the optional passphrase for the mnemonic
     ///     * `seed` - the optional Liquid wallet seed
     /// * `plugins` - the [Plugin]s which should be loaded by the SDK at startup
-    pub async fn connect(
-        req: ConnectRequest,
-        plugins: Option<Vec<Arc<dyn Plugin>>>,
-    ) -> Result<Arc<LiquidSdk>> {
+    pub async fn connect(req: ConnectRequest) -> Result<Arc<LiquidSdk>> {
         let signer = Self::default_signer(&req)?;
 
         Self::connect_with_signer(
             ConnectWithSignerRequest { config: req.config },
             Box::new(signer),
-            plugins,
         )
         .inspect_err(|e| error!("Failed to connect: {e:?}"))
         .await
@@ -462,24 +459,19 @@ impl LiquidSdk {
     pub async fn connect_with_signer(
         req: ConnectWithSignerRequest,
         signer: Box<dyn Signer>,
-        plugins: Option<Vec<Arc<dyn Plugin>>>,
     ) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
 
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
 
-        let mut builder = LiquidSdkBuilder::new(
+        let sdk = LiquidSdkBuilder::new(
             req.config,
             PRODUCTION_BREEZSERVER_URL.into(),
             Arc::new(signer),
-        )?;
-
-        if let Some(plugins) = plugins {
-            builder.plugins(plugins);
-        }
-
-        let sdk = builder.build().await?;
+        )?
+        .build()
+        .await?;
         sdk.start().await?;
 
         let init_time = Instant::now().duration_since(start_ts);
@@ -525,40 +517,14 @@ impl LiquidSdk {
         self.start_background_tasks()
             .inspect_err(|e| error!("Failed to start background tasks: {e:?}"))
             .await?;
+        self.start_plugins().await?;
         *is_started = true;
         Ok(())
     }
 
-    async fn init_plugins(self: &Arc<LiquidSdk>) -> SdkResult<()> {
-        // Before setting the plugins, we ensure there are no naming conflicts
-        let mut ids = HashSet::new();
-        for plugin in &self.plugins {
-            let id = plugin.id();
-            if ids.contains(&id) {
-                return Err(SdkError::generic(format!(
-                    "Attempted to start SDK with two plugins with equal ID: `{id}`"
-                )));
-            }
-            ids.insert(id);
-        }
-
-        for plugin in &self.plugins {
-            // We create a seed-dependent passphrase using the plugin id as HMAC input
-            let plugin_id = plugin.id();
-            let plugin_passphrase = self
-                .signer
-                .hmac_sha256(plugin_id.as_bytes().to_vec(), "m/49'/1'/0'/0/0".to_string())
-                .map_err(|err| {
-                    SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
-                })?;
-            let storage = PluginStorage::new(
-                Arc::downgrade(&self.persister),
-                &plugin_passphrase,
-                plugin.id(),
-            )?;
-            plugin
-                .on_start(PluginSdk::new(Arc::downgrade(self)), storage)
-                .await;
+    async fn start_plugins(self: &Arc<LiquidSdk>) -> SdkResult<()> {
+        for (_, plugin) in self.plugins.lock().await.iter() {
+            self.start_plugin_inner(plugin).await?;
         }
         Ok(())
     }
@@ -595,7 +561,6 @@ impl LiquidSdk {
                 handle,
             });
         }
-        self.init_plugins().await?;
         Ok(())
     }
 
@@ -643,7 +608,7 @@ impl LiquidSdk {
                 handle.handle.abort();
             }
         }
-        for plugin in &self.plugins {
+        for (_, plugin) in self.plugins.lock().await.iter() {
             plugin.on_stop().await;
         }
 
@@ -5108,6 +5073,47 @@ impl LiquidSdk {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn init_logging(log_dir: &str, app_logger: Option<Box<dyn log::Log>>) -> Result<()> {
         crate::logger::init_logging(log_dir, app_logger)
+    }
+
+    async fn start_plugin_inner(self: &Arc<Self>, plugin: &Arc<dyn Plugin>) -> SdkResult<()> {
+        let plugin_id = plugin.id();
+        let plugin_passphrase = self
+            .signer
+            .hmac_sha256(plugin_id.as_bytes().to_vec(), "m/49'/1'/0'/0/0".to_string())
+            .map_err(|err| {
+                SdkError::generic(format!("Could not generate plugin passphrase: {err}"))
+            })?;
+        let storage = PluginStorage::new(
+            Arc::downgrade(&self.persister),
+            &plugin_passphrase,
+            plugin.id(),
+        )?;
+        plugin
+            .on_start(PluginSdk::new(Arc::downgrade(self)), storage)
+            .await;
+        Ok(())
+    }
+
+    pub async fn start_plugin(self: &Arc<Self>, plugin: Arc<dyn Plugin>) -> SdkResult<()> {
+        let plugin_id = plugin.id();
+        let mut plugins = self.plugins.lock().await;
+        if plugins.get(&plugin_id).is_some() {
+            return Err(SdkError::generic(format!(
+                "Plugin {plugin_id} is already running"
+            )));
+        }
+        plugins.insert(plugin_id, plugin.clone());
+        self.start_plugin_inner(&plugin).await?;
+        Ok(())
+    }
+
+    pub async fn stop_plugin(&self, plugin_id: &str) -> SdkResult<()> {
+        let mut plugins = self.plugins.lock().await;
+        let Some(plugin) = plugins.remove(plugin_id) else {
+            return Err(SdkError::generic(format!("Plugin {plugin_id} not found")));
+        };
+        plugin.on_stop().await;
+        Ok(())
     }
 }
 

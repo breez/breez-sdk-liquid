@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
-use breez_sdk_liquid::plugin::Plugin;
 use breez_sdk_liquid::prelude::*;
 use breez_sdk_liquid_nwc::{model::NwcConfig, SdkNwcService};
 use clap::Parser;
@@ -116,7 +115,13 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
-    let mut plugins: Vec<Arc<dyn Plugin>> = vec![];
+    let sdk = LiquidSdk::connect(ConnectRequest {
+        config,
+        mnemonic: Some(mnemonic.to_string()),
+        passphrase,
+        seed: None,
+    })
+    .await?;
     if args.nwc {
         let nwc_service = Arc::new(SdkNwcService::new(NwcConfig {
             relay_urls: None,
@@ -125,18 +130,8 @@ async fn main() -> Result<()> {
         NWC_SERVICE.set(nwc_service.clone()).unwrap_or_else(|_| {
             panic!("Could not set NWC service");
         });
-        plugins.push(nwc_service);
+        sdk.start_plugin(nwc_service).await?;
     };
-    let sdk = LiquidSdk::connect(
-        ConnectRequest {
-            config,
-            mnemonic: Some(mnemonic.to_string()),
-            passphrase,
-            seed: None,
-        },
-        Some(plugins),
-    )
-    .await?;
     let listener_id = sdk
         .add_event_listener(Box::new(CliEventListener {}))
         .await?;

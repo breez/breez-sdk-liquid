@@ -12,6 +12,6 @@ log() {
 log "Building iOS universal and macOS (Darwin) universal libraries..."
 (
   cd "$LIB_DIR"
-  make init ios-universal darwin-universal
+  make build-ios-universal build-darwin-universal
 )
 log "✅ Universal iOS/macOS build completed successfully."

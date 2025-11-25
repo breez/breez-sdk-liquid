@@ -114,7 +114,7 @@ jobs:
         if: ${{ inputs.csharp }}
         working-directory: lib/bindings
         run: |
-          cargo install uniffi-bindgen-cs --git https://github.com/NordSecurity/uniffi-bindgen-cs --tag v0.9.1+v0.28.3
+          make install-bindgen-cs
           uniffi-bindgen-cs src/breez_sdk_liquid.udl -o ffi/csharp -c ./uniffi.toml
 
       - name: Archive C# binding
@@ -128,8 +128,7 @@ jobs:
         if: ${{ inputs.kotlin }}
         working-directory: lib/bindings
         run: |
-          cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
-          gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kotlin src/breez_sdk_liquid.udl
+          make build-kotlin-bindgen-only
   
       - name: Archive Kotlin binding
         if: ${{ inputs.kotlin }}
@@ -142,8 +141,7 @@ jobs:
         if: ${{ inputs.kotlin }}
         working-directory: lib/bindings
         run: |
-          cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
-          gobley-uniffi-bindgen -c ./uniffi.kotlin-multiplatform.toml -o ffi/kmp src/breez_sdk_liquid.udl
+          make build-kotlin-multiplatform-bindgen-only
 
       - name: Archive Kotlin multiplatform binding
         if: ${{ inputs.kotlin }}
@@ -156,7 +154,7 @@ jobs:
         if: ${{ inputs.golang }}
         working-directory: lib/bindings
         run: |
-          cargo install uniffi-bindgen-go --git https://github.com/NordSecurity/uniffi-bindgen-go --tag v0.3.0+v0.28.3
+          make install-bindgen-go
           uniffi-bindgen-go src/breez_sdk_liquid.udl -o ffi/golang -c ./uniffi.toml
 
       - name: Archive golang binding

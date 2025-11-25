@@ -7,8 +7,7 @@ try
     var config = BreezSdkLiquidMethods.DefaultConfig(LiquidNetwork.Testnet, null) with { syncServiceUrl = null };
 
     var connectReq = new ConnectRequest(config, mnemonic);
-    ConnectResponse res = BreezSdkLiquidMethods.Connect(connectReq, null);
-    BindingLiquidSdk sdk = res.sdk;
+    BindingLiquidSdk sdk = BreezSdkLiquidMethods.Connect(connectReq);
 
     GetInfoResponse? info = sdk.GetInfo();
 

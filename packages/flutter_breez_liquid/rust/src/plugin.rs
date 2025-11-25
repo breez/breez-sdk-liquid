@@ -1,8 +1,5 @@
-use crate::{
-    errors::*, events::BreezEventListener, frb_generated::StreamSink, nwc::BreezNwcService,
-};
+use crate::{errors::*, events::BreezEventListener, frb_generated::StreamSink};
 use breez_sdk_liquid::prelude::*;
-use breez_sdk_liquid_nwc::model::NwcConfig;
 use flutter_rust_bridge::frb;
 
 pub use breez_sdk_liquid::plugin::{
@@ -98,21 +95,4 @@ pub trait Plugin: Send + Sync {
     fn id(&self) -> String;
     fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage);
     fn on_stop(&self);
-}
-
-#[derive(Default)]
-pub struct PluginConfigs {
-    pub nwc: Option<NwcConfig>,
-}
-
-#[derive(Clone, Default)]
-pub struct PluginServices {
-    pub nwc: Option<BreezNwcService>,
-}
-
-impl Into<PluginServices> for PluginConfigs {
-    fn into(self) -> PluginServices {
-        let nwc = self.nwc.map(BreezNwcService::new);
-        PluginServices { nwc }
-    }
 }

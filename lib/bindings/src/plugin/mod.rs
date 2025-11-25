@@ -10,10 +10,11 @@ pub use nwc::*;
 
 use crate::{rt, EventListener, EventListenerWrapper};
 
-pub struct PluginSdk {
+pub(crate) struct PluginSdk {
     plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
 }
 
+#[allow(dead_code)]
 impl PluginSdk {
     pub fn get_info(&self) -> Result<GetInfoResponse, SdkError> {
         rt().block_on(self.plugin_sdk.get_info())
@@ -66,10 +67,11 @@ impl PluginSdk {
     }
 }
 
-pub struct PluginStorage {
+pub(crate) struct PluginStorage {
     pub(crate) storage: breez_sdk_liquid::plugin::PluginStorage,
 }
 
+#[allow(dead_code)]
 impl PluginStorage {
     pub fn set_item(
         &self,
@@ -89,20 +91,26 @@ impl PluginStorage {
     }
 }
 
-pub trait Plugin: Send + Sync {
+pub(crate) trait Plugin: Send + Sync {
     fn id(&self) -> String;
     fn on_start(&self, plugin_sdk: Arc<PluginSdk>, storage: Arc<PluginStorage>);
     fn on_stop(&self);
 }
 
 pub(crate) struct PluginWrapper {
-    pub(crate) inner: Arc<dyn Plugin>,
+    pub(crate) plugin: Arc<dyn Plugin>,
+}
+
+impl PluginWrapper {
+    pub(crate) fn new_plugin(plugin: Arc<dyn Plugin>) -> Arc<dyn breez_sdk_liquid::plugin::Plugin> {
+        Arc::new(Self { plugin })
+    }
 }
 
 #[sdk_macros::async_trait]
 impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
     fn id(&self) -> String {
-        self.inner.id()
+        self.plugin.id()
     }
 
     async fn on_start(
@@ -110,41 +118,13 @@ impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
         plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
         storage: breez_sdk_liquid::plugin::PluginStorage,
     ) {
-        self.inner.on_start(
+        self.plugin.on_start(
             PluginSdk { plugin_sdk }.into(),
             PluginStorage { storage }.into(),
         );
     }
 
     async fn on_stop(&self) {
-        self.inner.on_stop();
-    }
-}
-
-#[derive(Default)]
-pub struct PluginConfigs {
-    pub nwc: Option<NwcConfig>,
-}
-
-#[derive(Clone, Default)]
-pub struct PluginServices {
-    pub nwc: Option<Arc<BindingNwcService>>,
-}
-
-impl PluginServices {
-    pub(crate) fn as_plugins(&self) -> Vec<Arc<dyn breez_sdk_liquid::plugin::Plugin>> {
-        let mut plugins = vec![];
-        if let Some(nwc_service) = self.nwc.clone() {
-            plugins.push(Arc::new(PluginWrapper { inner: nwc_service })
-                as Arc<dyn breez_sdk_liquid::plugin::Plugin>);
-        }
-        plugins
-    }
-}
-
-impl From<PluginConfigs> for PluginServices {
-    fn from(c: PluginConfigs) -> Self {
-        let nwc = c.nwc.map(BindingNwcService::new).map(Arc::new);
-        PluginServices { nwc }
+        self.plugin.on_stop();
     }
 }

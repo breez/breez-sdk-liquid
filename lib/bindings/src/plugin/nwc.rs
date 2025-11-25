@@ -74,6 +74,10 @@ impl BindingNwcService {
     pub fn remove_event_listener(&self, listener_id: String) {
         rt().block_on(self.inner.remove_event_listener(&listener_id))
     }
+
+    pub fn stop(&self) {
+        Plugin::on_stop(self);
+    }
 }
 
 #[sdk_macros::async_trait]

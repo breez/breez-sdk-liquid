@@ -1,13 +1,9 @@
 use breez_sdk_liquid::plugin::Plugin as _;
 use breez_sdk_liquid_nwc::{NwcService as _, SdkNwcService};
-use std::rc::Rc;
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
-use crate::{
-    error::WasmError,
-    model::WasmResult,
-    plugin::{storage::PluginStorage, PluginSdk},
-};
+use crate::{error::WasmError, model::WasmResult};
 
 mod model {
     use wasm_bindgen::prelude::*;
@@ -123,15 +119,15 @@ pub struct NwcConfig {
 
 #[wasm_bindgen]
 pub struct BindingNwcService {
-    inner: Rc<SdkNwcService>,
+    pub(crate) service: Arc<SdkNwcService>,
 }
 
 #[wasm_bindgen]
 impl BindingNwcService {
     #[wasm_bindgen(constructor)]
     pub fn new(config: NwcConfig) -> Self {
-        let inner = Rc::new(SdkNwcService::new(config.into()));
-        Self { inner }
+        let service = Arc::new(SdkNwcService::new(config.into()));
+        Self { service }
     }
 
     // NWC
@@ -140,7 +136,7 @@ impl BindingNwcService {
         &self,
         req: AddConnectionRequest,
     ) -> WasmResult<AddConnectionResponse> {
-        self.inner
+        self.service
             .add_connection(req.into())
             .await
             .map(Into::into)
@@ -152,7 +148,7 @@ impl BindingNwcService {
         &self,
         req: EditConnectionRequest,
     ) -> WasmResult<EditConnectionResponse> {
-        self.inner
+        self.service
             .edit_connection(req.into())
             .await
             .map(Into::into)
@@ -162,7 +158,7 @@ impl BindingNwcService {
     #[wasm_bindgen(js_name = "listConnections")]
     pub async fn list_connections(&self) -> WasmResult<js_sys::Map> {
         let connections = self
-            .inner
+            .service
             .list_connections()
             .await
             .map_err(Into::<WasmError>::into)?;
@@ -176,41 +172,47 @@ impl BindingNwcService {
 
     #[wasm_bindgen(js_name = "removeConnection")]
     pub async fn remove_connection(&self, name: String) -> WasmResult<()> {
-        self.inner.remove_connection(name).await.map_err(Into::into)
+        self.service
+            .remove_connection(name)
+            .await
+            .map_err(Into::into)
     }
 
     #[wasm_bindgen(js_name = "handleEvent")]
     pub async fn handle_event(&self, event_id: String) -> WasmResult<()> {
-        self.inner.handle_event(event_id).await.map_err(Into::into)
+        self.service
+            .handle_event(event_id)
+            .await
+            .map_err(Into::into)
     }
 
     #[wasm_bindgen(js_name = "addEventListener")]
     pub async fn add_event_listener(&self, listener: model::NwcEventListener) -> String {
         let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =
             Box::new(WasmNwcEventListener { listener });
-        self.inner.add_event_listener(listener).await
+        self.service.add_event_listener(listener).await
     }
 
     #[wasm_bindgen(js_name = "removeEventListener")]
     pub async fn remove_event_listener(&self, listener_id: String) {
-        self.inner.remove_event_listener(&listener_id).await
+        self.service.remove_event_listener(&listener_id).await
     }
 
     /// Plugin
-    #[wasm_bindgen(js_name = "id")]
-    pub fn id(&self) -> String {
-        self.inner.id()
-    }
+    // #[wasm_bindgen(js_name = "id")]
+    // pub fn id(&self) -> String {
+    //     self.service.id()
+    // }
+    //
+    // #[wasm_bindgen(js_name = "onStart")]
+    // pub async fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
+    //     self.service
+    //         .on_start(plugin_sdk.sdk(), storage.storage())
+    //         .await;
+    // }
 
-    #[wasm_bindgen(js_name = "onStart")]
-    pub async fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
-        self.inner
-            .on_start(plugin_sdk.sdk(), storage.storage())
-            .await;
-    }
-
-    #[wasm_bindgen(js_name = "onStop")]
-    pub async fn on_stop(&self) {
-        self.inner.on_stop().await;
+    #[wasm_bindgen(js_name = "stop")]
+    pub async fn stop(&self) {
+        self.service.on_stop().await;
     }
 }

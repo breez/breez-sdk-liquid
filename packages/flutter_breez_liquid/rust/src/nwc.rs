@@ -128,47 +128,45 @@ use event::BreezNwcEventListener;
 
 #[derive(Clone)]
 pub struct BreezNwcService {
-    inner: Arc<SdkNwcService>,
+    pub(crate) service: Arc<SdkNwcService>,
 }
 
 impl BreezNwcService {
     #[frb(sync)]
     pub fn new(config: NwcConfig) -> BreezNwcService {
         Self {
-            inner: Arc::new(SdkNwcService::new(config)),
+            service: Arc::new(SdkNwcService::new(config)),
         }
     }
-}
 
-impl BreezNwcService {
     pub async fn add_connection(
         &self,
         req: AddConnectionRequest,
     ) -> Result<AddConnectionResponse, NwcError> {
-        self.inner.add_connection(req).await
+        self.service.add_connection(req).await
     }
 
     pub async fn edit_connection(
         &self,
         req: EditConnectionRequest,
     ) -> Result<EditConnectionResponse, NwcError> {
-        self.inner.edit_connection(req).await
+        self.service.edit_connection(req).await
     }
 
     pub async fn list_connections(&self) -> Result<HashMap<String, NwcConnection>, NwcError> {
-        self.inner.list_connections().await
+        self.service.list_connections().await
     }
 
     pub async fn handle_event(&self, event_id: String) -> Result<(), NwcError> {
-        self.inner.handle_event(event_id).await
+        self.service.handle_event(event_id).await
     }
 
     pub async fn remove_connection(&self, name: String) -> Result<(), NwcError> {
-        self.inner.remove_connection(name).await
+        self.service.remove_connection(name).await
     }
 
     pub async fn add_event_listener(&self, listener: StreamSink<NwcEvent>) -> String {
-        self.inner
+        self.service
             .add_event_listener(Box::new(BreezNwcEventListener { stream: listener }))
             .await
     }
@@ -176,17 +174,17 @@ impl BreezNwcService {
 
 impl Plugin for BreezNwcService {
     fn id(&self) -> String {
-        self.inner.id()
+        self.service.id()
     }
 
     fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
         futures::executor::block_on(
-            self.inner
+            self.service
                 .on_start(plugin_sdk.plugin_sdk.clone(), storage.storage.clone()),
         );
     }
 
     fn on_stop(&self) {
-        futures::executor::block_on(self.inner.on_stop());
+        futures::executor::block_on(self.service.on_stop());
     }
 }
