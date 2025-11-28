@@ -12,14 +12,14 @@ mod model {
     pub struct PeriodicBudget {
         pub used_budget_sat: u64,
         pub max_budget_sat: u64,
-        pub renews_at: u32,
+        pub renews_at: Option<u32>,
         pub updated_at: u32,
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::PeriodicBudgetRequest)]
     pub struct PeriodicBudgetRequest {
         pub max_budget_sat: u64,
-        pub renewal_time_mins: u32,
+        pub renewal_time_mins: Option<u32>,
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NwcConnection)]
@@ -49,7 +49,9 @@ mod model {
         pub name: String,
         pub receive_only: Option<bool>,
         pub expiry_time_mins: Option<u32>,
+        pub remove_expiry: Option<bool>,
         pub periodic_budget_req: Option<PeriodicBudgetRequest>,
+        pub remove_periodic_budget: Option<bool>,
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::EditConnectionResponse)]

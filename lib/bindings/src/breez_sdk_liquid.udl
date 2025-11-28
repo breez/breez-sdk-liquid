@@ -349,13 +349,13 @@ callback interface NwcEventListener {
 dictionary PeriodicBudget {
     u64 used_budget_sat;
     u64 max_budget_sat;
-    u32 renews_at;
+    u32? renews_at;
     u32 updated_at;
 };
 
 dictionary PeriodicBudgetRequest {
     u64 max_budget_sat;
-    u32 renewal_time_mins;
+    u32? renewal_time_mins;
 };
 
 dictionary NwcConnection {
@@ -381,7 +381,9 @@ dictionary EditConnectionRequest {
     string name;
     boolean? receive_only = null;
     u32? expiry_time_mins = null;
+    boolean? remove_expiry = null;
     PeriodicBudgetRequest? periodic_budget_req = null;
+    boolean? remove_periodic_budget = null;
 };
 
 dictionary EditConnectionResponse {

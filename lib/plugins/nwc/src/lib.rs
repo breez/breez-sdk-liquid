@@ -486,13 +486,11 @@ impl NwcService for SdkNwcService {
         &self,
         req: EditConnectionRequest,
     ) -> NwcResult<EditConnectionResponse> {
-        let connection = self.runtime_ctx().await?.persister.edit_nwc_connection(
-            &req.name,
-            req.expiry_time_mins.map(utils::mins_to_seconds),
-            req.receive_only,
-            req.periodic_budget_req
-                .map(|req| PeriodicBudgetInner::from_budget_request(req, utils::now())),
-        )?;
+        let connection = self
+            .runtime_ctx()
+            .await?
+            .persister
+            .edit_nwc_connection(req)?;
         self.runtime_ctx().await?.trigger_resubscription().await;
         Ok(EditConnectionResponse {
             connection: connection.into(),

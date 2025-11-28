@@ -309,10 +309,14 @@ pub(crate) enum NwcCommand {
         receive_only: Option<bool>,
         #[arg(short, long)]
         expiry_time_mins: Option<u32>,
+        #[arg(long)]
+        remove_expiry: Option<bool>,
         #[arg(short, long)]
         max_budget_sat: Option<u64>,
         #[arg(short, long)]
         budget_renewal_mins: Option<u32>,
+        #[arg(long)]
+        remove_periodic_budget: Option<bool>,
     },
     /// Lists the available NWC connection strings
     ListConnections {},
@@ -908,20 +912,6 @@ pub(crate) async fn handle_command(
         }
         Command::Nwc { nwc } => {
             let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
-            let get_periodic_budget_req =
-                |max_budget_sat: Option<u64>, budget_renewal_mins: Option<u32>| match (
-                    max_budget_sat,
-                    budget_renewal_mins,
-                ) {
-                    (Some(max_budget_sat), Some(renewal_mins)) => Ok(Some(PeriodicBudgetRequest {
-                        max_budget_sat,
-                        renewal_time_mins: renewal_mins,
-                    })),
-                    (Some(_), None) | (None, Some(_)) => {
-                        bail!("Both `max_budget_sat` and `period_time_sec` must be set at once.")
-                    }
-                    _ => Ok(None),
-                };
             match nwc {
                 NwcCommand::AddConnection {
                     name,
@@ -930,15 +920,18 @@ pub(crate) async fn handle_command(
                     max_budget_sat,
                     budget_renewal_mins,
                 } => {
-                    let periodic_budget_req =
-                        get_periodic_budget_req(max_budget_sat, budget_renewal_mins)?;
                     command_result!(
                         nwc_service
                             .add_connection(AddConnectionRequest {
                                 name,
                                 receive_only,
                                 expiry_time_mins,
-                                periodic_budget_req
+                                periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
+                                    PeriodicBudgetRequest {
+                                        max_budget_sat,
+                                        renewal_time_mins: budget_renewal_mins,
+                                    }
+                                })
                             })
                             .await?
                     )
@@ -947,18 +940,25 @@ pub(crate) async fn handle_command(
                     name,
                     receive_only,
                     expiry_time_mins,
+                    remove_expiry,
                     max_budget_sat,
                     budget_renewal_mins,
+                    remove_periodic_budget,
                 } => {
-                    let periodic_budget_req =
-                        get_periodic_budget_req(max_budget_sat, budget_renewal_mins)?;
                     command_result!(
                         nwc_service
                             .edit_connection(EditConnectionRequest {
                                 name,
                                 receive_only,
                                 expiry_time_mins,
-                                periodic_budget_req
+                                remove_expiry,
+                                periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
+                                    PeriodicBudgetRequest {
+                                        max_budget_sat,
+                                        renewal_time_mins: budget_renewal_mins,
+                                    }
+                                }),
+                                remove_periodic_budget,
                             })
                             .await?
                     )

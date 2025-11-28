@@ -4,7 +4,7 @@ use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
 
 use crate::{
     error::{NwcError, NwcResult},
-    model::{NwcConnectionInner, PeriodicBudgetInner, RefreshResult},
+    model::{EditConnectionRequest, NwcConnectionInner, PeriodicBudgetInner, RefreshResult},
     utils, MIN_REFRESH_INTERVAL_SEC,
 };
 
@@ -79,29 +79,49 @@ impl Persister {
         name: &str,
         periodic_budget: PeriodicBudgetInner,
     ) -> NwcResult<()> {
-        self.edit_nwc_connection(name, None, None, Some(periodic_budget))?;
-        Ok(())
-    }
-
-    pub(crate) fn edit_nwc_connection(
-        &self,
-        name: &str,
-        expiry_time_sec: Option<u32>,
-        receive_only: Option<bool>,
-        periodic_budget: Option<PeriodicBudgetInner>,
-    ) -> NwcResult<NwcConnectionInner> {
         self.set_connections_safe(|connections| {
             let Some(connection) = connections.get_mut(name) else {
                 return Err(NwcError::generic("Connection not found."));
             };
-            if let Some(new_expiry_time) = expiry_time_sec {
-                connection.expiry_time_sec = Some(new_expiry_time);
-            }
-            if let Some(new_receive_only) = receive_only {
+            connection.periodic_budget = Some(periodic_budget.clone());
+            Ok((true, ()))
+        })
+    }
+
+    pub(crate) fn edit_nwc_connection(
+        &self,
+        req: EditConnectionRequest,
+    ) -> NwcResult<NwcConnectionInner> {
+        self.set_connections_safe(|connections| {
+            let Some(connection) = connections.get_mut(&req.name) else {
+                return Err(NwcError::generic("Connection not found."));
+            };
+            if let Some(new_receive_only) = req.receive_only {
                 connection.receive_only = new_receive_only;
             }
-            if let Some(new_periodic_budget) = periodic_budget.clone() {
-                connection.periodic_budget = Some(new_periodic_budget);
+            match (req.expiry_time_mins, req.remove_expiry) {
+                (Some(_), Some(_)) => {
+                    return Err(NwcError::generic(
+                        "`expiry_time_mins` and `remove_expiry` cannot both be set at once",
+                    ));
+                }
+                (Some(new_expiry_mins), None) => {
+                    connection.expiry_time_sec = Some(utils::mins_to_seconds(new_expiry_mins))
+                }
+                (None, Some(true)) => connection.expiry_time_sec = None,
+                _ => {}
+            }
+            match (req.periodic_budget_req.clone(), req.remove_periodic_budget) {
+                (Some(_), Some(_)) => {
+                    return Err(NwcError::generic(
+                        "`periodic_budget_req` and `remove_periodic_budget` cannot both be set at once",
+                    ));
+                }
+                (Some(periodic_budget_req), None) => {
+                    connection.periodic_budget = Some(PeriodicBudgetInner::from_budget_request(periodic_budget_req, utils::now()));
+                }
+                (None, Some(true)) => connection.periodic_budget = None,
+                _ => {}
             }
             Ok((true, connection.clone()))
         })
@@ -121,7 +141,7 @@ impl Persister {
                     }
                 }
                 if let Some(renewal_time_sec) =
-                    connection.periodic_budget.map(|b| b.renewal_time_sec)
+                    connection.periodic_budget.and_then(|b| b.renewal_time_sec)
                 {
                     if renewal_time_sec < min_interval.unwrap_or(u32::MAX) {
                         min_interval = Some(renewal_time_sec);
@@ -161,10 +181,12 @@ impl Persister {
                 }
                 // If the connection's periodic budget has to be updated
                 if let Some(ref mut budget) = connection.periodic_budget {
-                    if now >= budget.updated_at + budget.renewal_time_sec {
-                        budget.used_budget_sat = 0;
-                        budget.updated_at = now;
-                        result.refreshed.push(name.clone());
+                    if let Some(renewal_time_sec) = budget.renewal_time_sec {
+                        if now >= budget.updated_at + renewal_time_sec {
+                            budget.used_budget_sat = 0;
+                            budget.updated_at = now;
+                            result.refreshed.push(name.clone());
+                        }
                     }
                 }
             }

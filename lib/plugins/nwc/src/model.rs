@@ -28,7 +28,7 @@ pub(crate) struct PeriodicBudgetInner {
     /// If the renewal time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
     /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
     /// renewal to take effect.
-    pub renewal_time_sec: u32,
+    pub renewal_time_sec: Option<u32>,
     pub updated_at: u32,
 }
 
@@ -37,7 +37,7 @@ impl PeriodicBudgetInner {
         Self {
             used_budget_sat: 0,
             max_budget_sat: req.max_budget_sat,
-            renewal_time_sec: utils::mins_to_seconds(req.renewal_time_mins),
+            renewal_time_sec: req.renewal_time_mins.map(utils::mins_to_seconds),
             updated_at,
         }
     }
@@ -51,7 +51,7 @@ pub struct PeriodicBudget {
     /// The maximum budget amount allowed (in satoshi) for the period
     pub max_budget_sat: u64,
     /// The budget's renewal time
-    pub renews_at: u32,
+    pub renews_at: Option<u32>,
     /// The latest budget update time (last reset time)
     pub updated_at: u32,
 }
@@ -61,7 +61,7 @@ impl PeriodicBudget {
         Self {
             used_budget_sat: b.used_budget_sat,
             max_budget_sat: b.max_budget_sat,
-            renews_at: created_at + b.renewal_time_sec,
+            renews_at: b.renewal_time_sec.map(|t| created_at + t),
             updated_at: b.updated_at,
         }
     }
@@ -72,7 +72,7 @@ pub struct PeriodicBudgetRequest {
     /// See [PeriodicBudget::max_budget_sat]
     pub max_budget_sat: u64,
     /// See [PeriodicBudget::renews_at]
-    pub renewal_time_mins: u32,
+    pub renewal_time_mins: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -139,9 +139,13 @@ pub struct EditConnectionRequest {
     pub name: String,
     /// The expiry time of the connection, in minutes
     pub expiry_time_mins: Option<u32>,
+    /// Whether or not to remove the [NwcConnection::expires_at] field
+    pub remove_expiry: Option<bool>,
     /// See [NwcConnection::receive_only]
     pub receive_only: Option<bool>,
     pub periodic_budget_req: Option<PeriodicBudgetRequest>,
+    /// Whether or not to remove the [NwcConnection::periodic_budget] field
+    pub remove_periodic_budget: Option<bool>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
