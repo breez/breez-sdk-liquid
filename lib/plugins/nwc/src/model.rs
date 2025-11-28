@@ -50,7 +50,7 @@ pub struct PeriodicBudget {
     pub used_budget_sat: u64,
     /// The maximum budget amount allowed (in satoshi) for the period
     pub max_budget_sat: u64,
-    /// The budget's renewal time
+    /// The next timestamp at which the budget will be renewed (reset to 0)
     pub renews_at: Option<u32>,
     /// The latest budget update time (last reset time)
     pub updated_at: u32,
@@ -71,7 +71,9 @@ impl PeriodicBudget {
 pub struct PeriodicBudgetRequest {
     /// See [PeriodicBudget::max_budget_sat]
     pub max_budget_sat: u64,
-    /// See [PeriodicBudget::renews_at]
+    /// The renewal time of the budget, in minutes.
+    /// If not provided, the budget will be fixed for the entire lifetime of the connection.
+    /// Otherwise, it will be reset after the amount provided
     pub renewal_time_mins: Option<u32>,
 }
 
@@ -80,7 +82,7 @@ pub(crate) struct NwcConnectionInner {
     pub connection_string: String,
     pub created_at: u32,
     pub receive_only: bool,
-    /// The expiry timestamp of the connection
+    /// The duration of the connection before it expires, in seconds
     /// ## Dev Note:
     /// If the expiry time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
     /// then it will take at most [crate::MIN_REFRESH_INTERVAL_SEC] seconds in order for the
@@ -97,7 +99,7 @@ pub struct NwcConnection {
     pub created_at: u32,
     /// Specifies whether this is a receive-only connection. Defaults to false.
     pub receive_only: bool,
-    /// The expiry time of the connection
+    /// The timestamp at which the connection expires
     pub expires_at: Option<u32>,
     /// An optional [PeriodicBudget] for the connection
     pub periodic_budget: Option<PeriodicBudget>,
@@ -121,7 +123,7 @@ impl From<NwcConnectionInner> for NwcConnection {
 pub struct AddConnectionRequest {
     /// The **unique** name for the new connection
     pub name: String,
-    /// The expiry time of the connection, in minutes
+    /// The duration of the connection before it expires, in minutes
     pub expiry_time_mins: Option<u32>,
     /// See [NwcConnection::receive_only]
     pub receive_only: Option<bool>,
@@ -137,7 +139,7 @@ pub struct AddConnectionResponse {
 pub struct EditConnectionRequest {
     /// The **unique** name for the new connection
     pub name: String,
-    /// The expiry time of the connection, in minutes
+    /// The duration of the connection before it expires, in minutes
     pub expiry_time_mins: Option<u32>,
     /// Whether or not to remove the [NwcConnection::expires_at] field
     pub remove_expiry: Option<bool>,
