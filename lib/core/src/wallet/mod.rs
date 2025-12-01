@@ -142,7 +142,12 @@ impl WalletClient {
                         }
                     };
                 }
-                let client = Box::new(builder.timeout(3).waterfalls(waterfalls).build());
+                let client = Box::new(
+                    builder
+                        .timeout(config.onchain_sync_request_timeout_sec as u8)
+                        .waterfalls(waterfalls)
+                        .build(),
+                );
                 Ok(Self::Esplora(client))
             }
         }
