@@ -406,7 +406,7 @@ jobs:
       - name: Build Android bindings
         working-directory: lib/bindings
         run: |
-          cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+          cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev 72753910f54a157de2f84b78dc6f78415e28d4f2
           gobley-uniffi-bindgen -c ./uniffi.toml -o langs/android/lib/src src/breez_sdk_liquid.udl
 
       - name: Run Android build

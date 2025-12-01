@@ -38,7 +38,7 @@ all: bindings-swift bindings-android python-darwin
 ## Android 
 .PHONY: android
 android: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
-	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev 72753910f54a157de2f84b78dc6f78415e28d4f2
 	gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kotlin src/breez_sdk_liquid.udl
 
 aarch64-linux-android: $(SOURCES) ndk-home
@@ -68,11 +68,11 @@ bindings-android: android
 .PHONY: kotlin
 kotlin: $(SOURCES)
 	cargo build --release --target $(TARGET)
-	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev 72753910f54a157de2f84b78dc6f78415e28d4f2
 	gobley-uniffi-bindgen -c ./uniffi.toml -o ffi/kotlin src/breez_sdk_liquid.udl
 
 bindings-kotlin-multiplatform: ios-universal android
-	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev f920c275e4f60e22080a6cd280d9562d64eb6ac9
+	cargo install gobley-uniffi-bindgen --git https://github.com/breez/gobley --rev 72753910f54a157de2f84b78dc6f78415e28d4f2
 	gobley-uniffi-bindgen -c ./uniffi.kotlin-multiplatform.toml -o ffi/kmp src/breez_sdk_liquid.udl
 
 	mkdir -p langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/kotlin/breez_sdk_liquid
