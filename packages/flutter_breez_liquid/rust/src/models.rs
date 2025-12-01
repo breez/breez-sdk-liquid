@@ -353,6 +353,8 @@ pub struct _Config {
     pub asset_metadata: Option<Vec<AssetMetadata>>,
     pub sideswap_api_key: Option<String>,
     pub use_magic_routing_hints: bool,
+    pub onchain_sync_period_sec: u32,
+    pub onchain_sync_request_timeout_sec: u32,
 }
 
 #[frb(mirror(ConnectRequest))]

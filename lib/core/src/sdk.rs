@@ -728,7 +728,10 @@ impl LiquidSdk {
                 .track_new_blocks(&mut current_liquid_block, &mut current_bitcoin_block)
                 .await;
             loop {
-                tokio::time::sleep(Duration::from_secs(10)).await;
+                tokio::time::sleep(Duration::from_secs(
+                    cloned.config.onchain_sync_period_sec as u64,
+                ))
+                .await;
                 cloned
                     .track_new_blocks(&mut current_liquid_block, &mut current_bitcoin_block)
                     .await;

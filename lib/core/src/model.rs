@@ -46,6 +46,8 @@ pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
 pub const BREEZ_SWAP_PROXY_URL: &str = "https://swap.breez.technology/v2";
 pub const DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT: u64 = 500;
+const DEFAULT_ONCHAIN_SYNC_PERIOD_SEC: u32 = 10;
+const DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC: u32 = 7;
 
 const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
 
@@ -104,6 +106,10 @@ pub struct Config {
     pub sideswap_api_key: Option<String>,
     /// Set this to false to disable the use of Magic Routing Hints (MRH) to send payments. Enabled by default.
     pub use_magic_routing_hints: bool,
+    /// The default period between onchain syncs in seconds. Defaults to 10 seconds.
+    pub onchain_sync_period_sec: u32,
+    /// The default onchain sync request timeout in seconds. Defaults to 7 seconds.
+    pub onchain_sync_request_timeout_sec: u32,
 }
 
 impl Config {
@@ -128,6 +134,8 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
+            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
         }
     }
 
@@ -153,6 +161,8 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
+            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
         }
     }
 
@@ -177,6 +187,8 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
+            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
         }
     }
 
@@ -202,6 +214,8 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
             use_magic_routing_hints: true,
+            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
+            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
         }
     }
 
@@ -226,6 +240,8 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: None,
             use_magic_routing_hints: true,
+            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
+            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
         }
     }
 
@@ -251,6 +267,8 @@ impl Config {
             asset_metadata: None,
             sideswap_api_key: None,
             use_magic_routing_hints: true,
+            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
+            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
         }
     }
 
@@ -359,7 +377,9 @@ impl Config {
         let electrum_url = lwk_wollet::ElectrumUrl::new(url, tls, validate_domain)?;
         lwk_wollet::ElectrumClient::with_options(
             &electrum_url,
-            lwk_wollet::ElectrumOptions { timeout: Some(3) },
+            lwk_wollet::ElectrumOptions {
+                timeout: Some(self.onchain_sync_request_timeout_sec as u8),
+            },
         )
     }
 
