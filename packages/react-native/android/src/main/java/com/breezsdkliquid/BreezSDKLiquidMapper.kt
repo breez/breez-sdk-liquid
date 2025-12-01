@@ -1,11 +1,7 @@
 package com.breezsdkliquid
 import breez_sdk_liquid.*
 import com.facebook.react.bridge.*
-import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
-import java.io.File
 import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 fun asAcceptPaymentProposedFeesRequest(acceptPaymentProposedFeesRequest: ReadableMap): AcceptPaymentProposedFeesRequest? {
     if (!validateMandatoryFields(
@@ -433,6 +429,8 @@ fun asConfig(config: ReadableMap): Config? {
                 "paymentTimeoutSec",
                 "useDefaultExternalInputParsers",
                 "useMagicRoutingHints",
+                "onchainSyncPeriodSec",
+                "onchainSyncRequestTimeoutSec",
             ),
         )
     ) {
@@ -486,6 +484,8 @@ fun asConfig(config: ReadableMap): Config? {
             null
         }
     val sideswapApiKey = if (hasNonNullKey(config, "sideswapApiKey")) config.getString("sideswapApiKey") else null
+    val onchainSyncPeriodSec = config.getInt("onchainSyncPeriodSec").toUInt()
+    val onchainSyncRequestTimeoutSec = config.getInt("onchainSyncRequestTimeoutSec").toUInt()
     return Config(
         liquidExplorer,
         bitcoinExplorer,
@@ -501,6 +501,8 @@ fun asConfig(config: ReadableMap): Config? {
         onchainFeeRateLeewaySat,
         assetMetadata,
         sideswapApiKey,
+        onchainSyncPeriodSec,
+        onchainSyncRequestTimeoutSec,
     )
 }
 
@@ -520,6 +522,8 @@ fun readableMapOf(config: Config): ReadableMap =
         "onchainFeeRateLeewaySat" to config.onchainFeeRateLeewaySat,
         "assetMetadata" to config.assetMetadata?.let { readableArrayOf(it) },
         "sideswapApiKey" to config.sideswapApiKey,
+        "onchainSyncPeriodSec" to config.onchainSyncPeriodSec,
+        "onchainSyncRequestTimeoutSec" to config.onchainSyncRequestTimeoutSec,
     )
 
 fun asConfigList(arr: ReadableArray): List<Config> {

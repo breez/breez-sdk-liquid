@@ -104,6 +104,8 @@ export interface Config {
     onchainFeeRateLeewaySat?: number
     assetMetadata?: AssetMetadata[]
     sideswapApiKey?: string
+    onchainSyncPeriodSec: number
+    onchainSyncRequestTimeoutSec: number
 }
 
 export interface ConnectRequest {

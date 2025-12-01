@@ -580,8 +580,14 @@ enum BreezSDKLiquidMapper {
             }
             sideswapApiKey = sideswapApiKeyTmp
         }
+        guard let onchainSyncPeriodSec = config["onchainSyncPeriodSec"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "onchainSyncPeriodSec", typeName: "Config"))
+        }
+        guard let onchainSyncRequestTimeoutSec = config["onchainSyncRequestTimeoutSec"] as? UInt32 else {
+            throw SdkError.Generic(message: errMissingMandatoryField(fieldName: "onchainSyncRequestTimeoutSec", typeName: "Config"))
+        }
 
-        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, useMagicRoutingHints: useMagicRoutingHints, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey)
+        return Config(liquidExplorer: liquidExplorer, bitcoinExplorer: bitcoinExplorer, workingDir: workingDir, network: network, paymentTimeoutSec: paymentTimeoutSec, syncServiceUrl: syncServiceUrl, breezApiKey: breezApiKey, zeroConfMaxAmountSat: zeroConfMaxAmountSat, useDefaultExternalInputParsers: useDefaultExternalInputParsers, useMagicRoutingHints: useMagicRoutingHints, externalInputParsers: externalInputParsers, onchainFeeRateLeewaySat: onchainFeeRateLeewaySat, assetMetadata: assetMetadata, sideswapApiKey: sideswapApiKey, onchainSyncPeriodSec: onchainSyncPeriodSec, onchainSyncRequestTimeoutSec: onchainSyncRequestTimeoutSec)
     }
 
     static func dictionaryOf(config: Config) -> [String: Any?] {
@@ -600,6 +606,8 @@ enum BreezSDKLiquidMapper {
             "onchainFeeRateLeewaySat": config.onchainFeeRateLeewaySat == nil ? nil : config.onchainFeeRateLeewaySat,
             "assetMetadata": config.assetMetadata == nil ? nil : arrayOf(assetMetadataList: config.assetMetadata!),
             "sideswapApiKey": config.sideswapApiKey == nil ? nil : config.sideswapApiKey,
+            "onchainSyncPeriodSec": config.onchainSyncPeriodSec,
+            "onchainSyncRequestTimeoutSec": config.onchainSyncRequestTimeoutSec,
         ]
     }
 

@@ -5,9 +5,9 @@ import Foundation
 class RNBreezSDKLiquid: RCTEventEmitter {
     static let TAG: String = "BreezSDKLiquid"
 
-    static var emitter: RCTEventEmitter!
-    static var hasListeners: Bool = false
-    static var supportedEvents: [String] = ["breezSdkLiquidLog"]
+    public static var emitter: RCTEventEmitter!
+    public static var hasListeners: Bool = false
+    public static var supportedEvents: [String] = ["breezSdkLiquidLog"]
 
     private var bindingLiquidSdk: BindingLiquidSdk!
 
