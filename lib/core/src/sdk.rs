@@ -5106,15 +5106,6 @@ impl LiquidSdk {
         self.start_plugin_inner(&plugin).await?;
         Ok(())
     }
-
-    pub async fn stop_plugin(&self, plugin_id: &str) -> SdkResult<()> {
-        let mut plugins = self.plugins.lock().await;
-        let Some(plugin) = plugins.remove(plugin_id) else {
-            return Err(SdkError::generic(format!("Plugin {plugin_id} not found")));
-        };
-        plugin.on_stop().await;
-        Ok(())
-    }
 }
 
 /// Extracts `description` from `metadata_str`

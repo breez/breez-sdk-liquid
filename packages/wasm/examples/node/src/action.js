@@ -1,4 +1,4 @@
-const { connect, defaultConfig, setLogger, BindingNwcService } = require('@breeztech/breez-sdk-liquid/node')
+const { connect, defaultConfig, setLogger } = require('@breeztech/breez-sdk-liquid/node')
 const { confirm, question } = require('./prompt.js')
 const fs = require('fs')
 const qrcode = require('qrcode')
@@ -29,7 +29,7 @@ const eventListener = new JsEventListener()
 let sdk = null
 let plugins = null
 
-const initSdk = async (plugins) => {
+const initSdk = async () => {
     if (sdk) return sdk
 
     // Set the logger to trace
@@ -43,16 +43,18 @@ const initSdk = async (plugins) => {
     let config = defaultConfig('mainnet', breezApiKey)
     config.workingDir = './.data'
 
-    sdk = await connect({ config, mnemonic }, plugins)
+    sdk = await connect({ config, mnemonic })
 
     await sdk.addEventListener(eventListener)
     return sdk
 }
 
-const initPlugins = () => {
+const initPlugins = async (sdk) => {
     if (plugins) return plugins
-    const nwcService = new BindingNwcService({})
-    plugins = [nwcService]
+    const nwc = await sdk.useNwcPlugin({})
+    plugins = {
+        nwc
+    }
     return plugins
 }
 
@@ -377,9 +379,8 @@ const unregisterWebhook = async (url) => {
 
 const addNwcConnection = async (name, options) => {
     const { receiveOnly, expiry: expiryTimeSec, periodTime: resetTimeSec, maxBudget: maxBudgetSat } = options
-    const plugins = initPlugins()
-    await initSdk(plugins)
-    const nwcService = plugins[0]
+    const sdk = await initSdk()
+    const { nwc } = await initPlugins(sdk)
 
     if ((maxBudgetSat != null && resetTimeSec == null) || (resetTimeSec != null && maxBudgetSat == null)) {
         console.log(`Both "maxBudgetSat" and "resetTimeSec" must be provided at once when used.`)
@@ -391,7 +392,7 @@ const addNwcConnection = async (name, options) => {
         resetTimeSec,
     } : null
 
-    console.log(JSON.stringify(await nwcService.addConnection({
+    console.log(JSON.stringify(await nwc.addConnection({
         name,
         receiveOnly,
         expiryTimeSec,
@@ -400,17 +401,15 @@ const addNwcConnection = async (name, options) => {
 }
 
 const listNwcConnections = async () => {
-    const plugins = initPlugins()
-    await initSdk(plugins)
-    const nwcService = plugins[0]
-    console.log(JSON.stringify(Object.fromEntries(await nwcService.listConnections()), null, 2))
+    const sdk = await initSdk()
+    const { nwc } = await initPlugins(sdk)
+    console.log(JSON.stringify(Object.fromEntries(await nwc.listConnections()), null, 2))
 }
 
 const removeNwcConnection = async (name) => {
-    const plugins = initPlugins()
-    await initSdk(plugins)
-    const nwcService = plugins[0]
-    await nwcService.removeConnection(name)
+    const sdk = await initSdk()
+    const { nwc } = await initPlugins(sdk)
+    await nwc.removeConnection(name)
     console.log("Connection removed successfully.")
 }
 

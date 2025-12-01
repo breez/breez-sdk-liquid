@@ -394,8 +394,8 @@ impl BindingLiquidSdk {
         Ok(())
     }
 
-    #[wasm_bindgen(js_name = "useNwcService")]
-    pub async fn use_nwc_service(&self, config: NwcConfig) -> WasmResult<BindingNwcService> {
+    #[wasm_bindgen(js_name = "useNwcPlugin")]
+    pub async fn use_nwc_plugin(&self, config: NwcConfig) -> WasmResult<BindingNwcService> {
         let nwc_service = BindingNwcService::new(config);
         self.sdk.start_plugin(nwc_service.service.clone()).await?;
         Ok(nwc_service)

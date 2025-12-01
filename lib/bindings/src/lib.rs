@@ -298,7 +298,7 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.disconnect())
     }
 
-    pub fn use_nwc_service(&self, config: NwcConfig) -> SdkResult<Arc<BindingNwcService>> {
+    pub fn use_nwc_plugin(&self, config: NwcConfig) -> SdkResult<Arc<BindingNwcService>> {
         rt().block_on(async {
             let nwc_service = Arc::new(BindingNwcService::new(config));
             let nwc_plugin = PluginWrapper::new_plugin(nwc_service.clone());

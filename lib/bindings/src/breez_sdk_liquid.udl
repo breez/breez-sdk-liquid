@@ -1041,5 +1041,5 @@ interface BindingLiquidSdk {
     sequence<FiatCurrency> list_fiat_currencies();
 
     [Throws=SdkError]
-    BindingNwcService use_nwc_service(NwcConfig config);
+    BindingNwcService use_nwc_plugin(NwcConfig config);
 };

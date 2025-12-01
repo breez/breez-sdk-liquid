@@ -261,7 +261,7 @@ impl BreezSdkLiquid {
         self.sdk.disconnect().await
     }
 
-    pub async fn use_nwc_service(&self, config: NwcConfig) -> Result<BreezNwcService, SdkError> {
+    pub async fn use_nwc_plugin(&self, config: NwcConfig) -> Result<BreezNwcService, SdkError> {
         let nwc_service = BreezNwcService::new(config);
         self.sdk.start_plugin(nwc_service.service.clone()).await?;
         Ok(nwc_service)

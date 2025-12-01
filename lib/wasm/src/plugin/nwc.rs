@@ -126,8 +126,7 @@ pub struct BindingNwcService {
 
 #[wasm_bindgen]
 impl BindingNwcService {
-    #[wasm_bindgen(constructor)]
-    pub fn new(config: NwcConfig) -> Self {
+    pub(crate) fn new(config: NwcConfig) -> Self {
         let service = Arc::new(SdkNwcService::new(config.into()));
         Self { service }
     }
@@ -199,19 +198,6 @@ impl BindingNwcService {
     pub async fn remove_event_listener(&self, listener_id: String) {
         self.service.remove_event_listener(&listener_id).await
     }
-
-    /// Plugin
-    // #[wasm_bindgen(js_name = "id")]
-    // pub fn id(&self) -> String {
-    //     self.service.id()
-    // }
-    //
-    // #[wasm_bindgen(js_name = "onStart")]
-    // pub async fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
-    //     self.service
-    //         .on_start(plugin_sdk.sdk(), storage.storage())
-    //         .await;
-    // }
 
     #[wasm_bindgen(js_name = "stop")]
     pub async fn stop(&self) {
