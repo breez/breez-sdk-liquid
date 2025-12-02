@@ -362,6 +362,7 @@ dictionary NwcConnection {
     string connection_string;
     u32 created_at;
     boolean receive_only;
+    u64 paid_amount_sat;
     u32? expires_at = null;
     PeriodicBudget? periodic_budget = null;
 };

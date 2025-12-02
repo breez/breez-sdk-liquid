@@ -284,6 +284,7 @@ impl SdkNwcService {
                     // We modify the connection's budget before executing the payment to avoid any race
                     // conditions
                     periodic_budget.used_budget_sat += req_amount_sat;
+                    client.connection.paid_amount_sat += req_amount_sat;
                     if let Err(err) = ctx
                         .persister
                         .update_periodic_budget(connection_name, periodic_budget.clone())
@@ -299,6 +300,7 @@ impl SdkNwcService {
                         // In case of payment failure, we want to undo the periodic budget changes
                         if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
                             periodic_budget.used_budget_sat -= req_amount_sat;
+                            client.connection.paid_amount_sat -= req_amount_sat;
                             if let Err(err) = ctx
                                 .persister
                                 .update_periodic_budget(connection_name, periodic_budget.clone())
@@ -470,6 +472,7 @@ impl NwcService for SdkNwcService {
             created_at: now,
             expiry_time_sec: req.expiry_time_mins.map(utils::mins_to_seconds),
             receive_only: req.receive_only.unwrap_or(false),
+            paid_amount_sat: 0,
             periodic_budget: req
                 .periodic_budget_req
                 .map(|req| PeriodicBudgetInner::from_budget_request(req, now)),

@@ -82,6 +82,7 @@ pub(crate) struct NwcConnectionInner {
     pub connection_string: String,
     pub created_at: u32,
     pub receive_only: bool,
+    pub paid_amount_sat: u64,
     /// The duration of the connection before it expires, in seconds
     /// ## Dev Note:
     /// If the expiry time is less than [crate::MIN_REFRESH_INTERVAL_SEC] seconds,
@@ -99,6 +100,8 @@ pub struct NwcConnection {
     pub created_at: u32,
     /// Specifies whether this is a receive-only connection. Defaults to false.
     pub receive_only: bool,
+    /// The _total_ amount of funds sent for this connection, in satoshi
+    pub paid_amount_sat: u64,
     /// The timestamp at which the connection expires
     pub expires_at: Option<u32>,
     /// An optional [PeriodicBudget] for the connection
@@ -111,6 +114,7 @@ impl From<NwcConnectionInner> for NwcConnection {
             connection_string: c.connection_string,
             created_at: c.created_at,
             receive_only: c.receive_only,
+            paid_amount_sat: c.paid_amount_sat,
             expires_at: c.expiry_time_sec.map(|expiry| c.created_at + expiry),
             periodic_budget: c
                 .periodic_budget

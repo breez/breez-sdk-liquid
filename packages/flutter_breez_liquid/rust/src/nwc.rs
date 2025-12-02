@@ -41,6 +41,7 @@ pub mod model {
         pub connection_string: String,
         pub created_at: u32,
         pub receive_only: bool,
+        pub paid_amount_sat: u64,
         pub expires_at: Option<u32>,
         pub periodic_budget: Option<PeriodicBudget>,
     }
