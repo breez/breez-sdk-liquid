@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
 
@@ -12,6 +12,7 @@ const MAX_SAFE_WRITE_RETRIES: u64 = 3;
 const REFRESH_INTERVAL_GRACE_PERIOD: u64 = 3;
 const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
+const KEY_NWC_PAID_INVOICES: &str = "nwc_paid_invoices";
 
 pub(crate) struct Persister {
     pub(crate) storage: PluginStorage,
@@ -81,7 +82,7 @@ impl Persister {
     ) -> NwcResult<()> {
         self.set_connections_safe(|connections| {
             let Some(connection) = connections.get_mut(name) else {
-                return Err(NwcError::generic("Connection not found."));
+                return Err(NwcError::ConnectionNotFound);
             };
             connection.periodic_budget = Some(periodic_budget.clone());
             Ok((true, ()))
@@ -94,7 +95,7 @@ impl Persister {
     ) -> NwcResult<NwcConnectionInner> {
         self.set_connections_safe(|connections| {
             let Some(connection) = connections.get_mut(&req.name) else {
-                return Err(NwcError::generic("Connection not found."));
+                return Err(NwcError::ConnectionNotFound );
             };
             if let Some(new_receive_only) = req.receive_only {
                 connection.receive_only = new_receive_only;
@@ -212,8 +213,52 @@ impl Persister {
     pub(crate) fn remove_nwc_connection(&self, name: String) -> NwcResult<()> {
         self.set_connections_safe(|connections| {
             if connections.remove(&name).is_none() {
-                return Err(NwcError::generic("Connection not found."));
+                return Err(NwcError::ConnectionNotFound);
             }
+            Ok((true, ()))
+        })
+    }
+
+    fn set_paid_invoices_safe<F, R>(&self, f: F) -> NwcResult<R>
+    where
+        F: Fn(&mut HashMap<String, HashSet<String>>) -> NwcResult<(bool, R)>,
+    {
+        for _ in 0..MAX_SAFE_WRITE_RETRIES {
+            let paid_invoices = self.list_paid_invoices()?;
+            let mut new_paid_invoices = paid_invoices.clone();
+            let (changed, result) = f(&mut new_paid_invoices)?;
+            if changed {
+                let set_result = self.storage.set_item(
+                    KEY_NWC_PAID_INVOICES,
+                    serde_json::to_string(&new_paid_invoices)?,
+                    Some(serde_json::to_string(&paid_invoices)?),
+                );
+                match set_result {
+                    Ok(_) => return Ok(result),
+                    Err(PluginStorageError::DataTooOld) => continue,
+                    Err(err) => return Err(err.into()),
+                }
+            }
+            return Ok(result);
+        }
+        Err(NwcError::persist("Maximum write attempts reached"))
+    }
+
+    pub(crate) fn list_paid_invoices(&self) -> NwcResult<HashMap<String, HashSet<String>>> {
+        let paid_invoices = self
+            .storage
+            .get_item(KEY_NWC_PAID_INVOICES)?
+            .unwrap_or("{}".to_string());
+        let paid_invoices = serde_json::from_str(&paid_invoices)?;
+        Ok(paid_invoices)
+    }
+
+    pub(crate) fn add_paid_invoice(&self, connection: &str, invoice: String) -> NwcResult<()> {
+        self.set_paid_invoices_safe(|paid_invoices| {
+            let Some(invoices) = paid_invoices.get_mut(connection) else {
+                return Err(NwcError::ConnectionNotFound);
+            };
+            invoices.insert(invoice.clone());
             Ok((true, ()))
         })
     }

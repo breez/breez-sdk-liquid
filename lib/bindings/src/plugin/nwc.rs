@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use breez_sdk_liquid::plugin::Plugin as _;
+use breez_sdk_liquid::{model::Payment, plugin::Plugin as _};
 pub use breez_sdk_liquid_nwc::{
     error::{NwcError, NwcResult},
     event::{NwcEvent, NwcEventDetails},
@@ -63,6 +63,10 @@ impl BindingNwcService {
 
     pub fn handle_event(&self, event_id: String) -> NwcResult<()> {
         rt().block_on(self.inner.handle_event(event_id))
+    }
+
+    pub fn list_connection_payments(&self, name: String) -> NwcResult<Vec<Payment>> {
+        rt().block_on(self.inner.list_connection_payments(name))
     }
 
     pub fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {

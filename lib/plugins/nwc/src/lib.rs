@@ -14,6 +14,7 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use breez_sdk_liquid::{
+    model::{ListPaymentsRequest, Payment, PaymentDetails},
     plugin::{Plugin, PluginSdk, PluginStorage},
     InputType,
 };
@@ -97,6 +98,11 @@ pub trait NwcService: Send + Sync {
     /// # Arguments
     /// * `name` - The unique identifier for the connection string
     async fn remove_connection(&self, name: String) -> NwcResult<()>;
+
+    /// Lists the payments associated to a specific connection
+    /// # Arguments
+    /// * `name` - The unique identifier for the connection string
+    async fn list_connection_payments(&self, name: String) -> NwcResult<Vec<Payment>>;
 
     /// Fetches and handles a Nostr WalletRequest event
     ///
@@ -295,7 +301,11 @@ impl SdkNwcService {
                     }
                 }
                 match ctx.handler.pay_invoice(req).await {
-                    Ok(res) => (Some(ResponseResult::PayInvoice(res)), None),
+                    Ok(res) => {
+                        ctx.persister
+                            .add_paid_invoice(connection_name, invoice.bolt11)?;
+                        (Some(ResponseResult::PayInvoice(res)), None)
+                    }
                     Err(e) => {
                         // In case of payment failure, we want to undo the periodic budget changes
                         if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
@@ -513,6 +523,31 @@ impl NwcService for SdkNwcService {
         ctx.persister.remove_nwc_connection(name)?;
         ctx.trigger_resubscription().await;
         Ok(())
+    }
+
+    async fn list_connection_payments(&self, name: String) -> NwcResult<Vec<Payment>> {
+        let ctx = self.runtime_ctx().await?;
+        let paid_invoices = ctx.persister.list_paid_invoices()?;
+        let Some(paid_invoices) = paid_invoices.get(&name) else {
+            return Err(NwcError::ConnectionNotFound);
+        };
+        let payment_list = ctx
+            .sdk
+            .list_payments(&ListPaymentsRequest {
+                ..Default::default()
+            })
+            .await
+            .map_err(|err| NwcError::generic(format!("Could not list payments: {err}")))?;
+
+        Ok(payment_list
+            .into_iter()
+            .filter(|payment| match &payment.details {
+                PaymentDetails::Lightning { invoice, .. } => invoice
+                    .as_ref()
+                    .is_some_and(|invoice| paid_invoices.contains(invoice)),
+                _ => false,
+            })
+            .collect())
     }
 
     async fn add_event_listener(&self, listener: Box<dyn NwcEventListener>) -> String {

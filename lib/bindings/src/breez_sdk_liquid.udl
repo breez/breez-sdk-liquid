@@ -318,6 +318,7 @@ interface NwcError {
     InvoiceExpired();
     InvoiceWithoutAmount();
     MaxBudgetExceeded();
+    ConnectionNotFound();
 };
 
 dictionary NwcConfig {
@@ -408,6 +409,9 @@ interface BindingNwcService {
 
   [Throws=NwcError]
   void handle_event(string event_id);
+
+  [Throws=NwcError]
+  sequence<Payment> list_connection_payments(string name);
 
   string add_event_listener(NwcEventListener listener);
 

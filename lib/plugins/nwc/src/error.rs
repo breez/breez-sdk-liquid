@@ -37,6 +37,9 @@ pub enum NwcError {
 
     #[error("Could not pay invoice: max budget has been exceeded")]
     MaxBudgetExceeded,
+
+    #[error("Connection not found")]
+    ConnectionNotFound,
 }
 
 impl NwcError {

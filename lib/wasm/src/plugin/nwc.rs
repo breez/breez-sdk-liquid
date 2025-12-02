@@ -3,7 +3,10 @@ use breez_sdk_liquid_nwc::{NwcService as _, SdkNwcService};
 use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
-use crate::{error::WasmError, model::WasmResult};
+use crate::{
+    error::WasmError,
+    model::{Payment, WasmResult},
+};
 
 mod model {
     use wasm_bindgen::prelude::*;
@@ -188,6 +191,15 @@ impl BindingNwcService {
             .map_err(Into::into)
     }
 
+    #[wasm_bindgen(js_name = "listConnectionPayments")]
+    pub async fn list_connection_payments(&self, name: String) -> WasmResult<Vec<Payment>> {
+        self.service
+            .list_connection_payments(name)
+            .await
+            .map(|res| res.into_iter().map(Into::into).collect())
+            .map_err(Into::into)
+    }
+
     #[wasm_bindgen(js_name = "addEventListener")]
     pub async fn add_event_listener(&self, listener: model::NwcEventListener) -> String {
         let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =
@@ -205,5 +217,3 @@ impl BindingNwcService {
         self.service.on_stop().await;
     }
 }
-
-
