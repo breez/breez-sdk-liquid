@@ -23,7 +23,7 @@ class BreezSdkLiquidConnector {
                         "Connecting to Breez Liquid SDK",
                         "DEBUG",
                     )
-                    liquidSDK = connect(connectRequest, null)
+                    liquidSDK = connect(connectRequest)
                     logger.log(TAG, "Connected to Breez Liquid SDK", "DEBUG")
                     liquidSDK!!.addEventListener(sdkListener)
                 } else {
