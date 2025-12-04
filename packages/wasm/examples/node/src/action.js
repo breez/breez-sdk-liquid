@@ -378,24 +378,19 @@ const unregisterWebhook = async (url) => {
 }
 
 const addNwcConnection = async (name, options) => {
-    const { receiveOnly, expiry: expiryTimeSec, periodTime: resetTimeSec, maxBudget: maxBudgetSat } = options
+    const { receiveOnly, expiry: expiryTimeMins, periodTime: renewalTimeMins, maxBudget: maxBudgetSat } = options
     const sdk = await initSdk()
     const { nwc } = await initPlugins(sdk)
 
-    if ((maxBudgetSat != null && resetTimeSec == null) || (resetTimeSec != null && maxBudgetSat == null)) {
-        console.log(`Both "maxBudgetSat" and "resetTimeSec" must be provided at once when used.`)
-        return
-    }
-
-    let periodicBudgetReq = (maxBudgetSat != null && resetTimeSec != null) ? {
+    let periodicBudgetReq = (maxBudgetSat != null || renewalTimeMins != null) ? {
         maxBudgetSat,
-        resetTimeSec,
+        renewalTimeMins,
     } : null
 
     console.log(JSON.stringify(await nwc.addConnection({
         name,
         receiveOnly,
-        expiryTimeSec,
+        expiryTimeMins,
         periodicBudgetReq,
     })))
 }

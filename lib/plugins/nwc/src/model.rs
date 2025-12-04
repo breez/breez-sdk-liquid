@@ -56,12 +56,12 @@ pub struct PeriodicBudget {
     pub updated_at: u32,
 }
 
-impl PeriodicBudget {
-    fn from_budget_inner(b: PeriodicBudgetInner, created_at: u32) -> Self {
+impl From<PeriodicBudgetInner> for PeriodicBudget {
+    fn from(b: PeriodicBudgetInner) -> Self {
         Self {
             used_budget_sat: b.used_budget_sat,
             max_budget_sat: b.max_budget_sat,
-            renews_at: b.renewal_time_sec.map(|t| created_at + t),
+            renews_at: b.renewal_time_sec.map(|t| b.updated_at + t),
             updated_at: b.updated_at,
         }
     }
@@ -116,9 +116,7 @@ impl From<NwcConnectionInner> for NwcConnection {
             receive_only: c.receive_only,
             paid_amount_sat: c.paid_amount_sat,
             expires_at: c.expiry_time_sec.map(|expiry| c.created_at + expiry),
-            periodic_budget: c
-                .periodic_budget
-                .map(|b| PeriodicBudget::from_budget_inner(b, c.created_at)),
+            periodic_budget: c.periodic_budget.map(Into::into),
         }
     }
 }

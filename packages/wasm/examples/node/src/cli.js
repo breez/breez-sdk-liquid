@@ -273,8 +273,8 @@ const initCommand = () => {
         .description("Adds an NWC connection")
         .addArgument(new Argument('<name>', 'The unique identifier of the connection'))
         .addOption(new Option('--receive-only', 'Whether the connection is receive-only'))
-        .addOption(new Option('--expiry <number>', 'The expiry time of the connection, in seconds').argParser(parseInt))
-        .addOption(new Option('--period-time <number>', 'The amount of time a periodic budget lasts, in seconds').argParser(parseInt))
+        .addOption(new Option('--expiry <number>', 'The expiry time of the connection, in minutes').argParser(parseInt))
+        .addOption(new Option('--period-time <number>', 'The duration of a periodic budget, in minutes').argParser(parseInt))
         .addOption(new Option('--max-budget <number>', 'The maximum budget for a period').argParser(parseInt))
         .action(addNwcConnection)
 

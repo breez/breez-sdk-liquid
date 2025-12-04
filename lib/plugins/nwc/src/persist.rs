@@ -216,7 +216,12 @@ impl Persister {
                 return Err(NwcError::ConnectionNotFound);
             }
             Ok((true, ()))
-        })
+        })?;
+        self.set_paid_invoices_safe(|paid_invoices| {
+            paid_invoices.remove(&name);
+            Ok((true, ()))
+        })?;
+        Ok(())
     }
 
     fn set_paid_invoices_safe<F, R>(&self, f: F) -> NwcResult<R>
@@ -255,9 +260,9 @@ impl Persister {
 
     pub(crate) fn add_paid_invoice(&self, connection: &str, invoice: String) -> NwcResult<()> {
         self.set_paid_invoices_safe(|paid_invoices| {
-            let Some(invoices) = paid_invoices.get_mut(connection) else {
-                return Err(NwcError::ConnectionNotFound);
-            };
+            let invoices = paid_invoices
+                .entry(connection.to_string())
+                .or_insert_with(HashSet::new);
             invoices.insert(invoice.clone());
             Ok((true, ()))
         })

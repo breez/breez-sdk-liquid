@@ -14,7 +14,7 @@ use crate::{
 };
 use anyhow::{bail, Result};
 use breez_sdk_liquid::{
-    model::{ListPaymentsRequest, Payment, PaymentDetails},
+    model::{ListPaymentsRequest, Payment, PaymentDetails, PaymentType},
     plugin::{Plugin, PluginSdk, PluginStorage},
     InputType,
 };
@@ -45,6 +45,7 @@ pub(crate) mod utils;
 
 pub const MIN_REFRESH_INTERVAL_SEC: u64 = 60; // 1 minute
 pub const DEFAULT_PERIODIC_BUDGET_TIME_SEC: u32 = 60 * 60 * 24 * 30; // 30 days
+pub const DEFAULT_EVENT_HANDLING_INTERVAL_SEC: u64 = 10;
 pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
 
 #[sdk_macros::async_trait]
@@ -238,7 +239,7 @@ impl SdkNwcService {
         if event
             .tags
             .expiration()
-            .is_some_and(|t| *t > Timestamp::now())
+            .is_some_and(|t| *t < Timestamp::now())
         {
             return Err(NwcError::EventExpired);
         }
@@ -290,7 +291,6 @@ impl SdkNwcService {
                     // We modify the connection's budget before executing the payment to avoid any race
                     // conditions
                     periodic_budget.used_budget_sat += req_amount_sat;
-                    client.connection.paid_amount_sat += req_amount_sat;
                     if let Err(err) = ctx
                         .persister
                         .update_periodic_budget(connection_name, periodic_budget.clone())
@@ -303,14 +303,17 @@ impl SdkNwcService {
                 match ctx.handler.pay_invoice(req).await {
                     Ok(res) => {
                         ctx.persister
-                            .add_paid_invoice(connection_name, invoice.bolt11)?;
+                            .add_paid_invoice(connection_name, invoice.bolt11)
+                            .map_err(|err| {
+                                NwcError::persist(format!("Could not persist paid invoice: {err}"))
+                            })?;
+                        client.connection.paid_amount_sat += req_amount_sat;
                         (Some(ResponseResult::PayInvoice(res)), None)
                     }
                     Err(e) => {
                         // In case of payment failure, we want to undo the periodic budget changes
                         if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
                             periodic_budget.used_budget_sat -= req_amount_sat;
-                            client.connection.paid_amount_sat -= req_amount_sat;
                             if let Err(err) = ctx
                                 .persister
                                 .update_periodic_budget(connection_name, periodic_budget.clone())
@@ -527,13 +530,18 @@ impl NwcService for SdkNwcService {
 
     async fn list_connection_payments(&self, name: String) -> NwcResult<Vec<Payment>> {
         let ctx = self.runtime_ctx().await?;
+        if !ctx.persister.list_nwc_connections()?.contains_key(&name) {
+            return Err(NwcError::ConnectionNotFound);
+        }
+
         let paid_invoices = ctx.persister.list_paid_invoices()?;
         let Some(paid_invoices) = paid_invoices.get(&name) else {
-            return Err(NwcError::ConnectionNotFound);
+            return Ok(vec![]);
         };
         let payment_list = ctx
             .sdk
             .list_payments(&ListPaymentsRequest {
+                filters: Some(vec![PaymentType::Send]),
                 ..Default::default()
             })
             .await
@@ -564,7 +572,10 @@ impl NwcService for SdkNwcService {
         let event_id = EventId::from_str(&event_id)?;
         let events = ctx
             .client
-            .fetch_events(Filter::new().id(event_id), Duration::from_secs(3))
+            .fetch_events(
+                Filter::new().id(event_id),
+                Duration::from_secs(DEFAULT_EVENT_HANDLING_INTERVAL_SEC),
+            )
             .await?;
         let Some(event) = events.first() else {
             return Err(NwcError::EventNotFound);
