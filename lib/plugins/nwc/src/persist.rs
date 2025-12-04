@@ -65,9 +65,7 @@ impl Persister {
     ) -> NwcResult<()> {
         self.set_connections_safe(|connections| {
             if connections.contains_key(&name) {
-                return Err(NwcError::generic(format!(
-                    "Could not insert connection: `{name}` already exists"
-                )));
+                return Err(NwcError::ConnectionExists);
             }
             connections.insert(name.clone(), connection.clone());
             Ok((true, ()))

@@ -319,6 +319,7 @@ interface NwcError {
     InvoiceWithoutAmount();
     MaxBudgetExceeded();
     ConnectionNotFound();
+    ConnectionExists();
 };
 
 dictionary NwcConfig {

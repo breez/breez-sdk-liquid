@@ -40,6 +40,9 @@ pub enum NwcError {
 
     #[error("Connection not found")]
     ConnectionNotFound,
+
+    #[error("Connection already exists")]
+    ConnectionExists,
 }
 
 impl NwcError {

@@ -58,4 +58,5 @@ pub enum _NwcError {
     InvoiceWithoutAmount,
     MaxBudgetExceeded,
     ConnectionNotFound,
+    ConnectionExists,
 }
