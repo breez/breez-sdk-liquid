@@ -58,7 +58,7 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
             let amount = ReceiveAmount.bitcoin(payerAmountSat: amountSat)
             let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.bolt11Invoice, amount: amount))
-            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true, payerNote: request!.comment))
+            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, descriptionHash: DescriptionHash.useDescription, payerNote: request!.comment))
             // Add the verify URL
             var verify: String?
             if let verifyUrl = request!.verify_url {

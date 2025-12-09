@@ -6,6 +6,7 @@ import breez_sdk_liquid.InputType
 import breez_sdk_liquid.PaymentMethod
 import breez_sdk_liquid.PrepareReceiveRequest
 import breez_sdk_liquid.ReceiveAmount
+import breez_sdk_liquid.DescriptionHash
 import breez_sdk_liquid.ReceivePaymentRequest
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
@@ -84,7 +85,7 @@ class LnurlPayInvoiceJob(
                     ReceivePaymentRequest(
                         prepareReceivePaymentRes,
                         description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
-                        useDescriptionHash = true,
+                        descriptionHash = DescriptionHash.UseDescription,
                         payerNote = request.comment,
                     ),
                 )
