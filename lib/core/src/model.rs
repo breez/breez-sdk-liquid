@@ -653,14 +653,22 @@ pub struct PrepareReceiveResponse {
     pub swapper_feerate: Option<f64>,
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum DescriptionHash {
+    UseDescription,
+    Custom { hash: String },
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::receive_payment].
 #[derive(Debug, Serialize)]
 pub struct ReceivePaymentRequest {
     pub prepare_response: PrepareReceiveResponse,
     /// The description for this payment request
     pub description: Option<String>,
-    /// If set to true, then the hash of the description will be used
-    pub use_description_hash: Option<bool>,
+    /// If set, it will use either the provided description hash, or calculate it from the
+    /// [ReceivePaymentRequest::description] field. If both fields are provided and don't match,
+    /// an error is thrown
+    pub description_hash: Option<DescriptionHash>,
     /// An optional payer note, typically included in a LNURL-Pay request
     pub payer_note: Option<String>,
 }

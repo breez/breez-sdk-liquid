@@ -2959,7 +2959,8 @@ impl LiquidSdk {
     /// * `req` - the [ReceivePaymentRequest] containing:
     ///     * `prepare_response` - the [PrepareReceiveResponse] from calling [LiquidSdk::prepare_receive_payment]
     ///     * `description` - the optional payment description
-    ///     * `use_description_hash` - optional if true uses the hash of the description
+    ///     * `description_hash` - optional, whether to pass a custom description hash or to
+    ///       calculate it from the `description` field
     ///     * `payer_note` - the optional payer note, typically included in a LNURL-Pay request
     ///
     /// # Returns
@@ -2999,21 +3000,35 @@ impl LiquidSdk {
                         ));
                     }
                 };
-                let (description, description_hash) = match (
-                    req.description.clone(),
-                    req.use_description_hash.unwrap_or_default(),
-                ) {
-                    (Some(description), true) => (
-                        None,
-                        Some(sha256::Hash::hash(description.as_bytes()).to_hex()),
-                    ),
-                    (_, false) => (req.description.clone(), None),
-                    _ => {
-                        return Err(PaymentError::InvalidDescription {
-                            err: "Missing payment description to hash".to_string(),
-                        })
-                    }
-                };
+
+                let (description, description_hash) =
+                    match (req.description.clone(), req.description_hash.clone()) {
+                        (None, Some(description_hash)) => {
+                            match description_hash {
+                                DescriptionHash::UseDescription => return Err(
+                                    PaymentError::InvalidDescription { err: "Cannot calculate payment description hash: no description provided".to_string() 
+                                }),
+                                DescriptionHash::Custom { hash } => (None, Some(hash)),
+                            }
+                        }
+                        (Some(description), Some(description_hash)) => {
+                            let calculated_hash =
+                                sha256::Hash::hash(description.as_bytes()).to_hex();
+                            match description_hash {
+                                DescriptionHash::UseDescription => (None, Some(calculated_hash)),
+                                DescriptionHash::Custom { hash } => {
+                                    ensure_sdk!(
+                                        calculated_hash == *hash,
+                                        PaymentError::InvalidDescription {
+                                            err: "Payment description hash mismatch".to_string()
+                                        }
+                                    );
+                                    (None, Some(calculated_hash))
+                                }
+                            }
+                        }
+                        (description, None) => (description, None),
+                    };
                 self.create_bolt11_receive_swap(
                     amount_sat,
                     fees_sat,
@@ -4851,7 +4866,7 @@ impl LiquidSdk {
             .receive_payment(&ReceivePaymentRequest {
                 prepare_response,
                 description: req.description.clone(),
-                use_description_hash: Some(false),
+                description_hash: None,
                 payer_note: None,
             })
             .await?;

@@ -624,10 +624,16 @@ dictionary PrepareReceiveResponse {
     f64? swapper_feerate;
 };
 
+[Enum]
+interface DescriptionHash {
+    UseDescription();
+    Custom(string hash);
+};
+
 dictionary ReceivePaymentRequest {
     PrepareReceiveResponse prepare_response;
     string? description = null;
-    boolean? use_description_hash = null;
+    DescriptionHash? description_hash = null;
     string? payer_note = null;
 };
 

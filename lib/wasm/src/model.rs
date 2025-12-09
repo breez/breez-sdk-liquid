@@ -400,11 +400,17 @@ pub struct PrepareReceiveResponse {
     pub swapper_feerate: Option<f64>,
 }
 
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::DescriptionHash)]
+pub enum DescriptionHash {
+    UseDescription,
+    Custom { hash: String },
+}
+
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ReceivePaymentRequest)]
 pub struct ReceivePaymentRequest {
     pub prepare_response: PrepareReceiveResponse,
     pub description: Option<String>,
-    pub use_description_hash: Option<bool>,
+    pub description_hash: Option<DescriptionHash>,
     pub payer_note: Option<String>,
 }
 

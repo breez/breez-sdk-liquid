@@ -303,12 +303,12 @@ pub use breez_sdk_liquid::{
         AcceptPaymentProposedFeesRequest, AssetBalance, AssetInfo, AssetMetadata, BackupRequest,
         BlockchainExplorer, BlockchainInfo, BuyBitcoinProvider, BuyBitcoinRequest,
         CheckMessageRequest, CheckMessageResponse, Config, ConnectRequest,
-        CreateBolt12InvoiceRequest, CreateBolt12InvoiceResponse, FetchPaymentProposedFeesRequest,
-        FetchPaymentProposedFeesResponse, GetInfoResponse, GetPaymentRequest,
-        LightningPaymentLimitsResponse, Limits, LiquidNetwork, ListPaymentDetails,
-        ListPaymentsRequest, LnUrlInfo, LnUrlPayRequest, LnUrlPayResult, LnUrlPaySuccessData,
-        OnchainPaymentLimitsResponse, PayAmount, PayOnchainRequest, Payment, PaymentDetails,
-        PaymentMethod, PaymentState, PaymentType, PrepareBuyBitcoinRequest,
+        CreateBolt12InvoiceRequest, CreateBolt12InvoiceResponse, DescriptionHash,
+        FetchPaymentProposedFeesRequest, FetchPaymentProposedFeesResponse, GetInfoResponse,
+        GetPaymentRequest, LightningPaymentLimitsResponse, Limits, LiquidNetwork,
+        ListPaymentDetails, ListPaymentsRequest, LnUrlInfo, LnUrlPayRequest, LnUrlPayResult,
+        LnUrlPaySuccessData, OnchainPaymentLimitsResponse, PayAmount, PayOnchainRequest, Payment,
+        PaymentDetails, PaymentMethod, PaymentState, PaymentType, PrepareBuyBitcoinRequest,
         PrepareBuyBitcoinResponse, PrepareLnUrlPayRequest, PrepareLnUrlPayResponse,
         PreparePayOnchainRequest, PreparePayOnchainResponse, PrepareReceiveRequest,
         PrepareReceiveResponse, PrepareRefundRequest, PrepareRefundResponse, PrepareSendRequest,
@@ -567,11 +567,17 @@ pub struct _PrepareSendResponse {
     pub payment_timeout_sec: Option<u64>,
 }
 
+#[frb(mirror(DescriptionHash))]
+pub enum _DescriptionHash {
+    UseDescription,
+    Custom { hash: String },
+}
+
 #[frb(mirror(ReceivePaymentRequest))]
 pub struct _ReceivePaymentRequest {
     pub prepare_response: PrepareReceiveResponse,
     pub description: Option<String>,
-    pub use_description_hash: Option<bool>,
+    pub description_hash: Option<DescriptionHash>,
     pub payer_note: Option<String>,
 }
 

@@ -1,7 +1,7 @@
 use breez_sdk_liquid::model::{
-    ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentMethod, PaymentState,
-    PaymentType, PrepareReceiveRequest, PrepareSendRequest, ReceiveAmount, ReceivePaymentRequest,
-    SendPaymentRequest,
+    DescriptionHash, ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentMethod,
+    PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest, ReceiveAmount,
+    ReceivePaymentRequest, SendPaymentRequest,
 };
 use breez_sdk_liquid::plugin::PluginSdk;
 use log::info;
@@ -61,7 +61,9 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
             .receive_payment(&ReceivePaymentRequest {
                 prepare_response,
                 description: req.description,
-                use_description_hash: Some(req.description_hash.is_some()),
+                description_hash: req
+                    .description_hash
+                    .map(|hash| DescriptionHash::Custom { hash }),
                 payer_note: None,
             })
             .await

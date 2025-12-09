@@ -426,7 +426,12 @@ pub(crate) async fn handle_command(
                 .receive_payment(&ReceivePaymentRequest {
                     prepare_response,
                     description,
-                    use_description_hash,
+                    description_hash: use_description_hash.and_then(|use_description| {
+                        match use_description {
+                            true => Some(DescriptionHash::UseDescription),
+                            false => None,
+                        }
+                    }),
                     payer_note,
                 })
                 .await?;
