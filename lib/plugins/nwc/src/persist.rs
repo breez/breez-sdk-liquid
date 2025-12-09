@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 
 use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
 
@@ -35,7 +35,7 @@ impl Persister {
 
     fn set_connections_safe<F, R>(&self, f: F) -> NwcResult<R>
     where
-        F: Fn(&mut HashMap<String, NwcConnectionInner>) -> NwcResult<(bool, R)>,
+        F: Fn(&mut BTreeMap<String, NwcConnectionInner>) -> NwcResult<(bool, R)>,
     {
         for _ in 0..MAX_SAFE_WRITE_RETRIES {
             let connections = self.list_nwc_connections()?;
@@ -199,7 +199,7 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_nwc_connections(&self) -> NwcResult<HashMap<String, NwcConnectionInner>> {
+    pub(crate) fn list_nwc_connections(&self) -> NwcResult<BTreeMap<String, NwcConnectionInner>> {
         let connections = self
             .storage
             .get_item(KEY_NWC_CONNECTIONS)?
@@ -224,7 +224,7 @@ impl Persister {
 
     fn set_paid_invoices_safe<F, R>(&self, f: F) -> NwcResult<R>
     where
-        F: Fn(&mut HashMap<String, HashSet<String>>) -> NwcResult<(bool, R)>,
+        F: Fn(&mut BTreeMap<String, HashSet<String>>) -> NwcResult<(bool, R)>,
     {
         for _ in 0..MAX_SAFE_WRITE_RETRIES {
             let paid_invoices = self.list_paid_invoices()?;
@@ -247,7 +247,7 @@ impl Persister {
         Err(NwcError::persist("Maximum write attempts reached"))
     }
 
-    pub(crate) fn list_paid_invoices(&self) -> NwcResult<HashMap<String, HashSet<String>>> {
+    pub(crate) fn list_paid_invoices(&self) -> NwcResult<BTreeMap<String, HashSet<String>>> {
         let paid_invoices = self
             .storage
             .get_item(KEY_NWC_PAID_INVOICES)?
