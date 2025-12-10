@@ -26,6 +26,7 @@ public class NwcPlugin {
     }
 
     static func unregister() {
+        os_log("Stopping NWC service", log: logger, type: .debug)
         NwcPlugin.queue.sync { [] in
             NwcPlugin.listener = nil
             if let service = NwcPlugin.service {
@@ -33,6 +34,7 @@ public class NwcPlugin {
                 NwcPlugin.service = nil
             }
         }
+        os_log("Successfully stopped NWC service", log: logger, type: .debug)
     }
 
     static func newService(sdk: BindingLiquidSdk, config: NwcConfig) throws -> BindingNwcService? {
