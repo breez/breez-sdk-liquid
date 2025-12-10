@@ -101,6 +101,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.logger.log(tag: TAG, line: "shutting down...", level: "INFO")
         BreezSDKLiquidConnector.unregister()
         self.logger.log(tag: TAG, line: "task unregistered", level: "INFO")
+        plugins.stop()
         self.currentTask?.onShutdown()
     }
     

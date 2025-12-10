@@ -47,11 +47,11 @@ class NwcEventTask: TaskProtocol {
             let eventName: String
             switch event.details {
                 case .getBalance:
-                    eventName = "get_balance"
+                    eventName = "Get Balance"
                 case .listTransactions:
-                    eventName = "list_transactions"
+                    eventName = "List Transactions"
                 case .payInvoice:
-                    eventName = "pay_invoice"
+                    eventName = "Pay Invoice"
                 default:
                     return;
             }

@@ -10,6 +10,10 @@ class Plugins {
   fun init(liquidSDK: BindingLiquidSdk, configs: PluginConfigs) {
     configs.nwc?.let { nwcConfig -> this.nwc = liquidSDK.useNwcPlugin(nwcConfig) }
   }
+
+  fun stop() {
+    nwc = null;
+  }
 }
 
 abstract class PluginConfigs {

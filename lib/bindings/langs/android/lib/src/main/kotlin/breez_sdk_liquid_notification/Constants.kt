@@ -152,6 +152,6 @@ object Constants {
         "Tap to complete payment"
     const val DEFAULT_SWAP_CONFIRMED_NOTIFICATION_FAILURE_TITLE =
         "Payment Pending"
-    const val DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE = "NWC %s command completed successfully"
-    const val DEFAULT_NWC_FAILURE_NOTIFICATION_TITLE = "Failed to run NWC command"
+    const val DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE = "NWC %s success"
+    const val DEFAULT_NWC_FAILURE_NOTIFICATION_TITLE = "NWC request failed"
 }
