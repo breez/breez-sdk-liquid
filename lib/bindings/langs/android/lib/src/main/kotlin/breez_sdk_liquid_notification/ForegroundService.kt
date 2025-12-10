@@ -252,6 +252,7 @@ abstract class ForegroundService :
         logger.log(TAG, "Shutting down Breez Liquid SDK connection", "DEBUG")
         shutdownSDK()
         liquidSDK = null
+        plugins.stop()
     }
 
     /** Handles incoming events from the Breez Liquid SDK EventListener */
