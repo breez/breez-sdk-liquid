@@ -5,7 +5,7 @@ struct NwcEventNotification: Codable {
     let eventId: String
 }
 
-class NwcEventTask: TaskProtocol {
+class NwcEventTask: TaskProtocol, NwcEventListener {
     fileprivate let TAG = "NwcEventTask"
 
     internal var payload: String
@@ -21,10 +21,11 @@ class NwcEventTask: TaskProtocol {
         self.logger = logger
     }
 
-    func start(liquidSDK: BindingLiquidSdk, plugins: SDKPlugins) throws {
-        guard let nwcService = plugins.nwc else {
+    func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
+        guard let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs) else {
             return
         }
+        _ = nwcService.addEventListener(listener: self)
         var request: NwcEventNotification? = nil
         do {
             request = try JSONDecoder().decode(NwcEventNotification.self, from: self.payload.data(using: .utf8)!)

@@ -1,7 +1,6 @@
 package breez_sdk_liquid_notification.job
 
 import breez_sdk_liquid.SdkEvent
-import breez_sdk_liquid.NwcEvent
 import breez_sdk_liquid_notification.ServiceLogger
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -23,7 +22,6 @@ interface LnurlPayJob : Job {
     }
 
     override fun onEvent(e: SdkEvent) {}
-    override fun onEvent(event: NwcEvent) {}
 
     fun fail(
         withError: String?,

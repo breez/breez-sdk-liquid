@@ -29,7 +29,7 @@ class LnurlPayVerifyTask : LnurlPayTask {
         super.init(payload: payload, logger: logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent, successNotificationTitle: successNotificationTitle, failNotificationTitle: failNotificationTitle)
     }
     
-    override func start(liquidSDK: BindingLiquidSdk, plugins: SDKPlugins) throws {
+    override func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
         var request: LnurlVerifyRequest? = nil
         do {
             request = try JSONDecoder().decode(LnurlVerifyRequest.self, from: self.payload.data(using: .utf8)!)
