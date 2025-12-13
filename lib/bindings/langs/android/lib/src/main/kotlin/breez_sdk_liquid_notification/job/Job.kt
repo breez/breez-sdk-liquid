@@ -2,18 +2,17 @@ package breez_sdk_liquid_notification.job
 
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.EventListener
-import breez_sdk_liquid.NwcEventListener
 import java.io.DataOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import Plugins
+import PluginConfigs
 
 
-interface Job : EventListener, NwcEventListener {
+interface Job : EventListener {
     /** When the notification service is connected to the Breez Liquid SDK
      *  it calls `start` to initiate the job.
      */
-    fun start(liquidSDK: BindingLiquidSdk, plugins: Plugins)
+    fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs)
 
     /** When the short service timeout is reached it calls `onShutdown`
      *  to cleanup the job.

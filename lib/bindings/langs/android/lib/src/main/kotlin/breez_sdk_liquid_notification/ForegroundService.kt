@@ -39,7 +39,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlin.io.path.Path
-import Plugins
 import PluginConfigs
 
 interface SdkForegroundService {
@@ -52,7 +51,6 @@ abstract class ForegroundService :
     EventListener,
     NwcEventListener {
     private var liquidSDK: BindingLiquidSdk? = null
-    private var plugins: Plugins = Plugins()
 
     @Suppress("MemberVisibilityCanBePrivate")
     val serviceScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -215,9 +213,9 @@ abstract class ForegroundService :
         }
 
     /** Get the plugin configurations to be passed to the SDK's `connect` method
-     *  This can be overridden to select which plugins to activate. By default, no config is passed. */
-    open fun getPluginConfigs(): PluginConfigs? {
-        return null
+     *  This can be overridden to select which plugins to activate. By default, an empty config is passed. */
+    open fun getPluginConfigs(): PluginConfigs {
+        return PluginConfigs(nwc = null)
     }
 
     private fun launchSdkConnection(
@@ -225,7 +223,6 @@ abstract class ForegroundService :
         job: Job,
     ) {
         val sdkListener = this
-        val nwcListener = this
         serviceScope.launch(
             Dispatchers.IO +
                 CoroutineExceptionHandler { _, e ->
@@ -235,37 +232,26 @@ abstract class ForegroundService :
         ) {
             liquidSDK ?: run {
                 liquidSDK = connectSDK(connectRequest, sdkListener, logger)
-                getPluginConfigs()?.let { configs -> 
-                    plugins.init(liquidSDK!!, configs)
-                    plugins.nwc?.addEventListener(nwcListener)
-                }
             }
 
             liquidSDK?.let {
                 jobs.add(job)
-                job.start(liquidSDK!!, plugins)
+                job.start(liquidSDK!!, getPluginConfigs())
             }
         }
     }
 
     private fun shutdownSdkConnection() {
+        PluginManager.shutdown(logger)
         logger.log(TAG, "Shutting down Breez Liquid SDK connection", "DEBUG")
         shutdownSDK()
         liquidSDK = null
-        plugins.stop()
     }
 
     /** Handles incoming events from the Breez Liquid SDK EventListener */
     override fun onEvent(e: SdkEvent) {
         synchronized(this) {
             jobs.forEach { job -> job.onEvent(e) }
-        }
-    }
-
-    /** Handles incoming events from the Breez Liquid SDK EventListener */
-    override fun onEvent(event: NwcEvent) {
-        synchronized(this) {
-            jobs.forEach { job -> job.onEvent(event) }
         }
     }
 
