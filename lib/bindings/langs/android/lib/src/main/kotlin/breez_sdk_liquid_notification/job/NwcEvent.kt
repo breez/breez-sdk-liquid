@@ -4,6 +4,7 @@ import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid.NwcEvent
+import breez_sdk_liquid.NwcEventListener
 import breez_sdk_liquid.NwcEventDetails
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
@@ -17,7 +18,7 @@ import breez_sdk_liquid_notification.Constants.NWC_SUCCESS_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.NWC_FAILURE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_NWC_FAILURE_NOTIFICATION_TITLE
-import Plugins
+import PluginConfigs
 
 @Serializable
 data class NwcEventNotification(
@@ -29,18 +30,20 @@ class NwcEventJob(
         private val fgService: SdkForegroundService,
         private val payload: String,
         private val logger: ServiceLogger,
-) : Job {
+) : Job, NwcEventListener {
     private var eventId: String? = null
     companion object {
         private const val TAG = "NwcEventJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk, plugins: Plugins) {
-        if (plugins.nwc == null) return;
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
+        val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+        if (nwcService == null) return;
+        nwcService.addEventListener(this)
         try {
             val decoder = Json { ignoreUnknownKeys = true }
             var notification = decoder.decodeFromString(NwcEventNotification.serializer(), payload)
-            plugins.nwc!!.handleEvent(notification.eventId)
+            nwcService.handleEvent(notification.eventId)
             eventId = notification.eventId
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process NWC event: ${e.message}", "WARN")

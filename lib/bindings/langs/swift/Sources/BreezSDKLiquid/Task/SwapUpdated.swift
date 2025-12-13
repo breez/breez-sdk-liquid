@@ -26,7 +26,7 @@ class SwapUpdatedTask : TaskProtocol {
         self.logger = logger
     }
     
-    func start(liquidSDK: BindingLiquidSdk, plugins: SDKPlugins) throws {
+    func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
         do {
             self.request = try JSONDecoder().decode(SwapUpdatedRequest.self, from: self.payload.data(using: .utf8)!)
         } catch let e {
@@ -104,8 +104,6 @@ class SwapUpdatedTask : TaskProtocol {
             }
         }
     }
-
-    func onEvent(event: NwcEvent) {}
 
     func getSwapId(details: PaymentDetails?) -> String? {
         if let details = details {

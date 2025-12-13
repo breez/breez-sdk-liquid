@@ -4,7 +4,6 @@ import android.content.Context
 import breez_sdk_liquid.CreateBolt12InvoiceRequest
 import breez_sdk_liquid.PaymentException
 import breez_sdk_liquid.SdkEvent
-import breez_sdk_liquid.NwcEvent
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid_notification.Constants.DEFAULT_INVOICE_REQUEST_NOTIFICATION_FAILURE_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_INVOICE_REQUEST_NOTIFICATION_TITLE
@@ -19,7 +18,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import Plugins
+import PluginConfigs
 
 @Serializable
 data class InvoiceRequestRequest(
@@ -48,7 +47,7 @@ class InvoiceRequestJob(
         private const val TAG = "InvoiceRequestJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk, plugins: Plugins) {
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         var request: InvoiceRequestRequest? = null
         try {
             val decoder = Json { ignoreUnknownKeys = true }
@@ -97,7 +96,6 @@ class InvoiceRequestJob(
 
 
     override fun onEvent(e: SdkEvent) {}
-    override fun onEvent(event: NwcEvent) {}
 
     override fun onShutdown() {}
 }

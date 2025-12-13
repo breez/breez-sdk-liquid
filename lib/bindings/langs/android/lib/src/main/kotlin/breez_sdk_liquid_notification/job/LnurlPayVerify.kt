@@ -20,7 +20,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import Plugins
+import PluginConfigs
 
 @Serializable
 data class LnurlVerifyRequest(
@@ -50,7 +50,7 @@ class LnurlPayVerifyJob(
         private const val TAG = "LnurlPayVerifyJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk, plugins: Plugins) {
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         var request: LnurlVerifyRequest? = null
         try {
             val decoder = Json { ignoreUnknownKeys = true }
