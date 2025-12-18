@@ -1,3 +1,5 @@
+use std::str::FromStr as _;
+
 use breez_sdk_liquid::model::{
     DescriptionHash, ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentMethod,
     PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest, ReceiveAmount,
@@ -6,7 +8,7 @@ use breez_sdk_liquid::model::{
 use breez_sdk_liquid::plugin::PluginSdk;
 use log::info;
 use nostr_sdk::nips::nip47::{
-    ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse,
+    ErrorCode, GetBalanceResponse, GetInfoResponse, ListTransactionsRequest, LookupInvoiceResponse,
     MakeInvoiceRequest, MakeInvoiceResponse, NIP47Error, PayInvoiceRequest, PayInvoiceResponse,
     TransactionType,
 };
@@ -14,6 +16,14 @@ use nostr_sdk::Timestamp;
 use sdk_common::prelude::InputType;
 
 type Result<T> = std::result::Result<T, NIP47Error>;
+
+pub(crate) const NWC_SUPPORTED_METHODS: [&str; 5] = [
+    "pay_invoice",
+    "make_invoice",
+    "list_transactions",
+    "get_balance",
+    "get_info",
+];
 
 #[sdk_macros::async_trait]
 pub trait RelayMessageHandler: Send + Sync {
@@ -24,6 +34,7 @@ pub trait RelayMessageHandler: Send + Sync {
         req: ListTransactionsRequest,
     ) -> Result<Vec<LookupInvoiceResponse>>;
     async fn get_balance(&self) -> Result<GetBalanceResponse>;
+    async fn get_info(&self) -> Result<GetInfoResponse>;
 }
 
 pub struct SdkRelayMessageHandler {
@@ -261,6 +272,27 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
 
         Ok(GetBalanceResponse {
             balance: balance_msats,
+        })
+    }
+
+    async fn get_info(&self) -> Result<GetInfoResponse> {
+        info!("NWC Get info is called");
+        let info = self.sdk.get_info().await.map_err(|e| NIP47Error {
+            code: ErrorCode::Internal,
+            message: format!("Failed to get wallet info: {e}"),
+        })?;
+        Ok(GetInfoResponse {
+            alias: None,
+            color: None,
+            network: None,
+            block_hash: None,
+            block_height: None,
+            pubkey: nostr_sdk::secp256k1::PublicKey::from_str(&info.wallet_info.pubkey).ok(),
+            methods: NWC_SUPPORTED_METHODS
+                .into_iter()
+                .map(String::from)
+                .collect(),
+            notifications: vec![],
         })
     }
 }

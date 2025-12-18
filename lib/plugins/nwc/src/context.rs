@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     event::{EventManager, NwcEvent, NwcEventDetails},
-    handler::RelayMessageHandler,
+    handler::{RelayMessageHandler, NWC_SUPPORTED_METHODS},
     model::ActiveConnection,
     persist::Persister,
 };
@@ -114,8 +114,7 @@ impl RuntimeContext {
 
     pub async fn send_info_event(&self) {
         // Broadcast info event
-        let content =
-            "pay_invoice make_invoice list_transactions get_balance notifications".to_string();
+        let content = NWC_SUPPORTED_METHODS.join(" ").to_string();
         if let Err(err) = self
             .send_event(
                 EventBuilder::new(Kind::WalletConnectInfo, content)
