@@ -25,8 +25,8 @@ use nostr_sdk::{
         ErrorCode, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
         ResponseResult,
     },
-    Client as NostrClient, Event, EventBuilder, EventId, Filter, Keys, Kind, RelayPoolNotification,
-    RelayUrl, Tag, Timestamp,
+    Client as NostrClient, Event, EventBuilder, EventId, Filter, Keys, Kind, RelayMessage,
+    RelayPoolNotification, RelayUrl, Tag, Timestamp,
 };
 use tokio::{
     sync::{mpsc, Mutex, OnceCell},
@@ -46,7 +46,12 @@ pub(crate) mod utils;
 pub const MIN_REFRESH_INTERVAL_SEC: u64 = 60; // 1 minute
 pub const DEFAULT_PERIODIC_BUDGET_TIME_SEC: u32 = 60 * 60 * 24 * 30; // 30 days
 pub const DEFAULT_EVENT_HANDLING_INTERVAL_SEC: u64 = 10;
-pub const DEFAULT_RELAY_URLS: [&str; 1] = ["wss://relay.getalbypro.com/breez"];
+pub const DEFAULT_RELAY_URLS: [&str; 4] = [
+    "wss://relay.getalbypro.com/breez",
+    "wss://nos.lol/",
+    "wss://nostr.land/",
+    "wss://nostr.wine/",
+];
 
 #[sdk_macros::async_trait]
 pub trait NwcService: Send + Sync {
@@ -341,6 +346,10 @@ impl SdkNwcService {
                 Ok(res) => (Some(ResponseResult::GetBalance(res)), None),
                 Err(e) => (None, Some(e)),
             },
+            RequestParams::GetInfo => match ctx.handler.get_info().await {
+                Ok(res) => (Some(ResponseResult::GetInfo(res)), None),
+                Err(e) => (None, Some(e)),
+            },
             _ => {
                 return Err(NwcError::generic(format!(
                     "Received unhandled request: {req:?}"
@@ -464,6 +473,7 @@ impl SdkNwcService {
 #[sdk_macros::async_trait]
 impl NwcService for SdkNwcService {
     async fn add_connection(&self, req: AddConnectionRequest) -> NwcResult<AddConnectionResponse> {
+        let ctx = self.runtime_ctx().await?;
         let random_secret_key = nostr_sdk::SecretKey::generate();
         let relays = self
             .config
@@ -472,7 +482,6 @@ impl NwcService for SdkNwcService {
             .filter_map(|r| RelayUrl::from_str(&r).ok())
             .collect();
 
-        let ctx = self.runtime_ctx().await?;
         let now = utils::now();
         let connection = NwcConnectionInner {
             connection_string: NostrWalletConnectURI::new(
@@ -502,12 +511,9 @@ impl NwcService for SdkNwcService {
         &self,
         req: EditConnectionRequest,
     ) -> NwcResult<EditConnectionResponse> {
-        let connection = self
-            .runtime_ctx()
-            .await?
-            .persister
-            .edit_nwc_connection(req)?;
-        self.runtime_ctx().await?.trigger_resubscription().await;
+        let ctx = self.runtime_ctx().await?;
+        let connection = ctx.persister.edit_nwc_connection(req)?;
+        ctx.trigger_resubscription().await;
         Ok(EditConnectionResponse {
             connection: connection.into(),
         })
@@ -661,12 +667,16 @@ impl Plugin for SdkNwcService {
                 let mut notifications_listener = thread_ctx.client.notifications();
                 loop {
                     tokio::select! {
-                        Ok(RelayPoolNotification::Event { event, .. } ) = notifications_listener.recv() => {
-                            info!("Received NWC event: {event:?}");
-                            if let Err(err) = Self::handle_event_inner(&thread_ctx, &mut active_connections, &event).await {
-                                warn!("Could not handle NWC event {}: {}", event.id, err);
-                            }
-                        }
+                        Ok(notification) = notifications_listener.recv() => match notification {
+                            RelayPoolNotification::Message { message: RelayMessage::Event { event, .. }, .. } => {
+                                    info!("Received NWC event: {event:?}");
+                                    if let Err(err) = Self::handle_event_inner(&thread_ctx, &mut active_connections, &event).await {
+                                        warn!("Could not handle NWC event {}: {}", event.id, err);
+                                    }
+                            },
+                            RelayPoolNotification::Message { message: RelayMessage::EndOfStoredEvents(_), .. } => notifications_listener = notifications_listener.resubscribe(),
+                            _ => {},
+                        },
                         Some(_) = Self::min_refresh_interval(&mut maybe_expiry_interval) => {
                             let result = match thread_ctx.persister.refresh_connections() {
                                 Ok(result) => result,
