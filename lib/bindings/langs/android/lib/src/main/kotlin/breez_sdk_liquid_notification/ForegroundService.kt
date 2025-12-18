@@ -8,7 +8,6 @@ import android.os.Looper
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.ConnectRequest
 import breez_sdk_liquid.EventListener
-import breez_sdk_liquid.NwcEventListener
 import breez_sdk_liquid.Logger
 import breez_sdk_liquid.SdkEvent
 import breez_sdk_liquid.NwcEvent
@@ -48,8 +47,7 @@ interface SdkForegroundService {
 abstract class ForegroundService :
     Service(),
     SdkForegroundService,
-    EventListener,
-    NwcEventListener {
+    EventListener {
     private var liquidSDK: BindingLiquidSdk? = null
 
     @Suppress("MemberVisibilityCanBePrivate")
