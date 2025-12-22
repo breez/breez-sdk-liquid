@@ -160,7 +160,7 @@ impl Persister {
     /// Calling this method will clear the database and free up memory.
     #[cfg(all(target_family = "wasm", target_os = "unknown"))]
     pub fn clear_in_memory_db(&self) -> Result<()> {
-        rusqlite::ffi::mem_vfs::MemVfsUtil::new().delete_db(
+        sqlite_wasm_rs::MemVfsUtil::<sqlite_wasm_rs::WasmOsCallback>::new().delete_db(
             self.get_db_path()
                 .to_str()
                 .ok_or(anyhow!("Failed to get db path str"))?,

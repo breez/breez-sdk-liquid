@@ -724,6 +724,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sideswap_api",
+ "sqlite-wasm-rs",
  "strum",
  "strum_macros",
  "tempfile",
@@ -2370,9 +2371,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-version = "0.3.83"
+version = "0.3.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "464a3709c7f55f1f721e5389aa6ea4e3bc6aba669353300af094b29ffbdde1d8"
+checksum = "0c0b063578492ceec17683ef2f8c5e89121fbd0b172cbc280635ab7567db2738"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
@@ -2456,8 +2457,7 @@ dependencies = [
 [[package]]
 name = "libsqlite3-sys"
 version = "0.36.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95b4103cffefa72eb8428cb6b47d6627161e51c2739fc5e3b734584157bc642a"
+source = "git+https://github.com/breez/rusqlite?branch=rusqlite-v0.38.0#bd6838971f13cd120820693b369e1fa1d51524e3"
 dependencies = [
  "cc",
  "pkg-config",
@@ -3731,10 +3731,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rsqlite-vfs"
+version = "0.1.0"
+source = "git+https://github.com/breez/sqlite-wasm-rs?branch=rusqlite-v0.38.0#61afdd3aef30b27892602a43933e346eb8cc7ecc"
+dependencies = [
+ "hashbrown 0.16.1",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.38.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1c93dd1c9683b438c392c492109cb702b8090b2bfc8fed6f6e4eb4523f17af3"
+source = "git+https://github.com/breez/rusqlite?branch=rusqlite-v0.38.0#bd6838971f13cd120820693b369e1fa1d51524e3"
 dependencies = [
  "bitflags 2.9.1",
  "fallible-iterator",
@@ -3748,7 +3756,7 @@ dependencies = [
 [[package]]
 name = "rusqlite_migration"
 version = "2.3.0"
-source = "git+https://github.com/breez/rusqlite_migration?branch=rusqlite-v0.38.0#5ec48d3b19d8fe409352923d9bcd45fa8337cd90"
+source = "git+https://github.com/breez/rusqlite_migration?branch=rusqlite-v0.38.0#7c12f3c09cb2eb1210331eccd9e9f58e7f444b5e"
 dependencies = [
  "log",
  "rusqlite",
@@ -4367,13 +4375,11 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 [[package]]
 name = "sqlite-wasm-rs"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05e98301bf8b0540c7de45ecd760539b9c62f5772aed172f08efba597c11cd5d"
+source = "git+https://github.com/breez/sqlite-wasm-rs?branch=rusqlite-v0.38.0#61afdd3aef30b27892602a43933e346eb8cc7ecc"
 dependencies = [
  "cc",
- "hashbrown 0.16.1",
  "js-sys",
- "thiserror 2.0.12",
+ "rsqlite-vfs",
  "wasm-bindgen",
 ]
 
@@ -5210,9 +5216,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.106"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d759f433fa64a2d763d1340820e46e111a7a5ab75f993d1852d70b03dbb80fd"
+checksum = "7e14915cadd45b529bb8d1f343c4ed0ac1de926144b746e2710f9cd05df6603b"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -5222,10 +5228,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasm-bindgen-futures"
-version = "0.4.56"
+name = "wasm-bindgen-backend"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "836d9622d604feee9e5de25ac10e3ea5f2d65b41eac0d9ce72eb5deae707ce7c"
+checksum = "e28d1ba982ca7923fd01448d5c30c6864d0a14109560296a162f80f305fb93bb"
+dependencies = [
+ "bumpalo",
+ "log",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-futures"
+version = "0.4.51"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ca85039a9b469b38336411d6d6ced91f3fc87109a2a27b0c197663f5144dffe"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -5236,9 +5256,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.106"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48cb0d2638f8baedbc542ed444afc0644a29166f1595371af4fecf8ce1e7eeb3"
+checksum = "7c3d463ae3eff775b0c45df9da45d68837702ac35af998361e2c84e7c5ec1b0d"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -5246,22 +5266,22 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.106"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cefb59d5cd5f92d9dcf80e4683949f15ca4b511f4ac0a6e14d4e1ac60c6ecd40"
+checksum = "7bb4ce89b08211f923caf51d527662b75bdc9c9c7aab40f86dcb9fb85ac552aa"
 dependencies = [
- "bumpalo",
  "proc-macro2",
  "quote",
  "syn 2.0.104",
+ "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.106"
+version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbc538057e648b67f72a982e708d485b2efa771e1ac05fec311f9f63e5800db4"
+checksum = "f143854a3b13752c6950862c906306adb27c7e839f7414cec8fea35beab624c1"
 dependencies = [
  "unicode-ident",
 ]
@@ -5281,9 +5301,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.83"
+version = "0.3.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b32828d774c412041098d182a8b38b16ea816958e07cf40eec2bc080ae137ac"
+checksum = "77e4b637749ff0d92b8fad63aa1f7cff3cbe125fd49c175cd6345e7272638b12"
 dependencies = [
  "js-sys",
  "wasm-bindgen",

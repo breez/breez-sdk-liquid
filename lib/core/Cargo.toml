@@ -78,7 +78,7 @@ boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "d62
     "electrum",
     "ws",
 ] }
-rusqlite = { version = "0.38.0", features = [
+rusqlite = { git = "https://github.com/breez/rusqlite", branch = "rusqlite-v0.38.0", features = [
     "backup",
     "bundled",
 ] }
@@ -86,6 +86,7 @@ rusqlite = { version = "0.38.0", features = [
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
+sqlite-wasm-rs = { git = "https://github.com/breez/sqlite-wasm-rs", branch = "rusqlite-v0.38.0", default-features = false }
 lwk_wollet = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b", default-features = false, features = [
     "esplora",
 ] }
@@ -98,7 +99,7 @@ tonic = { version = "0.12", default-features = false, features = [
 boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "d62288fdd1799d90df72a811f4bb6a1b400c5ac7", features = [
     "ws",
 ] }
-rusqlite = { version = "0.38.0", features = [
+rusqlite = { git = "https://github.com/breez/rusqlite", branch = "rusqlite-v0.38.0", features = [
     "backup",
     "bundled",
     "serialize",
