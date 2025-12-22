@@ -19,8 +19,8 @@ anyhow = { workspace = true }
 breez-sdk-liquid = { path = "../core" }
 breez-sdk-liquid-nwc = { path = "../plugins/nwc" }
 log = { workspace = true }
-uniffi = { package = "uniffi", version = "0.28.0", features = [ "bindgen-tests", "cli" ] }
-uniffi_bindgen = { package = "uniffi_bindgen", version = "0.28.0" }
+uniffi = { git = "https://github.com/breez/uniffi-rs", rev = "28d4dd232a1603cb88213380a9e0415f1ae0757d", features = [ "bindgen-tests", "cli" ] }
+uniffi_bindgen = { git = "https://github.com/breez/uniffi-rs", rev = "28d4dd232a1603cb88213380a9e0415f1ae0757d" }
 camino = "1.1.1"
 thiserror = { workspace = true }
 tokio = { version = "1", features = ["rt"] }
@@ -30,5 +30,5 @@ sdk-macros = { workspace = true }
 async-trait = "0.1.86"
 
 [build-dependencies]
-uniffi = { package = "uniffi", version = "0.28.0", features = [ "build" ] }
+uniffi = { git = "https://github.com/breez/uniffi-rs", rev = "28d4dd232a1603cb88213380a9e0415f1ae0757d", features = [ "build" ] }
 glob = "0.3.1"
