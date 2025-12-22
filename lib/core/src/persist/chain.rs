@@ -10,6 +10,9 @@ use crate::model::*;
 use crate::persist::{get_where_clause_state_in, where_clauses_to_string, Persister};
 use crate::sync::model::data::ChainSyncData;
 use crate::sync::model::RecordType;
+use crate::utils::{
+    from_optional_u64_to_row, from_row_to_optional_u64, from_row_to_u64, from_u64_to_row,
+};
 
 impl Persister {
     pub(crate) fn insert_or_update_chain_swap_inner(
@@ -49,13 +52,13 @@ impl Persister {
                 &chain_swap.timeout_block_height,
                 &chain_swap.claim_timeout_block_height,
                 &chain_swap.preimage,
-                &chain_swap.payer_amount_sat,
-                &chain_swap.receiver_amount_sat,
+                from_u64_to_row(chain_swap.payer_amount_sat)?,
+                from_u64_to_row(chain_swap.receiver_amount_sat)?,
                 &chain_swap.accept_zero_conf,
                 &chain_swap.create_response_json,
                 &chain_swap.claim_private_key,
                 &chain_swap.refund_private_key,
-                &chain_swap.claim_fees_sat,
+                from_u64_to_row(chain_swap.claim_fees_sat)?,
                 &chain_swap.created_at,
                 &chain_swap.state,
             ),
@@ -91,9 +94,9 @@ impl Persister {
                 ":refund_tx_id": &chain_swap.refund_tx_id,
                 ":pair_fees_json": &chain_swap.pair_fees_json,
                 ":state": &chain_swap.state,
-                ":actual_payer_amount_sat": &chain_swap.actual_payer_amount_sat,
-                ":accepted_receiver_amount_sat": &chain_swap.accepted_receiver_amount_sat,
-                ":version": &chain_swap.metadata.version,
+                ":actual_payer_amount_sat": from_optional_u64_to_row(&chain_swap.actual_payer_amount_sat)?,
+                ":accepted_receiver_amount_sat": from_optional_u64_to_row(&chain_swap.accepted_receiver_amount_sat)?,
+                ":version": from_u64_to_row(chain_swap.metadata.version)?,
             },
         )?;
         ensure_sdk!(
@@ -205,25 +208,25 @@ impl Persister {
             claim_timeout_block_height: row.get(6)?,
             preimage: row.get(7)?,
             description: row.get(8)?,
-            payer_amount_sat: row.get(9)?,
-            receiver_amount_sat: row.get(10)?,
+            payer_amount_sat: from_row_to_u64(row, 9)?,
+            receiver_amount_sat: from_row_to_u64(row, 10)?,
             accept_zero_conf: row.get(11)?,
             create_response_json: row.get(12)?,
             claim_private_key: row.get(13)?,
             refund_private_key: row.get(14)?,
             server_lockup_tx_id: row.get(15)?,
             user_lockup_tx_id: row.get(16)?,
-            claim_fees_sat: row.get(17)?,
+            claim_fees_sat: from_row_to_u64(row, 17)?,
             claim_tx_id: row.get(18)?,
             refund_tx_id: row.get(19)?,
             created_at: row.get(20)?,
             state: row.get(21)?,
             pair_fees_json: row.get(22)?,
-            actual_payer_amount_sat: row.get(23)?,
-            accepted_receiver_amount_sat: row.get(24)?,
+            actual_payer_amount_sat: from_row_to_optional_u64(row, 23)?,
+            accepted_receiver_amount_sat: from_row_to_optional_u64(row, 24)?,
             auto_accepted_fees: row.get(25)?,
             metadata: SwapMetadata {
-                version: row.get(26)?,
+                version: from_row_to_u64(row, 26)?,
                 last_updated_at: row.get(27)?,
                 is_local: row.get::<usize, Option<bool>>(28)?.unwrap_or(true),
             },
@@ -325,7 +328,7 @@ impl Persister {
             WHERE id = :id",
             named_params! {
                 ":id": swap_id,
-                ":actual_payer_amount_sat": actual_payer_amount_sat,
+                ":actual_payer_amount_sat": from_u64_to_row(actual_payer_amount_sat)?,
             },
         )?;
 
@@ -352,7 +355,7 @@ impl Persister {
             WHERE id = :id",
             named_params! {
                 ":id": swap_id,
-                ":accepted_receiver_amount_sat": accepted_receiver_amount_sat,
+                ":accepted_receiver_amount_sat": from_optional_u64_to_row(&accepted_receiver_amount_sat)?,
             },
         )?;
         self.commit_outgoing(

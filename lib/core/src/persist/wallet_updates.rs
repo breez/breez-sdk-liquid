@@ -1,3 +1,5 @@
+use crate::utils::{from_row_to_optional_u64, from_u64_to_row};
+
 use super::Persister;
 
 use anyhow::Result;
@@ -22,7 +24,7 @@ impl Persister {
 
         tx.execute(
             "INSERT INTO wallet_updates (id, data) VALUES (?, ?)",
-            (index, update),
+            (from_u64_to_row(index)?, update),
         )?;
 
         tx.commit()?;
@@ -39,7 +41,7 @@ impl Persister {
         let data: Option<Vec<u8>> = conn
             .query_row(
                 "SELECT data FROM wallet_updates WHERE id = ?",
-                [index],
+                [from_u64_to_row(index)?],
                 |row| row.get(0),
             )
             .optional()?;
@@ -55,7 +57,9 @@ impl Persister {
 
     fn get_next_index(&self, conn: &rusqlite::Connection) -> Result<u64> {
         let max_index: Option<u64> =
-            conn.query_row("SELECT MAX(id) FROM wallet_updates", [], |row| row.get(0))?;
+            conn.query_row("SELECT MAX(id) FROM wallet_updates", [], |row| {
+                from_row_to_optional_u64(row, 0)
+            })?;
         Ok(max_index.map_or(0, |max| max + 1))
     }
 }

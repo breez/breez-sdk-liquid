@@ -18,7 +18,9 @@ use std::{path::PathBuf, str::FromStr};
 use crate::elements::AssetId;
 use crate::model::*;
 use crate::sync::model::RecordType;
-use crate::utils;
+use crate::utils::{
+    self, from_optional_u64_to_row, from_row_to_optional_u64, from_row_to_u64, from_u64_to_row,
+};
 use anyhow::{anyhow, Result};
 use boltz_client::boltz::{ChainPair, ReversePair, SubmarinePair};
 use log::{error, warn};
@@ -312,7 +314,7 @@ impl Persister {
                 Ok(PaymentTxData {
                     tx_id: row.get(0)?,
                     timestamp: row.get(1)?,
-                    fees_sat: row.get(2)?,
+                    fees_sat: from_row_to_u64(row, 2)?,
                     is_confirmed: row.get(3)?,
                     unblinding_data: row.get(4)?,
                 })
@@ -339,7 +341,7 @@ impl Persister {
                 tx_id,
                 &balance.asset_id,
                 balance.payment_type,
-                balance.amount,
+                from_u64_to_row(balance.amount)?,
             ),
         )?;
         Ok(())
@@ -372,7 +374,7 @@ impl Persister {
             (
                 &ptx.tx_id,
                 ptx.timestamp.or(Some(utils::now())),
-                ptx.fees_sat,
+                from_u64_to_row(ptx.fees_sat)?,
                 ptx.is_confirmed,
                 ptx.unblinding_data,
             ),
@@ -461,7 +463,7 @@ impl Persister {
                     .map(|info| serde_json::to_string(&info).ok()),
                 &payment_tx_details.bip353_address,
                 &payment_tx_details.payer_note,
-                &payment_tx_details.asset_fees,
+                from_optional_u64_to_row(&payment_tx_details.asset_fees)?,
             ),
         )?;
         Ok(())
@@ -500,7 +502,7 @@ impl Persister {
             let maybe_lnurl_info_json: Option<String> = row.get(2)?;
             let maybe_bip353_address = row.get(3)?;
             let maybe_payer_note = row.get(4)?;
-            let maybe_asset_fees = row.get(5)?;
+            let maybe_asset_fees = from_row_to_optional_u64(row, 5)?;
             Ok(PaymentTxDetails {
                 tx_id: tx_id.to_string(),
                 destination,
@@ -677,12 +679,12 @@ impl Persister {
                 PaymentTxData {
                     tx_id: tx_id.to_string(),
                     timestamp: row.get(1)?,
-                    fees_sat: row.get(2)?,
+                    fees_sat: from_row_to_u64(row, 2)?,
                     is_confirmed: row.get(3)?,
                     unblinding_data: row.get(4)?,
                 },
                 PaymentTxBalance {
-                    amount: row.get(5)?,
+                    amount: from_row_to_u64(row, 5)?,
                     asset_id: row.get(6)?,
                     payment_type: row.get(7)?,
                 },
@@ -700,8 +702,8 @@ impl Persister {
         let maybe_receive_swap_description: Option<String> = row.get(15)?;
         let maybe_receive_swap_payer_note: Option<String> = row.get(16)?;
         let maybe_receive_swap_preimage: Option<String> = row.get(17)?;
-        let maybe_receive_swap_payer_amount_sat: Option<u64> = row.get(18)?;
-        let maybe_receive_swap_receiver_amount_sat: Option<u64> = row.get(19)?;
+        let maybe_receive_swap_payer_amount_sat = from_row_to_optional_u64(row, 18)?;
+        let maybe_receive_swap_receiver_amount_sat = from_row_to_optional_u64(row, 19)?;
         let maybe_receive_swap_receiver_state: Option<PaymentState> = row.get(20)?;
         let maybe_receive_swap_pair_fees_json: Option<String> = row.get(21)?;
         let maybe_receive_swap_pair_fees: Option<ReversePair> =
@@ -718,8 +720,8 @@ impl Persister {
         let maybe_send_swap_description: Option<String> = row.get(30)?;
         let maybe_send_swap_preimage: Option<String> = row.get(31)?;
         let maybe_send_swap_refund_tx_id: Option<String> = row.get(32)?;
-        let maybe_send_swap_payer_amount_sat: Option<u64> = row.get(33)?;
-        let maybe_send_swap_receiver_amount_sat: Option<u64> = row.get(34)?;
+        let maybe_send_swap_payer_amount_sat = from_row_to_optional_u64(row, 33)?;
+        let maybe_send_swap_receiver_amount_sat = from_row_to_optional_u64(row, 34)?;
         let maybe_send_swap_state: Option<PaymentState> = row.get(35)?;
         let maybe_send_swap_pair_fees_json: Option<String> = row.get(36)?;
         let maybe_send_swap_pair_fees: Option<SubmarinePair> =
@@ -733,21 +735,21 @@ impl Persister {
         let maybe_chain_swap_preimage: Option<String> = row.get(42)?;
         let maybe_chain_swap_description: Option<String> = row.get(43)?;
         let maybe_chain_swap_refund_tx_id: Option<String> = row.get(44)?;
-        let maybe_chain_swap_payer_amount_sat: Option<u64> = row.get(45)?;
-        let maybe_chain_swap_receiver_amount_sat: Option<u64> = row.get(46)?;
+        let maybe_chain_swap_payer_amount_sat = from_row_to_optional_u64(row, 45)?;
+        let maybe_chain_swap_receiver_amount_sat = from_row_to_optional_u64(row, 46)?;
         let maybe_chain_swap_claim_address: Option<String> = row.get(47)?;
         let maybe_chain_swap_lockup_address: Option<String> = row.get(48)?;
         let maybe_chain_swap_state: Option<PaymentState> = row.get(49)?;
         let maybe_chain_swap_pair_fees_json: Option<String> = row.get(50)?;
         let maybe_chain_swap_pair_fees: Option<ChainPair> =
             maybe_chain_swap_pair_fees_json.and_then(|pair| serde_json::from_str(&pair).ok());
-        let maybe_chain_swap_actual_payer_amount_sat: Option<u64> = row.get(51)?;
-        let maybe_chain_swap_accepted_receiver_amount_sat: Option<u64> = row.get(52)?;
+        let maybe_chain_swap_actual_payer_amount_sat = from_row_to_optional_u64(row, 51)?;
+        let maybe_chain_swap_accepted_receiver_amount_sat = from_row_to_optional_u64(row, 52)?;
         let maybe_chain_swap_auto_accepted_fees: Option<bool> = row.get(53)?;
         let maybe_chain_swap_user_lockup_tx_id: Option<String> = row.get(54)?;
         let maybe_chain_swap_claim_tx_id: Option<String> = row.get(55)?;
 
-        let maybe_swap_refund_tx_amount_sat: Option<u64> = row.get(56)?;
+        let maybe_swap_refund_tx_amount_sat = from_row_to_optional_u64(row, 56)?;
 
         let maybe_payment_details_destination: Option<String> = row.get(57)?;
         let maybe_payment_details_description: Option<String> = row.get(58)?;
@@ -756,7 +758,7 @@ impl Persister {
             maybe_payment_details_lnurl_info_json.and_then(|info| serde_json::from_str(&info).ok());
         let maybe_payment_details_bip353_address: Option<String> = row.get(60)?;
         let maybe_payment_details_payer_note: Option<String> = row.get(61)?;
-        let maybe_payment_details_asset_fees: Option<u64> = row.get(62)?;
+        let maybe_payment_details_asset_fees = from_row_to_optional_u64(row, 62)?;
 
         let maybe_asset_metadata_name: Option<String> = row.get(63)?;
         let maybe_asset_metadata_ticker: Option<String> = row.get(64)?;
