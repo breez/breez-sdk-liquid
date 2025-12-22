@@ -156,8 +156,8 @@ async fn main() -> Result<()> {
                     .map_err(|e| anyhow!("Failed to parse command line: {}", e))?;
                 vec.insert(0, "".to_string());
                 let cli_res = Command::try_parse_from(vec);
-                if cli_res.is_err() {
-                    println!("{}", cli_res.unwrap_err());
+                if let Err(err) = cli_res {
+                    println!("{}", err);
                     continue;
                 }
                 let res = handle_command(rl, &sdk, &args, cli_res.unwrap()).await;
