@@ -49,10 +49,14 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
             switch event.details {
                 case .getBalance:
                     eventName = "Get Balance"
+                case .getInfo:
+                    eventName = "Get Info"
                 case .listTransactions:
                     eventName = "List Transactions"
                 case .payInvoice:
                     eventName = "Pay Invoice"
+                case .makeInvoice:
+                    eventName = "Make Invoice"
                 default:
                     return;
             }

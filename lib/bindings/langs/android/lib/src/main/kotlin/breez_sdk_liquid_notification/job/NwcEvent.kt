@@ -68,8 +68,10 @@ class NwcEventJob(
         var eventName: String
         when(event.details) {
             is NwcEventDetails.GetBalance -> eventName = "Get Balance"
+            is NwcEventDetails.GetInfo -> eventName = "Get Info"
             is NwcEventDetails.ListTransactions -> eventName = "List Transactions"
             is NwcEventDetails.PayInvoice -> eventName = "Pay Invoice"
+            is NwcEventDetails.MakeInvoice -> eventName = "Make Invoice"
             else -> return
         }
         notifyChannel(
