@@ -425,6 +425,11 @@ impl SdkNwcService {
                     return;
                 }
             },
+            (Some(ResponseResult::MakeInvoice(_)), None) => NwcEvent {
+                details: NwcEventDetails::MakeInvoice,
+                connection_name: Some(connection_name),
+                event_id: Some(event_id.to_string()),
+            },
             (Some(ResponseResult::ListTransactions(_)), None) => NwcEvent {
                 details: NwcEventDetails::ListTransactions,
                 connection_name: Some(connection_name),
@@ -432,6 +437,11 @@ impl SdkNwcService {
             },
             (Some(ResponseResult::GetBalance(_)), None) => NwcEvent {
                 details: NwcEventDetails::GetBalance,
+                connection_name: Some(connection_name),
+                event_id: Some(event_id.to_string()),
+            },
+            (Some(ResponseResult::GetInfo(_)), None) => NwcEvent {
+                details: NwcEventDetails::GetInfo,
                 connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
