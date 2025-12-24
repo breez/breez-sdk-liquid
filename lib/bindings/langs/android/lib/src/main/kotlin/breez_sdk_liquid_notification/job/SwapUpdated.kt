@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
+import PluginConfigs
 
 @Serializable
 data class SwapUpdatedRequest(
@@ -60,7 +61,7 @@ class SwapUpdatedJob(
         private const val TAG = "SwapUpdatedJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk) {
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         try {
             val decoder = Json { ignoreUnknownKeys = true }
             val request = decoder.decodeFromString(SwapUpdatedRequest.serializer(), payload)
