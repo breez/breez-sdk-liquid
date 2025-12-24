@@ -6,7 +6,8 @@ use std::{
 
 use crate::{
     event::{EventManager, NwcEvent, NwcEventDetails},
-    handler::RelayMessageHandler,
+    handler::{RelayMessageHandler, NWC_SUPPORTED_METHODS},
+    model::ActiveConnection,
     persist::Persister,
 };
 use anyhow::Result;
@@ -48,20 +49,30 @@ impl RuntimeContext {
         self.event_manager
             .notify(NwcEvent {
                 event_id: None,
+                connection_name: None,
                 details: NwcEventDetails::Disconnected,
             })
             .await;
         self.event_manager.pause_notifications();
     }
 
-    pub async fn list_clients(&self) -> Result<HashMap<String, NostrWalletConnectURI>> {
+    pub async fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
         Ok(self
             .persister
-            .list_nwc_uris()?
+            .list_nwc_connections()?
             .into_iter()
-            .filter_map(|(name, uri)| {
-                NostrWalletConnectURI::from_str(&uri)
-                    .map(|uri| (name, uri))
+            .filter_map(|(name, connection)| {
+                NostrWalletConnectURI::from_str(&connection.connection_string)
+                    .map(|uri| {
+                        (
+                            name,
+                            ActiveConnection {
+                                pubkey: Keys::new(uri.secret.clone()).public_key,
+                                uri,
+                                connection,
+                            },
+                        )
+                    })
                     .ok()
             })
             .collect())
@@ -69,11 +80,11 @@ impl RuntimeContext {
 
     pub async fn resubscribe(
         &self,
-        clients: &HashMap<String, NostrWalletConnectURI>,
+        active_connections: &HashMap<String, ActiveConnection>,
     ) -> Result<()> {
-        let pubkeys = clients
+        let pubkeys = active_connections
             .values()
-            .map(|uri| uri.public_key.to_string())
+            .map(|con| con.uri.public_key.to_string())
             .collect();
         self.client
             .subscribe(
@@ -103,7 +114,7 @@ impl RuntimeContext {
 
     pub async fn send_info_event(&self) {
         // Broadcast info event
-        let content = "pay_invoice list_transactions get_balance notifications".to_string();
+        let content = NWC_SUPPORTED_METHODS.join(" ").to_string();
         if let Err(err) = self
             .send_event(
                 EventBuilder::new(Kind::WalletConnectInfo, content)

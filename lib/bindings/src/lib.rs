@@ -3,6 +3,7 @@ use std::sync::Arc;
 mod plugin;
 
 use anyhow::Result;
+pub use breez_sdk_liquid::NostrWalletConnectUri as NostrConnectionUri;
 use breez_sdk_liquid::{error::*, logger::Logger, model::*, prelude::*};
 use log::{Metadata, Record, SetLoggerError};
 use once_cell::sync::Lazy;
@@ -70,42 +71,20 @@ pub fn set_logger(logger: Box<dyn Logger>) -> Result<(), SdkError> {
     UniffiBindingLogger::init(logger).map_err(|_| SdkError::generic("Logger already created"))
 }
 
-pub fn connect(
-    req: ConnectRequest,
-    plugins: Option<Vec<Box<dyn Plugin>>>,
-) -> Result<Arc<BindingLiquidSdk>, SdkError> {
+pub fn connect(req: ConnectRequest) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let plugins = plugins.map(|plugins| {
-            plugins
-                .into_iter()
-                .map(|p| {
-                    Arc::new(PluginWrapper { inner: p })
-                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
-                })
-                .collect()
-        });
-        let sdk = LiquidSdk::connect(req, plugins).await?;
-        Ok(Arc::from(BindingLiquidSdk { sdk }))
+        let sdk = LiquidSdk::connect(req).await?;
+        Ok(Arc::new(BindingLiquidSdk { sdk }))
     })
 }
 
 pub fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Box<dyn Signer>,
-    plugins: Option<Vec<Box<dyn Plugin>>>,
 ) -> Result<Arc<BindingLiquidSdk>, SdkError> {
     rt().block_on(async {
-        let plugins = plugins.map(|plugins| {
-            plugins
-                .into_iter()
-                .map(|p| {
-                    Arc::new(PluginWrapper { inner: p })
-                        as Arc<dyn breez_sdk_liquid::plugin::Plugin>
-                })
-                .collect()
-        });
-        let sdk = LiquidSdk::connect_with_signer(req, signer, plugins).await?;
-        Ok(Arc::from(BindingLiquidSdk { sdk }))
+        let sdk = LiquidSdk::connect_with_signer(req, signer).await?;
+        Ok(Arc::new(BindingLiquidSdk { sdk }))
     })
 }
 
@@ -317,6 +296,15 @@ impl BindingLiquidSdk {
 
     pub fn disconnect(&self) -> SdkResult<()> {
         rt().block_on(self.sdk.disconnect())
+    }
+
+    pub fn use_nwc_plugin(&self, config: NwcConfig) -> SdkResult<Arc<BindingNwcService>> {
+        rt().block_on(async {
+            let nwc_service = Arc::new(BindingNwcService::new(config));
+            let nwc_plugin = PluginWrapper::new_plugin(nwc_service.clone());
+            self.sdk.start_plugin(nwc_plugin).await?;
+            Ok(nwc_service)
+        })
     }
 }
 

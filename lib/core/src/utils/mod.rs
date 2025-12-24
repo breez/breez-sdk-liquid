@@ -229,6 +229,43 @@ pub async fn run_with_shutdown_and_cleanup<F, T, Fut, C>(
     }
 }
 
+pub(crate) fn from_u64_to_row(val: u64) -> Result<i64, anyhow::Error> {
+    i64::try_from(val).map_err(|_| anyhow!("Storage error: integer overflows i64 range"))
+}
+
+pub(crate) fn from_optional_u64_to_row(val: &Option<u64>) -> Result<Option<i64>, anyhow::Error> {
+    Ok(match val {
+        Some(val) => Some(from_u64_to_row(*val)?),
+        None => None,
+    })
+}
+
+pub(crate) fn u64_from_sql(val: i64, index: usize) -> Result<u64, rusqlite::Error> {
+    u64::try_from(val).map_err(|_| {
+        rusqlite::Error::FromSqlConversionFailure(
+            index,
+            rusqlite::types::Type::Integer,
+            rusqlite::types::FromSqlError::OutOfRange(val).into(),
+        )
+    })
+}
+
+pub(crate) fn from_row_to_u64(row: &rusqlite::Row, index: usize) -> Result<u64, rusqlite::Error> {
+    let val = row.get::<usize, i64>(index)?;
+    u64_from_sql(val, index)
+}
+
+pub(crate) fn from_row_to_optional_u64(
+    row: &rusqlite::Row,
+    index: usize,
+) -> Result<Option<u64>, rusqlite::Error> {
+    let val = row.get::<usize, Option<i64>>(index)?;
+    Ok(match val {
+        Some(val) => Some(u64_from_sql(val, index)?),
+        None => None,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use crate::error::PaymentError;

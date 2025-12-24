@@ -5,9 +5,8 @@ use std::sync::Arc;
 use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
-use breez_sdk_liquid::plugin::Plugin;
 use breez_sdk_liquid::prelude::*;
-use breez_sdk_liquid_nwc::{NwcConfig, SdkNwcService};
+use breez_sdk_liquid_nwc::{model::NwcConfig, SdkNwcService};
 use clap::Parser;
 use commands::{handle_command, CliHelper, Command, CommandResult};
 use log::{error, info};
@@ -116,7 +115,13 @@ async fn main() -> Result<()> {
     } else if data_sync_url.is_some() {
         config.sync_service_url = data_sync_url;
     }
-    let mut plugins: Vec<Arc<dyn Plugin>> = vec![];
+    let sdk = LiquidSdk::connect(ConnectRequest {
+        config,
+        mnemonic: Some(mnemonic.to_string()),
+        passphrase,
+        seed: None,
+    })
+    .await?;
     if args.nwc {
         let nwc_service = Arc::new(SdkNwcService::new(NwcConfig {
             relay_urls: None,
@@ -125,18 +130,8 @@ async fn main() -> Result<()> {
         NWC_SERVICE.set(nwc_service.clone()).unwrap_or_else(|_| {
             panic!("Could not set NWC service");
         });
-        plugins.push(nwc_service);
+        sdk.start_plugin(nwc_service).await?;
     };
-    let sdk = LiquidSdk::connect(
-        ConnectRequest {
-            config,
-            mnemonic: Some(mnemonic.to_string()),
-            passphrase,
-            seed: None,
-        },
-        Some(plugins),
-    )
-    .await?;
     let listener_id = sdk
         .add_event_listener(Box::new(CliEventListener {}))
         .await?;
@@ -156,8 +151,8 @@ async fn main() -> Result<()> {
                     .map_err(|e| anyhow!("Failed to parse command line: {}", e))?;
                 vec.insert(0, "".to_string());
                 let cli_res = Command::try_parse_from(vec);
-                if cli_res.is_err() {
-                    println!("{}", cli_res.unwrap_err());
+                if let Err(err) = cli_res {
+                    println!("{}", err);
                     continue;
                 }
                 let res = handle_command(rl, &sdk, &args, cli_res.unwrap()).await;

@@ -9,6 +9,7 @@ use crate::model::*;
 use crate::persist::{get_where_clause_state_in, Persister};
 use crate::sync::model::data::SendSyncData;
 use crate::sync::model::RecordType;
+use crate::utils::{from_row_to_u64, from_u64_to_row};
 use crate::{ensure_sdk, get_updated_fields};
 
 use super::where_clauses_to_string;
@@ -47,9 +48,9 @@ impl Persister {
                 &send_swap.bolt12_offer,
                 &send_swap.payment_hash,
                 &send_swap.destination_pubkey,
-                &send_swap.timeout_block_height,
-                &send_swap.payer_amount_sat,
-                &send_swap.receiver_amount_sat,
+                from_u64_to_row(send_swap.timeout_block_height)?,
+                from_u64_to_row(send_swap.payer_amount_sat)?,
+                from_u64_to_row(send_swap.receiver_amount_sat)?,
                 &send_swap.create_response_json,
                 &send_swap.refund_private_key,
                 &send_swap.created_at,
@@ -78,7 +79,7 @@ impl Persister {
                 ":refund_address": &send_swap.refund_address,
                 ":refund_tx_id": &send_swap.refund_tx_id,
                 ":state": &send_swap.state,
-                ":version": &send_swap.metadata.version,
+                ":version": from_u64_to_row(send_swap.metadata.version)?,
             },
         )?;
         ensure_sdk!(
@@ -221,11 +222,11 @@ impl Persister {
             bolt12_offer: row.get(2)?,
             payment_hash: row.get(3)?,
             destination_pubkey: row.get(4)?,
-            timeout_block_height: row.get(5)?,
+            timeout_block_height: from_row_to_u64(row, 5)?,
             description: row.get(6)?,
             preimage: row.get(7)?,
-            payer_amount_sat: row.get(8)?,
-            receiver_amount_sat: row.get(9)?,
+            payer_amount_sat: from_row_to_u64(row, 8)?,
+            receiver_amount_sat: from_row_to_u64(row, 9)?,
             create_response_json: row.get(10)?,
             refund_private_key: row.get(11)?,
             lockup_tx_id: row.get(12)?,
@@ -235,7 +236,7 @@ impl Persister {
             state: row.get(16)?,
             pair_fees_json: row.get(17)?,
             metadata: SwapMetadata {
-                version: row.get(18)?,
+                version: from_row_to_u64(row, 18)?,
                 last_updated_at: row.get(19)?,
                 is_local: row.get::<usize, Option<bool>>(20)?.unwrap_or(true),
             },

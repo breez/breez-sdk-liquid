@@ -42,40 +42,32 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - uses: actions/download-artifact@v4
+      - name: Download Android JNI libs
+        uses: actions/download-artifact@v4
         with:
           name: bindings-android-jniLibs
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/androidMain/jniLibs
 
-      - uses: actions/download-artifact@v4
+      - name: Download Kotlin Multiplatform bindings
+        uses: actions/download-artifact@v4
         with:
           name: bindings-kotlin-multiplatform
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src
 
-      - name: Move files
-        working-directory: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src
-        run: |
-          mkdir -p androidMain/kotlin/breez_sdk_liquid
-          mkdir -p commonMain/kotlin/breez_sdk_liquid
-          mkdir -p jvmMain/kotlin/breez_sdk_liquid
-          mkdir -p nativeMain/kotlin/breez_sdk_liquid
-          mv main/kotlin/breez_sdk_liquid/breez_sdk_liquid.android.kt androidMain/kotlin/breez_sdk_liquid/
-          mv main/kotlin/breez_sdk_liquid/breez_sdk_liquid.common.kt commonMain/kotlin/breez_sdk_liquid/
-          mv main/kotlin/breez_sdk_liquid/breez_sdk_liquid.jvm.kt jvmMain/kotlin/breez_sdk_liquid/
-          mv main/kotlin/breez_sdk_liquid/breez_sdk_liquid.native.kt nativeMain/kotlin/breez_sdk_liquid/
-          rm -r main/kotlin/breez_sdk_liquid
-
-      - uses: actions/download-artifact@v4
+      - name: Download aarch64-apple-ios
+        uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-arm64
 
-      - uses: actions/download-artifact@v4
+      - name: Download aarch64-apple-ios-sim
+        uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-ios-sim
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-arm64
 
-      - uses: actions/download-artifact@v4
+      - name: Download x86_64-apple-ios
+        uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-apple-ios
           path: lib/bindings/langs/kotlin-multiplatform/breez-sdk-liquid-kmp/src/lib/ios-simulator-x64

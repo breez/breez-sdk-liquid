@@ -15,7 +15,7 @@ use crate::{
         data::LAST_DERIVATION_INDEX_DATA_ID, Record, RecordType, SyncOutgoingChanges, SyncSettings,
         SyncState,
     },
-    utils,
+    utils::{self, from_row_to_u64, from_u64_to_row},
 };
 
 impl Persister {
@@ -39,7 +39,7 @@ impl Persister {
         Ok(SyncState {
             data_id: row.get(0)?,
             record_id: row.get(1)?,
-            record_revision: row.get(2)?,
+            record_revision: from_row_to_u64(row, 2)?,
             is_local: row.get(3)?,
         })
     }
@@ -68,7 +68,7 @@ impl Persister {
         Self::set_sync_state_stmt(&con)?.execute(named_params! {
             ":data_id": &sync_state.data_id,
             ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
+            ":record_revision": from_u64_to_row(sync_state.record_revision)?,
             ":is_local": &sync_state.is_local,
         })?;
 
@@ -193,7 +193,7 @@ impl Persister {
             .query_map([], |row| {
                 Ok(Record {
                     id: row.get(0)?,
-                    revision: row.get(1)?,
+                    revision: from_row_to_u64(row, 1)?,
                     schema_version: row.get(2)?,
                     data: row.get(3)?,
                 })
@@ -216,7 +216,7 @@ impl Persister {
             ",
                 named_params! {
                     ":record_id": record.id,
-                    ":revision": record.revision,
+                    ":revision": from_u64_to_row(record.revision)?,
                     ":schema_version": record.schema_version,
                     ":data": record.data,
                 },
@@ -423,7 +423,7 @@ impl Persister {
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": &sync_state.data_id,
             ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
+            ":record_revision": from_u64_to_row(sync_state.record_revision)?,
             ":is_local": &sync_state.is_local,
         })?;
 
@@ -461,7 +461,7 @@ impl Persister {
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": sync_state.data_id,
             ":record_id": sync_state.record_id,
-            ":record_revision": sync_state.record_revision,
+            ":record_revision": from_u64_to_row(sync_state.record_revision)?,
             ":is_local": sync_state.is_local,
         })?;
 
@@ -488,7 +488,7 @@ impl Persister {
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": &sync_state.data_id,
             ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
+            ":record_revision": from_u64_to_row(sync_state.record_revision)?,
             ":is_local": &sync_state.is_local,
         })?;
 
@@ -515,7 +515,7 @@ impl Persister {
         Self::set_sync_state_stmt(&tx)?.execute(named_params! {
             ":data_id": &sync_state.data_id,
             ":record_id": &sync_state.record_id,
-            ":record_revision": &sync_state.record_revision,
+            ":record_revision": from_u64_to_row(sync_state.record_revision)?,
             ":is_local": &sync_state.is_local,
         })?;
 
