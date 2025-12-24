@@ -2,8 +2,7 @@ services:
   rt-sync:
     environment:
       SQLITE_DIR_PATH: /app/db
-    build:
-      context: https://github.com/breez/data-sync.git
+    image: hydrayse/data-sync:db82770265ad71c3af905be49b2b9a7f22df3467
     user: "0:0"
     restart: on-failure
     ports:
@@ -13,7 +12,7 @@ services:
       - rt-sync-data:/app/db
 
   waterfalls:
-    build: ./waterfalls-service
+    image: hydrayse/waterfalls:d4ea616df4bec72f7d26ebd13b496757f263b952
     environment:
       - RPC_USER_PASSWORD=regtest:regtest
     command: waterfalls --network elements-regtest --esplora-url http://esplora:4003/api --use-esplora --listen 0.0.0.0:3102 --add-cors

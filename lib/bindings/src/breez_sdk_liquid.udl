@@ -478,6 +478,8 @@ dictionary Config {
     u64? onchain_fee_rate_leeway_sat = null;
     sequence<AssetMetadata>? asset_metadata = null;
     string? sideswap_api_key = null;
+    u32 onchain_sync_period_sec;
+    u32 onchain_sync_request_timeout_sec;
 };
 
 enum LiquidNetwork {
