@@ -10,6 +10,7 @@ use crate::model::*;
 use crate::persist::{get_where_clause_state_in, where_clauses_to_string, Persister};
 use crate::sync::model::data::ReceiveSyncData;
 use crate::sync::model::RecordType;
+use crate::utils::{from_optional_u64_to_row, from_row_to_u64, from_u64_to_row};
 
 impl Persister {
     pub(crate) fn insert_or_update_receive_swap_inner(
@@ -50,10 +51,10 @@ impl Persister {
                 &receive_swap.timeout_block_height,
                 &receive_swap.payment_hash,
                 &receive_swap.destination_pubkey,
-                &receive_swap.payer_amount_sat,
-                &receive_swap.receiver_amount_sat,
+                from_u64_to_row(receive_swap.payer_amount_sat)?,
+                from_u64_to_row(receive_swap.receiver_amount_sat)?,
                 &receive_swap.created_at,
-                &receive_swap.claim_fees_sat,
+                from_u64_to_row(receive_swap.claim_fees_sat)?,
                 &receive_swap.mrh_address,
                 &receive_swap.state,
                 &receive_swap.pair_fees_json,
@@ -88,10 +89,10 @@ impl Persister {
                 // When the swap is paid via MRH, the recoverer sets the
                 // payer/receiver amount to the MRH tx amount.
                 // This is to show no fees in the payment.
-                ":payer_amount_sat": &receive_swap.payer_amount_sat,
-                ":receiver_amount_sat": &receive_swap.receiver_amount_sat,
+                ":payer_amount_sat": from_u64_to_row(receive_swap.payer_amount_sat)?,
+                ":receiver_amount_sat": from_u64_to_row(receive_swap.receiver_amount_sat)?,
                 ":state": &receive_swap.state,
-                ":version": &receive_swap.metadata.version,
+                ":version": from_u64_to_row(receive_swap.metadata.version)?,
             },
         )?;
         ensure_sdk!(
@@ -205,9 +206,9 @@ impl Persister {
             timeout_block_height: row.get(8)?,
             description: row.get(9)?,
             payer_note: row.get(10)?,
-            payer_amount_sat: row.get(11)?,
-            receiver_amount_sat: row.get(12)?,
-            claim_fees_sat: row.get(13)?,
+            payer_amount_sat: from_row_to_u64(row, 11)?,
+            receiver_amount_sat: from_row_to_u64(row, 12)?,
+            claim_fees_sat: from_row_to_u64(row, 13)?,
             claim_address: row.get(14)?,
             claim_tx_id: row.get(15)?,
             lockup_tx_id: row.get(16)?,
@@ -217,7 +218,7 @@ impl Persister {
             state: row.get(20)?,
             pair_fees_json: row.get(21)?,
             metadata: SwapMetadata {
-                version: row.get(22)?,
+                version: from_row_to_u64(row, 22)?,
                 last_updated_at: row.get(23)?,
                 is_local: row.get::<usize, Option<bool>>(24)?.unwrap_or(true),
             },
@@ -350,7 +351,7 @@ impl Persister {
                 ":lockup_tx_id": lockup_tx_id,
                 ":claim_tx_id": claim_tx_id,
                 ":mrh_tx_id": mrh_tx_id,
-                ":mrh_amount_sat": mrh_amount_sat,
+                ":mrh_amount_sat": from_optional_u64_to_row(&mrh_amount_sat)?,
                 ":state": to_state,
             },
         )?;

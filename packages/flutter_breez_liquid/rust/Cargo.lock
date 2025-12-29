@@ -695,6 +695,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sideswap_api",
+ "sqlite-wasm-rs",
  "strum 0.25.0",
  "strum_macros 0.25.3",
  "tempfile",
@@ -1711,9 +1712,9 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "foldhash"
-version = "0.1.5"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
+checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
 
 [[package]]
 name = "foreign-types"
@@ -1984,17 +1985,23 @@ name = "hashbrown"
 version = "0.15.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
+
+[[package]]
+name = "hashbrown"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
 dependencies = [
  "foldhash",
 ]
 
 [[package]]
 name = "hashlink"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7382cf6263419f2d8df38c55d7da83da5c18aef87fc7a7fc1fb1e344edfe14c1"
+checksum = "ea0b22561a9c04a7cb1a302c013e0259cd3b4bb619f145b32f72b8b4bcbed230"
 dependencies = [
- "hashbrown 0.15.5",
+ "hashbrown 0.16.1",
 ]
 
 [[package]]
@@ -2873,8 +2880,8 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.35.0"
-source = "git+https://github.com/Spxg/rusqlite?rev=8e53118a3e1807dc9a9f59c5969fdff7e0416400#8e53118a3e1807dc9a9f59c5969fdff7e0416400"
+version = "0.36.0"
+source = "git+https://github.com/breez/rusqlite?branch=rusqlite-v0.38.0#bd6838971f13cd120820693b369e1fa1d51524e3"
 dependencies = [
  "cc",
  "pkg-config",
@@ -4162,9 +4169,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "rsqlite-vfs"
+version = "0.1.0"
+source = "git+https://github.com/breez/sqlite-wasm-rs?branch=rusqlite-v0.38.0#61afdd3aef30b27892602a43933e346eb8cc7ecc"
+dependencies = [
+ "hashbrown 0.16.1",
+ "thiserror 2.0.16",
+]
+
+[[package]]
 name = "rusqlite"
-version = "0.37.0"
-source = "git+https://github.com/Spxg/rusqlite?rev=8e53118a3e1807dc9a9f59c5969fdff7e0416400#8e53118a3e1807dc9a9f59c5969fdff7e0416400"
+version = "0.38.0"
+source = "git+https://github.com/breez/rusqlite?branch=rusqlite-v0.38.0#bd6838971f13cd120820693b369e1fa1d51524e3"
 dependencies = [
  "bitflags 2.9.4",
  "fallible-iterator",
@@ -4178,7 +4194,7 @@ dependencies = [
 [[package]]
 name = "rusqlite_migration"
 version = "2.3.0"
-source = "git+https://github.com/breez/rusqlite_migration?branch=spxg-rusqlite#b3368027ca342d782d6d199fbcaf49d728b84195"
+source = "git+https://github.com/breez/rusqlite_migration?branch=rusqlite-v0.38.0#7c12f3c09cb2eb1210331eccd9e9f58e7f444b5e"
 dependencies = [
  "log",
  "rusqlite",
@@ -4802,21 +4818,17 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "sqlite-wasm-rs"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0894a1b91dc660fbf1e6ea6f287562708e01ca1a18fa4e2c6dae0df5a05199c5"
+version = "0.5.1"
+source = "git+https://github.com/breez/sqlite-wasm-rs?branch=rusqlite-v0.38.0#61afdd3aef30b27892602a43933e346eb8cc7ecc"
 dependencies = [
  "cc",
- "fragile",
  "js-sys",
  "once_cell",
- "parking_lot 0.12.4",
+ "parking_lot",
  "thiserror 2.0.16",
  "tokio",
  "wasm-array-cp",
  "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -5722,16 +5734,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a51ae83037bdd272a9e28ce236db8c07016dd0d50c27038b3f407533c030c95"
 dependencies = [
  "wit-bindgen",
-]
-
-[[package]]
-name = "wasm-array-cp"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb633b3e235f0ebe0a35162adc1e0293fc4b7e3f3a6fc7b5374d80464267ff84"
-dependencies = [
- "js-sys",
- "wasm-bindgen",
 ]
 
 [[package]]

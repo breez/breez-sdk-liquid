@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, bail, Result};
 use breez_sdk_liquid::prelude::*;
-use clap::{arg, ArgAction, Parser};
+use clap::{ArgAction, Parser};
 use qrcode_rs::render::unicode;
 use qrcode_rs::{EcLevel, QrCode};
 use rustyline::highlight::Highlighter;

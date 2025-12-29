@@ -36,7 +36,7 @@ tokio_with_wasm = { version = "=0.8.2", features = [
 tokio-stream = { version = "0.1.14", features = ["sync"] }
 sdk-common = { workspace = true }
 sdk-macros = { workspace = true }
-rusqlite_migration = { git = "https://github.com/breez/rusqlite_migration", branch = "spxg-rusqlite" }
+rusqlite_migration = { git = "https://github.com/breez/rusqlite_migration", branch = "rusqlite-v0.38.0" }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.116"
 strum = "0.25"
@@ -77,7 +77,7 @@ boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "d62
     "electrum",
     "ws",
 ] }
-rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "8e53118a3e1807dc9a9f59c5969fdff7e0416400", features = [
+rusqlite = { git = "https://github.com/breez/rusqlite", branch = "rusqlite-v0.38.0", features = [
     "backup",
     "bundled",
 ] }
@@ -85,6 +85,7 @@ rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "8e53118a3e1807dc9a
 # Wasm dependencies
 [target.'cfg(all(target_family = "wasm", target_os = "unknown"))'.dependencies]
 console_log = "1"
+sqlite-wasm-rs = { git = "https://github.com/breez/sqlite-wasm-rs", branch = "rusqlite-v0.38.0", default-features = false }
 lwk_wollet = { git = "https://github.com/breez/lwk", rev = "c28d2a0dfc7b", default-features = false, features = [
     "esplora",
 ] }
@@ -98,7 +99,7 @@ tonic = { version = "0.12", default-features = false, features = [
 boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "d62288fdd1799d90df72a811f4bb6a1b400c5ac7", features = [
     "ws",
 ] }
-rusqlite = { git = "https://github.com/Spxg/rusqlite", rev = "8e53118a3e1807dc9a9f59c5969fdff7e0416400", features = [
+rusqlite = { git = "https://github.com/breez/rusqlite", branch = "rusqlite-v0.38.0", features = [
     "backup",
     "bundled",
     "serialize",
