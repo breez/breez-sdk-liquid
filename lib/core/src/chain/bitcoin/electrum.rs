@@ -51,6 +51,24 @@ impl ElectrumBitcoinChainService {
         let client = self.client.get_or_init(|| client);
         Ok(client)
     }
+
+    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+        let mut result = vec![];
+        for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
+            let tx: Transaction = deserialize(&tx)?;
+            result.push(tx);
+        }
+        Ok(result)
+    }
+
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+        Ok(self
+            .get_client()?
+            .batch_script_get_history(scripts)?
+            .into_iter()
+            .map(|v| v.into_iter().map(Into::into).collect())
+            .collect())
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -95,13 +113,30 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
-    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        let mut result = vec![];
-        for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
-            let tx: Transaction = deserialize(&tx)?;
-            result.push(tx);
+    async fn get_transactions_with_retry(
+        &self,
+        txids: &[Txid],
+        retries: u64,
+    ) -> Result<Vec<Transaction>> {
+        let mut transactions = vec![];
+        let mut retry = 0;
+        while retry <= retries {
+            match self.get_transactions(txids).await {
+                Ok(res) => {
+                    transactions = res;
+                    break;
+                }
+                Err(e) => {
+                    if retry == retries {
+                        return Err(e);
+                    }
+                    retry += 1;
+                    info!("Error fetching transactions: {e}, retrying in {retry} seconds...");
+                    tokio::time::sleep(Duration::from_secs(retry)).await;
+                }
+            }
         }
-        Ok(result)
+        Ok(transactions)
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
@@ -113,15 +148,6 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
             .collect())
     }
 
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        Ok(self
-            .get_client()?
-            .batch_script_get_history(scripts)?
-            .into_iter()
-            .map(|v| v.into_iter().map(Into::into).collect())
-            .collect())
-    }
-
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
@@ -130,7 +156,6 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
         let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         info!("Fetching script history for {}", script_hash);
         let mut script_history = vec![];
-
         let mut retry = 0;
         while retry <= retries {
             script_history = self.get_script_history(script).await?;
@@ -146,6 +171,32 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
             }
         }
         Ok(script_history)
+    }
+
+    async fn get_scripts_history_with_retry(
+        &self,
+        scripts: &[&Script],
+        retries: u64,
+    ) -> Result<Vec<Vec<History>>> {
+        let mut scripts_history = vec![];
+        let mut retry = 0;
+        while retry <= retries {
+            match self.get_scripts_history(scripts).await {
+                Ok(res) => {
+                    scripts_history = res;
+                    break;
+                }
+                Err(e) => {
+                    if retry == retries {
+                        return Err(e);
+                    }
+                    retry += 1;
+                    info!("Error fetching scripts history: {e}, retrying in {retry} seconds...");
+                    tokio::time::sleep(Duration::from_secs(retry)).await;
+                }
+            }
+        }
+        Ok(scripts_history)
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

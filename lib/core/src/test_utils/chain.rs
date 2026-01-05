@@ -73,9 +73,10 @@ impl LiquidChainService for MockLiquidChainService {
         Ok(vec![])
     }
 
-    async fn get_scripts_history(
+    async fn get_scripts_history_with_retry(
         &self,
         _scripts: &[ElementsScript],
+        _retries: u64,
     ) -> Result<Vec<Vec<LBtcHistory>>> {
         Ok(vec![])
     }
@@ -142,9 +143,10 @@ impl BitcoinChainService for MockBitcoinChainService {
         Ok(tx.compute_txid())
     }
 
-    async fn get_transactions(
+    async fn get_transactions_with_retry(
         &self,
         _txids: &[bitcoin::Txid],
+        _retries: u64,
     ) -> Result<Vec<bitcoin::Transaction>> {
         Ok(self.txs.lock().unwrap().clone())
     }
@@ -161,7 +163,11 @@ impl BitcoinChainService for MockBitcoinChainService {
         Ok(vec![])
     }
 
-    async fn get_scripts_history(&self, _scripts: &[&Script]) -> Result<Vec<Vec<BtcHistory>>> {
+    async fn get_scripts_history_with_retry(
+        &self,
+        _scripts: &[&Script],
+        _retries: u64,
+    ) -> Result<Vec<Vec<BtcHistory>>> {
         Ok(vec![])
     }
 

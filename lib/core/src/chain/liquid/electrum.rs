@@ -44,6 +44,18 @@ impl ElectrumLiquidChainService {
         let client = self.client.get_or_init(|| RwLock::new(client));
         Ok(client)
     }
+
+    async fn get_scripts_history(&self, scripts: &[Script]) -> Result<Vec<Vec<History>>> {
+        let scripts: Vec<&Script> = scripts.iter().collect();
+        Ok(self
+            .get_client()?
+            .read()
+            .await
+            .get_scripts_history(&scripts)?
+            .into_iter()
+            .map(|h| h.into_iter().map(Into::into).collect())
+            .collect())
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -77,18 +89,6 @@ impl LiquidChainService for ElectrumLiquidChainService {
             .context("History not found")
     }
 
-    async fn get_scripts_history(&self, scripts: &[Script]) -> Result<Vec<Vec<History>>> {
-        let scripts: Vec<&Script> = scripts.iter().collect();
-        Ok(self
-            .get_client()?
-            .read()
-            .await
-            .get_scripts_history(&scripts)?
-            .into_iter()
-            .map(|h| h.into_iter().map(Into::into).collect())
-            .collect())
-    }
-
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
@@ -111,6 +111,32 @@ impl LiquidChainService for ElectrumLiquidChainService {
             }
         }
         Ok(script_history)
+    }
+
+    async fn get_scripts_history_with_retry(
+        &self,
+        scripts: &[Script],
+        retries: u64,
+    ) -> Result<Vec<Vec<History>>> {
+        let mut scripts_history = vec![];
+        let mut retry = 0;
+        while retry <= retries {
+            match self.get_scripts_history(scripts).await {
+                Ok(res) => {
+                    scripts_history = res;
+                    break;
+                }
+                Err(e) => {
+                    if retry == retries {
+                        return Err(e);
+                    }
+                    retry += 1;
+                    info!("Error fetching scripts history: {e}, retrying in {retry} seconds...");
+                    tokio::time::sleep(Duration::from_secs(retry)).await;
+                }
+            }
+        }
+        Ok(scripts_history)
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

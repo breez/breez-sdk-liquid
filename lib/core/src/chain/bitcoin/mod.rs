@@ -21,13 +21,14 @@ pub trait BitcoinChainService: Send + Sync {
     async fn broadcast(&self, tx: &Transaction) -> Result<Txid>;
 
     /// Get a list of transactions
-    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>>;
+    async fn get_transactions_with_retry(
+        &self,
+        txids: &[Txid],
+        retries: u64,
+    ) -> Result<Vec<Transaction>>;
 
     /// Get the transactions involved for a script
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>>;
-
-    /// Get the transactions involved in a list of scripts.
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>>;
 
     /// Get the transactions involved for a script
     async fn get_script_history_with_retry(
@@ -35,6 +36,13 @@ pub trait BitcoinChainService: Send + Sync {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>>;
+
+    /// Get the transactions involved in a list of scripts
+    async fn get_scripts_history_with_retry(
+        &self,
+        scripts: &[&Script],
+        retries: u64,
+    ) -> Result<Vec<Vec<History>>>;
 
     /// Get the utxos associated with a script pubkey
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>>;

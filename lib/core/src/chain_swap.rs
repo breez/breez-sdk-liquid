@@ -1300,7 +1300,7 @@ impl ChainSwapHandler {
         // Get full transaction
         let txs = self
             .bitcoin_chain_service
-            .get_transactions(&[first_tx_id])
+            .get_transactions_with_retry(&[first_tx_id], 3)
             .await?;
         let user_lockup_tx = txs.first().ok_or(anyhow!(
             "No transactions found for user lockup script for swap {}",
