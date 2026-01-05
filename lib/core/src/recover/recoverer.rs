@@ -281,7 +281,7 @@ impl Recoverer {
         let t0 = web_time::Instant::now();
         let lbtc_script_histories = self
             .liquid_chain_service
-            .get_scripts_history(&swap_lbtc_scripts)
+            .get_scripts_history_with_retry(&swap_lbtc_scripts, 3)
             .await?;
         info!(
             "Recoverer::fetch_lbtc_history_map: executed liquid get_scripts_history for {} scripts in {} milliseconds",
@@ -321,7 +321,7 @@ impl Recoverer {
         let t0 = web_time::Instant::now();
         let btc_script_histories = self
             .bitcoin_chain_service
-            .get_scripts_history(&swap_btc_scripts)
+            .get_scripts_history_with_retry(&swap_btc_scripts, 3)
             .await?;
 
         info!(
@@ -352,7 +352,7 @@ impl Recoverer {
         let t0 = web_time::Instant::now();
         let btc_script_txs = self
             .bitcoin_chain_service
-            .get_transactions(&btx_script_tx_ids)
+            .get_transactions_with_retry(&btx_script_tx_ids, 3)
             .await?;
         info!(
             "Recoverer executed bitcoin get_transactions for {} transactions in {} milliseconds",

@@ -1,11 +1,12 @@
 #![cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 
-use std::{sync::OnceLock, time::Duration};
+use std::sync::OnceLock;
 
 use anyhow::{anyhow, bail, Context as _, Result};
 use tokio::sync::RwLock;
 
 use crate::{
+    chain::{with_empty_retry, with_error_retry},
     elements::{Address, OutPoint, Script, Transaction, Txid},
     model::{BlockchainExplorer, Config, Utxo},
     utils,
@@ -44,6 +45,18 @@ impl ElectrumLiquidChainService {
         let client = self.client.get_or_init(|| RwLock::new(client));
         Ok(client)
     }
+
+    async fn get_scripts_history(&self, scripts: &[Script]) -> Result<Vec<Vec<History>>> {
+        let scripts: Vec<&Script> = scripts.iter().collect();
+        Ok(self
+            .get_client()?
+            .read()
+            .await
+            .get_scripts_history(&scripts)?
+            .into_iter()
+            .map(|h| h.into_iter().map(Into::into).collect())
+            .collect())
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -77,40 +90,22 @@ impl LiquidChainService for ElectrumLiquidChainService {
             .context("History not found")
     }
 
-    async fn get_scripts_history(&self, scripts: &[Script]) -> Result<Vec<Vec<History>>> {
-        let scripts: Vec<&Script> = scripts.iter().collect();
-        Ok(self
-            .get_client()?
-            .read()
-            .await
-            .get_scripts_history(&scripts)?
-            .into_iter()
-            .map(|h| h.into_iter().map(Into::into).collect())
-            .collect())
-    }
-
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>> {
         info!("Fetching script history for {script:x}");
-        let mut script_history = vec![];
+        with_empty_retry(|| self.get_script_history(script), retries).await
+    }
 
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!("Script history for {script:x} is empty, retrying in 1 second... ({retry} of {retries})");
-                    // Waiting 1s between retries, so we detect the new tx as soon as possible
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-                }
-                false => break,
-            }
-        }
-        Ok(script_history)
+    async fn get_scripts_history_with_retry(
+        &self,
+        scripts: &[Script],
+        retries: u64,
+    ) -> Result<Vec<Vec<History>>> {
+        info!("Fetching scripts history for {} scripts", scripts.len());
+        with_error_retry(|| self.get_scripts_history(scripts), retries).await
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

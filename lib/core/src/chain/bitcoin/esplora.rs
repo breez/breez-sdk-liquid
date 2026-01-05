@@ -10,6 +10,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
+    chain::{with_empty_retry, with_error_retry},
     model::{BlockchainExplorer, Config},
 };
 
@@ -56,6 +57,38 @@ impl EsploraBitcoinChainService {
         let client = self.client.get_or_init(|| client);
         Ok(client)
     }
+
+    async fn get_transaction(&self, txid: &Txid) -> Result<Option<Transaction>> {
+        Ok(self.get_client()?.get_tx(txid).await?)
+    }
+
+    // TODO Switch to batch search
+    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+        debug!("BitcoinChainService::get_transactions: start");
+        let client = self.get_client()?;
+        let mut result = vec![];
+        for txid in txids {
+            let tx = client
+                .get_tx(txid)
+                .await?
+                .context("Transaction not found")?;
+            result.push(tx);
+        }
+        debug!("BitcoinChainService::get_transactions: end");
+        Ok(result)
+    }
+
+    // TODO Switch to batch search
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+        debug!("BitcoinChainService::get_scripts_history: start");
+        let mut result = vec![];
+        for script in scripts {
+            let history = self.get_script_history(script).await?;
+            result.push(history);
+        }
+        debug!("BitcoinChainService::get_scripts_history end");
+        Ok(result)
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -84,20 +117,21 @@ impl BitcoinChainService for EsploraBitcoinChainService {
         Ok(tx.compute_txid())
     }
 
-    // TODO Switch to batch search
-    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        debug!("BitcoinChainService::get_transactions: start");
-        let client = self.get_client()?;
-        let mut result = vec![];
+    async fn get_transactions_with_retry(
+        &self,
+        txids: &[Txid],
+        retries: u64,
+    ) -> Result<Vec<Transaction>> {
+        debug!("BitcoinChainService::get_transactions_with_retry: start");
+        let mut transactions = vec![];
         for txid in txids {
-            let tx = client
-                .get_tx(txid)
+            let tx = with_error_retry(|| self.get_transaction(txid), retries)
                 .await?
-                .context("Transaction not found")?;
-            result.push(tx);
+                .context(format!("Transaction not found: {}", txid))?;
+            transactions.push(tx);
         }
-        debug!("BitcoinChainService::get_transactions: end");
-        Ok(result)
+        debug!("BitcoinChainService::get_transactions_with_retry end");
+        Ok(transactions)
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
@@ -116,44 +150,32 @@ impl BitcoinChainService for EsploraBitcoinChainService {
         Ok(history)
     }
 
-    // TODO Switch to batch search
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        debug!("BitcoinChainService::get_scripts_history: start");
-        let mut result = vec![];
-        for script in scripts {
-            let history = self.get_script_history(script).await?;
-            result.push(history);
-        }
-        debug!("BitcoinChainService::get_scripts_history end");
-        Ok(result)
-    }
-
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>> {
-        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         debug!("BitcoinChainService::get_script_history_with_retry: start");
-        info!("Fetching script history for {}", script_hash);
-        let mut script_history = vec![];
-
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!(
-                        "Script history for {script_hash} got zero transactions, retrying in {retry} seconds..."
-                    );
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-                false => break,
-            }
-        }
+        info!("Fetching script history for {script:x}");
+        let script_history = with_empty_retry(|| self.get_script_history(script), retries).await?;
         debug!("BitcoinChainService::get_script_history_with_retry end");
         Ok(script_history)
+    }
+
+    async fn get_scripts_history_with_retry(
+        &self,
+        scripts: &[&Script],
+        retries: u64,
+    ) -> Result<Vec<Vec<History>>> {
+        debug!("BitcoinChainService::get_scripts_history_with_retry: start");
+        info!("Fetching scripts history for {} scripts", scripts.len());
+        let mut scripts_histories = vec![];
+        for script in scripts {
+            let history = with_error_retry(|| self.get_script_history(script), retries).await?;
+            scripts_histories.push(history);
+        }
+        debug!("BitcoinChainService::get_scripts_history_with_retry end");
+        Ok(scripts_histories)
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

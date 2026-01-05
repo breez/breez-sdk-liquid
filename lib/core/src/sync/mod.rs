@@ -517,7 +517,14 @@ impl SyncService {
         }
 
         // Step 6: Recover the swap records' data from onchain, and commit it
-        for (decryption_info, swap) in self.handle_recovery(decrypted_swap_info).await? {
+        let recovered_swaps = self
+            .handle_recovery(decrypted_swap_info)
+            .await
+            .inspect_err(|e| {
+                warn!("realtime-sync: Could not recover swap record data from onchain: {e:?}");
+            })?;
+
+        for (decryption_info, swap) in recovered_swaps {
             if let Err(e) = self.commit_record(&decryption_info, Some(swap)) {
                 warn!("realtime-sync: Could not commit swap record: {e:?}");
                 continue;

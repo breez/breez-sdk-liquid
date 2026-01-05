@@ -11,6 +11,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
+    chain::{with_empty_retry, with_error_retry},
     model::{BlockchainExplorer, Config, RecommendedFees, Utxo},
 };
 
@@ -50,6 +51,24 @@ impl ElectrumBitcoinChainService {
 
         let client = self.client.get_or_init(|| client);
         Ok(client)
+    }
+
+    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
+        let mut result = vec![];
+        for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
+            let tx: Transaction = deserialize(&tx)?;
+            result.push(tx);
+        }
+        Ok(result)
+    }
+
+    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
+        Ok(self
+            .get_client()?
+            .batch_script_get_history(scripts)?
+            .into_iter()
+            .map(|v| v.into_iter().map(Into::into).collect())
+            .collect())
     }
 }
 
@@ -95,13 +114,12 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
         Ok(Txid::from_raw_hash(txid.to_raw_hash()))
     }
 
-    async fn get_transactions(&self, txids: &[Txid]) -> Result<Vec<Transaction>> {
-        let mut result = vec![];
-        for tx in self.get_client()?.batch_transaction_get_raw(txids)? {
-            let tx: Transaction = deserialize(&tx)?;
-            result.push(tx);
-        }
-        Ok(result)
+    async fn get_transactions_with_retry(
+        &self,
+        txids: &[Txid],
+        retries: u64,
+    ) -> Result<Vec<Transaction>> {
+        with_error_retry(|| self.get_transactions(txids), retries).await
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
@@ -113,39 +131,22 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
             .collect())
     }
 
-    async fn get_scripts_history(&self, scripts: &[&Script]) -> Result<Vec<Vec<History>>> {
-        Ok(self
-            .get_client()?
-            .batch_script_get_history(scripts)?
-            .into_iter()
-            .map(|v| v.into_iter().map(Into::into).collect())
-            .collect())
-    }
-
     async fn get_script_history_with_retry(
         &self,
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>> {
-        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
-        info!("Fetching script history for {}", script_hash);
-        let mut script_history = vec![];
+        info!("Fetching script history for {script:x}");
+        with_empty_retry(|| self.get_script_history(script), retries).await
+    }
 
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!(
-                        "Script history for {script_hash} got zero transactions, retrying in {retry} seconds..."
-                    );
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-                false => break,
-            }
-        }
-        Ok(script_history)
+    async fn get_scripts_history_with_retry(
+        &self,
+        scripts: &[&Script],
+        retries: u64,
+    ) -> Result<Vec<Vec<History>>> {
+        info!("Fetching scripts history for {} scripts", scripts.len());
+        with_error_retry(|| self.get_scripts_history(scripts), retries).await
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {
