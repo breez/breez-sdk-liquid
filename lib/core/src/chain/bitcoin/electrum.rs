@@ -11,6 +11,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
+    chain::{with_empty_retry, with_error_retry},
     model::{BlockchainExplorer, Config, RecommendedFees, Utxo},
 };
 
@@ -118,25 +119,7 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
         txids: &[Txid],
         retries: u64,
     ) -> Result<Vec<Transaction>> {
-        let mut transactions = vec![];
-        let mut retry = 0;
-        while retry <= retries {
-            match self.get_transactions(txids).await {
-                Ok(res) => {
-                    transactions = res;
-                    break;
-                }
-                Err(e) => {
-                    if retry == retries {
-                        return Err(e);
-                    }
-                    retry += 1;
-                    info!("Error fetching transactions: {e}, retrying in {retry} seconds...");
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-            }
-        }
-        Ok(transactions)
+        with_error_retry(|| self.get_transactions(txids), retries).await
     }
 
     async fn get_script_history(&self, script: &Script) -> Result<Vec<History>> {
@@ -153,24 +136,8 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>> {
-        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
-        info!("Fetching script history for {}", script_hash);
-        let mut script_history = vec![];
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!(
-                        "Script history for {script_hash} got zero transactions, retrying in {retry} seconds..."
-                    );
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-                false => break,
-            }
-        }
-        Ok(script_history)
+        info!("Fetching script history for {script:x}");
+        with_empty_retry(|| self.get_script_history(script), retries).await
     }
 
     async fn get_scripts_history_with_retry(
@@ -178,25 +145,8 @@ impl BitcoinChainService for ElectrumBitcoinChainService {
         scripts: &[&Script],
         retries: u64,
     ) -> Result<Vec<Vec<History>>> {
-        let mut scripts_history = vec![];
-        let mut retry = 0;
-        while retry <= retries {
-            match self.get_scripts_history(scripts).await {
-                Ok(res) => {
-                    scripts_history = res;
-                    break;
-                }
-                Err(e) => {
-                    if retry == retries {
-                        return Err(e);
-                    }
-                    retry += 1;
-                    info!("Error fetching scripts history: {e}, retrying in {retry} seconds...");
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-            }
-        }
-        Ok(scripts_history)
+        info!("Fetching scripts history for {} scripts", scripts.len());
+        with_error_retry(|| self.get_scripts_history(scripts), retries).await
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

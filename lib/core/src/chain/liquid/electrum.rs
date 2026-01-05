@@ -1,11 +1,12 @@
 #![cfg(not(all(target_family = "wasm", target_os = "unknown")))]
 
-use std::{sync::OnceLock, time::Duration};
+use std::sync::OnceLock;
 
 use anyhow::{anyhow, bail, Context as _, Result};
 use tokio::sync::RwLock;
 
 use crate::{
+    chain::{with_empty_retry, with_error_retry},
     elements::{Address, OutPoint, Script, Transaction, Txid},
     model::{BlockchainExplorer, Config, Utxo},
     utils,
@@ -95,22 +96,7 @@ impl LiquidChainService for ElectrumLiquidChainService {
         retries: u64,
     ) -> Result<Vec<History>> {
         info!("Fetching script history for {script:x}");
-        let mut script_history = vec![];
-
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!("Script history for {script:x} is empty, retrying in 1 second... ({retry} of {retries})");
-                    // Waiting 1s between retries, so we detect the new tx as soon as possible
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-                }
-                false => break,
-            }
-        }
-        Ok(script_history)
+        with_empty_retry(|| self.get_script_history(script), retries).await
     }
 
     async fn get_scripts_history_with_retry(
@@ -118,25 +104,8 @@ impl LiquidChainService for ElectrumLiquidChainService {
         scripts: &[Script],
         retries: u64,
     ) -> Result<Vec<Vec<History>>> {
-        let mut scripts_history = vec![];
-        let mut retry = 0;
-        while retry <= retries {
-            match self.get_scripts_history(scripts).await {
-                Ok(res) => {
-                    scripts_history = res;
-                    break;
-                }
-                Err(e) => {
-                    if retry == retries {
-                        return Err(e);
-                    }
-                    retry += 1;
-                    info!("Error fetching scripts history: {e}, retrying in {retry} seconds...");
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-            }
-        }
-        Ok(scripts_history)
+        info!("Fetching scripts history for {} scripts", scripts.len());
+        with_error_retry(|| self.get_scripts_history(scripts), retries).await
     }
 
     async fn get_script_utxos(&self, script: &Script) -> Result<Vec<Utxo>> {

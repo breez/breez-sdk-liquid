@@ -10,6 +10,7 @@ use crate::{
         hashes::{sha256, Hash},
         Address, OutPoint, Script, ScriptBuf, Transaction, Txid,
     },
+    chain::{with_empty_retry, with_error_retry},
     model::{BlockchainExplorer, Config},
 };
 
@@ -55,6 +56,10 @@ impl EsploraBitcoinChainService {
             .build_async()?;
         let client = self.client.get_or_init(|| client);
         Ok(client)
+    }
+
+    async fn get_transaction(&self, txid: &Txid) -> Result<Option<Transaction>> {
+        Ok(self.get_client()?.get_tx(txid).await?)
     }
 
     // TODO Switch to batch search
@@ -118,29 +123,12 @@ impl BitcoinChainService for EsploraBitcoinChainService {
         retries: u64,
     ) -> Result<Vec<Transaction>> {
         debug!("BitcoinChainService::get_transactions_with_retry: start");
-        let client = self.get_client()?;
         let mut transactions = vec![];
         for txid in txids {
-            let mut retry = 0;
-            while retry <= retries {
-                match client.get_tx(txid).await {
-                    Ok(maybe_tx) => {
-                        let tx = maybe_tx.context(format!("Transaction not found: {}", txid))?;
-                        transactions.push(tx);
-                        break;
-                    }
-                    Err(e) => {
-                        if retry == retries {
-                            return Err(e.into());
-                        }
-                        retry += 1;
-                        info!(
-                            "Error fetching transaction for txid: {txid}: {e}, retrying in {retry} seconds..."
-                        );
-                        tokio::time::sleep(Duration::from_secs(retry)).await;
-                    }
-                }
-            }
+            let tx = with_error_retry(|| self.get_transaction(txid), retries)
+                .await?
+                .context(format!("Transaction not found: {}", txid))?;
+            transactions.push(tx);
         }
         debug!("BitcoinChainService::get_transactions_with_retry end");
         Ok(transactions)
@@ -167,25 +155,9 @@ impl BitcoinChainService for EsploraBitcoinChainService {
         script: &Script,
         retries: u64,
     ) -> Result<Vec<History>> {
-        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
         debug!("BitcoinChainService::get_script_history_with_retry: start");
-        info!("Fetching script history for {}", script_hash);
-        let mut script_history = vec![];
-
-        let mut retry = 0;
-        while retry <= retries {
-            script_history = self.get_script_history(script).await?;
-            match script_history.is_empty() {
-                true => {
-                    retry += 1;
-                    info!(
-                        "Script history for {script_hash} got zero transactions, retrying in {retry} seconds..."
-                    );
-                    tokio::time::sleep(Duration::from_secs(retry)).await;
-                }
-                false => break,
-            }
-        }
+        info!("Fetching script history for {script:x}");
+        let script_history = with_empty_retry(|| self.get_script_history(script), retries).await?;
         debug!("BitcoinChainService::get_script_history_with_retry end");
         Ok(script_history)
     }
@@ -196,28 +168,11 @@ impl BitcoinChainService for EsploraBitcoinChainService {
         retries: u64,
     ) -> Result<Vec<Vec<History>>> {
         debug!("BitcoinChainService::get_scripts_history_with_retry: start");
+        info!("Fetching scripts history for {} scripts", scripts.len());
         let mut scripts_histories = vec![];
         for script in scripts {
-            let mut retry = 0;
-            while retry <= retries {
-                match self.get_script_history(script).await {
-                    Ok(history) => {
-                        scripts_histories.push(history);
-                        break;
-                    }
-                    Err(e) => {
-                        if retry == retries {
-                            return Err(e);
-                        }
-                        retry += 1;
-                        let script_hash = sha256::Hash::hash(script.as_bytes()).to_hex();
-                        info!(
-                            "Error fetching scripts history for {script_hash}: {e}, retrying in {retry} seconds..."
-                        );
-                        tokio::time::sleep(Duration::from_secs(retry)).await;
-                    }
-                }
-            }
+            let history = with_error_retry(|| self.get_script_history(script), retries).await?;
+            scripts_histories.push(history);
         }
         debug!("BitcoinChainService::get_scripts_history_with_retry end");
         Ok(scripts_histories)
