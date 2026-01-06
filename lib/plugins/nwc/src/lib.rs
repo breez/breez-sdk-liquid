@@ -2,6 +2,7 @@ use std::{collections::HashMap, str::FromStr as _, sync::Arc, time::Duration};
 
 use crate::{
     context::RuntimeContext,
+    encrypt::EncryptionHandler,
     error::{NwcError, NwcResult},
     event::{EventManager, NwcEvent, NwcEventDetails, NwcEventListener},
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
@@ -20,7 +21,6 @@ use breez_sdk_liquid::{
 };
 use log::{debug, error, info, warn};
 use nostr_sdk::{
-    nips::nip44::{decrypt, encrypt, Version},
     nips::nip47::{
         ErrorCode, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
         ResponseResult,
@@ -35,6 +35,7 @@ use tokio::{
 use tokio_with_wasm::alias as tokio;
 
 pub(crate) mod context;
+mod encrypt;
 pub mod error;
 pub mod event;
 pub(crate) mod handler;
@@ -255,10 +256,8 @@ impl SdkNwcService {
         })?;
 
         // Decrypt the event content
-        let decrypted_content = decrypt(ctx.our_keys.secret_key(), &client_pubkey, &event.content)
-            .map_err(|err| NwcError::Encryption {
-                err: err.to_string(),
-            })?;
+        let encryption_handler = EncryptionHandler::new(ctx.our_keys.secret_key(), &client_pubkey);
+        let decrypted_content = encryption_handler.decrypt(event)?;
         info!("Decrypted NWC notification");
 
         // Build response
@@ -375,15 +374,7 @@ impl SdkNwcService {
         })
         .map_err(|err| NwcError::generic(format!("Could not serialize Nostr response: {err:?}")))?;
 
-        let encrypted_content = encrypt(
-            ctx.our_keys.secret_key(),
-            &client_pubkey,
-            &content,
-            Version::V2,
-        )
-        .map_err(|err| NwcError::Encryption {
-            err: err.to_string(),
-        })?;
+        let encrypted_content = encryption_handler.encrypt(event, &content)?;
         info!("Encrypted NWC response");
         let event_builder = EventBuilder::new(Kind::WalletConnectResponse, encrypted_content)
             .tags([Tag::event(event.id), Tag::public_key(client_pubkey)]);

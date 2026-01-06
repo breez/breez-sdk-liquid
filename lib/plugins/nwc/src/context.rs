@@ -117,8 +117,10 @@ impl RuntimeContext {
         let content = NWC_SUPPORTED_METHODS.join(" ").to_string();
         if let Err(err) = self
             .send_event(
-                EventBuilder::new(Kind::WalletConnectInfo, content)
-                    .tag(Tag::custom("encryption".into(), ["nip44_v2".to_string()])),
+                EventBuilder::new(Kind::WalletConnectInfo, content).tag(Tag::custom(
+                    "encryption".into(),
+                    ["nip44_v2 nip04".to_string()],
+                )),
             )
             .await
         {

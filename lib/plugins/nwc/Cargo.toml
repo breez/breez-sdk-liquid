@@ -24,7 +24,7 @@ tokio_with_wasm = { version = "=0.8.2", features = [
     "sync",
     "time",
 ] }
-nostr-sdk = { version = "0.43.0", features = ["nip44", "nip47"] }
+nostr-sdk = { version = "0.43.0", features = ["nip04", "nip44", "nip47"] }
 web-time = "1.1.0"
 
 # Non-Wasm dependencies
