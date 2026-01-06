@@ -32,13 +32,13 @@ import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
 import breez_sdk_liquid_notification.job.LnurlPayVerifyJob
 import breez_sdk_liquid_notification.job.SwapUpdatedJob
 import breez_sdk_liquid_notification.job.NwcEventJob
+import breez_sdk_liquid_notification.PluginConfigs
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlin.io.path.Path
-import PluginConfigs
 
 interface SdkForegroundService {
     fun onFinished(job: Job)
