@@ -1,7 +1,8 @@
+package breez_sdk_liquid_notification
+
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.BindingNwcService
 import breez_sdk_liquid.NwcConfig
-import breez_sdk_liquid_notification.ServiceLogger
 
 class PluginManager {
   companion object {
@@ -9,13 +10,13 @@ class PluginManager {
     private var nwc: BindingNwcService? = null
 
     internal fun nwc(
-      liquidSDK: BindingLiquidSdk,
-      configs: PluginConfigs,
-      logger: ServiceLogger
+            liquidSDK: BindingLiquidSdk,
+            configs: PluginConfigs,
+            logger: ServiceLogger
     ): BindingNwcService? {
       synchronized(this) {
         if (nwc == null) {
-          if (configs.nwc == null) return null;
+          if (configs.nwc == null) return null
           logger.log(TAG, "Starting NWC service", "DEBUG")
           nwc = liquidSDK.useNwcPlugin(configs.nwc)
           logger.log(TAG, "Successfully started NWC service", "DEBUG")
@@ -37,7 +38,4 @@ class PluginManager {
   }
 }
 
-class PluginConfigs(
-  public val nwc: NwcConfig?
-) {
-}
+class PluginConfigs(public val nwc: NwcConfig?) {}

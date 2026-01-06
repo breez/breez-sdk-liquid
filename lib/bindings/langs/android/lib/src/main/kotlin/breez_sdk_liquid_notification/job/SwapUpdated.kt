@@ -29,6 +29,7 @@ import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
 import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
+import breez_sdk_liquid_notification.PluginConfigs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,7 +38,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
-import PluginConfigs
 
 @Serializable
 data class SwapUpdatedRequest(

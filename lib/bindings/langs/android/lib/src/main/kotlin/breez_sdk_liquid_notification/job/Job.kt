@@ -2,10 +2,10 @@ package breez_sdk_liquid_notification.job
 
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.EventListener
+import breez_sdk_liquid_notification.PluginConfigs
 import java.io.DataOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import PluginConfigs
 
 
 interface Job : EventListener {
