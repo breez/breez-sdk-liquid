@@ -126,6 +126,7 @@ async fn main() -> Result<()> {
         let nwc_service = Arc::new(SdkNwcService::new(NwcConfig {
             relay_urls: None,
             secret_key_hex: None,
+            listen_to_events: None,
         }));
         NWC_SERVICE.set(nwc_service.clone()).unwrap_or_else(|_| {
             panic!("Could not set NWC service");

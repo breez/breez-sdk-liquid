@@ -121,6 +121,7 @@ pub use model::*;
 pub struct NwcConfig {
     pub relay_urls: Option<Vec<String>>,
     pub secret_key_hex: Option<String>,
+    pub listen_to_events: Option<bool>,
 }
 
 #[wasm_bindgen]

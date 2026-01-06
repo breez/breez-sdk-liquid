@@ -9,6 +9,9 @@ pub struct NwcConfig {
     pub relay_urls: Option<Vec<String>>,
     /// Custom Nostr secret key (hex-encoded) for the wallet node
     pub secret_key_hex: Option<String>,
+    /// Whether or not to start the notification listener event loop. True by default.
+    /// Recommended to set to `Some(false)` if you only need event handling
+    pub listen_to_events: Option<bool>,
 }
 
 impl NwcConfig {

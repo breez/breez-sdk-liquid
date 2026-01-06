@@ -21,6 +21,7 @@ pub mod model {
     pub struct _NwcConfig {
         pub relay_urls: Option<Vec<String>>,
         pub secret_key_hex: Option<String>,
+        pub listen_to_events: Option<bool>,
     }
 
     #[frb(mirror(PeriodicBudget))]

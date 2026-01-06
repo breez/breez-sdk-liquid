@@ -605,6 +605,11 @@ impl Plugin for SdkNwcService {
         };
         self.event_manager.resume_notifications();
 
+        if self.config.listen_to_events.is_some_and(|listen| !listen) {
+            *ctx_lock = Some(ctx);
+            return;
+        }
+
         let thread_ctx = ctx.clone();
         let event_loop_handle = tokio::spawn(async move {
             thread_ctx.client.connect().await;

@@ -325,6 +325,7 @@ interface NwcError {
 dictionary NwcConfig {
   sequence<string>? relay_urls = null;
   string? secret_key_hex = null;
+  boolean? listen_to_events = null;
 };
 
 [Enum]
