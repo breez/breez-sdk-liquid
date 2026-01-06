@@ -1,25 +1,45 @@
-use crate::model::{
-    ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentState, PaymentType,
-    PrepareSendRequest, SendPaymentRequest,
+use std::str::FromStr as _;
+use std::time::Duration;
+
+use anyhow::{anyhow, bail};
+use breez_sdk_liquid::model::{
+    DescriptionHash, EventListener, ListPaymentsRequest, PayAmount, Payment, PaymentDetails,
+    PaymentMethod, PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest,
+    ReceiveAmount, ReceivePaymentRequest, SdkEvent, SendPaymentRequest, SendPaymentResponse,
 };
 use breez_sdk_liquid::plugin::PluginSdk;
 use log::info;
 use nostr_sdk::nips::nip47::{
-    ErrorCode, GetBalanceResponse, ListTransactionsRequest, LookupInvoiceResponse, NIP47Error,
-    PayInvoiceRequest, PayInvoiceResponse, TransactionType,
+    ErrorCode, GetBalanceResponse, GetInfoResponse, ListTransactionsRequest, LookupInvoiceResponse,
+    MakeInvoiceRequest, MakeInvoiceResponse, NIP47Error, PayInvoiceRequest, PayInvoiceResponse,
+    TransactionType,
 };
 use nostr_sdk::Timestamp;
+use sdk_common::prelude::InputType;
+use tokio::sync::oneshot::{self, Sender};
+use tokio::sync::Mutex;
+use tokio_with_wasm::alias as tokio;
 
 type Result<T> = std::result::Result<T, NIP47Error>;
 
+pub(crate) const NWC_SUPPORTED_METHODS: [&str; 5] = [
+    "pay_invoice",
+    "make_invoice",
+    "list_transactions",
+    "get_balance",
+    "get_info",
+];
+
 #[sdk_macros::async_trait]
 pub trait RelayMessageHandler: Send + Sync {
+    async fn make_invoice(&self, req: MakeInvoiceRequest) -> Result<MakeInvoiceResponse>;
     async fn pay_invoice(&self, req: PayInvoiceRequest) -> Result<PayInvoiceResponse>;
     async fn list_transactions(
         &self,
         req: ListTransactionsRequest,
     ) -> Result<Vec<LookupInvoiceResponse>>;
     async fn get_balance(&self) -> Result<GetBalanceResponse>;
+    async fn get_info(&self) -> Result<GetInfoResponse>;
 }
 
 pub struct SdkRelayMessageHandler {
@@ -32,8 +52,135 @@ impl SdkRelayMessageHandler {
     }
 }
 
+struct PreimageListener {
+    payment_tx_id: String,
+    preimage_listener_tx: Mutex<Option<Sender<Result<String>>>>,
+}
+
+impl PreimageListener {
+    pub(crate) fn new(payment_tx_id: String, preimage_listener_tx: Sender<Result<String>>) -> Self {
+        Self {
+            payment_tx_id,
+            preimage_listener_tx: Mutex::new(Some(preimage_listener_tx)),
+        }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl EventListener for PreimageListener {
+    async fn on_event(&self, e: SdkEvent) {
+        let (payment, succeeded) = match e {
+            SdkEvent::PaymentSucceeded { details } => (details, true),
+            SdkEvent::PaymentFailed { details } => (details, false),
+            _ => return,
+        };
+        if payment
+            .tx_id
+            .is_some_and(|tx_id| tx_id == self.payment_tx_id)
+        {
+            return;
+        }
+
+        let payload = match succeeded {
+            true => match payment.details {
+                PaymentDetails::Lightning {
+                    preimage: Some(preimage),
+                    ..
+                } => Ok(preimage),
+                _ => Err(NIP47Error {
+                    code: ErrorCode::PaymentFailed,
+                    message: "Unexpected payment data was returned from the SDK".to_string(),
+                }),
+            },
+            false => Err(NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: "Could not send payment".to_string(),
+            }),
+        };
+        if let Some(tx) = self.preimage_listener_tx.lock().await.take() {
+            let _ = tx.send(payload);
+        }
+    }
+}
+
+impl SdkRelayMessageHandler {
+    async fn wait_for_preimage(
+        &self,
+        response: SendPaymentResponse,
+    ) -> anyhow::Result<PayInvoiceResponse> {
+        let Some(tx_id) = response.payment.tx_id else {
+            bail!("Unexpected payment data was returned from the SDK")
+        };
+        let (preimage_listener_tx, preimage_listener_rx) = oneshot::channel();
+        let preimage_event_listener = Box::new(PreimageListener::new(tx_id, preimage_listener_tx));
+        let listener_id = self.sdk.add_event_listener(preimage_event_listener).await?;
+        let payment_timeout_fut =
+            tokio::time::timeout(Duration::from_secs(180), preimage_listener_rx).await??;
+        let result = match payment_timeout_fut {
+            Ok(preimage) => {
+                let fees_paid = response.payment.fees_sat * 1000; // Convert sats to msats
+                Ok(PayInvoiceResponse {
+                    preimage,
+                    fees_paid: Some(fees_paid),
+                })
+            }
+            Err(err) => Err(anyhow!("Could not retrieve payment preimage: {err}")),
+        };
+        let _ = self.sdk.remove_event_listener(listener_id).await;
+        result
+    }
+}
+
 #[sdk_macros::async_trait]
 impl RelayMessageHandler for SdkRelayMessageHandler {
+    async fn make_invoice(&self, req: MakeInvoiceRequest) -> Result<MakeInvoiceResponse> {
+        info!("NWC Make invoice is called");
+
+        let prepare_req = PrepareReceiveRequest {
+            payment_method: PaymentMethod::Bolt11Invoice,
+            amount: Some(ReceiveAmount::Bitcoin {
+                payer_amount_sat: req.amount.div_ceil(1000),
+            }),
+        };
+
+        let prepare_response = self
+            .sdk
+            .prepare_receive_payment(&prepare_req)
+            .await
+            .map_err(|e| NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: format!("Failed to prepare receive: {e}"),
+            })?;
+        let receive_response = self
+            .sdk
+            .receive_payment(&ReceivePaymentRequest {
+                prepare_response,
+                description: req.description,
+                description_hash: req
+                    .description_hash
+                    .map(|hash| DescriptionHash::Custom { hash }),
+                payer_note: None,
+            })
+            .await
+            .map_err(|e| NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: format!("Failed to create invoice: {e}"),
+            })?;
+
+        let Ok(InputType::Bolt11 { invoice }) = self.sdk.parse(&receive_response.destination).await
+        else {
+            return Err(NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: "Could not parse SDK invoice".to_string(),
+            });
+        };
+
+        Ok(MakeInvoiceResponse {
+            invoice: invoice.bolt11,
+            payment_hash: invoice.payment_hash,
+        })
+    }
+
     /// Processes a Lightning invoice payment request.
     ///
     /// This method handles the complete payment flow:
@@ -85,25 +232,12 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
                 code: ErrorCode::PaymentFailed,
                 message: format!("Failed to send payment: {e}"),
             })?;
-
-        // Extract preimage and fees from payment
-        let PaymentDetails::Lightning {
-            preimage: Some(preimage),
-            ..
-        } = response.payment.details
-        else {
-            return Err(NIP47Error {
+        self.wait_for_preimage(response)
+            .await
+            .map_err(|e| NIP47Error {
                 code: ErrorCode::PaymentFailed,
-                message: "Payment did not return any preimage".to_string(),
-            });
-        };
-
-        let fees_paid = response.payment.fees_sat * 1000; // Convert sats to msats
-
-        Ok(PayInvoiceResponse {
-            preimage,
-            fees_paid: Some(fees_paid),
-        })
+                message: format!("Failed to send payment: {e}"),
+            })
     }
 
     /// Retrieves a filtered list of wallet transactions.
@@ -209,6 +343,27 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
 
         Ok(GetBalanceResponse {
             balance: balance_msats,
+        })
+    }
+
+    async fn get_info(&self) -> Result<GetInfoResponse> {
+        info!("NWC Get info is called");
+        let info = self.sdk.get_info().await.map_err(|e| NIP47Error {
+            code: ErrorCode::Internal,
+            message: format!("Failed to get wallet info: {e}"),
+        })?;
+        Ok(GetInfoResponse {
+            alias: None,
+            color: None,
+            network: None,
+            block_hash: None,
+            block_height: None,
+            pubkey: nostr_sdk::secp256k1::PublicKey::from_str(&info.wallet_info.pubkey).ok(),
+            methods: NWC_SUPPORTED_METHODS
+                .into_iter()
+                .map(String::from)
+                .collect(),
+            notifications: vec![],
         })
     }
 }

@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 use crate::event::{EventListener, WasmEventListener};
 use crate::model::*;
+use crate::plugin::nwc::{BindingNwcService, NwcConfig};
 
 use anyhow::anyhow;
 use breez_sdk_liquid::elements::hex::ToHex;
@@ -21,7 +22,6 @@ use breez_sdk_liquid::signer::SdkLwkSigner;
 use breez_sdk_liquid::PRODUCTION_BREEZSERVER_URL;
 use log::LevelFilter;
 use logger::{Logger, WasmLogger};
-use plugin::Plugin;
 use signer::{Signer, WasmSigner};
 use wasm_bindgen::prelude::*;
 
@@ -33,30 +33,23 @@ pub struct BindingLiquidSdk {
 }
 
 #[wasm_bindgen(js_name = "connect")]
-pub async fn connect(
-    req: ConnectRequest,
-    plugins: Option<Vec<Plugin>>,
-) -> WasmResult<BindingLiquidSdk> {
+pub async fn connect(req: ConnectRequest) -> WasmResult<BindingLiquidSdk> {
     let signer = Box::new(LiquidSdk::default_signer(&req.clone().into())?);
-    let plugins = plugins.map(|p| p.into_iter().map(Into::into).collect());
-    connect_inner(req.config, signer, plugins).await
+    connect_inner(req.config, signer).await
 }
 
 #[wasm_bindgen(js_name = "connectWithSigner")]
 pub async fn connect_with_signer(
     req: ConnectWithSignerRequest,
     signer: Signer,
-    plugins: Option<Vec<Plugin>>,
 ) -> WasmResult<BindingLiquidSdk> {
     let signer: Box<dyn breez_sdk_liquid::model::Signer> = Box::new(WasmSigner { signer });
-    let plugins = plugins.map(|p| p.into_iter().map(Into::into).collect());
-    connect_inner(req.config, signer, plugins).await
+    connect_inner(req.config, signer).await
 }
 
 async fn connect_inner(
     config: Config,
     signer: Box<dyn breez_sdk_liquid::model::Signer>,
-    plugins: Option<Vec<Arc<dyn breez_sdk_liquid::plugin::Plugin>>>,
 ) -> WasmResult<BindingLiquidSdk> {
     let config: breez_sdk_liquid::model::Config = config.into();
     let signer = Arc::new(signer);
@@ -66,9 +59,6 @@ async fn connect_inner(
         PRODUCTION_BREEZSERVER_URL.to_string(),
         Arc::clone(&signer),
     )?;
-    if let Some(plugins) = plugins {
-        sdk_builder.plugins(plugins);
-    }
 
     let sdk_lwk_signer = SdkLwkSigner::new(Arc::clone(&signer))?;
     let fingerprint = sdk_lwk_signer.fingerprint()?;
@@ -402,5 +392,12 @@ impl BindingLiquidSdk {
     pub async fn disconnect(&self) -> WasmResult<()> {
         self.sdk.disconnect().await?;
         Ok(())
+    }
+
+    #[wasm_bindgen(js_name = "useNwcPlugin")]
+    pub async fn use_nwc_plugin(&self, config: NwcConfig) -> WasmResult<BindingNwcService> {
+        let nwc_service = BindingNwcService::new(config);
+        self.sdk.start_plugin(nwc_service.service.clone()).await?;
+        Ok(nwc_service)
     }
 }

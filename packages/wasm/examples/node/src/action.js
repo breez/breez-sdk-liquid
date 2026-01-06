@@ -27,6 +27,7 @@ class JsEventListener {
 const eventListener = new JsEventListener()
 
 let sdk = null
+let plugins = null
 
 const initSdk = async () => {
     if (sdk) return sdk
@@ -46,6 +47,15 @@ const initSdk = async () => {
 
     await sdk.addEventListener(eventListener)
     return sdk
+}
+
+const initPlugins = async (sdk) => {
+    if (plugins) return plugins
+    const nwc = await sdk.useNwcPlugin({})
+    plugins = {
+        nwc
+    }
+    return plugins
 }
 
 const disconnect = () => {
@@ -88,8 +98,8 @@ const getPayment = async (options) => {
     const req = options.paymentHash
         ? { type: 'paymentHash', paymentHash: options.paymentHash }
         : options.swapId
-        ? { type: 'swapId', swapId: options.swapId }
-        : undefined
+            ? { type: 'swapId', swapId: options.swapId }
+            : undefined
     if (!req) {
         console.error('Please provide either a payment hash or swap id')
         return
@@ -135,8 +145,8 @@ const listPayments = async (options) => {
             options.asset || options.destination
                 ? { type: 'liquid', assetId: options.asset, destination: options.destination }
                 : options.address
-                ? { type: 'bitcoin', address: options.address }
-                : undefined,
+                    ? { type: 'bitcoin', address: options.address }
+                    : undefined,
         sortAscending: options.ascending
     })
     console.log(JSON.stringify(res, null, 2))
@@ -282,8 +292,8 @@ const sendOnchainPayment = async (address, options) => {
     const amount = options.drain
         ? { type: 'drain' }
         : options.receiverAmountSat
-        ? { type: 'bitcoin', receiverAmountSat: options.receiverAmountSat }
-        : undefined
+            ? { type: 'bitcoin', receiverAmountSat: options.receiverAmountSat }
+            : undefined
     if (!amount) {
         console.error('Must specify a receiver amount if not draining')
         return
@@ -306,16 +316,16 @@ const sendPayment = async (options) => {
     const amount = options.drain
         ? { type: 'drain' }
         : options.asset
-        ? {
-              type: 'asset',
-              toAsset: options.asset,
-              fromAsset: options.fromAsset,
-              receiverAmount: options.amount,
-              estimateAssetFees: useAssetFees
-          }
-        : options.amountSat
-        ? { type: 'bitcoin', receiverAmountSat: options.amountSat }
-        : undefined
+            ? {
+                type: 'asset',
+                toAsset: options.asset,
+                fromAsset: options.fromAsset,
+                receiverAmount: options.amount,
+                estimateAssetFees: useAssetFees
+            }
+            : options.amountSat
+                ? { type: 'bitcoin', receiverAmountSat: options.amountSat }
+                : undefined
     if (!destination) {
         console.error('Please provide either an invoice, offer or address')
         return
@@ -367,6 +377,37 @@ const unregisterWebhook = async (url) => {
     console.log(JSON.stringify(res, null, 2))
 }
 
+const addNwcConnection = async (name, options) => {
+    const { receiveOnly, expiry: expiryTimeMins, periodTime: renewalTimeMins, maxBudget: maxBudgetSat } = options
+    const sdk = await initSdk()
+    const { nwc } = await initPlugins(sdk)
+
+    let periodicBudgetReq = (maxBudgetSat != null || renewalTimeMins != null) ? {
+        maxBudgetSat,
+        renewalTimeMins,
+    } : null
+
+    console.log(JSON.stringify(await nwc.addConnection({
+        name,
+        receiveOnly,
+        expiryTimeMins,
+        periodicBudgetReq,
+    })))
+}
+
+const listNwcConnections = async () => {
+    const sdk = await initSdk()
+    const { nwc } = await initPlugins(sdk)
+    console.log(JSON.stringify(Object.fromEntries(await nwc.listConnections()), null, 2))
+}
+
+const removeNwcConnection = async (name) => {
+    const sdk = await initSdk()
+    const { nwc } = await initPlugins(sdk)
+    await nwc.removeConnection(name)
+    console.log("Connection removed successfully.")
+}
+
 module.exports = {
     buyBitcoin,
     checkMessage,
@@ -394,5 +435,8 @@ module.exports = {
     sendPayment,
     signMessage,
     sync,
-    unregisterWebhook
+    unregisterWebhook,
+    addNwcConnection,
+    listNwcConnections,
+    removeNwcConnection,
 }
