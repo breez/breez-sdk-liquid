@@ -1,9 +1,11 @@
 use std::str::FromStr as _;
+use std::time::Duration;
 
+use anyhow::{anyhow, bail};
 use breez_sdk_liquid::model::{
-    DescriptionHash, ListPaymentsRequest, PayAmount, Payment, PaymentDetails, PaymentMethod,
-    PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest, ReceiveAmount,
-    ReceivePaymentRequest, SendPaymentRequest,
+    DescriptionHash, EventListener, ListPaymentsRequest, PayAmount, Payment, PaymentDetails,
+    PaymentMethod, PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest,
+    ReceiveAmount, ReceivePaymentRequest, SdkEvent, SendPaymentRequest, SendPaymentResponse,
 };
 use breez_sdk_liquid::plugin::PluginSdk;
 use log::info;
@@ -14,6 +16,9 @@ use nostr_sdk::nips::nip47::{
 };
 use nostr_sdk::Timestamp;
 use sdk_common::prelude::InputType;
+use tokio::sync::oneshot::{self, Sender};
+use tokio::sync::Mutex;
+use tokio_with_wasm::alias as tokio;
 
 type Result<T> = std::result::Result<T, NIP47Error>;
 
@@ -44,6 +49,85 @@ pub struct SdkRelayMessageHandler {
 impl SdkRelayMessageHandler {
     pub fn new(sdk: PluginSdk) -> Self {
         Self { sdk }
+    }
+}
+
+struct PreimageListener {
+    payment_tx_id: String,
+    preimage_listener_tx: Mutex<Option<Sender<Result<String>>>>,
+}
+
+impl PreimageListener {
+    pub(crate) fn new(payment_tx_id: String, preimage_listener_tx: Sender<Result<String>>) -> Self {
+        Self {
+            payment_tx_id,
+            preimage_listener_tx: Mutex::new(Some(preimage_listener_tx)),
+        }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl EventListener for PreimageListener {
+    async fn on_event(&self, e: SdkEvent) {
+        let (payment, succeeded) = match e {
+            SdkEvent::PaymentSucceeded { details } => (details, true),
+            SdkEvent::PaymentFailed { details } => (details, false),
+            _ => return,
+        };
+        if payment
+            .tx_id
+            .is_some_and(|tx_id| tx_id == self.payment_tx_id)
+        {
+            return;
+        }
+
+        let payload = match succeeded {
+            true => match payment.details {
+                PaymentDetails::Lightning {
+                    preimage: Some(preimage),
+                    ..
+                } => Ok(preimage),
+                _ => Err(NIP47Error {
+                    code: ErrorCode::PaymentFailed,
+                    message: "Unexpected payment data was returned from the SDK".to_string(),
+                }),
+            },
+            false => Err(NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: "Could not send payment".to_string(),
+            }),
+        };
+        if let Some(tx) = self.preimage_listener_tx.lock().await.take() {
+            let _ = tx.send(payload);
+        }
+    }
+}
+
+impl SdkRelayMessageHandler {
+    async fn wait_for_preimage(
+        &self,
+        response: SendPaymentResponse,
+    ) -> anyhow::Result<PayInvoiceResponse> {
+        let Some(tx_id) = response.payment.tx_id else {
+            bail!("Unexpected payment data was returned from the SDK")
+        };
+        let (preimage_listener_tx, preimage_listener_rx) = oneshot::channel();
+        let preimage_event_listener = Box::new(PreimageListener::new(tx_id, preimage_listener_tx));
+        let listener_id = self.sdk.add_event_listener(preimage_event_listener).await?;
+        let payment_timeout_fut =
+            tokio::time::timeout(Duration::from_secs(180), preimage_listener_rx).await??;
+        let result = match payment_timeout_fut {
+            Ok(preimage) => {
+                let fees_paid = response.payment.fees_sat * 1000; // Convert sats to msats
+                Ok(PayInvoiceResponse {
+                    preimage,
+                    fees_paid: Some(fees_paid),
+                })
+            }
+            Err(err) => Err(anyhow!("Could not retrieve payment preimage: {err}")),
+        };
+        let _ = self.sdk.remove_event_listener(listener_id).await;
+        result
     }
 }
 
@@ -148,25 +232,12 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
                 code: ErrorCode::PaymentFailed,
                 message: format!("Failed to send payment: {e}"),
             })?;
-
-        // Extract preimage and fees from payment
-        let PaymentDetails::Lightning {
-            preimage: Some(preimage),
-            ..
-        } = response.payment.details
-        else {
-            return Err(NIP47Error {
+        self.wait_for_preimage(response)
+            .await
+            .map_err(|e| NIP47Error {
                 code: ErrorCode::PaymentFailed,
-                message: "Payment did not return any preimage".to_string(),
-            });
-        };
-
-        let fees_paid = response.payment.fees_sat * 1000; // Convert sats to msats
-
-        Ok(PayInvoiceResponse {
-            preimage,
-            fees_paid: Some(fees_paid),
-        })
+                message: format!("Failed to send payment: {e}"),
+            })
     }
 
     /// Retrieves a filtered list of wallet transactions.
