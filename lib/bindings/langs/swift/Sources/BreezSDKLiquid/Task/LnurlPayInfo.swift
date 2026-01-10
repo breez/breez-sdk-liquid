@@ -33,7 +33,7 @@ class LnurlPayInfoTask : LnurlPayTask {
         super.init(payload: payload, logger: logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent, successNotificationTitle: successNotificationTitle, failNotificationTitle: failNotificationTitle)
     }
     
-    override func start(liquidSDK: BindingLiquidSdk) throws {
+    override func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
         var request: LnurlInfoRequest? = nil
         do {
             request = try JSONDecoder().decode(LnurlInfoRequest.self, from: self.payload.data(using: .utf8)!)

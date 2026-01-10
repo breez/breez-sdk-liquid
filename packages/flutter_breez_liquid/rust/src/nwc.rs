@@ -95,8 +95,10 @@ pub mod event {
             fees_sat: Option<u64>,
             error: Option<String>,
         },
+        MakeInvoice,
         ListTransactions,
         GetBalance,
+        GetInfo,
         ConnectionExpired,
         ConnectionRefreshed,
     }

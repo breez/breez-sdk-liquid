@@ -14,6 +14,7 @@ import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
 import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
+import breez_sdk_liquid_notification.PluginConfigs
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -46,7 +47,7 @@ class InvoiceRequestJob(
         private const val TAG = "InvoiceRequestJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk) {
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         var request: InvoiceRequestRequest? = null
         try {
             val decoder = Json { ignoreUnknownKeys = true }

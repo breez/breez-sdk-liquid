@@ -140,30 +140,30 @@ build-x86_64-apple-darwin: install-target-x86_64-apple-darwin
 ## Swift
 swift-ios: build-ios-universal
 	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl -l swift -o ffi/swift-ios
-	cp ../target/ios-universal/release/libbreez_sdk_liquid_bindings.a ffi/swift-ios
+	cp $(TARGET_DIR)/ios-universal/release/libbreez_sdk_liquid_bindings.a ffi/swift-ios
 	cd ffi/swift-ios && "swiftc" "-emit-module" "-module-name" "breez_sdk_liquid_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-ios/breez_sdk_liquidFFI.modulemap" "-I" "."  "-L" "." "-lbreez_sdk_liquid_bindings" breez_sdk_liquid.swift
 
 swift-darwin: build-darwin-universal
 	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl -l swift -o ffi/swift-darwin
-	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/swift-darwin
+	cp $(TARGET_DIR)/darwin-universal/release/libbreez_sdk_liquid_bindings.dylib ffi/swift-darwin
 	cd ffi/swift-darwin && "swiftc" "-emit-module" "-module-name" "breez_sdk_liquid_bindings" "-Xcc" "-fmodule-map-file=$(CURRENT_DIR)/ffi/swift-darwin/breez_sdk_liquidFFI.modulemap" "-I" "."  "-L" "." "-lbreez_sdk_liquid_bindings" breez_sdk_liquid.swift
 
-bindings-swift: build-ios-universal build-darwin-universal build-ios-framework
-
-build-ios-framework:
+build-ios-framework: build-darwin-universal build-ios-universal
 	mkdir -p langs/swift/Sources/BreezSDKLiquid
 	cargo run --bin uniffi-bindgen generate src/breez_sdk_liquid.udl --no-format --language swift -o langs/swift/Sources/BreezSDKLiquid
 	mv langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquid.swift langs/swift/Sources/BreezSDKLiquid/BreezSDKLiquid.swift
 	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/Headers
 	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/Headers
 	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/Headers
-	cp ../target/aarch64-apple-ios/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
-	cp ../target/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
-	cp ../target/darwin-universal/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
+	cp $(TARGET_DIR)/aarch64-apple-ios/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
+	cp $(TARGET_DIR)/ios-universal-sim/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/ios-arm64_x86_64-simulator/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
+	cp $(TARGET_DIR)/darwin-universal/release/libbreez_sdk_liquid_bindings.a langs/swift/breez_sdk_liquidFFI.xcframework/macos-arm64_x86_64/breez_sdk_liquidFFI.framework/breez_sdk_liquidFFI
 	mkdir -p langs/flutter/breez_sdk_liquidFFI/include
 	cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_sdk_liquidFFI/include/
 	rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
 	rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
+
+bindings-swift: build-ios-framework
 
 # Others
 csharp-darwin: install-bindgen-cs build-darwin-universal

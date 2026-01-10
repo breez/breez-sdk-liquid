@@ -80,8 +80,9 @@ pub struct LNOffer {
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::NostrWalletConnectUri)]
 pub struct NostrWalletConnectUri {
-    pub public_key: String,
-    pub secret: String,
+    pub wallet_public_key: String,
+    pub app_public_key: String,
+    pub app_secret: String,
     pub relays: Vec<String>,
     pub lud16: Option<String>,
 }

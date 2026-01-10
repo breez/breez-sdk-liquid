@@ -60,8 +60,9 @@ dictionary LNOffer {
 };
 
 dictionary NostrConnectionUri {
-    string public_key;
-    string secret;
+    string wallet_public_key;
+    string app_public_key;
+    string app_secret;
     sequence<string> relays;
     string? lud16;
 };
@@ -333,8 +334,10 @@ interface NwcEventDetails {
     Connected();
     Disconnected();
     PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
+    MakeInvoice();
     ListTransactions();
     GetBalance();
+    GetInfo();
     ConnectionExpired();
     ConnectionRefreshed();
 };
