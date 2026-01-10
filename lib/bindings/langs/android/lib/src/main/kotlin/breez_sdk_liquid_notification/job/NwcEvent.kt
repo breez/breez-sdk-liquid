@@ -39,13 +39,13 @@ class NwcEventJob(
 
     override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
-        if (nwcService == null) return;
+        if (nwcService == null) return
         nwcService.addEventListener(this)
         try {
             val decoder = Json { ignoreUnknownKeys = true }
             var notification = decoder.decodeFromString(NwcEventNotification.serializer(), payload)
-            nwcService.handleEvent(notification.eventId)
             eventId = notification.eventId
+            nwcService.handleEvent(notification.eventId)
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process NWC event: ${e.message}", "WARN")
             notifyChannel(
