@@ -29,8 +29,8 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
         var request: NwcEventNotification? = nil
         do {
             request = try JSONDecoder().decode(NwcEventNotification.self, from: self.payload.data(using: .utf8)!)
-            try nwcService.handleEvent(eventId: request!.eventId)
             eventId = request!.eventId
+            try nwcService.handleEvent(eventId: request!.eventId)
         } catch let e {
             self.logger.log(tag: TAG, line: "failed to run nwc command: \(e)", level: "ERROR")
             self.onShutdown()
