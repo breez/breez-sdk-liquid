@@ -577,16 +577,61 @@ impl NwcService for SdkNwcService {
         let ctx = self.runtime_ctx().await?;
         let mut active_connections = ctx.list_active_connections().await?;
         let event_id = EventId::from_str(&event_id)?;
-        let events = ctx
-            .client
-            .fetch_events(
-                Filter::new().id(event_id),
-                Duration::from_secs(DEFAULT_EVENT_HANDLING_INTERVAL_SEC),
-            )
-            .await?;
-        let Some(event) = events.first() else {
+        ctx.client.connect().await;
+
+        // Retry fetching the event with exponential backoff
+        // Relays may take time to sync or connection may be slow
+        let mut retry_delay = Duration::from_secs(1);
+        let max_retries = 3;
+        let mut events = None;
+
+        for attempt in 0..max_retries {
+            match ctx
+                .client
+                .fetch_events(
+                    Filter::new().id(event_id),
+                    Duration::from_secs(30), // Increased timeout from 10s to 30s
+                )
+                .await
+            {
+                Ok(fetched) if !fetched.is_empty() => {
+                    events = Some(fetched);
+                    break;
+                }
+                Ok(_) => {
+                    warn!(
+                        "Event {} not found on attempt {}/{}",
+                        event_id,
+                        attempt + 1,
+                        max_retries
+                    );
+                }
+                Err(e) => {
+                    warn!(
+                        "Failed to fetch event {} on attempt {}/{}: {}",
+                        event_id,
+                        attempt + 1,
+                        max_retries,
+                        e
+                    );
+                }
+            }
+
+            if attempt < max_retries - 1 {
+                info!("Retrying event fetch in {:?}", retry_delay);
+                tokio::time::sleep(retry_delay).await;
+                retry_delay *= 2; // Exponential backoff
+            }
+        }
+
+        let Some(event_list) = events else {
             return Err(NwcError::EventNotFound);
         };
+
+        let Some(event) = event_list.first() else {
+            return Err(NwcError::EventNotFound);
+        };
+
         Self::handle_event_inner(&ctx, &mut active_connections, event).await?;
         Ok(())
     }
