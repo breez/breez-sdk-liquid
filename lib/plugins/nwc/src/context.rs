@@ -82,10 +82,10 @@ impl RuntimeContext {
         &self,
         active_connections: &HashMap<String, ActiveConnection>,
     ) -> Result<()> {
-        let pubkeys = active_connections
-            .values()
-            .map(|con| con.uri.public_key.to_string())
-            .collect();
+        if active_connections.is_empty() {
+            info!("No active connections, skipping subscription.");
+            return Ok(());
+        }
         self.client
             .subscribe(
                 Filter {
@@ -94,7 +94,7 @@ impl RuntimeContext {
                             character: Alphabet::P,
                             uppercase: false,
                         },
-                        pubkeys,
+                        BTreeSet::from([self.our_keys.public_key.to_string()]),
                     )]),
                     kinds: Some(BTreeSet::from([Kind::WalletConnectRequest])),
                     ..Default::default()

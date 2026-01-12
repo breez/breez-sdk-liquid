@@ -160,6 +160,7 @@ pub struct EditConnectionResponse {
     pub connection: NwcConnection,
 }
 
+#[derive(Clone, Debug)]
 pub(crate) struct ActiveConnection {
     pub connection: NwcConnectionInner,
     pub uri: NostrWalletConnectURI,

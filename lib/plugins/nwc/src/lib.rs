@@ -21,10 +21,7 @@ use breez_sdk_liquid::{
 };
 use log::{debug, error, info, warn};
 use nostr_sdk::{
-    nips::nip47::{
-        ErrorCode, NIP47Error, NostrWalletConnectURI, Request, RequestParams, Response,
-        ResponseResult,
-    },
+    nips::nip47::{NostrWalletConnectURI, Request, RequestParams, Response, ResponseResult},
     Client as NostrClient, Event, EventBuilder, EventId, Filter, Keys, Kind, RelayMessage,
     RelayPoolNotification, RelayUrl, Tag, Timestamp,
 };
@@ -225,21 +222,28 @@ impl SdkNwcService {
         Ok(Keys::parse(&secret_key)?)
     }
 
+    fn get_client_from_connections(
+        pubkey: nostr_sdk::PublicKey,
+        active_connections: &HashMap<String, ActiveConnection>,
+    ) -> NwcResult<(&String, &ActiveConnection)> {
+        active_connections
+            .iter()
+            .find(|(_, con)| con.pubkey == pubkey)
+            .ok_or(NwcError::PubkeyNotFound {
+                pubkey: pubkey.to_string(),
+            })
+    }
+
     async fn handle_event_inner(
         ctx: &RuntimeContext,
-        active_connections: &mut HashMap<String, ActiveConnection>,
+        active_connections: &HashMap<String, ActiveConnection>,
         event: &Event,
-    ) -> NwcResult<()> {
+    ) -> NwcResult<ResponseResult> {
         // Verify client belongs in active connections list
         let client_pubkey = event.pubkey;
-        let Some((connection_name, client)) = active_connections
-            .iter_mut()
-            .find(|(_, con)| con.pubkey == client_pubkey)
-        else {
-            return Err(NwcError::PubkeyNotFound {
-                pubkey: client_pubkey.to_string(),
-            });
-        };
+        let (connection_name, mut client) =
+            Self::get_client_from_connections(client_pubkey, active_connections)
+                .map(|(name, client)| (name.clone(), client.clone()))?;
 
         // Verify the event has not expired
         if event
@@ -262,106 +266,103 @@ impl SdkNwcService {
 
         // Build response
         let req = serde_json::from_str::<Request>(&decrypted_content)?;
-        if client.connection.receive_only && !matches!(req.params, RequestParams::MakeInvoice(_)) {
-            return Err(NwcError::generic(format!(
-                "Could not execute command: {:?}: connection is receive-only.",
-                req.params,
-            )));
-        }
-        let (result, error) = match req.params {
-            RequestParams::PayInvoice(req) => {
-                let Ok(InputType::Bolt11 { invoice }) =
-                    sdk_common::input_parser::parse(&req.invoice, None).await
-                else {
-                    return Err(NwcError::generic(format!(
-                        "Could not parse pay_invoice invoice: {}",
-                        req.invoice
-                    )));
-                };
-                let Some(req_amount_sat) = req
-                    .amount
-                    .or(invoice.amount_msat)
-                    .map(|amount| amount.div_ceil(1000))
-                else {
-                    return Err(NwcError::InvoiceWithoutAmount);
-                };
+        let mut compute_result = async || -> NwcResult<ResponseResult> {
+            if client.connection.receive_only
+                && !matches!(req.params, RequestParams::MakeInvoice(_))
+            {
+                return Err(NwcError::generic("Connection is receive-only."));
+            }
 
-                if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
-                    if periodic_budget.used_budget_sat + req_amount_sat
-                        > periodic_budget.max_budget_sat
-                    {
-                        return Err(NwcError::MaxBudgetExceeded);
-                    }
-                    // We modify the connection's budget before executing the payment to avoid any race
-                    // conditions
-                    periodic_budget.used_budget_sat += req_amount_sat;
-                    if let Err(err) = ctx
-                        .persister
-                        .update_periodic_budget(connection_name, periodic_budget.clone())
-                    {
+            match &req.params {
+                RequestParams::PayInvoice(req) => {
+                    let Ok(InputType::Bolt11 { invoice }) =
+                        sdk_common::input_parser::parse(&req.invoice, None).await
+                    else {
                         return Err(NwcError::generic(format!(
+                            "Could not parse pay_invoice invoice: {}",
+                            req.invoice
+                        )));
+                    };
+                    let Some(req_amount_sat) = req
+                        .amount
+                        .or(invoice.amount_msat)
+                        .map(|amount| amount.div_ceil(1000))
+                    else {
+                        return Err(NwcError::InvoiceWithoutAmount);
+                    };
+
+                    if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
+                        if periodic_budget.used_budget_sat + req_amount_sat
+                            > periodic_budget.max_budget_sat
+                        {
+                            return Err(NwcError::MaxBudgetExceeded);
+                        }
+                        // We modify the connection's budget before executing the payment to avoid any race
+                        // conditions
+                        if let Err(err) = ctx
+                            .persister
+                            .update_budget(&connection_name, req_amount_sat as i64)
+                        {
+                            return Err(NwcError::generic(format!(
                             "Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}"
                         )));
+                        }
                     }
-                }
-                match ctx.handler.pay_invoice(req).await {
-                    Ok(res) => {
-                        ctx.persister
-                            .add_paid_invoice(connection_name, invoice.bolt11)
-                            .map_err(|err| {
-                                NwcError::persist(format!("Could not persist paid invoice: {err}"))
-                            })?;
-                        client.connection.paid_amount_sat += req_amount_sat;
-                        (Some(ResponseResult::PayInvoice(res)), None)
-                    }
-                    Err(e) => {
-                        // In case of payment failure, we want to undo the periodic budget changes
-                        if let Some(ref mut periodic_budget) = client.connection.periodic_budget {
-                            periodic_budget.used_budget_sat -= req_amount_sat;
-                            if let Err(err) = ctx
-                                .persister
-                                .update_periodic_budget(connection_name, periodic_budget.clone())
-                            {
-                                return Err(NwcError::generic(format!(
+                    match ctx.handler.pay_invoice(req).await {
+                        Ok(res) => {
+                            ctx.persister
+                                .add_paid_invoice(&connection_name, invoice.bolt11)
+                                .map_err(|err| {
+                                    NwcError::persist(format!(
+                                        "Could not persist paid invoice: {err}"
+                                    ))
+                                })?;
+                            Ok(ResponseResult::PayInvoice(res))
+                        }
+                        Err(e) => {
+                            // In case of payment failure, we want to undo the periodic budget changes
+                            if client.connection.periodic_budget.is_some() {
+                                if let Err(err) = ctx
+                                    .persister
+                                    .update_budget(&connection_name, -(req_amount_sat as i64))
+                                {
+                                    return Err(NwcError::generic(format!(
                                     "Cannot pay invoice: could not update periodic budget on connection \"{connection_name}\": {err}."
                                 )));
+                                }
                             }
+                            Err(e)
                         }
-                        (None, Some(e))
                     }
                 }
-            }
-            RequestParams::MakeInvoice(req) => match ctx.handler.make_invoice(req).await {
-                Ok(res) => (Some(ResponseResult::MakeInvoice(res)), None),
-                Err(e) => (None, Some(e)),
-            },
-            RequestParams::ListTransactions(req) => {
-                match ctx.handler.list_transactions(req).await {
-                    Ok(res) => (Some(ResponseResult::ListTransactions(res)), None),
-                    Err(e) => (None, Some(e)),
-                }
-            }
-            RequestParams::GetBalance => match ctx.handler.get_balance().await {
-                Ok(res) => (Some(ResponseResult::GetBalance(res)), None),
-                Err(e) => (None, Some(e)),
-            },
-            RequestParams::GetInfo => match ctx.handler.get_info().await {
-                Ok(res) => (Some(ResponseResult::GetInfo(res)), None),
-                Err(e) => (None, Some(e)),
-            },
-            _ => {
-                return Err(NwcError::generic(format!(
+                RequestParams::MakeInvoice(req) => ctx
+                    .handler
+                    .make_invoice(req)
+                    .await
+                    .map(ResponseResult::MakeInvoice),
+                RequestParams::ListTransactions(req) => ctx
+                    .handler
+                    .list_transactions(req)
+                    .await
+                    .map(ResponseResult::ListTransactions),
+                RequestParams::GetBalance => ctx
+                    .handler
+                    .get_balance()
+                    .await
+                    .map(ResponseResult::GetBalance),
+                RequestParams::GetInfo => ctx.handler.get_info().await.map(ResponseResult::GetInfo),
+                _ => Err(NwcError::generic(format!(
                     "Received unhandled request: {req:?}"
-                )));
+                ))),
             }
         };
+        let res = compute_result().await;
 
         // Notify SDK
         Self::handle_local_notification(
             ctx,
-            connection_name.clone(),
-            &result,
-            &error,
+            connection_name.to_string(),
+            &res,
             &event.id.to_string(),
         )
         .await;
@@ -369,8 +370,8 @@ impl SdkNwcService {
         // Serialize and encrypt the response
         let content = serde_json::to_string(&Response {
             result_type: req.method,
-            result,
-            error,
+            result: res.as_ref().ok().cloned(),
+            error: res.as_ref().err().cloned().map(Into::into),
         })
         .map_err(|err| NwcError::generic(format!("Could not serialize Nostr response: {err:?}")))?;
 
@@ -387,19 +388,18 @@ impl SdkNwcService {
             })?;
         info!("Sent encrypted NWC response");
 
-        Ok(())
+        res
     }
 
     async fn handle_local_notification(
         ctx: &RuntimeContext,
         connection_name: String,
-        result: &Option<ResponseResult>,
-        error: &Option<NIP47Error>,
+        result: &NwcResult<ResponseResult>,
         event_id: &str,
     ) {
-        debug!("Handling notification: {result:?} {error:?}");
-        let event = match (result, error) {
-            (Some(ResponseResult::PayInvoice(response)), None) => NwcEvent {
+        debug!("Handling notification: {result:?}");
+        let event = match result {
+            Ok(ResponseResult::PayInvoice(response)) => NwcEvent {
                 details: NwcEventDetails::PayInvoice {
                     success: true,
                     preimage: Some(response.preimage.clone()),
@@ -409,44 +409,41 @@ impl SdkNwcService {
                 connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
-            (None, Some(error)) => match error.code {
-                ErrorCode::PaymentFailed => NwcEvent {
-                    details: NwcEventDetails::PayInvoice {
-                        success: false,
-                        preimage: None,
-                        fees_sat: None,
-                        error: Some(error.message.clone()),
-                    },
-                    connection_name: Some(connection_name),
-                    event_id: Some(event_id.to_string()),
-                },
-                _ => {
-                    warn!("Unhandled error code: {:?}", error.code);
-                    return;
-                }
-            },
-            (Some(ResponseResult::MakeInvoice(_)), None) => NwcEvent {
+            Ok(ResponseResult::MakeInvoice(_)) => NwcEvent {
                 details: NwcEventDetails::MakeInvoice,
                 connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
-            (Some(ResponseResult::ListTransactions(_)), None) => NwcEvent {
+            Ok(ResponseResult::ListTransactions(_)) => NwcEvent {
                 details: NwcEventDetails::ListTransactions,
                 connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
-            (Some(ResponseResult::GetBalance(_)), None) => NwcEvent {
+            Ok(ResponseResult::GetBalance(_)) => NwcEvent {
                 details: NwcEventDetails::GetBalance,
                 connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
-            (Some(ResponseResult::GetInfo(_)), None) => NwcEvent {
+            Ok(ResponseResult::GetInfo(_)) => NwcEvent {
                 details: NwcEventDetails::GetInfo,
                 connection_name: Some(connection_name),
                 event_id: Some(event_id.to_string()),
             },
+            Err(
+                err @ NwcError::InvoiceExpired
+                | err @ NwcError::InvoiceWithoutAmount
+                | err @ NwcError::MaxBudgetExceeded,
+            ) => NwcEvent {
+                details: NwcEventDetails::PayInvoice {
+                    success: false,
+                    preimage: None,
+                    fees_sat: None,
+                    error: Some(err.to_string()),
+                },
+                connection_name: Some(connection_name),
+                event_id: Some(event_id.to_string()),
+            },
             _ => {
-                warn!("Unexpected combination");
                 return;
             }
         };
@@ -575,7 +572,7 @@ impl NwcService for SdkNwcService {
 
     async fn handle_event(&self, event_id: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
-        let mut active_connections = ctx.list_active_connections().await?;
+        let active_connections = ctx.list_active_connections().await?;
         let event_id = EventId::from_str(&event_id)?;
         ctx.client.connect().await;
 
@@ -632,7 +629,7 @@ impl NwcService for SdkNwcService {
             return Err(NwcError::EventNotFound);
         };
 
-        Self::handle_event_inner(&ctx, &mut active_connections, event).await?;
+        Self::handle_event_inner(&ctx, &active_connections, event).await?;
         Ok(())
     }
 }
@@ -682,7 +679,7 @@ impl Plugin for SdkNwcService {
 
             let mut maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx).await;
             loop {
-                let mut active_connections = match thread_ctx.list_active_connections().await {
+                let active_connections = match thread_ctx.list_active_connections().await {
                     Ok(clients) => clients,
                     Err(err) => {
                         warn!("Could not retreive active connections from database: {err:?}");
@@ -721,9 +718,13 @@ impl Plugin for SdkNwcService {
                         Ok(notification) = notifications_listener.recv() => match notification {
                             RelayPoolNotification::Message { message: RelayMessage::Event { event, .. }, .. } => {
                                     info!("Received NWC event: {event:?}");
-                                    if let Err(err) = Self::handle_event_inner(&thread_ctx, &mut active_connections, &event).await {
-                                        warn!("Could not handle NWC event {}: {}", event.id, err);
-                                    }
+                                    let ctx = thread_ctx.clone();
+                                    let active_connections = active_connections.clone();
+                                    tokio::spawn(async move {
+                                        if let Err(err) = Self::handle_event_inner(&ctx, &active_connections, &event).await {
+                                            warn!("Could not handle NWC event {}: {}", event.id, err);
+                                        }
+                                    });
                             },
                             RelayPoolNotification::Message { message: RelayMessage::EndOfStoredEvents(_), .. } => notifications_listener = notifications_listener.resubscribe(),
                             _ => {},

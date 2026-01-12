@@ -73,16 +73,21 @@ impl Persister {
     }
 
     // Helper method to update a connection's used budget directly
-    pub(crate) fn update_periodic_budget(
-        &self,
-        name: &str,
-        periodic_budget: PeriodicBudgetInner,
-    ) -> NwcResult<()> {
+    pub(crate) fn update_budget(&self, name: &str, delta_sat: i64) -> NwcResult<()> {
         self.set_connections_safe(|connections| {
             let Some(connection) = connections.get_mut(name) else {
                 return Err(NwcError::ConnectionNotFound);
             };
-            connection.periodic_budget = Some(periodic_budget.clone());
+            if let Some(ref mut periodic_budget) = &mut connection.periodic_budget {
+                periodic_budget.used_budget_sat = periodic_budget
+                    .used_budget_sat
+                    .checked_add_signed(delta_sat)
+                    .unwrap_or(0);
+                connection.paid_amount_sat = connection
+                    .paid_amount_sat
+                    .checked_add_signed(delta_sat)
+                    .unwrap_or(0);
+            }
             Ok((true, ()))
         })
     }
