@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, BTreeSet, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     str::FromStr as _,
     sync::Arc,
 };
@@ -31,6 +31,7 @@ pub(crate) struct RuntimeContext {
     pub resubscription_trigger: mpsc::Sender<()>,
     pub event_loop_handle: OnceCell<JoinHandle<()>>,
     pub sdk_listener_id: Mutex<Option<String>>,
+    pub replied_event_ids: Mutex<HashSet<String>>,
 }
 
 impl RuntimeContext {
@@ -126,5 +127,10 @@ impl RuntimeContext {
         {
             warn!("Could not send info event to relay pool: {err:?}");
         }
+    }
+
+    /// Returns true when value was inserted, or false otherwise
+    pub async fn try_insert_replied_event(&self, event_id: String) -> bool {
+        self.replied_event_ids.lock().await.insert(event_id)
     }
 }

@@ -1,4 +1,9 @@
-use std::{collections::HashMap, str::FromStr as _, sync::Arc, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr as _,
+    sync::Arc,
+    time::Duration,
+};
 
 use crate::{
     context::RuntimeContext,
@@ -7,8 +12,8 @@ use crate::{
     event::{EventManager, NwcEvent, NwcEventDetails, NwcEventListener},
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
     model::{
-        ActiveConnection, AddConnectionRequest, AddConnectionResponse, EditConnectionRequest,
-        EditConnectionResponse, NwcConfig, NwcConnection, NwcConnectionInner, PeriodicBudgetInner,
+        AddConnectionRequest, AddConnectionResponse, EditConnectionRequest, EditConnectionResponse,
+        NwcConfig, NwcConnection, NwcConnectionInner, PeriodicBudgetInner,
     },
     persist::Persister,
     sdk_event::SdkEventListener,
@@ -187,6 +192,7 @@ impl SdkNwcService {
             event_loop_handle: OnceCell::new(),
             sdk_listener_id: Mutex::new(None),
             event_manager: self.event_manager.clone(),
+            replied_event_ids: Mutex::new(HashSet::new()),
         };
         Ok(ctx)
     }
@@ -222,28 +228,22 @@ impl SdkNwcService {
         Ok(Keys::parse(&secret_key)?)
     }
 
-    fn get_client_from_connections(
-        pubkey: nostr_sdk::PublicKey,
-        active_connections: &HashMap<String, ActiveConnection>,
-    ) -> NwcResult<(&String, &ActiveConnection)> {
-        active_connections
-            .iter()
-            .find(|(_, con)| con.pubkey == pubkey)
-            .ok_or(NwcError::PubkeyNotFound {
-                pubkey: pubkey.to_string(),
-            })
-    }
-
-    async fn handle_event_inner(
-        ctx: &RuntimeContext,
-        active_connections: &HashMap<String, ActiveConnection>,
-        event: &Event,
-    ) -> NwcResult<ResponseResult> {
-        // Verify client belongs in active connections list
+    async fn handle_event_inner(ctx: &RuntimeContext, event: &Event) -> NwcResult<()> {
+        let event_id = event.id.to_string();
         let client_pubkey = event.pubkey;
-        let (connection_name, mut client) =
-            Self::get_client_from_connections(client_pubkey, active_connections)
-                .map(|(name, client)| (name.clone(), client.clone()))?;
+
+        let (connection_name, mut client) = ctx
+            .list_active_connections()
+            .await?
+            .into_iter()
+            .find(|(_, con)| con.pubkey == client_pubkey)
+            .ok_or(NwcError::PubkeyNotFound {
+                pubkey: client_pubkey.to_string(),
+            })?;
+        if !(ctx.try_insert_replied_event(event_id.clone()).await) {
+            info!("Event {event_id} has already been replied to. Skipping.");
+            return Ok(());
+        }
 
         // Verify the event has not expired
         if event
@@ -357,15 +357,10 @@ impl SdkNwcService {
             }
         };
         let res = compute_result().await;
+        debug!("Got result {res:?} for event {event_id}");
 
         // Notify SDK
-        Self::handle_local_notification(
-            ctx,
-            connection_name.to_string(),
-            &res,
-            &event.id.to_string(),
-        )
-        .await;
+        Self::handle_local_notification(ctx, connection_name.to_string(), &res, &event_id).await;
 
         // Serialize and encrypt the response
         let content = serde_json::to_string(&Response {
@@ -388,7 +383,7 @@ impl SdkNwcService {
             })?;
         info!("Sent encrypted NWC response");
 
-        res
+        Ok(())
     }
 
     async fn handle_local_notification(
@@ -572,7 +567,6 @@ impl NwcService for SdkNwcService {
 
     async fn handle_event(&self, event_id: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
-        let active_connections = ctx.list_active_connections().await?;
         let event_id = EventId::from_str(&event_id)?;
         ctx.client.connect().await;
 
@@ -629,7 +623,7 @@ impl NwcService for SdkNwcService {
             return Err(NwcError::EventNotFound);
         };
 
-        Self::handle_event_inner(&ctx, &active_connections, event).await?;
+        Self::handle_event_inner(&ctx, event).await?;
         Ok(())
     }
 }
@@ -719,9 +713,8 @@ impl Plugin for SdkNwcService {
                             RelayPoolNotification::Message { message: RelayMessage::Event { event, .. }, .. } => {
                                     info!("Received NWC event: {event:?}");
                                     let ctx = thread_ctx.clone();
-                                    let active_connections = active_connections.clone();
                                     tokio::spawn(async move {
-                                        if let Err(err) = Self::handle_event_inner(&ctx, &active_connections, &event).await {
+                                        if let Err(err) = Self::handle_event_inner(&ctx, &event).await {
                                             warn!("Could not handle NWC event {}: {}", event.id, err);
                                         }
                                     });
