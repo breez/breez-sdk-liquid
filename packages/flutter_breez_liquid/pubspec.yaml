@@ -45,6 +45,8 @@ flutter:
   plugin:
     platforms:
       android:
+        package: com.breez.breez_sdk_liquid
+        pluginClass: BreezSDKLiquidPlugin
         ffiPlugin: true
       ios:
         ffiPlugin: true
