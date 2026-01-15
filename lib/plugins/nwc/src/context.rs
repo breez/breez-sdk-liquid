@@ -129,8 +129,8 @@ impl RuntimeContext {
         }
     }
 
-    /// Returns true when value was inserted, or false otherwise
-    pub async fn try_insert_replied_event(&self, event_id: String) -> bool {
-        self.replied_event_ids.lock().await.insert(event_id)
+    /// Returns true when we have replied to the event, and false otherwise (and inserts it)
+    pub async fn check_replied_event(&self, event_id: String) -> bool {
+        !self.replied_event_ids.lock().await.insert(event_id)
     }
 }

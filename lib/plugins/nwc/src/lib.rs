@@ -240,7 +240,7 @@ impl SdkNwcService {
             .ok_or(NwcError::PubkeyNotFound {
                 pubkey: client_pubkey.to_string(),
             })?;
-        if !(ctx.try_insert_replied_event(event_id.clone()).await) {
+        if ctx.check_replied_event(event_id.clone()).await {
             info!("Event {event_id} has already been replied to. Skipping.");
             return Ok(());
         }
