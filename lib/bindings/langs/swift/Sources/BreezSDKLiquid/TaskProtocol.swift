@@ -4,8 +4,8 @@ public protocol TaskProtocol : EventListener {
     var payload: String { get set }
     var contentHandler: ((UNNotificationContent) -> Void)? { get set }
     var bestAttemptContent: UNMutableNotificationContent? { get set }
-    
-    func start(liquidSDK: BindingLiquidSdk) throws
+
+    func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws
     func onShutdown()
 }
 
@@ -76,8 +76,8 @@ class ReplyableTask : TaskProtocol {
         self.successNotificationTitle = successNotificationTitle;
         self.failNotificationTitle = failNotificationTitle;
     }
-    
-    func start(liquidSDK: BindingLiquidSdk) throws {}
+
+    func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {}
 
     public func onEvent(e: SdkEvent) {}
     

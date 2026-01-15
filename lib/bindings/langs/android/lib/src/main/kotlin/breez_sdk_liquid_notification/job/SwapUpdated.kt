@@ -29,6 +29,7 @@ import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
 import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
+import breez_sdk_liquid_notification.PluginConfigs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -60,7 +61,7 @@ class SwapUpdatedJob(
         private const val TAG = "SwapUpdatedJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk) {
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         try {
             val decoder = Json { ignoreUnknownKeys = true }
             val request = decoder.decodeFromString(SwapUpdatedRequest.serializer(), payload)
