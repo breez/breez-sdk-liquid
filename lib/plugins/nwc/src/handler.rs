@@ -115,18 +115,21 @@ impl SdkRelayMessageHandler {
         let (preimage_listener_tx, preimage_listener_rx) = oneshot::channel();
         let preimage_event_listener = Box::new(PreimageListener::new(tx_id, preimage_listener_tx));
         let listener_id = self.sdk.add_event_listener(preimage_event_listener).await?;
-        let payment_timeout_fut =
-            tokio::time::timeout(Duration::from_secs(180), preimage_listener_rx).await??;
-        let result = match payment_timeout_fut {
-            Ok(preimage) => {
-                let fees_paid = response.payment.fees_sat * 1000; // Convert sats to msats
-                Ok(PayInvoiceResponse {
-                    preimage,
-                    fees_paid: Some(fees_paid),
-                })
+        let compute_result = async || {
+            let payment_timeout_fut =
+                tokio::time::timeout(Duration::from_secs(180), preimage_listener_rx).await??;
+            match payment_timeout_fut {
+                Ok(preimage) => {
+                    let fees_paid = response.payment.fees_sat * 1000; // Convert sats to msats
+                    Ok(PayInvoiceResponse {
+                        preimage,
+                        fees_paid: Some(fees_paid),
+                    })
+                }
+                Err(err) => Err(anyhow!("Could not retrieve payment preimage: {err}")),
             }
-            Err(err) => Err(anyhow!("Could not retrieve payment preimage: {err}")),
         };
+        let result = compute_result().await;
         let _ = self.sdk.remove_event_listener(listener_id).await;
         result
     }
