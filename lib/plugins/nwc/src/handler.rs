@@ -79,7 +79,7 @@ impl EventListener for PreimageListener {
         };
         if payment
             .tx_id
-            .is_some_and(|tx_id| tx_id == self.payment_tx_id)
+            .is_none_or(|tx_id| tx_id != self.payment_tx_id)
         {
             return;
         }
