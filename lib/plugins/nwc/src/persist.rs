@@ -81,12 +81,9 @@ impl Persister {
             if let Some(ref mut periodic_budget) = &mut connection.periodic_budget {
                 periodic_budget.used_budget_sat = periodic_budget
                     .used_budget_sat
-                    .checked_add_signed(delta_sat)
-                    .unwrap_or(0);
-                connection.paid_amount_sat = connection
-                    .paid_amount_sat
-                    .checked_add_signed(delta_sat)
-                    .unwrap_or(0);
+                    .saturating_add_signed(delta_sat);
+                connection.paid_amount_sat =
+                    connection.paid_amount_sat.saturating_add_signed(delta_sat);
             }
             Ok((true, ()))
         })
