@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
 
@@ -229,7 +229,7 @@ impl Persister {
 
     fn set_paid_invoices_safe<F, R>(&self, f: F) -> NwcResult<R>
     where
-        F: Fn(&mut BTreeMap<String, HashSet<String>>) -> NwcResult<(bool, R)>,
+        F: Fn(&mut BTreeMap<String, BTreeSet<String>>) -> NwcResult<(bool, R)>,
     {
         for _ in 0..MAX_SAFE_WRITE_RETRIES {
             let paid_invoices = self.list_paid_invoices()?;
@@ -252,7 +252,7 @@ impl Persister {
         Err(NwcError::persist("Maximum write attempts reached"))
     }
 
-    pub(crate) fn list_paid_invoices(&self) -> NwcResult<BTreeMap<String, HashSet<String>>> {
+    pub(crate) fn list_paid_invoices(&self) -> NwcResult<BTreeMap<String, BTreeSet<String>>> {
         let paid_invoices = self
             .storage
             .get_item(KEY_NWC_PAID_INVOICES)?
@@ -265,7 +265,7 @@ impl Persister {
         self.set_paid_invoices_safe(|paid_invoices| {
             let invoices = paid_invoices
                 .entry(connection.to_string())
-                .or_insert_with(HashSet::new);
+                .or_insert_with(BTreeSet::new);
             invoices.insert(invoice.clone());
             Ok((true, ()))
         })
