@@ -333,8 +333,10 @@ interface NwcEventDetails {
     Connected();
     Disconnected();
     PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
+    MakeInvoice();
     ListTransactions();
     GetBalance();
+    GetInfo();
     ConnectionExpired();
     ConnectionRefreshed();
 };
