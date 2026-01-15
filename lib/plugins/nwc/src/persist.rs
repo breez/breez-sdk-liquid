@@ -78,12 +78,12 @@ impl Persister {
             let Some(connection) = connections.get_mut(name) else {
                 return Err(NwcError::ConnectionNotFound);
             };
+            connection.paid_amount_sat =
+                connection.paid_amount_sat.saturating_add_signed(delta_sat);
             if let Some(ref mut periodic_budget) = &mut connection.periodic_budget {
                 periodic_budget.used_budget_sat = periodic_budget
                     .used_budget_sat
                     .saturating_add_signed(delta_sat);
-                connection.paid_amount_sat =
-                    connection.paid_amount_sat.saturating_add_signed(delta_sat);
             }
             Ok((true, ()))
         })
