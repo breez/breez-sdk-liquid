@@ -7,6 +7,7 @@ pub struct PluginStorage {
     storage: breez_sdk_liquid::plugin::PluginStorage,
 }
 
+#[allow(dead_code)]
 impl PluginStorage {
     pub(crate) fn new(storage: breez_sdk_liquid::plugin::PluginStorage) -> Self {
         Self { storage }
@@ -20,8 +21,15 @@ impl PluginStorage {
 #[wasm_bindgen]
 impl PluginStorage {
     #[wasm_bindgen(js_name = "setItem")]
-    pub fn set_item(&self, key: String, value: String) -> WasmResult<()> {
-        self.storage.set_item(&key, value).map_err(Into::into)
+    pub fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> WasmResult<()> {
+        self.storage
+            .set_item(&key, value, old_value)
+            .map_err(Into::into)
     }
 
     #[wasm_bindgen(js_name = "getItem")]

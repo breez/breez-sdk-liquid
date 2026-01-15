@@ -27,7 +27,10 @@ const {
     sendPayment,
     signMessage,
     sync,
-    unregisterWebhook
+    unregisterWebhook,
+    addNwcConnection,
+    listNwcConnections,
+    removeNwcConnection,
 } = require('./action.js')
 const { parse: parseShell } = require('shell-quote')
 
@@ -263,6 +266,28 @@ const initCommand = () => {
     program.command('sync').description('Sync local data with mempool and onchain data').action(sync)
 
     program.command('unregister-webhook').description('Unregister the webhook URL').action(unregisterWebhook)
+
+    const nwc = program.command('nwc').description('Run NWC features')
+    nwc
+        .command("add-connection")
+        .description("Adds an NWC connection")
+        .addArgument(new Argument('<name>', 'The unique identifier of the connection'))
+        .addOption(new Option('--receive-only', 'Whether the connection is receive-only'))
+        .addOption(new Option('--expiry <number>', 'The expiry time of the connection, in minutes').argParser(parseInt))
+        .addOption(new Option('--period-time <number>', 'The duration of a periodic budget, in minutes').argParser(parseInt))
+        .addOption(new Option('--max-budget <number>', 'The maximum budget for a period').argParser(parseInt))
+        .action(addNwcConnection)
+
+    nwc
+        .command("list-connections")
+        .description("Lists active NWC connections")
+        .action(listNwcConnections)
+
+    nwc
+        .command("remove-connection")
+        .description("Removes an active NWC connection")
+        .addArgument(new Argument('<name>', 'The unique identifier of the connection'))
+        .action(removeNwcConnection)
 
     return program
 }

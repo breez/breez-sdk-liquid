@@ -6,6 +6,9 @@ use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
 use breez_sdk_liquid::prelude::*;
+use breez_sdk_liquid_nwc::model::{
+    AddConnectionRequest, EditConnectionRequest, PeriodicBudgetRequest,
+};
 use breez_sdk_liquid_nwc::NwcService;
 use clap::{ArgAction, Parser};
 use qrcode_rs::render::unicode;
@@ -288,11 +291,37 @@ pub(crate) enum Command {
 #[derive(Parser, Debug, Clone, PartialEq)]
 pub(crate) enum NwcCommand {
     /// Creates and saves an NWC connection string
-    AddConnectionString { name: String },
+    AddConnection {
+        name: String,
+        #[arg(long)]
+        receive_only: Option<bool>,
+        #[arg(short, long)]
+        expiry_time_mins: Option<u32>,
+        #[arg(short, long)]
+        max_budget_sat: Option<u64>,
+        #[arg(short = 'r', long)]
+        budget_renewal_mins: Option<u32>,
+    },
+    /// Edits an existing NWC connection string
+    EditConnection {
+        name: String,
+        #[arg(long)]
+        receive_only: Option<bool>,
+        #[arg(short, long)]
+        expiry_time_mins: Option<u32>,
+        #[arg(long)]
+        remove_expiry: Option<bool>,
+        #[arg(short, long)]
+        max_budget_sat: Option<u64>,
+        #[arg(short, long)]
+        budget_renewal_mins: Option<u32>,
+        #[arg(long)]
+        remove_periodic_budget: Option<bool>,
+    },
     /// Lists the available NWC connection strings
-    ListConnectionStrings {},
+    ListConnections {},
     /// Removes a saved NWC connection string
-    RemoveConnectionString { name: String },
+    RemoveConnection { name: String },
 }
 
 #[derive(Helper, Completer, Hinter, Validator)]
@@ -397,7 +426,12 @@ pub(crate) async fn handle_command(
                 .receive_payment(&ReceivePaymentRequest {
                     prepare_response,
                     description,
-                    use_description_hash,
+                    description_hash: use_description_hash.and_then(|use_description| {
+                        match use_description {
+                            true => Some(DescriptionHash::UseDescription),
+                            false => None,
+                        }
+                    }),
                     payer_note,
                 })
                 .await?;
@@ -884,14 +918,61 @@ pub(crate) async fn handle_command(
         Command::Nwc { nwc } => {
             let nwc_service = NWC_SERVICE.get().context("NWC not initialized")?;
             match nwc {
-                NwcCommand::AddConnectionString { name } => {
-                    command_result!(nwc_service.add_connection_string(name).await?)
+                NwcCommand::AddConnection {
+                    name,
+                    receive_only,
+                    expiry_time_mins,
+                    max_budget_sat,
+                    budget_renewal_mins,
+                } => {
+                    command_result!(
+                        nwc_service
+                            .add_connection(AddConnectionRequest {
+                                name,
+                                receive_only,
+                                expiry_time_mins,
+                                periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
+                                    PeriodicBudgetRequest {
+                                        max_budget_sat,
+                                        renewal_time_mins: budget_renewal_mins,
+                                    }
+                                })
+                            })
+                            .await?
+                    )
                 }
-                NwcCommand::ListConnectionStrings {} => {
-                    command_result!(nwc_service.list_connection_strings().await?)
+                NwcCommand::EditConnection {
+                    name,
+                    receive_only,
+                    expiry_time_mins,
+                    remove_expiry,
+                    max_budget_sat,
+                    budget_renewal_mins,
+                    remove_periodic_budget,
+                } => {
+                    command_result!(
+                        nwc_service
+                            .edit_connection(EditConnectionRequest {
+                                name,
+                                receive_only,
+                                expiry_time_mins,
+                                remove_expiry,
+                                periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
+                                    PeriodicBudgetRequest {
+                                        max_budget_sat,
+                                        renewal_time_mins: budget_renewal_mins,
+                                    }
+                                }),
+                                remove_periodic_budget,
+                            })
+                            .await?
+                    )
                 }
-                NwcCommand::RemoveConnectionString { name } => {
-                    command_result!(nwc_service.remove_connection_string(name).await?)
+                NwcCommand::ListConnections {} => {
+                    command_result!(nwc_service.list_connections().await?)
+                }
+                NwcCommand::RemoveConnection { name } => {
+                    command_result!(nwc_service.remove_connection(name).await?)
                 }
             }
         }

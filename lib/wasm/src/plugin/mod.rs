@@ -72,6 +72,7 @@ pub struct PluginSdk {
     plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
 }
 
+#[allow(dead_code)]
 impl PluginSdk {
     pub(crate) fn sdk(&self) -> breez_sdk_liquid::plugin::PluginSdk {
         self.plugin_sdk.clone()

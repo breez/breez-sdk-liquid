@@ -1,12 +1,13 @@
 use std::{
-    collections::{BTreeMap, BTreeSet, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     str::FromStr as _,
     sync::Arc,
 };
 
 use crate::{
     event::{EventManager, NwcEvent, NwcEventDetails},
-    handler::RelayMessageHandler,
+    handler::{RelayMessageHandler, NWC_SUPPORTED_METHODS},
+    model::ActiveConnection,
     persist::Persister,
 };
 use anyhow::Result;
@@ -30,6 +31,7 @@ pub(crate) struct RuntimeContext {
     pub resubscription_trigger: mpsc::Sender<()>,
     pub event_loop_handle: OnceCell<JoinHandle<()>>,
     pub sdk_listener_id: Mutex<Option<String>>,
+    pub replied_event_ids: Mutex<HashSet<String>>,
 }
 
 impl RuntimeContext {
@@ -48,20 +50,30 @@ impl RuntimeContext {
         self.event_manager
             .notify(NwcEvent {
                 event_id: None,
+                connection_name: None,
                 details: NwcEventDetails::Disconnected,
             })
             .await;
         self.event_manager.pause_notifications();
     }
 
-    pub async fn list_clients(&self) -> Result<HashMap<String, NostrWalletConnectURI>> {
+    pub async fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
         Ok(self
             .persister
-            .list_nwc_uris()?
+            .list_nwc_connections()?
             .into_iter()
-            .filter_map(|(name, uri)| {
-                NostrWalletConnectURI::from_str(&uri)
-                    .map(|uri| (name, uri))
+            .filter_map(|(name, connection)| {
+                NostrWalletConnectURI::from_str(&connection.connection_string)
+                    .map(|uri| {
+                        (
+                            name,
+                            ActiveConnection {
+                                pubkey: Keys::new(uri.secret.clone()).public_key,
+                                uri,
+                                connection,
+                            },
+                        )
+                    })
                     .ok()
             })
             .collect())
@@ -69,12 +81,12 @@ impl RuntimeContext {
 
     pub async fn resubscribe(
         &self,
-        clients: &HashMap<String, NostrWalletConnectURI>,
+        active_connections: &HashMap<String, ActiveConnection>,
     ) -> Result<()> {
-        let pubkeys = clients
-            .values()
-            .map(|uri| uri.public_key.to_string())
-            .collect();
+        if active_connections.is_empty() {
+            info!("No active connections, skipping subscription.");
+            return Ok(());
+        }
         self.client
             .subscribe(
                 Filter {
@@ -83,7 +95,7 @@ impl RuntimeContext {
                             character: Alphabet::P,
                             uppercase: false,
                         },
-                        pubkeys,
+                        BTreeSet::from([self.our_keys.public_key.to_string()]),
                     )]),
                     kinds: Some(BTreeSet::from([Kind::WalletConnectRequest])),
                     ..Default::default()
@@ -103,15 +115,22 @@ impl RuntimeContext {
 
     pub async fn send_info_event(&self) {
         // Broadcast info event
-        let content = "pay_invoice list_transactions get_balance notifications".to_string();
+        let content = NWC_SUPPORTED_METHODS.join(" ").to_string();
         if let Err(err) = self
             .send_event(
-                EventBuilder::new(Kind::WalletConnectInfo, content)
-                    .tag(Tag::custom("encryption".into(), ["nip44_v2".to_string()])),
+                EventBuilder::new(Kind::WalletConnectInfo, content).tag(Tag::custom(
+                    "encryption".into(),
+                    ["nip44_v2 nip04".to_string()],
+                )),
             )
             .await
         {
             warn!("Could not send info event to relay pool: {err:?}");
         }
+    }
+
+    /// Returns true when we have replied to the event, and false otherwise (and inserts it)
+    pub async fn check_replied_event(&self, event_id: String) -> bool {
+        !self.replied_event_ids.lock().await.insert(event_id)
     }
 }
