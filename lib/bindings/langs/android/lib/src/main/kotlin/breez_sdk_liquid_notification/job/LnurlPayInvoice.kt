@@ -6,6 +6,7 @@ import breez_sdk_liquid.InputType
 import breez_sdk_liquid.PaymentMethod
 import breez_sdk_liquid.PrepareReceiveRequest
 import breez_sdk_liquid.ReceiveAmount
+import breez_sdk_liquid.DescriptionHash
 import breez_sdk_liquid.ReceivePaymentRequest
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
@@ -19,6 +20,7 @@ import breez_sdk_liquid_notification.NotificationHelper.Companion.notifyChannel
 import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
+import breez_sdk_liquid_notification.PluginConfigs
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -52,7 +54,7 @@ class LnurlPayInvoiceJob(
         private const val TAG = "LnurlPayInvoiceJob"
     }
 
-    override fun start(liquidSDK: BindingLiquidSdk) {
+    override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
         var request: LnurlInvoiceRequest? = null
         try {
             val decoder = Json { ignoreUnknownKeys = true }
@@ -83,7 +85,7 @@ class LnurlPayInvoiceJob(
                     ReceivePaymentRequest(
                         prepareReceivePaymentRes,
                         description = "[[\"text/plain\",\"$plainTextMetadata\"]]",
-                        useDescriptionHash = true,
+                        descriptionHash = DescriptionHash.UseDescription,
                         payerNote = request.comment,
                     ),
                 )
