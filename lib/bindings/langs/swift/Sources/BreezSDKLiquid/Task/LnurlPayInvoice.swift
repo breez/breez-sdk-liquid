@@ -32,7 +32,7 @@ class LnurlPayInvoiceTask : LnurlPayTask {
         super.init(payload: payload, logger: logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent, successNotificationTitle: successNotificationTitle, failNotificationTitle: failNotificationTitle)
     }
     
-    override func start(liquidSDK: BindingLiquidSdk) throws {
+    override func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
         var request: LnurlInvoiceRequest? = nil
         do {
             request = try JSONDecoder().decode(LnurlInvoiceRequest.self, from: self.payload.data(using: .utf8)!)
@@ -58,7 +58,7 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
             let amount = ReceiveAmount.bitcoin(payerAmountSat: amountSat)
             let prepareReceivePaymentRes = try liquidSDK.prepareReceivePayment(req: PrepareReceiveRequest(paymentMethod: PaymentMethod.bolt11Invoice, amount: amount))
-            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, useDescriptionHash: true, payerNote: request!.comment))
+            let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, descriptionHash: DescriptionHash.useDescription, payerNote: request!.comment))
             // Add the verify URL
             var verify: String?
             if let verifyUrl = request!.verify_url {

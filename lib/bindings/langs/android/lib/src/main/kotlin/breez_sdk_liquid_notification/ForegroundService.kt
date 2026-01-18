@@ -10,6 +10,7 @@ import breez_sdk_liquid.ConnectRequest
 import breez_sdk_liquid.EventListener
 import breez_sdk_liquid.Logger
 import breez_sdk_liquid.SdkEvent
+import breez_sdk_liquid.NwcEvent
 import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.connectSDK
 import breez_sdk_liquid_notification.BreezSdkLiquidConnector.Companion.shutdownSDK
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_INVOICE_REQUEST
@@ -17,6 +18,7 @@ import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INFO
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_INVOICE
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_LNURL_PAY_VERIFY
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
+import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_NWC_EVENT
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_FOREGROUND_SERVICE
 import breez_sdk_liquid_notification.Constants.NOTIFICATION_ID_REPLACEABLE
 import breez_sdk_liquid_notification.Constants.SERVICE_TIMEOUT_MS
@@ -29,6 +31,8 @@ import breez_sdk_liquid_notification.job.LnurlPayInfoJob
 import breez_sdk_liquid_notification.job.LnurlPayInvoiceJob
 import breez_sdk_liquid_notification.job.LnurlPayVerifyJob
 import breez_sdk_liquid_notification.job.SwapUpdatedJob
+import breez_sdk_liquid_notification.job.NwcEventJob
+import breez_sdk_liquid_notification.PluginConfigs
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -193,10 +197,24 @@ abstract class ForegroundService :
                             logger,
                         )
 
+                    MESSAGE_TYPE_NWC_EVENT ->
+                        NwcEventJob(
+                            applicationContext,
+                            this,
+                            payload,
+                            logger,
+                        )
+
                     else -> null
                 }
             }
         }
+
+    /** Get the plugin configurations to be passed to the SDK's `connect` method
+     *  This can be overridden to select which plugins to activate. By default, an empty config is passed. */
+    open fun getPluginConfigs(): PluginConfigs {
+        return PluginConfigs(nwc = null)
+    }
 
     private fun launchSdkConnection(
         connectRequest: ConnectRequest,
@@ -216,12 +234,13 @@ abstract class ForegroundService :
 
             liquidSDK?.let {
                 jobs.add(job)
-                job.start(liquidSDK!!)
+                job.start(liquidSDK!!, getPluginConfigs())
             }
         }
     }
 
     private fun shutdownSdkConnection() {
+        PluginManager.shutdown(logger)
         logger.log(TAG, "Shutting down Breez Liquid SDK connection", "DEBUG")
         shutdownSDK()
         liquidSDK = null

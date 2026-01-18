@@ -11,7 +11,7 @@ def test():
     config = breez_sdk_liquid.default_config(breez_sdk_liquid.LiquidNetwork.TESTNET, None)
     config.sync_service_url = None
     connect_request = breez_sdk_liquid.ConnectRequest(config=config, mnemonic=mnemonic)
-    sdk = breez_sdk_liquid.connect(req=connect_request,plugins=None)
+    sdk = breez_sdk_liquid.connect(req=connect_request)
 
     listener_id = sdk.add_event_listener(SDKListener())
 

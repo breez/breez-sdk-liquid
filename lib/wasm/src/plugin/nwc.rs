@@ -1,16 +1,67 @@
 use breez_sdk_liquid::plugin::Plugin as _;
 use breez_sdk_liquid_nwc::{NwcService as _, SdkNwcService};
-use std::rc::Rc;
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 
 use crate::{
     error::WasmError,
-    model::WasmResult,
-    plugin::{storage::PluginStorage, PluginSdk},
+    model::{Payment, WasmResult},
 };
 
 mod model {
     use wasm_bindgen::prelude::*;
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::PeriodicBudget)]
+    pub struct PeriodicBudget {
+        pub used_budget_sat: u64,
+        pub max_budget_sat: u64,
+        pub renews_at: Option<u32>,
+        pub updated_at: u32,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::PeriodicBudgetRequest)]
+    pub struct PeriodicBudgetRequest {
+        pub max_budget_sat: u64,
+        pub renewal_time_mins: Option<u32>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NwcConnection)]
+    pub struct NwcConnection {
+        pub connection_string: String,
+        pub created_at: u32,
+        pub receive_only: bool,
+        pub paid_amount_sat: u64,
+        pub expires_at: Option<u32>,
+        pub periodic_budget: Option<PeriodicBudget>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::AddConnectionRequest)]
+    pub struct AddConnectionRequest {
+        pub name: String,
+        pub receive_only: Option<bool>,
+        pub expiry_time_mins: Option<u32>,
+        pub periodic_budget_req: Option<PeriodicBudgetRequest>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::AddConnectionResponse)]
+    pub struct AddConnectionResponse {
+        pub connection: NwcConnection,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::EditConnectionRequest)]
+    pub struct EditConnectionRequest {
+        pub name: String,
+        pub receive_only: Option<bool>,
+        pub expiry_time_mins: Option<u32>,
+        pub remove_expiry: Option<bool>,
+        pub periodic_budget_req: Option<PeriodicBudgetRequest>,
+        pub remove_periodic_budget: Option<bool>,
+    }
+
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::EditConnectionResponse)]
+    pub struct EditConnectionResponse {
+        pub connection: NwcConnection,
+    }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEventDetails)]
     pub enum NwcEventDetails {
@@ -22,13 +73,18 @@ mod model {
             fees_sat: Option<u64>,
             error: Option<String>,
         },
+        MakeInvoice,
         ListTransactions,
         GetBalance,
+        GetInfo,
+        ConnectionExpired,
+        ConnectionRefreshed,
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEvent)]
     pub struct NwcEvent {
         pub event_id: Option<String>,
+        pub connection_name: Option<String>,
         pub details: NwcEventDetails,
     }
 
@@ -63,53 +119,87 @@ mod model {
 pub use model::*;
 
 #[derive(Clone)]
-#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::NwcConfig)]
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NwcConfig)]
 pub struct NwcConfig {
     pub relay_urls: Option<Vec<String>>,
     pub secret_key_hex: Option<String>,
+    pub listen_to_events: Option<bool>,
 }
 
 #[wasm_bindgen]
 pub struct BindingNwcService {
-    inner: Rc<SdkNwcService>,
+    pub(crate) service: Arc<SdkNwcService>,
 }
 
 #[wasm_bindgen]
 impl BindingNwcService {
-    #[wasm_bindgen(constructor)]
-    pub fn new(config: NwcConfig) -> Self {
-        let inner = Rc::new(SdkNwcService::new(config.into()));
-        Self { inner }
+    pub(crate) fn new(config: NwcConfig) -> Self {
+        let service = Arc::new(SdkNwcService::new(config.into()));
+        Self { service }
     }
 
     // NWC
-    #[wasm_bindgen(js_name = "addConnectionString")]
-    pub async fn add_connection_string(&self, name: String) -> WasmResult<String> {
-        self.inner
-            .add_connection_string(name)
+    #[wasm_bindgen(js_name = "addConnection")]
+    pub async fn add_connection(
+        &self,
+        req: AddConnectionRequest,
+    ) -> WasmResult<AddConnectionResponse> {
+        self.service
+            .add_connection(req.into())
             .await
+            .map(Into::into)
             .map_err(Into::into)
     }
 
-    #[wasm_bindgen(js_name = "listConnectionStrings")]
-    pub async fn list_connection_strings(&self) -> WasmResult<js_sys::Map> {
-        let uris = self
-            .inner
-            .list_connection_strings()
+    #[wasm_bindgen(js_name = "editConnection")]
+    pub async fn edit_connection(
+        &self,
+        req: EditConnectionRequest,
+    ) -> WasmResult<EditConnectionResponse> {
+        self.service
+            .edit_connection(req.into())
+            .await
+            .map(Into::into)
+            .map_err(Into::into)
+    }
+
+    #[wasm_bindgen(js_name = "listConnections")]
+    pub async fn list_connections(&self) -> WasmResult<js_sys::Map> {
+        let connections = self
+            .service
+            .list_connections()
             .await
             .map_err(Into::<WasmError>::into)?;
         let mut result = js_sys::Map::new();
-        for (key, value) in uris.into_iter() {
-            result = result.set(&JsValue::from_str(&key), &JsValue::from_str(&value));
+        for (name, con) in connections.into_iter() {
+            let con: NwcConnection = con.into();
+            result = result.set(&JsValue::from_str(&name), &JsValue::from(con));
         }
         Ok(result)
     }
 
-    #[wasm_bindgen(js_name = "removeConnectionString")]
-    pub async fn remove_connection_string(&self, name: String) -> WasmResult<()> {
-        self.inner
-            .remove_connection_string(name)
+    #[wasm_bindgen(js_name = "removeConnection")]
+    pub async fn remove_connection(&self, name: String) -> WasmResult<()> {
+        self.service
+            .remove_connection(name)
             .await
+            .map_err(Into::into)
+    }
+
+    #[wasm_bindgen(js_name = "handleEvent")]
+    pub async fn handle_event(&self, event_id: String) -> WasmResult<()> {
+        self.service
+            .handle_event(event_id)
+            .await
+            .map_err(Into::into)
+    }
+
+    #[wasm_bindgen(js_name = "listConnectionPayments")]
+    pub async fn list_connection_payments(&self, name: String) -> WasmResult<Vec<Payment>> {
+        self.service
+            .list_connection_payments(name)
+            .await
+            .map(|res| res.into_iter().map(Into::into).collect())
             .map_err(Into::into)
     }
 
@@ -117,29 +207,16 @@ impl BindingNwcService {
     pub async fn add_event_listener(&self, listener: model::NwcEventListener) -> String {
         let listener: Box<dyn breez_sdk_liquid_nwc::event::NwcEventListener> =
             Box::new(WasmNwcEventListener { listener });
-        self.inner.add_event_listener(listener).await
+        self.service.add_event_listener(listener).await
     }
 
     #[wasm_bindgen(js_name = "removeEventListener")]
     pub async fn remove_event_listener(&self, listener_id: String) {
-        self.inner.remove_event_listener(&listener_id).await
+        self.service.remove_event_listener(&listener_id).await
     }
 
-    /// Plugin
-    #[wasm_bindgen(js_name = "id")]
-    pub fn id(&self) -> String {
-        self.inner.id()
-    }
-
-    #[wasm_bindgen(js_name = "onStart")]
-    pub async fn on_start(&self, plugin_sdk: PluginSdk, storage: PluginStorage) {
-        self.inner
-            .on_start(plugin_sdk.sdk(), storage.storage())
-            .await;
-    }
-
-    #[wasm_bindgen(js_name = "onStop")]
-    pub async fn on_stop(&self) {
-        self.inner.on_stop().await;
+    #[wasm_bindgen(js_name = "stop")]
+    pub async fn stop(&self) {
+        self.service.on_stop().await;
     }
 }

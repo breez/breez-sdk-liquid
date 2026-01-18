@@ -1,26 +1,26 @@
 diff --git a/packages/react-native/lib/commonjs/generated/breez_sdk_liquid.js b/packages/react-native/lib/commonjs/generated/breez_sdk_liquid.js
-index 233bedd0..6d4ea103 100644
+index a6120880..b21a3a9c 100644
 --- a/packages/react-native/lib/commonjs/generated/breez_sdk_liquid.js
 +++ b/packages/react-native/lib/commonjs/generated/breez_sdk_liquid.js
-@@ -8,7 +8,12 @@ exports.WalletInfo = exports.UrlSuccessActionData = exports.Symbol = exports.Suc
- exports.connect = connect;
- exports.connectWithSigner = connectWithSigner;
- exports.default = void 0;
--exports.defaultConfig = defaultConfig;
-+exports.defaultConfig = (network, breezApiKey) => {
-+  var config = defaultConfig(network, breezApiKey);
+@@ -38,9 +38,12 @@ function connectWithSigner(req, signer) /*throws*/{
+   }, /*liftString:*/FfiConverterString.lift));
+ }
+ function defaultConfig(network, breezApiKey) /*throws*/{
+-  return FfiConverterTypeConfig.lift(uniffiCaller.rustCallWithError(/*liftError:*/FfiConverterTypeSdkError.lift.bind(FfiConverterTypeSdkError), /*caller:*/callStatus => {
++  const config = FfiConverterTypeConfig.lift(uniffiCaller.rustCallWithError(/*liftError:*/FfiConverterTypeSdkError.lift.bind(FfiConverterTypeSdkError), /*caller:*/callStatus => {
+     return (0, _breez_sdk_liquidFfi.default)().ubrn_uniffi_breez_sdk_liquid_bindings_fn_func_default_config(FfiConverterTypeLiquidNetwork.lower(network), FfiConverterOptionalString.lower(breezApiKey), callStatus);
+   }, /*liftString:*/FfiConverterString.lift));
 +  var fs = require('react-native-fs');
 +  config.workingDir = `${fs.DocumentDirectoryPath}/breezSdkLiquid`;
 +  return config;
-+}
- exports.parseInvoice = parseInvoice;
- exports.setLogger = setLogger;
- var _breez_sdk_liquidFfi = _interopRequireDefault(require("./breez_sdk_liquid-ffi.js"));
+ }
+ function parseInvoice(input) /*throws*/{
+   return FfiConverterTypeLNInvoice.lift(uniffiCaller.rustCallWithError(/*liftError:*/FfiConverterTypePaymentError.lift.bind(FfiConverterTypePaymentError), /*caller:*/callStatus => {
 diff --git a/packages/react-native/lib/module/generated/breez_sdk_liquid.js b/packages/react-native/lib/module/generated/breez_sdk_liquid.js
-index ab0ec549..b7384a6a 100644
+index bf7db559..f85a715b 100644
 --- a/packages/react-native/lib/module/generated/breez_sdk_liquid.js
 +++ b/packages/react-native/lib/module/generated/breez_sdk_liquid.js
-@@ -25,9 +25,12 @@ export function connectWithSigner(req, signer, plugins) /*throws*/{
+@@ -25,9 +25,12 @@ export function connectWithSigner(req, signer) /*throws*/{
    }, /*liftString:*/FfiConverterString.lift));
  }
  export function defaultConfig(network, breezApiKey) /*throws*/{
@@ -34,3 +34,7 @@ index ab0ec549..b7384a6a 100644
  }
  export function parseInvoice(input) /*throws*/{
    return FfiConverterTypeLNInvoice.lift(uniffiCaller.rustCallWithError(/*liftError:*/FfiConverterTypePaymentError.lift.bind(FfiConverterTypePaymentError), /*caller:*/callStatus => {
+@@ -10855,4 +10858,4 @@ export default Object.freeze({
+     FfiConverterTypeWalletInfo
+   }
+ });

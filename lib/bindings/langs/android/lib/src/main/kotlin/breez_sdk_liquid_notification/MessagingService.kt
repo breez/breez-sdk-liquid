@@ -5,6 +5,7 @@ import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
 import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
 import android.content.Context
 import android.util.Log
+import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_NWC_EVENT
 import breez_sdk_liquid_notification.Constants.MESSAGE_TYPE_SWAP_UPDATED
 import breez_sdk_liquid_notification.NotificationHelper.Companion.getNotificationManager
 
@@ -29,6 +30,7 @@ interface MessagingService {
         val isServiceNeeded =
             when (message.type) {
                 MESSAGE_TYPE_SWAP_UPDATED -> !isAppForeground(context)
+                MESSAGE_TYPE_NWC_EVENT -> !isAppForeground(context)
                 else -> true
             }
         if (notificationManager != null && isServiceNeeded) {

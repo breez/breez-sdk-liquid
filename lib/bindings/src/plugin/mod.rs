@@ -10,10 +10,11 @@ pub use nwc::*;
 
 use crate::{rt, EventListener, EventListenerWrapper};
 
-pub struct PluginSdk {
+pub(crate) struct PluginSdk {
     plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
 }
 
+#[allow(dead_code)]
 impl PluginSdk {
     pub fn get_info(&self) -> Result<GetInfoResponse, SdkError> {
         rt().block_on(self.plugin_sdk.get_info())
@@ -47,6 +48,10 @@ impl PluginSdk {
         rt().block_on(self.plugin_sdk.receive_payment(&req))
     }
 
+    pub fn parse(&self, input: String) -> Result<InputType, PaymentError> {
+        rt().block_on(self.plugin_sdk.parse(&input))
+    }
+
     pub fn list_payments(&self, req: ListPaymentsRequest) -> Result<Vec<Payment>, PaymentError> {
         rt().block_on(self.plugin_sdk.list_payments(&req))
     }
@@ -62,13 +67,19 @@ impl PluginSdk {
     }
 }
 
-pub struct PluginStorage {
+pub(crate) struct PluginStorage {
     pub(crate) storage: breez_sdk_liquid::plugin::PluginStorage,
 }
 
+#[allow(dead_code)]
 impl PluginStorage {
-    pub fn set_item(&self, key: String, value: String) -> Result<(), PluginStorageError> {
-        self.storage.set_item(&key, value)
+    pub fn set_item(
+        &self,
+        key: String,
+        value: String,
+        old_value: Option<String>,
+    ) -> Result<(), PluginStorageError> {
+        self.storage.set_item(&key, value, old_value)
     }
 
     pub fn get_item(&self, key: String) -> Result<Option<String>, PluginStorageError> {
@@ -80,20 +91,26 @@ impl PluginStorage {
     }
 }
 
-pub trait Plugin: Send + Sync {
+pub(crate) trait Plugin: Send + Sync {
     fn id(&self) -> String;
     fn on_start(&self, plugin_sdk: Arc<PluginSdk>, storage: Arc<PluginStorage>);
     fn on_stop(&self);
 }
 
 pub(crate) struct PluginWrapper {
-    pub(crate) inner: Box<dyn Plugin>,
+    pub(crate) plugin: Arc<dyn Plugin>,
+}
+
+impl PluginWrapper {
+    pub(crate) fn new_plugin(plugin: Arc<dyn Plugin>) -> Arc<dyn breez_sdk_liquid::plugin::Plugin> {
+        Arc::new(Self { plugin })
+    }
 }
 
 #[sdk_macros::async_trait]
 impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
     fn id(&self) -> String {
-        self.inner.id()
+        self.plugin.id()
     }
 
     async fn on_start(
@@ -101,13 +118,13 @@ impl breez_sdk_liquid::plugin::Plugin for PluginWrapper {
         plugin_sdk: breez_sdk_liquid::plugin::PluginSdk,
         storage: breez_sdk_liquid::plugin::PluginStorage,
     ) {
-        self.inner.on_start(
+        self.plugin.on_start(
             PluginSdk { plugin_sdk }.into(),
             PluginStorage { storage }.into(),
         );
     }
 
     async fn on_stop(&self) {
-        self.inner.on_stop();
+        self.plugin.on_stop();
     }
 }

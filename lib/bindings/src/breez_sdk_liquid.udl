@@ -59,6 +59,14 @@ dictionary LNOffer {
     string? issuer;
 };
 
+dictionary NostrConnectionUri {
+    string wallet_public_key;
+    string app_public_key;
+    string app_secret;
+    sequence<string> relays;
+    string? lud16;
+};
+
 [Enum]
 interface InputType {
     BitcoinAddress(BitcoinAddressData address);
@@ -71,6 +79,7 @@ interface InputType {
     LnUrlWithdraw(LnUrlWithdrawRequestData data);
     LnUrlAuth(LnUrlAuthRequestData data);
     LnUrlError(LnUrlErrorData data);
+    NostrWalletConnectUri(NostrConnectionUri data);
 };
 
 dictionary BitcoinAddressData {
@@ -293,6 +302,132 @@ dictionary LnUrlPaySuccessData {
 // END sdk-common wrappers
 ////////////////////////////////
 
+//////////////////////////////////
+// BEGIN NWC interfaces
+
+[Error]
+interface NwcError {
+    Generic(string err);
+    Persist(string err);
+    Network(string err);
+    PubkeyNotFound(string pubkey);
+    InvalidSignature(string err);
+    Encryption(string err);
+    EventNotFound();
+    EventExpired();
+    AlreadyReplied();
+    InvoiceExpired();
+    InvoiceWithoutAmount();
+    MaxBudgetExceeded();
+    ConnectionNotFound();
+    ConnectionExists();
+};
+
+dictionary NwcConfig {
+  sequence<string>? relay_urls = null;
+  string? secret_key_hex = null;
+  boolean? listen_to_events = null;
+};
+
+[Enum]
+interface NwcEventDetails {
+    Connected();
+    Disconnected();
+    PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
+    MakeInvoice();
+    ListTransactions();
+    GetBalance();
+    GetInfo();
+    ConnectionExpired();
+    ConnectionRefreshed();
+};
+
+dictionary NwcEvent {
+    string? event_id;
+    string? connection_name;
+    NwcEventDetails details;
+};
+
+callback interface NwcEventListener {
+    void on_event(NwcEvent event);
+};
+
+dictionary PeriodicBudget {
+    u64 used_budget_sat;
+    u64 max_budget_sat;
+    u32? renews_at;
+    u32 updated_at;
+};
+
+dictionary PeriodicBudgetRequest {
+    u64 max_budget_sat;
+    u32? renewal_time_mins;
+};
+
+dictionary NwcConnection {
+    string connection_string;
+    u32 created_at;
+    boolean receive_only;
+    u64 paid_amount_sat;
+    u32? expires_at = null;
+    PeriodicBudget? periodic_budget = null;
+};
+
+dictionary AddConnectionRequest {
+    string name;
+    boolean? receive_only = null;
+    u32? expiry_time_mins = null;
+    PeriodicBudgetRequest? periodic_budget_req = null;
+};
+
+dictionary AddConnectionResponse {
+    NwcConnection connection;
+};
+
+dictionary EditConnectionRequest {
+    string name;
+    boolean? receive_only = null;
+    u32? expiry_time_mins = null;
+    boolean? remove_expiry = null;
+    PeriodicBudgetRequest? periodic_budget_req = null;
+    boolean? remove_periodic_budget = null;
+};
+
+dictionary EditConnectionResponse {
+    NwcConnection connection;
+};
+
+interface BindingNwcService {
+  constructor(NwcConfig config);
+
+  [Throws=NwcError]
+  AddConnectionResponse add_connection(AddConnectionRequest req);
+
+  [Throws=NwcError]
+  EditConnectionResponse edit_connection(EditConnectionRequest req);
+
+  [Throws=NwcError]
+  record<string,NwcConnection> list_connections();
+
+  [Throws=NwcError]
+  void remove_connection(string name);
+
+  [Throws=NwcError]
+  void handle_event(string event_id);
+
+  [Throws=NwcError]
+  sequence<Payment> list_connection_payments(string name);
+
+  string add_event_listener(NwcEventListener listener);
+
+  void remove_event_listener(string listener_id);
+  
+  void stop();
+};
+
+// END NWC interfaces
+////////////////////////////////
+
 [Error]
 enum SdkError {
     "AlreadyStarted",
@@ -495,10 +630,16 @@ dictionary PrepareReceiveResponse {
     f64? swapper_feerate;
 };
 
+[Enum]
+interface DescriptionHash {
+    UseDescription();
+    Custom(string hash);
+};
+
 dictionary ReceivePaymentRequest {
     PrepareReceiveResponse prepare_response;
     string? description = null;
-    boolean? use_description_hash = null;
+    DescriptionHash? description_hash = null;
     string? payer_note = null;
 };
 
@@ -756,10 +897,10 @@ dictionary AssetMetadata {
 
 namespace breez_sdk_liquid {
     [Throws=SdkError]
-    BindingLiquidSdk connect(ConnectRequest req, sequence<Plugin>? plugins);
+    BindingLiquidSdk connect(ConnectRequest req);
 
     [Throws=SdkError]
-    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer, sequence<Plugin>? plugins);
+    BindingLiquidSdk connect_with_signer(ConnectWithSignerRequest req, Signer signer);
 
     [Throws=SdkError]
     void set_logger(Logger logger);
@@ -916,109 +1057,7 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     sequence<FiatCurrency> list_fiat_currencies();
-};
-
-/// PLUGINS
-
-// Interface
-interface PluginSdk {
-    [Throws=SdkError]
-    GetInfoResponse get_info();
-
-    [Throws=PaymentError]
-    PrepareSendResponse prepare_send_payment(PrepareSendRequest req);
-
-    [Throws=PaymentError]
-    SendPaymentResponse send_payment(SendPaymentRequest req);
-
-    [Throws=PaymentError]
-    PrepareReceiveResponse prepare_receive_payment(PrepareReceiveRequest req);
-
-    [Throws=PaymentError]
-    ReceivePaymentResponse receive_payment(ReceivePaymentRequest req);
-
-    [Throws=PaymentError]
-    sequence<Payment> list_payments(ListPaymentsRequest req);
 
     [Throws=SdkError]
-    string add_event_listener(EventListener listener);
-
-    [Throws=SdkError]
-    void remove_event_listener(string id);
-};
-
-[Error]
-interface PluginStorageError {
-    Encryption(string err);
-    Generic(string err);
-};
-
-interface PluginStorage {
-    [Throws=PluginStorageError]
-    void set_item(string key, string value);
-
-    [Throws=PluginStorageError]
-    string? get_item(string key);
-
-    [Throws=PluginStorageError]
-    void remove_item(string key);
-};
-
-callback interface Plugin {
-    string id();
-    void on_start(PluginSdk plugin_sdk, PluginStorage storage);
-    void on_stop();
-};
-
-// NWC
-[Error]
-enum NwcError {
-    "Generic",
-    "Persist",
-};
-
-dictionary NwcConfig {
-  sequence<string>? relay_urls;
-  string? secret_key_hex;
-};
-
-[Enum]
-interface NwcEventDetails {
-    Connected();
-    Disconnected();
-    PayInvoice(boolean success, string? preimage, u64? fees_sat, string? error);
-    ListTransactions();
-    GetBalance();
-};
-
-dictionary NwcEvent {
-    string? event_id;
-    NwcEventDetails details;
-};
-
-callback interface NwcEventListener {
-    void on_event(NwcEvent event);
-};
-
-interface BindingNwcService {
-  constructor(NwcConfig config);
-
-  [Throws=NwcError]
-  string add_connection_string(string name);
-
-  [Throws=NwcError]
-  record<string,string> list_connection_strings();
-
-  [Throws=NwcError]
-  void remove_connection_string(string name);
-
-  string add_event_listener(NwcEventListener listener);
-
-  void remove_event_listener(string listener_id);
-
-  string id();
-
-  void on_start(PluginSdk plugin_sdk, PluginStorage storage);
-
-  void on_stop();
+    BindingNwcService use_nwc_plugin(NwcConfig config);
 };

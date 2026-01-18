@@ -18,7 +18,7 @@ func main() {
 	sdk, err := breez_sdk_liquid.Connect(breez_sdk_liquid.ConnectRequest{
 		Config:   config,
 		Mnemonic: &mnemonic,
-	}, nil)
+	})
 
 	if err != nil {
 		log.Fatalf("Connect failed: %#v", err)

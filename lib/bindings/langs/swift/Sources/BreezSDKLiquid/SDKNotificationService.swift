@@ -26,7 +26,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
             }
             return
         }
-        
+
         if let currentTask = self.getTaskFromNotification() {
             self.currentTask = currentTask
             
@@ -35,7 +35,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
                     logger.log(tag: TAG, line: "Breez Liquid SDK is not connected, connecting...", level: "INFO")
                     liquidSDK = try BreezSDKLiquidConnector.register(connectRequest: connectRequest, listener: currentTask)
                     logger.log(tag: TAG, line: "Breez Liquid SDK connected successfully", level: "INFO")
-                    try currentTask.start(liquidSDK: liquidSDK!)
+                    try currentTask.start(liquidSDK: liquidSDK!, pluginConfigs: getPluginConfigs())
                 } catch {
                     logger.log(tag: TAG, line: "Breez Liquid SDK connection failed \(error)", level: "ERROR")
                     shutdown()
@@ -46,6 +46,10 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     
     open func getConnectRequest() -> ConnectRequest? {
         return nil
+    }
+
+    open func getPluginConfigs() -> PluginConfigs {
+        return PluginConfigs(nwc: nil)
     }
         
     open func getTaskFromNotification() -> TaskProtocol? {
@@ -72,6 +76,8 @@ open class SDKNotificationService: UNNotificationServiceExtension {
             return LnurlPayInvoiceTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
         case Constants.MESSAGE_TYPE_LNURL_PAY_VERIFY:
             return LnurlPayVerifyTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
+        case Constants.MESSAGE_TYPE_NWC_EVENT:
+            return NwcEventTask(payload: payload, logger: self.logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent)
         default:
             return nil
         }
@@ -87,6 +93,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     }
     
     private func shutdown() -> Void {
+        PluginManager.shutdown()
         self.logger.log(tag: TAG, line: "shutting down...", level: "INFO")
         BreezSDKLiquidConnector.unregister()
         self.logger.log(tag: TAG, line: "task unregistered", level: "INFO")

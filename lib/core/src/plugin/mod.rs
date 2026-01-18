@@ -8,6 +8,7 @@ use crate::sdk::LiquidSdk;
 mod storage;
 
 use anyhow::Context as _;
+use sdk_common::prelude::InputType;
 pub use storage::*;
 
 #[sdk_macros::async_trait]
@@ -70,6 +71,10 @@ impl PluginSdk {
         req: &ListPaymentsRequest,
     ) -> Result<Vec<Payment>, PaymentError> {
         self.sdk()?.list_payments(req).await
+    }
+
+    pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
+        self.sdk()?.parse(input).await
     }
 
     pub async fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {

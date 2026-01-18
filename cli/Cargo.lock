@@ -750,8 +750,9 @@ dependencies = [
  "async-trait",
  "breez-sdk-liquid",
  "log",
- "nostr-sdk",
+ "nostr-sdk 0.43.0",
  "once_cell",
+ "sdk-common",
  "sdk-macros",
  "serde",
  "serde_json",
@@ -759,6 +760,7 @@ dependencies = [
  "tokio",
  "tokio_with_wasm",
  "uuid",
+ "web-time",
 ]
 
 [[package]]
@@ -2857,14 +2859,59 @@ dependencies = [
 ]
 
 [[package]]
+name = "nostr"
+version = "0.44.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3595fecf0e0aaacb69a0dc0101a4453f3c76eda333d6bbc49f68f64390b3d85"
+dependencies = [
+ "aes",
+ "base64 0.22.1",
+ "bech32 0.11.0",
+ "bip39",
+ "bitcoin_hashes 0.14.0",
+ "cbc",
+ "chacha20",
+ "chacha20poly1305",
+ "getrandom 0.2.16",
+ "hex",
+ "instant",
+ "scrypt",
+ "secp256k1 0.29.1",
+ "serde",
+ "serde_json",
+ "unicode-normalization",
+ "url",
+]
+
+[[package]]
 name = "nostr-database"
 version = "0.43.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1c75a8c2175d2785ba73cfddef21d1e30da5fbbdf158569b6808ba44973a15b"
 dependencies = [
  "lru",
- "nostr",
+ "nostr 0.43.1",
  "tokio",
+]
+
+[[package]]
+name = "nostr-database"
+version = "0.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7462c9d8ae5ef6a28d66a192d399ad2530f1f2130b13186296dbb11bdef5b3d1"
+dependencies = [
+ "lru",
+ "nostr 0.44.1",
+ "tokio",
+]
+
+[[package]]
+name = "nostr-gossip"
+version = "0.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ade30de16869618919c6b5efc8258f47b654a98b51541eb77f85e8ec5e3c83a6"
+dependencies = [
+ "nostr 0.44.1",
 ]
 
 [[package]]
@@ -2878,8 +2925,26 @@ dependencies = [
  "atomic-destructor",
  "lru",
  "negentropy",
- "nostr",
- "nostr-database",
+ "nostr 0.43.1",
+ "nostr-database 0.43.0",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "nostr-relay-pool"
+version = "0.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b1073ccfbaea5549fb914a9d52c68dab2aecda61535e5143dd73e95445a804b"
+dependencies = [
+ "async-utility",
+ "async-wsocket",
+ "atomic-destructor",
+ "hex",
+ "lru",
+ "negentropy",
+ "nostr 0.44.1",
+ "nostr-database 0.44.0",
  "tokio",
  "tracing",
 ]
@@ -2891,10 +2956,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "599f8963d6a1522a13b1a2b0ea6e168acfc367706606f1d33fa595e91fa22db0"
 dependencies = [
  "async-utility",
- "nostr",
- "nostr-database",
- "nostr-relay-pool",
+ "nostr 0.43.1",
+ "nostr-database 0.43.0",
+ "nostr-relay-pool 0.43.0",
  "tokio",
+]
+
+[[package]]
+name = "nostr-sdk"
+version = "0.44.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "471732576710e779b64f04c55e3f8b5292f865fea228436daf19694f0bf70393"
+dependencies = [
+ "async-utility",
+ "nostr 0.44.1",
+ "nostr-database 0.44.0",
+ "nostr-gossip",
+ "nostr-relay-pool 0.44.0",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -4040,7 +4120,7 @@ dependencies = [
 [[package]]
 name = "sdk-common"
 version = "0.7.1"
-source = "git+https://github.com/breez/breez-sdk?rev=5e60ae519b23d618e1ffb3d9899205fb1638d02d#5e60ae519b23d618e1ffb3d9899205fb1638d02d"
+source = "git+https://github.com/breez/breez-sdk?rev=27452b5fd80be52ef047b3e3acb51dc6779b4a38#27452b5fd80be52ef047b3e3acb51dc6779b4a38"
 dependencies = [
  "aes",
  "anyhow",
@@ -4059,6 +4139,7 @@ dependencies = [
  "lightning 0.1.5",
  "lightning-invoice 0.26.0",
  "log",
+ "nostr-sdk 0.44.1",
  "percent-encoding",
  "prost 0.11.9",
  "prost 0.13.5",
@@ -4084,7 +4165,7 @@ dependencies = [
 [[package]]
 name = "sdk-macros"
 version = "0.7.1"
-source = "git+https://github.com/breez/breez-sdk?rev=5e60ae519b23d618e1ffb3d9899205fb1638d02d#5e60ae519b23d618e1ffb3d9899205fb1638d02d"
+source = "git+https://github.com/breez/breez-sdk?rev=27452b5fd80be52ef047b3e3acb51dc6779b4a38#27452b5fd80be52ef047b3e3acb51dc6779b4a38"
 dependencies = [
  "proc-macro2",
  "quote",

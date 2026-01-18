@@ -15,11 +15,13 @@ log() {
 }
 
 # Init Rust/FFI build
-log "Initializing Rust/FFI build..."
-(
-  cd "$LIB_DIR"
-  make init android
-)
+if [[ $SKIP_BUILD -ne 1 ]]; then
+  log "Initializing Rust/FFI build..."
+  (
+    cd "$LIB_DIR"
+    make android
+  )
+fi
 
 # Clean existing Kotlin bindings
 log "Cleaning old Kotlin bindings..."
