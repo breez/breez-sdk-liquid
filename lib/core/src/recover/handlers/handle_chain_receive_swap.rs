@@ -47,6 +47,10 @@ impl ChainReceiveSwapHandler {
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();
         debug!("[Recover Chain Receive] Recovering data for swap {swap_id}");
+        debug!(
+            "[Recover Chain Receive] Swap {swap_id}: stored claim_address={:?}, current claim_tx_id={:?}, current refund_tx_id={:?}",
+            chain_swap.claim_address, chain_swap.claim_tx_id, chain_swap.refund_tx_id
+        );
 
         // Extract lockup script from swap
         let lockup_script = chain_swap
@@ -89,6 +93,18 @@ impl ChainReceiveSwapHandler {
                 .cloned(),
         };
 
+        debug!(
+            "[Recover Chain Receive] Swap {swap_id}: lbtc_claim_script_history len={}, btc_lockup_script_history len={}",
+            history.lbtc_claim_script_history.len(),
+            history.btc_lockup_script_history.len()
+        );
+        for (i, h) in history.lbtc_claim_script_history.iter().enumerate() {
+            debug!(
+                "[Recover Chain Receive] Swap {swap_id}: lbtc_history[{i}] txid={}, height={}",
+                h.txid, h.height
+            );
+        }
+
         // First obtain transaction IDs from the history
         let recovered_data = Self::recover_onchain_data(
             &context.tx_map,
@@ -96,6 +112,15 @@ impl ChainReceiveSwapHandler {
             &lockup_script,
             &context.master_blinding_key,
         )?;
+
+        debug!(
+            "[Recover Chain Receive] Swap {swap_id}: recovered lbtc_server_lockup_tx_id={:?}, lbtc_claim_tx_id={:?}, lbtc_claim_address={:?}, btc_user_lockup_tx_id={:?}, btc_refund_tx_id={:?}",
+            recovered_data.lbtc_server_lockup_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.lbtc_claim_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.lbtc_claim_address,
+            recovered_data.btc_user_lockup_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.btc_refund_tx_id.as_ref().map(|h| h.txid.to_string())
+        );
 
         // Update the swap with recovered data
         Self::update_swap(
@@ -139,6 +164,10 @@ impl ChainReceiveSwapHandler {
             is_expired,
             chain_swap.is_waiting_fee_acceptance(),
         ) {
+            debug!(
+                "[Recover Chain Receive] Swap {}: state transition {:?} -> {:?}",
+                chain_swap.id, chain_swap.state, new_state
+            );
             chain_swap.state = new_state;
         }
 
@@ -182,10 +211,27 @@ impl ChainReceiveSwapHandler {
 
         // Get claim address from tx
         let lbtc_claim_address = if let Some(claim_tx_id) = &lbtc_claim_tx_id {
-            tx_map
-                .incoming_tx_map
-                .get(&claim_tx_id.txid)
+            let wallet_tx = tx_map.incoming_tx_map.get(&claim_tx_id.txid);
+            log::debug!(
+                "[recover_onchain_data] Extracting claim address: claim_txid={}, found_in_incoming_tx_map={}",
+                claim_tx_id.txid,
+                wallet_tx.is_some()
+            );
+
+            wallet_tx
                 .and_then(|tx| {
+                    let valid_outputs: Vec<_> = tx
+                        .outputs
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, o)| o.is_some())
+                        .collect();
+                    log::debug!(
+                        "[recover_onchain_data] Claim tx has {} total outputs, {} unblinded",
+                        tx.outputs.len(),
+                        valid_outputs.len()
+                    );
+
                     tx.outputs
                         .iter()
                         .find(|output| output.is_some())
@@ -200,6 +246,7 @@ impl ChainReceiveSwapHandler {
                     .map(|addr| addr.to_string())
                 })
         } else {
+            log::debug!("[recover_onchain_data] No claim tx to extract address from");
             None
         };
 
@@ -262,12 +309,27 @@ impl ChainReceiveSwapHandler {
             .cloned();
 
         // Determine the refund tx based on claim status
+        log::debug!(
+            "[recover_onchain_data] Refund determination: lbtc_claim_tx_id.is_some()={}, btc_lockup_outgoing_txs.len()={}, btc_last_outgoing_tx_id={:?}",
+            lbtc_claim_tx_id.is_some(),
+            btc_lockup_outgoing_txs.len(),
+            btc_last_outgoing_tx_id.as_ref().map(|h| h.txid.to_string())
+        );
         let btc_refund_tx_id = match lbtc_claim_tx_id.is_some() {
             true => match btc_lockup_outgoing_txs.len() > 1 {
-                true => btc_last_outgoing_tx_id,
-                false => None,
+                true => {
+                    log::debug!("[recover_onchain_data] Claim exists and >1 BTC outgoing txs -> returning last outgoing as refund");
+                    btc_last_outgoing_tx_id
+                }
+                false => {
+                    log::debug!("[recover_onchain_data] Claim exists and <=1 BTC outgoing tx -> no refund (outgoing is server claim)");
+                    None
+                }
             },
-            false => btc_last_outgoing_tx_id,
+            false => {
+                log::debug!("[recover_onchain_data] No LBTC claim found -> treating BTC outgoing tx as user refund");
+                btc_last_outgoing_tx_id
+            }
         };
 
         Ok(RecoveredOnchainDataChainReceive {
