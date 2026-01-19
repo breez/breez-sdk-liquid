@@ -104,7 +104,12 @@ async fn connect_inner(
 pub fn default_config(network: LiquidNetwork, breez_api_key: Option<String>) -> WasmResult<Config> {
     let mut config = match network {
         LiquidNetwork::Mainnet => breez_sdk_liquid::model::Config::mainnet_esplora(breez_api_key),
-        LiquidNetwork::Testnet => breez_sdk_liquid::model::Config::testnet_esplora(breez_api_key),
+        LiquidNetwork::Testnet => {
+            return Err(breez_sdk_liquid::error::SdkError::NetworkNotSupported {
+                network: "Testnet".to_string(),
+            }
+            .into());
+        }
         LiquidNetwork::Regtest => breez_sdk_liquid::model::Config::regtest_esplora(),
     };
     config.sync_service_url = Some(BREEZ_WASM_SYNC_SERVICE_URL.to_string());

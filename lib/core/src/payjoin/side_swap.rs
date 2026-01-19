@@ -494,7 +494,8 @@ mod tests {
     fn create_sideswap_payjoin_service(
         persister: std::sync::Arc<Persister>,
     ) -> Result<(Arc<MockWallet>, Arc<MockRestClient>, SideSwapPayjoinService)> {
-        let config = Config::testnet_esplora(None);
+        // Use mainnet config since sideswap is not available on regtest
+        let config = Config::mainnet_esplora(None);
         let breez_server = Arc::new(BreezServer::new(STAGING_BREEZSERVER_URL.to_string(), None)?);
         let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
         let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
