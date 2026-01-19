@@ -85,6 +85,18 @@ impl ReceiveSwapHandler {
                 .collect(),
         };
 
+        debug!(
+            "[Recover Receive] Swap {swap_id}: lbtc_claim_script_history len={}, lbtc_mrh_script_history len={}",
+            history.lbtc_claim_script_history.len(),
+            history.lbtc_mrh_script_history.len()
+        );
+        for (i, h) in history.lbtc_claim_script_history.iter().enumerate() {
+            debug!(
+                "[Recover Receive] Swap {swap_id}: lbtc_claim_history[{i}] txid={}, height={}",
+                h.txid, h.height
+            );
+        }
+
         // First obtain recovered data from the history
         let recovered_data = Self::recover_onchain_data(
             &context.tx_map,
@@ -93,6 +105,14 @@ impl ReceiveSwapHandler {
             receive_swap.receiver_amount_sat,
             &context.lbtc_asset_id,
         )?;
+
+        debug!(
+            "[Recover Receive] Swap {swap_id}: recovered lockup_tx_id={:?}, claim_tx_id={:?}, mrh_tx_id={:?}, mrh_amount_sat={:?}",
+            recovered_data.lockup_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.claim_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.mrh_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.mrh_amount_sat
+        );
 
         // Update the swap with recovered data
         Self::update_swap(
@@ -119,6 +139,10 @@ impl ReceiveSwapHandler {
         let timeout_block_height = receive_swap.timeout_block_height;
         let is_expired = current_block_height >= timeout_block_height;
         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+            debug!(
+                "[Recover Receive] Swap {}: state transition {:?} -> {:?}",
+                receive_swap.id, receive_swap.state, new_state
+            );
             receive_swap.state = new_state;
         }
 
