@@ -60,7 +60,7 @@ dictionary LNOffer {
 };
 
 dictionary NostrConnectionUri {
-    string wallet_public_key;
+    string wallet_service_public_key;
     string app_public_key;
     string app_secret;
     sequence<string> relays;

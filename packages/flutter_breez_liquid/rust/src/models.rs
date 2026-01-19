@@ -94,7 +94,7 @@ pub struct _LNOffer {
 
 #[frb(mirror(NostrWalletConnectUri))]
 pub struct _NostrWalletConnectUri {
-    pub wallet_public_key: String,
+    pub wallet_service_public_key: String,
     pub app_public_key: String,
     pub app_secret: String,
     pub relays: Vec<String>,
