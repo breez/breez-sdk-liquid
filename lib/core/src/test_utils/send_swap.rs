@@ -18,7 +18,7 @@ use super::{
 pub(crate) fn new_send_swap_handler(
     persister: std::sync::Arc<Persister>,
 ) -> Result<SendSwapHandler> {
-    let config = Config::testnet_esplora(None);
+    let config = Config::regtest_esplora();
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
     let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
     let swapper = Arc::new(MockSwapper::default());

@@ -46,7 +46,7 @@ pub(crate) async fn new_liquid_sdk_with_chain_services(
     bitcoin_chain_service: Arc<MockBitcoinChainService>,
     onchain_fee_rate_leeway_sat: Option<u64>,
 ) -> Result<Arc<LiquidSdk>> {
-    let mut config = Config::testnet_esplora(None);
+    let mut config = Config::regtest_esplora();
     config.working_dir = persister
         .get_database_dir()
         .to_str()
