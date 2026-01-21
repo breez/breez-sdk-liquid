@@ -12,7 +12,7 @@ flutter_rust_bridge = "=2.9.0"
 # Replaced with release commit during publishing
 breez-sdk-liquid = { path = "../../../lib/core" }
 breez-sdk-liquid-nwc = { path = "../../../lib/plugins/nwc" }
-sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "27452b5fd80be52ef047b3e3acb51dc6779b4a38", features = ["liquid", "nwc"] }
+sdk-common = { git = "https://github.com/breez/breez-sdk", rev = "113749fd36dd7a20358dc40526c4a30147f8c1a8", features = ["liquid", "nwc"] }
 async-trait = "0.1.86"
 futures = "0.3"
 
