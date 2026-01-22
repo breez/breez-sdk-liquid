@@ -28,19 +28,16 @@ To set a specific network, use one of
 
 ```bash
 cargo run -- --network mainnet
-cargo run -- --network testnet
+cargo run -- --network regtest
 ```
+
+> **Note:** Testnet is not currently supported. The `LiquidNetwork::Testnet` variant exists for potential future testnet4 support but attempting to connect will result in an error.
 
 To specify a custom data directory, use
 
 ```bash
 cargo run -- --data-dir temp-dir
 ```
-
-#### Using testnet
-
-You'll need a Testnet LN node to test the sending and receiving operations. A simple solution is using [Alby's testnet nodes](https://thunderhub.regtest.getalby.com). Read more about Alby's test setup [here](https://github.com/getAlby/lightning-browser-extension/wiki/Test-setup).
-
 
 ## Commands
 
