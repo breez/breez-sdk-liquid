@@ -45,7 +45,7 @@ impl SendSwapHandler {
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = send_swap.id.clone();
-        debug!("[Recover Send] Recovering data for swap {swap_id}");
+        debug!("[Recover Send] Recovering data for swap {send_swap}");
         let swap_script = send_swap.get_swap_script()?;
         let lockup_script = swap_script
             .funding_addrs

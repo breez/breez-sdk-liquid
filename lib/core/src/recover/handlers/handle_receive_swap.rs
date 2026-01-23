@@ -43,7 +43,7 @@ impl ReceiveSwapHandler {
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &receive_swap.id.clone();
-        debug!("[Recover Receive] Recovering data for swap {swap_id}");
+        debug!("[Recover Receive] Recovering data for swap {receive_swap}");
 
         let mrh_script = if !receive_swap.mrh_address.is_empty() {
             match ElementsAddress::from_str(&receive_swap.mrh_address) {

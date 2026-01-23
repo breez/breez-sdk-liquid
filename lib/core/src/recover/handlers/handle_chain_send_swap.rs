@@ -43,7 +43,7 @@ impl ChainSendSwapHandler {
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();
-        debug!("[Recover Chain Send] Recovering data for swap {swap_id}");
+        debug!("[Recover Chain Send] Recovering data for swap {chain_swap}");
 
         // Extract claim script from swap
         let claim_script = chain_swap

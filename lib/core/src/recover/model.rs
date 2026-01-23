@@ -2,9 +2,11 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
+use log::debug;
 use lwk_wollet::elements::AssetId;
 use lwk_wollet::elements_miniscript::slip77::MasterBlindingKey;
 use lwk_wollet::WalletTx;
+use sdk_common::bitcoin::hashes::{sha256, Hash};
 
 use crate::chain::liquid::LiquidChainService;
 use crate::prelude::*;
@@ -63,7 +65,13 @@ impl SwapsList {
                 Swap::Send(send_swap) => {
                     if let Ok(script) = send_swap.get_swap_script() {
                         if let Some(funding_addr) = script.funding_addrs {
-                            swap_scripts.push(funding_addr.script_pubkey());
+                            let script = funding_addr.script_pubkey();
+                            debug!(
+                                "[Swaps list] send swap {} script {}",
+                                send_swap.id,
+                                sha256::Hash::hash(script.as_bytes())
+                            );
+                            swap_scripts.push(script);
                         }
                     }
                 }
@@ -71,7 +79,13 @@ impl SwapsList {
                     // Add claim script
                     if let Ok(script) = receive_swap.get_swap_script() {
                         if let Some(funding_addr) = script.funding_addrs {
-                            swap_scripts.push(funding_addr.script_pubkey());
+                            let script = funding_addr.script_pubkey();
+                            debug!(
+                                "[Swaps list] receive swap {} script {}",
+                                receive_swap.id,
+                                sha256::Hash::hash(script.as_bytes())
+                            );
+                            swap_scripts.push(script);
                         }
                     }
 
@@ -90,7 +104,13 @@ impl SwapsList {
                                 .and_then(|lockup_script| {
                                     Ok(lockup_script.as_liquid_script()?.funding_addrs.map(
                                         |funding_addr| {
-                                            swap_scripts.push(funding_addr.script_pubkey())
+                                            let script = funding_addr.script_pubkey();
+                                            debug!(
+                                                "[Swaps list] send chain swap {} script {}",
+                                                chain_swap.id,
+                                                sha256::Hash::hash(script.as_bytes())
+                                            );
+                                            swap_scripts.push(script);
                                         },
                                     ))
                                 })
@@ -99,7 +119,15 @@ impl SwapsList {
                             // For incoming chain swaps, add claim script
                             _ = chain_swap.get_claim_swap_script().and_then(|claim_script| {
                                 Ok(claim_script.as_liquid_script()?.funding_addrs.map(
-                                    |funding_addr| swap_scripts.push(funding_addr.script_pubkey()),
+                                    |funding_addr| {
+                                        let script = funding_addr.script_pubkey();
+                                        debug!(
+                                            "[Swaps list] receive chain swap {} script {}",
+                                            chain_swap.id,
+                                            sha256::Hash::hash(script.as_bytes())
+                                        );
+                                        swap_scripts.push(script);
+                                    },
                                 ))
                             })
                         }

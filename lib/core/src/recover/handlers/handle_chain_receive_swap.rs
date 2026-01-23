@@ -46,7 +46,7 @@ impl ChainReceiveSwapHandler {
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();
-        debug!("[Recover Chain Receive] Recovering data for swap {swap_id}");
+        debug!("[Recover Chain Receive] Recovering data for swap {chain_swap}");
         debug!(
             "[Recover Chain Receive] Swap {swap_id}: stored claim_address={:?}, current claim_tx_id={:?}, current refund_tx_id={:?}",
             chain_swap.claim_address, chain_swap.claim_tx_id, chain_swap.refund_tx_id

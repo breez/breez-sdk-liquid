@@ -1,3 +1,8 @@
+use std::fmt::Display;
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::{cmp::PartialEq, sync::Arc};
+
 use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
@@ -16,9 +21,6 @@ use rusqlite::ToSql;
 use sdk_common::prelude::*;
 use sdk_common::{bitcoin::hashes::hex::ToHex, lightning_with_bolt12::offers::offer::Offer};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::{cmp::PartialEq, sync::Arc};
 use strum_macros::{Display, EnumString};
 use tokio_with_wasm::alias as tokio;
 
@@ -1119,6 +1121,23 @@ pub enum Swap {
     Send(SendSwap),
     Receive(ReceiveSwap),
 }
+
+impl Display for Swap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Swap::Chain(swap) => {
+                write!(f, "{}", swap)
+            }
+            Swap::Receive(receive_swap) => {
+                write!(f, "{}", receive_swap)
+            }
+            Swap::Send(send_swap) => {
+                write!(f, "{}", send_swap)
+            }
+        }
+    }
+}
+
 impl Swap {
     pub(crate) fn id(&self) -> String {
         match &self {
@@ -1278,6 +1297,41 @@ pub struct ChainSwap {
     #[derivative(PartialEq = "ignore")]
     pub(crate) metadata: SwapMetadata,
 }
+
+impl Display for ChainSwap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ChainSwap")
+            .field("id", &self.id)
+            .field("direction", &self.direction)
+            .field("state", &self.state)
+            .field("claim_address", &self.claim_address)
+            .field("lockup_address", &self.lockup_address)
+            .field("refund_address", &self.refund_address)
+            .field("server_lockup_tx_id", &self.server_lockup_tx_id)
+            .field("user_lockup_tx_id", &self.user_lockup_tx_id)
+            .field("claim_tx_id", &self.claim_tx_id)
+            .field("refund_tx_id", &self.refund_tx_id)
+            .field("timeout_block_height", &self.timeout_block_height)
+            .field(
+                "claim_timeout_block_height",
+                &self.claim_timeout_block_height,
+            )
+            .field(
+                "preimage",
+                &format!("{}***REDACTED***", &self.preimage[..3]),
+            )
+            .field("payer_amount_sat", &self.payer_amount_sat)
+            .field("actual_payer_amount_sat", &self.actual_payer_amount_sat)
+            .field("receiver_amount_sat", &self.receiver_amount_sat)
+            .field(
+                "accepted_receiver_amount_sat",
+                &self.accepted_receiver_amount_sat,
+            )
+            .field("claim_fees_sat", &self.claim_fees_sat)
+            .finish()
+    }
+}
+
 impl ChainSwap {
     pub(crate) fn get_claim_keypair(&self) -> SdkResult<Keypair> {
         utils::decode_keypair(&self.claim_private_key)
@@ -1434,6 +1488,32 @@ pub struct SendSwap {
     #[derivative(PartialEq = "ignore")]
     pub(crate) metadata: SwapMetadata,
 }
+
+impl Display for SendSwap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SendSwap")
+            .field("id", &self.id)
+            .field("state", &self.state)
+            .field("refund_address", &self.refund_address)
+            .field("lockup_tx_id", &self.lockup_tx_id)
+            .field("refund_tx_id", &self.refund_tx_id)
+            .field("timeout_block_height", &self.timeout_block_height)
+            .field("invoice", &self.invoice)
+            .field("bolt12_offer", &self.bolt12_offer)
+            .field("payment_hash", &self.payment_hash)
+            .field(
+                "preimage",
+                &self
+                    .preimage
+                    .as_ref()
+                    .map(|p| format!("{}***REDACTED***", &p[..3])),
+            )
+            .field("payer_amount_sat", &self.payer_amount_sat)
+            .field("receiver_amount_sat", &self.receiver_amount_sat)
+            .finish()
+    }
+}
+
 impl SendSwap {
     pub(crate) fn get_refund_keypair(&self) -> Result<Keypair, SdkError> {
         utils::decode_keypair(&self.refund_private_key)
@@ -1537,6 +1617,32 @@ pub struct ReceiveSwap {
     #[derivative(PartialEq = "ignore")]
     pub(crate) metadata: SwapMetadata,
 }
+
+impl Display for ReceiveSwap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ReceiveSwap")
+            .field("id", &self.id)
+            .field("state", &self.state)
+            .field("claim_address", &self.claim_address)
+            .field("mrh_address", &self.mrh_address)
+            .field("claim_tx_id", &self.claim_tx_id)
+            .field("lockup_tx_id", &self.lockup_tx_id)
+            .field("mrh_tx_id", &self.mrh_tx_id)
+            .field("timeout_block_height", &self.timeout_block_height)
+            .field("invoice", &self.invoice)
+            .field("bolt12_offer", &self.bolt12_offer)
+            .field("payment_hash", &self.payment_hash)
+            .field(
+                "preimage",
+                &format!("{}***REDACTED***", &self.preimage[..3]),
+            )
+            .field("payer_amount_sat", &self.payer_amount_sat)
+            .field("receiver_amount_sat", &self.receiver_amount_sat)
+            .field("claim_fees_sat", &self.claim_fees_sat)
+            .finish()
+    }
+}
+
 impl ReceiveSwap {
     pub(crate) fn get_claim_keypair(&self) -> Result<Keypair, PaymentError> {
         utils::decode_keypair(&self.claim_private_key).map_err(Into::into)
