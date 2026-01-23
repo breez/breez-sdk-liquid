@@ -362,6 +362,7 @@ dictionary ConnectRequest {
     string? mnemonic = null;
     string? passphrase = null;
     sequence<u8>? seed = null;
+    string? derivation_path = null;
 };
 
 dictionary ConnectWithSignerRequest {

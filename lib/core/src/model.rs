@@ -601,6 +601,8 @@ pub struct ConnectRequest {
     pub passphrase: Option<String>,
     /// The optional Liquid wallet seed
     pub seed: Option<Vec<u8>>,
+    /// Optional BIP32 derivation path to derive an extended private key
+    pub derivation_path: Option<String>,
 }
 
 pub struct ConnectWithSignerRequest {

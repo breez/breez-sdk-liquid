@@ -42,6 +42,9 @@ pub(crate) struct Args {
     #[clap(long)]
     pub(crate) passphrase: Option<String>,
 
+    #[clap(long)]
+    pub(crate) derivation_path: Option<String>,
+
     #[clap(long, default_value = "false")]
     pub(crate) no_qrs: bool,
 
@@ -105,6 +108,7 @@ async fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic(args.phrase_path.as_deref())?;
     let passphrase = args.passphrase.clone();
+    let derivation_path = args.derivation_path.clone();
     let network = args.network.unwrap_or(LiquidNetwork::Testnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
@@ -133,6 +137,7 @@ async fn main() -> Result<()> {
             mnemonic: Some(mnemonic.to_string()),
             passphrase,
             seed: None,
+            derivation_path,
         },
         Some(plugins),
     )

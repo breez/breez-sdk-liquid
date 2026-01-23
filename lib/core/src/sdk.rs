@@ -448,12 +448,19 @@ impl LiquidSdk {
 
     pub fn default_signer(req: &ConnectRequest) -> Result<SdkSigner> {
         let is_mainnet = req.config.network == LiquidNetwork::Mainnet;
+        let derivation_path = req.derivation_path.as_deref();
+
         match (&req.mnemonic, &req.seed) {
-            (None, Some(seed)) => Ok(SdkSigner::new_with_seed(seed.clone(), is_mainnet)?),
+            (None, Some(seed)) => Ok(SdkSigner::new_with_seed(
+                seed.clone(),
+                is_mainnet,
+                derivation_path,
+            )?),
             (Some(mnemonic), None) => Ok(SdkSigner::new(
                 mnemonic,
                 req.passphrase.as_ref().unwrap_or(&"".to_string()).as_ref(),
                 is_mainnet,
+                derivation_path,
             )?),
             _ => Err(anyhow!("Either `mnemonic` or `seed` must be set")),
         }

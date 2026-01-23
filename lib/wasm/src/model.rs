@@ -349,6 +349,7 @@ pub struct ConnectRequest {
     pub mnemonic: Option<String>,
     pub passphrase: Option<String>,
     pub seed: Option<Vec<u8>>,
+    pub derivation_path: Option<String>,
 }
 
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ConnectWithSignerRequest)]

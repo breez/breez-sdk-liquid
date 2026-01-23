@@ -605,7 +605,8 @@ mod tests {
     #[sdk_macros::async_test_all]
     async fn test_sign_and_check_message() -> Result<()> {
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
+        let sdk_signer: Box<dyn Signer> =
+            Box::new(SdkSigner::new(mnemonic, "", false, None).unwrap());
         let sdk_signer = Arc::new(sdk_signer);
 
         let config = Config::testnet_esplora(None);

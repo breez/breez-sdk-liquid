@@ -363,6 +363,7 @@ pub struct _ConnectRequest {
     pub mnemonic: Option<String>,
     pub passphrase: Option<String>,
     pub seed: Option<Vec<u8>>,
+    pub derivation_path: Option<String>,
 }
 
 #[frb(mirror(CreateBolt12InvoiceRequest))]
