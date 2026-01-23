@@ -46,7 +46,7 @@ impl ChainReceiveSwapHandler {
         is_within_grace_period: bool,
     ) -> Result<()> {
         let swap_id = &chain_swap.id.clone();
-        debug!("[Recover Chain Receive] Recovering data for swap {swap_id}");
+        debug!("[Recover Chain Receive] Recovering data for swap {chain_swap}");
 
         // Extract lockup script from swap
         let lockup_script = chain_swap

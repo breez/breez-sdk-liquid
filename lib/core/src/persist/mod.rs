@@ -517,6 +517,25 @@ impl Persister {
         Ok(res.ok())
     }
 
+    pub(crate) fn list_swaps(&self) -> Result<Vec<Swap>> {
+        let send_swaps: Vec<Swap> = self
+            .list_send_swaps()?
+            .into_iter()
+            .map(Swap::Send)
+            .collect();
+        let receive_swaps: Vec<Swap> = self
+            .list_receive_swaps()?
+            .into_iter()
+            .map(Swap::Receive)
+            .collect();
+        let chain_swaps: Vec<Swap> = self
+            .list_chain_swaps()?
+            .into_iter()
+            .map(Swap::Chain)
+            .collect();
+        Ok([send_swaps, receive_swaps, chain_swaps].concat())
+    }
+
     pub(crate) fn list_ongoing_swaps(&self) -> Result<Vec<Swap>> {
         let ongoing_send_swaps: Vec<Swap> = self
             .list_ongoing_send_swaps()?
