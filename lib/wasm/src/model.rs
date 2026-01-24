@@ -305,9 +305,20 @@ pub struct Symbol {
 }
 
 #[derive(Clone)]
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::ExplorerAuthorization)]
+pub enum ExplorerAuthorization {
+    Basic { username: String, password: String },
+    Bearer { token: String },
+}
+
+#[derive(Clone)]
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::BlockchainExplorer)]
 pub enum BlockchainExplorer {
-    Esplora { url: String, use_waterfalls: bool },
+    Esplora {
+        url: String,
+        use_waterfalls: bool,
+        authorization: Option<ExplorerAuthorization>,
+    },
 }
 
 #[derive(Clone)]

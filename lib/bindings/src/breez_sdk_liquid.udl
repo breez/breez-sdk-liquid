@@ -463,9 +463,15 @@ enum PaymentError {
 };
 
 [Enum]
+interface ExplorerAuthorization {
+    Basic(string username, string password);
+    Bearer(string token);
+};
+
+[Enum]
 interface BlockchainExplorer {
     Electrum(string url);
-    Esplora(string url, boolean use_waterfalls);
+    Esplora(string url, boolean use_waterfalls, ExplorerAuthorization? authorization);
 };
 
 dictionary Config {

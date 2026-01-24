@@ -42,18 +42,26 @@ impl EsploraBitcoinChainService {
             return Ok(c);
         }
 
-        let esplora_url = match &self.config.bitcoin_explorer {
-            BlockchainExplorer::Esplora { url, .. } => url,
+        let (esplora_url, authorization) = match &self.config.bitcoin_explorer {
+            BlockchainExplorer::Esplora {
+                url, authorization, ..
+            } => (url, authorization),
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { .. } => {
                 anyhow::bail!("Cannot start Bitcoin Esplora chain service without an Esplora url")
             }
         };
-        let client = Builder::new(esplora_url)
+
+        let mut builder = Builder::new(esplora_url)
             .connect_timeout(10)
             .timeout(3)
-            .max_retries(2)
-            .build_async()?;
+            .max_retries(2);
+
+        if let Some(auth) = authorization {
+            builder = builder.header("authorization", &auth.to_header_value());
+        }
+
+        let client = builder.build_async()?;
         let client = self.client.get_or_init(|| client);
         Ok(client)
     }
