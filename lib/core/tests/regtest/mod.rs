@@ -96,15 +96,12 @@ impl SdkNodeHandle {
             sdk
         };
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-        let sdk = LiquidSdk::connect(
-            ConnectRequest {
-                config,
-                mnemonic: Some(mnemonic.to_string()),
-                passphrase: None,
-                seed: None,
-            },
-            None,
-        )
+        let sdk = LiquidSdk::connect(ConnectRequest {
+            config,
+            mnemonic: Some(mnemonic.to_string()),
+            passphrase: None,
+            seed: None,
+        })
         .await?;
 
         let (sender, receiver) = mpsc::channel(50);
@@ -143,7 +140,7 @@ impl SdkNodeHandle {
             .receive_payment(&ReceivePaymentRequest {
                 prepare_response: prepare_response.clone(),
                 description: None,
-                use_description_hash: None,
+                description_hash: None,
                 payer_note: None,
             })
             .await?;
