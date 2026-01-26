@@ -274,7 +274,7 @@ impl ChainReceiveSwapHandler {
                 // - LBTC history > 1: Server refunded LBTC → BTC outgoing is user refund
                 let lbtc_history_len = history.lbtc_claim_script_history.len();
                 match lbtc_history_len {
-                    1 => None, // LBTC still claimable, BTC outgoing is Boltz claiming
+                    1 => None,                    // LBTC still claimable, BTC outgoing is Boltz claiming
                     _ => btc_last_outgoing_tx_id, // 0 or >1: user refund
                 }
             }
