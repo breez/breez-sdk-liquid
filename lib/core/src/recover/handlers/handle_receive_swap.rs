@@ -236,7 +236,7 @@ impl RecoveredOnchainDataReceive {
                 None => {
                     // No claim found. Check if server has refunded.
                     // history = 1: only server lockup, LBTC still claimable
-                    // history > 1: server refunded, swap is Failed
+                    // history > 1: server refunded (or user claimed but LWK didn't see claim tx as ours), swap is Failed
                     let server_refunded = self.lbtc_claim_script_history_len > 1;
                     match is_expired && server_refunded {
                         true => Some(PaymentState::Failed),
