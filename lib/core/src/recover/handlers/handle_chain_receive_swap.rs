@@ -338,7 +338,9 @@ impl ChainReceiveSwapHandler {
                         None
                     }
                     _ => {
-                        log::debug!("[recover_onchain_data] LBTC history > 1, BTC outgoing is user refund");
+                        log::debug!(
+                            "[recover_onchain_data] LBTC history > 1, BTC outgoing is user refund"
+                        );
                         btc_last_outgoing_tx_id
                     }
                 }
