@@ -5,8 +5,6 @@
  * 1. Store the result in a 'config' variable instead of returning directly
  * 2. Set config.workingDir using react-native-fs
  * 3. Return the modified config
- *
- * Note: The generated code is minified (all on one line), so we use regex replacement.
  */
 
 const fs = require('fs');
@@ -24,16 +22,21 @@ function patchFile(filePath) {
 
   let content = fs.readFileSync(filePath, 'utf8');
 
-  // The generated code is minified. The defaultConfig function looks like:
-  // function defaultConfig(network,breezApiKey)/*throws*/{return FfiConverterTypeConfig.lift(unifiCaller.rustCallWithError(...,FfiConverterString.lift));}
+  // The generated code structure (formatted with newlines):
+  // function defaultConfig(network, breezApiKey) /*throws*/{
+  //   return FfiConverterTypeConfig.lift(uniffiCaller.rustCallWithError(...
+  //   }, /*liftString:*/FfiConverterString.lift));
+  // }
+  //
   // We need to:
   // 1. Change "return FfiConverterTypeConfig.lift(" to "const config = FfiConverterTypeConfig.lift("
-  // 2. Change the ending "FfiConverterString.lift));};" to "FfiConverterString.lift))};var fs=require('react-native-fs');config.workingDir=`${fs.DocumentDirectoryPath}/breezSdkLiquid`;return config;};"
+  // 2. Add the workingDir assignment and return statement before the closing brace
 
-  // Pattern to match the defaultConfig function (handles both with and without spaces)
-  const pattern = /(function defaultConfig\(network,\s*breezApiKey\)[^{]*\{)(return FfiConverterTypeConfig\.lift\()(.+?)(\,\s*\/\*liftString:\*\/FfiConverterString\.lift\)\);)(\})/gs;
+  // Pattern to match the defaultConfig function with multiline support
+  // Using [\s\S] to match any character including newlines
+  const pattern = /(function defaultConfig\(network,\s*breezApiKey\)\s*\/\*throws\*\/\s*\{\s*)(return)(\s+FfiConverterTypeConfig\.lift\([\s\S]+?\/\*liftString:\*\/FfiConverterString\.lift\)\);)(\s*\})/g;
 
-  const replacement = '$1const config = FfiConverterTypeConfig.lift($3$4var fs=require(\'react-native-fs\');config.workingDir=`${fs.DocumentDirectoryPath}/breezSdkLiquid`;return config;$5';
+  const replacement = '$1const config =$3\n  var fs = require(\'react-native-fs\');\n  config.workingDir = `${fs.DocumentDirectoryPath}/breezSdkLiquid`;\n  return config;$4';
 
   const newContent = content.replace(pattern, replacement);
 
@@ -45,8 +48,8 @@ function patchFile(filePath) {
     if (content.includes('function defaultConfig')) {
       const idx = content.indexOf('function defaultConfig');
       console.error('\nFound "function defaultConfig" at position', idx);
-      console.error('Context (200 chars):');
-      console.error(content.substring(idx, idx + 200));
+      console.error('Context (500 chars):');
+      console.error(content.substring(idx, idx + 500));
     } else {
       console.error('\nCould not find "function defaultConfig" at all!');
     }
@@ -68,7 +71,7 @@ function verifyPatch(filePath) {
     errors++;
   }
 
-  if (!content.includes('config.workingDir=')) {
+  if (!content.includes('config.workingDir')) {
     console.error(`ERROR: Missing 'config.workingDir' assignment in ${filePath}`);
     errors++;
   }
