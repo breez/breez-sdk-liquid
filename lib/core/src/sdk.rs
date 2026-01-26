@@ -2467,7 +2467,7 @@ impl LiquidSdk {
             .ok_or(PaymentError::PairsNotFound)?;
         let receive_limits = reverse_pair.limits;
 
-        Ok(LightningPaymentLimitsResponse {
+        let res = LightningPaymentLimitsResponse {
             send: Limits {
                 min_sat: send_limits.minimal_batched.unwrap_or(send_limits.minimal),
                 max_sat: send_limits.maximal,
@@ -2478,7 +2478,9 @@ impl LiquidSdk {
                 max_sat: receive_limits.maximal,
                 max_zero_conf_sat: self.config.zero_conf_max_amount_sat(),
             },
-        })
+        };
+        debug!("fetch_lightning_limits returned: {res:?}");
+        Ok(res)
     }
 
     /// Fetch the current payment limits for [LiquidSdk::pay_onchain] and [LiquidSdk::receive_onchain].
@@ -2830,20 +2832,24 @@ impl LiquidSdk {
     ) -> Result<PrepareReceiveResponse, PaymentError> {
         self.ensure_is_started().await?;
 
-        match req.payment_method.clone() {
+        let result = match req.payment_method.clone() {
             #[allow(deprecated)]
             PaymentMethod::Bolt11Invoice => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::asset_error(
+                        let err = PaymentError::asset_error(
                             "Cannot receive an asset for this payment method",
-                        ));
+                        );
+                        error!("prepare_receive_payment returned error: {err:?}");
+                        return Err(err);
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => payer_amount_sat,
                     None => {
-                        return Err(PaymentError::generic(
+                        let err = PaymentError::generic(
                             "Bitcoin payer amount must be set for this payment method",
-                        ));
+                        );
+                        error!("prepare_receive_payment returned error: {err:?}");
+                        return Err(err);
                     }
                 };
                 let reverse_pair = self
@@ -2880,9 +2886,9 @@ impl LiquidSdk {
             }
             PaymentMethod::Bolt12Offer => {
                 if req.amount.is_some() {
-                    return Err(PaymentError::generic(
-                        "Amount cannot be set for this payment method",
-                    ));
+                    let err = PaymentError::generic("Amount cannot be set for this payment method");
+                    error!("prepare_receive_payment returned error: {err:?}");
+                    return Err(err);
                 }
 
                 let reverse_pair = self
@@ -2906,9 +2912,11 @@ impl LiquidSdk {
             PaymentMethod::BitcoinAddress => {
                 let payer_amount_sat = match req.amount {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::asset_error(
+                        let err = PaymentError::asset_error(
                             "Asset cannot be received for this payment method",
-                        ));
+                        );
+                        error!("prepare_receive_payment returned error: {err:?}");
+                        return Err(err);
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
                     None => None,
@@ -2957,7 +2965,10 @@ impl LiquidSdk {
                     swapper_feerate: None,
                 })
             }
-        }
+        };
+        result
+            .inspect(|res| debug!("prepare_receive_payment returned: {res:?}"))
+            .inspect_err(|e| error!("prepare_receive_payment returned error: {e:?}"))
     }
 
     /// Receive a Lightning payment via a reverse submarine swap, a chain swap or via direct Liquid
@@ -2993,51 +3004,56 @@ impl LiquidSdk {
             ..
         } = req.prepare_response.clone();
 
-        match payment_method {
+        let result = match payment_method {
             #[allow(deprecated)]
             PaymentMethod::Bolt11Invoice => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::asset_error(
+                        let err = PaymentError::asset_error(
                             "Asset cannot be received for this payment method",
-                        ));
+                        );
+                        error!("receive_payment returned error: {err:?}");
+                        return Err(err);
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => payer_amount_sat,
                     None => {
-                        return Err(PaymentError::generic(
+                        let err = PaymentError::generic(
                             "Bitcoin payer amount must be set for this payment method",
-                        ));
+                        );
+                        error!("receive_payment returned error: {err:?}");
+                        return Err(err);
                     }
                 };
 
-                let (description, description_hash) =
-                    match (req.description.clone(), req.description_hash.clone()) {
-                        (None, Some(description_hash)) => {
-                            match description_hash {
-                                DescriptionHash::UseDescription => return Err(
-                                    PaymentError::InvalidDescription { err: "Cannot calculate payment description hash: no description provided".to_string() 
-                                }),
-                                DescriptionHash::Custom { hash } => (None, Some(hash)),
+                let (description, description_hash) = match (
+                    req.description.clone(),
+                    req.description_hash.clone(),
+                ) {
+                    (None, Some(description_hash)) => match description_hash {
+                        DescriptionHash::UseDescription => {
+                            let err = PaymentError::InvalidDescription { err: "Cannot calculate payment description hash: no description provided".to_string() };
+                            error!("receive_payment returned error: {err:?}");
+                            return Err(err);
+                        }
+                        DescriptionHash::Custom { hash } => (None, Some(hash)),
+                    },
+                    (Some(description), Some(description_hash)) => {
+                        let calculated_hash = sha256::Hash::hash(description.as_bytes()).to_hex();
+                        match description_hash {
+                            DescriptionHash::UseDescription => (None, Some(calculated_hash)),
+                            DescriptionHash::Custom { hash } => {
+                                ensure_sdk!(
+                                    calculated_hash == *hash,
+                                    PaymentError::InvalidDescription {
+                                        err: "Payment description hash mismatch".to_string()
+                                    }
+                                );
+                                (None, Some(calculated_hash))
                             }
                         }
-                        (Some(description), Some(description_hash)) => {
-                            let calculated_hash =
-                                sha256::Hash::hash(description.as_bytes()).to_hex();
-                            match description_hash {
-                                DescriptionHash::UseDescription => (None, Some(calculated_hash)),
-                                DescriptionHash::Custom { hash } => {
-                                    ensure_sdk!(
-                                        calculated_hash == *hash,
-                                        PaymentError::InvalidDescription {
-                                            err: "Payment description hash mismatch".to_string()
-                                        }
-                                    );
-                                    (None, Some(calculated_hash))
-                                }
-                            }
-                        }
-                        (description, None) => (description, None),
-                    };
+                    }
+                    (description, None) => (description, None),
+                };
                 self.create_bolt11_receive_swap(
                     amount_sat,
                     fees_sat,
@@ -3064,9 +3080,11 @@ impl LiquidSdk {
             PaymentMethod::BitcoinAddress => {
                 let amount_sat = match amount.clone() {
                     Some(ReceiveAmount::Asset { .. }) => {
-                        return Err(PaymentError::asset_error(
+                        let err = PaymentError::asset_error(
                             "Asset cannot be received for this payment method",
-                        ));
+                        );
+                        error!("receive_payment returned error: {err:?}");
+                        return Err(err);
                     }
                     Some(ReceiveAmount::Bitcoin { payer_amount_sat }) => Some(payer_amount_sat),
                     None => None,
@@ -3112,7 +3130,10 @@ impl LiquidSdk {
                     bitcoin_expiration_blockheight: None,
                 })
             }
-        }
+        };
+        result
+            .inspect(|res| debug!("receive_payment returned: {res:?}"))
+            .inspect_err(|e| error!("receive_payment returned error: {e:?}"))
     }
 
     async fn create_bolt11_receive_swap(
