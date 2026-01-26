@@ -41,6 +41,7 @@
   "scripts": {
     "clean": "del-cli android/generated ios/generated lib",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "patch-working-dir": "node ./scripts/patch-working-dir.js",
     "postinstall": "./scripts/postinstall.sh",
     "prepare": "bob build",
     "release": "release-it --only-version",

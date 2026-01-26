@@ -27,4 +27,4 @@ init: install-protobuf
 react-native:
 	yarn ubrn:build
 	yarn prepare
-	node ./scripts/patch-working-dir.js
+	yarn patch-working-dir
