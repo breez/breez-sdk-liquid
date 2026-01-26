@@ -327,8 +327,21 @@ impl ChainReceiveSwapHandler {
                 }
             },
             false => {
-                log::debug!("[recover_onchain_data] No LBTC claim found -> treating BTC outgoing tx as user refund");
-                btc_last_outgoing_tx_id
+                // No LBTC claim found. Determine if BTC outgoing is user refund or Boltz claiming.
+                // - LBTC history = 0: No server activity → BTC outgoing is user refund
+                // - LBTC history = 1: Server locked up, LBTC still claimable → BTC outgoing is Boltz claiming
+                // - LBTC history > 1: Server refunded LBTC → BTC outgoing is user refund
+                let lbtc_history_len = history.lbtc_claim_script_history.len();
+                match lbtc_history_len {
+                    1 => {
+                        log::debug!("[recover_onchain_data] LBTC history = 1, BTC outgoing is Boltz claiming");
+                        None
+                    }
+                    _ => {
+                        log::debug!("[recover_onchain_data] LBTC history > 1, BTC outgoing is user refund");
+                        btc_last_outgoing_tx_id
+                    }
+                }
             }
         };
 
