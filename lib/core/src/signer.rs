@@ -178,14 +178,23 @@ pub struct SdkSigner {
 }
 
 impl SdkSigner {
-    pub fn new(mnemonic: &str, passphrase: &str, is_mainnet: bool) -> Result<Self, NewError> {
+    pub fn new(
+        mnemonic: &str,
+        passphrase: &str,
+        is_mainnet: bool,
+        derivation_path: Option<&str>,
+    ) -> Result<Self, NewError> {
         let mnemonic: Mnemonic = mnemonic.parse()?;
         let seed = mnemonic.to_seed(passphrase).to_vec();
 
-        Self::new_with_seed(seed, is_mainnet)
+        Self::new_with_seed(seed, is_mainnet, derivation_path)
     }
 
-    pub fn new_with_seed(seed: Vec<u8>, is_mainnet: bool) -> Result<Self, NewError> {
+    pub fn new_with_seed(
+        seed: Vec<u8>,
+        is_mainnet: bool,
+        derivation_path: Option<&str>,
+    ) -> Result<Self, NewError> {
         if seed.len() < 32 {
             return Err(NewError::Seed(anyhow!("Seed must be at least 32 bytes")));
         }
@@ -197,7 +206,16 @@ impl SdkSigner {
             bitcoin::Network::Testnet
         };
 
-        let xprv = Xpriv::new_master(network, &seed)?;
+        let master_xprv = Xpriv::new_master(network, &seed)?;
+
+        // Derive at path if provided
+        let xprv = match derivation_path {
+            Some(path) => {
+                let der: DerivationPath = path.parse()?;
+                master_xprv.derive_priv(&secp, &der)?
+            }
+            None => master_xprv,
+        };
 
         Ok(Self {
             xprv,
@@ -314,7 +332,8 @@ mod tests {
 
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {
         let sw_signer = SwSigner::new(mnemonic, false).unwrap();
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
+        let sdk_signer: Box<dyn Signer> =
+            Box::new(SdkSigner::new(mnemonic, "", false, None).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
         (sw_signer, sdk_signer)
     }
@@ -368,17 +387,17 @@ mod tests {
 
         assert!(SwSigner::new("", false).is_err());
 
-        assert!(SdkSigner::new("", "", false).is_err());
+        assert!(SdkSigner::new("", "", false, None).is_err());
 
-        assert!(SdkSigner::new_with_seed(vec![], false).is_err());
+        assert!(SdkSigner::new_with_seed(vec![], false, None).is_err());
 
         let mut seed1 = [0u8; 31];
         rng.fill_bytes(&mut seed1);
-        assert!(SdkSigner::new_with_seed(seed1.to_vec(), false).is_err());
+        assert!(SdkSigner::new_with_seed(seed1.to_vec(), false, None).is_err());
 
         let mut seed2 = [0u8; 32];
         rng.fill_bytes(&mut seed2);
-        assert!(SdkSigner::new_with_seed(seed2.to_vec(), false).is_ok());
+        assert!(SdkSigner::new_with_seed(seed2.to_vec(), false, None).is_ok());
     }
 
     #[sdk_macros::test_all]
@@ -484,7 +503,8 @@ mod tests {
         .unwrap();
 
         // 2. Create a wallet using SdkLwkSigner
-        let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
+        let sdk_signer: Box<dyn Signer> =
+            Box::new(SdkSigner::new(mnemonic, "", false, None).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
         let sdk_wallet = Wollet::new(
             network,
