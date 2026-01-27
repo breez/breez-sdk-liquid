@@ -462,6 +462,11 @@ impl LiquidSdk {
     ) -> Result<Arc<LiquidSdk>> {
         let start_ts = Instant::now();
 
+        // Testnet is not currently supported
+        if req.config.network == LiquidNetwork::Testnet {
+            return Err(SdkError::network_not_supported(req.config.network).into());
+        }
+
         #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         std::fs::create_dir_all(&req.config.working_dir)?;
 
@@ -5024,7 +5029,9 @@ impl LiquidSdk {
     ) -> Result<Config, SdkError> {
         let config = match network {
             LiquidNetwork::Mainnet => Config::mainnet_esplora(breez_api_key),
-            LiquidNetwork::Testnet => Config::testnet_esplora(breez_api_key),
+            LiquidNetwork::Testnet => {
+                return Err(SdkError::network_not_supported(network));
+            }
             LiquidNetwork::Regtest => Config::regtest_esplora(),
         };
 
@@ -5925,7 +5932,7 @@ mod tests {
             .unwrap()
             .amount_msats(1_000_000)
             .unwrap()
-            .chain(Network::Testnet)
+            .chain(Network::Regtest)
             .unwrap()
             .build_and_sign()
             .unwrap();

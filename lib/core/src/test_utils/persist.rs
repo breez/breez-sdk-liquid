@@ -142,7 +142,7 @@ macro_rules! create_persister {
             };
             std::sync::Arc::new($crate::persist::Persister::new_in_memory(
                 &db_id,
-                $crate::model::LiquidNetwork::Testnet,
+                $crate::model::LiquidNetwork::Regtest,
                 true,
                 None,
                 None,
@@ -157,7 +157,7 @@ macro_rules! create_persister {
                 .to_string();
             std::sync::Arc::new($crate::persist::Persister::new_using_fs(
                 &temp_dir_path,
-                $crate::model::LiquidNetwork::Testnet,
+                $crate::model::LiquidNetwork::Regtest,
                 true,
                 None,
             )?)

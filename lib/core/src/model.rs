@@ -165,59 +165,6 @@ impl Config {
     }
 
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
-    pub fn testnet(breez_api_key: Option<String>) -> Self {
-        Config {
-            liquid_explorer: BlockchainExplorer::Electrum {
-                url: "elements-testnet.blockstream.info:50002".to_string(),
-            },
-            bitcoin_explorer: BlockchainExplorer::Electrum {
-                url: "bitcoin-testnet.blockstream.info:50002".to_string(),
-            },
-            working_dir: ".".to_string(),
-            network: LiquidNetwork::Testnet,
-            payment_timeout_sec: 15,
-            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
-            zero_conf_max_amount_sat: None,
-            breez_api_key,
-            external_input_parsers: None,
-            use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat: None,
-            asset_metadata: None,
-            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
-            use_magic_routing_hints: true,
-            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
-            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
-        }
-    }
-
-    pub fn testnet_esplora(breez_api_key: Option<String>) -> Self {
-        Config {
-            liquid_explorer: BlockchainExplorer::Esplora {
-                url: "https://blockstream.info/liquidtestnet/api".to_string(),
-                use_waterfalls: false,
-            },
-            bitcoin_explorer: BlockchainExplorer::Esplora {
-                url: "https://blockstream.info/testnet/api/".to_string(),
-                use_waterfalls: false,
-            },
-            working_dir: ".".to_string(),
-            network: LiquidNetwork::Testnet,
-            payment_timeout_sec: 15,
-            sync_service_url: Some(BREEZ_SYNC_SERVICE_URL.to_string()),
-            zero_conf_max_amount_sat: None,
-            breez_api_key,
-            external_input_parsers: None,
-            use_default_external_input_parsers: true,
-            onchain_fee_rate_leeway_sat: None,
-            asset_metadata: None,
-            sideswap_api_key: Some(SIDESWAP_API_KEY.to_string()),
-            use_magic_routing_hints: true,
-            onchain_sync_period_sec: DEFAULT_ONCHAIN_SYNC_PERIOD_SEC,
-            onchain_sync_request_timeout_sec: DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC,
-        }
-    }
-
-    #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn regtest() -> Self {
         Config {
             liquid_explorer: BlockchainExplorer::Electrum {
@@ -396,7 +343,10 @@ impl Config {
 pub enum LiquidNetwork {
     /// Mainnet Bitcoin and Liquid chains
     Mainnet,
-    /// Testnet Bitcoin and Liquid chains
+    /// Testnet Bitcoin and Liquid chains.
+    ///
+    /// **Note:** Testnet is not currently supported. Attempting to connect with this network
+    /// will result in an error. This variant is kept for potential future testnet4 support.
     Testnet,
     /// Regtest Bitcoin and Liquid chains
     Regtest,

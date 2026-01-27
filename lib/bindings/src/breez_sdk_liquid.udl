@@ -432,6 +432,7 @@ interface BindingNwcService {
 enum SdkError {
     "AlreadyStarted",
     "Generic",
+    "NetworkNotSupported",
     "NotStarted",
     "ServiceConnectivity",
 };
