@@ -514,6 +514,10 @@ impl OnchainWallet for LiquidOnchainWallet {
             .get_last_derivation_index()?
             .unwrap_or_default();
         let index_with_buffer = last_derivation_index + 5;
+        info!(
+            "LiquidOnchainWallet::full_scan: scanning addresses 0 to {} (last_derivation_index={}, buffer=5)",
+            index_with_buffer, last_derivation_index
+        );
         let mut wallet = self.wallet.lock().await;
 
         // Reunblind the wallet txs if there has been a change in the derivation index since the
@@ -558,8 +562,12 @@ impl OnchainWallet for LiquidOnchainWallet {
         self.persister
             .set_last_scanned_derivation_index(last_derivation_index)?;
 
+        let tx_count = wallet.transactions().map(|txs| txs.len()).unwrap_or(0);
         let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
-        info!("lwk wallet full_scan duration: ({duration_ms} ms)");
+        info!(
+            "lwk wallet full_scan duration: ({duration_ms} ms), found {} transactions, set last_scanned_derivation_index={}",
+            tx_count, last_derivation_index
+        );
         debug!("LiquidOnchainWallet::full_scan: end");
         res
     }

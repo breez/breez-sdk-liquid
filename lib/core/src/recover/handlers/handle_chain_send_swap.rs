@@ -82,9 +82,29 @@ impl ChainSendSwapHandler {
                 .unwrap_or_default(),
         };
 
+        debug!(
+            "[Recover Chain Send] Swap {swap_id}: lbtc_lockup_script_history len={}, btc_claim_script_history len={}",
+            history.lbtc_lockup_script_history.len(),
+            history.btc_claim_script_history.len()
+        );
+        for (i, h) in history.lbtc_lockup_script_history.iter().enumerate() {
+            debug!(
+                "[Recover Chain Send] Swap {swap_id}: lbtc_history[{i}] txid={}, height={}",
+                h.txid, h.height
+            );
+        }
+
         // First obtain transaction IDs from the history
         let recovered_data =
             Self::recover_onchain_data(&context.tx_map, swap_id, history, &claim_script)?;
+
+        debug!(
+            "[Recover Chain Send] Swap {swap_id}: recovered lbtc_user_lockup_tx_id={:?}, lbtc_refund_tx_id={:?}, btc_server_lockup_tx_id={:?}, btc_claim_tx_id={:?}",
+            recovered_data.lbtc_user_lockup_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.lbtc_refund_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.btc_server_lockup_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.btc_claim_tx_id.as_ref().map(|h| h.txid.to_string())
+        );
 
         // Update the swap with recovered data
         Self::update_swap(
@@ -113,6 +133,10 @@ impl ChainSendSwapHandler {
         let is_expired = current_liquid_block_height >= chain_swap.timeout_block_height
             || current_bitcoin_block_height >= chain_swap.claim_timeout_block_height;
         if let Some(new_state) = recovered_data.derive_partial_state(is_expired) {
+            debug!(
+                "[Recover Chain Send] Swap {}: state transition {:?} -> {:?}",
+                chain_swap.id, chain_swap.state, new_state
+            );
             chain_swap.state = new_state;
         }
 

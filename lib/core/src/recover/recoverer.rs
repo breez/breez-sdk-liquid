@@ -197,6 +197,15 @@ impl Recoverer {
         let has_unscanned_derivation_indices =
             last_used_derivation_index > last_scanned_derivation_index;
 
+        debug!(
+            "[sync_wallet_if_needed] wallet_tip={}, liquid_tip={}, tip_diff={}, tips_too_far_apart={}, \
+             last_used_derivation_index={}, last_scanned_derivation_index={}, has_unscanned_derivation_indices={}, \
+             will_full_scan={}",
+            wallet_tip, liquid_tip, tip_difference, tips_too_far_apart,
+            last_used_derivation_index, last_scanned_derivation_index, has_unscanned_derivation_indices,
+            tips_too_far_apart || has_unscanned_derivation_indices
+        );
+
         if tips_too_far_apart || has_unscanned_derivation_indices {
             if tips_too_far_apart {
                 debug!(
