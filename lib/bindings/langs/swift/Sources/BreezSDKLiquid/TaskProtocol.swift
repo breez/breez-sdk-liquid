@@ -98,12 +98,20 @@ class ReplyableTask : TaskProtocol {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
         request.httpBody = try! encoder.encode(encodable)
+
+        self.logger.log(tag: "ReplyableTask", line: "Sending POST request to: \(replyURL)", level: "INFO")
+
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             let statusCode = (response as! HTTPURLResponse).statusCode
-            
+            self.logger.log(tag: "ReplyableTask", line: "Response status code: \(statusCode)", level: "INFO")
+
             if statusCode == 200 {
                 self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             } else {
+                if let data = data, let responseBody = String(data: data, encoding: .utf8) {
+                    let truncatedBody = String(responseBody.prefix(200))
+                    self.logger.log(tag: "ReplyableTask", line: "Response body: \(truncatedBody)", level: "ERROR")
+                }
                 self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
                 return
             }
