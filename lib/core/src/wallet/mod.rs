@@ -126,10 +126,12 @@ impl WalletClient {
             BlockchainExplorer::Esplora {
                 url,
                 use_waterfalls,
+                authorization,
             } => {
                 let waterfalls = *use_waterfalls;
                 let mut builder = EsploraClientBuilder::new(url, config.network.into());
                 if url == BREEZ_LIQUID_ESPLORA_URL {
+                    // Breez API key takes precedence for the Breez URL
                     match &config.breez_api_key {
                         Some(api_key) => {
                             builder = builder
@@ -141,6 +143,9 @@ impl WalletClient {
                             bail!(err)
                         }
                     };
+                } else if let Some(auth) = authorization {
+                    // Apply custom authorization for non-Breez URLs
+                    builder = builder.header("authorization".to_string(), auth.to_header_value());
                 }
                 let client = Box::new(
                     builder
