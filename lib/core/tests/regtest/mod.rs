@@ -64,6 +64,7 @@ impl SdkNodeHandle {
             ChainBackend::Esplora => Config::regtest_esplora(),
         };
         config.working_dir = data_dir.to_str().unwrap().to_string();
+        config.payment_timeout_sec = TIMEOUT.as_secs();
 
         #[cfg(all(target_family = "wasm", target_os = "unknown"))]
         let sdk = {

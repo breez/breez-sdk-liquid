@@ -67,7 +67,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     utils::mine_blocks(1).await.unwrap();
 
     // Wait for swapper to lock up funds
-    tokio::time::sleep(Duration::from_secs(5)).await;
+    tokio::time::sleep(Duration::from_secs(15)).await;
 
     // Confirm swapper lockup
     utils::mine_blocks(1).await.unwrap();
@@ -134,7 +134,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     utils::mine_blocks(1).await.unwrap();
 
     // Wait for swapper to lock up funds
-    tokio::time::sleep(Duration::from_secs(5)).await;
+    tokio::time::sleep(Duration::from_secs(15)).await;
 
     // Confirm swapper lockup
     utils::mine_blocks(1).await.unwrap();
