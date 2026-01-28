@@ -221,6 +221,7 @@ impl Swapper for MockSwapper {
         &self,
         swap: Swap,
         _claim_address: Option<String>,
+        _is_cooperative: bool,
     ) -> Result<SdkTransaction, PaymentError> {
         let btc_tx = SdkTransaction::Bitcoin(boltz_client::bitcoin::Transaction {
             version: lwk_wollet::bitcoin::transaction::Version::TWO,

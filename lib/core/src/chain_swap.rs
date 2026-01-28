@@ -891,7 +891,7 @@ impl ChainSwapHandler {
         };
         let claim_tx = self
             .swapper
-            .create_claim_tx(Swap::Chain(swap.clone()), claim_address.clone())
+            .create_claim_tx(Swap::Chain(swap.clone()), claim_address.clone(), true)
             .await?;
 
         // Set the swap claim_tx_id before broadcasting.
