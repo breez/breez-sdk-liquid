@@ -2766,6 +2766,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
             auto_accepted_fees: false,
+            user_lockup_spent: false,
             metadata: Default::default(),
         };
         self.persister.insert_or_update_chain_swap(&swap)?;
@@ -3652,6 +3653,7 @@ impl LiquidSdk {
             created_at: utils::now(),
             state: PaymentState::Created,
             auto_accepted_fees: false,
+            user_lockup_spent: false,
             metadata: Default::default(),
         };
         self.persister.insert_or_update_chain_swap(&swap)?;
