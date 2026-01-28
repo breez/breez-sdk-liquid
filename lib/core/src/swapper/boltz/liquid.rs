@@ -51,11 +51,17 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             None
         };
 
+        let fee = if is_cooperative {
+            Fee::Absolute(swap.claim_fees_sat)
+        } else {
+            Fee::Relative(LIQUID_FEE_RATE_SAT_PER_VBYTE)
+        };
+
         let signed_tx = claim_tx_wrapper
             .sign_claim(
                 &swap.get_claim_keypair()?,
                 &Preimage::from_str(&swap.preimage)?,
-                Fee::Absolute(swap.claim_fees_sat),
+                fee,
                 cooperative_details,
                 true,
             )
@@ -90,11 +96,17 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             None
         };
 
+        let fee = if is_cooperative {
+            Fee::Absolute(swap.claim_fees_sat)
+        } else {
+            Fee::Relative(LIQUID_FEE_RATE_SAT_PER_VBYTE)
+        };
+
         let signed_tx = claim_tx_wrapper
             .sign_claim(
                 &claim_keypair,
                 &Preimage::from_str(&swap.preimage)?,
-                Fee::Absolute(swap.claim_fees_sat),
+                fee,
                 cooperative_details,
                 true,
             )
