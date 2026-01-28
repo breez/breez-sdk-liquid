@@ -348,15 +348,14 @@ impl ReceiveSwapHandler {
         let swap = self.fetch_receive_swap_by_id(swap_id)?;
         ensure_sdk!(swap.claim_tx_id.is_none(), PaymentError::AlreadyClaimed);
 
-        // Make sure the timeout block height has not been reached (with 10 blocks margin)
+        // Use non-cooperative claim if within 10 blocks of timeout
         let liquid_tip = self.liquid_chain_service.tip().await?;
-        if liquid_tip > swap.timeout_block_height - 10 {
-            return Err(PaymentError::Generic {
-                err: format!(
-                    "Preventing claim for receive swap {swap_id} as timeout block height {} has been/will soon be reached (liquid tip: {liquid_tip})",
-                    swap.timeout_block_height
-                ),
-            });
+        let is_cooperative = liquid_tip <= swap.timeout_block_height.saturating_sub(10);
+        if !is_cooperative {
+            info!(
+                "Using non-cooperative claim for Receive Swap {swap_id} as timeout block height {} is near or past (liquid tip: {liquid_tip})",
+                swap.timeout_block_height
+            );
         }
 
         info!("Initiating claim for Receive Swap {swap_id}");
@@ -373,7 +372,11 @@ impl ReceiveSwapHandler {
 
         let crate::prelude::Transaction::Liquid(claim_tx) = self
             .swapper
-            .create_claim_tx(Swap::Receive(swap.clone()), Some(claim_address.clone()))
+            .create_claim_tx(
+                Swap::Receive(swap.clone()),
+                Some(claim_address.clone()),
+                is_cooperative,
+            )
             .await?
         else {
             return Err(PaymentError::Generic {

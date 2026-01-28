@@ -128,6 +128,7 @@ impl From<ChainSyncData> for ChainSwap {
             claim_tx_id: None,
             refund_tx_id: None,
             auto_accepted_fees: val.auto_accepted_fees,
+            user_lockup_spent: false,
             metadata: Default::default(),
         }
     }

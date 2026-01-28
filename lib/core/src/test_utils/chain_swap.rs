@@ -151,6 +151,7 @@ pub(crate) fn new_chain_swap(
             }"#
             .to_string(),
             auto_accepted_fees: false,
+            user_lockup_spent: false,
             metadata: Default::default(),
         };
     }
@@ -238,6 +239,7 @@ pub(crate) fn new_chain_swap(
               }
             }"#.to_string(),
             auto_accepted_fees: false,
+            user_lockup_spent: false,
             metadata: Default::default(),
         },
         Direction::Outgoing => ChainSwap {
@@ -323,6 +325,7 @@ pub(crate) fn new_chain_swap(
               }
             }"#.to_string(),
             auto_accepted_fees: false,
+            user_lockup_spent: false,
             metadata: Default::default(),
         }
     }

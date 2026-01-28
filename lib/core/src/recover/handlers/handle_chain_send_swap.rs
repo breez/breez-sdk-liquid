@@ -133,6 +133,7 @@ impl ChainSendSwapHandler {
             .btc_claim_tx_id
             .clone()
             .map(|h| h.txid.to_string());
+        chain_swap.user_lockup_spent = recovered_data.user_lockup_spent;
 
         Ok(())
     }
@@ -194,11 +195,15 @@ impl ChainSendSwapHandler {
             }
         };
 
+        // User lockup is spent if there are 2+ txs on the lockup script (lockup + spend)
+        let user_lockup_spent = history.lbtc_lockup_script_history.len() >= 2;
+
         Ok(RecoveredOnchainDataChainSend {
             lbtc_user_lockup_tx_id,
             lbtc_refund_tx_id,
             btc_server_lockup_tx_id,
             btc_claim_tx_id,
+            user_lockup_spent,
         })
     }
 }
@@ -212,6 +217,8 @@ pub(crate) struct RecoveredOnchainDataChainSend {
     pub(crate) btc_server_lockup_tx_id: Option<BtcHistory>,
     /// BTC tx that claims to the final BTC destination address. The final step in a successful swap.
     pub(crate) btc_claim_tx_id: Option<BtcHistory>,
+    /// Whether the user's LBTC lockup has been spent (by server claim or user refund)
+    pub(crate) user_lockup_spent: bool,
 }
 
 // TODO: We have to be careful around overwriting the RefundPending state, as this swap monitored

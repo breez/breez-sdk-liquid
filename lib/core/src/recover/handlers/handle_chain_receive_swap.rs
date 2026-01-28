@@ -160,6 +160,7 @@ impl ChainReceiveSwapHandler {
             .btc_refund_tx_id
             .clone()
             .map(|h| h.txid.to_string());
+        chain_swap.user_lockup_spent = recovered_data.user_lockup_spent;
 
         Ok(())
     }
@@ -267,8 +268,21 @@ impl ChainReceiveSwapHandler {
                 true => btc_last_outgoing_tx_id,
                 false => None,
             },
-            false => btc_last_outgoing_tx_id,
+            false => {
+                // No LBTC claim found. Determine if BTC outgoing is user refund or Boltz claiming.
+                // - LBTC history = 0: No server activity → BTC outgoing is user refund
+                // - LBTC history = 1: Server locked up, LBTC still claimable → BTC outgoing is Boltz claiming
+                // - LBTC history > 1: Server refunded LBTC (or user claimed but LWK didn't see claim tx as ours) → BTC outgoing is user refund
+                let lbtc_history_len = history.lbtc_claim_script_history.len();
+                match lbtc_history_len {
+                    1 => None,                    // LBTC still claimable, BTC outgoing is Boltz claiming
+                    _ => btc_last_outgoing_tx_id, // 0 or >1: user refund
+                }
+            }
         };
+
+        // User lockup is spent if there are any outgoing transactions from the lockup script
+        let user_lockup_spent = !btc_lockup_outgoing_txs.is_empty();
 
         Ok(RecoveredOnchainDataChainReceive {
             lbtc_server_lockup_tx_id,
@@ -278,6 +292,7 @@ impl ChainReceiveSwapHandler {
             btc_user_lockup_address_balance_sat,
             btc_user_lockup_amount_sat,
             btc_refund_tx_id,
+            user_lockup_spent,
         })
     }
 }
@@ -297,6 +312,8 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     pub(crate) btc_user_lockup_amount_sat: u64,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
     pub(crate) btc_refund_tx_id: Option<BtcHistory>,
+    /// Whether the user's BTC lockup has been spent (by server claim or user refund)
+    pub(crate) user_lockup_spent: bool,
 }
 
 impl RecoveredOnchainDataChainReceive {

@@ -169,6 +169,84 @@ mod test {
         assert_eq!(chain_swap.claim_tx_id, None);
     }
 
+    /// Tests the scenario where:
+    /// - Claim broadcast failed after sharing preimage with Boltz
+    /// - Boltz claimed BTC (has preimage) → BTC history shows 2 txs
+    /// - LBTC still in claim script → LBTC history shows 1 tx (server lockup only)
+    /// - Expected: state should be Pending (LBTC still claimable), not Failed
+    #[sdk_macros::async_test_all]
+    async fn test_recover_with_lbtc_lockup_only_and_btc_claimed_by_boltz() {
+        // Setup mock data
+        let (mut chain_swap, recovery_context) = setup_test_data();
+
+        // Add BTC lockup tx to history
+        let btc_lockup_script = chain_swap
+            .get_lockup_swap_script()
+            .unwrap()
+            .as_bitcoin_script()
+            .unwrap()
+            .funding_addrs
+            .unwrap()
+            .script_pubkey();
+
+        // Add BTC lockup and "refund" (actually Boltz claiming after getting preimage)
+        let (recovery_context, btc_lockup_tx_id, _btc_outgoing_tx_id) =
+            add_btc_lockup_and_refund_to_context(
+                recovery_context,
+                &btc_lockup_script,
+                100, // Lockup confirmed height
+                102, // Outgoing confirmed height
+                chain_swap.payer_amount_sat,
+            );
+
+        // Add LBTC server lockup only (no claim tx yet - LBTC still claimable)
+        let lbtc_claim_script = chain_swap
+            .get_claim_swap_script()
+            .unwrap()
+            .as_liquid_script()
+            .unwrap()
+            .funding_addrs
+            .unwrap()
+            .script_pubkey();
+
+        let lbtc_server_lockup_tx_id =
+            "2222222222222222222222222222222222222222222222222222222222222222";
+
+        // Only 1 LBTC tx (server lockup) - no claim yet
+        let recovery_context = add_lbtc_history_to_context(
+            recovery_context,
+            &lbtc_claim_script,
+            &[(lbtc_server_lockup_tx_id, 101)],
+            "", // No claim tx
+            0,
+        );
+
+        // Test recover swap
+        let result = ChainReceiveSwapHandler::recover_swap(
+            &mut chain_swap,
+            &recovery_context,
+            false, // Not within grace period
+        )
+        .await;
+
+        // Verify results
+        assert!(result.is_ok());
+        // Should be Pending since LBTC is still claimable, NOT Failed
+        assert_eq!(chain_swap.state, PaymentState::Pending);
+        assert_eq!(
+            chain_swap.user_lockup_tx_id,
+            Some(btc_lockup_tx_id.to_string())
+        );
+        assert_eq!(
+            chain_swap.server_lockup_tx_id,
+            Some(lbtc_server_lockup_tx_id.to_string())
+        );
+        // No refund detected since BTC outgoing is Boltz claiming (not user refund)
+        assert_eq!(chain_swap.refund_tx_id, None);
+        // No claim yet
+        assert_eq!(chain_swap.claim_tx_id, None);
+    }
+
     #[sdk_macros::async_test_all]
     async fn test_recover_expired_swap() {
         // Setup mock data
@@ -384,6 +462,7 @@ mod test {
             claim_fees_sat: 1000,
             accept_zero_conf: true,
             auto_accepted_fees: true,
+            user_lockup_spent: false,
         };
 
         // Create empty recovery context

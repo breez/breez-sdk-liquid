@@ -217,6 +217,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         &self,
         swap: &Swap,
         claim_address: Option<String>,
+        is_cooperative: bool,
     ) -> Result<Transaction, PaymentError> {
         let tx = match &swap {
             Swap::Chain(swap) => {
@@ -230,7 +231,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                 };
                 match swap.direction {
                     Direction::Incoming => Transaction::Liquid(
-                        self.new_incoming_chain_claim_tx(swap, claim_address)
+                        self.new_incoming_chain_claim_tx(swap, claim_address, is_cooperative)
                             .await?,
                     ),
                     Direction::Outgoing => Transaction::Bitcoin(
@@ -248,7 +249,10 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
                         ),
                     });
                 };
-                Transaction::Liquid(self.new_receive_claim_tx(swap, claim_address).await?)
+                Transaction::Liquid(
+                    self.new_receive_claim_tx(swap, claim_address, is_cooperative)
+                        .await?,
+                )
             }
             Swap::Send(swap) => {
                 return Err(PaymentError::Generic {
@@ -445,12 +449,13 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
         &self,
         swap: Swap,
         claim_address: Option<String>,
+        is_cooperative: bool,
     ) -> Result<Transaction, PaymentError> {
         let mut attempts = 0;
         let mut current_delay_secs = MIN_RETRY_DELAY_SECS;
         loop {
             match self
-                .create_claim_tx_impl(&swap, claim_address.clone())
+                .create_claim_tx_impl(&swap, claim_address.clone(), is_cooperative)
                 .await
             {
                 Ok(tx) => return Ok(tx),

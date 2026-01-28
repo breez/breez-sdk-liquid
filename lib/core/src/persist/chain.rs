@@ -78,7 +78,8 @@ impl Persister {
                 pair_fees_json = :pair_fees_json,
                 state = :state,
                 actual_payer_amount_sat = :actual_payer_amount_sat,
-                accepted_receiver_amount_sat = :accepted_receiver_amount_sat
+                accepted_receiver_amount_sat = :accepted_receiver_amount_sat,
+                user_lockup_spent = :user_lockup_spent
             WHERE
                 id = :id AND
                 version = :version",
@@ -96,6 +97,7 @@ impl Persister {
                 ":state": &chain_swap.state,
                 ":actual_payer_amount_sat": from_optional_u64_to_row(&chain_swap.actual_payer_amount_sat)?,
                 ":accepted_receiver_amount_sat": from_optional_u64_to_row(&chain_swap.accepted_receiver_amount_sat)?,
+                ":user_lockup_spent": &chain_swap.user_lockup_spent,
                 ":version": from_u64_to_row(chain_swap.metadata.version)?,
             },
         )?;
@@ -166,6 +168,7 @@ impl Persister {
                 actual_payer_amount_sat,
                 accepted_receiver_amount_sat,
                 auto_accepted_fees,
+                user_lockup_spent,
                 version,
                 last_updated_at,
 
@@ -225,10 +228,11 @@ impl Persister {
             actual_payer_amount_sat: from_row_to_optional_u64(row, 23)?,
             accepted_receiver_amount_sat: from_row_to_optional_u64(row, 24)?,
             auto_accepted_fees: row.get(25)?,
+            user_lockup_spent: row.get(26)?,
             metadata: SwapMetadata {
-                version: from_row_to_u64(row, 26)?,
-                last_updated_at: row.get(27)?,
-                is_local: row.get::<usize, Option<bool>>(28)?.unwrap_or(true),
+                version: from_row_to_u64(row, 27)?,
+                last_updated_at: row.get(28)?,
+                is_local: row.get::<usize, Option<bool>>(29)?.unwrap_or(true),
             },
         })
     }

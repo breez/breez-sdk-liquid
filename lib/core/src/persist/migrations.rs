@@ -374,6 +374,7 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         UPDATE chain_swaps
         SET claim_timeout_block_height = CAST(json_extract(create_response_json, '$.claim_details.timeoutBlockHeight') AS INTEGER);
         ",
+        "ALTER TABLE chain_swaps ADD COLUMN user_lockup_spent INTEGER NOT NULL DEFAULT 0;",
     ]
 }
 

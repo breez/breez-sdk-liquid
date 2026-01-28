@@ -18,6 +18,7 @@ mod test {
             claim_tx_id: Some(create_lbtc_history_txid("2222", 101)), // Confirmed claim
             mrh_tx_id: None,
             mrh_amount_sat: None,
+            lbtc_claim_script_history_len: 2,
         };
 
         // When there's a lockup and confirmed claim tx, it should be Complete
@@ -36,6 +37,7 @@ mod test {
             claim_tx_id: Some(create_lbtc_history_txid("2222", 0)), // Unconfirmed claim
             mrh_tx_id: None,
             mrh_amount_sat: None,
+            lbtc_claim_script_history_len: 2,
         };
 
         // When there's a lockup and unconfirmed claim tx, it should be Pending
@@ -50,12 +52,14 @@ mod test {
     }
 
     #[sdk_macros::test_all]
-    fn test_derive_partial_state_with_lockup_only() {
+    fn test_derive_partial_state_with_lockup_only_server_refunded() {
+        // Server has refunded (history > 1)
         let recovered_data = RecoveredOnchainDataReceive {
             lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
             claim_tx_id: None,
             mrh_tx_id: None,
             mrh_amount_sat: None,
+            lbtc_claim_script_history_len: 2, // Server lockup + server refund
         };
 
         // Not expired yet - should be Pending
@@ -64,10 +68,34 @@ mod test {
             Some(PaymentState::Pending)
         );
 
-        // Expired - should be Failed
+        // Expired and server refunded - should be Failed
         assert_eq!(
             recovered_data.derive_partial_state(true),
             Some(PaymentState::Failed)
+        );
+    }
+
+    #[sdk_macros::test_all]
+    fn test_derive_partial_state_with_lockup_only_still_claimable() {
+        // Server has NOT refunded (history = 1), LBTC still claimable
+        let recovered_data = RecoveredOnchainDataReceive {
+            lockup_tx_id: Some(create_lbtc_history_txid("1111", 100)),
+            claim_tx_id: None,
+            mrh_tx_id: None,
+            mrh_amount_sat: None,
+            lbtc_claim_script_history_len: 1, // Only server lockup
+        };
+
+        // Not expired yet - should be Pending
+        assert_eq!(
+            recovered_data.derive_partial_state(false),
+            Some(PaymentState::Pending)
+        );
+
+        // Expired but server hasn't refunded - should be Pending (still claimable)
+        assert_eq!(
+            recovered_data.derive_partial_state(true),
+            Some(PaymentState::Pending)
         );
     }
 
@@ -79,6 +107,7 @@ mod test {
             claim_tx_id: None,
             mrh_tx_id: Some(create_lbtc_history_txid("3333", 103)),
             mrh_amount_sat: Some(100000),
+            lbtc_claim_script_history_len: 0,
         };
 
         // When there's a confirmed MRH tx, it should be Complete
@@ -97,6 +126,7 @@ mod test {
             claim_tx_id: None,
             mrh_tx_id: Some(create_lbtc_history_txid("3333", 0)), // Unconfirmed MRH tx
             mrh_amount_sat: Some(100000),
+            lbtc_claim_script_history_len: 0,
         };
 
         // When there's an unconfirmed MRH tx, it should be Pending
@@ -117,6 +147,7 @@ mod test {
             claim_tx_id: None,
             mrh_tx_id: None,
             mrh_amount_sat: None,
+            lbtc_claim_script_history_len: 0,
         };
 
         // Not expired yet - should return None because we can't determine the state
