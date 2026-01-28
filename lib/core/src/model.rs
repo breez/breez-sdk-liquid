@@ -1282,6 +1282,9 @@ pub struct ChainSwap {
     pub(crate) claim_private_key: String,
     pub(crate) refund_private_key: String,
     pub(crate) auto_accepted_fees: bool,
+    /// Whether the user lockup has been spent (server claimed). If true, we must claim regardless
+    /// of timeout proximity since the preimage has been revealed.
+    pub(crate) user_lockup_spent: bool,
     /// Swap metadata that is only valid when reading one from the local database
     #[derivative(PartialEq = "ignore")]
     pub(crate) metadata: SwapMetadata,

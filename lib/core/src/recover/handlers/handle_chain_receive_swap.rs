@@ -160,6 +160,7 @@ impl ChainReceiveSwapHandler {
             .btc_refund_tx_id
             .clone()
             .map(|h| h.txid.to_string());
+        chain_swap.user_lockup_spent = recovered_data.user_lockup_spent;
 
         Ok(())
     }
@@ -280,6 +281,9 @@ impl ChainReceiveSwapHandler {
             }
         };
 
+        // User lockup is spent if there are any outgoing transactions from the lockup script
+        let user_lockup_spent = !btc_lockup_outgoing_txs.is_empty();
+
         Ok(RecoveredOnchainDataChainReceive {
             lbtc_server_lockup_tx_id,
             lbtc_claim_tx_id,
@@ -288,6 +292,7 @@ impl ChainReceiveSwapHandler {
             btc_user_lockup_address_balance_sat,
             btc_user_lockup_amount_sat,
             btc_refund_tx_id,
+            user_lockup_spent,
         })
     }
 }
@@ -307,6 +312,8 @@ pub(crate) struct RecoveredOnchainDataChainReceive {
     pub(crate) btc_user_lockup_amount_sat: u64,
     /// BTC tx initiated by the SDK to a user-chosen address, in case the initial funds have to be refunded.
     pub(crate) btc_refund_tx_id: Option<BtcHistory>,
+    /// Whether the user's BTC lockup has been spent (by server claim or user refund)
+    pub(crate) user_lockup_spent: bool,
 }
 
 impl RecoveredOnchainDataChainReceive {

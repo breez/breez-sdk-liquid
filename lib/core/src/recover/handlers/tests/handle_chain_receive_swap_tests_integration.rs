@@ -462,6 +462,7 @@ mod test {
             claim_fees_sat: 1000,
             accept_zero_conf: true,
             auto_accepted_fees: true,
+            user_lockup_spent: false,
         };
 
         // Create empty recovery context
