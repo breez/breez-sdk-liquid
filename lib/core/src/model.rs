@@ -938,6 +938,12 @@ pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
+/// An argument when calling [crate::sdk::LiquidSdk::rescan_onchain_swaps].
+#[derive(Debug, Serialize)]
+pub struct RescanSwapsRequest {
+    pub swap_ids: Vec<String>,
+}
+
 /// An asset balance to denote the balance for each asset.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct AssetBalance {

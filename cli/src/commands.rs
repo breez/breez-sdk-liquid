@@ -207,8 +207,12 @@ pub(crate) enum Command {
         // Fee rate to use, in sat/vbyte
         fee_rate_sat_per_vbyte: u32,
     },
-    /// Rescan onchain swaps
-    RescanOnchainSwaps,
+    /// Rescan swaps
+    RescanSwaps {
+        /// A optional list of swap ids
+        #[clap(name = "swap_id", short = 's', long = "swap_id")]
+        swap_ids: Option<Vec<String>>,
+    },
     /// Get the balance and general info of the current instance
     GetInfo,
     /// Sign a message using the wallet private key
@@ -741,8 +745,11 @@ pub(crate) async fn handle_command(
                 .await?;
             command_result!(res)
         }
-        Command::RescanOnchainSwaps => {
-            sdk.rescan_onchain_swaps().await?;
+        Command::RescanSwaps { swap_ids } => {
+            sdk.rescan_swaps(&RescanSwapsRequest {
+                swap_ids: swap_ids.unwrap_or_default(),
+            })
+            .await?;
             command_result!("Rescanned successfully")
         }
         Command::Sync => {

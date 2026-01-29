@@ -375,6 +375,12 @@ impl BindingLiquidSdk {
         Ok(())
     }
 
+    #[wasm_bindgen(js_name = "rescanSwaps")]
+    pub async fn rescan_swaps(&self, req: RescanSwapsRequest) -> WasmResult<()> {
+        self.sdk.rescan_swaps(&req.into()).await?;
+        Ok(())
+    }
+
     #[wasm_bindgen(js_name = "sync")]
     pub async fn sync(&self) -> WasmResult<()> {
         self.sdk.sync(false).await?;

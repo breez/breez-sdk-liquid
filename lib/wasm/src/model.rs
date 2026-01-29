@@ -544,6 +544,11 @@ pub struct RefundResponse {
     pub refund_tx_id: String,
 }
 
+#[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::RescanSwapsRequest)]
+pub struct RescanSwapsRequest {
+    pub swap_ids: Vec<String>,
+}
+
 #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid::prelude::AssetBalance)]
 pub struct AssetBalance {
     pub asset_id: String,

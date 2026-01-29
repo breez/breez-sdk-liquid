@@ -295,6 +295,10 @@ impl BindingLiquidSdk {
         rt().block_on(self.sdk.rescan_onchain_swaps())
     }
 
+    pub fn rescan_swaps(&self, req: RescanSwapsRequest) -> SdkResult<()> {
+        rt().block_on(self.sdk.rescan_swaps(&req))
+    }
+
     pub fn sync(&self) -> SdkResult<()> {
         rt().block_on(self.sdk.sync(false))
     }

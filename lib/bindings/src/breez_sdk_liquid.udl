@@ -713,6 +713,10 @@ dictionary RefundResponse {
     string refund_tx_id;
 };
 
+dictionary RescanSwapsRequest {
+    sequence<string> swap_ids;
+};
+
 [Enum]
 interface SdkEvent {
     PaymentFailed(Payment details);
@@ -878,6 +882,9 @@ interface BindingLiquidSdk {
 
     [Throws=SdkError]
     void rescan_onchain_swaps();
+
+    [Throws=SdkError]
+    void rescan_swaps(RescanSwapsRequest req);
 
     [Throws=SdkError]
     void sync();

@@ -302,9 +302,9 @@ pub use breez_sdk_liquid::{
         PreparePayOnchainRequest, PreparePayOnchainResponse, PrepareReceiveRequest,
         PrepareReceiveResponse, PrepareRefundRequest, PrepareRefundResponse, PrepareSendRequest,
         PrepareSendResponse, ReceiveAmount, ReceivePaymentRequest, ReceivePaymentResponse,
-        RecommendedFees, RefundRequest, RefundResponse, RefundableSwap, RestoreRequest, SdkEvent,
-        SendDestination, SendPaymentRequest, SendPaymentResponse, SignMessageRequest,
-        SignMessageResponse, WalletInfo,
+        RecommendedFees, RefundRequest, RefundResponse, RefundableSwap, RescanSwapsRequest,
+        RestoreRequest, SdkEvent, SendDestination, SendPaymentRequest, SendPaymentResponse,
+        SignMessageRequest, SignMessageResponse, WalletInfo,
     },
     sdk::LiquidSdk,
 };
@@ -593,6 +593,11 @@ pub struct _RefundRequest {
 #[frb(mirror(RefundResponse))]
 pub struct _RefundResponse {
     pub refund_tx_id: String,
+}
+
+#[frb(mirror(RescanSwapsRequest))]
+pub struct _RescanSwapsRequest {
+    pub swap_ids: Vec<String>,
 }
 
 #[frb(mirror(RefundableSwap))]

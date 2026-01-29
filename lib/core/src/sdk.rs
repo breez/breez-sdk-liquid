@@ -3826,27 +3826,58 @@ impl LiquidSdk {
     /// (within last [CHAIN_SWAP_MONITORING_PERIOD_BITCOIN_BLOCKS] blocks = ~14 days), calling this
     /// is not necessary as it happens automatically in the background.
     pub async fn rescan_onchain_swaps(&self) -> SdkResult<()> {
-        let t0 = Instant::now();
-        let mut rescannable_swaps: Vec<Swap> = self
+        let swaps: Vec<Swap> = self
             .persister
             .list_chain_swaps()?
             .into_iter()
             .map(Into::into)
             .collect();
+        self.rescan_swaps_inner(swaps).await
+    }
+
+    pub async fn rescan_swaps(&self, req: &RescanSwapsRequest) -> SdkResult<()> {
+        let swap_id_filter: HashSet<String> = req.swap_ids.clone().into_iter().collect();
+        let swaps: Vec<Swap> = self
+            .persister
+            .list_swaps()?
+            .into_iter()
+            .filter(|swap| swap_id_filter.contains(&swap.id()))
+            .collect();
+        self.rescan_swaps_inner(swaps).await
+    }
+
+    async fn rescan_swaps_inner(&self, mut swaps: Vec<Swap>) -> SdkResult<()> {
+        let t0 = Instant::now();
+        debug!("[Rescan swaps] Starting rescan of swaps:");
+        for swap in swaps.iter() {
+            debug!("[Rescan swaps] {swap}");
+        }
         self.recoverer
-            .recover_from_onchain(&mut rescannable_swaps, None)
+            .recover_from_onchain(&mut swaps, None)
             .await?;
-        let scanned_len = rescannable_swaps.len();
-        for swap in rescannable_swaps {
+        let scanned_len = swaps.len();
+        for swap in swaps {
             let swap_id = &swap.id();
-            if let Swap::Chain(chain_swap) = swap {
-                if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
-                    error!("Error persisting rescanned Chain Swap {swap_id}: {e}");
+            match swap {
+                Swap::Chain(chain_swap) => {
+                    if let Err(e) = self.chain_swap_handler.update_swap(chain_swap) {
+                        error!("Error persisting rescanned Chain Swap {swap_id}: {e}");
+                    }
+                }
+                Swap::Receive(receive_swap) => {
+                    if let Err(e) = self.receive_swap_handler.update_swap(receive_swap) {
+                        error!("Error persisting rescanned Recieve Swap {swap_id}: {e}");
+                    }
+                }
+                Swap::Send(send_swap) => {
+                    if let Err(e) = self.send_swap_handler.update_swap(send_swap) {
+                        error!("Error persisting rescanned Send Swap {swap_id}: {e}");
+                    }
                 }
             }
         }
         info!(
-            "Rescanned {} chain swaps in {} seconds",
+            "Rescanned {} swaps in {} seconds",
             scanned_len,
             t0.elapsed().as_millis()
         );

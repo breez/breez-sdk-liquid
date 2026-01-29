@@ -241,6 +241,10 @@ impl BreezSdkLiquid {
         self.sdk.rescan_onchain_swaps().await
     }
 
+    pub async fn rescan_swaps(&self, req: RescanSwapsRequest) -> Result<(), SdkError> {
+        self.sdk.rescan_swaps(&req).await
+    }
+
     #[frb(name = "sync")]
     pub async fn sync(&self) -> Result<(), SdkError> {
         self.sdk.sync(false).await.map_err(Into::into)
