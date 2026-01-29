@@ -32,6 +32,7 @@ pub enum _PaymentError {
 pub enum _SdkError {
     AlreadyStarted,
     Generic { err: String },
+    NetworkNotSupported { network: String },
     NotStarted,
     ServiceConnectivity { err: String },
 }

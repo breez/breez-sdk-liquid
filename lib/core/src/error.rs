@@ -27,6 +27,9 @@ pub enum SdkError {
     #[error("Error: {err}")]
     Generic { err: String },
 
+    #[error("Network {network} is not currently supported")]
+    NetworkNotSupported { network: String },
+
     #[error("Liquid SDK instance is not running")]
     NotStarted,
 
@@ -37,6 +40,12 @@ impl SdkError {
     pub fn generic<T: AsRef<str>>(err: T) -> Self {
         Self::Generic {
             err: err.as_ref().to_string(),
+        }
+    }
+
+    pub(crate) fn network_not_supported<T: ToString>(network: T) -> Self {
+        Self::NetworkNotSupported {
+            network: network.to_string(),
         }
     }
 }

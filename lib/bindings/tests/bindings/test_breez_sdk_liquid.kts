@@ -7,7 +7,7 @@ class SDKListener: breez_sdk_liquid.EventListener {
 
 try {
     var mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-    var config = breez_sdk_liquid.defaultConfig(breez_sdk_liquid.LiquidNetwork.TESTNET, null)
+    var config = breez_sdk_liquid.defaultConfig(breez_sdk_liquid.LiquidNetwork.REGTEST, null)
     config.syncServiceUrl = null
     var connectRequest = breez_sdk_liquid.ConnectRequest(config, mnemonic)
     var sdk = breez_sdk_liquid.connect(connectRequest)

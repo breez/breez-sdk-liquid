@@ -104,7 +104,7 @@ async fn main() -> Result<()> {
 
     let mnemonic = persistence.get_or_create_mnemonic(args.phrase_path.as_deref())?;
     let passphrase = args.passphrase.clone();
-    let network = args.network.unwrap_or(LiquidNetwork::Testnet);
+    let network = args.network.unwrap_or(LiquidNetwork::Mainnet);
     let breez_api_key = std::env::var_os("BREEZ_API_KEY")
         .map(|var| var.into_string().expect("Expected valid API key string"));
     let mut config = LiquidSdk::default_config(network, breez_api_key)?;

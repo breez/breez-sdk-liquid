@@ -68,7 +68,7 @@ async function createAndDestroyRound(roundIdx) {
 
   /* 1. create */
   const createPromises = Array.from({ length: INSTANCES }, async (_, i) => {
-    const cfg = defaultConfig('testnet', API_KEY)
+    const cfg = defaultConfig('mainnet', API_KEY)
     cfg.workingDir = `./breez/memory-test-${roundIdx}-${i}`
 
     const seed = [...new Uint8Array(32).fill((roundIdx + i) & 0xff)]
