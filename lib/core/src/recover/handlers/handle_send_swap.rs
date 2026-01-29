@@ -58,8 +58,26 @@ impl SendSwapHandler {
             .get(&lockup_script)
             .unwrap_or(&empty_history);
 
+        debug!(
+            "[Recover Send] Swap {swap_id}: lbtc_lockup_script_history len={}",
+            history.len()
+        );
+        for (i, h) in history.iter().enumerate() {
+            debug!(
+                "[Recover Send] Swap {swap_id}: lbtc_history[{i}] txid={}, height={}",
+                h.txid, h.height
+            );
+        }
+
         // First obtain transaction IDs from the history
         let mut recovered_data = Self::recover_onchain_data(&context.tx_map, &swap_id, history)?;
+
+        debug!(
+            "[Recover Send] Swap {swap_id}: recovered lockup_tx_id={:?}, claim_tx_id={:?}, refund_tx_id={:?}",
+            recovered_data.lockup_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.claim_tx_id.as_ref().map(|h| h.txid.to_string()),
+            recovered_data.refund_tx_id.as_ref().map(|h| h.txid.to_string())
+        );
 
         // Recover preimage if needed
         if recovered_data.lockup_tx_id.is_some() && send_swap.preimage.is_none() {
@@ -137,6 +155,10 @@ impl SendSwapHandler {
         if let Some(new_state) =
             recovered_data.derive_partial_state(send_swap.preimage.clone(), is_expired)
         {
+            debug!(
+                "[Recover Send] Swap {swap_id}: state transition {:?} -> {:?}",
+                send_swap.state, new_state
+            );
             send_swap.state = new_state;
         }
 
