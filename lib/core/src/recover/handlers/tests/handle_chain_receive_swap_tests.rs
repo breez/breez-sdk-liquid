@@ -22,6 +22,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // When there's a lockup and confirmed claim tx, it should be Complete
@@ -43,6 +44,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // When there's a lockup and unconfirmed claim tx, it should be Pending
@@ -67,6 +69,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: Some(create_btc_history_txid("4444", 103)), // Confirmed refund
+            user_lockup_spent: true,
         };
 
         // When there's a lockup and confirmed refund tx, it should be Failed
@@ -88,6 +91,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: Some(create_btc_history_txid("4444", 0)), // Unconfirmed refund
+            user_lockup_spent: true,
         };
 
         // When there's a lockup and unconfirmed refund tx, it should be RefundPending
@@ -112,6 +116,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Not expired yet - should be Pending
@@ -139,6 +144,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 100000, // Funds still in address
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Expired with funds still in address - should be Refundable
@@ -165,6 +171,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 5000,
             btc_user_lockup_amount_sat: 5000, // Below minimum
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Should be Refundable due to amount below minimum
@@ -182,6 +189,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 3000000,
             btc_user_lockup_amount_sat: 3000000, // Above maximum
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Should be Refundable due to amount above maximum
@@ -199,6 +207,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 150000,
             btc_user_lockup_amount_sat: 150000, // Different from expected
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Should be Refundable due to unexpected amount
@@ -218,6 +227,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 0,
             btc_refund_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Not expired yet - should return None because we can't determine the state
@@ -244,6 +254,7 @@ mod test {
             btc_user_lockup_address_balance_sat: 0,
             btc_user_lockup_amount_sat: 100000,
             btc_refund_tx_id: Some(create_btc_history_txid("4444", 103)),
+            user_lockup_spent: true,
         };
 
         // Complete state should take precedence over refund
