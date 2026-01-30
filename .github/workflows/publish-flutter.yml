@@ -31,7 +31,7 @@ on:
         required: true
 
 env:
-  FLUTTER_VERSION: '3.35.3'
+  FLUTTER_VERSION: '3.38.9'
   PROTOC_VERSION: '30.2'
   NDK_VERSION: '23.2.8568313'
   ANDROID_MIN_SDK: '24'
