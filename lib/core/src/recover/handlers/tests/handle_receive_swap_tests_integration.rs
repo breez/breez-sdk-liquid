@@ -256,7 +256,7 @@ mod test {
         // Make the swap expired
         recovery_context.liquid_tip_height = receive_swap.timeout_block_height + 10;
 
-        // Setup only a lockup tx in the history
+        // Setup only a lockup tx in the history (server hasn't refunded yet)
         let claim_script = receive_swap.claim_script().unwrap();
 
         let lockup_tx_id = "1111111111111111111111111111111111111111111111111111111111111111";
@@ -277,7 +277,58 @@ mod test {
 
         // Verify results
         assert!(result.is_ok());
-        assert_eq!(receive_swap.state, PaymentState::Failed); // Should be failed since expired
+        // Should be Pending since LBTC is still claimable (server hasn't refunded)
+        assert_eq!(receive_swap.state, PaymentState::Pending);
+        assert_eq!(receive_swap.claim_tx_id, None); // No claim tx
+        assert_eq!(receive_swap.lockup_tx_id, Some(lockup_tx_id.to_string()));
+    }
+
+    #[sdk_macros::async_test_all]
+    async fn test_recover_with_lockup_expired_server_refunded() {
+        // Setup mock data
+        let (mut receive_swap, mut recovery_context) = setup_test_data();
+
+        // Make the swap expired
+        recovery_context.liquid_tip_height = receive_swap.timeout_block_height + 10;
+
+        // Setup lockup tx in the history
+        let claim_script = receive_swap.claim_script().unwrap();
+
+        let lockup_tx_id = "1111111111111111111111111111111111111111111111111111111111111111";
+        let mut recovery_context = add_lockup_tx_to_context(
+            recovery_context,
+            &claim_script,
+            lockup_tx_id,
+            100, // Confirmed
+        );
+
+        // Add a second history entry to simulate server refund
+        // (not in incoming_tx_map since it's not our claim)
+        let server_refund_tx_id =
+            Txid::from_str("4444444444444444444444444444444444444444444444444444444444444444")
+                .unwrap();
+        let server_refund_history = LBtcHistory {
+            txid: server_refund_tx_id,
+            height: 110,
+        };
+        recovery_context
+            .lbtc_script_to_history_map
+            .get_mut(&claim_script)
+            .unwrap()
+            .push(server_refund_history);
+
+        // Test recover swap
+        let result = ReceiveSwapHandler::recover_swap(
+            &mut receive_swap,
+            &recovery_context,
+            false, // Not within grace period
+        )
+        .await;
+
+        // Verify results
+        assert!(result.is_ok());
+        // Should be Failed since server has refunded (history > 1)
+        assert_eq!(receive_swap.state, PaymentState::Failed);
         assert_eq!(receive_swap.claim_tx_id, None); // No claim tx
         assert_eq!(receive_swap.lockup_tx_id, Some(lockup_tx_id.to_string()));
     }

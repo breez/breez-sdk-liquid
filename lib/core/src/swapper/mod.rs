@@ -97,6 +97,7 @@ pub trait Swapper: MaybeSend + MaybeSync {
         &self,
         swap: Swap,
         claim_address: Option<String>,
+        is_cooperative: bool,
     ) -> Result<crate::prelude::Transaction, PaymentError>;
 
     /// Estimate the refund broadcast transaction size and fees in sats for a send or chain swap

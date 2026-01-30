@@ -18,6 +18,7 @@ mod test {
             lbtc_refund_tx_id: None,
             btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: Some(create_btc_history_txid("3333", 102)),
+            user_lockup_spent: true,
         };
 
         // When there's a lockup and confirmed claim tx, it should be Complete
@@ -36,6 +37,7 @@ mod test {
             lbtc_refund_tx_id: None,
             btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: Some(create_btc_history_txid("3333", 0)), // Unconfirmed claim
+            user_lockup_spent: true,
         };
 
         // When there's a lockup and unconfirmed claim tx, it should be Pending
@@ -57,6 +59,7 @@ mod test {
             lbtc_refund_tx_id: Some(create_lbtc_history_txid("4444", 102)),
             btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: None,
+            user_lockup_spent: true,
         };
 
         // When there's a lockup and confirmed refund tx, it should be Failed
@@ -75,6 +78,7 @@ mod test {
             lbtc_refund_tx_id: Some(create_lbtc_history_txid("4444", 0)), // Unconfirmed refund
             btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: None,
+            user_lockup_spent: true,
         };
 
         // When there's a lockup and unconfirmed refund tx, it should be RefundPending
@@ -95,6 +99,7 @@ mod test {
             lbtc_refund_tx_id: None,
             btc_server_lockup_tx_id: None,
             btc_claim_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Not expired yet - should be Pending
@@ -117,6 +122,7 @@ mod test {
             lbtc_refund_tx_id: None,
             btc_server_lockup_tx_id: None,
             btc_claim_tx_id: None,
+            user_lockup_spent: false,
         };
 
         // Not expired yet - should return None because we can't determine the state
@@ -137,6 +143,7 @@ mod test {
             lbtc_refund_tx_id: Some(create_lbtc_history_txid("4444", 102)),
             btc_server_lockup_tx_id: Some(create_btc_history_txid("2222", 101)),
             btc_claim_tx_id: Some(create_btc_history_txid("3333", 103)),
+            user_lockup_spent: true,
         };
 
         // Complete state should take precedence over refund

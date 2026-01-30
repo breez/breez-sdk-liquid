@@ -31,6 +31,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         &self,
         swap: &ReceiveSwap,
         claim_address: String,
+        is_cooperative: bool,
     ) -> Result<Transaction, PaymentError> {
         let liquid_client = self.get_liquid_client()?;
         let swap_script = swap.get_swap_script()?;
@@ -44,12 +45,24 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         )
         .await?;
 
+        let cooperative_details = if is_cooperative {
+            self.get_cooperative_details(swap.id.clone(), None).await?
+        } else {
+            None
+        };
+
+        let fee = if is_cooperative {
+            Fee::Absolute(swap.claim_fees_sat)
+        } else {
+            Fee::Relative(LIQUID_FEE_RATE_SAT_PER_VBYTE)
+        };
+
         let signed_tx = claim_tx_wrapper
             .sign_claim(
                 &swap.get_claim_keypair()?,
                 &Preimage::from_str(&swap.preimage)?,
-                Fee::Absolute(swap.claim_fees_sat),
-                self.get_cooperative_details(swap.id.clone(), None).await?,
+                fee,
+                cooperative_details,
                 true,
             )
             .await?;
@@ -61,6 +74,7 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         &self,
         swap: &ChainSwap,
         claim_address: String,
+        is_cooperative: bool,
     ) -> Result<Transaction, PaymentError> {
         let liquid_client = self.get_liquid_client()?;
         let claim_keypair = swap.get_claim_keypair()?;
@@ -74,15 +88,26 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
         )
         .await?;
 
-        let signature = self.get_claim_partial_sig(swap).await?;
+        let cooperative_details = if is_cooperative {
+            let signature = self.get_claim_partial_sig(swap).await?;
+            self.get_cooperative_details(swap.id.clone(), signature)
+                .await?
+        } else {
+            None
+        };
+
+        let fee = if is_cooperative {
+            Fee::Absolute(swap.claim_fees_sat)
+        } else {
+            Fee::Relative(LIQUID_FEE_RATE_SAT_PER_VBYTE)
+        };
 
         let signed_tx = claim_tx_wrapper
             .sign_claim(
                 &claim_keypair,
                 &Preimage::from_str(&swap.preimage)?,
-                Fee::Absolute(swap.claim_fees_sat),
-                self.get_cooperative_details(swap.id.clone(), signature)
-                    .await?,
+                fee,
+                cooperative_details,
                 true,
             )
             .await?;

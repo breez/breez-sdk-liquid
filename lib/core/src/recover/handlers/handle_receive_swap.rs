@@ -195,18 +195,21 @@ impl ReceiveSwapHandler {
 
         // Take only the lockup_tx_id and claim_tx_id if either are set,
         // otherwise take the mrh_tx_id and mrh_amount_sat
+        let lbtc_claim_script_history_len = history.lbtc_claim_script_history.len();
         let recovered_onchain_data = match (lockup_tx_id.as_ref(), claim_tx_id.as_ref()) {
             (Some(_), None) | (Some(_), Some(_)) => RecoveredOnchainDataReceive {
                 lockup_tx_id,
                 claim_tx_id,
                 mrh_tx_id: None,
                 mrh_amount_sat: None,
+                lbtc_claim_script_history_len,
             },
             _ => RecoveredOnchainDataReceive {
                 lockup_tx_id: None,
                 claim_tx_id: None,
                 mrh_tx_id,
                 mrh_amount_sat,
+                lbtc_claim_script_history_len,
             },
         };
 
@@ -219,6 +222,7 @@ pub(crate) struct RecoveredOnchainDataReceive {
     pub(crate) claim_tx_id: Option<LBtcHistory>,
     pub(crate) mrh_tx_id: Option<LBtcHistory>,
     pub(crate) mrh_amount_sat: Option<u64>,
+    pub(crate) lbtc_claim_script_history_len: usize,
 }
 
 impl RecoveredOnchainDataReceive {
@@ -229,10 +233,16 @@ impl RecoveredOnchainDataReceive {
                     true => Some(PaymentState::Complete),
                     false => Some(PaymentState::Pending),
                 },
-                None => match is_expired {
-                    true => Some(PaymentState::Failed),
-                    false => Some(PaymentState::Pending),
-                },
+                None => {
+                    // No claim found. Check if server has refunded.
+                    // history = 1: only server lockup, LBTC still claimable
+                    // history > 1: server refunded (or user claimed but LWK didn't see claim tx as ours), swap is Failed
+                    let server_refunded = self.lbtc_claim_script_history_len > 1;
+                    match is_expired && server_refunded {
+                        true => Some(PaymentState::Failed),
+                        false => Some(PaymentState::Pending),
+                    }
+                }
             },
             None => match &self.mrh_tx_id {
                 Some(mrh_tx_id) => match mrh_tx_id.confirmed() {
