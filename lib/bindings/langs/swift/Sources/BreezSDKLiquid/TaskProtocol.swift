@@ -87,10 +87,12 @@ class ReplyableTask : TaskProtocol {
     
     func replyServer(encodable: Encodable, replyURL: String, maxAge: Int = 0) {
         guard let serverReplyURL = URL(string: replyURL) else {
+            self.logger.log(tag: "ReplyableTask", line: "Invalid reply URL: \(replyURL)", level: "ERROR")
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             return
         }
         var request = URLRequest(url: serverReplyURL)
+        request.timeoutInterval = 25 // Leave buffer before iOS kills NSE at ~30s
         if maxAge > 0 {
             request.setValue("max-age=\(maxAge)", forHTTPHeaderField: "Cache-Control")
         }
@@ -101,21 +103,51 @@ class ReplyableTask : TaskProtocol {
 
         self.logger.log(tag: "ReplyableTask", line: "Sending POST request to: \(replyURL)", level: "INFO")
 
+        // Use semaphore to block until HTTP response is received
+        // This prevents iOS from killing the NSE before we get the response
+        let semaphore = DispatchSemaphore(value: 0)
+        var httpSuccess = false
+
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            let statusCode = (response as! HTTPURLResponse).statusCode
+            defer {
+                semaphore.signal()
+            }
+
+            if let error = error {
+                self.logger.log(tag: "ReplyableTask", line: "HTTP request failed: \(error.localizedDescription)", level: "ERROR")
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                self.logger.log(tag: "ReplyableTask", line: "Invalid response type", level: "ERROR")
+                return
+            }
+
+            let statusCode = httpResponse.statusCode
             self.logger.log(tag: "ReplyableTask", line: "Response status code: \(statusCode)", level: "INFO")
 
             if statusCode == 200 {
-                self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+                httpSuccess = true
             } else {
                 if let data = data, let responseBody = String(data: data, encoding: .utf8) {
                     let truncatedBody = String(responseBody.prefix(200))
                     self.logger.log(tag: "ReplyableTask", line: "Response body: \(truncatedBody)", level: "ERROR")
                 }
-                self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
-                return
             }
         }
         task.resume()
+
+        // Wait for HTTP response (with timeout matching request timeout)
+        let waitResult = semaphore.wait(timeout: .now() + 26)
+        if waitResult == .timedOut {
+            self.logger.log(tag: "ReplyableTask", line: "HTTP request timed out waiting for response", level: "ERROR")
+        }
+
+        // Now display notification after we have the response
+        if httpSuccess {
+            self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+        } else {
+            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+        }
     }
 }

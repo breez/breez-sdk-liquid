@@ -13,15 +13,39 @@ struct LnurlErrorResponse: Decodable, Encodable {
 
 class LnurlPayTask : ReplyableTask {
     func fail(withError: String, replyURL: String, failNotificationTitle: String? = nil) {
+        self.logger.log(tag: "LnurlPayTask", line: "fail() called with error: \(withError)", level: "ERROR")
+
         if let serverReplyURL = URL(string: replyURL) {
             var request = URLRequest(url: serverReplyURL)
+            request.timeoutInterval = 25
             request.httpMethod = "POST"
             request.httpBody = try! JSONEncoder().encode(LnurlErrorResponse(status: "ERROR", reason: withError))
+
+            // Use semaphore to block until HTTP response is received
+            let semaphore = DispatchSemaphore(value: 0)
+
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                let _ = (response as! HTTPURLResponse).statusCode
+                defer {
+                    semaphore.signal()
+                }
+
+                if let error = error {
+                    self.logger.log(tag: "LnurlPayTask", line: "fail() HTTP request failed: \(error.localizedDescription)", level: "ERROR")
+                    return
+                }
+
+                if let httpResponse = response as? HTTPURLResponse {
+                    self.logger.log(tag: "LnurlPayTask", line: "fail() response status code: \(httpResponse.statusCode)", level: "INFO")
+                }
             }
             task.resume()
+
+            let waitResult = semaphore.wait(timeout: .now() + 26)
+            if waitResult == .timedOut {
+                self.logger.log(tag: "LnurlPayTask", line: "fail() HTTP request timed out", level: "ERROR")
+            }
         }
+
         let title = failNotificationTitle != nil ? failNotificationTitle! : self.failNotificationTitle
         self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
