@@ -27,8 +27,10 @@ class SwapUpdatedTask : TaskProtocol {
     }
     
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
+        self.logger.log(tag: TAG, line: "start() called", level: "DEBUG")
         do {
             self.request = try JSONDecoder().decode(SwapUpdatedRequest.self, from: self.payload.data(using: .utf8)!)
+            self.logger.log(tag: TAG, line: "Decoded request - id: \(self.request!.id), status: \(self.request!.status)", level: "DEBUG")
         } catch let e {
             self.logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
             self.onShutdown()
@@ -39,30 +41,46 @@ class SwapUpdatedTask : TaskProtocol {
     }
 
     func startPolling(liquidSDK: BindingLiquidSdk) {
+        self.logger.log(tag: TAG, line: "startPolling() - interval: \(pollingInterval)s", level: "DEBUG")
+        var pollCount = 0
         pollingTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] _ in
             guard let self = self else { return }
+            pollCount += 1
             do {
                 guard let request = self.request else {
                     self.stopPolling(withError: NSError(domain: "SwapUpdatedTask", code: -1, userInfo: [NSLocalizedDescriptionKey: "Missing swap updated request"]))
                     return
                 }
 
+                self.logger.log(tag: TAG, line: "Polling #\(pollCount) - getPayment(swapId: \(request.id))", level: "DEBUG")
+                let pollStartTime = Date()
                 if let payment = try liquidSDK.getPayment(req: .swapId(swapId: request.id)) {
+                    let pollElapsed = Date().timeIntervalSince(pollStartTime)
+                    self.logger.log(tag: TAG, line: "getPayment() returned in \(String(format: "%.3f", pollElapsed))s - status: \(payment.status), txId: \(payment.txId ?? "nil")", level: "DEBUG")
                     switch payment.status {
                     case .complete:
+                        self.logger.log(tag: TAG, line: "Payment complete, emitting paymentSucceeded event", level: "INFO")
                         onEvent(e: SdkEvent.paymentSucceeded(details: payment))
                         self.stopPolling()
                     case .waitingFeeAcceptance:
+                        self.logger.log(tag: TAG, line: "Payment waiting fee acceptance", level: "INFO")
                         onEvent(e: SdkEvent.paymentWaitingFeeAcceptance(details: payment))
                         self.stopPolling()
                     case .pending:
                         if paymentClaimIsBroadcasted(details: payment.details) {
+                            self.logger.log(tag: TAG, line: "Payment pending with claim broadcasted, emitting paymentWaitingConfirmation event", level: "INFO")
                             onEvent(e: SdkEvent.paymentWaitingConfirmation(details: payment))
                             self.stopPolling()
+                        } else {
+                            self.logger.log(tag: TAG, line: "Payment pending, claim not yet broadcasted, continuing to poll", level: "DEBUG")
                         }
                     default:
+                        self.logger.log(tag: TAG, line: "Payment status: \(payment.status), continuing to poll", level: "DEBUG")
                         break
                     }
+                } else {
+                    let pollElapsed = Date().timeIntervalSince(pollStartTime)
+                    self.logger.log(tag: TAG, line: "getPayment() returned nil in \(String(format: "%.3f", pollElapsed))s", level: "DEBUG")
                 }
             } catch {
                 self.stopPolling(withError: error)
@@ -71,14 +89,17 @@ class SwapUpdatedTask : TaskProtocol {
 
         pollingTimer?.fire()
     }
-    
+
     private func stopPolling(withError error: Error? = nil) {
+        self.logger.log(tag: TAG, line: "stopPolling() called - hasError: \(error != nil)", level: "DEBUG")
         pollingTimer?.invalidate()
         pollingTimer = nil
-        
+
         if let error = error {
             logger.log(tag: TAG, line: "Polling stopped with error: \(error)", level: "ERROR")
             onShutdown()
+        } else {
+            self.logger.log(tag: TAG, line: "Polling stopped successfully", level: "DEBUG")
         }
     }
 
