@@ -41,9 +41,11 @@ impl EsploraLiquidChainService {
             BlockchainExplorer::Esplora {
                 url,
                 use_waterfalls,
+                authorization,
             } => {
                 let mut builder = EsploraClientBuilder::new(url, self.config.network.into());
                 if url == BREEZ_LIQUID_ESPLORA_URL {
+                    // Breez API key takes precedence for the Breez URL
                     match &self.config.breez_api_key {
                         Some(api_key) => {
                             builder = builder
@@ -55,6 +57,9 @@ impl EsploraLiquidChainService {
                             bail!(err)
                         }
                     };
+                } else if let Some(auth) = authorization {
+                    // Apply custom authorization for non-Breez URLs
+                    builder = builder.header("authorization".to_string(), auth.to_header_value());
                 }
                 builder.timeout(3).waterfalls(*use_waterfalls).build()
             }
