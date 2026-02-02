@@ -42,16 +42,17 @@ open class ServiceLogger {
     }
 
     private func memoryUsageString() -> String {
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+        // Use task_vm_info with phys_footprint - this is what iOS uses for memory limits/jetsam
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
         let result = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
             }
         }
         if result == KERN_SUCCESS {
-            let usedMB = Double(info.resident_size) / (1024 * 1024)
-            return String(format: "%.1fMB", usedMB)
+            let footprintMB = Double(info.phys_footprint) / (1024 * 1024)
+            return String(format: "%.1fMB", footprintMB)
         }
         return "?"
     }

@@ -3,13 +3,19 @@ import os.log
 
 open class SDKNotificationService: UNNotificationServiceExtension {
     fileprivate let TAG = "SDKNotificationService"
-    
+
+    // NSE memory limit is ~24MB - trigger graceful shutdown before iOS kills us
+    private let memoryWarningThresholdMB: Double = 20.0
+    private let memoryCriticalThresholdMB: Double = 22.0
+    private var memoryMonitorTimer: DispatchSourceTimer?
+    private var isShuttingDown = false
+
     var liquidSDK: BindingLiquidSdk?
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
     var currentTask: TaskProtocol?
     public var logger: ServiceLogger = ServiceLogger(logStream: nil)
-    
+
     override public init() { }
 
     override open func didReceive(
@@ -19,6 +25,9 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.logger.log(tag: TAG, line: "Notification received - identifier: \(request.identifier)", level: "INFO")
         self.contentHandler = contentHandler
         self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+
+        // Start memory monitoring to prevent EXC_RESOURCE crashes
+        startMemoryMonitor()
 
         guard let connectRequest = self.getConnectRequest() else {
             self.logger.log(tag: TAG, line: "getConnectRequest() returned nil, delivering original content", level: "WARN")
@@ -104,7 +113,68 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.shutdown()
     }
 
+    // MARK: - Memory Monitoring
+
+    private func startMemoryMonitor() {
+        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global(qos: .utility))
+        timer.schedule(deadline: .now(), repeating: .milliseconds(500))
+        timer.setEventHandler { [weak self] in
+            self?.checkMemoryUsage()
+        }
+        timer.resume()
+        memoryMonitorTimer = timer
+        self.logger.log(tag: TAG, line: "Memory monitor started (warning: \(memoryWarningThresholdMB)MB, critical: \(memoryCriticalThresholdMB)MB)", level: "DEBUG")
+    }
+
+    private func stopMemoryMonitor() {
+        memoryMonitorTimer?.cancel()
+        memoryMonitorTimer = nil
+    }
+
+    private func checkMemoryUsage() {
+        let memoryMB = currentMemoryUsageMB()
+
+        if memoryMB >= memoryCriticalThresholdMB && !isShuttingDown {
+            isShuttingDown = true
+            self.logger.log(tag: TAG, line: "⚠️ CRITICAL: Memory at \(String(format: "%.1f", memoryMB))MB - initiating emergency shutdown to prevent EXC_RESOURCE crash", level: "ERROR")
+            DispatchQueue.main.async { [weak self] in
+                self?.emergencyShutdown(reason: "Memory limit exceeded (\(String(format: "%.1f", memoryMB))MB)")
+            }
+        } else if memoryMB >= memoryWarningThresholdMB {
+            self.logger.log(tag: TAG, line: "⚠️ WARNING: Memory at \(String(format: "%.1f", memoryMB))MB - approaching limit", level: "WARN")
+        }
+    }
+
+    private func currentMemoryUsageMB() -> Double {
+        // Use task_vm_info with phys_footprint - this is what iOS uses for memory limits/jetsam
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        if result == KERN_SUCCESS {
+            return Double(info.phys_footprint) / (1024 * 1024)
+        }
+        return 0
+    }
+
+    private func emergencyShutdown(reason: String) {
+        self.logger.log(tag: TAG, line: "Emergency shutdown: \(reason)", level: "ERROR")
+
+        // Display notification about the issue
+        if let content = bestAttemptContent {
+            content.title = "Payment Processing Interrupted"
+            content.body = "Please open the app to complete any pending operations."
+            contentHandler?(content)
+        }
+
+        shutdown()
+    }
+
     private func shutdown() -> Void {
+        stopMemoryMonitor()
         self.logger.log(tag: TAG, line: "shutdown() started", level: "DEBUG")
         PluginManager.shutdown()
         self.logger.log(tag: TAG, line: "PluginManager.shutdown() completed", level: "DEBUG")

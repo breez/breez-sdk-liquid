@@ -12,6 +12,20 @@ struct LnurlErrorResponse: Decodable, Encodable {
 }
 
 class LnurlPayTask : ReplyableTask {
+    // Custom URLSession for NSE with proper TLS configuration
+    private static let nseURLSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 25
+        config.timeoutIntervalForResource = 25
+        config.tlsMinimumSupportedProtocolVersion = .TLSv12
+        config.allowsCellularAccess = true
+        config.allowsExpensiveNetworkAccess = true
+        config.allowsConstrainedNetworkAccess = true
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.urlCache = nil
+        return URLSession(configuration: config)
+    }()
+
     func fail(withError: String, replyURL: String, failNotificationTitle: String? = nil) {
         self.logger.log(tag: "LnurlPayTask", line: "fail() called with error: \(withError)", level: "ERROR")
 
@@ -19,18 +33,20 @@ class LnurlPayTask : ReplyableTask {
             var request = URLRequest(url: serverReplyURL)
             request.timeoutInterval = 25
             request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try! JSONEncoder().encode(LnurlErrorResponse(status: "ERROR", reason: withError))
 
             // Use semaphore to block until HTTP response is received
             let semaphore = DispatchSemaphore(value: 0)
 
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            let task = LnurlPayTask.nseURLSession.dataTask(with: request) { data, response, error in
                 defer {
                     semaphore.signal()
                 }
 
                 if let error = error {
-                    self.logger.log(tag: "LnurlPayTask", line: "fail() HTTP request failed: \(error.localizedDescription)", level: "ERROR")
+                    let nsError = error as NSError
+                    self.logger.log(tag: "LnurlPayTask", line: "fail() HTTP request failed: \(error.localizedDescription) (domain: \(nsError.domain), code: \(nsError.code))", level: "ERROR")
                     return
                 }
 

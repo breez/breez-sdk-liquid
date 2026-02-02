@@ -1,4 +1,5 @@
 import UserNotifications
+import Foundation
 
 public protocol TaskProtocol : EventListener {
     var payload: String { get set }
@@ -67,7 +68,24 @@ class ReplyableTask : TaskProtocol {
     var logger: ServiceLogger
     var successNotificationTitle: String
     var failNotificationTitle: String
-    
+
+    // Custom URLSession for NSE with proper TLS configuration
+    private static let nseURLSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 25
+        config.timeoutIntervalForResource = 25
+        // Ensure TLS 1.2+ is used
+        config.tlsMinimumSupportedProtocolVersion = .TLSv12
+        // Allow cellular and expensive networks in background
+        config.allowsCellularAccess = true
+        config.allowsExpensiveNetworkAccess = true
+        config.allowsConstrainedNetworkAccess = true
+        // Disable caching for fresh requests
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.urlCache = nil
+        return URLSession(configuration: config)
+    }()
+
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil, successNotificationTitle: String, failNotificationTitle: String) {
         self.payload = payload
         self.contentHandler = contentHandler
@@ -97,6 +115,7 @@ class ReplyableTask : TaskProtocol {
             request.setValue("max-age=\(maxAge)", forHTTPHeaderField: "Cache-Control")
         }
         request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
         request.httpBody = try! encoder.encode(encodable)
@@ -108,13 +127,19 @@ class ReplyableTask : TaskProtocol {
         let semaphore = DispatchSemaphore(value: 0)
         var httpSuccess = false
 
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        // Use custom URLSession configured for NSE instead of URLSession.shared
+        let task = ReplyableTask.nseURLSession.dataTask(with: request) { data, response, error in
             defer {
                 semaphore.signal()
             }
 
             if let error = error {
-                self.logger.log(tag: "ReplyableTask", line: "HTTP request failed: \(error.localizedDescription)", level: "ERROR")
+                let nsError = error as NSError
+                self.logger.log(tag: "ReplyableTask", line: "HTTP request failed: \(error.localizedDescription) (domain: \(nsError.domain), code: \(nsError.code))", level: "ERROR")
+                // Log underlying error if available
+                if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+                    self.logger.log(tag: "ReplyableTask", line: "Underlying error: \(underlyingError.localizedDescription) (domain: \(underlyingError.domain), code: \(underlyingError.code))", level: "ERROR")
+                }
                 return
             }
 
