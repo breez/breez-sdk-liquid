@@ -52,8 +52,30 @@ cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_
 rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
 rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
 
-# Copy to Flutter plugin directories
-log "Copying to Flutter plugin directories..."
+FRAMEWORK_NAME="breez_sdk_liquidFFI.xcframework"
+SOURCES_DIR="Sources"
+
+# Clean existing frameworks and sources
+log "Cleaning old iOS/macOS frameworks and sources..."
+rm -rf "$IOS_DIR/Frameworks/$FRAMEWORK_NAME" "$IOS_DIR/$SOURCES_DIR"
+rm -rf "$MACOS_DIR/Frameworks/$FRAMEWORK_NAME" "$MACOS_DIR/$SOURCES_DIR"
+
+# Copy newly built frameworks
+log "Copying new iOS framework..."
+cp -r "$LIB_DIR/langs/swift/$FRAMEWORK_NAME" "$IOS_DIR/Frameworks/"
+
+log "Copying new macOS framework..."
+cp -r "$LIB_DIR/langs/swift/$FRAMEWORK_NAME" "$MACOS_DIR/Frameworks/"
+
+# Copy Swift sources
+log "Copying Swift sources to iOS..."
+cp -r "$LIB_DIR/langs/swift/$SOURCES_DIR" "$IOS_DIR/"
+
+log "Copying Swift sources to macOS..."
+cp -r "$LIB_DIR/langs/swift/$SOURCES_DIR" "$MACOS_DIR/"
+
+# Copy headers to Flutter plugin Classes
+log "Copying headers to Flutter plugin directories..."
 cp "$LIB_DIR/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h" "$IOS_DIR/Classes/breez_sdk_liquidFFI.h"
 cp "$LIB_DIR/langs/flutter/breez_sdk_liquidFFI/include/breez_sdk_liquidFFI.h" "$MACOS_DIR/Classes/breez_sdk_liquidFFI.h"
 
