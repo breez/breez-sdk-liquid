@@ -128,3 +128,16 @@ clean:
 	find . -name "*.so" -delete
 	find . -name "*.dylib" -delete
 	find . -name "*.a" -delete
+
+# ============================================================
+# Device-only iOS builds (for faster CI when testing on physical devices)
+# Skips simulator and macOS targets, saving ~80% of Rust compile time
+# ============================================================
+
+# Builds only aarch64-apple-ios target (device-only, no simulator/macOS)
+build-uniffi-swift-device-only:
+	bash scripts/build_uniffi_swift_device_only.sh
+
+# Builds iOS framework for device-only (uses device binary as placeholder for sim/macOS)
+build-ios-framework-device-only:
+	bash scripts/build_ios_framework_device_only.sh
