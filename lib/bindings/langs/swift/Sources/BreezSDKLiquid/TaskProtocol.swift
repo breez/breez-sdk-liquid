@@ -177,13 +177,28 @@ class ReplyableTask : TaskProtocol {
     var successNotificationTitle: String
     var failNotificationTitle: String
 
+    // Dedicated serial queue for URLSession delegate callbacks
+    // Using a serial queue ensures delegate methods are called in order and synchronously
+    private static let delegateQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "com.breez.sdk.nse.urlsession"
+        queue.maxConcurrentOperationCount = 1
+        // Use underlying serial dispatch queue for more predictable behavior
+        queue.underlyingQueue = DispatchQueue(label: "com.breez.sdk.nse.urlsession.dispatch")
+        return queue
+    }()
+
     // Delegate instance for handling server trust challenges
     private static let urlSessionDelegate = NSEURLSessionDelegate()
 
     // Custom URLSession for NSE with proper TLS configuration
     // Internal so subclasses can reuse it
+    //
+    // NOTE: We use ephemeral configuration to avoid any caching/persistence issues
+    // in the NSE sandbox. Ephemeral sessions don't persist cookies, caches, or
+    // credentials to disk, which is appropriate for NSE where we want clean state.
     static let nseURLSession: URLSession = {
-        let config = URLSessionConfiguration.default
+        let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 25
         config.timeoutIntervalForResource = 25
         // Ensure TLS 1.2+ is used
@@ -196,7 +211,8 @@ class ReplyableTask : TaskProtocol {
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil
         // Use delegate to handle server trust challenges in NSE sandbox
-        return URLSession(configuration: config, delegate: urlSessionDelegate, delegateQueue: nil)
+        // Using a dedicated queue ensures delegate callbacks are processed reliably
+        return URLSession(configuration: config, delegate: urlSessionDelegate, delegateQueue: delegateQueue)
     }()
 
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil, successNotificationTitle: String, failNotificationTitle: String) {
