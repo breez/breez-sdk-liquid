@@ -29,7 +29,12 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         }
         self.logger.log(tag: TAG, line: "ConnectRequest obtained successfully", level: "DEBUG")
 
-        if let currentTask = self.getTaskFromNotification() {
+        if var currentTask = self.getTaskFromNotification() {
+            // Set completion callback to cleanup resources when task finishes
+            currentTask.onComplete = { [weak self] in
+                self?.logger.log(tag: self?.TAG ?? "SDKNotificationService", line: "Task completed, shutting down", level: "INFO")
+                self?.shutdown()
+            }
             self.currentTask = currentTask
             self.logger.log(tag: TAG, line: "Task created: \(type(of: currentTask))", level: "DEBUG")
 
