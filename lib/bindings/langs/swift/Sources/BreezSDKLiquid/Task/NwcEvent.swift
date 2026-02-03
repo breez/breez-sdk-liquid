@@ -11,6 +11,7 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
     internal var payload: String
     internal var contentHandler: ((UNNotificationContent) -> Void)?
     internal var bestAttemptContent: UNMutableNotificationContent?
+    internal var onComplete: TaskCompletionCallback?
     internal var logger: ServiceLogger
     internal var eventId: String? = nil
 

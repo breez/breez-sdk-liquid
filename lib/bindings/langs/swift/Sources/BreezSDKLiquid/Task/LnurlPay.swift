@@ -25,32 +25,46 @@ class LnurlPayTask : ReplyableTask {
             // Use semaphore to block until HTTP response is received
             let semaphore = DispatchSemaphore(value: 0)
 
-            // Use parent class's nseURLSession which has proper server trust handling
-            let task = ReplyableTask.nseURLSession.dataTask(with: request) { data, response, error in
+            // Create fresh delegate and session for this request
+            let delegate = NSEURLSessionDelegate()
+            let session = ReplyableTask.createURLSession(delegate: delegate)
+
+            let task = session.dataTask(with: request)
+
+            delegate.registerCallback(for: task) { [weak self] result in
                 defer {
                     semaphore.signal()
                 }
 
-                if let error = error {
+                guard let self = self else { return }
+
+                if let error = result.error {
                     let nsError = error as NSError
                     self.logger.log(tag: "LnurlPayTask", line: "fail() HTTP request failed: \(error.localizedDescription) (domain: \(nsError.domain), code: \(nsError.code))", level: "ERROR")
                     return
                 }
 
-                if let httpResponse = response as? HTTPURLResponse {
-                    self.logger.log(tag: "LnurlPayTask", line: "fail() response status code: \(httpResponse.statusCode)", level: "INFO")
+                if let statusCode = result.statusCode {
+                    self.logger.log(tag: "LnurlPayTask", line: "fail() response status code: \(statusCode)", level: "INFO")
                 }
             }
+
             task.resume()
 
             let waitResult = semaphore.wait(timeout: .now() + 26)
             if waitResult == .timedOut {
                 self.logger.log(tag: "LnurlPayTask", line: "fail() HTTP request timed out", level: "ERROR")
             }
+
+            // Invalidate session to release resources
+            session.invalidateAndCancel()
         }
 
         let title = failNotificationTitle != nil ? failNotificationTitle! : self.failNotificationTitle
         self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+
+        // Notify that task is complete
+        self.onComplete?()
     }
 }
 

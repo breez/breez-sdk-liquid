@@ -269,7 +269,7 @@ class ReplyableTask : TaskProtocol {
     /// when the NSE process is reused across multiple notifications.
     ///
     /// The session is invalidated immediately after the request completes to release resources.
-    private static func createURLSession(delegate: NSEURLSessionDelegate) -> URLSession {
+    internal static func createURLSession(delegate: NSEURLSessionDelegate) -> URLSession {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 25
         config.timeoutIntervalForResource = 25

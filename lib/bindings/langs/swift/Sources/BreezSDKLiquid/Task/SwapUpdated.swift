@@ -8,12 +8,13 @@ struct SwapUpdatedRequest: Codable {
 
 class SwapUpdatedTask : TaskProtocol {
     fileprivate let TAG = "SwapUpdatedTask"
-    
+
     private let pollingInterval: TimeInterval = 5.0
-    
+
     internal var payload: String
     internal var contentHandler: ((UNNotificationContent) -> Void)?
     internal var bestAttemptContent: UNMutableNotificationContent?
+    internal var onComplete: TaskCompletionCallback?
     internal var logger: ServiceLogger
     internal var request: SwapUpdatedRequest? = nil
     internal var notified: Bool = false
