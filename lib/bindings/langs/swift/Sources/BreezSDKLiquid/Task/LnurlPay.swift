@@ -62,9 +62,6 @@ class LnurlPayTask : ReplyableTask {
 
         let title = failNotificationTitle != nil ? failNotificationTitle! : self.failNotificationTitle
         self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
-
-        // Notify that task is complete
-        self.onComplete?()
     }
 }
 

@@ -8,8 +8,6 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
     var currentTask: TaskProtocol?
-    /// Tracks whether the task completed normally (vs being terminated by iOS)
-    var taskCompletedNormally: Bool = false
     public var logger: ServiceLogger = ServiceLogger(logStream: nil)
 
     override public init() { }
@@ -31,13 +29,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         }
         self.logger.log(tag: TAG, line: "ConnectRequest obtained successfully", level: "DEBUG")
 
-        if var currentTask = self.getTaskFromNotification() {
-            // Set completion callback to cleanup resources when task finishes
-            currentTask.onComplete = { [weak self] in
-                self?.logger.log(tag: self?.TAG ?? "SDKNotificationService", line: "Task completed normally, shutting down", level: "INFO")
-                self?.taskCompletedNormally = true
-                self?.shutdown()
-            }
+        if let currentTask = self.getTaskFromNotification() {
             self.currentTask = currentTask
             self.logger.log(tag: TAG, line: "Task created: \(type(of: currentTask))", level: "DEBUG")
 
@@ -118,11 +110,7 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         self.logger.log(tag: TAG, line: "PluginManager.shutdown() completed", level: "DEBUG")
         BreezSDKLiquidConnector.unregister()
         self.logger.log(tag: TAG, line: "BreezSDKLiquidConnector.unregister() completed", level: "DEBUG")
-        // Only call onShutdown if task didn't complete normally (e.g., iOS terminated us early)
-        // This prevents showing "Receive Payment Failed" after successful task completion
-        if !self.taskCompletedNormally {
-            self.currentTask?.onShutdown()
-        }
+        self.currentTask?.onShutdown()
         self.logger.log(tag: TAG, line: "shutdown() completed", level: "DEBUG")
     }
     

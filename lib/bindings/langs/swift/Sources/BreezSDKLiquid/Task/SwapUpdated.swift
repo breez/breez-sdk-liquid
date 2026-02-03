@@ -14,7 +14,6 @@ class SwapUpdatedTask : TaskProtocol {
     internal var payload: String
     internal var contentHandler: ((UNNotificationContent) -> Void)?
     internal var bestAttemptContent: UNMutableNotificationContent?
-    internal var onComplete: TaskCompletionCallback?
     internal var logger: ServiceLogger
     internal var request: SwapUpdatedRequest? = nil
     internal var notified: Bool = false

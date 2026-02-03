@@ -191,15 +191,10 @@ class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegat
     }
 }
 
-/// Callback invoked when task completes (success or failure)
-/// Used to notify SDKNotificationService to cleanup resources
-public typealias TaskCompletionCallback = () -> Void
-
 public protocol TaskProtocol : EventListener {
     var payload: String { get set }
     var contentHandler: ((UNNotificationContent) -> Void)? { get set }
     var bestAttemptContent: UNMutableNotificationContent? { get set }
-    var onComplete: TaskCompletionCallback? { get set }
 
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws
     func onShutdown()
@@ -260,7 +255,6 @@ class ReplyableTask : TaskProtocol {
     var payload: String
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
-    var onComplete: TaskCompletionCallback?
     var logger: ServiceLogger
     var successNotificationTitle: String
     var failNotificationTitle: String
@@ -397,8 +391,5 @@ class ReplyableTask : TaskProtocol {
         } else {
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
         }
-
-        // Notify that task is complete so resources can be cleaned up
-        self.onComplete?()
     }
 }
