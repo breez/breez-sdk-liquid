@@ -302,90 +302,62 @@ class ReplyableTask : TaskProtocol {
     func onShutdown() {
         displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
-    
+
+    /// Sends an HTTP POST request synchronously and returns whether it succeeded.
+    /// Uses semaphore to block until response is received, preventing iOS from killing NSE early.
+    func sendPostRequest(url: URL, body: Data, maxAge: Int = 0) -> Bool {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 25
+        if maxAge > 0 {
+            request.setValue("max-age=\(maxAge)", forHTTPHeaderField: "Cache-Control")
+        }
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var httpSuccess = false
+
+        let delegate = NSEURLSessionDelegate()
+        let session = ReplyableTask.createURLSession(delegate: delegate)
+        let task = session.dataTask(with: request)
+
+        delegate.registerCallback(for: task) { [weak self] result in
+            defer { semaphore.signal() }
+            guard let self = self else { return }
+
+            if let error = result.error {
+                self.logger.log(tag: "ReplyableTask", line: "HTTP request failed: \(error.localizedDescription)", level: "ERROR")
+                return
+            }
+
+            if result.statusCode == 200 {
+                httpSuccess = true
+            } else if let statusCode = result.statusCode {
+                self.logger.log(tag: "ReplyableTask", line: "HTTP request failed with status: \(statusCode)", level: "ERROR")
+            }
+        }
+
+        task.resume()
+        _ = semaphore.wait(timeout: .now() + 26)
+        session.invalidateAndCancel()
+
+        return httpSuccess
+    }
+
     func replyServer(encodable: Encodable, replyURL: String, maxAge: Int = 0) {
         guard let serverReplyURL = URL(string: replyURL) else {
             self.logger.log(tag: "ReplyableTask", line: "Invalid reply URL: \(replyURL)", level: "ERROR")
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             return
         }
-        var request = URLRequest(url: serverReplyURL)
-        request.timeoutInterval = 25 // Leave buffer before iOS kills NSE at ~30s
-        if maxAge > 0 {
-            request.setValue("max-age=\(maxAge)", forHTTPHeaderField: "Cache-Control")
-        }
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
-        request.httpBody = try! encoder.encode(encodable)
+        let body = try! encoder.encode(encodable)
 
-        self.logger.log(tag: "ReplyableTask", line: "Sending POST request to: \(replyURL)", level: "INFO")
+        let httpSuccess = sendPostRequest(url: serverReplyURL, body: body, maxAge: maxAge)
 
-        // Use semaphore to block until HTTP response is received
-        // This prevents iOS from killing the NSE before we get the response
-        let semaphore = DispatchSemaphore(value: 0)
-        var httpSuccess = false
-
-        // Create fresh delegate and session for each request
-        // This avoids stale TLS session issues when NSE process is reused
-        let delegate = NSEURLSessionDelegate()
-        let session = ReplyableTask.createURLSession(delegate: delegate)
-
-        // IMPORTANT: Use dataTask WITHOUT completion handler so that delegate methods
-        // are called for authentication challenges. Using dataTask(with:completionHandler:)
-        // bypasses all delegate methods including auth challenges, causing certificate
-        // validation to fail in the NSE sandbox.
-        let task = session.dataTask(with: request)
-
-        // Register callback with delegate to receive result
-        delegate.registerCallback(for: task) { [weak self] result in
-            defer {
-                semaphore.signal()
-            }
-
-            guard let self = self else { return }
-
-            if let error = result.error {
-                let nsError = error as NSError
-                self.logger.log(tag: "ReplyableTask", line: "HTTP request failed: \(error.localizedDescription) (domain: \(nsError.domain), code: \(nsError.code))", level: "ERROR")
-                // Log underlying error if available
-                if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
-                    self.logger.log(tag: "ReplyableTask", line: "Underlying error: \(underlyingError.localizedDescription) (domain: \(underlyingError.domain), code: \(underlyingError.code))", level: "ERROR")
-                }
-                return
-            }
-
-            guard let statusCode = result.statusCode else {
-                self.logger.log(tag: "ReplyableTask", line: "Invalid response type", level: "ERROR")
-                return
-            }
-
-            self.logger.log(tag: "ReplyableTask", line: "Response status code: \(statusCode)", level: "INFO")
-
-            if statusCode == 200 {
-                httpSuccess = true
-            } else {
-                if let data = result.data, let responseBody = String(data: data, encoding: .utf8) {
-                    let truncatedBody = String(responseBody.prefix(200))
-                    self.logger.log(tag: "ReplyableTask", line: "Response body: \(truncatedBody)", level: "ERROR")
-                }
-            }
-        }
-
-        task.resume()
-
-        // Wait for HTTP response (with timeout matching request timeout)
-        let waitResult = semaphore.wait(timeout: .now() + 26)
-        if waitResult == .timedOut {
-            self.logger.log(tag: "ReplyableTask", line: "HTTP request timed out waiting for response", level: "ERROR")
-        }
-
-        // Invalidate session to release resources immediately
-        // This ensures clean state for next request and prevents stale TLS sessions
-        session.invalidateAndCancel()
-
-        // Now display notification after we have the response
         if httpSuccess {
             self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
         } else {
