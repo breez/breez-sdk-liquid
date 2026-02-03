@@ -12,20 +12,6 @@ struct LnurlErrorResponse: Decodable, Encodable {
 }
 
 class LnurlPayTask : ReplyableTask {
-    // Custom URLSession for NSE with proper TLS configuration
-    private static let nseURLSession: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 25
-        config.timeoutIntervalForResource = 25
-        config.tlsMinimumSupportedProtocolVersion = .TLSv12
-        config.allowsCellularAccess = true
-        config.allowsExpensiveNetworkAccess = true
-        config.allowsConstrainedNetworkAccess = true
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        config.urlCache = nil
-        return URLSession(configuration: config)
-    }()
-
     func fail(withError: String, replyURL: String, failNotificationTitle: String? = nil) {
         self.logger.log(tag: "LnurlPayTask", line: "fail() called with error: \(withError)", level: "ERROR")
 
@@ -39,7 +25,8 @@ class LnurlPayTask : ReplyableTask {
             // Use semaphore to block until HTTP response is received
             let semaphore = DispatchSemaphore(value: 0)
 
-            let task = LnurlPayTask.nseURLSession.dataTask(with: request) { data, response, error in
+            // Use parent class's nseURLSession which has proper server trust handling
+            let task = ReplyableTask.nseURLSession.dataTask(with: request) { data, response, error in
                 defer {
                     semaphore.signal()
                 }
