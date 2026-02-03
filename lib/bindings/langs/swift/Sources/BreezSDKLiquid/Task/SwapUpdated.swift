@@ -27,10 +27,8 @@ class SwapUpdatedTask : TaskProtocol {
     }
     
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
-        self.logger.log(tag: TAG, line: "start() called", level: "DEBUG")
         do {
             self.request = try JSONDecoder().decode(SwapUpdatedRequest.self, from: self.payload.data(using: .utf8)!)
-            self.logger.log(tag: TAG, line: "Decoded request - id: \(self.request!.id), status: \(self.request!.status)", level: "DEBUG")
         } catch let e {
             self.logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
             self.onShutdown()
@@ -41,25 +39,18 @@ class SwapUpdatedTask : TaskProtocol {
     }
 
     func startPolling(liquidSDK: BindingLiquidSdk) {
-        self.logger.log(tag: TAG, line: "startPolling() - interval: \(pollingInterval)s", level: "DEBUG")
-        var pollCount = 0
         pollingTimer = Timer.scheduledTimer(withTimeInterval: pollingInterval, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            pollCount += 1
             do {
                 guard let request = self.request else {
                     self.stopPolling(withError: NSError(domain: "SwapUpdatedTask", code: -1, userInfo: [NSLocalizedDescriptionKey: "Missing swap updated request"]))
                     return
                 }
 
-                self.logger.log(tag: TAG, line: "Polling #\(pollCount) - getPayment(swapId: \(request.id))", level: "DEBUG")
-                let pollStartTime = Date()
                 if let payment = try liquidSDK.getPayment(req: .swapId(swapId: request.id)) {
-                    let pollElapsed = Date().timeIntervalSince(pollStartTime)
-                    self.logger.log(tag: TAG, line: "getPayment() returned in \(String(format: "%.3f", pollElapsed))s - status: \(payment.status), txId: \(payment.txId ?? "nil")", level: "DEBUG")
                     switch payment.status {
                     case .complete:
-                        self.logger.log(tag: TAG, line: "Payment complete, emitting paymentSucceeded event", level: "INFO")
+                        self.logger.log(tag: TAG, line: "Payment complete", level: "INFO")
                         onEvent(e: SdkEvent.paymentSucceeded(details: payment))
                         self.stopPolling()
                     case .waitingFeeAcceptance:
@@ -68,19 +59,13 @@ class SwapUpdatedTask : TaskProtocol {
                         self.stopPolling()
                     case .pending:
                         if paymentClaimIsBroadcasted(details: payment.details) {
-                            self.logger.log(tag: TAG, line: "Payment pending with claim broadcasted, emitting paymentWaitingConfirmation event", level: "INFO")
+                            self.logger.log(tag: TAG, line: "Payment pending with claim broadcasted", level: "INFO")
                             onEvent(e: SdkEvent.paymentWaitingConfirmation(details: payment))
                             self.stopPolling()
-                        } else {
-                            self.logger.log(tag: TAG, line: "Payment pending, claim not yet broadcasted, continuing to poll", level: "DEBUG")
                         }
                     default:
-                        self.logger.log(tag: TAG, line: "Payment status: \(payment.status), continuing to poll", level: "DEBUG")
                         break
                     }
-                } else {
-                    let pollElapsed = Date().timeIntervalSince(pollStartTime)
-                    self.logger.log(tag: TAG, line: "getPayment() returned nil in \(String(format: "%.3f", pollElapsed))s", level: "DEBUG")
                 }
             } catch {
                 self.stopPolling(withError: error)
@@ -91,15 +76,12 @@ class SwapUpdatedTask : TaskProtocol {
     }
 
     private func stopPolling(withError error: Error? = nil) {
-        self.logger.log(tag: TAG, line: "stopPolling() called - hasError: \(error != nil)", level: "DEBUG")
         pollingTimer?.invalidate()
         pollingTimer = nil
 
         if let error = error {
             logger.log(tag: TAG, line: "Polling stopped with error: \(error)", level: "ERROR")
             onShutdown()
-        } else {
-            self.logger.log(tag: TAG, line: "Polling stopped successfully", level: "DEBUG")
         }
     }
 
@@ -109,14 +91,12 @@ class SwapUpdatedTask : TaskProtocol {
             case .paymentWaitingConfirmation(details: let payment), .paymentSucceeded(details: let payment):
                 let swapId = self.getSwapId(details: payment.details)
                 if swapIdHash == swapId?.sha256() {
-                    self.logger.log(tag: TAG, line: "Received payment event: \(swapIdHash) \(payment.status)", level: "INFO")
                     self.notifySuccess(payment: payment)
                 }
                 break
             case .paymentWaitingFeeAcceptance(details: let payment):
                 let swapId = self.getSwapId(details: payment.details)
                 if swapIdHash == swapId?.sha256() {
-                    self.logger.log(tag: TAG, line: "Received payment event: \(swapIdHash) \(payment.status)", level: "INFO")
                     self.notifyPaymentWaitingFeeAcceptance(payment: payment)
                 }
                 break
@@ -159,20 +139,18 @@ class SwapUpdatedTask : TaskProtocol {
 
     func notifySuccess(payment: Payment) {
         if !self.notified {
-            self.logger.log(tag: TAG, line: "Payment \(payment.txId ?? "") processing successful", level: "INFO")
             let received = payment.paymentType == PaymentType.receive
             let notificationTitle = ResourceHelper.shared.getString(
-                key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE, 
-                validateContains: "%d", 
+                key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE,
+                validateContains: "%d",
                 fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
             self.notified = true
             self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
         }
     }
-    
+
     func notifyPaymentWaitingFeeAcceptance(payment: Payment) {
         if !self.notified {
-            self.logger.log(tag: TAG, line: "Payment \(self.getSwapId(details: payment.details) ?? "") requires fee acceptance", level: "INFO")
             let notificationTitle = ResourceHelper.shared.getString(
                 key: Constants.PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE,
                 fallback: Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TITLE)

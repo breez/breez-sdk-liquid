@@ -34,7 +34,7 @@ class LnurlPayVerifyTask : LnurlPayTask {
         do {
             request = try JSONDecoder().decode(LnurlVerifyRequest.self, from: self.payload.data(using: .utf8)!)
         } catch let e {
-            self.logger.log(tag: TAG, line: "failed to decode payload: \(e)", level: "ERROR")
+            self.logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
             self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             throw e
         }
@@ -69,7 +69,7 @@ class LnurlPayVerifyTask : LnurlPayTask {
             let maxAge = response!.settled ? Constants.CACHE_CONTROL_MAX_AGE_WEEK : Constants.CACHE_CONTROL_MAX_AGE_THREE_SEC
             replyServer(encodable: response, replyURL: request!.reply_url, maxAge: maxAge)
         } catch let e {
-            self.logger.log(tag: TAG, line: "failed to process lnurl verify: \(e)", level: "ERROR")
+            self.logger.log(tag: TAG, line: "Failed to process lnurl verify: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)
         }
     }
