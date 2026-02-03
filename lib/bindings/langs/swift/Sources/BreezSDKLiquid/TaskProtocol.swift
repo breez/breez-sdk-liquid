@@ -2,15 +2,37 @@ import UserNotifications
 import Foundation
 import Security
 
+/// Result of an HTTP request made through NSEURLSessionDelegate
+struct NSEHTTPResult {
+    let data: Data?
+    let response: URLResponse?
+    let error: Error?
+
+    var httpResponse: HTTPURLResponse? {
+        return response as? HTTPURLResponse
+    }
+
+    var statusCode: Int? {
+        return httpResponse?.statusCode
+    }
+
+    var isSuccess: Bool {
+        return error == nil && statusCode == 200
+    }
+}
+
+/// Callback type for HTTP request completion
+typealias NSEHTTPCallback = (NSEHTTPResult) -> Void
+
 /// URLSession delegate that handles server trust evaluation for NSE
 /// The NSE sandbox may not have full access to the system trust store,
 /// so we embed the ISRG Root X1 certificate (Let's Encrypt's root CA) as a trust anchor.
 ///
-/// IMPORTANT: We implement URLSessionTaskDelegate (not just URLSessionDelegate) because
-/// server trust challenges for HTTPS connections are delivered as task-level challenges,
-/// not session-level challenges. The session-level delegate method is only called for
-/// session-wide authentication challenges.
-private class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
+/// IMPORTANT: We implement URLSessionDataDelegate to handle data tasks without completion handlers.
+/// When using dataTask(with:) WITHOUT a completion handler, the delegate receives ALL callbacks
+/// including authentication challenges. Using dataTask(with:completionHandler:) bypasses
+/// the auth challenge delegate methods entirely, which is why we must use delegate-based handling.
+private class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate {
 
     // ISRG Root X1 certificate (Let's Encrypt root CA) in DER format, base64 encoded
     // This certificate is used by breez.fun and many other services
@@ -54,6 +76,40 @@ private class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionTas
         return SecCertificateCreateWithData(nil, certData as CFData)
     }()
 
+    // Thread-safe storage for task callbacks and data
+    private let lock = NSLock()
+    private var taskCallbacks: [Int: NSEHTTPCallback] = [:]
+    private var taskData: [Int: Data] = [:]
+    private var taskResponses: [Int: URLResponse] = [:]
+
+    /// Register a callback for a task
+    func registerCallback(for task: URLSessionTask, callback: @escaping NSEHTTPCallback) {
+        lock.lock()
+        defer { lock.unlock() }
+        taskCallbacks[task.taskIdentifier] = callback
+        taskData[task.taskIdentifier] = Data()
+    }
+
+    /// Clean up storage for a task
+    private func cleanupTask(_ taskId: Int) {
+        taskCallbacks.removeValue(forKey: taskId)
+        taskData.removeValue(forKey: taskId)
+        taskResponses.removeValue(forKey: taskId)
+    }
+
+    // MARK: - URLSessionDelegate
+
+    /// Handle server trust evaluation at session level
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        handleServerTrust(challenge: challenge, completionHandler: completionHandler)
+    }
+
+    // MARK: - URLSessionTaskDelegate
+
     /// Handle server trust evaluation for a specific task
     /// This is called for HTTPS connections when the server presents its certificate
     func urlSession(
@@ -65,14 +121,40 @@ private class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionTas
         handleServerTrust(challenge: challenge, completionHandler: completionHandler)
     }
 
-    /// Handle server trust evaluation at session level (fallback)
-    func urlSession(
-        _ session: URLSession,
-        didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-    ) {
-        handleServerTrust(challenge: challenge, completionHandler: completionHandler)
+    /// Called when task completes (success or failure)
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        lock.lock()
+        let taskId = task.taskIdentifier
+        let callback = taskCallbacks[taskId]
+        let data = taskData[taskId]
+        let response = taskResponses[taskId]
+        cleanupTask(taskId)
+        lock.unlock()
+
+        let result = NSEHTTPResult(data: data, response: response, error: error)
+        callback?(result)
     }
+
+    // MARK: - URLSessionDataDelegate
+
+    /// Called when response headers are received
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        lock.lock()
+        taskResponses[dataTask.taskIdentifier] = response
+        lock.unlock()
+        completionHandler(.allow)
+    }
+
+    /// Called when data is received
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        lock.lock()
+        if taskData[dataTask.taskIdentifier] != nil {
+            taskData[dataTask.taskIdentifier]?.append(data)
+        }
+        lock.unlock()
+    }
+
+    // MARK: - Server Trust Handling
 
     /// Common server trust evaluation logic
     private func handleServerTrust(
@@ -256,13 +338,21 @@ class ReplyableTask : TaskProtocol {
         let semaphore = DispatchSemaphore(value: 0)
         var httpSuccess = false
 
-        // Use custom URLSession configured for NSE instead of URLSession.shared
-        let task = ReplyableTask.nseURLSession.dataTask(with: request) { data, response, error in
+        // IMPORTANT: Use dataTask WITHOUT completion handler so that delegate methods
+        // are called for authentication challenges. Using dataTask(with:completionHandler:)
+        // bypasses all delegate methods including auth challenges, causing certificate
+        // validation to fail in the NSE sandbox.
+        let task = ReplyableTask.nseURLSession.dataTask(with: request)
+
+        // Register callback with delegate to receive result
+        ReplyableTask.urlSessionDelegate.registerCallback(for: task) { [weak self] result in
             defer {
                 semaphore.signal()
             }
 
-            if let error = error {
+            guard let self = self else { return }
+
+            if let error = result.error {
                 let nsError = error as NSError
                 self.logger.log(tag: "ReplyableTask", line: "HTTP request failed: \(error.localizedDescription) (domain: \(nsError.domain), code: \(nsError.code))", level: "ERROR")
                 // Log underlying error if available
@@ -272,23 +362,23 @@ class ReplyableTask : TaskProtocol {
                 return
             }
 
-            guard let httpResponse = response as? HTTPURLResponse else {
+            guard let statusCode = result.statusCode else {
                 self.logger.log(tag: "ReplyableTask", line: "Invalid response type", level: "ERROR")
                 return
             }
 
-            let statusCode = httpResponse.statusCode
             self.logger.log(tag: "ReplyableTask", line: "Response status code: \(statusCode)", level: "INFO")
 
             if statusCode == 200 {
                 httpSuccess = true
             } else {
-                if let data = data, let responseBody = String(data: data, encoding: .utf8) {
+                if let data = result.data, let responseBody = String(data: data, encoding: .utf8) {
                     let truncatedBody = String(responseBody.prefix(200))
                     self.logger.log(tag: "ReplyableTask", line: "Response body: \(truncatedBody)", level: "ERROR")
                 }
             }
         }
+
         task.resume()
 
         // Wait for HTTP response (with timeout matching request timeout)
