@@ -27,27 +27,18 @@ open class SDKNotificationService: UNNotificationServiceExtension {
             }
             return
         }
-        self.logger.log(tag: TAG, line: "ConnectRequest obtained successfully", level: "DEBUG")
 
         if let currentTask = self.getTaskFromNotification() {
             self.currentTask = currentTask
-            self.logger.log(tag: TAG, line: "Task created: \(type(of: currentTask))", level: "DEBUG")
 
             DispatchQueue.main.async { [self] in
                 do {
-                    logger.log(tag: TAG, line: "Breez Liquid SDK is not connected, connecting...", level: "INFO")
-                    let connectStartTime = Date()
+                    logger.log(tag: TAG, line: "Connecting to Breez Liquid SDK...", level: "INFO")
                     liquidSDK = try BreezSDKLiquidConnector.register(connectRequest: connectRequest, listener: currentTask)
-                    let connectElapsed = Date().timeIntervalSince(connectStartTime)
-                    logger.log(tag: TAG, line: "Breez Liquid SDK connected successfully in \(String(format: "%.3f", connectElapsed))s", level: "INFO")
-
-                    logger.log(tag: TAG, line: "Starting task: \(type(of: currentTask))", level: "DEBUG")
-                    let taskStartTime = Date()
+                    logger.log(tag: TAG, line: "Breez Liquid SDK connected, starting task: \(type(of: currentTask))", level: "INFO")
                     try currentTask.start(liquidSDK: liquidSDK!, pluginConfigs: getPluginConfigs())
-                    let taskElapsed = Date().timeIntervalSince(taskStartTime)
-                    logger.log(tag: TAG, line: "Task start() completed in \(String(format: "%.3f", taskElapsed))s", level: "DEBUG")
                 } catch {
-                    logger.log(tag: TAG, line: "Breez Liquid SDK connection failed \(error)", level: "ERROR")
+                    logger.log(tag: TAG, line: "Failed to process notification: \(error)", level: "ERROR")
                     shutdown()
                 }
             }
@@ -105,13 +96,9 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     }
 
     private func shutdown() -> Void {
-        self.logger.log(tag: TAG, line: "shutdown() started", level: "DEBUG")
-        PluginManager.shutdown()
-        self.logger.log(tag: TAG, line: "PluginManager.shutdown() completed", level: "DEBUG")
+        PluginManager.shutdown(logger: self.logger)
         BreezSDKLiquidConnector.unregister()
-        self.logger.log(tag: TAG, line: "BreezSDKLiquidConnector.unregister() completed", level: "DEBUG")
         self.currentTask?.onShutdown()
-        self.logger.log(tag: TAG, line: "shutdown() completed", level: "DEBUG")
     }
     
     public func setServiceLogger(logger: Logger) {
