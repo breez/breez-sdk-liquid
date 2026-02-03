@@ -32,7 +32,7 @@ typealias NSEHTTPCallback = (NSEHTTPResult) -> Void
 /// When using dataTask(with:) WITHOUT a completion handler, the delegate receives ALL callbacks
 /// including authentication challenges. Using dataTask(with:completionHandler:) bypasses
 /// the auth challenge delegate methods entirely, which is why we must use delegate-based handling.
-private class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate {
+class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate {
 
     // ISRG Root X1 certificate (Let's Encrypt root CA) in DER format, base64 encoded
     // This certificate is used by breez.fun and many other services
@@ -259,27 +259,11 @@ class ReplyableTask : TaskProtocol {
     var successNotificationTitle: String
     var failNotificationTitle: String
 
-    // Dedicated serial queue for URLSession delegate callbacks
-    // Using a serial queue ensures delegate methods are called in order and synchronously
-    private static let delegateQueue: OperationQueue = {
-        let queue = OperationQueue()
-        queue.name = "com.breez.sdk.nse.urlsession"
-        queue.maxConcurrentOperationCount = 1
-        // Use underlying serial dispatch queue for more predictable behavior
-        queue.underlyingQueue = DispatchQueue(label: "com.breez.sdk.nse.urlsession.dispatch")
-        return queue
-    }()
-
-    // Delegate instance for handling server trust challenges
-    private static let urlSessionDelegate = NSEURLSessionDelegate()
-
-    // Custom URLSession for NSE with proper TLS configuration
-    // Internal so subclasses can reuse it
-    //
-    // NOTE: We use ephemeral configuration to avoid any caching/persistence issues
-    // in the NSE sandbox. Ephemeral sessions don't persist cookies, caches, or
-    // credentials to disk, which is appropriate for NSE where we want clean state.
-    static let nseURLSession: URLSession = {
+    /// Creates a fresh URLSession for each request to avoid stale TLS session issues
+    /// when the NSE process is reused across multiple notifications.
+    ///
+    /// The session is invalidated immediately after the request completes to release resources.
+    private static func createURLSession(delegate: NSEURLSessionDelegate) -> URLSession {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 25
         config.timeoutIntervalForResource = 25
@@ -292,10 +276,15 @@ class ReplyableTask : TaskProtocol {
         // Disable caching for fresh requests
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.urlCache = nil
-        // Use delegate to handle server trust challenges in NSE sandbox
-        // Using a dedicated queue ensures delegate callbacks are processed reliably
-        return URLSession(configuration: config, delegate: urlSessionDelegate, delegateQueue: delegateQueue)
-    }()
+
+        // Create dedicated queue for this session's delegate callbacks
+        let delegateQueue = OperationQueue()
+        delegateQueue.name = "com.breez.sdk.nse.urlsession"
+        delegateQueue.maxConcurrentOperationCount = 1
+        delegateQueue.underlyingQueue = DispatchQueue(label: "com.breez.sdk.nse.urlsession.dispatch")
+
+        return URLSession(configuration: config, delegate: delegate, delegateQueue: delegateQueue)
+    }
 
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil, successNotificationTitle: String, failNotificationTitle: String) {
         self.payload = payload
@@ -338,14 +327,19 @@ class ReplyableTask : TaskProtocol {
         let semaphore = DispatchSemaphore(value: 0)
         var httpSuccess = false
 
+        // Create fresh delegate and session for each request
+        // This avoids stale TLS session issues when NSE process is reused
+        let delegate = NSEURLSessionDelegate()
+        let session = ReplyableTask.createURLSession(delegate: delegate)
+
         // IMPORTANT: Use dataTask WITHOUT completion handler so that delegate methods
         // are called for authentication challenges. Using dataTask(with:completionHandler:)
         // bypasses all delegate methods including auth challenges, causing certificate
         // validation to fail in the NSE sandbox.
-        let task = ReplyableTask.nseURLSession.dataTask(with: request)
+        let task = session.dataTask(with: request)
 
         // Register callback with delegate to receive result
-        ReplyableTask.urlSessionDelegate.registerCallback(for: task) { [weak self] result in
+        delegate.registerCallback(for: task) { [weak self] result in
             defer {
                 semaphore.signal()
             }
@@ -386,6 +380,10 @@ class ReplyableTask : TaskProtocol {
         if waitResult == .timedOut {
             self.logger.log(tag: "ReplyableTask", line: "HTTP request timed out waiting for response", level: "ERROR")
         }
+
+        // Invalidate session to release resources immediately
+        // This ensures clean state for next request and prevents stale TLS sessions
+        session.invalidateAndCancel()
 
         // Now display notification after we have the response
         if httpSuccess {
