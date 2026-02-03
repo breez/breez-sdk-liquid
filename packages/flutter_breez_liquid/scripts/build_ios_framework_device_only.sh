@@ -48,10 +48,6 @@ cp "$TARGET_DIR/aarch64-apple-ios/release/$BIN_NAME.a" langs/swift/breez_sdk_liq
 mkdir -p langs/flutter/breez_sdk_liquidFFI/include
 cp langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h langs/flutter/breez_sdk_liquidFFI/include/
 
-# Cleanup generated files that aren't needed
-rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
-rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
-
 FRAMEWORK_NAME="breez_sdk_liquidFFI.xcframework"
 SOURCES_DIR="Sources"
 
@@ -67,12 +63,16 @@ cp -r "$LIB_DIR/langs/swift/$FRAMEWORK_NAME" "$IOS_DIR/Frameworks/"
 log "Copying new macOS framework..."
 cp -r "$LIB_DIR/langs/swift/$FRAMEWORK_NAME" "$MACOS_DIR/Frameworks/"
 
-# Copy Swift sources
+# Copy Swift sources (before cleanup)
 log "Copying Swift sources to iOS..."
 cp -r "$LIB_DIR/langs/swift/$SOURCES_DIR" "$IOS_DIR/"
 
 log "Copying Swift sources to macOS..."
 cp -r "$LIB_DIR/langs/swift/$SOURCES_DIR" "$MACOS_DIR/"
+
+# Cleanup generated files that aren't needed (after copying Sources)
+rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.h
+rm langs/swift/Sources/BreezSDKLiquid/breez_sdk_liquidFFI.modulemap
 
 # Copy headers to Flutter plugin Classes
 log "Copying headers to Flutter plugin directories..."
