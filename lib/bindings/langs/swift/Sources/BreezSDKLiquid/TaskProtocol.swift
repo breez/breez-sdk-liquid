@@ -4,8 +4,13 @@ import Security
 
 /// URLSession delegate that handles server trust evaluation for NSE
 /// The NSE sandbox may not have full access to the system trust store,
-/// so we embed the ISRG Root X1 certificate (Let's Encrypt's root CA) as a trust anchor
-private class NSEURLSessionDelegate: NSObject, URLSessionDelegate {
+/// so we embed the ISRG Root X1 certificate (Let's Encrypt's root CA) as a trust anchor.
+///
+/// IMPORTANT: We implement URLSessionTaskDelegate (not just URLSessionDelegate) because
+/// server trust challenges for HTTPS connections are delivered as task-level challenges,
+/// not session-level challenges. The session-level delegate method is only called for
+/// session-wide authentication challenges.
+private class NSEURLSessionDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate {
 
     // ISRG Root X1 certificate (Let's Encrypt root CA) in DER format, base64 encoded
     // This certificate is used by breez.fun and many other services
@@ -49,9 +54,29 @@ private class NSEURLSessionDelegate: NSObject, URLSessionDelegate {
         return SecCertificateCreateWithData(nil, certData as CFData)
     }()
 
+    /// Handle server trust evaluation for a specific task
+    /// This is called for HTTPS connections when the server presents its certificate
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        handleServerTrust(challenge: challenge, completionHandler: completionHandler)
+    }
+
+    /// Handle server trust evaluation at session level (fallback)
     func urlSession(
         _ session: URLSession,
         didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        handleServerTrust(challenge: challenge, completionHandler: completionHandler)
+    }
+
+    /// Common server trust evaluation logic
+    private func handleServerTrust(
+        challenge: URLAuthenticationChallenge,
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
