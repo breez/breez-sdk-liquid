@@ -356,7 +356,10 @@ impl Persister {
                     ":lockup_tx_id": lockup_tx_id,
                 },
             )
-            .map_err(|_| PaymentError::PersistError)?;
+            .map_err(|e| {
+                log::error!("Failed to set send swap lockup_tx_id: {e:?}");
+                PaymentError::PersistError
+            })?;
         match row_count {
             1 => Ok(()),
             _ => Err(PaymentError::PaymentInProgress),
@@ -378,7 +381,10 @@ impl Persister {
                 ":lockup_tx_id": lockup_tx_id,
             },
         )
-        .map_err(|_| PaymentError::PersistError)?;
+        .map_err(|e| {
+            log::error!("Failed to unset send swap lockup_tx_id: {e:?}");
+            PaymentError::PersistError
+        })?;
         Ok(())
     }
 }

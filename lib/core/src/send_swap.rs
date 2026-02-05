@@ -7,7 +7,7 @@ use boltz_client::boltz::SubmarineClaimTxResponse;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
 use futures_util::TryFutureExt;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use lwk_wollet::elements::{LockTime, Transaction};
 use lwk_wollet::hashes::{sha256, Hash};
 use sdk_common::prelude::{AesSuccessActionDataResult, SuccessAction, SuccessActionProcessed};
@@ -278,7 +278,10 @@ impl SendSwapHandler {
     fn fetch_send_swap_by_id(&self, swap_id: &str) -> Result<SendSwap, PaymentError> {
         self.persister
             .fetch_send_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
+            .map_err(|e| {
+                error!("Failed to fetch send swap by id: {e:?}");
+                PaymentError::PersistError
+            })?
             .ok_or(PaymentError::Generic {
                 err: format!("Send Swap not found {swap_id}"),
             })

@@ -3251,7 +3251,10 @@ impl LiquidSdk {
                 state: PaymentState::Created,
                 metadata: Default::default(),
             })
-            .map_err(|_| PaymentError::PersistError)?;
+            .map_err(|e| {
+                error!("Failed to insert or update receive swap: {e:?}");
+                PaymentError::PersistError
+            })?;
         self.status_stream.track_swap_id(&swap_id)?;
 
         Ok(ReceivePaymentResponse {
@@ -3461,7 +3464,10 @@ impl LiquidSdk {
                 state: PaymentState::Created,
                 metadata: Default::default(),
             })
-            .map_err(|_| PaymentError::PersistError)?;
+            .map_err(|e| {
+                error!("Failed to insert or update receive swap: {e:?}");
+                PaymentError::PersistError
+            })?;
         self.status_stream.track_swap_id(&swap_id)?;
         debug!("Finished create BOLT12 invoice");
 

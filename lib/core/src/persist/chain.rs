@@ -439,7 +439,10 @@ impl Persister {
                             ":claim_tx_id": claim_tx_id,
                 },
             )
-            .map_err(|_| PaymentError::PersistError)?;
+            .map_err(|e| {
+                log::error!("Failed to set chain swap claim_tx_id: {e:?}");
+                PaymentError::PersistError
+            })?;
         match row_count {
             1 => Ok(()),
             _ => Err(PaymentError::AlreadyClaimed),
@@ -462,7 +465,10 @@ impl Persister {
                         ":claim_tx_id": claim_tx_id,
             },
         )
-        .map_err(|_| PaymentError::PersistError)?;
+        .map_err(|e| {
+            log::error!("Failed to unset chain swap claim_tx_id: {e:?}");
+            PaymentError::PersistError
+        })?;
         Ok(())
     }
 
