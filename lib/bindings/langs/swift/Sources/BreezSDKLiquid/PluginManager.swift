@@ -1,19 +1,10 @@
 import Foundation
-import os.log
-
-#if DEBUG && true
-fileprivate var logger = OSLog(
-    subsystem: Bundle.main.bundleIdentifier!,
-    category: "PluginManager"
-)
-#else
-fileprivate var logger = OSLog.disabled
-#endif
 
 public class PluginManager {
+    fileprivate static let TAG = "PluginManager"
     private static var nwcPlugin: BindingNwcService? = nil
-
     fileprivate static var queue = DispatchQueue(label: "PluginManager")
+    static var logger: ServiceLogger = ServiceLogger(logStream: nil)
 
     static func nwc(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws -> BindingNwcService? {
         try PluginManager.queue.sync { [] in
@@ -21,9 +12,8 @@ public class PluginManager {
                 if pluginConfigs.nwc == nil {
                     return nil;
                 }
-                os_log("Starting NWC service", log: logger, type: .debug)
+                logger.log(tag: TAG, line: "Starting NWC service", level: "INFO")
                 PluginManager.nwcPlugin = try liquidSDK.useNwcPlugin(config: pluginConfigs.nwc!)
-                os_log("Successfully started NWC service", log: logger, type: .debug)
             }
             return PluginManager.nwcPlugin
         }
@@ -31,10 +21,11 @@ public class PluginManager {
 
     static func shutdown() {
         PluginManager.queue.sync { [] in
-            os_log("Shutting down the plugin manager", log: logger, type: .debug)
-            PluginManager.nwcPlugin?.stop()
-            PluginManager.nwcPlugin = nil
-            os_log("Successfully shut down the plugin manager", log: logger, type: .debug)
+            if PluginManager.nwcPlugin != nil {
+                logger.log(tag: TAG, line: "Shutting down NWC service", level: "INFO")
+                PluginManager.nwcPlugin?.stop()
+                PluginManager.nwcPlugin = nil
+            }
         }
     }
 }
