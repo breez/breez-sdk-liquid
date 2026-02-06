@@ -9,44 +9,38 @@ class BreezSDKLiquidConnector {
     static var logger: ServiceLogger = ServiceLogger(logStream: nil)
 
     static func register(connectRequest: ConnectRequest, listener: EventListener) throws -> BindingLiquidSdk? {
-        logger.log(tag: TAG, line: "register() called - SDK already connected: \(BreezSDKLiquidConnector.liquidSDK != nil)", level: "TRACE")
         return try BreezSDKLiquidConnector.queue.sync { [] in
             BreezSDKLiquidConnector.sdkListener = listener
             if BreezSDKLiquidConnector.liquidSDK == nil {
-                logger.log(tag: TAG, line: "SDK is nil, calling connectSDK()", level: "TRACE")
+                logger.log(tag: TAG, line: "Connecting to Breez SDK", level: "DEBUG")
                 BreezSDKLiquidConnector.liquidSDK = try BreezSDKLiquidConnector.connectSDK(connectRequest: connectRequest)
+                logger.log(tag: TAG, line: "Connected to Breez SDK", level: "DEBUG")
             } else {
-                logger.log(tag: TAG, line: "SDK already connected, reusing existing instance", level: "TRACE")
+                logger.log(tag: TAG, line: "Reusing existing Breez SDK connection", level: "DEBUG")
             }
             return BreezSDKLiquidConnector.liquidSDK
         }
     }
 
     static func unregister() {
-        logger.log(tag: TAG, line: "unregister() called", level: "TRACE")
         BreezSDKLiquidConnector.queue.sync { [] in
             BreezSDKLiquidConnector.sdkListener = nil
             if let sdk = BreezSDKLiquidConnector.liquidSDK {
-                logger.log(tag: TAG, line: "Disconnecting SDK...", level: "TRACE")
+                logger.log(tag: TAG, line: "Disconnecting from Breez SDK", level: "DEBUG")
                 do {
                     try sdk.disconnect()
-                    logger.log(tag: TAG, line: "SDK disconnected successfully", level: "TRACE")
+                    logger.log(tag: TAG, line: "Disconnected from Breez SDK", level: "DEBUG")
                 } catch {
-                    logger.log(tag: TAG, line: "Failed to disconnect SDK: \(error.localizedDescription)", level: "ERROR")
+                    logger.log(tag: TAG, line: "Failed to disconnect from Breez SDK: \(error.localizedDescription)", level: "ERROR")
                 }
                 BreezSDKLiquidConnector.liquidSDK = nil
-            } else {
-                logger.log(tag: TAG, line: "SDK was already nil", level: "TRACE")
             }
         }
-        logger.log(tag: TAG, line: "unregister() completed", level: "TRACE")
     }
 
     private static func connectSDK(connectRequest: ConnectRequest) throws -> BindingLiquidSdk? {
-        logger.log(tag: TAG, line: "connectSDK() starting - workingDir: \(connectRequest.config.workingDir)", level: "TRACE")
         let liquidSDK = try connect(req: connectRequest)
         let _ = try liquidSDK.addEventListener(listener: BreezSDKEventListener())
-        logger.log(tag: TAG, line: "connectSDK() completed", level: "TRACE")
         return liquidSDK
     }
 }
