@@ -1,6 +1,6 @@
 {
   "name": "@breeztech/breez-sdk-liquid-react-native",
-  "version": "0.10.3",
+  "version": "0.11.14-misty",
   "description": "React Native bindings for the Breez SDK - Nodeless (Liquid Implementation)",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",

@@ -14,7 +14,7 @@ pip install breez_sdk_liquid
 
 setup(
     name="breez_sdk_liquid",
-    version="0.2.7.dev9",
+    version="0.11.14+misty",
     description="Python language bindings for the Breez Liquid SDK",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",

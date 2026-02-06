@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Breez.Sdk.Liquid</PackageId>
-    <Version>0.0.1</Version>
+    <Version>0.11.14-misty</Version>
     <Company>Breez</Company>
     <Description>C# Breez Liquid SDK</Description>
     <TargetFramework>net6.0</TargetFramework>
