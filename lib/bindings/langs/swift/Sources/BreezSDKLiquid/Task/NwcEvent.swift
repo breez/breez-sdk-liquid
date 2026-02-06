@@ -22,17 +22,16 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
     }
 
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
-        guard let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs) else {
+        guard let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs, logger: self.logger) else {
             return
         }
         _ = nwcService.addEventListener(listener: self)
-        var request: NwcEventNotification? = nil
         do {
-            request = try JSONDecoder().decode(NwcEventNotification.self, from: self.payload.data(using: .utf8)!)
-            eventId = request!.eventId
-            try nwcService.handleEvent(eventId: request!.eventId)
+            let request = try JSONDecoder().decode(NwcEventNotification.self, from: self.payload.data(using: .utf8)!)
+            eventId = request.eventId
+            try nwcService.handleEvent(eventId: request.eventId)
         } catch let e {
-            self.logger.log(tag: TAG, line: "failed to run nwc command: \(e)", level: "ERROR")
+            self.logger.log(tag: TAG, line: "Failed to process NWC event: \(e)", level: "ERROR")
             self.onShutdown()
             throw e
         }

@@ -50,13 +50,16 @@ class SwapUpdatedTask : TaskProtocol {
                 if let payment = try liquidSDK.getPayment(req: .swapId(swapId: request.id)) {
                     switch payment.status {
                     case .complete:
+                        self.logger.log(tag: TAG, line: "Payment complete", level: "INFO")
                         onEvent(e: SdkEvent.paymentSucceeded(details: payment))
                         self.stopPolling()
                     case .waitingFeeAcceptance:
+                        self.logger.log(tag: TAG, line: "Payment waiting fee acceptance", level: "INFO")
                         onEvent(e: SdkEvent.paymentWaitingFeeAcceptance(details: payment))
                         self.stopPolling()
                     case .pending:
                         if paymentClaimIsBroadcasted(details: payment.details) {
+                            self.logger.log(tag: TAG, line: "Payment pending with claim broadcasted", level: "INFO")
                             onEvent(e: SdkEvent.paymentWaitingConfirmation(details: payment))
                             self.stopPolling()
                         }
@@ -141,8 +144,8 @@ class SwapUpdatedTask : TaskProtocol {
             self.logger.log(tag: TAG, line: "Payment \(payment.txId ?? "") processing successful", level: "INFO")
             let received = payment.paymentType == PaymentType.receive
             let notificationTitle = ResourceHelper.shared.getString(
-                key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE, 
-                validateContains: "%d", 
+                key: received ? Constants.PAYMENT_RECEIVED_NOTIFICATION_TITLE : Constants.PAYMENT_SENT_NOTIFICATION_TITLE,
+                validateContains: "%d",
                 fallback: received ? Constants.DEFAULT_PAYMENT_RECEIVED_NOTIFICATION_TITLE: Constants.DEFAULT_PAYMENT_SENT_NOTIFICATION_TITLE)
             self.notified = true
             self.displayPushNotification(title: String(format: notificationTitle, payment.amountSat), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)

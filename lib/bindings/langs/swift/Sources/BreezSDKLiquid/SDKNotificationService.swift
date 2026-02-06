@@ -16,11 +16,12 @@ open class SDKNotificationService: UNNotificationServiceExtension {
         _ request: UNNotificationRequest,
         withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
     ) {
-        self.logger.log(tag: TAG, line: "Notification received", level: "INFO")
+        self.logger.log(tag: TAG, line: "Notification received - identifier: \(request.identifier)", level: "INFO")
         self.contentHandler = contentHandler
         self.bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
-                
+
         guard let connectRequest = self.getConnectRequest() else {
+            self.logger.log(tag: TAG, line: "getConnectRequest() returned nil, delivering original content", level: "WARN")
             if let content = bestAttemptContent {
                 contentHandler(content)
             }
@@ -29,18 +30,20 @@ open class SDKNotificationService: UNNotificationServiceExtension {
 
         if let currentTask = self.getTaskFromNotification() {
             self.currentTask = currentTask
-            
+
             DispatchQueue.main.async { [self] in
                 do {
-                    logger.log(tag: TAG, line: "Breez Liquid SDK is not connected, connecting...", level: "INFO")
+                    logger.log(tag: TAG, line: "Connecting to Breez Liquid SDK...", level: "INFO")
                     liquidSDK = try BreezSDKLiquidConnector.register(connectRequest: connectRequest, listener: currentTask)
-                    logger.log(tag: TAG, line: "Breez Liquid SDK connected successfully", level: "INFO")
+                    logger.log(tag: TAG, line: "Breez Liquid SDK connected, starting task: \(type(of: currentTask))", level: "INFO")
                     try currentTask.start(liquidSDK: liquidSDK!, pluginConfigs: getPluginConfigs())
                 } catch {
-                    logger.log(tag: TAG, line: "Breez Liquid SDK connection failed \(error)", level: "ERROR")
+                    logger.log(tag: TAG, line: "Failed to process notification: \(error)", level: "ERROR")
                     shutdown()
                 }
             }
+        } else {
+            self.logger.log(tag: TAG, line: "getTaskFromNotification() returned nil", level: "WARN")
         }
     }
     
@@ -84,19 +87,17 @@ open class SDKNotificationService: UNNotificationServiceExtension {
     }
     
     override open func serviceExtensionTimeWillExpire() {
-        self.logger.log(tag: TAG, line: "serviceExtensionTimeWillExpire()", level: "INFO")
-        
+        self.logger.log(tag: TAG, line: "serviceExtensionTimeWillExpire() - iOS is about to terminate the extension", level: "WARN")
+
         // iOS calls this function just before the extension will be terminated by the system.
         // Use this as an opportunity to deliver your "best attempt" at modified content,
         // otherwise the original push payload will be used.
         self.shutdown()
     }
-    
+
     private func shutdown() -> Void {
-        PluginManager.shutdown()
-        self.logger.log(tag: TAG, line: "shutting down...", level: "INFO")
+        PluginManager.shutdown(logger: self.logger)
         BreezSDKLiquidConnector.unregister()
-        self.logger.log(tag: TAG, line: "task unregistered", level: "INFO")
         self.currentTask?.onShutdown()
     }
     

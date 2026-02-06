@@ -13,7 +13,7 @@ fileprivate var logger = OSLog.disabled
 open class ServiceLogger {
     var logStream: Logger?
     
-    init(logStream: Logger?) {
+    public init(logStream: Logger?) {
         self.logStream = logStream
     }
     
