@@ -1,63 +1,52 @@
 import Foundation
-import os.log
-
-#if DEBUG && true
-fileprivate var logger = OSLog(
-    subsystem: Bundle.main.bundleIdentifier!,
-    category: "BreezSDKLiquidConnector"
-)
-#else
-fileprivate var logger = OSLog.disabled
-#endif
 
 class BreezSDKLiquidConnector {
+    fileprivate static let TAG = "BreezSDKLiquidConnector"
+
     private static var liquidSDK: BindingLiquidSdk? = nil
     fileprivate static var queue = DispatchQueue(label: "BreezSDKLiquidConnector")
     fileprivate static var sdkListener: EventListener? = nil
-    
+    static var logger: ServiceLogger = ServiceLogger(logStream: nil)
+
     static func register(connectRequest: ConnectRequest, listener: EventListener) throws -> BindingLiquidSdk? {
-        os_log("register() called - SDK already connected: %{public}@", log: logger, type: .debug, String(BreezSDKLiquidConnector.liquidSDK != nil))
+        logger.log(tag: TAG, line: "register() called - SDK already connected: \(BreezSDKLiquidConnector.liquidSDK != nil)", level: "TRACE")
         return try BreezSDKLiquidConnector.queue.sync { [] in
             BreezSDKLiquidConnector.sdkListener = listener
             if BreezSDKLiquidConnector.liquidSDK == nil {
-                os_log("SDK is nil, calling connectSDK()", log: logger, type: .debug)
+                logger.log(tag: TAG, line: "SDK is nil, calling connectSDK()", level: "TRACE")
                 BreezSDKLiquidConnector.liquidSDK = try BreezSDKLiquidConnector.connectSDK(connectRequest: connectRequest)
             } else {
-                os_log("SDK already connected, reusing existing instance", log: logger, type: .debug)
+                logger.log(tag: TAG, line: "SDK already connected, reusing existing instance", level: "TRACE")
             }
             return BreezSDKLiquidConnector.liquidSDK
         }
     }
 
     static func unregister() {
-        os_log("unregister() called", log: logger, type: .debug)
+        logger.log(tag: TAG, line: "unregister() called", level: "TRACE")
         BreezSDKLiquidConnector.queue.sync { [] in
             BreezSDKLiquidConnector.sdkListener = nil
             if let sdk = BreezSDKLiquidConnector.liquidSDK {
-                os_log("Disconnecting SDK...", log: logger, type: .debug)
+                logger.log(tag: TAG, line: "Disconnecting SDK...", level: "TRACE")
                 do {
                     try sdk.disconnect()
-                    os_log("SDK disconnected successfully", log: logger, type: .debug)
+                    logger.log(tag: TAG, line: "SDK disconnected successfully", level: "TRACE")
                 } catch {
-                    os_log("Failed to disconnect SDK: %@", log: logger, type: .error, error.localizedDescription)
+                    logger.log(tag: TAG, line: "Failed to disconnect SDK: \(error.localizedDescription)", level: "ERROR")
                 }
                 BreezSDKLiquidConnector.liquidSDK = nil
             } else {
-                os_log("SDK was already nil", log: logger, type: .debug)
+                logger.log(tag: TAG, line: "SDK was already nil", level: "TRACE")
             }
         }
-        os_log("unregister() completed", log: logger, type: .debug)
+        logger.log(tag: TAG, line: "unregister() completed", level: "TRACE")
     }
 
-    static func connectSDK(connectRequest: ConnectRequest) throws -> BindingLiquidSdk? {
-        // Connect to the Breez Liquid SDK make it ready for use
-        os_log("connectSDK() starting - workingDir: %{public}@", log: logger, type: .debug, connectRequest.config.workingDir)
-        let startTime = Date()
+    private static func connectSDK(connectRequest: ConnectRequest) throws -> BindingLiquidSdk? {
+        logger.log(tag: TAG, line: "connectSDK() starting - workingDir: \(connectRequest.config.workingDir)", level: "TRACE")
         let liquidSDK = try connect(req: connectRequest)
-        let elapsed = Date().timeIntervalSince(startTime)
-        os_log("connect() completed in %.3fs", log: logger, type: .debug, elapsed)
         let _ = try liquidSDK.addEventListener(listener: BreezSDKEventListener())
-        os_log("addEventListener() completed", log: logger, type: .debug)
+        logger.log(tag: TAG, line: "connectSDK() completed", level: "TRACE")
         return liquidSDK
     }
 }
