@@ -15,7 +15,7 @@ log() {
 }
 
 # Init Rust/FFI build
-if [[ $SKIP_BUILD -ne 1 ]]; then
+if [[ ${SKIP_BUILD:-0} -ne 1 ]]; then
   log "Initializing Rust/FFI build..."
   (
     cd "$LIB_DIR"
