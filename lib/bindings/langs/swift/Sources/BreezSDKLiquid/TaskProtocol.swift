@@ -42,7 +42,7 @@ extension TaskProtocol {
         }
 
         removePushNotifications(threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE, logger: logger)
-        
+
         if let body = body {
             bestAttemptContent.body = body
         }
@@ -50,7 +50,7 @@ extension TaskProtocol {
         if let threadIdentifier = threadIdentifier {
             bestAttemptContent.threadIdentifier = threadIdentifier
         }
-        
+
         bestAttemptContent.title = title
         // The call to contentHandler() needs to be done with a slight delay otherwise
         // it will be killed before its finished removing the notifications
@@ -67,7 +67,7 @@ class ReplyableTask : TaskProtocol {
     var logger: ServiceLogger
     var successNotificationTitle: String
     var failNotificationTitle: String
-    
+
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil, successNotificationTitle: String, failNotificationTitle: String) {
         self.payload = payload
         self.contentHandler = contentHandler
@@ -80,14 +80,14 @@ class ReplyableTask : TaskProtocol {
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {}
 
     public func onEvent(e: SdkEvent) {}
-    
+
     func onShutdown() {
-        displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+        displayPushNotification(title: failNotificationTitle, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
-    
+
     func replyServer(encodable: Encodable, replyURL: String, maxAge: Int = 0) {
         guard let serverReplyURL = URL(string: replyURL) else {
-            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+            displayPushNotification(title: failNotificationTitle, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             return
         }
         var request = URLRequest(url: serverReplyURL)
@@ -100,7 +100,7 @@ class ReplyableTask : TaskProtocol {
         request.httpBody = try! encoder.encode(encodable)
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             let statusCode = (response as! HTTPURLResponse).statusCode
-            
+
             if statusCode == 200 {
                 self.displayPushNotification(title: self.successNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             } else {

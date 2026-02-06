@@ -13,7 +13,7 @@ struct LnurlInfoResponse: Decodable, Encodable {
     let metadata: String
     let commentAllowed: Int
     let tag: String
-    
+
     init(callback: String, maxSendable: UInt64, minSendable: UInt64, metadata: String, commentAllowed: Int, tag: String) {
         self.callback = callback
         self.maxSendable = maxSendable
@@ -26,25 +26,25 @@ struct LnurlInfoResponse: Decodable, Encodable {
 
 class LnurlPayInfoTask : LnurlPayTask {
     fileprivate let TAG = "LnurlPayInfoTask"
-    
+
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
         let successNotificationTitle = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_INFO_NOTIFICATION_TITLE, fallback: Constants.DEFAULT_LNURL_PAY_INFO_NOTIFICATION_TITLE)
         let failNotificationTitle = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_NOTIFICATION_FAILURE_TITLE, fallback: Constants.DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE)
         super.init(payload: payload, logger: logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent, successNotificationTitle: successNotificationTitle, failNotificationTitle: failNotificationTitle)
     }
-    
+
     override func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
         var request: LnurlInfoRequest? = nil
         do {
-            request = try JSONDecoder().decode(LnurlInfoRequest.self, from: self.payload.data(using: .utf8)!)
+            request = try JSONDecoder().decode(LnurlInfoRequest.self, from: payload.data(using: .utf8)!)
         } catch let e {
-            self.logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
-            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+            logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
+            displayPushNotification(title: failNotificationTitle, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             throw e
         }
-        
+
         do {
-            self.logger.log(tag: TAG, line: "Fetching lightning limits", level: "INFO")
+            logger.log(tag: TAG, line: "Fetching lightning limits", level: "INFO")
             let limits = try liquidSDK.fetchLightningLimits()
 
             // Max millisatoshi amount LN SERVICE is willing to receive
@@ -52,13 +52,13 @@ class LnurlPayInfoTask : LnurlPayTask {
             // Min millisatoshi amount LN SERVICE is willing to receive, can not be less than 1 or more than `maxSendableMsat`
             let minSendableMsat = limits.receive.minSat * UInt64(1000)
             if minSendableMsat < UInt64(1) || minSendableMsat > maxSendableMsat {
-                self.logger.log(tag: TAG, line: "Invalid limits - minSendableMsat: \(minSendableMsat), maxSendableMsat: \(maxSendableMsat)", level: "ERROR")
+                logger.log(tag: TAG, line: "Invalid limits - minSendableMsat: \(minSendableMsat), maxSendableMsat: \(maxSendableMsat)", level: "ERROR")
                 throw InvalidLnurlPayError.minSendable
             }
             // Format the response
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
-            self.logger.log(tag: TAG, line: "Sending info response", level: "INFO")
+            logger.log(tag: TAG, line: "Sending info response", level: "INFO")
             replyServer(encodable: LnurlInfoResponse(callback: request!.callback_url,
                                                      maxSendable: maxSendableMsat,
                                                      minSendable: minSendableMsat,
@@ -68,7 +68,7 @@ class LnurlPayInfoTask : LnurlPayTask {
                         replyURL: request!.reply_url,
                         maxAge: Constants.CACHE_CONTROL_MAX_AGE_DAY)
         } catch let e {
-            self.logger.log(tag: TAG, line: "Failed to process lnurl info: \(e)", level: "ERROR")
+            logger.log(tag: TAG, line: "Failed to process lnurl info: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)
         }
     }

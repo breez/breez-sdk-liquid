@@ -11,7 +11,7 @@ struct LnurlVerifyResponse: Decodable, Encodable {
     let settled: Bool
     let preimage: String?
     let pr: String
-    
+
     init(settled: Bool, preimage: String?, pr: String) {
         self.status = "OK"
         self.settled = settled
@@ -22,23 +22,23 @@ struct LnurlVerifyResponse: Decodable, Encodable {
 
 class LnurlPayVerifyTask : LnurlPayTask {
     fileprivate let TAG = "LnurlPayVerifyTask"
-    
+
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
         let successNotificationTitle = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_VERIFY_NOTIFICATION_TITLE, fallback: Constants.DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_TITLE)
         let failNotificationTitle = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_VERIFY_NOTIFICATION_FAILURE_TITLE, fallback: Constants.DEFAULT_LNURL_PAY_VERIFY_NOTIFICATION_FAILURE_TITLE)
         super.init(payload: payload, logger: logger, contentHandler: contentHandler, bestAttemptContent: bestAttemptContent, successNotificationTitle: successNotificationTitle, failNotificationTitle: failNotificationTitle)
     }
-    
+
     override func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
         var request: LnurlVerifyRequest? = nil
         do {
-            request = try JSONDecoder().decode(LnurlVerifyRequest.self, from: self.payload.data(using: .utf8)!)
+            request = try JSONDecoder().decode(LnurlVerifyRequest.self, from: payload.data(using: .utf8)!)
         } catch let e {
-            self.logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
-            self.displayPushNotification(title: self.failNotificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+            logger.log(tag: TAG, line: "Failed to decode payload: \(e)", level: "ERROR")
+            displayPushNotification(title: failNotificationTitle, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
             throw e
         }
-        
+
         do {
             // Get the payment by payment hash
             let getPaymentReq = GetPaymentRequest.paymentHash(paymentHash: request!.payment_hash)
@@ -60,7 +60,7 @@ class LnurlPayVerifyTask : LnurlPayTask {
                             false
                     }
                     response = LnurlVerifyResponse(settled: settled, preimage: settled ? preimage : nil, pr: invoice!)
-                default: 
+                default:
                     break
             }
             if response == nil {
@@ -69,7 +69,7 @@ class LnurlPayVerifyTask : LnurlPayTask {
             let maxAge = response!.settled ? Constants.CACHE_CONTROL_MAX_AGE_WEEK : Constants.CACHE_CONTROL_MAX_AGE_THREE_SEC
             replyServer(encodable: response, replyURL: request!.reply_url, maxAge: maxAge)
         } catch let e {
-            self.logger.log(tag: TAG, line: "Failed to process lnurl verify: \(e)", level: "ERROR")
+            logger.log(tag: TAG, line: "Failed to process lnurl verify: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)
         }
     }

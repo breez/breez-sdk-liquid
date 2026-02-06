@@ -22,17 +22,17 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
     }
 
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
-        guard let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs, logger: self.logger) else {
+        guard let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs) else {
             return
         }
         _ = nwcService.addEventListener(listener: self)
         do {
-            let request = try JSONDecoder().decode(NwcEventNotification.self, from: self.payload.data(using: .utf8)!)
+            let request = try JSONDecoder().decode(NwcEventNotification.self, from: payload.data(using: .utf8)!)
             eventId = request.eventId
             try nwcService.handleEvent(eventId: request.eventId)
         } catch let e {
-            self.logger.log(tag: TAG, line: "Failed to process NWC event: \(e)", level: "ERROR")
-            self.onShutdown()
+            logger.log(tag: TAG, line: "Failed to process NWC event: \(e)", level: "ERROR")
+            onShutdown()
             throw e
         }
     }
@@ -40,7 +40,7 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
     func onEvent(e: SdkEvent) {}
 
     func onEvent(event: NwcEvent) {
-        if let eventId = self.eventId {
+        if let eventId = eventId {
             if event.eventId != eventId {
                 return
             }
@@ -60,20 +60,19 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
                     return;
             }
             let notificationTitle = ResourceHelper.shared.getString(
-                key: Constants.NWC_SUCCESS_NOTIFICATION_TITLE, 
-                validateContains: "%s", 
+                key: Constants.NWC_SUCCESS_NOTIFICATION_TITLE,
+                validateContains: "%s",
                 fallback: Constants.DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE
             )
-            self.displayPushNotification(title: String(format: notificationTitle, eventName), logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
+            displayPushNotification(title: String(format: notificationTitle, eventName), logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
         }
     }
 
     func onShutdown() {
         let notificationTitle = ResourceHelper.shared.getString(
-            key: Constants.NWC_FAILURE_NOTIFICATION_TITLE, 
+            key: Constants.NWC_FAILURE_NOTIFICATION_TITLE,
             fallback: Constants.DEFAULT_NWC_FAILURE_NOTIFICATION_TITLE
         )
-        self.displayPushNotification(title: notificationTitle, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
+        displayPushNotification(title: notificationTitle, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
     }
 }
-

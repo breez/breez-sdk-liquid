@@ -4,7 +4,7 @@ import Foundation
 struct LnurlErrorResponse: Decodable, Encodable {
     let status: String
     let reason: String
-    
+
     init(status: String, reason: String) {
         self.status = status
         self.reason = reason
@@ -23,7 +23,7 @@ class LnurlPayTask : ReplyableTask {
             task.resume()
         }
         let title = failNotificationTitle != nil ? failNotificationTitle! : self.failNotificationTitle
-        self.displayPushNotification(title: title, logger: self.logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
+        displayPushNotification(title: title, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_REPLACEABLE)
     }
 }
 
