@@ -268,7 +268,10 @@ impl ReceiveSwapHandler {
     fn fetch_receive_swap_by_id(&self, swap_id: &str) -> Result<ReceiveSwap, PaymentError> {
         self.persister
             .fetch_receive_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
+            .map_err(|e| {
+                error!("Failed to fetch receive swap by id: {e:?}");
+                PaymentError::PersistError
+            })?
             .ok_or(PaymentError::Generic {
                 err: format!("Receive Swap not found {swap_id}"),
             })

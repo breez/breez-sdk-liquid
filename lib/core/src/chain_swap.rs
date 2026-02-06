@@ -792,7 +792,10 @@ impl ChainSwapHandler {
     fn fetch_chain_swap_by_id(&self, swap_id: &str) -> Result<ChainSwap, PaymentError> {
         self.persister
             .fetch_chain_swap_by_id(swap_id)
-            .map_err(|_| PaymentError::PersistError)?
+            .map_err(|e| {
+                error!("Failed to fetch chain swap by id: {e:?}");
+                PaymentError::PersistError
+            })?
             .ok_or(PaymentError::Generic {
                 err: format!("Chain Swap not found {swap_id}"),
             })

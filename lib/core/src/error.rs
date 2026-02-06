@@ -253,7 +253,8 @@ impl From<PayjoinError> for PaymentError {
 }
 
 impl From<rusqlite::Error> for PaymentError {
-    fn from(_: rusqlite::Error) -> Self {
+    fn from(err: rusqlite::Error) -> Self {
+        log::error!("Persister returned error: {err:?}");
         Self::PersistError
     }
 }
