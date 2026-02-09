@@ -61,7 +61,7 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
             }
             let notificationTitle = ResourceHelper.shared.getString(
                 key: Constants.NWC_SUCCESS_NOTIFICATION_TITLE,
-                validateContains: "%s",
+                validateContains: "%@",
                 fallback: Constants.DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE
             )
             displayPushNotification(title: String(format: notificationTitle, eventName), logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
