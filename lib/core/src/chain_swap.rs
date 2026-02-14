@@ -353,11 +353,12 @@ impl ChainSwapHandler {
                     match self.handle_amountless_update(swap).await {
                         Ok(_) => {
                             // Either we accepted the quote, or we will be waiting for user fee acceptance
-                            return Ok(()); // Break from TxLockupFailed branch
                         }
-                        // In case of error, we continue and mark it as refundable
+                        // In case of error, we log the error but don't mark as refundable,
+                        // letting the recovery logic handle the state.
                         Err(e) => error!("Failed to accept the quote for swap {}: {e:?}", &swap.id),
                     }
+                    return Ok(());
                 }
 
                 match swap.refund_tx_id.clone() {
