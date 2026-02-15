@@ -13,7 +13,7 @@ use crate::{
     handler::{RelayMessageHandler, SdkRelayMessageHandler},
     model::{
         AddConnectionRequest, AddConnectionResponse, EditConnectionRequest, EditConnectionResponse,
-        NwcConfig, NwcConnection, NwcConnectionInner, PeriodicBudgetInner,
+        NostrServiceInfo, NwcConfig, NwcConnection, NwcConnectionInner, PeriodicBudgetInner,
     },
     persist::Persister,
     sdk_event::SdkEventListener,
@@ -133,6 +133,9 @@ pub trait NwcService: Send + Sync {
     ///
     /// * `id` - the event listener id returned by [NwcService::add_event_listener]
     async fn remove_event_listener(&self, id: &str);
+
+    /// Returns runtime information about the Nostr service
+    async fn get_info(&self) -> NostrServiceInfo;
 }
 
 pub struct SdkNwcService {
@@ -625,6 +628,21 @@ impl NwcService for SdkNwcService {
 
         Self::handle_event_inner(&ctx, event).await?;
         Ok(())
+    }
+
+    async fn get_info(&self) -> NostrServiceInfo {
+        let lock = self.runtime_ctx.lock().await;
+        let Some(ref ctx) = *lock else {
+            return NostrServiceInfo {
+                is_running: false,
+                ..Default::default()
+            };
+        };
+        NostrServiceInfo {
+            is_running: true,
+            wallet_pubkey: Some(ctx.our_keys.public_key().to_hex()),
+            connected_relays: Some(self.config.relays()),
+        }
     }
 }
 

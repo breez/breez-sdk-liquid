@@ -63,6 +63,13 @@ mod model {
         pub connection: NwcConnection,
     }
 
+    #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NostrServiceInfo)]
+    pub struct NostrServiceInfo {
+        pub is_running: bool,
+        pub wallet_pubkey: Option<String>,
+        pub connected_relays: Option<Vec<String>>,
+    }
+
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEventDetails)]
     pub enum NwcEventDetails {
         Connected,
@@ -213,6 +220,11 @@ impl BindingNwcService {
     #[wasm_bindgen(js_name = "removeEventListener")]
     pub async fn remove_event_listener(&self, listener_id: String) {
         self.service.remove_event_listener(&listener_id).await
+    }
+
+    #[wasm_bindgen(js_name = "getInfo")]
+    pub async fn get_info(&self) -> model::NostrServiceInfo {
+        self.service.get_info().await.into()
     }
 
     #[wasm_bindgen(js_name = "stop")]
