@@ -130,7 +130,7 @@ impl SdkEventListener {
             return;
         };
 
-        let Some(zap_request) = self.ctx.tracked_zaps.lock().await.remove(invoice) else {
+        let Ok(Some(zap_request)) = self.ctx.persister.remove_tracked_zap(invoice) else {
             return;
         };
 
