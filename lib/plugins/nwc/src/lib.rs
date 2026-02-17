@@ -682,6 +682,9 @@ impl Plugin for SdkNwcService {
         };
         self.event_manager.resume_notifications();
 
+        if let Err(err) = ctx.persister.clean_expired_zaps() {
+            warn!("Could not clean expired zaps: {err}");
+        };
         ctx.client.connect().await;
 
         if self.config.listen_to_events.is_some_and(|listen| !listen) {

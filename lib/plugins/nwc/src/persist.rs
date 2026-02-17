@@ -5,12 +5,16 @@ use serde::Serialize;
 
 use crate::{
     error::{NwcError, NwcResult},
-    model::{EditConnectionRequest, NwcConnectionInner, PeriodicBudgetInner, RefreshResult},
+    model::{
+        EditConnectionRequest, NwcConnectionInner, PeriodicBudgetInner, RefreshResult, TrackedZap,
+    },
     utils, MIN_REFRESH_INTERVAL_SEC,
 };
 
 const MAX_SAFE_WRITE_RETRIES: u64 = 3;
 const REFRESH_INTERVAL_GRACE_PERIOD: u64 = 3;
+const ZAP_TRACKING_EXPIRY_SEC: u32 = 60 * 60;
+
 const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
 const KEY_NWC_PAID_INVOICES: &str = "nwc_paid_invoices";
@@ -18,7 +22,7 @@ const KEY_TRACKED_ZAPS: &str = "nostr_zaps";
 
 type NwcConnections = BTreeMap<String, NwcConnectionInner>;
 type PaidInvoices = BTreeMap<String, BTreeSet<String>>;
-type TrackedZaps = BTreeMap<String, String>;
+type TrackedZaps = BTreeMap<String, TrackedZap>;
 
 pub(crate) struct Persister {
     pub(crate) storage: PluginStorage,
@@ -287,16 +291,39 @@ impl Persister {
 
     pub(crate) fn add_tracked_zap(&self, invoice: String, zap_request: String) -> NwcResult<()> {
         self.set_tracked_zaps_safe(|tracked_zaps| {
-            tracked_zaps.insert(invoice.clone(), zap_request.clone());
+            tracked_zaps.insert(
+                invoice.clone(),
+                TrackedZap {
+                    zap_request: zap_request.clone(),
+                    expires_at: utils::now() + ZAP_TRACKING_EXPIRY_SEC,
+                },
+            );
             Ok((true, ()))
         })
     }
 
     pub(crate) fn remove_tracked_zap(&self, invoice: &str) -> NwcResult<Option<nostr_sdk::Event>> {
         self.set_tracked_zaps_safe(|tracked_zaps| {
-            let zap_request = tracked_zaps.remove(invoice);
-            let zap_request = zap_request.and_then(|req| serde_json::from_str(&req).ok());
+            let tracked_zap = tracked_zaps.remove(invoice);
+            let zap_request =
+                tracked_zap.and_then(|zap| serde_json::from_str(&zap.zap_request).ok());
             Ok((true, zap_request))
+        })
+    }
+
+    pub(crate) fn clean_expired_zaps(&self) -> NwcResult<()> {
+        let now = utils::now();
+        self.set_tracked_zaps_safe(|tracked_zaps| {
+            let mut expired = vec![];
+            for (invoice, TrackedZap { expires_at, .. }) in tracked_zaps.iter() {
+                if now >= *expires_at {
+                    expired.push(invoice.clone());
+                }
+            }
+            for invoice in expired {
+                tracked_zaps.remove(&invoice);
+            }
+            Ok((true, ()))
         })
     }
 }
