@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use breez_sdk_liquid::plugin::{PluginStorage, PluginStorageError};
+use serde::Serialize;
 
 use crate::{
     error::{NwcError, NwcResult},
@@ -13,6 +14,11 @@ const REFRESH_INTERVAL_GRACE_PERIOD: u64 = 3;
 const KEY_NWC_CONNECTIONS: &str = "nwc_connections";
 const KEY_NWC_SECKEY: &str = "nwc_seckey";
 const KEY_NWC_PAID_INVOICES: &str = "nwc_paid_invoices";
+const KEY_TRACKED_ZAPS: &str = "nostr_zaps";
+
+type NwcConnections = BTreeMap<String, NwcConnectionInner>;
+type PaidInvoices = BTreeMap<String, BTreeSet<String>>;
+type TrackedZaps = BTreeMap<String, String>;
 
 pub(crate) struct Persister {
     pub(crate) storage: PluginStorage,
@@ -33,19 +39,26 @@ impl Persister {
         self.storage.get_item(KEY_NWC_SECKEY).map_err(Into::into)
     }
 
-    fn set_connections_safe<F, R>(&self, f: F) -> NwcResult<R>
+    fn set_storage_safe<T, Getter, Setter, Res>(
+        &self,
+        storage_key: &'static str,
+        get_data: Getter,
+        set_data: Setter,
+    ) -> NwcResult<Res>
     where
-        F: Fn(&mut BTreeMap<String, NwcConnectionInner>) -> NwcResult<(bool, R)>,
+        T: Clone + Serialize,
+        Getter: Fn(&Self) -> NwcResult<T>,
+        Setter: Fn(&mut T) -> NwcResult<(bool, Res)>,
     {
         for _ in 0..MAX_SAFE_WRITE_RETRIES {
-            let connections = self.list_nwc_connections()?;
-            let mut new_connections = connections.clone();
-            let (changed, result) = f(&mut new_connections)?;
+            let old_data = get_data(self)?;
+            let mut new_data = old_data.clone();
+            let (changed, result) = set_data(&mut new_data)?;
             if changed {
                 let set_result = self.storage.set_item(
-                    KEY_NWC_CONNECTIONS,
-                    serde_json::to_string(&new_connections)?,
-                    Some(serde_json::to_string(&connections)?),
+                    storage_key,
+                    serde_json::to_string(&new_data)?,
+                    Some(serde_json::to_string(&old_data)?),
                 );
                 match set_result {
                     Ok(_) => return Ok(result),
@@ -53,9 +66,29 @@ impl Persister {
                     Err(err) => return Err(err.into()),
                 }
             }
-            return Ok(result);
         }
         Err(NwcError::persist("Maximum write attempts reached"))
+    }
+
+    fn set_connections_safe<F, R>(&self, f: F) -> NwcResult<R>
+    where
+        F: Fn(&mut NwcConnections) -> NwcResult<(bool, R)>,
+    {
+        self.set_storage_safe(KEY_NWC_CONNECTIONS, Self::list_nwc_connections, f)
+    }
+
+    fn set_paid_invoices_safe<F, R>(&self, f: F) -> NwcResult<R>
+    where
+        F: Fn(&mut PaidInvoices) -> NwcResult<(bool, R)>,
+    {
+        self.set_storage_safe(KEY_NWC_PAID_INVOICES, Self::list_paid_invoices, f)
+    }
+
+    fn set_tracked_zaps_safe<F, R>(&self, f: F) -> NwcResult<R>
+    where
+        F: Fn(&mut TrackedZaps) -> NwcResult<(bool, R)>,
+    {
+        self.set_storage_safe(KEY_TRACKED_ZAPS, Self::list_tracked_zaps_raw, f)
     }
 
     pub(crate) fn add_nwc_connection(
@@ -201,7 +234,7 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_nwc_connections(&self) -> NwcResult<BTreeMap<String, NwcConnectionInner>> {
+    pub(crate) fn list_nwc_connections(&self) -> NwcResult<NwcConnections> {
         let connections = self
             .storage
             .get_item(KEY_NWC_CONNECTIONS)?
@@ -224,32 +257,7 @@ impl Persister {
         Ok(())
     }
 
-    fn set_paid_invoices_safe<F, R>(&self, f: F) -> NwcResult<R>
-    where
-        F: Fn(&mut BTreeMap<String, BTreeSet<String>>) -> NwcResult<(bool, R)>,
-    {
-        for _ in 0..MAX_SAFE_WRITE_RETRIES {
-            let paid_invoices = self.list_paid_invoices()?;
-            let mut new_paid_invoices = paid_invoices.clone();
-            let (changed, result) = f(&mut new_paid_invoices)?;
-            if changed {
-                let set_result = self.storage.set_item(
-                    KEY_NWC_PAID_INVOICES,
-                    serde_json::to_string(&new_paid_invoices)?,
-                    Some(serde_json::to_string(&paid_invoices)?),
-                );
-                match set_result {
-                    Ok(_) => return Ok(result),
-                    Err(PluginStorageError::DataTooOld) => continue,
-                    Err(err) => return Err(err.into()),
-                }
-            }
-            return Ok(result);
-        }
-        Err(NwcError::persist("Maximum write attempts reached"))
-    }
-
-    pub(crate) fn list_paid_invoices(&self) -> NwcResult<BTreeMap<String, BTreeSet<String>>> {
+    pub(crate) fn list_paid_invoices(&self) -> NwcResult<PaidInvoices> {
         let paid_invoices = self
             .storage
             .get_item(KEY_NWC_PAID_INVOICES)?
@@ -265,6 +273,30 @@ impl Persister {
                 .or_insert_with(BTreeSet::new);
             invoices.insert(invoice.clone());
             Ok((true, ()))
+        })
+    }
+
+    pub(crate) fn list_tracked_zaps_raw(&self) -> NwcResult<TrackedZaps> {
+        let tracked_zaps = self
+            .storage
+            .get_item(KEY_TRACKED_ZAPS)?
+            .unwrap_or("{}".to_string());
+        let tracked_zaps = serde_json::from_str(&tracked_zaps)?;
+        Ok(tracked_zaps)
+    }
+
+    pub(crate) fn add_tracked_zap(&self, invoice: String, zap_request: String) -> NwcResult<()> {
+        self.set_tracked_zaps_safe(|tracked_zaps| {
+            tracked_zaps.insert(invoice.clone(), zap_request.clone());
+            Ok((true, ()))
+        })
+    }
+
+    pub(crate) fn remove_tracked_zap(&self, invoice: &str) -> NwcResult<Option<nostr_sdk::Event>> {
+        self.set_tracked_zaps_safe(|tracked_zaps| {
+            let zap_request = tracked_zaps.remove(invoice);
+            let zap_request = zap_request.and_then(|req| serde_json::from_str(&req).ok());
+            Ok((true, zap_request))
         })
     }
 }

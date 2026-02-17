@@ -204,7 +204,6 @@ impl SdkNwcService {
             sdk_listener_id: Mutex::new(None),
             event_manager: self.event_manager.clone(),
             replied_event_ids: Mutex::new(HashSet::new()),
-            tracked_zaps: Mutex::new(HashMap::new()),
         };
         Ok(ctx)
     }
@@ -651,12 +650,10 @@ impl NwcService for SdkNwcService {
     async fn track_zap(&self, invoice: String, zap_request: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
         let zap_request = urlencoding::decode(&zap_request)?.into_owned();
-        let zap_request: Event = serde_json::from_str(&zap_request)?;
-        zap_request.verify()?;
-        ctx.tracked_zaps
-            .lock()
-            .await
-            .insert(invoice.clone(), zap_request);
+        let zap_request_event: Event = serde_json::from_str(&zap_request)?;
+        zap_request_event.verify()?;
+        ctx.persister
+            .add_tracked_zap(invoice.clone(), zap_request)?;
         info!("Successfully added zap tracking for invoice {invoice}");
         Ok(())
     }
