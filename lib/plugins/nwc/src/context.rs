@@ -9,6 +9,7 @@ use crate::{
     handler::{RelayMessageHandler, NWC_SUPPORTED_METHODS},
     model::ActiveConnection,
     persist::Persister,
+    sdk_event::SdkEventListener,
 };
 use anyhow::Result;
 use breez_sdk_liquid::plugin::PluginSdk;
@@ -17,7 +18,7 @@ use nostr_sdk::{
     nips::nip47::NostrWalletConnectURI, Alphabet, Client as NostrClient, EventBuilder, Filter,
     Keys, Kind, SingleLetterTag, Tag,
 };
-use tokio::sync::{mpsc, Mutex, OnceCell};
+use tokio::sync::{mpsc, Mutex, MutexGuard, OnceCell};
 use tokio::task::JoinHandle;
 use tokio_with_wasm::alias as tokio;
 
@@ -44,9 +45,8 @@ impl RuntimeContext {
         if let Some(handle) = self.event_loop_handle.get() {
             handle.abort();
         }
-        if let Some(ref listener_id) = *self.sdk_listener_id.lock().await {
-            let _ = self.sdk.remove_event_listener(listener_id.clone()).await;
-        }
+        self.remove_sdk_listener(&mut self.sdk_listener_id.lock().await)
+            .await;
         self.client.disconnect().await;
         self.event_manager
             .notify(NwcEvent {
@@ -56,6 +56,34 @@ impl RuntimeContext {
             })
             .await;
         self.event_manager.pause_notifications();
+    }
+
+    pub async fn new_sdk_listener(
+        self: &Arc<Self>,
+        active_connections: &HashMap<String, ActiveConnection>,
+    ) -> Result<()> {
+        let mut lock = self.sdk_listener_id.lock().await;
+        self.remove_sdk_listener(&mut lock).await;
+        let listener_id = self
+            .sdk
+            .add_event_listener(Box::new(SdkEventListener::new(
+                self.clone(),
+                active_connections
+                    .values()
+                    .map(|con| con.uri.clone())
+                    .collect(),
+            )))
+            .await?;
+        *lock = Some(listener_id);
+        Ok(())
+    }
+
+    async fn remove_sdk_listener(&self, listener_lock: &mut MutexGuard<'_, Option<String>>) {
+        if let Some(listener_id) = (**listener_lock).take() {
+            if let Err(err) = self.sdk.remove_event_listener(listener_id).await {
+                warn!("Could not remove payment event listener: {err:?}");
+            }
+        }
     }
 
     pub async fn list_active_connections(&self) -> Result<HashMap<String, ActiveConnection>> {
