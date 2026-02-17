@@ -16,7 +16,6 @@ use crate::{
         NostrServiceInfo, NwcConfig, NwcConnection, NwcConnectionInner, PeriodicBudgetInner,
     },
     persist::Persister,
-    sdk_event::SdkEventListener,
 };
 use anyhow::{bail, Result};
 use breez_sdk_liquid::{
@@ -686,14 +685,22 @@ impl Plugin for SdkNwcService {
         };
         self.event_manager.resume_notifications();
 
+        ctx.client.connect().await;
+
         if self.config.listen_to_events.is_some_and(|listen| !listen) {
+            let res = match ctx.list_active_connections().await {
+                Ok(connections) => ctx.new_sdk_listener(&connections).await,
+                Err(err) => Err(err),
+            };
+            if let Err(err) = res {
+                warn!("Could not create payment event listener: {err:?}");
+            }
             *ctx_lock = Some(ctx);
             return;
         }
 
         let thread_ctx = ctx.clone();
         let event_loop_handle = tokio::spawn(async move {
-            thread_ctx.client.connect().await;
             thread_ctx
                 .event_manager
                 .notify(NwcEvent {
@@ -721,25 +728,9 @@ impl Plugin for SdkNwcService {
                     return;
                 };
 
-                let sdk_listener_id = match sdk
-                    .add_event_listener(Box::new(SdkEventListener::new(
-                        thread_ctx.clone(),
-                        active_connections
-                            .values()
-                            .map(|con| con.uri.clone())
-                            .collect(),
-                    )))
-                    .await
-                {
-                    Ok(listener_id) => {
-                        *thread_ctx.sdk_listener_id.lock().await = Some(listener_id.clone());
-                        Some(listener_id)
-                    }
-                    Err(err) => {
-                        warn!("Could not set payment event listener: {err:?}");
-                        None
-                    }
-                };
+                if let Err(err) = thread_ctx.new_sdk_listener(&active_connections).await {
+                    warn!("Could not create payment event listener: {err:?}");
+                }
 
                 let mut notifications_listener = thread_ctx.client.notifications();
                 loop {
@@ -774,11 +765,6 @@ impl Plugin for SdkNwcService {
                         }
                         Some(_) = resub_rx.recv() => {
                             info!("Resubscribing to notifications.");
-                            if let Some(listener_id) = sdk_listener_id {
-                                if let Err(err) = sdk.remove_event_listener(listener_id).await {
-                                    warn!("Could not remove payment event listener: {err:?}");
-                                }
-                            }
                             // We update the interval in case any connections have been
                             // added/removed
                             maybe_expiry_interval = Self::new_maybe_interval(&thread_ctx).await;
