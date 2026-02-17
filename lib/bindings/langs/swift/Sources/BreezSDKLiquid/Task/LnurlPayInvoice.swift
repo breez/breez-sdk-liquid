@@ -6,6 +6,7 @@ struct LnurlInvoiceRequest: Codable {
     let comment: String?
     let reply_url: String
     let verify_url: String?
+    let nostr: String?
 }
 
 // Serialize the response according to:
@@ -80,6 +81,14 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             }
             logger.log(tag: TAG, line: "Sending invoice response", level: "INFO")
             replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: [], verify: verify), replyURL: request!.reply_url)
+            if let zapRequest = request!.nostr {
+                do {
+                    let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)
+                    try nwcService?.trackZap(invoice: receivePaymentRes.destination, zapRequest: zapRequest)
+                } catch let e {
+                    logger.log(tag: TAG, line: "Failed to track zap: \(e)", level: "WARN")
+                }
+            }
         } catch let e {
             logger.log(tag: TAG, line: "Failed to process lnurl invoice: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)
