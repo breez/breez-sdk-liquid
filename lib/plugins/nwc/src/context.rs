@@ -32,6 +32,7 @@ pub(crate) struct RuntimeContext {
     pub event_loop_handle: OnceCell<JoinHandle<()>>,
     pub sdk_listener_id: Mutex<Option<String>>,
     pub replied_event_ids: Mutex<HashSet<String>>,
+    pub tracked_zaps: Mutex<HashMap<String, nostr_sdk::Event>>,
 }
 
 impl RuntimeContext {

@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
-use breez_sdk_liquid::model::{EventListener, PaymentDetails, PaymentType, SdkEvent};
+use breez_sdk_liquid::{
+    model::{EventListener, Payment, PaymentDetails, PaymentType, SdkEvent},
+    InputType,
+};
 use log::{info, warn};
 use nostr_sdk::{
     nips::nip47::{
         NostrWalletConnectURI, Notification, NotificationResult, NotificationType,
         PaymentNotification, TransactionType,
     },
-    EventBuilder, Keys, Kind, Tag, Timestamp,
+    Alphabet, EventBuilder, Keys, Kind, Tag, TagKind, TagStandard, Timestamp,
 };
 
 use crate::{context::RuntimeContext, encrypt::EncryptionHandler};
@@ -26,15 +29,8 @@ impl SdkEventListener {
     pub fn new(ctx: Arc<RuntimeContext>, active_uris: Vec<NostrWalletConnectURI>) -> Self {
         Self { ctx, active_uris }
     }
-}
 
-#[sdk_macros::async_trait]
-impl EventListener for SdkEventListener {
-    async fn on_event(&self, e: SdkEvent) {
-        let SdkEvent::PaymentSucceeded { details: payment } = e else {
-            return;
-        };
-
+    async fn handle_notif_to_relay(&self, payment: &Payment) {
         let (invoice, description, preimage, payment_hash) = match &payment.details {
             PaymentDetails::Lightning {
                 invoice,
@@ -122,5 +118,87 @@ impl EventListener for SdkEventListener {
                 }
             }
         }
+    }
+
+    async fn handle_zap_receipt(&self, payment: &Payment) {
+        let PaymentDetails::Lightning {
+            invoice: Some(invoice),
+            preimage,
+            ..
+        } = &payment.details
+        else {
+            return;
+        };
+
+        let Some(zap_request) = self.ctx.tracked_zaps.lock().await.remove(invoice) else {
+            return;
+        };
+
+        let Ok(InputType::Bolt11 { invoice }) = self.ctx.sdk.parse(invoice).await else {
+            warn!("Could not parse bolt11 invoice for tracked zap");
+            return;
+        };
+
+        let mut eb = EventBuilder::new(Kind::ZapReceipt, "")
+            .custom_created_at(Timestamp::from_secs(invoice.timestamp));
+
+        // Verify zap_request
+        // https://github.com/nostr-protocol/nips/blob/master/57.md#appendix-e-zap-receipt-event
+
+        // Insert `p` tag
+        let Some(p_tag) = zap_request.tags.find(TagKind::p()) else {
+            warn!("No `p` tag found for zap request. Aborting receipt.");
+            return;
+        };
+        eb = eb.tag(p_tag.clone());
+
+        // Insert e, a, and P tag if present
+        for tag_kind in [
+            TagKind::a(),
+            TagKind::e(),
+            TagKind::single_letter(Alphabet::P, true),
+        ] {
+            if let Some(tag) = zap_request.tags.find(tag_kind) {
+                eb = eb.tag(tag.clone());
+            }
+        }
+        // Insert bolt11 tag
+        eb = eb.tag(Tag::from_standardized(TagStandard::Bolt11(
+            invoice.description_hash.unwrap_or("".to_string()),
+        )));
+        // Insert description tag
+        let Ok(zap_request_json) = serde_json::to_string(&zap_request) else {
+            warn!("Could not encode zap request in JSON");
+            return;
+        };
+        eb = eb.tag(Tag::from_standardized(TagStandard::Description(
+            zap_request_json,
+        )));
+        // Insert preimage tag
+        if let Some(preimage) = preimage {
+            eb = eb.tag(Tag::from_standardized(TagStandard::Preimage(
+                preimage.clone(),
+            )));
+        }
+
+        // Sign and send
+        let Ok(zap_receipt) = eb.sign_with_keys(&self.ctx.our_keys) else {
+            warn!("Could not sign zap receipt.");
+            return;
+        };
+        if let Err(err) = self.ctx.client.send_event(&zap_receipt).await {
+            warn!("Coult not broadcast zap receipt: {err}");
+        }
+    }
+}
+
+#[sdk_macros::async_trait]
+impl EventListener for SdkEventListener {
+    async fn on_event(&self, e: SdkEvent) {
+        let SdkEvent::PaymentSucceeded { details: payment } = e else {
+            return;
+        };
+        self.handle_notif_to_relay(&payment).await;
+        self.handle_zap_receipt(&payment).await;
     }
 }

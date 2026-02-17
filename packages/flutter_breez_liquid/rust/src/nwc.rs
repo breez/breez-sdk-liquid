@@ -191,6 +191,10 @@ impl BreezNwcService {
     pub async fn get_info(&self) -> Option<NostrServiceInfo> {
         self.service.get_info().await
     }
+
+    pub async fn track_zap(&self, invoice: String, zap_request: String) -> Result<(), NwcError> {
+        self.service.track_zap(invoice, zap_request).await
+    }
 }
 
 impl Plugin for BreezNwcService {
