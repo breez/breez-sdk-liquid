@@ -429,6 +429,9 @@ interface BindingNwcService {
 
   NostrServiceInfo? get_info();
   
+  [Throws=NwcError]
+  void track_zap(string invoice, string zap_request);
+  
   void stop();
 };
 

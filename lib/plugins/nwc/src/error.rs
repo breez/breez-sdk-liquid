@@ -1,3 +1,5 @@
+use std::string::FromUtf8Error;
+
 use breez_sdk_liquid::{
     error::{PaymentError, SdkError},
     plugin::PluginStorageError,
@@ -85,6 +87,12 @@ impl From<nostr_sdk::event::Error> for NwcError {
 
 impl From<serde_json::Error> for NwcError {
     fn from(err: serde_json::Error) -> Self {
+        Self::generic(err)
+    }
+}
+
+impl From<FromUtf8Error> for NwcError {
+    fn from(err: FromUtf8Error) -> Self {
         Self::generic(err)
     }
 }

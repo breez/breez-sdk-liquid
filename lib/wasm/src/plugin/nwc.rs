@@ -226,6 +226,14 @@ impl BindingNwcService {
         self.service.get_info().await.map(Into::into)
     }
 
+    #[wasm_bindgen(js_name = "trackZap")]
+    pub async fn track_zap(&self, invoice: String, zap_request: String) -> WasmResult<()> {
+        self.service
+            .track_zap(invoice, zap_request)
+            .await
+            .map_err(Into::into)
+    }
+
     #[wasm_bindgen(js_name = "stop")]
     pub async fn stop(&self) {
         self.service.on_stop().await;
