@@ -8,6 +8,8 @@ pub use breez_sdk_liquid_nwc::{
     NwcService, SdkNwcService,
 };
 
+use tokio::runtime::Handle;
+
 use crate::{plugin::PluginSdk, rt, Plugin, PluginStorage};
 
 pub trait NwcEventListener: Send + Sync {
@@ -108,8 +110,21 @@ impl Plugin for BindingNwcService {
     }
 
     fn on_stop(&self) {
-        rt().block_on(async {
-            self.inner.on_stop().await;
-        })
+        // When called from SDK's disconnect() which is already running inside a block_on,
+        // we need to use block_in_place to avoid nesting block_on calls.
+        // block_in_place temporarily moves the current task to a blocking thread,
+        // allowing us to call block_on without panicking.
+        if Handle::try_current().is_ok() {
+            let inner = self.inner.clone();
+            tokio::task::block_in_place(move || {
+                rt().block_on(async move {
+                    inner.on_stop().await;
+                })
+            });
+        } else {
+            rt().block_on(async {
+                self.inner.on_stop().await;
+            })
+        }
     }
 }
