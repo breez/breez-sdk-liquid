@@ -214,11 +214,15 @@ impl SdkEventListener {
 
 #[sdk_macros::async_trait]
 impl EventListener for SdkEventListener {
-    async fn on_event(&self, e: SdkEvent) {
-        let SdkEvent::PaymentSucceeded { details: payment } = e else {
-            return;
-        };
-        self.handle_notif_to_relay(&payment).await;
-        self.handle_zap_receipt(&payment).await;
+    async fn on_event(&self, event: SdkEvent) {
+        match event {
+            SdkEvent::PaymentSucceeded { details: payment } => {
+                self.handle_notif_to_relay(&payment).await;
+            }
+            SdkEvent::PaymentWaitingConfirmation { details: payment } => {
+                self.handle_zap_receipt(&payment).await;
+            }
+            _ => {}
+        }
     }
 }
