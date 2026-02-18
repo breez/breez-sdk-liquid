@@ -137,6 +137,7 @@ impl RuntimeContext {
 
     pub async fn send_event(&self, event_builder: EventBuilder) -> Result<()> {
         let event = event_builder.sign_with_keys(&self.our_keys)?;
+        info!("Broadcasting Nostr event: {event:?}");
         self.client.send_event(&event).await?;
         Ok(())
     }

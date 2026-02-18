@@ -107,6 +107,9 @@ pub mod event {
         GetInfo,
         ConnectionExpired,
         ConnectionRefreshed,
+        ZapReceived {
+            invoice: String,
+        },
     }
 
     #[frb(mirror(NwcEvent))]

@@ -10,10 +10,14 @@ use nostr_sdk::{
         NostrWalletConnectURI, Notification, NotificationResult, NotificationType,
         PaymentNotification, TransactionType,
     },
-    Alphabet, EventBuilder, Keys, Kind, Tag, TagKind, TagStandard, Timestamp,
+    EventBuilder, Keys, Kind, Tag, TagKind, TagStandard, Timestamp,
 };
 
-use crate::{context::RuntimeContext, encrypt::EncryptionHandler};
+use crate::{
+    context::RuntimeContext,
+    encrypt::EncryptionHandler,
+    event::{NwcEvent, NwcEventDetails},
+};
 
 enum NotificationKind {
     NIP04 = 23196,
@@ -134,6 +138,8 @@ impl SdkEventListener {
             return;
         };
 
+        info!("Constructing zap receipt for invoice {invoice}");
+
         let Ok(InputType::Bolt11 { invoice }) = self.ctx.sdk.parse(invoice).await else {
             warn!("Could not parse bolt11 invoice for tracked zap");
             return;
@@ -152,28 +158,31 @@ impl SdkEventListener {
         };
         eb = eb.tag(p_tag.clone());
 
-        // Insert e, a, and P tag if present
-        for tag_kind in [
-            TagKind::a(),
-            TagKind::e(),
-            TagKind::single_letter(Alphabet::P, true),
-        ] {
+        // Insert e, a
+        for tag_kind in [TagKind::a(), TagKind::e()] {
             if let Some(tag) = zap_request.tags.find(tag_kind) {
                 eb = eb.tag(tag.clone());
             }
         }
+        // Insert P tag
+        eb = eb.tag(
+            TagStandard::PublicKey {
+                public_key: zap_request.pubkey,
+                relay_url: None,
+                alias: None,
+                uppercase: true,
+            }
+            .into(),
+        );
+
         // Insert bolt11 tag
-        eb = eb.tag(Tag::from_standardized(TagStandard::Bolt11(
-            invoice.description_hash.unwrap_or("".to_string()),
-        )));
+        eb = eb.tag(TagStandard::Bolt11(invoice.bolt11.clone()).into());
         // Insert description tag
         let Ok(zap_request_json) = serde_json::to_string(&zap_request) else {
             warn!("Could not encode zap request in JSON");
             return;
         };
-        eb = eb.tag(Tag::from_standardized(TagStandard::Description(
-            zap_request_json,
-        )));
+        eb = eb.tag(TagStandard::Description(zap_request_json).into());
         // Insert preimage tag
         if let Some(preimage) = preimage {
             eb = eb.tag(Tag::from_standardized(TagStandard::Preimage(
@@ -181,14 +190,25 @@ impl SdkEventListener {
             )));
         }
 
-        // Sign and send
-        let Ok(zap_receipt) = eb.sign_with_keys(&self.ctx.our_keys) else {
-            warn!("Could not sign zap receipt.");
-            return;
-        };
-        if let Err(err) = self.ctx.client.send_event(&zap_receipt).await {
+        // Send event
+        if let Err(err) = self.ctx.send_event(eb).await {
             warn!("Coult not broadcast zap receipt: {err}");
+            return;
         }
+        info!(
+            "Successfully sent zap receipt for invoice {}",
+            invoice.bolt11
+        );
+        self.ctx
+            .event_manager
+            .notify(NwcEvent {
+                connection_name: None,
+                event_id: Some(zap_request.id.to_string()),
+                details: NwcEventDetails::ZapReceived {
+                    invoice: invoice.bolt11,
+                },
+            })
+            .await;
     }
 }
 

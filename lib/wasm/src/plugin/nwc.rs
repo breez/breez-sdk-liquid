@@ -85,6 +85,9 @@ mod model {
         GetInfo,
         ConnectionExpired,
         ConnectionRefreshed,
+        ZapReceived {
+            invoice: String,
+        },
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEvent)]
