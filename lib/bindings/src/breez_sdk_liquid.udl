@@ -340,6 +340,7 @@ interface NwcEventDetails {
     GetInfo();
     ConnectionExpired();
     ConnectionRefreshed();
+    ZapReceived(string invoice);
 };
 
 dictionary NwcEvent {

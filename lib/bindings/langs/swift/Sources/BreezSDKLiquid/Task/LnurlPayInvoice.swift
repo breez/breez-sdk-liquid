@@ -24,8 +24,12 @@ struct LnurlInvoiceResponse: Decodable, Encodable {
     }
 }
 
-class LnurlPayInvoiceTask : LnurlPayTask {
+class LnurlPayInvoiceTask : LnurlPayTask, NwcEventListener {
     fileprivate let TAG = "LnurlPayInvoiceTask"
+    fileprivate let ZAP_TRACKING_TIMEOUT_SECS: Double = 120.0
+
+    internal var zapTrackingInvoice: String? = nil
+    private var zapReceiptTimeout: DispatchWorkItem? = nil
 
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
         let successNotificationTitle = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_INVOICE_NOTIFICATION_TITLE, fallback: Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE)
@@ -83,15 +87,45 @@ class LnurlPayInvoiceTask : LnurlPayTask {
             replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: [], verify: verify), replyURL: request!.reply_url)
             if let zapRequest = request!.nostr {
                 do {
-                    let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)
-                    try nwcService?.trackZap(invoice: receivePaymentRes.destination, zapRequest: zapRequest)
-                } catch let e {
+                    if let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs) {
+                        let _ = nwcService.addEventListener(listener: self)
+                        zapTrackingInvoice = receivePaymentRes.destination
+                        logger.log(tag: TAG, line: "Tracking zap for invoice: \(zapTrackingInvoice!)", level: "INFO")
+                        try nwcService.trackZap(invoice: zapTrackingInvoice!, zapRequest: zapRequest)
+
+                        zapReceiptTimeout = DispatchWorkItem { [weak self] in
+                            guard let self = self else { return }
+                            self.logger.log(tag: self.TAG, line: "Zap tracking timeout reached for invoice: \(self.zapTrackingInvoice ?? "nil")", level: "WARN")
+                            self.zapTrackingInvoice = nil
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + ZAP_TRACKING_TIMEOUT_SECS, execute: zapReceiptTimeout!)
+                    }
+                }
+                catch let e {
                     logger.log(tag: TAG, line: "Failed to track zap: \(e)", level: "WARN")
                 }
             }
         } catch let e {
             logger.log(tag: TAG, line: "Failed to process lnurl invoice: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)
+        }
+    }
+
+    func onEvent(event: NwcEvent) {
+        if zapTrackingInvoice == nil {
+            return
+        }
+
+        switch event.details {
+            case .zapReceived(let invoice):
+                if zapTrackingInvoice != invoice {
+                    return
+                }
+                zapReceiptTimeout?.cancel()
+                zapReceiptTimeout = nil
+                logger.log(tag: TAG, line: "Successfully received zap for invoice: \(zapTrackingInvoice!)", level: "INFO")
+            default:
+                return
         }
     }
 }

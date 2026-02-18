@@ -21,6 +21,9 @@ pub enum NwcEventDetails {
     GetInfo,
     ConnectionExpired,
     ConnectionRefreshed,
+    ZapReceived {
+        invoice: String,
+    },
 }
 
 /// The event emitted when an NWC operation has been handled
