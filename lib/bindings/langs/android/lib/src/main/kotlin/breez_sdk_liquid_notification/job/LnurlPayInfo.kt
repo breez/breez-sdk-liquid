@@ -74,6 +74,8 @@ class LnurlPayInfoJob(
                     DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT,
                 )
             val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+            val walletNostrPubkey = nwcService?.getInfo()?.walletPubkey
+            val allowsNostr = walletNostrPubkey != null
             val response =
                 LnurlPayInfoResponse(
                     request.callbackURL,
@@ -82,8 +84,8 @@ class LnurlPayInfoJob(
                     "[[\"text/plain\",\"$plainTextMetadata\"]]",
                     LNURL_PAY_COMMENT_MAX_LENGTH,
                     "payRequest",
-                    nwcService != null,
-                    nwcService?.getInfo()?.walletPubkey,
+                    allowsNostr,
+                    walletNostrPubkey,
                 )
             val success = replyServer(Json.encodeToString(response), request.replyURL, CACHE_CONTROL_MAX_AGE_DAY)
             notifyChannel(
