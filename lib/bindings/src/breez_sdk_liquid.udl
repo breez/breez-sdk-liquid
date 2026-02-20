@@ -398,9 +398,8 @@ dictionary EditConnectionResponse {
 };
 
 dictionary NostrServiceInfo {
-    boolean is_running;
-    string? wallet_pubkey = null;
-    sequence<string>? connected_relays = null;
+    string wallet_pubkey;
+    sequence<string> connected_relays;
 };
 
 interface BindingNwcService {
@@ -428,7 +427,7 @@ interface BindingNwcService {
 
   void remove_event_listener(string listener_id);
 
-  NostrServiceInfo get_info();
+  NostrServiceInfo? get_info();
   
   void stop();
 };

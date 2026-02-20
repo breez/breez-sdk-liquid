@@ -175,7 +175,6 @@ pub(crate) struct RefreshResult {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct NostrServiceInfo {
-    pub is_running: bool,
-    pub wallet_pubkey: Option<String>,
-    pub connected_relays: Option<Vec<String>>,
+    pub wallet_pubkey: String,
+    pub connected_relays: Vec<String>,
 }

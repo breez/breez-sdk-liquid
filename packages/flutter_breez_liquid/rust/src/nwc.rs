@@ -78,9 +78,8 @@ pub mod model {
 
     #[frb(mirror(NostrServiceInfo))]
     pub struct _NostrServiceInfo {
-        pub is_running: bool,
-        pub wallet_pubkey: Option<String>,
-        pub connected_relays: Option<Vec<String>>,
+        pub wallet_pubkey: String,
+        pub connected_relays: Vec<String>,
     }
 }
 
@@ -189,7 +188,7 @@ impl BreezNwcService {
             .await
     }
 
-    pub async fn get_info(&self) -> NostrServiceInfo {
+    pub async fn get_info(&self) -> Option<NostrServiceInfo> {
         self.service.get_info().await
     }
 }

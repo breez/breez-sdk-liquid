@@ -79,7 +79,7 @@ impl BindingNwcService {
         rt().block_on(self.inner.remove_event_listener(&listener_id))
     }
 
-    pub fn get_info(&self) -> NostrServiceInfo {
+    pub fn get_info(&self) -> Option<NostrServiceInfo> {
         rt().block_on(self.inner.get_info())
     }
 

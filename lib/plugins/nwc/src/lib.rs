@@ -135,7 +135,7 @@ pub trait NwcService: Send + Sync {
     async fn remove_event_listener(&self, id: &str);
 
     /// Returns runtime information about the Nostr service
-    async fn get_info(&self) -> NostrServiceInfo;
+    async fn get_info(&self) -> Option<NostrServiceInfo>;
 }
 
 pub struct SdkNwcService {
@@ -630,19 +630,13 @@ impl NwcService for SdkNwcService {
         Ok(())
     }
 
-    async fn get_info(&self) -> NostrServiceInfo {
+    async fn get_info(&self) -> Option<NostrServiceInfo> {
         let lock = self.runtime_ctx.lock().await;
-        let Some(ref ctx) = *lock else {
-            return NostrServiceInfo {
-                is_running: false,
-                ..Default::default()
-            };
-        };
-        NostrServiceInfo {
-            is_running: true,
-            wallet_pubkey: Some(ctx.our_keys.public_key().to_hex()),
-            connected_relays: Some(self.config.relays()),
-        }
+        let ctx = (*lock).as_ref()?;
+        Some(NostrServiceInfo {
+            wallet_pubkey: ctx.our_keys.public_key().to_hex(),
+            connected_relays: self.config.relays(),
+        })
     }
 }
 

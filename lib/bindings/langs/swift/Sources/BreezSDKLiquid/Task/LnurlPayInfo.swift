@@ -72,7 +72,7 @@ class LnurlPayInfoTask : LnurlPayTask {
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
             logger.log(tag: TAG, line: "Sending info response", level: "INFO")
-            let nostrPubkey = try? PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)?.getInfo().walletPubkey;
+            let nostrPubkey = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)?.getInfo()?.walletPubkey;
             replyServer(encodable: LnurlInfoResponse(callback: request!.callback_url,
                                                      maxSendable: maxSendableMsat,
                                                      minSendable: minSendableMsat,

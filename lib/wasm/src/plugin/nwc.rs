@@ -65,9 +65,8 @@ mod model {
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::model::NostrServiceInfo)]
     pub struct NostrServiceInfo {
-        pub is_running: bool,
-        pub wallet_pubkey: Option<String>,
-        pub connected_relays: Option<Vec<String>>,
+        pub wallet_pubkey: String,
+        pub connected_relays: Vec<String>,
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEventDetails)]
@@ -223,8 +222,8 @@ impl BindingNwcService {
     }
 
     #[wasm_bindgen(js_name = "getInfo")]
-    pub async fn get_info(&self) -> model::NostrServiceInfo {
-        self.service.get_info().await.into()
+    pub async fn get_info(&self) -> Option<model::NostrServiceInfo> {
+        self.service.get_info().await.map(Into::into)
     }
 
     #[wasm_bindgen(js_name = "stop")]
