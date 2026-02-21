@@ -1,4 +1,4 @@
-# Breez SDK - Liquid*
+# Breez SDK - Liquid
 
 ## **Overview**
 
