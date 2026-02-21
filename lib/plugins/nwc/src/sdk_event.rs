@@ -3,7 +3,6 @@ use std::sync::Arc;
 use breez_sdk_liquid::model::{EventListener, PaymentDetails, PaymentType, SdkEvent};
 use log::{info, warn};
 use nostr_sdk::{
-    nips::nip44::{encrypt, Version},
     nips::nip47::{
         NostrWalletConnectURI, Notification, NotificationResult, NotificationType,
         PaymentNotification, TransactionType,
@@ -11,7 +10,12 @@ use nostr_sdk::{
     EventBuilder, Keys, Kind, Tag, Timestamp,
 };
 
-use crate::context::RuntimeContext;
+use crate::{context::RuntimeContext, encrypt::EncryptionHandler};
+
+enum NotificationKind {
+    NIP04 = 23196,
+    NIP44 = 23197,
+}
 
 pub(crate) struct SdkEventListener {
     ctx: Arc<RuntimeContext>,
@@ -90,26 +94,32 @@ impl EventListener for SdkEventListener {
 
         for uri in self.active_uris.iter() {
             let nwc_client_keypair = Keys::new(uri.secret.clone());
-            let encrypted_content = match encrypt(
+            let encryption_handler = EncryptionHandler::new(
                 self.ctx.our_keys.secret_key(),
                 &nwc_client_keypair.public_key,
-                &notification_content,
-                Version::V2,
-            ) {
-                Ok(encrypted) => encrypted,
-                Err(e) => {
-                    warn!("Could not encrypt notification content: {e:?}");
-                    continue;
+            );
+
+            for kind in [NotificationKind::NIP04, NotificationKind::NIP44] {
+                let enc = match kind {
+                    NotificationKind::NIP04 => EncryptionHandler::nip04_encrypt,
+                    NotificationKind::NIP44 => EncryptionHandler::nip44_encrypt,
+                };
+                let encrypted_content = match enc(&encryption_handler, &notification_content) {
+                    Ok(encrypted) => encrypted,
+                    Err(e) => {
+                        warn!("Could not encrypt notification content: {e:?}");
+                        continue;
+                    }
+                };
+
+                let event_builder = EventBuilder::new(Kind::Custom(kind as u16), encrypted_content)
+                    .tags([Tag::public_key(uri.public_key)]);
+
+                if let Err(e) = self.ctx.send_event(event_builder).await {
+                    warn!("Could not send notification event to relay: {e:?}");
+                } else {
+                    info!("Sent payment notification to relay");
                 }
-            };
-
-            let event_builder = EventBuilder::new(Kind::Custom(23196), encrypted_content)
-                .tags([Tag::public_key(uri.public_key)]);
-
-            if let Err(e) = self.ctx.send_event(event_builder).await {
-                warn!("Could not send notification event to relay: {e:?}");
-            } else {
-                info!("Sent payment notification to relay");
             }
         }
     }

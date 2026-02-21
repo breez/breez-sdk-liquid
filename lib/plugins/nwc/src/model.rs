@@ -172,3 +172,9 @@ pub(crate) struct RefreshResult {
     pub refreshed: Vec<String>,
     pub deleted: Vec<String>,
 }
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct NostrServiceInfo {
+    pub wallet_pubkey: String,
+    pub connected_relays: Vec<String>,
+}

@@ -16,6 +16,7 @@ import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
 import breez_sdk_liquid_notification.PluginConfigs
+import breez_sdk_liquid_notification.PluginManager
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -37,6 +38,8 @@ data class LnurlPayInfoResponse(
     val metadata: String,
     val commentAllowed: Int,
     val tag: String,
+    val allowsNostr: Boolean,
+    val nostrPubkey: String?,
 )
 
 class LnurlPayInfoJob(
@@ -70,6 +73,9 @@ class LnurlPayInfoJob(
                     LNURL_PAY_METADATA_PLAIN_TEXT,
                     DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT,
                 )
+            val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+            val walletNostrPubkey = nwcService?.getInfo()?.walletPubkey
+            val allowsNostr = walletNostrPubkey != null
             val response =
                 LnurlPayInfoResponse(
                     request.callbackURL,
@@ -78,6 +84,8 @@ class LnurlPayInfoJob(
                     "[[\"text/plain\",\"$plainTextMetadata\"]]",
                     LNURL_PAY_COMMENT_MAX_LENGTH,
                     "payRequest",
+                    allowsNostr,
+                    walletNostrPubkey,
                 )
             val success = replyServer(Json.encodeToString(response), request.replyURL, CACHE_CONTROL_MAX_AGE_DAY)
             notifyChannel(

@@ -2,7 +2,7 @@ import UserNotifications
 import Foundation
 
 struct NwcEventNotification: Codable {
-    let eventId: String
+    let event_id: String
 }
 
 class NwcEventTask: TaskProtocol, NwcEventListener {
@@ -28,8 +28,8 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
         _ = nwcService.addEventListener(listener: self)
         do {
             let request = try JSONDecoder().decode(NwcEventNotification.self, from: payload.data(using: .utf8)!)
-            eventId = request.eventId
-            try nwcService.handleEvent(eventId: request.eventId)
+            eventId = request.event_id
+            try nwcService.handleEvent(eventId: request.event_id)
         } catch let e {
             logger.log(tag: TAG, line: "Failed to process NWC event: \(e)", level: "ERROR")
             onShutdown()
@@ -61,7 +61,7 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
             }
             let notificationTitle = ResourceHelper.shared.getString(
                 key: Constants.NWC_SUCCESS_NOTIFICATION_TITLE,
-                validateContains: "%s",
+                validateContains: "%@",
                 fallback: Constants.DEFAULT_NWC_SUCCESS_NOTIFICATION_TITLE
             )
             displayPushNotification(title: String(format: notificationTitle, eventName), logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)

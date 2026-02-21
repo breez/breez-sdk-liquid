@@ -29,6 +29,7 @@ pub(crate) const NWC_SUPPORTED_METHODS: [&str; 5] = [
     "get_balance",
     "get_info",
 ];
+pub(crate) const NWC_SUPPORTED_NOTIFICATIONS: [&str; 2] = ["payment_received", "payment_sent"];
 
 #[sdk_macros::async_trait]
 pub trait RelayMessageHandler: Send + Sync {
@@ -325,7 +326,10 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
                 .into_iter()
                 .map(String::from)
                 .collect(),
-            notifications: vec![],
+            notifications: NWC_SUPPORTED_NOTIFICATIONS
+                .into_iter()
+                .map(String::from)
+                .collect(),
         })
     }
 }
