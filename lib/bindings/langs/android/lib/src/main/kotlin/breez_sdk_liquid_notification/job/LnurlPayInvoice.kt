@@ -1,6 +1,8 @@
 package breez_sdk_liquid_notification.job
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import breez_sdk_liquid.BindingLiquidSdk
 import breez_sdk_liquid.InputType
 import breez_sdk_liquid.PaymentMethod
@@ -8,6 +10,9 @@ import breez_sdk_liquid.PrepareReceiveRequest
 import breez_sdk_liquid.ReceiveAmount
 import breez_sdk_liquid.DescriptionHash
 import breez_sdk_liquid.ReceivePaymentRequest
+import breez_sdk_liquid.NwcEvent
+import breez_sdk_liquid.NwcEventListener
+import breez_sdk_liquid.NwcEventDetails
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT
 import breez_sdk_liquid_notification.Constants.DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE
@@ -21,6 +26,7 @@ import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
 import breez_sdk_liquid_notification.PluginConfigs
+import breez_sdk_liquid_notification.PluginManager
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -32,6 +38,7 @@ data class LnurlInvoiceRequest(
     @SerialName("comment") val comment: String? = null,
     @SerialName("reply_url") val replyURL: String,
     @SerialName("verify_url") val verifyURL: String? = null,
+    @SerialName("nostr") val nostr: String? = null,
 )
 
 // Serialize the response according to:
@@ -49,9 +56,17 @@ class LnurlPayInvoiceJob(
     private val fgService: SdkForegroundService,
     private val payload: String,
     private val logger: ServiceLogger,
-) : LnurlPayJob {
+) : LnurlPayJob, NwcEventListener {
     companion object {
         private const val TAG = "LnurlPayInvoiceJob"
+        private const val ZAP_TRACKING_TIMEOUT_MS = 120_000L
+    }
+    private val handler = Handler(Looper.getMainLooper())
+    private var zapTrackingInvoice: String? = null
+    private val zapReceiptTimeout = Runnable {
+        logger.log(TAG, "Zap tracking timeout reached for invoice: $zapTrackingInvoice", "WARN")
+        zapTrackingInvoice = null
+        fgService.onFinished(this)
     }
 
     override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
@@ -117,6 +132,21 @@ class LnurlPayInvoiceJob(
                     if (success) DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE else DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
                 ),
             )
+            val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+            if (request.nostr != null && nwcService != null) {
+                try {
+                    nwcService.addEventListener(this)
+                    zapTrackingInvoice = receivePaymentResponse.destination
+                    logger.log(TAG, "Tracking zap for invoice: ${zapTrackingInvoice}", "INFO")
+                    nwcService.trackZap(zapTrackingInvoice as String, request.nostr!!)
+                    handler.postDelayed(zapReceiptTimeout, ZAP_TRACKING_TIMEOUT_MS)
+                } catch (e: Exception) {
+                    logger.log(TAG, "Failed to track zap: ${e.message}", "WARN")
+                    fgService.onFinished(this)
+                }
+            } else {
+                fgService.onFinished(this)
+            }
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process lnurl: ${e.message}", "WARN")
             if (request != null) {
@@ -132,9 +162,24 @@ class LnurlPayInvoiceJob(
                 ),
             )
         }
-
-        fgService.onFinished(this)
     }
 
-    override fun onShutdown() {}
+    override fun onShutdown() {
+        handler.removeCallbacks(zapReceiptTimeout)
+    }
+
+    override fun onEvent(event: NwcEvent) {
+        if (zapTrackingInvoice == null) return
+        when(event.details) {
+            is NwcEventDetails.ZapReceived -> {
+                if (zapTrackingInvoice != (event.details as NwcEventDetails.ZapReceived).invoice) {
+                    return
+                }
+                handler.removeCallbacks(zapReceiptTimeout)
+                logger.log(TAG, "Successfully received zap for invoice: ${zapTrackingInvoice}", "INFO")
+                fgService.onFinished(this)
+            }
+            else -> return
+        }
+    }
 }
