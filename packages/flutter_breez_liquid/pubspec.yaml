@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   freezed_annotation: ^3.1.0  
-  flutter_rust_bridge: 2.9.0
+  flutter_rust_bridge: 2.11.1
   plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
