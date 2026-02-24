@@ -75,6 +75,12 @@ pub mod model {
     pub struct _EditConnectionResponse {
         pub connection: NwcConnection,
     }
+
+    #[frb(mirror(NostrServiceInfo))]
+    pub struct _NostrServiceInfo {
+        pub wallet_pubkey: String,
+        pub connected_relays: Vec<String>,
+    }
 }
 
 pub mod event {
@@ -180,6 +186,10 @@ impl BreezNwcService {
         self.service
             .add_event_listener(Box::new(BreezNwcEventListener { stream: listener }))
             .await
+    }
+
+    pub async fn get_info(&self) -> Option<NostrServiceInfo> {
+        self.service.get_info().await
     }
 }
 

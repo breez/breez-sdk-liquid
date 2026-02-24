@@ -42,14 +42,14 @@ impl<'a> EncryptionHandler<'a> {
         }
     }
 
-    fn nip44_encrypt(&self, msg: &str) -> Result<String, NwcError> {
+    pub(crate) fn nip44_encrypt(&self, msg: &str) -> Result<String, NwcError> {
         nostr_sdk::nips::nip44::encrypt(self.our_secret, self.client_pubkey, msg, Version::V2)
             .map_err(|err| NwcError::Encryption {
                 err: err.to_string(),
             })
     }
 
-    fn nip04_encrypt(&self, msg: &str) -> Result<String, NwcError> {
+    pub(crate) fn nip04_encrypt(&self, msg: &str) -> Result<String, NwcError> {
         nostr_sdk::nips::nip04::encrypt(self.our_secret, self.client_pubkey, msg).map_err(|err| {
             NwcError::Encryption {
                 err: err.to_string(),

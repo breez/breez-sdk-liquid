@@ -13,14 +13,27 @@ struct LnurlInfoResponse: Decodable, Encodable {
     let metadata: String
     let commentAllowed: Int
     let tag: String
+    let allowsNostr: Bool
+    let nostrPubkey: String?
 
-    init(callback: String, maxSendable: UInt64, minSendable: UInt64, metadata: String, commentAllowed: Int, tag: String) {
+    init(
+        callback: String, 
+        maxSendable: UInt64, 
+        minSendable: UInt64, 
+        metadata: String, 
+        commentAllowed: Int, 
+        tag: String, 
+        allowsNostr: Bool,
+        nostrPubkey: String?
+    ) {
         self.callback = callback
         self.maxSendable = maxSendable
         self.minSendable = minSendable
         self.metadata = metadata
         self.commentAllowed = commentAllowed
         self.tag = tag
+        self.allowsNostr = allowsNostr
+        self.nostrPubkey = nostrPubkey
     }
 }
 
@@ -59,12 +72,15 @@ class LnurlPayInfoTask : LnurlPayTask {
             let plainTextMetadata = ResourceHelper.shared.getString(key: Constants.LNURL_PAY_METADATA_PLAIN_TEXT, fallback: Constants.DEFAULT_LNURL_PAY_METADATA_PLAIN_TEXT)
             let metadata = "[[\"text/plain\",\"\(plainTextMetadata)\"]]"
             logger.log(tag: TAG, line: "Sending info response", level: "INFO")
+            let nostrPubkey = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)?.getInfo()?.walletPubkey;
             replyServer(encodable: LnurlInfoResponse(callback: request!.callback_url,
                                                      maxSendable: maxSendableMsat,
                                                      minSendable: minSendableMsat,
                                                      metadata: metadata,
                                                      commentAllowed: Constants.LNURL_PAY_COMMENT_MAX_LENGTH,
-                                                     tag: "payRequest"),
+                                                     tag: "payRequest",
+                                                     allowsNostr: nostrPubkey != nil,
+                                                     nostrPubkey: nostrPubkey),
                         replyURL: request!.reply_url,
                         maxAge: Constants.CACHE_CONTROL_MAX_AGE_DAY)
         } catch let e {

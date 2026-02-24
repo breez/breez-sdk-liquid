@@ -397,6 +397,11 @@ dictionary EditConnectionResponse {
     NwcConnection connection;
 };
 
+dictionary NostrServiceInfo {
+    string wallet_pubkey;
+    sequence<string> connected_relays;
+};
+
 interface BindingNwcService {
   constructor(NwcConfig config);
 
@@ -421,6 +426,8 @@ interface BindingNwcService {
   string add_event_listener(NwcEventListener listener);
 
   void remove_event_listener(string listener_id);
+
+  NostrServiceInfo? get_info();
   
   void stop();
 };
