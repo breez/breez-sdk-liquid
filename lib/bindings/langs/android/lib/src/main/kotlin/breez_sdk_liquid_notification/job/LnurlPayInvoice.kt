@@ -104,6 +104,19 @@ class LnurlPayInvoiceJob(
                         payerNote = request.comment,
                     ),
                 )
+            // Add zap tracking if necessary
+            val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+            if (request.nostr != null && nwcService != null) {
+                try {
+                    nwcService.addEventListener(this)
+                    zapTrackingInvoice = receivePaymentResponse.destination
+                    logger.log(TAG, "Tracking zap for invoice: ${zapTrackingInvoice}", "INFO")
+                    nwcService.trackZap(receivePaymentResponse.destination, request.nostr!!)
+                    handler.postDelayed(zapReceiptTimeout, ZAP_TRACKING_TIMEOUT_MS)
+                } catch (e: Exception) {
+                    logger.log(TAG, "Failed to track zap: ${e.message}", "WARN")
+                }
+            }
             // Add the verify URL
             var verify: String? = null
             if (request.verifyURL != null) {
@@ -132,21 +145,6 @@ class LnurlPayInvoiceJob(
                     if (success) DEFAULT_LNURL_PAY_INVOICE_NOTIFICATION_TITLE else DEFAULT_LNURL_PAY_NOTIFICATION_FAILURE_TITLE,
                 ),
             )
-            val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
-            if (request.nostr != null && nwcService != null) {
-                try {
-                    nwcService.addEventListener(this)
-                    zapTrackingInvoice = receivePaymentResponse.destination
-                    logger.log(TAG, "Tracking zap for invoice: ${zapTrackingInvoice}", "INFO")
-                    nwcService.trackZap(zapTrackingInvoice as String, request.nostr!!)
-                    handler.postDelayed(zapReceiptTimeout, ZAP_TRACKING_TIMEOUT_MS)
-                } catch (e: Exception) {
-                    logger.log(TAG, "Failed to track zap: ${e.message}", "WARN")
-                    fgService.onFinished(this)
-                }
-            } else {
-                fgService.onFinished(this)
-            }
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process lnurl: ${e.message}", "WARN")
             if (request != null) {
@@ -162,6 +160,7 @@ class LnurlPayInvoiceJob(
                 ),
             )
         }
+        fgService.onFinished(this)
     }
 
     override fun onShutdown() {

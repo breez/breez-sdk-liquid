@@ -13,7 +13,7 @@ use crate::{
 };
 use anyhow::Result;
 use breez_sdk_liquid::plugin::PluginSdk;
-use log::{info, warn};
+use log::{debug, info, warn};
 use nostr_sdk::{
     nips::nip47::NostrWalletConnectURI, Alphabet, Client as NostrClient, EventBuilder, Filter,
     Keys, Kind, SingleLetterTag, Tag,
@@ -137,7 +137,7 @@ impl RuntimeContext {
 
     pub async fn send_event(&self, event_builder: EventBuilder) -> Result<()> {
         let event = event_builder.sign_with_keys(&self.our_keys)?;
-        info!("Broadcasting Nostr event: {event:?}");
+        debug!("Broadcasting Nostr event: {event:?}");
         self.client.send_event(&event).await?;
         Ok(())
     }

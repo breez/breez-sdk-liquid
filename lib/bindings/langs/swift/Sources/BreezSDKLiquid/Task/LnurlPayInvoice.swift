@@ -71,20 +71,8 @@ class LnurlPayInvoiceTask : LnurlPayTask, NwcEventListener {
 
             logger.log(tag: TAG, line: "Creating invoice", level: "INFO")
             let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, descriptionHash: DescriptionHash.useDescription, payerNote: request!.comment))
-            // Add the verify URL
-            var verify: String?
-            if let verifyUrl = request!.verify_url {
-                do {
-                    let inputType = try liquidSDK.parse(input: receivePaymentRes.destination)
-                    if case .bolt11(let invoice) = inputType {
-                        verify = verifyUrl.replacingOccurrences(of: "{payment_hash}", with: invoice.paymentHash)
-                    }
-                } catch let e {
-                    logger.log(tag: TAG, line: "Failed to parse destination for verify URL: \(e)", level: "WARN")
-                }
-            }
-            logger.log(tag: TAG, line: "Sending invoice response", level: "INFO")
-            replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: [], verify: verify), replyURL: request!.reply_url)
+
+            // Add zap tracking if necessary
             if let zapRequest = request!.nostr {
                 do {
                     if let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs) {
@@ -105,6 +93,21 @@ class LnurlPayInvoiceTask : LnurlPayTask, NwcEventListener {
                     logger.log(tag: TAG, line: "Failed to track zap: \(e)", level: "WARN")
                 }
             }
+
+            // Add the verify URL
+            var verify: String?
+            if let verifyUrl = request!.verify_url {
+                do {
+                    let inputType = try liquidSDK.parse(input: receivePaymentRes.destination)
+                    if case .bolt11(let invoice) = inputType {
+                        verify = verifyUrl.replacingOccurrences(of: "{payment_hash}", with: invoice.paymentHash)
+                    }
+                } catch let e {
+                    logger.log(tag: TAG, line: "Failed to parse destination for verify URL: \(e)", level: "WARN")
+                }
+            }
+            logger.log(tag: TAG, line: "Sending invoice response", level: "INFO")
+            replyServer(encodable: LnurlInvoiceResponse(pr: receivePaymentRes.destination, routes: [], verify: verify), replyURL: request!.reply_url)
         } catch let e {
             logger.log(tag: TAG, line: "Failed to process lnurl invoice: \(e)", level: "ERROR")
             fail(withError: e.localizedDescription, replyURL: request!.reply_url)

@@ -70,6 +70,7 @@ impl Persister {
                     Err(err) => return Err(err.into()),
                 }
             }
+            return Ok(result);
         }
         Err(NwcError::persist("Maximum write attempts reached"))
     }
@@ -307,7 +308,7 @@ impl Persister {
             let tracked_zap = tracked_zaps.remove(invoice);
             let zap_request =
                 tracked_zap.and_then(|zap| serde_json::from_str(&zap.zap_request).ok());
-            Ok((true, zap_request))
+            Ok((zap_request.is_some(), zap_request))
         })
     }
 
@@ -320,10 +321,10 @@ impl Persister {
                     expired.push(invoice.clone());
                 }
             }
-            for invoice in expired {
-                tracked_zaps.remove(&invoice);
+            for invoice in expired.iter() {
+                tracked_zaps.remove(invoice);
             }
-            Ok((true, ()))
+            Ok((!expired.is_empty(), ()))
         })
     }
 }
