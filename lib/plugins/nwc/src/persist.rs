@@ -93,7 +93,7 @@ impl Persister {
     where
         F: Fn(&mut TrackedZaps) -> NwcResult<(bool, R)>,
     {
-        self.set_storage_safe(KEY_TRACKED_ZAPS, Self::list_tracked_zaps_raw, f)
+        self.set_storage_safe(KEY_TRACKED_ZAPS, Self::list_tracked_zaps, f)
     }
 
     pub(crate) fn add_nwc_connection(
@@ -281,7 +281,7 @@ impl Persister {
         })
     }
 
-    pub(crate) fn list_tracked_zaps_raw(&self) -> NwcResult<TrackedZaps> {
+    pub(crate) fn list_tracked_zaps(&self) -> NwcResult<TrackedZaps> {
         let tracked_zaps = self
             .storage
             .get_item(KEY_TRACKED_ZAPS)?
