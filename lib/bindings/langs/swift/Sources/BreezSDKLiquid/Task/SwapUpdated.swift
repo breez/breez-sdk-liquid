@@ -6,7 +6,7 @@ struct SwapUpdatedRequest: Codable {
     let status: String
 }
 
-class SwapUpdatedTask : TaskProtocol {
+class SwapUpdatedTask : TaskProtocol, NwcEventListener {
     fileprivate let TAG = "SwapUpdatedTask"
 
     private let pollingInterval: TimeInterval = 5.0
@@ -18,6 +18,9 @@ class SwapUpdatedTask : TaskProtocol {
     internal var request: SwapUpdatedRequest? = nil
     internal var notified: Bool = false
     private var pollingTimer: Timer?
+    private var zapInvoice: String? = nil
+    private var isZapPublished: Bool = false
+    private var nwcService: BindingNwcService? = nil
 
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
         self.payload = payload
@@ -27,6 +30,10 @@ class SwapUpdatedTask : TaskProtocol {
     }
 
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
+        self.nwcService = try? PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)
+        if let nwcService = nwcService {
+            let _ = nwcService.addEventListener(listener: self)
+        }
         do {
             request = try JSONDecoder().decode(SwapUpdatedRequest.self, from: payload.data(using: .utf8)!)
         } catch let e {
@@ -93,6 +100,7 @@ class SwapUpdatedTask : TaskProtocol {
                 if swapIdHash == swapId?.sha256() {
                     logger.log(tag: TAG, line: "Received payment event: \(swapIdHash) \(payment.status)", level: "INFO")
                     notifySuccess(payment: payment)
+                    checkAndTrackZap(payment: payment)
                 }
                 break
             case .paymentWaitingFeeAcceptance(details: let payment):
@@ -115,6 +123,18 @@ class SwapUpdatedTask : TaskProtocol {
                 return swapId
             case let .lightning(swapId, _, _, _, _, _, _, _, _, _, _, _, _, _):
                 return swapId
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
+    func getInvoice(details: PaymentDetails?) -> String? {
+        if let details = details {
+            switch details {
+            case let .lightning(_, _, _, _, invoice, _, _, _, _, _, _, _, _, _):
+                return invoice
             default:
                 break
             }
@@ -163,6 +183,37 @@ class SwapUpdatedTask : TaskProtocol {
                 fallback: Constants.DEFAULT_PAYMENT_WAITING_FEE_ACCEPTANCE_TEXT)
             notified = true
             displayPushNotification(title: notificationTitle, body: notificationBody, logger: logger, threadIdentifier: Constants.NOTIFICATION_THREAD_DISMISSIBLE)
+        }
+    }
+
+    func checkAndTrackZap(payment: Payment) {
+        guard let invoice = getInvoice(details: payment.details),
+              let nwcService = nwcService else {
+            return
+        }
+
+        do {
+            if try nwcService.isZap(invoice: invoice) {
+                logger.log(tag: TAG, line: "Waiting for zap receipt", level: "INFO")
+                zapInvoice = invoice
+                return
+            }
+        } catch let e {
+            logger.log(tag: TAG, line: "Failed to check zap status: \(e)", level: "WARN")
+        }
+    }
+
+    func onEvent(event: NwcEvent) {
+        guard let zapInvoice = zapInvoice else { return }
+
+        switch event.details {
+        case .zapReceived(let receivedInvoice):
+            if zapInvoice == receivedInvoice {
+                logger.log(tag: TAG, line: "Zap receipt published for invoice: \(zapInvoice)", level: "INFO")
+                isZapPublished = true
+            }
+        default:
+            break
         }
     }
 }

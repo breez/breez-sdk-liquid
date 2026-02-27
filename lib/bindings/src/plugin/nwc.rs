@@ -89,6 +89,10 @@ impl BindingNwcService {
         rt().block_on(self.inner.track_zap(invoice, zap_request))
     }
 
+    pub fn is_zap(&self, invoice: String) -> NwcResult<bool> {
+        rt().block_on(self.inner.is_zap(invoice))
+    }
+
     pub fn stop(&self) {
         Plugin::on_stop(self);
     }

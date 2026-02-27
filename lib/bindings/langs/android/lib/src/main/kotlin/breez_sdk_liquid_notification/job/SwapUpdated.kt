@@ -2,7 +2,11 @@ package breez_sdk_liquid_notification.job
 
 import android.content.Context
 import breez_sdk_liquid.BindingLiquidSdk
+import breez_sdk_liquid.BindingNwcService
 import breez_sdk_liquid.GetPaymentRequest
+import breez_sdk_liquid.NwcEvent
+import breez_sdk_liquid.NwcEventDetails
+import breez_sdk_liquid.NwcEventListener
 import breez_sdk_liquid.Payment
 import breez_sdk_liquid.PaymentDetails
 import breez_sdk_liquid.PaymentState
@@ -30,6 +34,7 @@ import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
 import breez_sdk_liquid_notification.PluginConfigs
+import breez_sdk_liquid_notification.PluginManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -51,17 +56,22 @@ class SwapUpdatedJob(
     private val payload: String,
     private val logger: ServiceLogger,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
-) : Job {
+) : Job, NwcEventListener {
     private var swapIdHash: String? = null
+    private var zapInvoice: String? = null
+    private var isZapPublished: Boolean = false
     private var notified: Boolean = false
     private var pollingJob: kotlinx.coroutines.Job? = null
     private val pollingInterval: Long = 5000
+    private var nwcService: BindingNwcService? = null
 
     companion object {
         private const val TAG = "SwapUpdatedJob"
     }
 
     override fun start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) {
+        this.nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+        nwcService?.addEventListener(this)
         try {
             val decoder = Json { ignoreUnknownKeys = true }
             val request = decoder.decodeFromString(SwapUpdatedRequest.serializer(), payload)
@@ -152,6 +162,12 @@ class SwapUpdatedJob(
             else -> null
         }
 
+    private fun getInvoice(details: PaymentDetails?): String? =
+        when (details) {
+            is PaymentDetails.Lightning -> details.invoice
+            else -> null
+        }
+
     private fun paymentClaimIsBroadcasted(details: PaymentDetails?): Boolean {
         return when (details) {
             is PaymentDetails.Bitcoin -> details.claimTxId != null
@@ -171,6 +187,11 @@ class SwapUpdatedJob(
                     "TRACE",
                 )
                 notifySuccess(payment)
+                // Run off the callback thread to avoid JNA reentrancy crash
+                // when isZap() calls back into Rust
+                scope.launch {
+                    checkAndTrackZap(payment)
+                }
             }
         }
     }
@@ -213,7 +234,6 @@ class SwapUpdatedJob(
                 ),
             )
             this.notified = true
-            fgService.onFinished(this)
         }
     }
 
@@ -235,7 +255,39 @@ class SwapUpdatedJob(
                 ),
             )
             this.notified = true
-            fgService.onFinished(this)
+        }
+        fgService.onFinished(this)
+    }
+
+    private fun checkAndTrackZap(payment: Payment) {
+        val invoice = getInvoice(payment.details)
+        if (invoice != null && nwcService != null) {
+            try {
+                if (nwcService!!.isZap(invoice)) {
+                    logger.log(TAG, "Waiting for zap receipt", "INFO")
+                    zapInvoice = invoice
+                    return
+                }
+            } catch (e: Exception) {
+                logger.log(TAG, "Failed to check zap status: ${e.message}", "WARN")
+            }
+        }
+        // If not a zap or error checking, finish immediately
+        fgService.onFinished(this)
+    }
+
+    override fun onEvent(event: NwcEvent) {
+        if (zapInvoice == null) return
+        when (event.details) {
+            is NwcEventDetails.ZapReceived -> {
+                val receivedInvoice = (event.details as NwcEventDetails.ZapReceived).invoice
+                if (zapInvoice == receivedInvoice) {
+                    logger.log(TAG, "Zap receipt published for invoice: $zapInvoice", "INFO")
+                    isZapPublished = true
+                    fgService.onFinished(this)
+                }
+            }
+            else -> { }
         }
     }
 

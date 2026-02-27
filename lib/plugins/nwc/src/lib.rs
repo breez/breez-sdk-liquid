@@ -144,6 +144,13 @@ pub trait NwcService: Send + Sync {
     /// * `invoice` - The invoice related to the zap request
     /// * `zap_request` - the URL- and JSON-encoded zap request
     async fn track_zap(&self, invoice: String, zap_request: String) -> NwcResult<()>;
+
+    /// Whether or not an invoice was registered to track a zap
+    ///
+    /// # Arguments
+    ///
+    /// * `invoice` - The invoice related to the zap
+    async fn is_zap(&self, invoice: String) -> NwcResult<bool>;
 }
 
 pub struct SdkNwcService {
@@ -656,6 +663,11 @@ impl NwcService for SdkNwcService {
             .add_tracked_zap(invoice.clone(), zap_request)?;
         info!("Successfully added zap tracking for invoice {invoice}");
         Ok(())
+    }
+
+    async fn is_zap(&self, invoice: String) -> NwcResult<bool> {
+        let ctx = self.runtime_ctx().await?;
+        Ok(ctx.persister.get_tracked_zap(&invoice)?.is_some())
     }
 }
 

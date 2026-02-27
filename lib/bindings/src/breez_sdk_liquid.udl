@@ -432,6 +432,9 @@ interface BindingNwcService {
   
   [Throws=NwcError]
   void track_zap(string invoice, string zap_request);
+
+  [Throws=NwcError]
+  boolean is_zap(string invoice);
   
   void stop();
 };
