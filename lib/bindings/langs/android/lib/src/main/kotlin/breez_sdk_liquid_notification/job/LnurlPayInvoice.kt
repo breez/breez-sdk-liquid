@@ -21,6 +21,7 @@ import breez_sdk_liquid_notification.ResourceHelper.Companion.getString
 import breez_sdk_liquid_notification.SdkForegroundService
 import breez_sdk_liquid_notification.ServiceLogger
 import breez_sdk_liquid_notification.PluginConfigs
+import breez_sdk_liquid_notification.PluginManager
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -32,6 +33,7 @@ data class LnurlInvoiceRequest(
     @SerialName("comment") val comment: String? = null,
     @SerialName("reply_url") val replyURL: String,
     @SerialName("verify_url") val verifyURL: String? = null,
+    @SerialName("nostr") val nostr: String? = null,
 )
 
 // Serialize the response according to:
@@ -89,6 +91,16 @@ class LnurlPayInvoiceJob(
                         payerNote = request.comment,
                     ),
                 )
+            // Add zap tracking if necessary
+            val nwcService = PluginManager.nwc(liquidSDK, pluginConfigs, logger)
+            if (request.nostr != null && nwcService != null) {
+                try {
+                    logger.log(TAG, "Tracking zap for invoice: ${receivePaymentResponse.destination}", "INFO")
+                    nwcService.trackZap(receivePaymentResponse.destination, request.nostr!!)
+                } catch (e: Exception) {
+                    logger.log(TAG, "Failed to track zap: ${e.message}", "WARN")
+                }
+            }
             // Add the verify URL
             var verify: String? = null
             if (request.verifyURL != null) {
@@ -132,7 +144,6 @@ class LnurlPayInvoiceJob(
                 ),
             )
         }
-
         fgService.onFinished(this)
     }
 

@@ -1,16 +1,23 @@
 use std::sync::Arc;
 
-use breez_sdk_liquid::model::{EventListener, PaymentDetails, PaymentType, SdkEvent};
+use breez_sdk_liquid::{
+    model::{EventListener, Payment, PaymentDetails, PaymentType, SdkEvent},
+    InputType,
+};
 use log::{info, warn};
 use nostr_sdk::{
     nips::nip47::{
         NostrWalletConnectURI, Notification, NotificationResult, NotificationType,
         PaymentNotification, TransactionType,
     },
-    EventBuilder, Keys, Kind, Tag, Timestamp,
+    EventBuilder, Keys, Kind, Tag, TagKind, TagStandard, Timestamp,
 };
 
-use crate::{context::RuntimeContext, encrypt::EncryptionHandler};
+use crate::{
+    context::RuntimeContext,
+    encrypt::EncryptionHandler,
+    event::{NwcEvent, NwcEventDetails},
+};
 
 enum NotificationKind {
     NIP04 = 23196,
@@ -26,15 +33,8 @@ impl SdkEventListener {
     pub fn new(ctx: Arc<RuntimeContext>, active_uris: Vec<NostrWalletConnectURI>) -> Self {
         Self { ctx, active_uris }
     }
-}
 
-#[sdk_macros::async_trait]
-impl EventListener for SdkEventListener {
-    async fn on_event(&self, e: SdkEvent) {
-        let SdkEvent::PaymentSucceeded { details: payment } = e else {
-            return;
-        };
-
+    async fn handle_notif_to_relay(&self, payment: &Payment) {
         let (invoice, description, preimage, payment_hash) = match &payment.details {
             PaymentDetails::Lightning {
                 invoice,
@@ -121,6 +121,110 @@ impl EventListener for SdkEventListener {
                     info!("Sent payment notification to relay");
                 }
             }
+        }
+    }
+
+    async fn handle_zap_receipt(&self, payment: &Payment) {
+        let PaymentDetails::Lightning {
+            invoice: Some(invoice),
+            preimage,
+            ..
+        } = &payment.details
+        else {
+            return;
+        };
+
+        let Ok(Some(zap_request)) = self.ctx.persister.get_tracked_zap(invoice) else {
+            return;
+        };
+
+        info!("Constructing zap receipt for invoice {invoice}");
+
+        let Ok(InputType::Bolt11 { invoice }) = self.ctx.sdk.parse(invoice).await else {
+            warn!("Could not parse bolt11 invoice for tracked zap");
+            return;
+        };
+
+        let mut eb = EventBuilder::new(Kind::ZapReceipt, "");
+
+        // Verify zap_request
+        // https://github.com/nostr-protocol/nips/blob/master/57.md#appendix-e-zap-receipt-event
+
+        // Insert `p` tag
+        let Some(p_tag) = zap_request.tags.find(TagKind::p()) else {
+            warn!("No `p` tag found for zap request. Aborting receipt.");
+            return;
+        };
+        eb = eb.tag(p_tag.clone());
+
+        // Insert e, a
+        for tag_kind in [TagKind::a(), TagKind::e()] {
+            if let Some(tag) = zap_request.tags.find(tag_kind) {
+                eb = eb.tag(tag.clone());
+            }
+        }
+        // Insert P tag
+        eb = eb.tag(
+            TagStandard::PublicKey {
+                public_key: zap_request.pubkey,
+                relay_url: None,
+                alias: None,
+                uppercase: true,
+            }
+            .into(),
+        );
+
+        // Insert bolt11 tag
+        eb = eb.tag(TagStandard::Bolt11(invoice.bolt11.clone()).into());
+        // Insert description tag
+        let Ok(zap_request_json) = serde_json::to_string(&zap_request) else {
+            warn!("Could not encode zap request in JSON");
+            return;
+        };
+        eb = eb.tag(TagStandard::Description(zap_request_json).into());
+        // Insert preimage tag
+        if let Some(preimage) = preimage {
+            eb = eb.tag(Tag::from_standardized(TagStandard::Preimage(
+                preimage.clone(),
+            )));
+        }
+
+        // Send event
+        if let Err(err) = self.ctx.send_event(eb).await {
+            warn!("Could not broadcast zap receipt: {err}");
+            return;
+        }
+        info!(
+            "Successfully sent zap receipt for invoice {}",
+            invoice.bolt11
+        );
+        if let Err(err) = self.ctx.persister.remove_tracked_zap(&invoice.bolt11) {
+            warn!("Could not remove tracked zap: {err}");
+        };
+        self.ctx
+            .event_manager
+            .notify(NwcEvent {
+                connection_name: None,
+                event_id: Some(zap_request.id.to_string()),
+                details: NwcEventDetails::ZapReceived {
+                    invoice: invoice.bolt11,
+                },
+            })
+            .await;
+    }
+}
+
+#[sdk_macros::async_trait]
+impl EventListener for SdkEventListener {
+    async fn on_event(&self, event: SdkEvent) {
+        match event {
+            SdkEvent::PaymentSucceeded { details: payment } => {
+                self.handle_notif_to_relay(&payment).await;
+            }
+            SdkEvent::PaymentWaitingConfirmation { details: payment } => {
+                self.handle_zap_receipt(&payment).await;
+            }
+            _ => {}
         }
     }
 }
