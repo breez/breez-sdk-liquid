@@ -103,7 +103,7 @@ pub enum PaymentError {
     InvalidOrExpiredFees,
 
     #[error("Cannot pay: not enough funds")]
-    InsufficientFunds,
+    InsufficientFunds { missing_sats: u64 },
 
     #[error("Invalid description: {err}")]
     InvalidDescription { err: String },
@@ -208,7 +208,9 @@ impl From<boltz_client::bitcoin::hex::HexToArrayError> for PaymentError {
 impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
         match err {
-            lwk_wollet::Error::InsufficientFunds { .. } => PaymentError::InsufficientFunds,
+            lwk_wollet::Error::InsufficientFunds { missing_sats, .. } => {
+                PaymentError::InsufficientFunds { missing_sats }
+            }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
@@ -244,7 +246,9 @@ impl From<anyhow::Error> for PaymentError {
 impl From<PayjoinError> for PaymentError {
     fn from(err: PayjoinError) -> Self {
         match err {
-            PayjoinError::InsufficientFunds => PaymentError::InsufficientFunds,
+            PayjoinError::InsufficientFunds { missing_sats } => {
+                PaymentError::InsufficientFunds { missing_sats }
+            }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
@@ -302,7 +306,7 @@ impl From<PaymentError> for LnUrlPayError {
                 err: format!("Amount is missing: {err}"),
             },
             PaymentError::InvalidNetwork { err } => Self::InvalidNetwork { err },
-            PaymentError::InsufficientFunds => Self::InsufficientBalance { err: String::new() },
+            PaymentError::InsufficientFunds { missing_sats: _ } => Self::InsufficientBalance { err: String::new() },
             PaymentError::InvalidInvoice { err } => Self::InvalidInvoice { err },
             PaymentError::PaymentTimeout => Self::PaymentTimeout { err: String::new() },
             _ => Self::Generic {

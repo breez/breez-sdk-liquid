@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::str::FromStr;
 
 use anyhow::anyhow;
 use bip39::Mnemonic;
@@ -24,7 +25,7 @@ use lwk_wollet::hashes::{sha256, HashEngine, Hmac, HmacEngine};
 use lwk_wollet::secp256k1::ecdsa::Signature;
 use lwk_wollet::secp256k1::Message;
 
-use crate::model::{Signer, SignerError};
+use crate::model::{PsbtSigner, Signer, SignerError, SignerPolicy};
 
 #[derive(thiserror::Error, Debug)]
 pub enum SignError {
@@ -64,8 +65,10 @@ pub enum NewError {
 }
 
 /// A software signer
+#[derive(Clone)]
 pub struct SdkLwkSigner {
     sdk_signer: Arc<Box<dyn Signer>>,
+    psbt_sdk_signer: Option<Arc<Box<dyn PsbtSigner>>>,
 }
 
 impl SdkLwkSigner {
@@ -73,8 +76,14 @@ impl SdkLwkSigner {
     ///
     /// Takes also a flag if the network is mainnet so that generated extended keys are in the
     /// correct form xpub/tpub (there is no need to discriminate between regtest and testnet)
-    pub fn new(sdk_signer: Arc<Box<dyn Signer>>) -> Result<Self, NewError> {
-        Ok(Self { sdk_signer })
+    pub fn new(
+        sdk_signer: Arc<Box<dyn Signer>>,
+        psbt_sdk_signer: Option<Arc<Box<dyn PsbtSigner>>>,
+    ) -> Result<Self, NewError> {
+        Ok(Self {
+            sdk_signer,
+            psbt_sdk_signer,
+        })
     }
 
     pub(crate) fn xpub(&self) -> Result<Xpub, SignError> {
@@ -95,12 +104,27 @@ impl SdkLwkSigner {
             .sign_ecdsa_recoverable(msg.as_ref().to_vec())?;
         Ok(sig_bytes)
     }
+
+    pub fn sign_policy(&self) -> SignerPolicy {
+        match &self.psbt_sdk_signer {
+            Some(signer) => signer.sign_policy(),
+            None => SignerPolicy::Singlesig,
+        }
+    }
 }
 
 impl LwkSigner for SdkLwkSigner {
     type Error = SignError;
 
     fn sign(&self, pset: &mut PartiallySignedTransaction) -> Result<u32, Self::Error> {
+        if let Some(psbt_signer) = &self.psbt_sdk_signer {
+            let (signed_psbt, signature_added) = psbt_signer.sign(pset.to_string())?;
+            let signed_psbt = PartiallySignedTransaction::from_str(&signed_psbt)?;
+            pset.merge(signed_psbt)?;
+
+            return Ok(signature_added);
+        }
+
         let tx = pset.extract_tx()?;
         let mut sighash_cache = SighashCache::new(&tx);
         let mut signature_added = 0;
@@ -283,6 +307,8 @@ impl Signer for SdkSigner {
 
 #[cfg(test)]
 mod tests {
+    use crate::model::SignerPolicy;
+
     use super::*;
     use bip32::KeySource;
     use bip39::rand::{self, RngCore};
@@ -291,31 +317,67 @@ mod tests {
         pset::{Input, Output, PartiallySignedTransaction},
         AssetId, TxOut, Txid,
     };
-    use lwk_common::{singlesig_desc, Singlesig};
+    use lwk_common::{multisig_desc, singlesig_desc, DescriptorBlindingKey, Multisig, Singlesig};
     use lwk_signer::SwSigner;
     use lwk_wollet::{
         elements::{self, Script},
         ElementsNetwork, NoPersist, Wollet, WolletDescriptor,
     };
-    use std::collections::BTreeMap;
+    use std::{collections::BTreeMap, str::FromStr};
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    fn get_descriptor<S: LwkSigner>(signer: &S) -> Result<WolletDescriptor, anyhow::Error> {
-        let descriptor_str = singlesig_desc(
-            signer,
-            Singlesig::Wpkh,
-            lwk_common::DescriptorBlindingKey::Slip77,
-        )
-        .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?;
+    fn get_descriptor<S: LwkSigner>(
+        signer: &S,
+        signer_policy: SignerPolicy,
+    ) -> Result<WolletDescriptor, anyhow::Error> {
+        let descriptor_str = match signer_policy {
+            SignerPolicy::Singlesig => singlesig_desc(
+                signer,
+                Singlesig::Wpkh,
+                lwk_common::DescriptorBlindingKey::Slip77,
+            )
+            .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?,
+            SignerPolicy::Multisig { threshold, xpubs } => {
+                if xpubs.len() < (threshold as usize) || threshold == 0 {
+                    return Err(anyhow!(
+                        "Invalid multisig policy: threshold={}, xpubs={}",
+                        threshold,
+                        xpubs.len()
+                    )
+                    .into());
+                }
+
+                let xpubs = xpubs
+                    .into_iter()
+                    .map(|xpub| {
+                        (
+                            None,
+                            Xpub::from_str(&xpub)
+                                .map_err(|e| anyhow!("Invalid Xpub: {e}"))
+                                .unwrap(),
+                        )
+                    })
+                    .collect();
+
+                multisig_desc(
+                    threshold,
+                    xpubs,
+                    Multisig::Wsh,
+                    DescriptorBlindingKey::Slip77,
+                )
+                .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
+            }
+        };
+
         Ok(descriptor_str.parse()?)
     }
 
     fn create_signers(mnemonic: &str) -> (SwSigner, SdkLwkSigner) {
         let sw_signer = SwSigner::new(mnemonic, false).unwrap();
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
-        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
+        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer), None).unwrap();
         (sw_signer, sdk_signer)
     }
 
@@ -479,17 +541,17 @@ mod tests {
         let sw_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sw_signer).unwrap(),
+            get_descriptor(&sw_signer, SignerPolicy::Singlesig).unwrap(),
         )
         .unwrap();
 
         // 2. Create a wallet using SdkLwkSigner
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
-        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
+        let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer), None).unwrap();
         let sdk_wallet = Wollet::new(
             network,
             NoPersist::new(),
-            get_descriptor(&sdk_signer).unwrap(),
+            get_descriptor(&sdk_signer, SignerPolicy::Singlesig).unwrap(),
         )
         .unwrap();
 
