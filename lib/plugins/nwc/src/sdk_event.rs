@@ -113,7 +113,7 @@ impl SdkEventListener {
                 };
 
                 let event_builder = EventBuilder::new(Kind::Custom(kind as u16), encrypted_content)
-                    .tags([Tag::public_key(uri.public_key)]);
+                    .tags([Tag::public_key(nwc_client_keypair.public_key)]);
 
                 if let Err(e) = self.ctx.send_event(event_builder).await {
                     warn!("Could not send notification event to relay: {e:?}");
