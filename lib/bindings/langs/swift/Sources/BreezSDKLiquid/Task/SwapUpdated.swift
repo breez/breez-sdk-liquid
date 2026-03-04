@@ -19,7 +19,6 @@ class SwapUpdatedTask : TaskProtocol, NwcEventListener {
     internal var notified: Bool = false
     private var pollingTimer: Timer?
     private var zapInvoice: String? = nil
-    private var isZapPublished: Bool = false
     private var nwcService: BindingNwcService? = nil
 
     init(payload: String, logger: ServiceLogger, contentHandler: ((UNNotificationContent) -> Void)? = nil, bestAttemptContent: UNMutableNotificationContent? = nil) {
@@ -210,7 +209,6 @@ class SwapUpdatedTask : TaskProtocol, NwcEventListener {
         case .zapReceived(let receivedInvoice):
             if zapInvoice == receivedInvoice {
                 logger.log(tag: TAG, line: "Zap receipt published for invoice: \(zapInvoice)", level: "INFO")
-                isZapPublished = true
             }
         default:
             break

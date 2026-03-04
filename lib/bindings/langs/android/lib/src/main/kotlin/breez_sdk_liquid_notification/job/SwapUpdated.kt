@@ -59,7 +59,6 @@ class SwapUpdatedJob(
 ) : Job, NwcEventListener {
     private var swapIdHash: String? = null
     private var zapInvoice: String? = null
-    private var isZapPublished: Boolean = false
     private var notified: Boolean = false
     private var pollingJob: kotlinx.coroutines.Job? = null
     private val pollingInterval: Long = 5000
@@ -283,7 +282,6 @@ class SwapUpdatedJob(
                 val receivedInvoice = (event.details as NwcEventDetails.ZapReceived).invoice
                 if (zapInvoice == receivedInvoice) {
                     logger.log(TAG, "Zap receipt published for invoice: $zapInvoice", "INFO")
-                    isZapPublished = true
                     fgService.onFinished(this)
                 }
             }
