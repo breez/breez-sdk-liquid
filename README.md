@@ -2,7 +2,7 @@
 
 ## **Overview**
 
-The Breez SDK provides developers with an end-to-end solution for integrating instant, self-custodial bitcoin into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of value transfer.
+The Breez SDK provides developers with an end-to-end solution for integrating non-custodial bitcoin into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of value transfer.
 
 To provide the best experience for their end-users, developers can choose between the following implementations:
 
@@ -13,7 +13,7 @@ To provide the best experience for their end-users, developers can choose betwee
 
 ## **What is the Breez SDK - Liquid?**
 
-It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating bitcoin, utilizing the Liquid Network & Lightning, with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll be able to:
+It’s a nodeless integration that offers a non-custodial, end-to-end solution for integrating bitcoin, utilizing the Liquid Network & Lightning, with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll be able to:
 
 - **Send payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Pay, Lightning address, BTC address
 - **Receive payments** via various protocols such as: Bolt11, Bolt12, BIP353, LNURL-Withdraw, LNURL-Pay, Lightning address, BTC address
