@@ -303,12 +303,10 @@ impl Persister {
         })
     }
 
-    pub(crate) fn get_tracked_zap(&self, invoice: &str) -> NwcResult<Option<nostr_sdk::Event>> {
+    pub(crate) fn get_tracked_zap_raw(&self, invoice: &str) -> NwcResult<Option<String>> {
         self.set_tracked_zaps_safe(|tracked_zaps| {
-            let tracked_zap = tracked_zaps.get(invoice).cloned();
-            let zap_request =
-                tracked_zap.and_then(|zap| serde_json::from_str(&zap.zap_request).ok());
-            Ok((false, zap_request))
+            let result = tracked_zaps.get(invoice).map(|zap| zap.zap_request.clone());
+            Ok((false, result))
         })
     }
 

@@ -667,7 +667,7 @@ impl NwcService for SdkNwcService {
 
     async fn is_zap(&self, invoice: String) -> NwcResult<bool> {
         let ctx = self.runtime_ctx().await?;
-        Ok(ctx.persister.get_tracked_zap(&invoice)?.is_some())
+        Ok(ctx.persister.get_tracked_zap_raw(&invoice)?.is_some())
     }
 }
 

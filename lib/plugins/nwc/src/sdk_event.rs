@@ -10,7 +10,7 @@ use nostr_sdk::{
         NostrWalletConnectURI, Notification, NotificationResult, NotificationType,
         PaymentNotification, TransactionType,
     },
-    EventBuilder, Keys, Kind, Tag, TagKind, TagStandard, Timestamp,
+    Event, EventBuilder, Keys, Kind, Tag, TagKind, TagStandard, Timestamp,
 };
 
 use crate::{
@@ -134,7 +134,12 @@ impl SdkEventListener {
             return;
         };
 
-        let Ok(Some(zap_request)) = self.ctx.persister.get_tracked_zap(invoice) else {
+        let Ok(Some(zap_request_raw)) = self.ctx.persister.get_tracked_zap_raw(invoice) else {
+            return;
+        };
+
+        let Ok(zap_request) = serde_json::from_str::<'_, Event>(&zap_request_raw) else {
+            warn!("Could not deserialize zap request for invoice {invoice}. Aborting receipt.");
             return;
         };
 
@@ -176,12 +181,8 @@ impl SdkEventListener {
 
         // Insert bolt11 tag
         eb = eb.tag(TagStandard::Bolt11(invoice.bolt11.clone()).into());
-        // Insert description tag
-        let Ok(zap_request_json) = serde_json::to_string(&zap_request) else {
-            warn!("Could not encode zap request in JSON");
-            return;
-        };
-        eb = eb.tag(TagStandard::Description(zap_request_json).into());
+        // Insert description tag with the original zap request JSON (not re-serialized)
+        eb = eb.tag(TagStandard::Description(zap_request_raw).into());
         // Insert preimage tag
         if let Some(preimage) = preimage {
             eb = eb.tag(Tag::from_standardized(TagStandard::Preimage(
@@ -189,7 +190,19 @@ impl SdkEventListener {
             )));
         }
 
+        // Find relays if specified
+        let relays = zap_request
+            .tags
+            .find(TagKind::Relays)
+            .map(|relays| relays.as_slice()[1..].to_vec());
+        if let Some(relays) = relays {
+            for relay_url in relays {
+                let _ = self.ctx.client.add_relay(relay_url).await;
+            }
+        }
+
         // Send event
+        self.ctx.client.connect().await;
         if let Err(err) = self.ctx.send_event(eb).await {
             warn!("Could not broadcast zap receipt: {err}");
             return;
