@@ -103,5 +103,5 @@ Contributions are always welcome. Please read our [contribution guide](CONTRIBUT
 - [x]  Bolt12 receive
 - [x]  Add fees via a dedicated portal
 - [x]  USDT <-> LBTC swaps
+- [x]  NWC
 - [ ]  WebLN
-- [ ]  NWC
