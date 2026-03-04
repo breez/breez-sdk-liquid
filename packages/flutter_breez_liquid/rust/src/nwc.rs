@@ -107,6 +107,9 @@ pub mod event {
         GetInfo,
         ConnectionExpired,
         ConnectionRefreshed,
+        ZapReceived {
+            invoice: String,
+        },
     }
 
     #[frb(mirror(NwcEvent))]
@@ -190,6 +193,14 @@ impl BreezNwcService {
 
     pub async fn get_info(&self) -> Option<NostrServiceInfo> {
         self.service.get_info().await
+    }
+
+    pub async fn track_zap(&self, invoice: String, zap_request: String) -> Result<(), NwcError> {
+        self.service.track_zap(invoice, zap_request).await
+    }
+
+    pub async fn is_zap(&self, invoice: String) -> Result<bool, NwcError> {
+        self.service.is_zap(invoice).await
     }
 }
 

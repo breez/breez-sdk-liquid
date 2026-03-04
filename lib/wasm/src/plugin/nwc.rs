@@ -85,6 +85,9 @@ mod model {
         GetInfo,
         ConnectionExpired,
         ConnectionRefreshed,
+        ZapReceived {
+            invoice: String,
+        },
     }
 
     #[sdk_macros::extern_wasm_bindgen(breez_sdk_liquid_nwc::event::NwcEvent)]
@@ -224,6 +227,19 @@ impl BindingNwcService {
     #[wasm_bindgen(js_name = "getInfo")]
     pub async fn get_info(&self) -> Option<model::NostrServiceInfo> {
         self.service.get_info().await.map(Into::into)
+    }
+
+    #[wasm_bindgen(js_name = "trackZap")]
+    pub async fn track_zap(&self, invoice: String, zap_request: String) -> WasmResult<()> {
+        self.service
+            .track_zap(invoice, zap_request)
+            .await
+            .map_err(Into::into)
+    }
+
+    #[wasm_bindgen(js_name = "isZap")]
+    pub async fn is_zap(&self, invoice: String) -> WasmResult<bool> {
+        self.service.is_zap(invoice).await.map_err(Into::into)
     }
 
     #[wasm_bindgen(js_name = "stop")]

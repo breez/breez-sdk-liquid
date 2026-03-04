@@ -178,3 +178,9 @@ pub struct NostrServiceInfo {
     pub wallet_pubkey: String,
     pub connected_relays: Vec<String>,
 }
+
+#[derive(Clone, Serialize, Deserialize)]
+pub(crate) struct TrackedZap {
+    pub zap_request: String,
+    pub expires_at: u32,
+}

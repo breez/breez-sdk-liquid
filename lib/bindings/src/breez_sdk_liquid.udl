@@ -340,6 +340,7 @@ interface NwcEventDetails {
     GetInfo();
     ConnectionExpired();
     ConnectionRefreshed();
+    ZapReceived(string invoice);
 };
 
 dictionary NwcEvent {
@@ -428,6 +429,12 @@ interface BindingNwcService {
   void remove_event_listener(string listener_id);
 
   NostrServiceInfo? get_info();
+  
+  [Throws=NwcError]
+  void track_zap(string invoice, string zap_request);
+
+  [Throws=NwcError]
+  boolean is_zap(string invoice);
   
   void stop();
 };

@@ -6,6 +6,7 @@ struct LnurlInvoiceRequest: Codable {
     let comment: String?
     let reply_url: String
     let verify_url: String?
+    let nostr: String?
 }
 
 // Serialize the response according to:
@@ -66,6 +67,20 @@ class LnurlPayInvoiceTask : LnurlPayTask {
 
             logger.log(tag: TAG, line: "Creating invoice", level: "INFO")
             let receivePaymentRes = try liquidSDK.receivePayment(req: ReceivePaymentRequest(prepareResponse: prepareReceivePaymentRes, description: metadata, descriptionHash: DescriptionHash.useDescription, payerNote: request!.comment))
+
+            // Add zap tracking if necessary
+            if let zapRequest = request!.nostr {
+                do {
+                    if let nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs) {
+                        logger.log(tag: TAG, line: "Tracking zap for invoice: \(receivePaymentRes.destination)", level: "INFO")
+                        try nwcService.trackZap(invoice: receivePaymentRes.destination, zapRequest: zapRequest)
+                    }
+                }
+                catch let e {
+                    logger.log(tag: TAG, line: "Failed to track zap: \(e)", level: "WARN")
+                }
+            }
+
             // Add the verify URL
             var verify: String?
             if let verifyUrl = request!.verify_url {
