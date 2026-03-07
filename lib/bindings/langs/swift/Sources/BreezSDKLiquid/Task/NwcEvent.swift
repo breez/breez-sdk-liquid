@@ -2,7 +2,11 @@ import UserNotifications
 import Foundation
 
 struct NwcEventNotification: Codable {
-    let event_id: String
+    let event: String
+}
+
+struct PartialNostrEvent: Codable {
+    let id: String
 }
 
 class NwcEventTask: TaskProtocol, NwcEventListener {
@@ -28,8 +32,9 @@ class NwcEventTask: TaskProtocol, NwcEventListener {
         _ = nwcService.addEventListener(listener: self)
         do {
             let request = try JSONDecoder().decode(NwcEventNotification.self, from: payload.data(using: .utf8)!)
-            eventId = request.event_id
-            try nwcService.handleEvent(eventId: request.event_id)
+            let partialEvent = try JSONDecoder().decode(PartialNostrEvent.self, from: request.event.data(using: .utf8)!)
+            eventId = partialEvent.id
+            try nwcService.handleEvent(rawEvent: request.event)
         } catch let e {
             logger.log(tag: TAG, line: "Failed to process NWC event: \(e)", level: "ERROR")
             onShutdown()

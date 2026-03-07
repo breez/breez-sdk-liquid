@@ -23,7 +23,12 @@ import breez_sdk_liquid_notification.PluginManager
 
 @Serializable
 data class NwcEventNotification(
-        @SerialName("event_id") val eventId: String,
+        @SerialName("event") val event: String,
+)
+
+@Serializable
+data class PartialNostrEvent(
+        @SerialName("id") val id: String,
 )
 
 class NwcEventJob(
@@ -43,9 +48,10 @@ class NwcEventJob(
         nwcService.addEventListener(this)
         try {
             val decoder = Json { ignoreUnknownKeys = true }
-            var notification = decoder.decodeFromString(NwcEventNotification.serializer(), payload)
-            eventId = notification.eventId
-            nwcService.handleEvent(notification.eventId)
+            var request = decoder.decodeFromString(NwcEventNotification.serializer(), payload)
+            var partialEvent = decoder.decodeFromString(PartialNostrEvent.serializer(), request.event)
+            eventId = partialEvent.id
+            nwcService.handleEvent(request.event)
         } catch (e: Exception) {
             logger.log(TAG, "Failed to process NWC event: ${e.message}", "WARN")
             notifyChannel(

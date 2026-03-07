@@ -26,8 +26,8 @@ use breez_sdk_liquid::{
 use log::{debug, error, info, warn};
 use nostr_sdk::{
     nips::nip47::{NostrWalletConnectURI, Request, RequestParams, Response, ResponseResult},
-    Client as NostrClient, Event, EventBuilder, EventId, Filter, Keys, Kind, RelayMessage,
-    RelayPoolNotification, RelayUrl, Tag, Timestamp,
+    Client as NostrClient, Event, EventBuilder, Keys, Kind, RelayMessage, RelayPoolNotification,
+    RelayUrl, Tag, Timestamp,
 };
 use tokio::{
     sync::{mpsc, Mutex, OnceCell},
@@ -115,8 +115,8 @@ pub trait NwcService: Send + Sync {
     /// Fetches and handles a Nostr WalletRequest event
     ///
     /// # Arguments
-    /// * `id` - the ID of the Nostr event
-    async fn handle_event(&self, event_id: String) -> NwcResult<()>;
+    /// * `raw_event` - the raw Nostr event
+    async fn handle_event(&self, raw_event: String) -> NwcResult<()>;
 
     /// Adds an event listener to the service, where all [NwcEvent]s will be emitted to.
     /// The event listener can be removed be calling [NwcService::remove_event_listener].
@@ -583,65 +583,11 @@ impl NwcService for SdkNwcService {
         self.event_manager.remove(id).await
     }
 
-    async fn handle_event(&self, event_id: String) -> NwcResult<()> {
+    async fn handle_event(&self, raw_event: String) -> NwcResult<()> {
         let ctx = self.runtime_ctx().await?;
-        let event_id = EventId::from_str(&event_id)?;
         ctx.client.connect().await;
-
-        // Retry fetching the event with exponential backoff
-        // Relays may take time to sync or connection may be slow
-        let mut retry_delay = Duration::from_secs(1);
-        let max_retries = 3;
-        let mut events = None;
-
-        for attempt in 0..max_retries {
-            match ctx
-                .client
-                .fetch_events(
-                    Filter::new().id(event_id),
-                    Duration::from_secs(30), // Increased timeout from 10s to 30s
-                )
-                .await
-            {
-                Ok(fetched) if !fetched.is_empty() => {
-                    events = Some(fetched);
-                    break;
-                }
-                Ok(_) => {
-                    warn!(
-                        "Event {} not found on attempt {}/{}",
-                        event_id,
-                        attempt + 1,
-                        max_retries
-                    );
-                }
-                Err(e) => {
-                    warn!(
-                        "Failed to fetch event {} on attempt {}/{}: {}",
-                        event_id,
-                        attempt + 1,
-                        max_retries,
-                        e
-                    );
-                }
-            }
-
-            if attempt < max_retries - 1 {
-                info!("Retrying event fetch in {:?}", retry_delay);
-                tokio::time::sleep(retry_delay).await;
-                retry_delay *= 2; // Exponential backoff
-            }
-        }
-
-        let Some(event_list) = events else {
-            return Err(NwcError::EventNotFound);
-        };
-
-        let Some(event) = event_list.first() else {
-            return Err(NwcError::EventNotFound);
-        };
-
-        Self::handle_event_inner(&ctx, event).await?;
+        let event = serde_json::from_str(&raw_event)?;
+        Self::handle_event_inner(&ctx, &event).await?;
         Ok(())
     }
 
