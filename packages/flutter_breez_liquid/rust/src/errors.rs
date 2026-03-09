@@ -52,7 +52,6 @@ pub enum _NwcError {
     PubkeyNotFound { pubkey: String },
     InvalidSignature { err: String },
     Encryption { err: String },
-    EventNotFound,
     EventExpired,
     AlreadyReplied,
     InvoiceExpired,

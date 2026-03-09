@@ -26,9 +26,6 @@ pub enum NwcError {
     #[error("Could not encrypt/decrypt event: {err}")]
     Encryption { err: String },
 
-    #[error("Event not found")]
-    EventNotFound,
-
     #[error("Event has expired")]
     EventExpired,
 
@@ -125,7 +122,6 @@ impl From<SdkError> for NwcError {
 impl Into<NIP47Error> for NwcError {
     fn into(self) -> NIP47Error {
         let code = match &self {
-            Self::PubkeyNotFound { .. } | Self::EventNotFound => ErrorCode::NotFound,
             Self::MaxBudgetExceeded => ErrorCode::QuotaExceeded,
             _ => ErrorCode::PaymentFailed,
         };

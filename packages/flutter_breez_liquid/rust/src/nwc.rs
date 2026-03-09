@@ -173,8 +173,8 @@ impl BreezNwcService {
         self.service.list_connections().await
     }
 
-    pub async fn handle_event(&self, event_id: String) -> Result<(), NwcError> {
-        self.service.handle_event(event_id).await
+    pub async fn handle_event(&self, raw_event: String) -> Result<(), NwcError> {
+        self.service.handle_event(raw_event).await
     }
 
     pub async fn list_connection_payments(&self, name: String) -> Result<Vec<Payment>, NwcError> {

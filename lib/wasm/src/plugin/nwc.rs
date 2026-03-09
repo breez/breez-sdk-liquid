@@ -196,9 +196,9 @@ impl BindingNwcService {
     }
 
     #[wasm_bindgen(js_name = "handleEvent")]
-    pub async fn handle_event(&self, event_id: String) -> WasmResult<()> {
+    pub async fn handle_event(&self, raw_event: String) -> WasmResult<()> {
         self.service
-            .handle_event(event_id)
+            .handle_event(raw_event)
             .await
             .map_err(Into::into)
     }

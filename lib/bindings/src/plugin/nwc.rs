@@ -63,8 +63,8 @@ impl BindingNwcService {
         rt().block_on(self.inner.remove_connection(name))
     }
 
-    pub fn handle_event(&self, event_id: String) -> NwcResult<()> {
-        rt().block_on(self.inner.handle_event(event_id))
+    pub fn handle_event(&self, raw_event: String) -> NwcResult<()> {
+        rt().block_on(self.inner.handle_event(raw_event))
     }
 
     pub fn list_connection_payments(&self, name: String) -> NwcResult<Vec<Payment>> {

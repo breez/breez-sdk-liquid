@@ -313,7 +313,6 @@ interface NwcError {
     PubkeyNotFound(string pubkey);
     InvalidSignature(string err);
     Encryption(string err);
-    EventNotFound();
     EventExpired();
     AlreadyReplied();
     InvoiceExpired();
@@ -419,7 +418,7 @@ interface BindingNwcService {
   void remove_connection(string name);
 
   [Throws=NwcError]
-  void handle_event(string event_id);
+  void handle_event(string raw_event);
 
   [Throws=NwcError]
   sequence<Payment> list_connection_payments(string name);
