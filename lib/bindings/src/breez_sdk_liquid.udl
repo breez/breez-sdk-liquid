@@ -313,7 +313,6 @@ interface NwcError {
     PubkeyNotFound(string pubkey);
     InvalidSignature(string err);
     Encryption(string err);
-    EventNotFound();
     EventExpired();
     AlreadyReplied();
     InvoiceExpired();
