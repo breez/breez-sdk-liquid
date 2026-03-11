@@ -29,7 +29,7 @@ class SwapUpdatedTask : TaskProtocol, NwcEventListener {
     }
 
     func start(liquidSDK: BindingLiquidSdk, pluginConfigs: PluginConfigs) throws {
-        self.nwcService = try? PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)
+        self.nwcService = try PluginManager.nwc(liquidSDK: liquidSDK, pluginConfigs: pluginConfigs)
         if let nwcService = nwcService {
             let _ = nwcService.addEventListener(listener: self)
         }
