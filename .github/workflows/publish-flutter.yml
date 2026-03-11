@@ -88,6 +88,7 @@ jobs:
         run: |
           HASH=$(git rev-parse HEAD)
           sed -i.bak -e 's/^breez-sdk-liquid = .*/breez-sdk-liquid = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "'"$HASH"'"}/' Cargo.toml
+          sed -i -e 's/^breez-sdk-liquid-nwc = .*/breez-sdk-liquid-nwc = { git = "https:\/\/github.com\/breez\/breez-sdk-liquid.git", rev = "'"$HASH"'"}/' Cargo.toml
 
       - name: Install flutter_rust_bridge_codegen
         working-directory: build/packages/flutter_breez_liquid
