@@ -19,7 +19,7 @@ type Line = {
 }
 
 class JsEventListener {
-    constructor(private callback: (title: string, text?: string) => void) {}
+    constructor(private callback: (title: string, text?: string) => void) { }
 
     onEvent = (event: SdkEvent) => {
         this.callback('EVENT RECEIVED', JSON.stringify(event))
@@ -46,6 +46,12 @@ function App() {
     const asyncFn = async () => {
         let listenerId = null
         let bolt11Invoice = null
+
+        // Guard against React StrictMode double-invocation in development.
+        // The SDK connect() opens IndexedDB; a second concurrent call causes
+        // crashes in the underlying wasm-bindgen FinalizationRegistry cleanup.
+        if ((window as any).__breezSdkConnecting) return
+            ; (window as any).__breezSdkConnecting = true
 
         try {
             // Initialize the Wasm module
@@ -77,10 +83,15 @@ function App() {
             listenerId = await sdk.addEventListener(eventListener)
             addLine('addEventListener', listenerId)
 
+            // NWC
+            let nwcService = await sdk.useNwcPlugin({ listenToEvents: true })
+            let connections = await nwcService.listConnections()
+            addLine("NWC Connections", JSON.stringify(connections))
+
             /* Receive lightning payment */
             let prepareReceiveRes = await sdk.prepareReceivePayment({
                 amount: { type: 'bitcoin', payerAmountSat: 1000 },
-                paymentMethod: 'lightning'
+                paymentMethod: 'bolt11Invoice'
             })
             addLine('prepareReceivePayment', JSON.stringify(prepareReceiveRes))
             // Get the fees required for this payment
