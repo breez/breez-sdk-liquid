@@ -85,8 +85,12 @@ function App() {
 
             // NWC
             let nwcService = await sdk.useNwcPlugin({ listenToEvents: true })
+            await nwcService.addConnection({
+                name: listenerId, // use a random UUID
+            })
             let connections = await nwcService.listConnections()
-            addLine("NWC Connections", JSON.stringify(connections))
+            Object.entries(connections).forEach(([name, conn]) => addLine(name, JSON.stringify(conn, null, 2)))
+            addLine('--- NWC CONNECTIONS ---')
 
             /* Receive lightning payment */
             let prepareReceiveRes = await sdk.prepareReceivePayment({
