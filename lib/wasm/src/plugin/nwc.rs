@@ -123,6 +123,9 @@ mod model {
 
         #[wasm_bindgen(structural, method, js_name = onEvent)]
         pub async fn on_event(this: &NwcEventListener, e: NwcEvent);
+
+        #[wasm_bindgen(typescript_type = "Record<string, NwcConnection>")]
+        pub type NwcConnectionRecord;
     }
 }
 pub use model::*;
@@ -173,18 +176,20 @@ impl BindingNwcService {
     }
 
     #[wasm_bindgen(js_name = "listConnections")]
-    pub async fn list_connections(&self) -> WasmResult<js_sys::Map> {
+    pub async fn list_connections(&self) -> WasmResult<NwcConnectionRecord> {
         let connections = self
             .service
             .list_connections()
             .await
             .map_err(Into::<WasmError>::into)?;
-        let mut result = js_sys::Map::new();
+        let result = js_sys::Object::new();
         for (name, con) in connections.into_iter() {
             let con: NwcConnection = con.into();
-            result = result.set(&JsValue::from_str(&name), &JsValue::from(con));
+            js_sys::Reflect::set(&result, &JsValue::from_str(&name), &JsValue::from(con)).map_err(
+                |e| WasmError::new(format!("Failed to set `listConnections` property: {e:?}")),
+            )?;
         }
-        Ok(result)
+        Ok(result.unchecked_into())
     }
 
     #[wasm_bindgen(js_name = "removeConnection")]

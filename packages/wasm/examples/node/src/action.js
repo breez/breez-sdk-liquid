@@ -398,7 +398,7 @@ const addNwcConnection = async (name, options) => {
 const listNwcConnections = async () => {
     const sdk = await initSdk()
     const { nwc } = await initPlugins(sdk)
-    console.log(JSON.stringify(Object.fromEntries(await nwc.listConnections()), null, 2))
+    console.log(JSON.stringify(await nwc.listConnections(), null, 2))
 }
 
 const removeNwcConnection = async (name) => {
