@@ -1,8 +1,8 @@
-# Breez SDK - Nodeless *(Liquid Implementation)*
+# Breez SDK - Liquid
 
 The Breez SDK provides developers with a end-to-end solution for integrating self-custodial Lightning payments into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of peer-to-peer payments.
 
-## **What Is the Breez SDK - Nodeless *(Liquid Implementation)*?**
+## **What is the Breez SDK - Liquid?**
 
 It’s a nodeless integration that offers a self-custodial, end-to-end solution for integrating Lightning payments, utilizing the Liquid Network with on-chain interoperability and third-party fiat on-ramps. Using the SDK you'll able to:
 
@@ -33,9 +33,9 @@ yarn add @breeztech/breez-sdk-liquid
 ```
 
 ## Usage
-Head over to the [Breez SDK - Nodeless *(Liquid Implementation)* documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
+Head over to the [Breez SDK - Liquid documentation](https://sdk-doc-liquid.breez.technology/) to start implementing Lightning in your app.
 
-You'll need an API key to use the Breez SDK - Nodeless *(Liquid Implementation)*. To request an API key is free — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
+You'll need an API key to use the Breez SDK - Liquid. To request an API key is free — you just need to [complete this simple form.](https://breez.technology/request-api-key/#contact-us-form-sdk)
 
 ### Web
 When developing a browser application you should import `@breeztech/breez-sdk-liquid` (or the explicit `@breeztech/breez-sdk-liquid/web` submodule). 
