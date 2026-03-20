@@ -60,6 +60,12 @@ pub enum BlockchainExplorer {
     },
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum SignerPolicy {
+    Singlesig,
+    Multisig { threshold: u32, xpubs: Vec<String> },
+}
+
 /// Configuration for the Liquid SDK
 #[derive(Clone, Debug, Serialize)]
 pub struct Config {
@@ -538,6 +544,11 @@ pub trait Signer: Send + Sync {
     fn ecies_decrypt(&self, msg: Vec<u8>) -> Result<Vec<u8>, SignerError>;
 }
 
+pub trait PsbtSigner: Send + Sync {
+    fn sign(&self, pset: String) -> Result<(String, u32), SignerError>;
+    fn sign_policy(&self) -> SignerPolicy;
+}
+
 /// An argument when calling [crate::sdk::LiquidSdk::connect].
 /// The resquest takes either a `mnemonic` and `passphrase`, or a `seed`.
 pub struct ConnectRequest {
@@ -943,7 +954,9 @@ impl WalletInfo {
         if asset_id.eq(&utils::lbtc_asset_id(network).to_string()) {
             ensure_sdk!(
                 amount_sat + fees_sat <= self.balance_sat,
-                PaymentError::InsufficientFunds
+                PaymentError::InsufficientFunds {
+                    missing_sats: (amount_sat + fees_sat) - self.balance_sat
+                }
             );
         } else {
             match self
@@ -953,9 +966,15 @@ impl WalletInfo {
             {
                 Some(asset_balance) => ensure_sdk!(
                     amount_sat <= asset_balance.balance_sat && fees_sat <= self.balance_sat,
-                    PaymentError::InsufficientFunds
+                    PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat - asset_balance.balance_sat
+                    }
                 ),
-                None => return Err(PaymentError::InsufficientFunds),
+                None => {
+                    return Err(PaymentError::InsufficientFunds {
+                        missing_sats: amount_sat,
+                    })
+                }
             }
         }
         Ok(())
