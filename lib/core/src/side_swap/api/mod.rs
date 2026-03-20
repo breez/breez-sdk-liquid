@@ -215,8 +215,17 @@ impl SideSwapService {
         anyhow!("Received invalid response from the server: {res:?}")
     }
 
-    fn send_bitcoins(&self, from_asset: AssetId) -> bool {
-        from_asset == utils::lbtc_asset_id(self.config.network)
+    fn swap_info<'a>(
+        &self,
+        from_asset: &'a AssetId,
+        to_asset: &'a AssetId,
+    ) -> Result<(&'a AssetId, bool)> {
+        let lbtc_asset_id = utils::lbtc_asset_id(self.config.network);
+        match (from_asset, to_asset) {
+            (lbtc, _) if lbtc == &lbtc_asset_id => Ok((to_asset, true)),
+            (_, lbtc) if lbtc == &lbtc_asset_id => Ok((from_asset, false)),
+            _ => bail!("This asset combination is not allowed."),
+        }
     }
 
     pub(crate) async fn get_asset_swap(
@@ -225,12 +234,13 @@ impl SideSwapService {
         to_asset: AssetId,
         receiver_amount_sat: u64,
     ) -> Result<AssetSwap> {
+        let (asset, send_bitcoins) = self.swap_info(&from_asset, &to_asset)?;
         let req = Request::SubscribePriceStream(SubscribePriceStreamRequest {
             subscribe_id: None,
-            asset: to_asset,
+            asset: *asset,
             send_amount: None,
             recv_amount: Some(receiver_amount_sat as i64),
-            send_bitcoins: self.send_bitcoins(from_asset),
+            send_bitcoins,
         });
         let request_id = self.request_handler.send(req).await?;
         let res = match self.response_handler.recv(request_id).await? {
@@ -240,7 +250,7 @@ impl SideSwapService {
             }
         };
 
-        AssetSwap::try_from_price_stream_res(from_asset, res)
+        AssetSwap::try_from_price_stream_res(from_asset, to_asset, res)
     }
 
     pub(crate) async fn execute_swap(
@@ -248,12 +258,14 @@ impl SideSwapService {
         receiver_address: Address,
         asset_swap: &AssetSwap,
     ) -> Result<String> {
+        let (asset, send_bitcoins) =
+            self.swap_info(&asset_swap.from_asset, &asset_swap.to_asset)?;
         let req = Request::StartSwapWeb(StartSwapWebRequest {
-            asset: asset_swap.to_asset,
+            asset: *asset,
             price: asset_swap.exchange_rate,
             send_amount: asset_swap.payer_amount_sat as i64,
             recv_amount: asset_swap.receiver_amount_sat as i64,
-            send_bitcoins: self.send_bitcoins(asset_swap.from_asset),
+            send_bitcoins,
         });
         let request_id = self.request_handler.send(req).await?;
         let start_res = match self.response_handler.recv(request_id).await? {
@@ -265,7 +277,7 @@ impl SideSwapService {
 
         let wallet_utxos = self
             .onchain_wallet
-            .asset_utxos(&utils::lbtc_asset_id(self.config.network))
+            .asset_utxos(&asset_swap.from_asset)
             .await?;
 
         ensure_sdk!(
@@ -342,7 +354,7 @@ impl SideSwapService {
             bail!("PSET verification error: Could not find change address script pubkey among outputs");
         };
         let change_amount = (send_value - start_res.send_amount) as u64;
-        let change_asset = utils::lbtc_asset_id(self.config.network);
+        let change_asset = start_res.send_asset;
         ensure_sdk!(
             change_output.amount.is_some_and(|a| a == change_amount) &&
             change_output.asset.is_some_and(|a| a == change_asset),

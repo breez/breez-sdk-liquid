@@ -7,6 +7,8 @@ use sideswap_api::{
     SwapDoneNotification, UnsubscribePriceStreamRequest, UnsubscribePriceStreamResponse,
 };
 
+use crate::{error::PaymentError, model::WalletInfo};
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub(crate) enum RequestId {
@@ -86,6 +88,7 @@ pub(crate) struct AssetSwap {
 impl AssetSwap {
     pub(crate) fn try_from_price_stream_res(
         from_asset: AssetId,
+        to_asset: AssetId,
         res: SubscribePriceStreamResponse,
     ) -> anyhow::Result<Self> {
         if let Some(err) = &res.error_msg {
@@ -96,7 +99,7 @@ impl AssetSwap {
 
         Ok(Self {
             from_asset,
-            to_asset: res.asset,
+            to_asset,
             payer_amount_sat: res
                 .send_amount
                 .context("Expected send amount when creating side swap")?
@@ -112,5 +115,29 @@ impl AssetSwap {
                 .price
                 .context("Expected price when creating side swap")?,
         })
+    }
+
+    pub(crate) fn check_sufficient_balance(
+        &self,
+        wallet_info: &WalletInfo,
+    ) -> Result<(), PaymentError> {
+        let Some(wallet_asset_balance) = wallet_info
+            .asset_balances
+            .iter()
+            .find(|b| b.asset_id.eq(&self.from_asset.to_string()))
+        else {
+            return Err(PaymentError::generic(format!(
+                "No asset balance found for asset {}",
+                self.from_asset
+            )));
+        };
+
+        if wallet_asset_balance.balance_sat < self.payer_amount_sat
+            || wallet_info.balance_sat < self.fees_sat
+        {
+            return Err(PaymentError::InsufficientFunds);
+        }
+
+        Ok(())
     }
 }
