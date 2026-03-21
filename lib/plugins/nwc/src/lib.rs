@@ -1,9 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    str::FromStr as _,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, str::FromStr as _, sync::Arc, time::Duration};
 
 use crate::{
     context::RuntimeContext,
@@ -210,7 +205,6 @@ impl SdkNwcService {
             event_loop_handle: OnceCell::new(),
             sdk_listener_id: Mutex::new(None),
             event_manager: self.event_manager.clone(),
-            replied_event_ids: Mutex::new(HashSet::new()),
         };
         Ok(ctx)
     }
@@ -258,10 +252,6 @@ impl SdkNwcService {
             .ok_or(NwcError::PubkeyNotFound {
                 pubkey: client_pubkey.to_string(),
             })?;
-        if ctx.check_replied_event(event_id.clone()).await {
-            info!("Event {event_id} has already been replied to. Skipping.");
-            return Ok(());
-        }
 
         // Verify the event has not expired
         if event
