@@ -7,7 +7,11 @@ use sideswap_api::{
     SwapDoneNotification, UnsubscribePriceStreamRequest, UnsubscribePriceStreamResponse,
 };
 
-use crate::{error::PaymentError, model::WalletInfo};
+use crate::{
+    error::PaymentError,
+    model::{LiquidNetwork, WalletInfo},
+    utils,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
@@ -139,5 +143,29 @@ impl AssetSwap {
         }
 
         Ok(())
+    }
+}
+
+pub(crate) struct AssetPayloadDetails {
+    pub asset: AssetId,
+    pub send_bitcoins: bool,
+}
+
+impl AssetPayloadDetails {
+    pub(crate) fn try_from_assets(
+        network: LiquidNetwork,
+        from_asset: &AssetId,
+        to_asset: &AssetId,
+    ) -> anyhow::Result<Self> {
+        let lbtc_asset_id = utils::lbtc_asset_id(network);
+        let (asset, send_bitcoins) = match (from_asset, to_asset) {
+            (lbtc, _) if lbtc == &lbtc_asset_id => (to_asset, true),
+            (_, lbtc) if lbtc == &lbtc_asset_id => (from_asset, false),
+            _ => anyhow::bail!("This asset combination is not allowed."),
+        };
+        Ok(Self {
+            asset: *asset,
+            send_bitcoins,
+        })
     }
 }
