@@ -1479,11 +1479,7 @@ impl LiquidSdk {
                                     .get_asset_swap(from_asset, to_asset, receiver_amount_sat)
                                     .await?;
                                 validate_funds = false;
-                                ensure_sdk!(
-                                    get_info_res.wallet_info.balance_sat
-                                        >= swap.payer_amount_sat + swap.fees_sat,
-                                    PaymentError::InsufficientFunds
-                                );
+                                swap.check_sufficient_balance(&get_info_res.wallet_info)?;
                                 exchange_amount_sat = Some(swap.payer_amount_sat - swap.fees_sat);
                                 Ok(swap.fees_sat)
                             }
@@ -2188,11 +2184,7 @@ impl LiquidSdk {
             swap.fees_sat <= fees_sat,
             PaymentError::InvalidOrExpiredFees
         );
-
-        ensure_sdk!(
-            self.get_info().await?.wallet_info.balance_sat >= swap.payer_amount_sat,
-            PaymentError::InsufficientFunds
-        );
+        swap.check_sufficient_balance(&self.get_info().await?.wallet_info)?;
 
         let tx_id = sideswap_service
             .execute_swap(to_address.clone(), &swap)
@@ -2209,7 +2201,7 @@ impl LiquidSdk {
                 unblinding_data: None,
             },
             &[PaymentTxBalance {
-                asset_id: utils::lbtc_asset_id(self.config.network).to_string(),
+                asset_id: swap.from_asset.to_string(),
                 amount: swap.payer_amount_sat,
                 payment_type: PaymentType::Send,
             }],
