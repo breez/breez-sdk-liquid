@@ -10,6 +10,7 @@ pub(crate) struct PaymentTxDetails {
     pub(crate) bip353_address: Option<String>,
     pub(crate) payer_note: Option<String>,
     pub(crate) asset_fees: Option<u64>,
+    pub(crate) settled_at: Option<u32>,
 }
 
 #[derive(Debug, Clone)]

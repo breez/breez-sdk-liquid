@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use boltz_client::boltz::SubmarineClaimTxResponse;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
@@ -152,6 +152,27 @@ impl SendSwapHandler {
                     }
                 }
 
+                Ok(())
+            }
+
+            // Boltz has locked the HTLC
+            SubSwapStates::InvoicePaid => {
+                info!("Received `InvoicePaid` state from Boltz, saving invoice settlement time.");
+                let Some(lockup_tx_id) = swap.lockup_tx_id else {
+                    bail!("Could not save invoice settlement time: no lockup tx id found.");
+                };
+                self.persister
+                    .insert_or_update_payment_details(PaymentTxDetails {
+                        tx_id: lockup_tx_id,
+                        destination: swap.invoice,
+                        settled_at: Some(utils::now()),
+                        ..Default::default()
+                    })
+                    .map_err(|err| {
+                        anyhow!(
+                            "Could not persist invoice settlement time for Send Swap {id}: {err}"
+                        )
+                    })?;
                 Ok(())
             }
 

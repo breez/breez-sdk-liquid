@@ -1962,6 +1962,9 @@ pub enum PaymentDetails {
 
         /// For a Send swap which was refunded, this is the refund amount
         refund_tx_amount_sat: Option<u64>,
+
+        /// The invoice settlement time, if present
+        settled_at: Option<u32>,
     },
     /// Direct onchain payment to a Liquid address
     Liquid {

@@ -732,6 +732,7 @@ pub enum PaymentDetails {
         claim_tx_id: Option<String>,
         refund_tx_id: Option<String>,
         refund_tx_amount_sat: Option<u64>,
+        settled_at: Option<u32>,
     },
     Liquid {
         destination: String,

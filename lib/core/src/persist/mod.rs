@@ -440,9 +440,10 @@ impl Persister {
                     lnurl_info_json,
                     bip353_address,
                     payer_note,
-                    asset_fees
+                    asset_fees,
+                    settled_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT (tx_id)
                 DO UPDATE SET
                     {destination_update}
@@ -450,7 +451,8 @@ impl Persister {
                     lnurl_info_json = COALESCE(excluded.lnurl_info_json, lnurl_info_json),
                     bip353_address = COALESCE(excluded.bip353_address, bip353_address),
                     payer_note = COALESCE(excluded.payer_note, payer_note),
-                    asset_fees = COALESCE(excluded.asset_fees, asset_fees)
+                    asset_fees = COALESCE(excluded.asset_fees, asset_fees),
+                    settled_at = COALESCE(excluded.settled_at, settled_at)
             "
             ),
             (
@@ -464,6 +466,7 @@ impl Persister {
                 &payment_tx_details.bip353_address,
                 &payment_tx_details.payer_note,
                 from_optional_u64_to_row(&payment_tx_details.asset_fees)?,
+                &payment_tx_details.settled_at,
             ),
         )?;
         Ok(())
@@ -492,7 +495,7 @@ impl Persister {
     pub(crate) fn get_payment_details(&self, tx_id: &str) -> Result<Option<PaymentTxDetails>> {
         let con = self.get_connection()?;
         let mut stmt = con.prepare(
-            "SELECT destination, description, lnurl_info_json, bip353_address, payer_note, asset_fees
+            "SELECT destination, description, lnurl_info_json, bip353_address, payer_note, asset_fees, settled_at
             FROM payment_details
             WHERE tx_id = ?",
         )?;
@@ -503,6 +506,7 @@ impl Persister {
             let maybe_bip353_address = row.get(3)?;
             let maybe_payer_note = row.get(4)?;
             let maybe_asset_fees = from_row_to_optional_u64(row, 5)?;
+            let maybe_settled_at = row.get(6)?;
             Ok(PaymentTxDetails {
                 tx_id: tx_id.to_string(),
                 destination,
@@ -512,6 +516,7 @@ impl Persister {
                 bip353_address: maybe_bip353_address,
                 payer_note: maybe_payer_note,
                 asset_fees: maybe_asset_fees,
+                settled_at: maybe_settled_at,
             })
         });
         Ok(res.ok())
@@ -628,6 +633,7 @@ impl Persister {
                 pd.bip353_address,
                 pd.payer_note,
                 pd.asset_fees,
+                pd.settled_at,
                 am.name,
                 am.ticker,
                 am.precision
@@ -759,10 +765,11 @@ impl Persister {
         let maybe_payment_details_bip353_address: Option<String> = row.get(60)?;
         let maybe_payment_details_payer_note: Option<String> = row.get(61)?;
         let maybe_payment_details_asset_fees = from_row_to_optional_u64(row, 62)?;
+        let maybe_payment_details_settled_at = row.get(63)?;
 
-        let maybe_asset_metadata_name: Option<String> = row.get(63)?;
-        let maybe_asset_metadata_ticker: Option<String> = row.get(64)?;
-        let maybe_asset_metadata_precision: Option<u8> = row.get(65)?;
+        let maybe_asset_metadata_name: Option<String> = row.get(64)?;
+        let maybe_asset_metadata_ticker: Option<String> = row.get(65)?;
+        let maybe_asset_metadata_precision: Option<u8> = row.get(66)?;
 
         let bitcoin_address = match maybe_chain_swap_direction {
             Some(Direction::Incoming) => maybe_chain_swap_lockup_address,
@@ -955,6 +962,7 @@ impl Persister {
                 description: maybe_payment_details_description
                     .unwrap_or(description.unwrap_or("Lightning transfer".to_string())),
                 liquid_expiration_blockheight: expiration_blockheight,
+                settled_at: maybe_payment_details_settled_at,
             },
             Some(PaymentSwapData {
                 swap_type: PaymentSwapType::Chain,

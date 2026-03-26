@@ -16,7 +16,7 @@ use crate::chain::liquid::LiquidChainService;
 use crate::error::is_txn_mempool_conflict_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
-use crate::persist::model::PaymentTxBalance;
+use crate::persist::model::{PaymentTxBalance, PaymentTxDetails};
 use crate::prelude::Swap;
 use crate::{ensure_sdk, utils};
 use crate::{
@@ -255,6 +255,24 @@ impl ReceiveSwapHandler {
                         }
                     }
                 }
+                Ok(())
+            }
+
+            RevSwapStates::InvoiceSettled => {
+                info!(
+                    "Received `InvoiceSettled` state from Boltz, saving invoice settlement time."
+                );
+                let Some(claim_tx_id) = receive_swap.claim_tx_id else {
+                    bail!("Could not save invoice settlement time: no claim tx id found.");
+                };
+                self.persister
+                    .insert_or_update_payment_details(PaymentTxDetails {
+                        tx_id: claim_tx_id,
+                        destination: receive_swap.invoice,
+                        settled_at: Some(utils::now()),
+                        ..Default::default()
+                    })
+                    .map_err(|err| anyhow!("Could not persist invoice settlement time for Receive Swap {id}: {err}"))?;
                 Ok(())
             }
 
