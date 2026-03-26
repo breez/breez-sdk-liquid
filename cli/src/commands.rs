@@ -925,21 +925,24 @@ pub(crate) async fn handle_command(
                     max_budget_sat,
                     budget_renewal_mins,
                 } => {
-                    command_result!(
-                        nwc_service
-                            .add_connection(AddConnectionRequest {
-                                name,
-                                receive_only,
-                                expiry_time_mins,
-                                periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
-                                    PeriodicBudgetRequest {
-                                        max_budget_sat,
-                                        renewal_time_mins: budget_renewal_mins,
-                                    }
-                                })
-                            })
-                            .await?
-                    )
+                    let response = nwc_service
+                        .add_connection(AddConnectionRequest {
+                            name,
+                            receive_only,
+                            expiry_time_mins,
+                            periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
+                                PeriodicBudgetRequest {
+                                    max_budget_sat,
+                                    renewal_time_mins: budget_renewal_mins,
+                                }
+                            }),
+                        })
+                        .await?;
+
+                    let mut result = command_result!(&response);
+                    result.push('\n');
+                    result.push_str(&build_qr_text(&response.connection.connection_string));
+                    result
                 }
                 NwcCommand::EditConnection {
                     name,
