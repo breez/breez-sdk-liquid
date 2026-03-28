@@ -305,7 +305,43 @@ impl ReceiveSwapHandler {
             );
             self.persister
                 .insert_or_update_receive_swap(&updated_swap)?;
-            let _ = self.subscription_notifier.send(updated_swap.id);
+            let _ = self.subscription_notifier.send(updated_swap.id.clone());
+        }
+
+        // If the swap is Complete and `settled_at` was never written (e.g. the missed
+        // `InvoiceSettled` event), backfill it now using the confirmed claim tx timestamp
+        // as the best available approximation.
+        if updated_swap.state == Complete {
+            if let Some(ref claim_tx_id) = updated_swap.claim_tx_id {
+                let settled_at = self
+                    .persister
+                    .get_payment_details(claim_tx_id)
+                    .ok()
+                    .flatten()
+                    .and_then(|d| d.settled_at);
+                if settled_at.is_none() {
+                    let settled_at = self
+                        .persister
+                        .get_payment_tx_timestamp(claim_tx_id)
+                        .ok()
+                        .flatten()
+                        .or_else(|| Some(utils::now()));
+                    if let Err(e) =
+                        self.persister
+                            .insert_or_update_payment_details(PaymentTxDetails {
+                                tx_id: claim_tx_id.clone(),
+                                destination: updated_swap.invoice.clone(),
+                                settled_at,
+                                ..Default::default()
+                            })
+                    {
+                        error!(
+                            "Failed to backfill `settled_at` for Receive Swap {}: {e}",
+                            updated_swap.id
+                        );
+                    }
+                }
+            }
         }
         Ok(())
     }

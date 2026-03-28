@@ -413,6 +413,16 @@ impl Persister {
         Ok(())
     }
 
+    pub(crate) fn get_payment_tx_timestamp(&self, tx_id: &str) -> Result<Option<u32>> {
+        let con = self.get_connection()?;
+        let res = con.query_row(
+            "SELECT timestamp FROM payment_tx_data WHERE tx_id = ?",
+            [tx_id],
+            |row| row.get(0),
+        );
+        Ok(res.ok().flatten())
+    }
+
     pub(crate) fn delete_payment_tx_data(&self, tx_id: &str) -> Result<()> {
         let con = self.get_connection()?;
 
