@@ -1,5 +1,4 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::ops::Not as _;
 use std::sync::Arc;
 use std::{path::PathBuf, str::FromStr, time::Duration};
 
@@ -719,27 +718,34 @@ impl LiquidSdk {
         }
 
         // Update swap handlers
-        if sync_context.is_new_liquid_block {
-            self.chain_swap_handler
-                .on_liquid_block(*current_liquid_block)
-                .await;
-            self.receive_swap_handler
-                .on_liquid_block(*current_liquid_block)
-                .await;
-            self.send_swap_handler
-                .on_liquid_block(*current_liquid_block)
-                .await;
+        self.notify_block_listeners(
+            *current_liquid_block,
+            *current_bitcoin_block,
+            sync_context.is_new_liquid_block,
+            sync_context.is_new_bitcoin_block,
+        )
+        .await;
+    }
+
+    /// Notifies block listeners of new blocks.
+    async fn notify_block_listeners(
+        &self,
+        liquid_tip: u32,
+        bitcoin_tip: u32,
+        is_new_liquid_block: bool,
+        is_new_bitcoin_block: bool,
+    ) {
+        if is_new_liquid_block {
+            self.chain_swap_handler.on_liquid_block(liquid_tip).await;
+            self.receive_swap_handler.on_liquid_block(liquid_tip).await;
+            self.send_swap_handler.on_liquid_block(liquid_tip).await;
         }
-        if sync_context.is_new_bitcoin_block {
-            self.chain_swap_handler
-                .on_bitcoin_block(*current_bitcoin_block)
-                .await;
+        if is_new_bitcoin_block {
+            self.chain_swap_handler.on_bitcoin_block(bitcoin_tip).await;
             self.receive_swap_handler
-                .on_bitcoin_block(*current_liquid_block)
+                .on_bitcoin_block(bitcoin_tip)
                 .await;
-            self.send_swap_handler
-                .on_bitcoin_block(*current_bitcoin_block)
-                .await;
+            self.send_swap_handler.on_bitcoin_block(bitcoin_tip).await;
         }
     }
 
@@ -4410,16 +4416,37 @@ impl LiquidSdk {
             })
             .await?;
 
+        let liquid_tip = sync_context.maybe_liquid_tip.ok_or(SdkError::Generic {
+            err: "Liquid tip not available".to_string(),
+        })?;
+
+        // Persist updated tips
+        self.persister
+            .update_blockchain_info(liquid_tip, sync_context.maybe_bitcoin_tip)
+            .unwrap_or_else(|err| warn!("Could not update local tips: {err:?}"));
+
         self.sync_inner(
             sync_context.recoverable_swaps,
             ChainTips {
-                liquid_tip: sync_context.maybe_liquid_tip.ok_or(SdkError::Generic {
-                    err: "Liquid tip not available".to_string(),
-                })?,
+                liquid_tip,
                 bitcoin_tip: sync_context.maybe_bitcoin_tip,
             },
         )
-        .await
+        .await?;
+
+        // Trigger block handlers for new blocks
+        let bitcoin_tip = sync_context
+            .maybe_bitcoin_tip
+            .unwrap_or(blockchain_info.bitcoin_tip);
+        self.notify_block_listeners(
+            liquid_tip,
+            bitcoin_tip,
+            sync_context.is_new_liquid_block,
+            sync_context.is_new_bitcoin_block,
+        )
+        .await;
+
+        Ok(())
     }
 
     /// Computes the sync context.
@@ -4466,17 +4493,19 @@ impl LiquidSdk {
             )
             .await?;
 
-        // Only fetch the bitcoin tip if there is a new liquid block and
-        // there are chain swaps being monitored
-        let bitcoin_tip = if !is_new_liquid_block {
-            debug!("No new liquid block, skipping bitcoin tip fetch");
-            None
-        } else if recoverable_swaps
+        // Only fetch the bitcoin tip if there are chain swaps being monitored.
+        // For background polling (partial_sync is None), also require a new liquid block
+        // to avoid redundant fetches. For explicit sync calls, always fetch if needed.
+        let is_background_poll = req.partial_sync.is_none();
+        let has_chain_swaps = recoverable_swaps
             .iter()
-            .any(|s| matches!(s, Swap::Chain(_)))
-            .not()
-        {
+            .any(|s| matches!(s, Swap::Chain(_)));
+
+        let bitcoin_tip = if !has_chain_swaps {
             debug!("No chain swaps being monitored, skipping bitcoin tip fetch");
+            None
+        } else if is_background_poll && !is_new_liquid_block {
+            debug!("No new liquid block in background poll, skipping bitcoin tip fetch");
             None
         } else {
             // Get the bitcoin tip
@@ -5969,6 +5998,146 @@ mod tests {
             .await
             .unwrap();
         assert!(create_res.invoice.starts_with("lni"));
+
+        Ok(())
+    }
+
+    /// Background polling skips Bitcoin tip fetch when no new Liquid block,
+    /// even if chain swaps exist.
+    #[sdk_macros::async_test_all]
+    async fn test_get_sync_context_background_poll_skips_btc_without_new_liquid() -> Result<()> {
+        use crate::model::GetSyncContextRequest;
+
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+        let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
+
+        // Set tips: liquid at 100, bitcoin at 50
+        liquid_chain_service.set_tip(100);
+        bitcoin_chain_service.set_tip(50);
+
+        let sdk = new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            None,
+        )
+        .await?;
+
+        // Insert a chain swap so chain swaps are being monitored
+        let chain_swap = new_chain_swap(Direction::Incoming, None, false, None, false, false, None);
+        persister.insert_or_update_chain_swap(&chain_swap)?;
+
+        // Background poll (partial_sync=None) with tips matching current state
+        // Liquid tip unchanged → should skip Bitcoin tip fetch
+        let ctx = sdk
+            .get_sync_context(GetSyncContextRequest {
+                partial_sync: None,
+                last_liquid_tip: 100,
+                last_bitcoin_tip: 50,
+            })
+            .await?;
+
+        // No new liquid block, so bitcoin tip should not be fetched
+        assert!(!ctx.is_new_liquid_block);
+        assert!(ctx.maybe_bitcoin_tip.is_none());
+        assert!(!ctx.is_new_bitcoin_block);
+
+        Ok(())
+    }
+
+    /// Explicit sync fetches Bitcoin tip even without a new Liquid block,
+    /// when chain swaps are being monitored.
+    #[sdk_macros::async_test_all]
+    async fn test_get_sync_context_explicit_sync_fetches_btc_without_new_liquid() -> Result<()> {
+        use crate::model::GetSyncContextRequest;
+
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+        let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
+
+        // Set tips: liquid at 100, bitcoin at 55
+        liquid_chain_service.set_tip(100);
+        bitcoin_chain_service.set_tip(55);
+
+        let sdk = new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            None,
+        )
+        .await?;
+
+        // Insert a chain swap so chain swaps are being monitored
+        let chain_swap = new_chain_swap(Direction::Incoming, None, false, None, false, false, None);
+        persister.insert_or_update_chain_swap(&chain_swap)?;
+
+        // Explicit sync (partial_sync=Some(false)) with liquid tip unchanged
+        // Should still fetch bitcoin tip because this is an explicit sync
+        let ctx = sdk
+            .get_sync_context(GetSyncContextRequest {
+                partial_sync: Some(false),
+                last_liquid_tip: 100,
+                last_bitcoin_tip: 50,
+            })
+            .await?;
+
+        // No new liquid block, but bitcoin tip SHOULD be fetched for explicit sync
+        assert!(!ctx.is_new_liquid_block);
+        assert_eq!(ctx.maybe_bitcoin_tip, Some(55));
+        assert!(ctx.is_new_bitcoin_block);
+
+        Ok(())
+    }
+
+    /// Bitcoin tip fetch is skipped when no chain swaps are being monitored.
+    #[sdk_macros::async_test_all]
+    async fn test_get_sync_context_no_chain_swaps_skips_btc() -> Result<()> {
+        use crate::model::GetSyncContextRequest;
+
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::default());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+        let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
+
+        // Set tips: liquid at 100, bitcoin at 50
+        liquid_chain_service.set_tip(100);
+        bitcoin_chain_service.set_tip(50);
+
+        let sdk = new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service.clone(),
+            bitcoin_chain_service.clone(),
+            None,
+        )
+        .await?;
+
+        // No chain swaps inserted
+
+        // Even explicit sync should skip bitcoin tip when no chain swaps
+        let ctx = sdk
+            .get_sync_context(GetSyncContextRequest {
+                partial_sync: Some(false),
+                last_liquid_tip: 99,
+                last_bitcoin_tip: 0,
+            })
+            .await?;
+
+        // New liquid block detected but no chain swaps → skip bitcoin
+        assert!(ctx.is_new_liquid_block);
+        assert!(ctx.maybe_bitcoin_tip.is_none());
+        assert!(!ctx.is_new_bitcoin_block);
 
         Ok(())
     }

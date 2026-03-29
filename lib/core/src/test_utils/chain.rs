@@ -17,9 +17,18 @@ use crate::{
     utils,
 };
 
-#[derive(Default)]
 pub(crate) struct MockLiquidChainService {
     history: Mutex<Vec<LBtcHistory>>,
+    tip: Mutex<u32>,
+}
+
+impl Default for MockLiquidChainService {
+    fn default() -> Self {
+        Self {
+            history: Mutex::new(vec![]),
+            tip: Mutex::new(0),
+        }
+    }
 }
 
 impl MockLiquidChainService {
@@ -32,6 +41,11 @@ impl MockLiquidChainService {
         self
     }
 
+    pub(crate) fn set_tip(&self, tip: u32) -> &Self {
+        *self.tip.lock().unwrap() = tip;
+        self
+    }
+
     pub(crate) fn get_history(&self) -> Vec<LBtcHistory> {
         self.history.lock().unwrap().clone()
     }
@@ -40,7 +54,7 @@ impl MockLiquidChainService {
 #[sdk_macros::async_trait]
 impl LiquidChainService for MockLiquidChainService {
     async fn tip(&self) -> Result<u32> {
-        Ok(0)
+        Ok(*self.tip.lock().unwrap())
     }
 
     async fn broadcast(&self, tx: &elements::Transaction) -> Result<elements::Txid> {
@@ -103,6 +117,7 @@ pub(crate) struct MockBitcoinChainService {
     history: Mutex<Vec<BtcHistory>>,
     txs: Mutex<Vec<bitcoin::Transaction>>,
     script_balance_sat: Mutex<u64>,
+    tip: Mutex<u32>,
 }
 
 impl MockBitcoinChainService {
@@ -111,7 +126,13 @@ impl MockBitcoinChainService {
             history: Mutex::new(vec![]),
             txs: Mutex::new(vec![]),
             script_balance_sat: Mutex::new(0),
+            tip: Mutex::new(0),
         }
+    }
+
+    pub(crate) fn set_tip(&self, tip: u32) -> &Self {
+        *self.tip.lock().unwrap() = tip;
+        self
     }
 
     pub(crate) fn set_history(&self, history: Vec<BtcHistory>) -> &Self {
@@ -136,7 +157,7 @@ impl MockBitcoinChainService {
 #[sdk_macros::async_trait]
 impl BitcoinChainService for MockBitcoinChainService {
     async fn tip(&self) -> Result<u32> {
-        Ok(0)
+        Ok(*self.tip.lock().unwrap())
     }
 
     async fn broadcast(&self, tx: &bitcoin::Transaction) -> Result<bitcoin::Txid, anyhow::Error> {
