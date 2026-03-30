@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{anyhow, bail, Context as _, Result};
+use anyhow::{anyhow, bail, Result};
 use boltz_client::boltz::SubmarineClaimTxResponse;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
@@ -326,35 +326,12 @@ impl SendSwapHandler {
         // `InvoicePaid` event), backfill it now using the confirmed lockup tx timestamp
         // as the best available approximation.
         if updated_swap.state == Complete {
-            if let Some(ref lockup_tx_id) = updated_swap.lockup_tx_id {
-                let settled_at = self
-                    .persister
-                    .get_payment_details(lockup_tx_id)
-                    .ok()
-                    .flatten()
-                    .and_then(|d| d.settled_at);
-                if settled_at.is_none() {
-                    let settled_at = self
-                        .persister
-                        .get_payment_tx_timestamp(lockup_tx_id)
-                        .map_err(|err| anyhow!("Could not read payment timestamp: {err}"))?
-                        .context("Expected payment timestamp for Send swap {swap_id}, got None")?;
-                    if let Err(e) =
-                        self.persister
-                            .insert_or_update_payment_details(PaymentTxDetails {
-                                tx_id: lockup_tx_id.clone(),
-                                destination: updated_swap.invoice.clone(),
-                                settled_at: Some(settled_at),
-                                ..Default::default()
-                            })
-                    {
-                        return Err(anyhow!(
-                            "Failed to backfill `settled_at` for Send Swap {swap_id}: {e}"
-                        )
-                        .into());
-                    }
-                }
-            }
+            utils::update_invoice_settled_at(
+                &self.persister,
+                swap_id,
+                updated_swap.lockup_tx_id.as_ref(),
+                updated_swap.invoice.clone(),
+            );
         }
 
         Ok(())

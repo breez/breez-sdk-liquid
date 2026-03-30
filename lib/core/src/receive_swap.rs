@@ -313,37 +313,12 @@ impl ReceiveSwapHandler {
         // `InvoiceSettled` event), backfill it now using the confirmed claim tx timestamp
         // as the best available approximation.
         if updated_swap.state == Complete {
-            if let Some(ref claim_tx_id) = updated_swap.claim_tx_id {
-                let settled_at = self
-                    .persister
-                    .get_payment_details(claim_tx_id)
-                    .ok()
-                    .flatten()
-                    .and_then(|d| d.settled_at);
-                if settled_at.is_none() {
-                    let settled_at = self
-                        .persister
-                        .get_payment_tx_timestamp(claim_tx_id)
-                        .map_err(|err| anyhow!("Could not read payment timestamp: {err}"))?
-                        .context(
-                            "Expected payment timestamp for Receive swap {swap_id}, got None",
-                        )?;
-                    if let Err(e) =
-                        self.persister
-                            .insert_or_update_payment_details(PaymentTxDetails {
-                                tx_id: claim_tx_id.clone(),
-                                destination: updated_swap.invoice.clone(),
-                                settled_at: Some(settled_at),
-                                ..Default::default()
-                            })
-                    {
-                        return Err(anyhow!(
-                            "Failed to backfill `settled_at` for Receive Swap {swap_id}: {e}"
-                        )
-                        .into());
-                    }
-                }
-            }
+            utils::update_invoice_settled_at(
+                &self.persister,
+                swap_id,
+                updated_swap.claim_tx_id.as_ref(),
+                updated_swap.invoice.clone(),
+            );
         }
         Ok(())
     }
