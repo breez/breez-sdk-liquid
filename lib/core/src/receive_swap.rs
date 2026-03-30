@@ -297,18 +297,19 @@ impl ReceiveSwapHandler {
 
     // Updates the swap without state transition validation
     pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<(), PaymentError> {
-        let swap = self.fetch_receive_swap_by_id(&updated_swap.id)?;
+        let swap_id = &updated_swap.id;
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
         if updated_swap != swap {
             info!(
-                "Updating Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
-                updated_swap.id, updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
+                "Updating Receive swap {swap_id} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
+                updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
             );
             self.persister
                 .insert_or_update_receive_swap(&updated_swap)?;
-            let _ = self.subscription_notifier.send(updated_swap.id.clone());
+            let _ = self.subscription_notifier.send(swap_id.clone());
         }
 
-        // If the swap is Complete and `settled_at` was never written (e.g. the missed
+        // If the swap is Complete and `settled_at` was never written (e.g. we missed
         // `InvoiceSettled` event), backfill it now using the confirmed claim tx timestamp
         // as the best available approximation.
         if updated_swap.state == Complete {
@@ -323,22 +324,23 @@ impl ReceiveSwapHandler {
                     let settled_at = self
                         .persister
                         .get_payment_tx_timestamp(claim_tx_id)
-                        .ok()
-                        .flatten()
-                        .or_else(|| Some(utils::now()));
+                        .map_err(|err| anyhow!("Could not read payment timestamp: {err}"))?
+                        .context(
+                            "Expected payment timestamp for Receive swap {swap_id}, got None",
+                        )?;
                     if let Err(e) =
                         self.persister
                             .insert_or_update_payment_details(PaymentTxDetails {
                                 tx_id: claim_tx_id.clone(),
                                 destination: updated_swap.invoice.clone(),
-                                settled_at,
+                                settled_at: Some(settled_at),
                                 ..Default::default()
                             })
                     {
-                        error!(
-                            "Failed to backfill `settled_at` for Receive Swap {}: {e}",
-                            updated_swap.id
-                        );
+                        return Err(anyhow!(
+                            "Failed to backfill `settled_at` for Receive Swap {swap_id}: {e}"
+                        )
+                        .into());
                     }
                 }
             }
