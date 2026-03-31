@@ -195,13 +195,10 @@ impl SdkNodeHandle {
     }
 
     /// Mine blocks on both chains and immediately sync the SDK to detect them.
-    /// On WASM, only mines blocks and lets the background poller detect them,
-    /// to avoid version mismatch races in the single-threaded async executor.
     pub async fn mine_and_sync(&self, n_blocks: u64) -> Result<()> {
         utils::mine_blocks(n_blocks)
             .await
             .map_err(|e| anyhow::anyhow!("{e}"))?;
-        #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
         self.sdk.sync(false).await?;
         Ok(())
     }
