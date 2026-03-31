@@ -26,6 +26,10 @@ use crate::{
 
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
+// The grace period for which we accept the `invoice.settled` event from Boltz as the real invoice
+// settlment time. If the event is received after this period, the settlement time will be
+// backfilled to the claim tx confirmation timestamp
+const SETTLED_AT_GRACE_PERIOD: u32 = 120;
 
 pub(crate) struct ReceiveSwapHandler {
     config: Config,
@@ -265,6 +269,10 @@ impl ReceiveSwapHandler {
                 let Some(claim_tx_id) = receive_swap.claim_tx_id else {
                     bail!("Could not save invoice settlement time: no claim tx id found.");
                 };
+                if utils::now().saturating_sub(receive_swap.created_at) > SETTLED_AT_GRACE_PERIOD {
+                    info!("Received `InvoiceSettled` event after grace period for Receive swap {id}: backfilling to claim tx timestamp.");
+                    return Ok(());
+                }
                 self.persister
                     .insert_or_update_payment_details(PaymentTxDetails {
                         tx_id: claim_tx_id,
