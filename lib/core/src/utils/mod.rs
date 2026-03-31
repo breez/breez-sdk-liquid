@@ -5,6 +5,8 @@ use std::time::Duration;
 
 use crate::ensure_sdk;
 use crate::error::{PaymentError, SdkResult};
+use crate::persist::model::PaymentTxDetails;
+use crate::persist::Persister;
 use crate::prelude::LiquidNetwork;
 use anyhow::{anyhow, Result};
 use bip39::rand::{self, RngCore};
@@ -12,6 +14,7 @@ use boltz_client::boltz::SubmarinePair;
 use boltz_client::util::secrets::Preimage;
 use boltz_client::{Keypair, ToHex};
 use lazy_static::lazy_static;
+use log::warn;
 use lwk_wollet::bitcoin::secp256k1::Message;
 use lwk_wollet::elements::encode::deserialize;
 use lwk_wollet::elements::hex::FromHex;
@@ -264,6 +267,43 @@ pub(crate) fn from_row_to_optional_u64(
         Some(val) => Some(u64_from_sql(val, index)?),
         None => None,
     })
+}
+
+pub(crate) fn update_invoice_settled_at(
+    persister: &Persister,
+    swap_id: &str,
+    tx_id: Option<&String>,
+    invoice: String,
+) {
+    if let Some(tx_id) = tx_id {
+        let settled_at = persister
+            .get_payment_details(tx_id)
+            .ok()
+            .flatten()
+            .and_then(|d| d.settled_at);
+        if settled_at.is_none() {
+            let settled_at = match persister.get_payment_tx_timestamp(tx_id) {
+                Ok(Some(settled_at)) => settled_at,
+                Ok(None) => {
+                    warn!("Expected payment timestamp for swap {swap_id}, got None");
+                    return;
+                }
+                Err(err) => {
+                    warn!("Could not read payment timestamp: {err}");
+                    return;
+                }
+            };
+
+            if let Err(err) = persister.insert_or_update_payment_details(PaymentTxDetails {
+                tx_id: tx_id.to_string(),
+                destination: invoice,
+                settled_at: Some(settled_at),
+                ..Default::default()
+            }) {
+                warn!("Failed to backfill `settled_at` for swap {swap_id}: {err}");
+            }
+        }
+    }
 }
 
 #[cfg(test)]

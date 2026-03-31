@@ -262,15 +262,32 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
         let txs: Vec<LookupInvoiceResponse> = payments
             .into_iter()
             .map(|payment| {
-                let (description, preimage, invoice, payment_hash) = match payment.details {
-                    PaymentDetails::Lightning {
-                        description,
-                        preimage,
-                        invoice,
-                        payment_hash,
-                        ..
-                    } => (Some(description), preimage, invoice, payment_hash),
-                    _ => (None, None, None, None),
+                let (description, preimage, invoice, payment_hash, settled_at) =
+                    match payment.details {
+                        PaymentDetails::Lightning {
+                            description,
+                            preimage,
+                            invoice,
+                            payment_hash,
+                            settled_at,
+                            ..
+                        } => (
+                            Some(description),
+                            preimage,
+                            invoice,
+                            payment_hash,
+                            settled_at,
+                        ),
+                        _ => (None, None, None, None, None),
+                    };
+
+                let created_at = Timestamp::from_secs(payment.timestamp as u64);
+                let settled_at = match payment.status {
+                    PaymentState::Complete => settled_at
+                        .map(|t| Timestamp::from_secs(t as u64))
+                        // We fallback to created_at for older payments
+                        .or(Some(created_at)),
+                    _ => None,
                 };
 
                 LookupInvoiceResponse {
@@ -284,10 +301,10 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
                     preimage,
                     amount: payment.amount_sat * 1000,
                     fees_paid: payment.fees_sat * 1000,
-                    created_at: Timestamp::from_secs(payment.timestamp as u64),
+                    created_at,
+                    settled_at,
                     description_hash: None,
                     expires_at: None,
-                    settled_at: None,
                     metadata: None,
                 }
             })

@@ -16,7 +16,7 @@ use crate::chain::liquid::LiquidChainService;
 use crate::error::is_txn_mempool_conflict_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
-use crate::persist::model::PaymentTxBalance;
+use crate::persist::model::{PaymentTxBalance, PaymentTxDetails};
 use crate::prelude::Swap;
 use crate::{ensure_sdk, utils};
 use crate::{
@@ -26,6 +26,10 @@ use crate::{
 
 /// The maximum acceptable amount in satoshi when claiming using zero-conf
 pub const DEFAULT_ZERO_CONF_MAX_SAT: u64 = 1_000_000;
+// The grace period for which we accept the `invoice.settled` event from Boltz as the real invoice
+// settlment time. If the event is received after this period, the settlement time will be
+// backfilled to the claim tx confirmation timestamp
+const SETTLED_AT_GRACE_PERIOD: u32 = 120;
 
 pub(crate) struct ReceiveSwapHandler {
     config: Config,
@@ -258,6 +262,28 @@ impl ReceiveSwapHandler {
                 Ok(())
             }
 
+            RevSwapStates::InvoiceSettled => {
+                info!(
+                    "Received `InvoiceSettled` state from Boltz, saving invoice settlement time."
+                );
+                let Some(claim_tx_id) = receive_swap.claim_tx_id else {
+                    bail!("Could not save invoice settlement time: no claim tx id found.");
+                };
+                if utils::now().saturating_sub(receive_swap.created_at) > SETTLED_AT_GRACE_PERIOD {
+                    info!("Received `InvoiceSettled` event after grace period for Receive swap {id}: backfilling to claim tx timestamp.");
+                    return Ok(());
+                }
+                self.persister
+                    .insert_or_update_payment_details(PaymentTxDetails {
+                        tx_id: claim_tx_id,
+                        destination: receive_swap.invoice,
+                        settled_at: Some(utils::now()),
+                        ..Default::default()
+                    })
+                    .map_err(|err| anyhow!("Could not persist invoice settlement time for Receive Swap {id}: {err}"))?;
+                Ok(())
+            }
+
             _ => {
                 debug!("Unhandled state for Receive Swap {id}: {swap_state:?}");
                 Ok(())
@@ -279,15 +305,28 @@ impl ReceiveSwapHandler {
 
     // Updates the swap without state transition validation
     pub(crate) fn update_swap(&self, updated_swap: ReceiveSwap) -> Result<(), PaymentError> {
-        let swap = self.fetch_receive_swap_by_id(&updated_swap.id)?;
+        let swap_id = &updated_swap.id;
+        let swap = self.fetch_receive_swap_by_id(swap_id)?;
         if updated_swap != swap {
             info!(
-                "Updating Receive swap {} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
-                updated_swap.id, updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
+                "Updating Receive swap {swap_id} to {:?} (claim_tx_id = {:?}, lockup_tx_id = {:?}, mrh_tx_id = {:?})",
+                updated_swap.state, updated_swap.claim_tx_id, updated_swap.lockup_tx_id, updated_swap.mrh_tx_id
             );
             self.persister
                 .insert_or_update_receive_swap(&updated_swap)?;
-            let _ = self.subscription_notifier.send(updated_swap.id);
+            let _ = self.subscription_notifier.send(swap_id.clone());
+        }
+
+        // If the swap is Complete and `settled_at` was never written (e.g. we missed
+        // `InvoiceSettled` event), backfill it now using the confirmed claim tx timestamp
+        // as the best available approximation.
+        if updated_swap.state == Complete {
+            utils::update_invoice_settled_at(
+                &self.persister,
+                swap_id,
+                updated_swap.claim_tx_id.as_ref(),
+                updated_swap.invoice.clone(),
+            );
         }
         Ok(())
     }

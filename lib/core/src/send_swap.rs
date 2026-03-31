@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use boltz_client::boltz::SubmarineClaimTxResponse;
 use boltz_client::swaps::boltz;
 use boltz_client::swaps::{boltz::CreateSubmarineResponse, boltz::SubSwapStates};
@@ -155,6 +155,27 @@ impl SendSwapHandler {
                 Ok(())
             }
 
+            // Boltz has locked the HTLC
+            SubSwapStates::InvoicePaid => {
+                info!("Received `InvoicePaid` state from Boltz, saving invoice settlement time.");
+                let Some(lockup_tx_id) = swap.lockup_tx_id else {
+                    bail!("Could not save invoice settlement time: no lockup tx id found.");
+                };
+                self.persister
+                    .insert_or_update_payment_details(PaymentTxDetails {
+                        tx_id: lockup_tx_id,
+                        destination: swap.invoice,
+                        settled_at: Some(utils::now()),
+                        ..Default::default()
+                    })
+                    .map_err(|err| {
+                        anyhow!(
+                            "Could not persist invoice settlement time for Send Swap {id}: {err}"
+                        )
+                    })?;
+                Ok(())
+            }
+
             // If swap state is unrecoverable, either:
             // 1. Boltz failed to pay
             // 2. The swap has expired (>24h)
@@ -289,19 +310,30 @@ impl SendSwapHandler {
 
     // Updates the swap without state transition validation
     pub(crate) fn update_swap(&self, updated_swap: SendSwap) -> Result<(), PaymentError> {
-        let swap = self.fetch_send_swap_by_id(&updated_swap.id)?;
+        let swap_id = &updated_swap.id;
+        let swap = self.fetch_send_swap_by_id(swap_id)?;
         let lnurl_info_updated = self.update_swap_lnurl_info(&swap, &updated_swap)?;
         if updated_swap != swap || lnurl_info_updated {
             info!(
-                "Updating Send swap {} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
-                updated_swap.id,
-                updated_swap.state,
-                updated_swap.lockup_tx_id,
-                updated_swap.refund_tx_id
+                "Updating Send swap {swap_id} to {:?} (lockup_tx_id = {:?}, refund_tx_id = {:?})",
+                updated_swap.state, updated_swap.lockup_tx_id, updated_swap.refund_tx_id
             );
             self.persister.insert_or_update_send_swap(&updated_swap)?;
-            let _ = self.subscription_notifier.send(updated_swap.id);
+            let _ = self.subscription_notifier.send(swap_id.clone());
         }
+
+        // If the swap is Complete and `settled_at` was never written (e.g. we missed
+        // `InvoicePaid` event), backfill it now using the confirmed lockup tx timestamp
+        // as the best available approximation.
+        if updated_swap.state == Complete {
+            utils::update_invoice_settled_at(
+                &self.persister,
+                swap_id,
+                updated_swap.lockup_tx_id.as_ref(),
+                updated_swap.invoice.clone(),
+            );
+        }
+
         Ok(())
     }
 

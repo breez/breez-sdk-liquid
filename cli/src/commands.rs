@@ -437,29 +437,18 @@ pub(crate) async fn handle_command(
                 .await?;
 
             let mut result = command_result!(&response);
-            result.push('\n');
-
-            if !args.no_qrs {
-                match sdk.parse(&response.destination).await? {
-                    InputType::Bolt11 { invoice } => {
-                        result.push_str(&build_qr_text(&invoice.bolt11))
-                    }
-                    InputType::Bolt12Offer { offer, .. } => {
-                        result.push_str(&build_qr_text(&offer.offer))
-                    }
-                    InputType::LiquidAddress { address } => {
-                        result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                            anyhow!("Could not build BIP21 from address data: {e:?}")
-                        })?))
-                    }
-                    InputType::BitcoinAddress { address } => {
-                        result.push_str(&build_qr_text(&address.to_uri().map_err(|e| {
-                            anyhow!("Could not build BIP21 from address data: {e:?}")
-                        })?))
-                    }
-                    _ => {}
-                }
-            }
+            let qr_text = match sdk.parse(&response.destination).await? {
+                InputType::Bolt11 { invoice } => invoice.bolt11,
+                InputType::Bolt12Offer { offer, .. } => offer.offer,
+                InputType::LiquidAddress { address } => address
+                    .to_uri()
+                    .map_err(|e| anyhow!("Could not build BIP21 from address data: {e:?}"))?,
+                InputType::BitcoinAddress { address } => address
+                    .to_uri()
+                    .map_err(|e| anyhow!("Could not build BIP21 from address data: {e:?}"))?,
+                _ => bail!("Got unsupported return type for `receive-payment` command"),
+            };
+            append_qr(args, &mut result, &qr_text);
             result
         }
         Command::FetchLightningLimits => {
@@ -633,10 +622,7 @@ pub(crate) async fn handle_command(
                 .await?;
 
             let mut result = command_result!(url.clone());
-            if !args.no_qrs {
-                result.push('\n');
-                result.push_str(&build_qr_text(&url));
-            }
+            append_qr(args, &mut result, &url);
             result
         }
         Command::GetInfo => {
@@ -925,21 +911,22 @@ pub(crate) async fn handle_command(
                     max_budget_sat,
                     budget_renewal_mins,
                 } => {
-                    command_result!(
-                        nwc_service
-                            .add_connection(AddConnectionRequest {
-                                name,
-                                receive_only,
-                                expiry_time_mins,
-                                periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
-                                    PeriodicBudgetRequest {
-                                        max_budget_sat,
-                                        renewal_time_mins: budget_renewal_mins,
-                                    }
-                                })
-                            })
-                            .await?
-                    )
+                    let response = nwc_service
+                        .add_connection(AddConnectionRequest {
+                            name,
+                            receive_only,
+                            expiry_time_mins,
+                            periodic_budget_req: max_budget_sat.map(|max_budget_sat| {
+                                PeriodicBudgetRequest {
+                                    max_budget_sat,
+                                    renewal_time_mins: budget_renewal_mins,
+                                }
+                            }),
+                        })
+                        .await?;
+                    let mut result = command_result!(&response);
+                    append_qr(args, &mut result, &response.connection.connection_string);
+                    result
                 }
                 NwcCommand::EditConnection {
                     name,
@@ -979,11 +966,16 @@ pub(crate) async fn handle_command(
     })
 }
 
-fn build_qr_text(text: &str) -> String {
-    QrCode::with_error_correction_level(text, EcLevel::L)
+fn append_qr(args: &Args, res: &mut String, qr_text: &str) {
+    if args.no_qrs {
+        return;
+    }
+    let qr = QrCode::with_error_correction_level(qr_text, EcLevel::L)
         .unwrap()
         .render::<unicode::Dense1x2>()
         .dark_color(unicode::Dense1x2::Light)
         .light_color(unicode::Dense1x2::Dark)
-        .build()
+        .build();
+    res.push('\n');
+    res.push_str(&qr);
 }
