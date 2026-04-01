@@ -244,6 +244,7 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
         });
 
         // Get payments from SDK
+        self.sdk.sync().await?;
         let payments: Vec<Payment> = self
             .sdk
             .list_payments(&ListPaymentsRequest {

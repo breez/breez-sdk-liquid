@@ -73,6 +73,10 @@ impl PluginSdk {
         self.sdk()?.list_payments(req).await
     }
 
+    pub async fn sync(&self) -> Result<(), SdkError> {
+        self.sdk()?.sync(false).await
+    }
+
     pub async fn parse(&self, input: &str) -> Result<InputType, PaymentError> {
         self.sdk()?.parse(input).await
     }
