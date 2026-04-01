@@ -56,6 +56,10 @@ impl PluginSdk {
         rt().block_on(self.plugin_sdk.list_payments(&req))
     }
 
+    pub fn sync(&self) -> Result<(), SdkError> {
+        rt().block_on(self.plugin_sdk.sync())
+    }
+
     pub fn add_event_listener(&self, listener: Box<dyn EventListener>) -> SdkResult<String> {
         let listener: Box<dyn breez_sdk_liquid::prelude::EventListener> =
             Box::new(EventListenerWrapper::new(listener));

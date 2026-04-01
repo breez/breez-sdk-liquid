@@ -55,6 +55,10 @@ impl PluginSdk {
         self.plugin_sdk.list_payments(&req).await
     }
 
+    pub async fn sync(&self) -> Result<(), SdkError> {
+        self.plugin_sdk.sync().await
+    }
+
     pub async fn add_event_listener(
         &self,
         listener: StreamSink<SdkEvent>,

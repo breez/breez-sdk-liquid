@@ -123,6 +123,27 @@ impl PluginSdk {
         Ok(self.plugin_sdk.receive_payment(&req.into()).await?.into())
     }
 
+    #[wasm_bindgen(js_name = "parse")]
+    pub async fn parse(&self, input: String) -> WasmResult<InputType> {
+        Ok(self.plugin_sdk.parse(&input).await?.into())
+    }
+
+    #[wasm_bindgen(js_name = "listPayments")]
+    pub async fn list_payments(&self, req: ListPaymentsRequest) -> WasmResult<Vec<Payment>> {
+        Ok(self
+            .plugin_sdk
+            .list_payments(&req.into())
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect())
+    }
+
+    #[wasm_bindgen(js_name = "sync")]
+    pub async fn sync(&self) -> WasmResult<()> {
+        Ok(self.plugin_sdk.sync().await?)
+    }
+
     #[wasm_bindgen(js_name = "addEventListener")]
     pub async fn add_event_listener(&self, listener: EventListener) -> WasmResult<String> {
         Ok(self
