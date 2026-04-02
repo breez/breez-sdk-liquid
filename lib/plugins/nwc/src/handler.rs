@@ -2,6 +2,7 @@ use std::str::FromStr as _;
 use std::time::Duration;
 
 use anyhow::{anyhow, bail};
+use breez_sdk_liquid::error::PaymentError;
 use breez_sdk_liquid::model::{
     DescriptionHash, EventListener, ListPaymentsRequest, PayAmount, Payment, PaymentDetails,
     PaymentMethod, PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest,
@@ -209,7 +210,11 @@ impl RelayMessageHandler for SdkRelayMessageHandler {
         };
 
         // Send the payment
-        let response = self.sdk.send_payment(&send_req).await?;
+        let response = match self.sdk.send_payment(&send_req).await {
+            Ok(res) => res,
+            Err(PaymentError::PaymentInProgress) => return Err(NwcError::PaymentInProgress),
+            Err(e) => return Err(e.into()),
+        };
         Ok(self.wait_for_preimage(response).await?)
     }
 
