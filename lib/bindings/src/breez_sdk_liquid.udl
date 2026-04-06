@@ -320,6 +320,7 @@ interface NwcError {
     MaxBudgetExceeded();
     ConnectionNotFound();
     ConnectionExists();
+    PaymentInProgress();
 };
 
 dictionary NwcConfig {

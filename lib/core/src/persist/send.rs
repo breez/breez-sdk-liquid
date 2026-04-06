@@ -207,11 +207,13 @@ impl Persister {
         Ok(res.ok())
     }
 
-    pub(crate) fn fetch_send_swap_by_invoice(&self, invoice: &str) -> Result<Option<SendSwap>> {
+    pub(crate) fn fetch_send_swap_by_payment_hash(
+        &self,
+        payment_hash: &str,
+    ) -> Result<Option<SendSwap>> {
         let con: Connection = self.get_connection()?;
-        let query = Self::list_send_swaps_query(vec!["invoice= ?1".to_string()]);
-        let res = con.query_row(&query, [invoice], Self::sql_row_to_send_swap);
-
+        let query = Self::list_send_swaps_query(vec!["payment_hash = ?1".to_string()]);
+        let res = con.query_row(&query, [payment_hash], Self::sql_row_to_send_swap);
         Ok(res.ok())
     }
 
@@ -447,9 +449,9 @@ mod tests {
         storage.insert_or_update_send_swap(&send_swap)?;
         // Fetch swap by id
         assert!(storage.fetch_send_swap_by_id(&send_swap.id).is_ok());
-        // Fetch swap by invoice
+        // Fetch swap by payment hash
         assert!(storage
-            .fetch_send_swap_by_invoice(&send_swap.invoice)
+            .fetch_send_swap_by_payment_hash(&send_swap.payment_hash.unwrap())
             .is_ok());
 
         Ok(())

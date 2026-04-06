@@ -367,6 +367,11 @@ impl SdkNwcService {
         let res = compute_result().await;
         debug!("Got result {res:?} for event {event_id}");
 
+        if let Err(NwcError::PaymentInProgress) = res {
+            debug!("Payment for event {event_id} is already in progress. Skipping.");
+            return Ok(());
+        }
+
         // Notify SDK
         Self::handle_local_notification(ctx, connection_name.to_string(), &res, &event_id).await;
 

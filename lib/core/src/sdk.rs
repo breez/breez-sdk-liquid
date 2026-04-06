@@ -2333,7 +2333,10 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let swap = match self.persister.fetch_send_swap_by_invoice(&invoice)? {
+        let swap = match self
+            .persister
+            .fetch_send_swap_by_payment_hash(&payment_hash)?
+        {
             Some(swap) => match swap.state {
                 Created => swap,
                 TimedOut => {

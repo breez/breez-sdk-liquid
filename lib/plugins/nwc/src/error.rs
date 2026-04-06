@@ -46,6 +46,9 @@ pub enum NwcError {
 
     #[error("Connection already exists")]
     ConnectionExists,
+
+    #[error("Payment is already in progress")]
+    PaymentInProgress,
 }
 
 impl NwcError {
