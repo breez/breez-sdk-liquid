@@ -1,11 +1,8 @@
-use std::time::Duration;
-
 use breez_sdk_liquid::model::{
     PayAmount, PaymentDetails, PaymentMethod, PaymentState, PaymentType, PreparePayOnchainRequest,
     PrepareReceiveRequest, PrepareRefundRequest, ReceiveAmount, RefundRequest, SdkEvent,
 };
 use serial_test::serial;
-use tokio_with_wasm::alias as tokio;
 
 use crate::regtest::{utils, ChainBackend, SdkNodeHandle, TIMEOUT};
 
@@ -63,15 +60,11 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm user lockup
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm user lockup.
+    utils::mine_bitcoin_then_liquid(1).await.unwrap();
 
-    // Wait for swapper to lock up funds
-    tokio::time::sleep(Duration::from_secs(5)).await;
-
-    // Confirm swapper lockup
-    utils::mine_blocks(1).await.unwrap();
-
+    // Wait for the SDK to detect the server lockup and broadcast the
+    // claim tx (emitted as PaymentWaitingConfirmation).
     handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
@@ -86,8 +79,8 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     );
     assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
 
-    // Confirm claim tx
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm claim tx.
+    utils::mine_bitcoin_then_liquid(1).await.unwrap();
 
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
@@ -130,16 +123,11 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let fees_sat = prepare_response.total_fees_sat;
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
-    // Confirm user lockup
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm user lockup.
+    utils::mine_bitcoin_then_liquid(1).await.unwrap();
 
-    // Wait for swapper to lock up funds
-    tokio::time::sleep(Duration::from_secs(5)).await;
-
-    // Confirm swapper lockup
-    utils::mine_blocks(1).await.unwrap();
-
-    // Wait for sdk to broadcast claim tx
+    // Wait for the SDK to detect the server lockup and broadcast the
+    // claim tx (emitted as PaymentWaitingConfirmation).
     handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
@@ -148,8 +136,8 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm claim tx
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm claim tx.
+    utils::mine_bitcoin_then_liquid(1).await.unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
@@ -271,7 +259,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         &refund_rbf_response.refund_tx_id
     );
 
-    utils::mine_blocks(1).await.unwrap();
+    utils::mine_bitcoin_then_liquid(1).await.unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
