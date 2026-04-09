@@ -735,7 +735,7 @@ impl LiquidSdk {
                 .on_bitcoin_block(*current_bitcoin_block)
                 .await;
             self.receive_swap_handler
-                .on_bitcoin_block(*current_liquid_block)
+                .on_bitcoin_block(*current_bitcoin_block)
                 .await;
             self.send_swap_handler
                 .on_bitcoin_block(*current_bitcoin_block)
