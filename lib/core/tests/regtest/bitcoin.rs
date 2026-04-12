@@ -34,8 +34,19 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // --------------RECEIVE--------------
+    // -------------- RECEIVE (non-zero-conf) --------------
+    // Incoming chain swap: BTC user-lockup → L-BTC server-lockup → SDK claims L-BTC.
+    // This tests the non-zero-conf path: Boltz requires a confirmed BTC
+    // lockup before broadcasting the L-BTC server-lockup, and the SDK
+    // requires a confirmed server-lockup before claiming.
+    let onchain_limits = handle.sdk.fetch_onchain_limits().await.unwrap();
     let payer_amount_sat = 100_000;
+    assert!(
+        payer_amount_sat > onchain_limits.receive.max_zero_conf_sat,
+        "RECEIVE test assumes non-zero-conf: payer_amount_sat ({payer_amount_sat}) \
+         must exceed receive max_zero_conf_sat ({})",
+        onchain_limits.receive.max_zero_conf_sat
+    );
 
     let (prepare_response, receive_response) = handle
         .receive_payment(&PrepareReceiveRequest {
@@ -60,12 +71,24 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm user lockup.
-    utils::mine_bitcoin_then_liquid(1).await.unwrap();
+    // Confirm the BTC user-lockup first.  Boltz requires at least one
+    // confirmation before broadcasting the L-BTC server-lockup in regtest
+    // (BTC maxZeroConfAmount = 0).
+    utils::mine_and_index_blocks(1, utils::Chain::Bitcoin, true)
+        .await
+        .unwrap();
+
+    // Ensure the Boltz server-lockup is in the Liquid mempool before
+    // mining, so that it gets included and confirmed in this block.
+    utils::wait_for_liquid_mempool_tx(TIMEOUT).await.unwrap();
+
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, true)
+        .await
+        .unwrap();
 
     // Wait for the SDK to detect the server lockup and broadcast the
     // claim tx (emitted as PaymentWaitingConfirmation).
-    handle
+    let waiting_event = handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
@@ -78,6 +101,19 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         receiver_amount_sat
     );
     assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
+
+    // Extract the claim_tx_id from the event and wait for it to reach
+    // elementsd's mempool before mining the confirming block.
+    let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {
+        panic!("Expected PaymentWaitingConfirmation, got {waiting_event:?}");
+    };
+    let PaymentDetails::Bitcoin { claim_tx_id, .. } = &details.details else {
+        panic!("Expected PaymentDetails::Bitcoin, got {:?}", details.details);
+    };
+    let claim_tx_id = claim_tx_id.as_ref().expect("claim_tx_id should be set in PaymentWaitingConfirmation");
+    utils::wait_for_tx_in_liquid_mempool(claim_tx_id, TIMEOUT)
+        .await
+        .unwrap();
 
     // Confirm claim tx.
     utils::mine_bitcoin_then_liquid(1).await.unwrap();
@@ -101,11 +137,22 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
 
-    // --------------SEND--------------
+    // -------------- SEND (zero-conf) --------------
+    // Outgoing chain swap: L-BTC user-lockup → BTC server-lockup → SDK claims BTC.
+    // This tests the zero-conf path: the send amount is within the Boltz
+    // zero-conf threshold, so the SDK accepts the BTC server-lockup from
+    // mempool and claims without waiting for a BTC confirmation.
+    // TODO: add a non-zero-conf SEND test with amount > send.max_zero_conf_sat
 
     let initial_balance_sat = handle.get_balance_sat().await.unwrap();
     let address = utils::generate_address_bitcoind().await.unwrap();
     let receiver_amount_sat = 50_000;
+    assert!(
+        receiver_amount_sat <= onchain_limits.send.max_zero_conf_sat,
+        "SEND test assumes zero-conf: receiver_amount_sat ({receiver_amount_sat}) \
+         must not exceed send max_zero_conf_sat ({})",
+        onchain_limits.send.max_zero_conf_sat
+    );
 
     let (prepare_response, _) = handle
         .send_onchain_payment(
@@ -123,16 +170,35 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let fees_sat = prepare_response.total_fees_sat;
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
-    // Confirm user lockup.
-    utils::mine_bitcoin_then_liquid(1).await.unwrap();
+    // Ensure the L-BTC user-lockup is in the Liquid mempool before mining.
+    utils::wait_for_liquid_mempool_tx(TIMEOUT).await.unwrap();
 
-    // Wait for the SDK to detect the server lockup and broadcast the
-    // claim tx (emitted as PaymentWaitingConfirmation).
-    handle
+    // Confirm the L-BTC user-lockup on Liquid.
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, true)
+        .await
+        .unwrap();
+
+    // Wait for Boltz to broadcast the BTC server-lockup.
+    utils::wait_for_bitcoin_mempool_tx(TIMEOUT).await.unwrap();
+
+    // Zero-conf: SDK claims from mempool without a BTC confirmation.
+    let waiting_event = handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
             TIMEOUT,
         )
+        .await
+        .unwrap();
+
+    // Ensure the BTC claim tx is in bitcoind's mempool before mining.
+    let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {
+        panic!("Expected PaymentWaitingConfirmation, got {waiting_event:?}");
+    };
+    let PaymentDetails::Bitcoin { claim_tx_id, .. } = &details.details else {
+        panic!("Expected PaymentDetails::Bitcoin, got {:?}", details.details);
+    };
+    let claim_tx_id = claim_tx_id.as_ref().expect("claim_tx_id should be set in PaymentWaitingConfirmation");
+    utils::wait_for_tx_in_bitcoin_mempool(claim_tx_id, TIMEOUT)
         .await
         .unwrap();
 

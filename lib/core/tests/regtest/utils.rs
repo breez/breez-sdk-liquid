@@ -225,6 +225,124 @@ async fn get_daemon_blockcount(url: &str, cookie: &str) -> Result<u64, Box<dyn E
         .ok_or_else(|| "getblockcount did not return a number".into())
 }
 
+/// Poll elementsd's `getrawmempool` until it contains at least one
+/// transaction.  Returns the txid of the first entry found.
+/// Times out with an error if the mempool stays empty.
+pub async fn wait_for_liquid_mempool_tx(timeout: Duration) -> Result<String, Box<dyn Error>> {
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        let result =
+            json_rpc_request(ELEMENTSD_URL, ELEMENTSD_COOKIE, "getrawmempool", json!([])).await?;
+        if let Some(arr) = result.as_array() {
+            if let Some(first) = arr.first() {
+                if let Some(txid) = first.as_str() {
+                    return Ok(txid.to_string());
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Liquid mempool did not contain any transaction within {:?}",
+        timeout
+    )
+    .into())
+}
+
+/// Poll elementsd's `getrawmempool` until `txid` appears.
+/// Times out with an error if the transaction is not seen.
+pub async fn wait_for_tx_in_liquid_mempool(
+    txid: &str,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        let result =
+            json_rpc_request(ELEMENTSD_URL, ELEMENTSD_COOKIE, "getrawmempool", json!([])).await?;
+        if let Some(arr) = result.as_array() {
+            if arr.iter().any(|v| v.as_str() == Some(txid)) {
+                return Ok(());
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Transaction {} did not appear in Liquid mempool within {:?}",
+        txid, timeout
+    )
+    .into())
+}
+
+/// Poll bitcoind's `getrawmempool` until it contains at least one
+/// transaction.  Returns the txid of the first entry found.
+/// Times out with an error if the mempool stays empty.
+pub async fn wait_for_bitcoin_mempool_tx(timeout: Duration) -> Result<String, Box<dyn Error>> {
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        let result = json_rpc_request(
+            BITCOIND_URL,
+            BITCOIND_COOKIE.unwrap(),
+            "getrawmempool",
+            json!([]),
+        )
+        .await?;
+        if let Some(arr) = result.as_array() {
+            if let Some(first) = arr.first() {
+                if let Some(txid) = first.as_str() {
+                    return Ok(txid.to_string());
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Bitcoin mempool did not contain any transaction within {:?}",
+        timeout
+    )
+    .into())
+}
+
+/// Poll bitcoind's `getrawmempool` until `txid` appears.
+/// Times out with an error if the transaction is not seen.
+pub async fn wait_for_tx_in_bitcoin_mempool(
+    txid: &str,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        let result = json_rpc_request(
+            BITCOIND_URL,
+            BITCOIND_COOKIE.unwrap(),
+            "getrawmempool",
+            json!([]),
+        )
+        .await?;
+        if let Some(arr) = result.as_array() {
+            if arr.iter().any(|v| v.as_str() == Some(txid)) {
+                return Ok(());
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Transaction {} did not appear in Bitcoin mempool within {:?}",
+        txid, timeout
+    )
+    .into())
+}
+
 /// Poll an esplora HTTP endpoint until the reported tip height is at least
 /// `expected_height`.  Times out after `timeout`.
 async fn wait_for_indexer_tip(
