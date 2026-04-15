@@ -1,4 +1,4 @@
-version '0.12.2' // generated; do not edit
+version '0.12.3-dev1' // generated; do not edit
 group 'com.flutter_rust_bridge.flutter_breez_liquid'
 
 buildscript {

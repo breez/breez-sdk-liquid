@@ -1,6 +1,6 @@
 [package]
 name = "flutter_breez_liquid"
-version = "0.12.2"
+version = "0.12.3-dev1"
 edition = "2021"
 
 [lib]
