@@ -37,6 +37,8 @@ impl EventListener for ForwardingEventListener {
 
 pub struct SdkNodeHandle {
     pub sdk: Arc<LiquidSdk>,
+    pub indexers: utils::Indexers,
+    pub onchain_sync_period_sec: u32,
     receiver: Receiver<SdkEvent>,
 }
 
@@ -63,7 +65,13 @@ impl SdkNodeHandle {
             ChainBackend::Electrum => Config::regtest(),
             ChainBackend::Esplora => Config::regtest_esplora(),
         };
+        let indexers = match backend {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            ChainBackend::Electrum => utils::Indexers::electrum(),
+            ChainBackend::Esplora => utils::Indexers::esplora(),
+        };
         config.working_dir = data_dir.to_str().unwrap().to_string();
+        let onchain_sync_period_sec = config.onchain_sync_period_sec;
 
         #[cfg(all(target_family = "wasm", target_os = "unknown"))]
         let sdk = {
@@ -108,7 +116,12 @@ impl SdkNodeHandle {
         let listener = ForwardingEventListener { sender };
         sdk.add_event_listener(Box::new(listener)).await?;
 
-        Ok(Self { sdk, receiver })
+        Ok(Self {
+            sdk,
+            indexers,
+            onchain_sync_period_sec,
+            receiver,
+        })
     }
 
     pub async fn get_balance_sat(&self) -> Result<u64> {

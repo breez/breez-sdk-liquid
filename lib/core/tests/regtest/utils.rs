@@ -10,24 +10,50 @@ const ELEMENTSD_URL: &str = "http://localhost:18884/wallet/client";
 const LND_URL: &str = "https://localhost:8081";
 
 const PROXY_URL: &str = "http://localhost:51234/proxy";
+const SWAPPROXY_URL: &str = "http://localhost:8387";
 
-/// Esplora HTTP endpoints for checking indexer tip heights.
-/// BTC: esplora container → electrs (same process as Electrum at 19001).
-/// L-BTC: nginx → waterfalls → esplora → electrs-liquid (same process as
-///        Electrum at 19002).
 const BTC_ESPLORA_URL: &str = "http://localhost:4002/api";
 const LBTC_ESPLORA_URL: &str = "http://localhost:3120/api";
+const WATERFALLS_URL: &str = "http://localhost:3102";
 
 const BITCOIND_COOKIE: Option<&str> = option_env!("BITCOIND_COOKIE");
 const ELEMENTSD_COOKIE: &str = "regtest:regtest";
 const LND_MACAROON_HEX: Option<&str> = option_env!("LND_MACAROON_HEX");
 
-/// Which blockchain(s) to mine on.
 #[derive(Clone, Copy)]
 pub enum Chain {
     Bitcoin,
     Liquid,
     Both,
+}
+
+/// Describes which indexing services are present in the test environment
+/// and must be waited on after mining.
+#[derive(Clone, Copy)]
+pub struct Indexers {
+    pub btc_esplora: bool,
+    pub lbtc_esplora: bool,
+    pub waterfalls: bool,
+}
+
+impl Indexers {
+    /// Electrum environment: only esplora/electrs, no waterfalls.
+    pub fn electrum() -> Self {
+        Self {
+            btc_esplora: true,
+            lbtc_esplora: true,
+            waterfalls: false,
+        }
+    }
+
+    /// Esplora environment: esplora/electrs + waterfalls.
+    pub fn esplora() -> Self {
+        Self {
+            btc_esplora: true,
+            lbtc_esplora: true,
+            waterfalls: true,
+        }
+    }
 }
 
 async fn json_rpc_request(
@@ -158,7 +184,7 @@ pub async fn pay_invoice_lnd(invoice: &str) -> Result<(), Box<dyn Error>> {
 }
 
 pub async fn mine_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
-    mine_and_index_blocks(n_blocks, Chain::Both, false).await
+    mine_and_index_blocks(n_blocks, Chain::Both, None).await
 }
 
 /// Mine one block on Bitcoin first, then one on Liquid, waiting for each
@@ -167,57 +193,78 @@ pub async fn mine_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
 /// electrs has already indexed its block, so `on_bitcoin_block` will see
 /// the new tip.  Without this ordering the gating optimisation in
 /// `get_sync_context` (PR #978) can permanently skip the BTC tip fetch.
-pub async fn mine_bitcoin_then_liquid(n_blocks: u64) -> Result<(), Box<dyn Error>> {
-    mine_and_index_blocks(n_blocks, Chain::Bitcoin, true).await?;
-    mine_and_index_blocks(n_blocks, Chain::Liquid, true).await
+pub async fn mine_bitcoin_then_liquid(
+    n_blocks: u64,
+    indexers: &Indexers,
+) -> Result<(), Box<dyn Error>> {
+    mine_and_index_blocks(n_blocks, Chain::Bitcoin, Some(indexers)).await?;
+    mine_and_index_blocks(n_blocks, Chain::Liquid, Some(indexers)).await
 }
 
 pub async fn mine_and_index_blocks(
     n_blocks: u64,
     chain: Chain,
-    wait_for_indexer: bool,
+    indexers: Option<&Indexers>,
 ) -> Result<(), Box<dyn Error>> {
     let mine_bitcoin = matches!(chain, Chain::Bitcoin | Chain::Both);
     let mine_liquid = matches!(chain, Chain::Liquid | Chain::Both);
 
-    if mine_bitcoin {
-        let address = generate_address_bitcoind().await?;
-        json_rpc_request(
-            BITCOIND_URL,
-            BITCOIND_COOKIE.unwrap(),
-            "generatetoaddress",
-            json!([n_blocks, address]),
-        )
-        .await?;
-    }
-
-    if mine_liquid {
-        let address = generate_address_elementsd().await?;
-        json_rpc_request(
-            ELEMENTSD_URL,
-            ELEMENTSD_COOKIE,
-            "generatetoaddress",
-            json!([n_blocks, address]),
-        )
-        .await?;
-    }
-
-    if wait_for_indexer {
-        let timeout = Duration::from_secs(30);
+    for _ in 0..n_blocks {
         if mine_bitcoin {
-            let daemon_height = get_daemon_blockcount(BITCOIND_URL, BITCOIND_COOKIE.unwrap()).await?;
-            wait_for_indexer_tip(BTC_ESPLORA_URL, daemon_height, timeout).await?;
+            let address = generate_address_bitcoind().await?;
+            json_rpc_request(
+                BITCOIND_URL,
+                BITCOIND_COOKIE.unwrap(),
+                "generatetoaddress",
+                json!([1, address]),
+            )
+            .await?;
         }
+
         if mine_liquid {
-            let daemon_height = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
-            wait_for_indexer_tip(LBTC_ESPLORA_URL, daemon_height, timeout).await?;
+            let address = generate_address_elementsd().await?;
+            json_rpc_request(
+                ELEMENTSD_URL,
+                ELEMENTSD_COOKIE,
+                "generatetoaddress",
+                json!([1, address]),
+            )
+            .await?;
+        }
+
+        if let Some(idx) = indexers {
+            wait_for_indexers(chain, idx).await?;
         }
     }
 
     Ok(())
 }
 
-/// Query a daemon's current block height via JSON-RPC `getblockcount`.
+/// Wait for all indexing services listed in `indexers` to catch up with
+/// the daemon tip for the given chain(s).  Each individual wait function
+/// assumes its service is running and will fail loudly if unreachable.
+pub async fn wait_for_indexers(chain: Chain, indexers: &Indexers) -> Result<(), Box<dyn Error>> {
+    let timeout = Duration::from_secs(30);
+    let wait_bitcoin = matches!(chain, Chain::Bitcoin | Chain::Both);
+    let wait_liquid = matches!(chain, Chain::Liquid | Chain::Both);
+
+    if wait_bitcoin && indexers.btc_esplora {
+        let h = get_daemon_blockcount(BITCOIND_URL, BITCOIND_COOKIE.unwrap()).await?;
+        wait_for_indexer_tip(BTC_ESPLORA_URL, h, timeout).await?;
+    }
+    if wait_liquid {
+        if indexers.lbtc_esplora {
+            let h = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
+            wait_for_indexer_tip(LBTC_ESPLORA_URL, h, timeout).await?;
+        }
+        if indexers.waterfalls {
+            let h = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
+            wait_for_waterfalls_tip(h, timeout).await?;
+        }
+    }
+    Ok(())
+}
+
 async fn get_daemon_blockcount(url: &str, cookie: &str) -> Result<u64, Box<dyn Error>> {
     let result = json_rpc_request(url, cookie, "getblockcount", json!([])).await?;
     result
@@ -225,16 +272,32 @@ async fn get_daemon_blockcount(url: &str, cookie: &str) -> Result<u64, Box<dyn E
         .ok_or_else(|| "getblockcount did not return a number".into())
 }
 
-/// Poll elementsd's `getrawmempool` until it contains at least one
-/// transaction.  Returns the txid of the first entry found.
-/// Times out with an error if the mempool stays empty.
-pub async fn wait_for_liquid_mempool_tx(timeout: Duration) -> Result<String, Box<dyn Error>> {
+fn chain_rpc_params(chain: Chain) -> (&'static str, &'static str) {
+    match chain {
+        Chain::Bitcoin => (BITCOIND_URL, BITCOIND_COOKIE.unwrap()),
+        Chain::Liquid => (ELEMENTSD_URL, ELEMENTSD_COOKIE),
+        Chain::Both => panic!("chain_rpc_params requires a single chain, not Both"),
+    }
+}
+
+fn chain_name(chain: Chain) -> &'static str {
+    match chain {
+        Chain::Bitcoin => "Bitcoin",
+        Chain::Liquid => "Liquid",
+        Chain::Both => "Bitcoin+Liquid",
+    }
+}
+
+pub async fn wait_for_mempool_tx(
+    chain: Chain,
+    timeout: Duration,
+) -> Result<String, Box<dyn Error>> {
+    let (url, cookie) = chain_rpc_params(chain);
     let poll_interval = Duration::from_millis(100);
     let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
 
     for _ in 0..iterations {
-        let result =
-            json_rpc_request(ELEMENTSD_URL, ELEMENTSD_COOKIE, "getrawmempool", json!([])).await?;
+        let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
         if let Some(arr) = result.as_array() {
             if let Some(first) = arr.first() {
                 if let Some(txid) = first.as_str() {
@@ -246,24 +309,25 @@ pub async fn wait_for_liquid_mempool_tx(timeout: Duration) -> Result<String, Box
     }
 
     Err(format!(
-        "Liquid mempool did not contain any transaction within {:?}",
+        "{} mempool did not contain any transaction within {:?}",
+        chain_name(chain),
         timeout
     )
     .into())
 }
 
-/// Poll elementsd's `getrawmempool` until `txid` appears.
-/// Times out with an error if the transaction is not seen.
-pub async fn wait_for_tx_in_liquid_mempool(
+/// Poll a daemon's mempool until `txid` appears.
+pub async fn wait_for_tx_in_mempool(
+    chain: Chain,
     txid: &str,
     timeout: Duration,
 ) -> Result<(), Box<dyn Error>> {
+    let (url, cookie) = chain_rpc_params(chain);
     let poll_interval = Duration::from_millis(100);
     let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
 
     for _ in 0..iterations {
-        let result =
-            json_rpc_request(ELEMENTSD_URL, ELEMENTSD_COOKIE, "getrawmempool", json!([])).await?;
+        let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
         if let Some(arr) = result.as_array() {
             if arr.iter().any(|v| v.as_str() == Some(txid)) {
                 return Ok(());
@@ -273,30 +337,72 @@ pub async fn wait_for_tx_in_liquid_mempool(
     }
 
     Err(format!(
-        "Transaction {} did not appear in Liquid mempool within {:?}",
-        txid, timeout
+        "Transaction {} did not appear in {} mempool within {:?}",
+        txid,
+        chain_name(chain),
+        timeout
     )
     .into())
 }
 
-/// Poll bitcoind's `getrawmempool` until it contains at least one
-/// transaction.  Returns the txid of the first entry found.
-/// Times out with an error if the mempool stays empty.
-pub async fn wait_for_bitcoin_mempool_tx(timeout: Duration) -> Result<String, Box<dyn Error>> {
-    let poll_interval = Duration::from_millis(100);
+/// Check whether a single chain's mempool is empty.
+async fn is_mempool_empty(chain: Chain) -> Result<bool, Box<dyn Error>> {
+    let (url, cookie) = chain_rpc_params(chain);
+    let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
+    Ok(result.as_array().map_or(true, |a| a.is_empty()))
+}
+
+/// Check whether both the Bitcoin and Liquid mempools are empty.
+async fn both_mempools_empty() -> Result<bool, Box<dyn Error>> {
+    Ok(is_mempool_empty(Chain::Bitcoin).await? && is_mempool_empty(Chain::Liquid).await?)
+}
+
+/// Mine blocks on both chains until both mempools are empty
+/// Gives up after `max_rounds` mining iterations.
+pub async fn drain_mempools(max_rounds: u32) -> Result<(), Box<dyn Error>> {
+    let settle = Duration::from_millis(1000);
+
+    for _ in 0..max_rounds {
+        mine_and_index_blocks(1, Chain::Both, None).await?;
+
+        if !both_mempools_empty().await? {
+            continue; // more txs than fit in one block, mine again
+        }
+
+        // Quiescence check: wait for deferred broadcasts.
+        tokio::time::sleep(settle).await;
+        if both_mempools_empty().await? {
+            return Ok(());
+        }
+        // Something appeared after the first check — loop and mine again
+    }
+
+    Err(format!("Mempools not empty after {max_rounds} rounds of mining").into())
+}
+
+pub async fn poll_boltz_server_lockup_txid(
+    swap_id: &str,
+    timeout: Duration,
+) -> Result<String, Box<dyn Error>> {
+    let url = format!("{}/v2/swap/chain/{}/transactions", SWAPPROXY_URL, swap_id);
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(200);
     let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
 
     for _ in 0..iterations {
-        let result = json_rpc_request(
-            BITCOIND_URL,
-            BITCOIND_COOKIE.unwrap(),
-            "getrawmempool",
-            json!([]),
-        )
-        .await?;
-        if let Some(arr) = result.as_array() {
-            if let Some(first) = arr.first() {
-                if let Some(txid) = first.as_str() {
+        if let Ok(resp) = client
+            .get(PROXY_URL)
+            .header("X-Proxy-URL", &url)
+            .send()
+            .await
+        {
+            if let Ok(body) = resp.json::<Value>().await {
+                if let Some(txid) = body
+                    .get("serverLock")
+                    .and_then(|sl| sl.get("transaction"))
+                    .and_then(|tx| tx.get("id"))
+                    .and_then(|id| id.as_str())
+                {
                     return Ok(txid.to_string());
                 }
             }
@@ -305,31 +411,24 @@ pub async fn wait_for_bitcoin_mempool_tx(timeout: Duration) -> Result<String, Bo
     }
 
     Err(format!(
-        "Bitcoin mempool did not contain any transaction within {:?}",
-        timeout
+        "Boltz did not broadcast server lockup for chain swap {} within {:?}",
+        swap_id, timeout
     )
     .into())
 }
 
-/// Poll bitcoind's `getrawmempool` until `txid` appears.
-/// Times out with an error if the transaction is not seen.
-pub async fn wait_for_tx_in_bitcoin_mempool(
-    txid: &str,
+async fn wait_for_waterfalls_tip(
+    expected_height: u64,
     timeout: Duration,
 ) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/block-height/{}", WATERFALLS_URL, expected_height);
+    let client = Client::new();
     let poll_interval = Duration::from_millis(100);
     let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
 
     for _ in 0..iterations {
-        let result = json_rpc_request(
-            BITCOIND_URL,
-            BITCOIND_COOKIE.unwrap(),
-            "getrawmempool",
-            json!([]),
-        )
-        .await?;
-        if let Some(arr) = result.as_array() {
-            if arr.iter().any(|v| v.as_str() == Some(txid)) {
+        if let Ok(resp) = client.get(&url).send().await {
+            if resp.status().is_success() {
                 return Ok(());
             }
         }
@@ -337,14 +436,12 @@ pub async fn wait_for_tx_in_bitcoin_mempool(
     }
 
     Err(format!(
-        "Transaction {} did not appear in Bitcoin mempool within {:?}",
-        txid, timeout
+        "Waterfalls did not index Liquid height {} within {:?}",
+        expected_height, timeout
     )
     .into())
 }
 
-/// Poll an esplora HTTP endpoint until the reported tip height is at least
-/// `expected_height`.  Times out after `timeout`.
 async fn wait_for_indexer_tip(
     esplora_url: &str,
     expected_height: u64,
