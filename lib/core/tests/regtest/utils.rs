@@ -288,34 +288,6 @@ fn chain_name(chain: Chain) -> &'static str {
     }
 }
 
-pub async fn wait_for_mempool_tx(
-    chain: Chain,
-    timeout: Duration,
-) -> Result<String, Box<dyn Error>> {
-    let (url, cookie) = chain_rpc_params(chain);
-    let poll_interval = Duration::from_millis(100);
-    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
-
-    for _ in 0..iterations {
-        let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
-        if let Some(arr) = result.as_array() {
-            if let Some(first) = arr.first() {
-                if let Some(txid) = first.as_str() {
-                    return Ok(txid.to_string());
-                }
-            }
-        }
-        tokio::time::sleep(poll_interval).await;
-    }
-
-    Err(format!(
-        "{} mempool did not contain any transaction within {:?}",
-        chain_name(chain),
-        timeout
-    )
-    .into())
-}
-
 /// Poll a daemon's mempool until `txid` appears.
 pub async fn wait_for_tx_in_mempool(
     chain: Chain,
@@ -412,6 +384,60 @@ pub async fn poll_boltz_server_lockup_txid(
 
     Err(format!(
         "Boltz did not broadcast server lockup for chain swap {} within {:?}",
+        swap_id, timeout
+    )
+    .into())
+}
+
+pub async fn poll_boltz_zero_conf_accepted(
+    swap_id: &str,
+    timeout: Duration,
+) -> Result<bool, Box<dyn Error>> {
+    // Duplicate the id so Express always parses `ids` as an array
+    // (a single `?ids=X` is parsed as a string, not a one-element array).
+    let url = format!(
+        "{}/v2/swap/status?ids={}&ids={}",
+        SWAPPROXY_URL, swap_id, swap_id
+    );
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(200);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client
+            .get(PROXY_URL)
+            .header("X-Proxy-URL", &url)
+            .send()
+            .await
+        {
+            if let Ok(body) = resp.json::<Value>().await {
+                if let Some(swap_status) = body.get(swap_id) {
+                    // If `zeroConfRejected` is present, use it directly.
+                    if let Some(rejected) = swap_status
+                        .get("zeroConfRejected")
+                        .and_then(|v| v.as_bool())
+                    {
+                        return Ok(!rejected);
+                    }
+                    // If the swap already advanced past mempool (e.g. confirmed,
+                    // claimed), zero-conf was implicitly accepted — the field is
+                    // only present transiently during `transaction.mempool`.
+                    if let Some(status) = swap_status.get("status").and_then(|v| v.as_str()) {
+                        match status {
+                            "transaction.confirmed" | "transaction.claimed" => {
+                                return Ok(true);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Boltz did not report zeroConfRejected for chain swap {} within {:?}",
         swap_id, timeout
     )
     .into())

@@ -191,12 +191,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     //
     // To stop skipping recovery we need more time for esplora to settle
     // + at least one new liquid block
-    utils::mine_and_index_blocks(1, utils::Chain::Bitcoin, Some(&indexers))
-        .await
-        .unwrap();
-    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
-        .await
-        .unwrap();
+    utils::mine_bitcoin_then_liquid(1, &indexers).await.unwrap();
 
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
@@ -246,13 +241,8 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
          must not exceed send max_zero_conf_sat ({})",
         onchain_limits.send.max_zero_conf_sat
     );
-    assert!(
-        initial_balance_sat >= receiver_amount_sat,
-        "SEND requires sufficient balance: have {initial_balance_sat} sat, \
-         need at least {receiver_amount_sat} sat"
-    );
 
-    let (prepare_response, _) = handle
+    let (prepare_response, send_response) = handle
         .send_onchain_payment(
             &PreparePayOnchainRequest {
                 amount: PayAmount::Bitcoin {
@@ -273,18 +263,46 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
          need {sender_amount_sat} sat (receiver: {receiver_amount_sat} + fees: {fees_sat})"
     );
 
-    // Ensure the L-BTC user-lockup is in the Liquid mempool before mining.
-    utils::wait_for_mempool_tx(utils::Chain::Liquid, TIMEOUT)
+    // SDK should have broadcast L-BTC user-lockup already
+    let PaymentDetails::Bitcoin {
+        swap_id,
+        lockup_tx_id,
+        ..
+    } = &send_response.payment.details
+    else {
+        panic!(
+            "Expected PaymentDetails::Bitcoin, got {:?}",
+            send_response.payment.details
+        );
+    };
+    let user_lockup_txid = lockup_tx_id
+        .as_ref()
+        .expect("lockup_tx_id should be set after pay_onchain returns");
+
+    utils::wait_for_tx_in_mempool(utils::Chain::Liquid, user_lockup_txid, TIMEOUT)
         .await
         .unwrap();
+
+    // Get Boltz's expected lockup txid as early as possible
+    let server_lockup_txid = utils::poll_boltz_server_lockup_txid(swap_id, TIMEOUT)
+        .await
+        .unwrap();
+
+    assert!(
+        utils::poll_boltz_zero_conf_accepted(swap_id, TIMEOUT)
+            .await
+            .unwrap(),
+        "Boltz should accept zero-conf for SEND swap {swap_id} \
+        (receiver_amount_sat = {receiver_amount_sat})"
+    );
 
     // Confirm the L-BTC user-lockup on Liquid.
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
         .unwrap();
 
-    // Wait for Boltz to broadcast the BTC server-lockup.
-    utils::wait_for_mempool_tx(utils::Chain::Bitcoin, TIMEOUT)
+    // Wait for Bolt's BTC server-lockup to appear in bitcoind's mempool.
+    utils::wait_for_tx_in_mempool(utils::Chain::Bitcoin, &server_lockup_txid, TIMEOUT)
         .await
         .unwrap();
 
@@ -314,7 +332,9 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm claim tx.
+    // Confirm lock-up and claim tx (on bitcoin).
+    // Additional liquid block is needed to circumvent gating introduced in #978
+    // (this liquid block could also confirm Boltz's L-BTC claim tx)
     utils::mine_bitcoin_then_liquid(1, &indexers).await.unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
@@ -345,7 +365,18 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
 
-    // ----------------REFUND--------------
+    // Cleanup: flush mempools, (e.g. Boltz's deferred L-BTC claim and
+    // any other pending transactions, so the REFUND section starts
+    // with clean mempools.
+    utils::drain_mempools(10).await.unwrap();
+
+    // ----------------REFUND with RBF--------------
+    // Incoming chain swap with incorrect user lockup amount:
+    // BTC user-lockup → BTC refund.
+    // This tests the cooperative refund path: the refund is
+    // confirmed by both SDK and Boltz (not timeout)
+    // User fee-bump is also tested
+    // TODO: add a non-cooperative test case
 
     let payer_amount_sat = 100_000;
     let lockup_amount_sat = payer_amount_sat - 1;
@@ -361,10 +392,15 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let bip21 = receive_response.destination;
     let address = bip21.split(':').nth(1).unwrap().split('?').next().unwrap();
 
-    utils::send_to_address_bitcoind(&address, lockup_amount_sat)
+    // BTC user-lockup creation. Wrong amount will already be flagged by Boltz in mempool w/o confirmation
+    let user_lockup_txid = utils::send_to_address_bitcoind(&address, lockup_amount_sat)
+        .await
+        .unwrap();
+    utils::wait_for_tx_in_mempool(utils::Chain::Bitcoin, &user_lockup_txid, TIMEOUT)
         .await
         .unwrap();
 
+    // SDK and Boltz should detect the wrong amount BTC user-lockup and start refund process
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentRefundable { .. }), TIMEOUT)
         .await
@@ -378,9 +414,33 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(refundable.swap_address, address);
     assert!(refundable.last_refund_tx_id.is_none());
 
+    // Create refund tx
     let refund_address = utils::generate_address_bitcoind().await.unwrap();
     let refund_fee_rate = 1;
-    let refund_rbf_fee_rate = 2;
+
+    let prepare_refund_response = handle
+        .sdk
+        .prepare_refund(&PrepareRefundRequest {
+            swap_address: address.to_string(),
+            refund_address: refund_address.clone(),
+            fee_rate_sat_per_vbyte: refund_fee_rate,
+        })
+        .await
+        .unwrap();
+    assert!(
+        prepare_refund_response.last_refund_tx_id.is_none(),
+        "No refund tx should exist yet"
+    );
+    // With fee_rate = 1 sat/vB, fee == vsize
+    assert_eq!(
+        prepare_refund_response.tx_fee_sat,
+        prepare_refund_response.tx_vsize as u64
+    );
+    assert!(
+        prepare_refund_response.tx_fee_sat < lockup_amount_sat,
+        "Refund fee ({}) must be less than lockup amount ({lockup_amount_sat})",
+        prepare_refund_response.tx_fee_sat
+    );
 
     let refund_response = handle
         .sdk
@@ -392,6 +452,14 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
+    utils::wait_for_tx_in_mempool(
+        utils::Chain::Bitcoin,
+        &refund_response.refund_tx_id,
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
+
     handle
         .wait_for_event(
             |e| matches!(e, SdkEvent::PaymentRefundPending { .. }),
@@ -400,6 +468,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
+    // User fee-bump
     let refundables = handle.sdk.list_refundables().await.unwrap();
 
     assert_eq!(refundables.len(), 1);
@@ -411,25 +480,23 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         &refund_response.refund_tx_id
     );
 
-    let _prepare_refund_rbf_response = handle
-        .sdk
-        .prepare_refund(&PrepareRefundRequest {
-            swap_address: address.to_string(),
-            refund_address: refund_address.clone(),
-            fee_rate_sat_per_vbyte: refund_rbf_fee_rate,
-        })
-        .await
-        .unwrap();
-
     let refund_rbf_response = handle
         .sdk
         .refund(&RefundRequest {
             swap_address: address.to_string(),
             refund_address,
-            fee_rate_sat_per_vbyte: refund_rbf_fee_rate,
+            fee_rate_sat_per_vbyte: refund_fee_rate * 2,
         })
         .await
         .unwrap();
+
+    utils::wait_for_tx_in_mempool(
+        utils::Chain::Bitcoin,
+        &refund_rbf_response.refund_tx_id,
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     let refundables = handle.sdk.list_refundables().await.unwrap();
 
@@ -442,6 +509,23 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         &refund_rbf_response.refund_tx_id
     );
 
+    // The following fails because the payment's refund_tx_amount_sat is None.
+    // Related issue: https://github.com/breez/breez-sdk-liquid/issues/773
+    // TODO: uncomment once the issue is fixed
+    /*{
+        let payments = handle.get_payments().await.unwrap();
+        let payment = &payments[0];
+        assert!(matches!(
+            payment.details,
+            PaymentDetails::Bitcoin {
+                refund_tx_amount_sat: Some(refund_tx_amount_sat),
+                ..
+            } if refund_tx_amount_sat == lockup_amount_sat - prepare_refund_response.tx_fee_sat * 2
+        ));
+    }*/
+
+    // Confirm the BTC refund tx (on bitcoin).
+    // Additional liquid block is needed to circumvent gating introduced in #978
     utils::mine_bitcoin_then_liquid(1, &indexers).await.unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
@@ -459,19 +543,16 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let refundables = handle.sdk.list_refundables().await.unwrap();
     assert_eq!(refundables.len(), 0);
 
+    // Cleanup: flush mempools
+    utils::drain_mempools(10).await.unwrap();
+
+    // ----------------FINAL ASSERTIONS--------------
+    // Verify the complete payment history across all three sections.
+
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 3);
     let payment = &payments[0];
     assert_eq!(payment.status, PaymentState::Failed);
-    // The following fails because the payment's refund_tx_amount_sat is None. Related issue: https://github.com/breez/breez-sdk-liquid/issues/773
-    // TODO: uncomment once the issue is fixed
-    /*assert!(matches!(
-        payment.details,
-        PaymentDetails::Bitcoin {
-            refund_tx_amount_sat: Some(refund_tx_amount_sat),
-            ..
-        } if refund_tx_amount_sat == lockup_amount_sat - prepare_refund_rbf_response.tx_fee_sat
-    ));*/
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
     handle.sdk.disconnect().await.unwrap();
