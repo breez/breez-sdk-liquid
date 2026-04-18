@@ -6,4 +6,4 @@
 	url = https://github.com/breez/waterfalls.git
 [submodule "regtest/swapproxy-service/swapproxy"]
 	path = regtest/swapproxy-service/swapproxy
-	url = https://github.com/breez/swapproxy.git
+	url = https://github.com/maggo83/swapproxy.git
