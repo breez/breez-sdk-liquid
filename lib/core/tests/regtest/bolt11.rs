@@ -1,10 +1,7 @@
-use std::time::Duration;
-
 use breez_sdk_liquid::model::{
     PaymentDetails, PaymentState, PaymentType, PrepareReceiveRequest, PrepareSendRequest, SdkEvent,
 };
 use serial_test::serial;
-use tokio_with_wasm::alias as tokio;
 
 use crate::regtest::{
     utils::{self},
@@ -39,6 +36,19 @@ async fn bolt11_esplora() {
     bolt11(handle_alice, handle_bob).await;
 }
 
+#[sdk_macros::async_test_not_wasm]
+#[serial]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn bolt11_mixed() {
+    let handle_alice = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    let handle_bob = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bolt11(handle_alice, handle_bob).await;
+}
+
 async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) {
     handle_alice
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
@@ -48,6 +58,14 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
         .unwrap();
+
+    // Merge indexers from both handles: if either node uses an indexer, we must wait for it.
+    let indexers = utils::Indexers {
+        btc_esplora: handle_alice.indexers.btc_esplora || handle_bob.indexers.btc_esplora,
+        btc_electrs: handle_alice.indexers.btc_electrs || handle_bob.indexers.btc_electrs,
+        lbtc_esplora: handle_alice.indexers.lbtc_esplora || handle_bob.indexers.lbtc_esplora,
+        waterfalls: handle_alice.indexers.waterfalls || handle_bob.indexers.waterfalls,
+    };
 
     // -------------------RECEIVE SWAP-------------------
     let payer_amount_sat = 200_000;
@@ -77,7 +95,10 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         receiver_amount_sat
     );
 
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm the server lockup and wait for swap to complete
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
 
     utils::wait_for_event_with_retry(
         &mut handle_alice,
@@ -88,9 +109,11 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
     .await
     .unwrap();
 
-    // TODO: this shouldn't be needed, but without it, sometimes get_balance_sat isn't updated in time
-    // https://github.com/breez/breez-sdk-liquid/issues/828
-    tokio::time::sleep(Duration::from_secs(1)).await;
+    // Workaround for #828: mine an extra Liquid block so that sync() sees a
+    // new tip and takes the full scan path, refreshing the LWK wallet state.
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
     handle_alice.sdk.sync(false).await.unwrap();
 
     assert_eq!(handle_alice.get_pending_receive_sat().await.unwrap(), 0);
@@ -142,7 +165,10 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         initial_balance - payer_amount_sat
     );
 
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm the server lockup and wait for swap to complete
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
 
     utils::wait_for_event_with_retry(
         &mut handle_alice,
@@ -153,9 +179,11 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
     .await
     .unwrap();
 
-    // TODO: this shouldn't be needed, but without it, sometimes get_balance_sat isn't updated in time
-    // https://github.com/breez/breez-sdk-liquid/issues/828
-    tokio::time::sleep(Duration::from_secs(10)).await;
+    // Workaround for #828: mine an extra Liquid block so that sync() sees a
+    // new tip and takes the full scan path, refreshing the LWK wallet state.
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
     handle_alice.sdk.sync(false).await.unwrap();
 
     assert_eq!(handle_alice.get_pending_receive_sat().await.unwrap(), 0);
@@ -206,7 +234,10 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm the liquid tx
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
@@ -226,9 +257,11 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
     .await
     .unwrap();
 
-    // TODO: this shouldn't be needed, but without it, sometimes get_balance_sat isn't updated in time
-    // https://github.com/breez/breez-sdk-liquid/issues/828
-    tokio::time::sleep(Duration::from_secs(10)).await;
+    // Workaround for #828: mine an extra Liquid block so that sync() sees a
+    // new tip and takes the full scan path, refreshing the LWK wallet state.
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
     handle_alice.sdk.sync(false).await.unwrap();
     handle_bob.sdk.sync(false).await.unwrap();
 
