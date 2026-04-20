@@ -230,7 +230,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     // This tests the zero-conf path: the send amount is within the Boltz
     // zero-conf threshold, so the SDK accepts the BTC server-lockup from
     // mempool and claims without waiting for a BTC confirmation.
-    // TODO: add a non-zero-conf SEND test with amount > send.max_zero_conf_sat
 
     let initial_balance_sat = handle.get_balance_sat().await.unwrap();
     let address = utils::generate_address_bitcoind().await.unwrap();
