@@ -116,20 +116,20 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .unwrap();
     handle_alice.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle_alice.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle_alice.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(
-        handle_alice.get_balance_sat().await.unwrap(),
-        receiver_amount_sat
-    );
+    handle_alice
+        .assert_wallet_settled(receiver_amount_sat)
+        .await;
 
     let payments = handle_alice.get_payments().await.unwrap();
     assert_eq!(payments.len(), 1);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, prepare_response.fees_sat);
-    assert_eq!(payment.payment_type, PaymentType::Receive);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        receiver_amount_sat,
+        prepare_response.fees_sat,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     assert!(matches!(payment.details, PaymentDetails::Lightning { .. }));
 
     // -------------------SEND SWAP-------------------
@@ -186,24 +186,25 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .unwrap();
     handle_alice.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle_alice.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle_alice.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(
-        handle_alice.get_balance_sat().await.unwrap(),
-        initial_balance - payer_amount_sat
-    );
+    handle_alice
+        .assert_wallet_settled(initial_balance - payer_amount_sat)
+        .await;
 
     let payments = handle_alice.get_payments().await.unwrap();
     assert_eq!(payments.len(), 2);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, prepare_response.fees_sat.unwrap());
-    assert_eq!(payment.payment_type, PaymentType::Send);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        receiver_amount_sat,
+        prepare_response.fees_sat.unwrap(),
+        PaymentType::Send,
+        PaymentState::Complete,
+    );
     assert!(matches!(payment.details, PaymentDetails::Lightning { .. }));
 
     // -------------------MRH-------------------
     let receiver_amount_sat = 50_000;
+    let alice_balance_before_mrh = handle_alice.get_balance_sat().await.unwrap();
 
     let (_, receive_response) = handle_bob
         .receive_payment(&PrepareReceiveRequest {
@@ -265,23 +266,25 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
     handle_alice.sdk.sync(false).await.unwrap();
     handle_bob.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle_bob.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle_bob.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(
-        handle_bob.get_balance_sat().await.unwrap(),
-        receiver_amount_sat
-    );
+    handle_alice
+        .assert_wallet_settled(
+            alice_balance_before_mrh
+                - receiver_amount_sat
+                - prepare_response_send.fees_sat.unwrap(),
+        )
+        .await;
+    handle_bob.assert_wallet_settled(receiver_amount_sat).await;
 
     let alice_payments = handle_alice.get_payments().await.unwrap();
     assert_eq!(alice_payments.len(), 3);
     let alice_payment = &alice_payments[0];
-    assert_eq!(alice_payment.amount_sat, receiver_amount_sat);
-    assert_eq!(
-        alice_payment.fees_sat,
-        prepare_response_send.fees_sat.unwrap()
+    utils::assert_payment(
+        alice_payment,
+        receiver_amount_sat,
+        prepare_response_send.fees_sat.unwrap(),
+        PaymentType::Send,
+        PaymentState::Complete,
     );
-    assert_eq!(alice_payment.payment_type, PaymentType::Send);
-    assert_eq!(alice_payment.status, PaymentState::Complete);
     assert!(matches!(
         alice_payment.details,
         PaymentDetails::Liquid { .. }
@@ -290,10 +293,13 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
     let bob_payments = handle_bob.get_payments().await.unwrap();
     assert_eq!(bob_payments.len(), 1);
     let bob_payment = &bob_payments[0];
-    assert_eq!(bob_payment.amount_sat, receiver_amount_sat);
-    assert_eq!(bob_payment.fees_sat, 0);
-    assert_eq!(bob_payment.payment_type, PaymentType::Receive);
-    assert_eq!(bob_payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        bob_payment,
+        receiver_amount_sat,
+        0,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     // TODO: figure out why occasionally this fails (details = Liquid)
     // https://github.com/breez/breez-sdk-liquid/issues/829
     /*assert!(matches!(

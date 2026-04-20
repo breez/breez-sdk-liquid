@@ -206,4 +206,11 @@ impl SdkNodeHandle {
         })
         .await?
     }
+
+    /// Assert that no pending funds are in-flight and the confirmed balance matches expectation.
+    pub async fn assert_wallet_settled(&self, expected_balance_sat: u64) {
+        assert_eq!(self.get_pending_receive_sat().await.unwrap(), 0);
+        assert_eq!(self.get_pending_send_sat().await.unwrap(), 0);
+        assert_eq!(self.get_balance_sat().await.unwrap(), expected_balance_sat);
+    }
 }

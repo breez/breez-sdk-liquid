@@ -90,17 +90,18 @@ async fn liquid(mut handle: SdkNodeHandle) {
         .unwrap();
     handle.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(handle.get_balance_sat().await.unwrap(), amount_sat);
+    handle.assert_wallet_settled(amount_sat).await;
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 1);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, amount_sat);
-    assert_eq!(payment.fees_sat, 0);
-    assert_eq!(payment.payment_type, PaymentType::Receive);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        amount_sat,
+        0,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     assert!(matches!(payment.details, PaymentDetails::Liquid { .. }));
 
     // --------------SEND--------------
@@ -153,20 +154,20 @@ async fn liquid(mut handle: SdkNodeHandle) {
         .unwrap();
     handle.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(
-        handle.get_balance_sat().await.unwrap(),
-        initial_balance_sat - sender_amount_sat
-    );
+    handle
+        .assert_wallet_settled(initial_balance_sat - sender_amount_sat)
+        .await;
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 2);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, fees_sat);
-    assert_eq!(payment.payment_type, PaymentType::Send);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        receiver_amount_sat,
+        fees_sat,
+        PaymentType::Send,
+        PaymentState::Complete,
+    );
     assert!(matches!(payment.details, PaymentDetails::Liquid { .. }));
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds

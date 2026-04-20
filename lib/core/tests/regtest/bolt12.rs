@@ -103,6 +103,8 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
+    handle_alice.assert_wallet_settled(amount_sat).await;
+
     // -------------------CREATE BOLT12 OFFER-------------------
     let (_, receive_response) = handle_bob
         .receive_payment(&PrepareReceiveRequest {
@@ -147,28 +149,30 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
     handle_alice.sdk.sync(false).await.unwrap();
+    handle_bob.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle_bob.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle_bob.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(
-        handle_bob.get_balance_sat().await.unwrap(),
-        receiver_amount_sat
-    );
-
-    let alice_payments = handle_alice.get_payments().await.unwrap();
-    assert_eq!(alice_payments.len(), 2);
-    let alice_payment = &alice_payments[0];
     // For BOLT12 MRH payments, prepare_send_payment estimates a submarine swap fee.
     // At send_payment time the SDK detects the MRH and routes via a direct Liquid tx,
     // so the actual fee is lower. Read back from the Liquid Esplora indexer.
     let prepare_fees_sat = prepare_response_send.fees_sat.unwrap();
+    let alice_payments = handle_alice.get_payments().await.unwrap();
+    assert_eq!(alice_payments.len(), 2);
+    let alice_payment = &alice_payments[0];
     let alice_tx_id = alice_payment.tx_id.as_ref().unwrap();
     let actual_fees_sat = utils::get_lbtc_tx_fee_sat(alice_tx_id).await.unwrap();
     assert!(actual_fees_sat <= prepare_fees_sat);
-    assert_eq!(alice_payment.amount_sat, receiver_amount_sat);
-    assert_eq!(alice_payment.fees_sat, actual_fees_sat);
-    assert_eq!(alice_payment.payment_type, PaymentType::Send);
-    assert_eq!(alice_payment.status, PaymentState::Complete);
+
+    handle_alice
+        .assert_wallet_settled(amount_sat - receiver_amount_sat - actual_fees_sat)
+        .await;
+
+    utils::assert_payment(
+        alice_payment,
+        receiver_amount_sat,
+        actual_fees_sat,
+        PaymentType::Send,
+        PaymentState::Complete,
+    );
     assert!(matches!(
         alice_payment.details,
         PaymentDetails::Liquid { .. }
@@ -177,10 +181,15 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
     let bob_payments = handle_bob.get_payments().await.unwrap();
     assert_eq!(bob_payments.len(), 1);
     let bob_payment = &bob_payments[0];
-    assert_eq!(bob_payment.amount_sat, receiver_amount_sat);
-    assert_eq!(bob_payment.fees_sat, 0);
-    assert_eq!(bob_payment.payment_type, PaymentType::Receive);
-    assert_eq!(bob_payment.status, PaymentState::Complete);
+    handle_bob.assert_wallet_settled(receiver_amount_sat).await;
+
+    utils::assert_payment(
+        bob_payment,
+        receiver_amount_sat,
+        0,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     // TODO: figure out why occasionally this fails (details = Liquid)
     // https://github.com/breez/breez-sdk-liquid/issues/829
     /*assert!(matches!(

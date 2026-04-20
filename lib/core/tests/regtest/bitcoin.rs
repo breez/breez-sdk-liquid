@@ -181,16 +181,18 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
     handle.sdk.sync(false).await.unwrap();
 
-    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle.get_balance_sat().await.unwrap(), receiver_amount_sat);
+    handle.assert_wallet_settled(receiver_amount_sat).await;
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 1);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, prepare_response.fees_sat);
-    assert_eq!(payment.payment_type, PaymentType::Receive);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        receiver_amount_sat,
+        prepare_response.fees_sat,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     assert!(
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
@@ -319,24 +321,29 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     handle.sdk.sync(false).await.unwrap();
 
     assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
+    assert_eq!(handle.get_pending_send_sat().await.unwrap(), 0);
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 2);
     let payment = &payments[0];
-    assert_eq!(payment.payment_type, PaymentType::Receive);
-    assert_eq!(payment.status, PaymentState::Complete);
+    // For an auto-accepted amountless receive, amount + fees = payer_amount
+    assert_eq!(payment.amount_sat + payment.fees_sat, payer_amount_sat);
+    utils::assert_payment(
+        payment,
+        payment.amount_sat,
+        payment.fees_sat,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     assert!(
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, auto_accepted_fees, .. }
             if *bitcoin_address == address && *auto_accepted_fees)
     );
-    // For an auto-accepted amountless receive, amount + fees = payer_amount
-    assert_eq!(payment.amount_sat + payment.fees_sat, payer_amount_sat);
 
     let receiver_amount_sat_amountless = payment.amount_sat;
-    assert_eq!(
-        handle.get_balance_sat().await.unwrap(),
-        balance_before_amountless + receiver_amount_sat_amountless
-    );
+    handle
+        .assert_wallet_settled(balance_before_amountless + receiver_amount_sat_amountless)
+        .await;
 
     // Cleanup: flush mempools so the SEND section starts clean.
     utils::drain_mempools(10).await.unwrap();
@@ -464,18 +471,20 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
     handle.sdk.sync(false).await.unwrap();
 
-    assert_eq!(
-        handle.get_balance_sat().await.unwrap(),
-        initial_balance_sat - sender_amount_sat
-    );
+    handle
+        .assert_wallet_settled(initial_balance_sat - sender_amount_sat)
+        .await;
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 3);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, fees_sat);
-    assert_eq!(payment.payment_type, PaymentType::Send);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        receiver_amount_sat,
+        fees_sat,
+        PaymentType::Send,
+        PaymentState::Complete,
+    );
     assert!(
         matches!(&payment.details, PaymentDetails::Bitcoin { bitcoin_address, .. } if *bitcoin_address == address)
     );
@@ -664,9 +673,14 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     // ----------------FINAL ASSERTIONS--------------
     // Verify the complete payment history across all four sections.
 
+    handle
+        .assert_wallet_settled(initial_balance_sat - sender_amount_sat)
+        .await;
+
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 4);
     let payment = &payments[0];
+    assert_eq!(payment.payment_type, PaymentType::Receive);
     assert_eq!(payment.status, PaymentState::Failed);
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
