@@ -13,6 +13,7 @@ const PROXY_URL: &str = "http://localhost:51234/proxy";
 const SWAPPROXY_URL: &str = "http://localhost:8387";
 
 const BTC_ESPLORA_URL: &str = "http://localhost:4002/api";
+const BTC_ELECTRS_URL: &str = "http://localhost:3002";
 const LBTC_ESPLORA_URL: &str = "http://localhost:3120/api";
 const WATERFALLS_URL: &str = "http://localhost:3102";
 
@@ -32,24 +33,27 @@ pub enum Chain {
 #[derive(Clone, Copy)]
 pub struct Indexers {
     pub btc_esplora: bool,
+    pub btc_electrs: bool,
     pub lbtc_esplora: bool,
     pub waterfalls: bool,
 }
 
 impl Indexers {
-    /// Electrum environment: only esplora/electrs, no waterfalls.
+    /// Electrum environment: esplora + electrs, no waterfalls.
     pub fn electrum() -> Self {
         Self {
             btc_esplora: true,
+            btc_electrs: true,
             lbtc_esplora: true,
             waterfalls: false,
         }
     }
 
-    /// Esplora environment: esplora/electrs + waterfalls.
+    /// Esplora environment: esplora + waterfalls (no electrs needed).
     pub fn esplora() -> Self {
         Self {
             btc_esplora: true,
+            btc_electrs: false,
             lbtc_esplora: true,
             waterfalls: true,
         }
@@ -248,17 +252,21 @@ pub async fn wait_for_indexers(chain: Chain, indexers: &Indexers) -> Result<(), 
     let wait_bitcoin = matches!(chain, Chain::Bitcoin | Chain::Both);
     let wait_liquid = matches!(chain, Chain::Liquid | Chain::Both);
 
-    if wait_bitcoin && indexers.btc_esplora {
+    if wait_bitcoin {
         let h = get_daemon_blockcount(BITCOIND_URL, BITCOIND_COOKIE.unwrap()).await?;
-        wait_for_indexer_tip(BTC_ESPLORA_URL, h, timeout).await?;
+        if indexers.btc_esplora {
+            wait_for_indexer_tip(BTC_ESPLORA_URL, h, timeout).await?;
+        }
+        if indexers.btc_electrs {
+            wait_for_indexer_tip(BTC_ELECTRS_URL, h, timeout).await?;
+        }
     }
     if wait_liquid {
+        let h = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
         if indexers.lbtc_esplora {
-            let h = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
             wait_for_indexer_tip(LBTC_ESPLORA_URL, h, timeout).await?;
         }
         if indexers.waterfalls {
-            let h = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
             wait_for_waterfalls_tip(h, timeout).await?;
         }
     }
