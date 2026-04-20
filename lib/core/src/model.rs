@@ -49,6 +49,31 @@ const DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC: u32 = 7;
 
 const SIDESWAP_API_KEY: &str = "97fb6a1dfa37ee6656af92ef79675cc03b8ac4c52e04655f41edbd5af888dcc2";
 
+/// Authorization credentials for blockchain explorers
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum ExplorerAuthorization {
+    /// HTTP Basic authentication
+    Basic { username: String, password: String },
+    /// Bearer token authentication
+    Bearer { token: String },
+}
+
+impl ExplorerAuthorization {
+    pub fn to_header_value(&self) -> String {
+        match self {
+            ExplorerAuthorization::Basic { username, password } => {
+                use crate::bitcoin::base64::{engine::general_purpose::STANDARD, Engine as _};
+                let credentials = format!("{}:{}", username, password);
+                let encoded = STANDARD.encode(credentials.as_bytes());
+                format!("Basic {}", encoded)
+            }
+            ExplorerAuthorization::Bearer { token } => {
+                format!("Bearer {}", token)
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub enum BlockchainExplorer {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -57,6 +82,8 @@ pub enum BlockchainExplorer {
         url: String,
         /// Whether or not to use the "waterfalls" extension
         use_waterfalls: bool,
+        /// Optional authorization credentials for this explorer
+        authorization: Option<ExplorerAuthorization>,
     },
 }
 
@@ -142,10 +169,12 @@ impl Config {
             liquid_explorer: BlockchainExplorer::Esplora {
                 url: BREEZ_LIQUID_ESPLORA_URL.to_string(),
                 use_waterfalls: true,
+                authorization: None,
             },
             bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "https://blockstream.info/api/".to_string(),
                 use_waterfalls: false,
+                authorization: None,
             },
             working_dir: ".".to_string(),
             network: LiquidNetwork::Mainnet,
@@ -195,10 +224,12 @@ impl Config {
             liquid_explorer: BlockchainExplorer::Esplora {
                 url: "http://localhost:3120/api".to_string(),
                 use_waterfalls: true,
+                authorization: None,
             },
             bitcoin_explorer: BlockchainExplorer::Esplora {
                 url: "http://localhost:4002/api".to_string(),
                 use_waterfalls: false,
+                authorization: None,
             },
             working_dir: ".".to_string(),
             network: LiquidNetwork::Regtest,
