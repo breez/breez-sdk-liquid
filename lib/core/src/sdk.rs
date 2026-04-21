@@ -5865,6 +5865,78 @@ mod tests {
     }
 
     #[sdk_macros::async_test_all]
+    async fn test_zero_amount_chain_swap_repeated_lockup_failed_is_idempotent() -> Result<()> {
+        create_persister!(persister);
+        let swapper = Arc::new(MockSwapper::new());
+        let status_stream = Arc::new(MockStatusStream::new());
+        let liquid_chain_service = Arc::new(MockLiquidChainService::new());
+        let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
+
+        // Configure replay-path quote inputs so that any reprocessing would compute
+        // different values than the pre-accepted swap snapshot below.
+        swapper.set_zero_amount_swap_mock_config(ZeroAmountSwapMockConfig {
+            user_lockup_sat: 50_000,
+            onchain_fee_increase_sat: 1_000,
+        });
+        bitcoin_chain_service.set_script_balance_sat(50_000);
+
+        let sdk = new_liquid_sdk_with_chain_services(
+            persister.clone(),
+            swapper.clone(),
+            status_stream.clone(),
+            liquid_chain_service,
+            bitcoin_chain_service.clone(),
+            Some(500),
+        )
+        .await?;
+
+        LiquidSdk::track_swap_updates(&sdk);
+
+        tokio::spawn(async move {
+            // Simulate a swap that already completed zero-amount fee acceptance.
+            let mut swap = new_chain_swap(
+                Direction::Incoming,
+                Some(PaymentState::Created),
+                false,
+                None,
+                true,
+                true,
+                None,
+            );
+            swap.actual_payer_amount_sat = Some(50_000);
+            swap.accepted_receiver_amount_sat = Some(49_672);
+            swap.auto_accepted_fees = true;
+
+            let swap_id = swap.id.clone();
+            persister.insert_or_update_chain_swap(&swap).unwrap();
+
+            status_stream
+                .clone()
+                .send_mock_update(boltz::SwapStatus {
+                    id: swap_id.clone(),
+                    status: ChainSwapStates::TransactionLockupFailed.to_string(),
+                    transaction: None,
+                    zero_conf_rejected: None,
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+
+            let persisted_swap = persister
+                .fetch_chain_swap_by_id(&swap_id)
+                .unwrap()
+                .expect("Could not retrieve chain swap");
+
+            // Replayed lockupFailed must not regress previously accepted values.
+            assert_eq!(persisted_swap.accepted_receiver_amount_sat, Some(49_672));
+            assert_eq!(persisted_swap.actual_payer_amount_sat, Some(50_000));
+        })
+        .await?;
+
+        Ok(())
+    }
+
+    #[sdk_macros::async_test_all]
     async fn test_background_tasks() -> Result<()> {
         create_persister!(persister);
         let swapper = Arc::new(MockSwapper::new());
