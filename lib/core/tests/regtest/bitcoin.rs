@@ -3,7 +3,6 @@ use breez_sdk_liquid::model::{
     PrepareReceiveRequest, PrepareRefundRequest, ReceiveAmount, RefundRequest, SdkEvent,
 };
 use serial_test::serial;
-use std::time::Duration;
 
 use crate::regtest::{utils, ChainBackend, SdkNodeHandle, TIMEOUT};
 
@@ -31,15 +30,6 @@ async fn bitcoin_esplora() {
 
 async fn bitcoin(mut handle: SdkNodeHandle) {
     let indexers = handle.indexers;
-
-    // Derive the one-poll-cycle timeout from the SDK's configured sync period.
-    // Add 1s as buffer
-    let one_poll_cycle = Duration::from_secs(handle.onchain_sync_period_sec as u64 + 1);
-    assert!(
-        one_poll_cycle * 2 <= TIMEOUT,
-        "TIMEOUT ({TIMEOUT:?}) must be at least 2x one_poll_cycle ({one_poll_cycle:?}) \
-         to leave room for the try-then-mine retry pattern",
-    );
 
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
@@ -130,29 +120,14 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     //    liquid block.
     // If that is detected by timeout, mine one more block and wait with
     // reduced timeout
-    let waiting_event = match handle
-        .wait_for_event(
-            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-            one_poll_cycle,
-        )
-        .await
-    {
-        Ok(event) => event,
-        Err(_) => {
-            // Tip N was consumed with stale waterfalls data.  Mine N+1
-            // so the poller gets a fresh tip with consistent data.
-            utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
-                .await
-                .unwrap();
-            handle
-                .wait_for_event(
-                    |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-                    TIMEOUT.saturating_sub(one_poll_cycle),
-                )
-                .await
-                .unwrap()
-        }
-    };
+    let waiting_event = utils::wait_for_event_with_retry(
+        &mut handle,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     assert_eq!(
         handle.get_pending_receive_sat().await.unwrap(),
@@ -298,27 +273,14 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    let waiting_event = match handle
-        .wait_for_event(
-            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-            one_poll_cycle,
-        )
-        .await
-    {
-        Ok(event) => event,
-        Err(_) => {
-            utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
-                .await
-                .unwrap();
-            handle
-                .wait_for_event(
-                    |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
-                    TIMEOUT.saturating_sub(one_poll_cycle),
-                )
-                .await
-                .unwrap()
-        }
-    };
+    let waiting_event = utils::wait_for_event_with_retry(
+        &mut handle,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {
         panic!("Expected PaymentWaitingConfirmation, got {waiting_event:?}");

@@ -66,10 +66,14 @@ async fn liquid(mut handle: SdkNodeHandle) {
 
     utils::mine_blocks(1).await.unwrap();
 
-    handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
+    utils::wait_for_event_with_retry(
+        &mut handle,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
     assert_eq!(handle.get_balance_sat().await.unwrap(), amount_sat);
@@ -106,10 +110,14 @@ async fn liquid(mut handle: SdkNodeHandle) {
 
     utils::mine_blocks(1).await.unwrap();
 
-    handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
+    utils::wait_for_event_with_retry(
+        &mut handle,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     assert_eq!(
         handle.get_balance_sat().await.unwrap(),

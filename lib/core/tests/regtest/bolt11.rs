@@ -79,10 +79,14 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
 
     utils::mine_blocks(1).await.unwrap();
 
-    handle_alice
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
+    utils::wait_for_event_with_retry(
+        &mut handle_alice,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     // TODO: this shouldn't be needed, but without it, sometimes get_balance_sat isn't updated in time
     // https://github.com/breez/breez-sdk-liquid/issues/828
@@ -140,10 +144,14 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
 
     utils::mine_blocks(1).await.unwrap();
 
-    handle_alice
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
+    utils::wait_for_event_with_retry(
+        &mut handle_alice,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     // TODO: this shouldn't be needed, but without it, sometimes get_balance_sat isn't updated in time
     // https://github.com/breez/breez-sdk-liquid/issues/828
@@ -202,13 +210,21 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
-    let _ = handle_alice
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await;
-    handle_bob
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
-        .await
-        .unwrap();
+    let _ = utils::wait_for_event_with_retry(
+        &mut handle_alice,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await;
+    utils::wait_for_event_with_retry(
+        &mut handle_bob,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
 
     // TODO: this shouldn't be needed, but without it, sometimes get_balance_sat isn't updated in time
     // https://github.com/breez/breez-sdk-liquid/issues/828

@@ -1,4 +1,5 @@
 use base64::Engine;
+use breez_sdk_liquid::model::{Payment, PaymentState, PaymentType, SdkEvent};
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::error::Error;
@@ -58,6 +59,22 @@ impl Indexers {
             waterfalls: true,
         }
     }
+}
+
+/// Assert the common scalar fields of a completed payment.
+/// Checks amount, fees, type, and status.
+/// Any additional fields (e.g. `details`) must be asserted by the caller.
+pub fn assert_payment(
+    payment: &Payment,
+    expected_amount_sat: u64,
+    expected_fees_sat: u64,
+    expected_type: PaymentType,
+    expected_status: PaymentState,
+) {
+    assert_eq!(payment.amount_sat, expected_amount_sat);
+    assert_eq!(payment.fees_sat, expected_fees_sat);
+    assert_eq!(payment.payment_type, expected_type);
+    assert_eq!(payment.status, expected_status);
 }
 
 async fn json_rpc_request(
@@ -170,6 +187,24 @@ pub async fn send_to_address_elementsd(
     .ok_or_else(|| "Invalid response".into())
 }
 
+pub async fn get_lbtc_tx_fee_sat(tx_id: &str) -> Result<u64, Box<dyn Error>> {
+    let client = Client::new();
+    let url = format!("{LBTC_ESPLORA_URL}/tx/{tx_id}");
+
+    let response = client
+        .get(PROXY_URL)
+        .header("X-Proxy-URL", url)
+        .send()
+        .await?
+        .json::<Value>()
+        .await?;
+
+    response
+        .get("fee")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| "Missing or invalid fee field in liquid esplora tx response".into())
+}
+
 pub async fn generate_invoice_lnd(amount_sat: u64) -> Result<String, Box<dyn Error>> {
     let response = lnd_request("v1/invoices", json!({ "value": amount_sat })).await?;
     response["payment_request"]
@@ -185,10 +220,6 @@ pub async fn pay_invoice_lnd(invoice: &str) -> Result<(), Box<dyn Error>> {
     )
     .await?;
     Ok(())
-}
-
-pub async fn mine_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
-    mine_and_index_blocks(n_blocks, Chain::Both, None).await
 }
 
 /// Mine one block on Bitcoin first, then one on Liquid, waiting for each
@@ -323,6 +354,44 @@ pub async fn wait_for_tx_in_mempool(
         timeout
     )
     .into())
+}
+
+/// Wait for an SDK event, with optional retry and mine if initial timeout occurs.
+/// With #978's poller gating optimization, there can be a race condition between
+/// the SDK's internal poller and the indexers after mining a liquid block.
+/// To force an update it might be required to mine an additional liquid block.
+/// However always mining can lead to unexpected side-effect / further state advances
+/// so it is only added when also after one polling cycle the expected event is not
+/// emitted.
+pub async fn wait_for_event_with_retry<F>(
+    handle: &mut super::SdkNodeHandle,
+    indexers: &Indexers,
+    event_match: F,
+    total_timeout: Duration,
+) -> Result<SdkEvent, Box<dyn Error>>
+where
+    F: Fn(&SdkEvent) -> bool,
+{
+    let first_timeout = Duration::from_secs(handle.onchain_sync_period_sec as u64 + 1);
+    assert!(
+        first_timeout * 2 <= total_timeout,
+        "total_timeout ({total_timeout:?}) must be at least 2x one_poll_cycle ({first_timeout:?}) \
+         to leave room for the try-then-mine retry pattern",
+    );
+
+    match handle.wait_for_event(&event_match, first_timeout).await {
+        Ok(event) => Ok(event),
+        Err(_) => {
+            // Tip N was consumed with stale indexer data. Mine N+1
+            // so the poller gets a fresh tip with consistent data.
+            mine_and_index_blocks(1, Chain::Liquid, Some(indexers)).await?;
+            let remaining_timeout = total_timeout.saturating_sub(first_timeout);
+            handle
+                .wait_for_event(&event_match, remaining_timeout)
+                .await
+                .map_err(|e| format!("Event wait timed out after retry: {e}").into())
+        }
+    }
 }
 
 /// Check whether a single chain's mempool is empty.
