@@ -95,6 +95,9 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
             details.details
         );
     };
+    handle
+        .assert_wallet_pending(receiver_amount_sat, 0, 0)
+        .await;
 
     let server_lockup_txid = utils::poll_boltz_server_lockup_txid(swap_id, TIMEOUT)
         .await
@@ -129,11 +132,9 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     .await
     .unwrap();
 
-    assert_eq!(
-        handle.get_pending_receive_sat().await.unwrap(),
-        receiver_amount_sat
-    );
-    assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
+    handle
+        .assert_wallet_pending(receiver_amount_sat, 0, 0)
+        .await;
 
     let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {
         panic!("Expected PaymentWaitingConfirmation, got {waiting_event:?}");
@@ -283,6 +284,19 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     )
     .await
     .unwrap();
+
+    let pending_receive_sat = handle.get_pending_receive_sat().await.unwrap();
+    assert!(
+        pending_receive_sat > 0,
+        "Amountless RECEIVE should expose pending_receive_sat > 0 once claim is waiting"
+    );
+    assert!(
+        pending_receive_sat <= payer_amount_sat,
+        "Amountless RECEIVE pending_receive_sat ({pending_receive_sat}) should not exceed payer amount ({payer_amount_sat})"
+    );
+    handle
+        .assert_wallet_pending(pending_receive_sat, 0, balance_before_amountless)
+        .await;
 
     let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {
         panic!("Expected PaymentWaitingConfirmation, got {waiting_event:?}");
@@ -436,6 +450,14 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         )
         .await
         .unwrap();
+
+    handle
+        .assert_wallet_pending(
+            0,
+            sender_amount_sat,
+            initial_balance_sat - sender_amount_sat,
+        )
+        .await;
 
     // Ensure the BTC claim tx is in bitcoind's mempool before mining.
     let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {

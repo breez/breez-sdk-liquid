@@ -213,4 +213,24 @@ impl SdkNodeHandle {
         assert_eq!(self.get_pending_send_sat().await.unwrap(), 0);
         assert_eq!(self.get_balance_sat().await.unwrap(), expected_balance_sat);
     }
+
+    /// Assert wallet state while a payment is in-flight.
+    /// Explicitly checks pending receive amount, pending send amount,
+    /// and confirmed balance.
+    pub async fn assert_wallet_pending(
+        &self,
+        expected_pending_receive_sat: u64,
+        expected_pending_send_sat: u64,
+        expected_balance_sat: u64,
+    ) {
+        assert_eq!(
+            self.get_pending_receive_sat().await.unwrap(),
+            expected_pending_receive_sat
+        );
+        assert_eq!(
+            self.get_pending_send_sat().await.unwrap(),
+            expected_pending_send_sat
+        );
+        assert_eq!(self.get_balance_sat().await.unwrap(), expected_balance_sat);
+    }
 }

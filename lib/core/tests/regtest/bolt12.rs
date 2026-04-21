@@ -93,6 +93,8 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
+    handle_alice.assert_wallet_pending(amount_sat, 0, 0).await;
+
     // Confirm the server lockup and wait for swap to complete
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
@@ -132,6 +134,17 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         })
         .await
         .unwrap();
+
+    handle_bob
+        .wait_for_event(
+            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
+            TIMEOUT,
+        )
+        .await
+        .unwrap();
+    handle_bob
+        .assert_wallet_pending(receiver_amount_sat, 0, 0)
+        .await;
 
     // Confirm the send TX and wait for swap to complete
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))

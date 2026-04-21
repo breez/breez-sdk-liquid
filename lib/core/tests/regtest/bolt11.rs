@@ -90,10 +90,9 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
-    assert_eq!(
-        handle_alice.get_pending_receive_sat().await.unwrap(),
-        receiver_amount_sat
-    );
+    handle_alice
+        .assert_wallet_pending(receiver_amount_sat, 0, 0)
+        .await;
 
     // Confirm the server lockup and wait for swap to complete
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
@@ -156,14 +155,9 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
-    assert_eq!(
-        handle_alice.get_pending_send_sat().await.unwrap(),
-        payer_amount_sat
-    );
-    assert_eq!(
-        handle_alice.get_balance_sat().await.unwrap(),
-        initial_balance - payer_amount_sat
-    );
+    handle_alice
+        .assert_wallet_pending(0, payer_amount_sat, initial_balance - payer_amount_sat)
+        .await;
 
     // Confirm the server lockup and wait for swap to complete
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))

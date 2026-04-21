@@ -66,9 +66,7 @@ async fn liquid(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), amount_sat);
-    assert_eq!(handle.get_pending_send_sat().await.unwrap(), 0);
-    assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
+    handle.assert_wallet_pending(amount_sat, 0, 0).await;
 
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
@@ -133,6 +131,21 @@ async fn liquid(mut handle: SdkNodeHandle) {
     utils::wait_for_tx_in_mempool(utils::Chain::Liquid, send_tx_id, TIMEOUT)
         .await
         .unwrap();
+
+    handle
+        .wait_for_event(
+            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
+            TIMEOUT,
+        )
+        .await
+        .unwrap();
+    handle
+        .assert_wallet_pending(
+            0,
+            sender_amount_sat,
+            initial_balance_sat - sender_amount_sat,
+        )
+        .await;
 
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
