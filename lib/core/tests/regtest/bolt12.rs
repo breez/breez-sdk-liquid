@@ -107,7 +107,9 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
 
     handle_alice.assert_wallet_settled(amount_sat).await;
 
-    // -------------------CREATE BOLT12 OFFER-------------------
+    // -------------------RECEIVE SWAP-------------------
+    // TODO: Receive to an offer using the CLN node
+
     let (_, receive_response) = handle_bob
         .receive_payment(&PrepareReceiveRequest {
             payment_method: PaymentMethod::Bolt12Offer,

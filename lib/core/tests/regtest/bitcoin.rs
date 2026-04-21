@@ -37,7 +37,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
 
     // -------------- RECEIVE (non-zero-conf) --------------
-    // Incoming chain swap: BTC user-lockup → L-BTC server-lockup → SDK claims L-BTC.
     // This tests the non-zero-conf path: Boltz requires a confirmed BTC
     // lockup before broadcasting the L-BTC server-lockup, and the SDK
     // requires a confirmed server-lockup before claiming.
@@ -81,7 +80,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
 
     // SDK and Boltz should detect the BTC user-lockup. Boltz should issue L-BTC server-lockup
-    // -> ensure server-lockup tx is in mempool before mining its confirmation
     let pending_event = handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentPending { .. }), TIMEOUT)
         .await
@@ -113,16 +111,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
 
     // SDK should detect server-lockup confirmation and eventually issue a
     // claim tx on liquid
-    //
-    // The SDK's background poller is not synched with mining/indexers
-    // -> might fire after server-lockup tx was mined but not all indexers have
-    //    caught up
-    // -> then it "consumes" the new block w/o detecting lockup tx and does
-    //    not issue PaymentWaitingConfirmation.
-    // -> On next poll(s) it won't update internal state if there is no new
-    //    liquid block.
-    // If that is detected by timeout, mine one more block and wait with
-    // reduced timeout
     let waiting_event = utils::wait_for_event_with_retry(
         &mut handle,
         &indexers,
@@ -152,14 +140,13 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm the L-BTC claim tx. In theory only a Liquid block is needed —
-    // PaymentSucceeded depends solely on the claim confirmation on Liquid.
+    // Confirm the L-BTC claim tx
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
         .unwrap();
 
     // TODO
-    // Workaround for #XXX (maybe same as #847?): Esplora sometimes has same
+    // Workaround for #1097: Esplora sometimes has same
     // claim TX twice in its output (once confirmed, once in mempool) which
     // leads to script history >2 which triggers the edge case in
     // determine_incoming_lockup_and_claim_txs() and triggers 120s "grace period"
@@ -242,7 +229,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
 
     // SDK detects the lockup via TransactionMempool/Confirmed → Pending.
     // Boltz then reports TransactionLockupFailed (zero-amount), the SDK
-    // auto-accepts the fees, and Boltz broadcasts the L-BTC server-lockup.
+    // auto-accepts the fees...
     let pending_event = handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentPending { .. }), TIMEOUT)
         .await
@@ -259,7 +246,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     };
     let swap_id = swap_id.clone();
 
-    // After auto-accept, Boltz broadcasts the L-BTC server-lockup
+    //... after auto-accept, Boltz broadcasts the L-BTC server-lockup
     let server_lockup_txid = utils::poll_boltz_server_lockup_txid(&swap_id, TIMEOUT)
         .await
         .unwrap();
@@ -267,11 +254,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm the L-BTC server-lockup so the SDK can claim.
-    // For amountless swaps, PaymentWaitingFeeAcceptance (claim_tx_id: None)
-    // may arrive first once the zero-amount quote is auto-accepted — it is
-    // harmlessly consumed by the predicate.  The actual claim produces
-    // PaymentWaitingConfirmation, identical to the RECEIVE path.
     utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
         .unwrap();
@@ -284,19 +266,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     )
     .await
     .unwrap();
-
-    let pending_receive_sat = handle.get_pending_receive_sat().await.unwrap();
-    assert!(
-        pending_receive_sat > 0,
-        "Amountless RECEIVE should expose pending_receive_sat > 0 once claim is waiting"
-    );
-    assert!(
-        pending_receive_sat <= payer_amount_sat,
-        "Amountless RECEIVE pending_receive_sat ({pending_receive_sat}) should not exceed payer amount ({payer_amount_sat})"
-    );
-    handle
-        .assert_wallet_pending(pending_receive_sat, 0, balance_before_amountless)
-        .await;
 
     let SdkEvent::PaymentWaitingConfirmation { details } = &waiting_event else {
         panic!("Expected PaymentWaitingConfirmation, got {waiting_event:?}");
@@ -311,6 +280,19 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .as_ref()
         .expect("claim_tx_id should be set in PaymentWaitingConfirmation");
 
+    let pending_receive_sat = handle.get_pending_receive_sat().await.unwrap();
+    assert!(
+        pending_receive_sat > 0,
+        "Amountless RECEIVE should expose pending_receive_sat > 0 once claim is waiting"
+    );
+    assert!(
+        pending_receive_sat <= payer_amount_sat,
+        "Amountless RECEIVE pending_receive_sat ({pending_receive_sat}) should not exceed payer amount ({payer_amount_sat})"
+    );
+    handle
+        .assert_wallet_pending(pending_receive_sat, 0, balance_before_amountless)
+        .await;
+
     utils::wait_for_tx_in_mempool(utils::Chain::Liquid, &claim_tx_id, TIMEOUT)
         .await
         .unwrap();
@@ -320,7 +302,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Workaround for esplora duplicate-tx edge case (see RECEIVE section)
+    // Workaround for #1097 esplora duplicate-tx edge case (see RECEIVE section)
     utils::mine_bitcoin_then_liquid(1, &indexers).await.unwrap();
 
     handle
@@ -363,7 +345,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     utils::drain_mempools(10).await.unwrap();
 
     // -------------- SEND (zero-conf) --------------
-    // Outgoing chain swap: L-BTC user-lockup → BTC server-lockup → SDK claims BTC.
     // This tests the zero-conf path: the send amount is within the Boltz
     // zero-conf threshold, so the SDK accepts the BTC server-lockup from
     // mempool and claims without waiting for a BTC confirmation.
@@ -419,7 +400,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Get Boltz's expected lockup txid as early as possible
     let server_lockup_txid = utils::poll_boltz_server_lockup_txid(swap_id, TIMEOUT)
         .await
         .unwrap();
@@ -437,7 +417,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Wait for Bolt's BTC server-lockup to appear in bitcoind's mempool.
     utils::wait_for_tx_in_mempool(utils::Chain::Bitcoin, &server_lockup_txid, TIMEOUT)
         .await
         .unwrap();
@@ -674,8 +653,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     // Additional liquid block is needed to circumvent gating introduced in #978
     utils::mine_bitcoin_then_liquid(1, &indexers).await.unwrap();
 
-    // TODO: figure out why on Wasm this event is occasionally skipped
-    // https://github.com/breez/breez-sdk-liquid/issues/847
     let _ = handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentFailed { .. }), TIMEOUT)
         .await;
@@ -689,12 +666,6 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let refundables = handle.sdk.list_refundables().await.unwrap();
     assert_eq!(refundables.len(), 0);
 
-    // Cleanup: flush mempools
-    utils::drain_mempools(10).await.unwrap();
-
-    // ----------------FINAL ASSERTIONS--------------
-    // Verify the complete payment history across all four sections.
-
     handle
         .assert_wallet_settled(initial_balance_sat - sender_amount_sat)
         .await;
@@ -704,6 +675,9 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let payment = &payments[0];
     assert_eq!(payment.payment_type, PaymentType::Receive);
     assert_eq!(payment.status, PaymentState::Failed);
+
+    // Cleanup: flush mempools
+    utils::drain_mempools(10).await.unwrap();
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
     handle.sdk.disconnect().await.unwrap();

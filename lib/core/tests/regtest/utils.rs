@@ -61,9 +61,6 @@ impl Indexers {
     }
 }
 
-/// Assert the common scalar fields of a completed payment.
-/// Checks amount, fees, type, and status.
-/// Any additional fields (e.g. `details`) must be asserted by the caller.
 pub fn assert_payment(
     payment: &Payment,
     expected_amount_sat: u64,
@@ -222,12 +219,11 @@ pub async fn pay_invoice_lnd(invoice: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// To avoid permanently skipped BTC tip fetches due to PR #978:
 /// Mine one block on Bitcoin first, then one on Liquid, waiting for each
-/// indexer before proceeding.  The ordering matters: by the time the
-/// Liquid block arrives and triggers the SDK's background poller, the BTC
-/// electrs has already indexed its block, so `on_bitcoin_block` will see
-/// the new tip.  Without this ordering the gating optimisation in
-/// `get_sync_context` (PR #978) can permanently skip the BTC tip fetch.
+/// indexer before proceeding.
+/// This ensures when the SDK's background poller sees the Liquid block,
+/// the BTC block is fully indexed.
 pub async fn mine_bitcoin_then_liquid(
     n_blocks: u64,
     indexers: &Indexers,
@@ -275,9 +271,6 @@ pub async fn mine_and_index_blocks(
     Ok(())
 }
 
-/// Wait for all indexing services listed in `indexers` to catch up with
-/// the daemon tip for the given chain(s).  Each individual wait function
-/// assumes its service is running and will fail loudly if unreachable.
 pub async fn wait_for_indexers(chain: Chain, indexers: &Indexers) -> Result<(), Box<dyn Error>> {
     let timeout = Duration::from_secs(30);
     let wait_bitcoin = matches!(chain, Chain::Bitcoin | Chain::Both);
@@ -311,6 +304,61 @@ async fn get_daemon_blockcount(url: &str, cookie: &str) -> Result<u64, Box<dyn E
         .ok_or_else(|| "getblockcount did not return a number".into())
 }
 
+async fn wait_for_waterfalls_tip(
+    expected_height: u64,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/block-height/{}", WATERFALLS_URL, expected_height);
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client.get(&url).send().await {
+            if resp.status().is_success() {
+                return Ok(());
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Waterfalls did not index Liquid height {} within {:?}",
+        expected_height, timeout
+    )
+    .into())
+}
+
+async fn wait_for_indexer_tip(
+    esplora_url: &str,
+    expected_height: u64,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/blocks/tip/height", esplora_url);
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client.get(&url).send().await {
+            if let Ok(text) = resp.text().await {
+                if let Ok(tip) = text.trim().parse::<u64>() {
+                    if tip >= expected_height {
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Indexer at {} did not reach height {} within {:?}",
+        esplora_url, expected_height, timeout
+    )
+    .into())
+}
+
 fn chain_rpc_params(chain: Chain) -> (&'static str, &'static str) {
     match chain {
         Chain::Bitcoin => (BITCOIND_URL, BITCOIND_COOKIE.unwrap()),
@@ -327,7 +375,6 @@ fn chain_name(chain: Chain) -> &'static str {
     }
 }
 
-/// Poll a daemon's mempool until `txid` appears.
 pub async fn wait_for_tx_in_mempool(
     chain: Chain,
     txid: &str,
@@ -394,20 +441,7 @@ where
     }
 }
 
-/// Check whether a single chain's mempool is empty.
-async fn is_mempool_empty(chain: Chain) -> Result<bool, Box<dyn Error>> {
-    let (url, cookie) = chain_rpc_params(chain);
-    let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
-    Ok(result.as_array().map_or(true, |a| a.is_empty()))
-}
-
-/// Check whether both the Bitcoin and Liquid mempools are empty.
-async fn both_mempools_empty() -> Result<bool, Box<dyn Error>> {
-    Ok(is_mempool_empty(Chain::Bitcoin).await? && is_mempool_empty(Chain::Liquid).await?)
-}
-
 /// Mine blocks on both chains until both mempools are empty
-/// Gives up after `max_rounds` mining iterations.
 pub async fn drain_mempools(max_rounds: u32) -> Result<(), Box<dyn Error>> {
     let settle = Duration::from_millis(1000);
 
@@ -427,6 +461,16 @@ pub async fn drain_mempools(max_rounds: u32) -> Result<(), Box<dyn Error>> {
     }
 
     Err(format!("Mempools not empty after {max_rounds} rounds of mining").into())
+}
+
+async fn is_mempool_empty(chain: Chain) -> Result<bool, Box<dyn Error>> {
+    let (url, cookie) = chain_rpc_params(chain);
+    let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
+    Ok(result.as_array().map_or(true, |a| a.is_empty()))
+}
+
+async fn both_mempools_empty() -> Result<bool, Box<dyn Error>> {
+    Ok(is_mempool_empty(Chain::Bitcoin).await? && is_mempool_empty(Chain::Liquid).await?)
 }
 
 pub async fn poll_boltz_server_lockup_txid(
@@ -516,61 +560,6 @@ pub async fn poll_boltz_zero_conf_accepted(
     Err(format!(
         "Boltz did not report zeroConfRejected for chain swap {} within {:?}",
         swap_id, timeout
-    )
-    .into())
-}
-
-async fn wait_for_waterfalls_tip(
-    expected_height: u64,
-    timeout: Duration,
-) -> Result<(), Box<dyn Error>> {
-    let url = format!("{}/block-height/{}", WATERFALLS_URL, expected_height);
-    let client = Client::new();
-    let poll_interval = Duration::from_millis(100);
-    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
-
-    for _ in 0..iterations {
-        if let Ok(resp) = client.get(&url).send().await {
-            if resp.status().is_success() {
-                return Ok(());
-            }
-        }
-        tokio::time::sleep(poll_interval).await;
-    }
-
-    Err(format!(
-        "Waterfalls did not index Liquid height {} within {:?}",
-        expected_height, timeout
-    )
-    .into())
-}
-
-async fn wait_for_indexer_tip(
-    esplora_url: &str,
-    expected_height: u64,
-    timeout: Duration,
-) -> Result<(), Box<dyn Error>> {
-    let url = format!("{}/blocks/tip/height", esplora_url);
-    let client = Client::new();
-    let poll_interval = Duration::from_millis(100);
-    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
-
-    for _ in 0..iterations {
-        if let Ok(resp) = client.get(&url).send().await {
-            if let Ok(text) = resp.text().await {
-                if let Ok(tip) = text.trim().parse::<u64>() {
-                    if tip >= expected_height {
-                        return Ok(());
-                    }
-                }
-            }
-        }
-        tokio::time::sleep(poll_interval).await;
-    }
-
-    Err(format!(
-        "Indexer at {} did not reach height {} within {:?}",
-        esplora_url, expected_height, timeout
     )
     .into())
 }

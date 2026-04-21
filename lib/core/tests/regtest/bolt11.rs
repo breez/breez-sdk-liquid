@@ -234,8 +234,6 @@ async fn bolt11(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
-    // TODO: figure out why on Wasm this event is occasionally skipped
-    // https://github.com/breez/breez-sdk-liquid/issues/847
     let _ = utils::wait_for_event_with_retry(
         &mut handle_alice,
         &indexers,
