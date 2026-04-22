@@ -193,4 +193,13 @@ impl SdkNodeHandle {
         })
         .await?
     }
+
+    /// Mine blocks on both chains and immediately sync the SDK to detect them.
+    pub async fn mine_and_sync(&self, n_blocks: u64) -> Result<()> {
+        utils::mine_blocks(n_blocks)
+            .await
+            .map_err(|e| anyhow::anyhow!("{e}"))?;
+        self.sdk.sync(false).await?;
+        Ok(())
+    }
 }

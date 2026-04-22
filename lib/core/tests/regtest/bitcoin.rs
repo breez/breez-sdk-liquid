@@ -64,13 +64,13 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
 
     // Confirm user lockup
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     // Wait for swapper to lock up funds
     tokio::time::sleep(Duration::from_secs(5)).await;
 
     // Confirm swapper lockup
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     handle
         .wait_for_event(
@@ -87,7 +87,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
 
     // Confirm claim tx
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
@@ -131,13 +131,13 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
     // Confirm user lockup
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     // Wait for swapper to lock up funds
     tokio::time::sleep(Duration::from_secs(5)).await;
 
     // Confirm swapper lockup
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     // Wait for sdk to broadcast claim tx
     handle
@@ -149,7 +149,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
 
     // Confirm claim tx
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
@@ -271,7 +271,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         &refund_rbf_response.refund_tx_id
     );
 
-    utils::mine_blocks(1).await.unwrap();
+    handle.mine_and_sync(1).await.unwrap();
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
