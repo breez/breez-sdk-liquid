@@ -162,3 +162,27 @@ pub async fn mine_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+pub async fn mine_bitcoin_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
+    let address_btc = generate_address_bitcoind().await?;
+    json_rpc_request(
+        BITCOIND_URL,
+        BITCOIND_COOKIE.unwrap(),
+        "generatetoaddress",
+        json!([n_blocks, address_btc]),
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn mine_liquid_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
+    let address_lqd = generate_address_elementsd().await?;
+    json_rpc_request(
+        ELEMENTSD_URL,
+        ELEMENTSD_COOKIE,
+        "generatetoaddress",
+        json!([n_blocks, address_lqd]),
+    )
+    .await?;
+    Ok(())
+}
