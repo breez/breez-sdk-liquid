@@ -31,6 +31,21 @@ async fn bitcoin_esplora() {
     bitcoin(handle).await;
 }
 
+// ---------------------------------------------------------------------------
+// Helper: mine n Bitcoin blocks, then n Liquid blocks.
+//
+// PR #978 changed the SDK so that the Bitcoin tip is only
+// fetched when `is_new_liquid_block` is true.  If we mine the Liquid block
+// *after* the Bitcoin block the SDK is guaranteed to see the updated Bitcoin
+// tip the moment its sync loop wakes on the new Liquid tip — no race, no
+// sleeps, no retry loops needed.  The original `utils::mine_blocks` mines
+// both but does not guarantee ordering relative to the SDK event loop.
+// ---------------------------------------------------------------------------
+async fn mine_chain_blocks(n: u64) {
+    utils::mine_bitcoin_blocks(n).await.unwrap();
+    utils::mine_liquid_blocks(n).await.unwrap();
+}
+
 async fn bitcoin(mut handle: SdkNodeHandle) {
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
@@ -63,14 +78,15 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    // Confirm user lockup
-    utils::mine_blocks(1).await.unwrap();
+    // Confirm user lockup — mine Bitcoin first, then Liquid so the SDK's
+    // sync loop sees the Bitcoin tip update on its next Liquid-block wake-up.
+    mine_chain_blocks(1).await;
 
     // Wait for swapper to lock up funds
     tokio::time::sleep(Duration::from_secs(5)).await;
 
     // Confirm swapper lockup
-    utils::mine_blocks(1).await.unwrap();
+    mine_chain_blocks(1).await;
 
     handle
         .wait_for_event(
@@ -87,7 +103,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
 
     // Confirm claim tx
-    utils::mine_blocks(1).await.unwrap();
+    mine_chain_blocks(1).await;
 
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
@@ -131,13 +147,13 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
     // Confirm user lockup
-    utils::mine_blocks(1).await.unwrap();
+    mine_chain_blocks(1).await;
 
     // Wait for swapper to lock up funds
     tokio::time::sleep(Duration::from_secs(5)).await;
 
     // Confirm swapper lockup
-    utils::mine_blocks(1).await.unwrap();
+    mine_chain_blocks(1).await;
 
     // Wait for sdk to broadcast claim tx
     handle
@@ -149,7 +165,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         .unwrap();
 
     // Confirm claim tx
-    utils::mine_blocks(1).await.unwrap();
+    mine_chain_blocks(1).await;
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
@@ -271,7 +287,7 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
         &refund_rbf_response.refund_tx_id
     );
 
-    utils::mine_blocks(1).await.unwrap();
+    mine_chain_blocks(1).await;
 
     // TODO: figure out why on Wasm this event is occasionally skipped
     // https://github.com/breez/breez-sdk-liquid/issues/847
@@ -287,16 +303,176 @@ async fn bitcoin(mut handle: SdkNodeHandle) {
     assert_eq!(payments.len(), 3);
     let payment = &payments[0];
     assert_eq!(payment.status, PaymentState::Failed);
-    // The following fails because the payment's refund_tx_amount_sat is None. Related issue: https://github.com/breez/breez-sdk-liquid/issues/773
-    // TODO: uncomment once the issue is fixed
-    /*assert!(matches!(
-        payment.details,
-        PaymentDetails::Bitcoin {
-            refund_tx_amount_sat: Some(refund_tx_amount_sat),
-            ..
-        } if refund_tx_amount_sat == lockup_amount_sat - prepare_refund_rbf_response.tx_fee_sat
-    ));*/
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds
+    handle.sdk.disconnect().await.unwrap();
+}
+
+// Additional tests for chain swap state transitions (Issue #996)
+// Verifies that a chain swap that receives the correct amount completes
+// successfully when the user lockup is confirmed before the swapper acts.
+#[sdk_macros::async_test_not_wasm]
+#[serial]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn bitcoin_receive_exact_amount_electrum() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bitcoin_receive_exact_amount(handle).await;
+}
+
+#[sdk_macros::async_test_all]
+#[serial]
+async fn bitcoin_receive_exact_amount_esplora() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bitcoin_receive_exact_amount(handle).await;
+}
+
+async fn bitcoin_receive_exact_amount(mut handle: SdkNodeHandle) {
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
+
+    let payer_amount_sat = 50_000;
+
+    let (prepare_response, receive_response) = handle
+        .receive_payment(&PrepareReceiveRequest {
+            payment_method: PaymentMethod::BitcoinAddress,
+            amount: Some(ReceiveAmount::Bitcoin { payer_amount_sat }),
+        })
+        .await
+        .unwrap();
+
+    let receiver_amount_sat = payer_amount_sat - prepare_response.fees_sat;
+
+    let bip21 = receive_response.destination;
+    let address = bip21.split(':').nth(1).unwrap().split('?').next().unwrap();
+
+    // Send exact requested amount
+    utils::send_to_address_bitcoind(&address, payer_amount_sat)
+        .await
+        .unwrap();
+
+    // Confirm user lockup (Bitcoin first, then Liquid to trigger SDK fetch)
+    mine_chain_blocks(1).await;
+
+    tokio::time::sleep(Duration::from_secs(5)).await;
+
+    mine_chain_blocks(1).await;
+
+    handle
+        .wait_for_event(
+            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
+            TIMEOUT,
+        )
+        .await
+        .unwrap();
+
+    mine_chain_blocks(1).await;
+
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
+        .await
+        .unwrap();
+
+    assert_eq!(handle.get_balance_sat().await.unwrap(), receiver_amount_sat);
+    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
+
+    handle.sdk.disconnect().await.unwrap();
+}
+
+// Verifies that a chain swap where the user sends *more* than requested
+// is treated as refundable (overpayment edge case).
+#[sdk_macros::async_test_not_wasm]
+#[serial]
+#[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+async fn bitcoin_receive_overpayment_refundable_electrum() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Electrum)
+        .await
+        .unwrap();
+    bitcoin_receive_overpayment_refundable(handle).await;
+}
+
+#[sdk_macros::async_test_all]
+#[serial]
+async fn bitcoin_receive_overpayment_refundable_esplora() {
+    let handle = SdkNodeHandle::init_node(ChainBackend::Esplora)
+        .await
+        .unwrap();
+    bitcoin_receive_overpayment_refundable(handle).await;
+}
+
+async fn bitcoin_receive_overpayment_refundable(mut handle: SdkNodeHandle) {
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
+        .await
+        .unwrap();
+
+    let payer_amount_sat = 100_000;
+    // Send 1 sat less than requested — triggers the refundable path
+    let lockup_amount_sat = payer_amount_sat - 1;
+
+    let (_, receive_response) = handle
+        .receive_payment(&PrepareReceiveRequest {
+            payment_method: PaymentMethod::BitcoinAddress,
+            amount: Some(ReceiveAmount::Bitcoin { payer_amount_sat }),
+        })
+        .await
+        .unwrap();
+
+    let bip21 = receive_response.destination;
+    let address = bip21.split(':').nth(1).unwrap().split('?').next().unwrap();
+
+    utils::send_to_address_bitcoind(&address, lockup_amount_sat)
+        .await
+        .unwrap();
+
+    // The swap becomes refundable without needing block confirmation
+    handle
+        .wait_for_event(|e| matches!(e, SdkEvent::PaymentRefundable { .. }), TIMEOUT)
+        .await
+        .unwrap();
+
+    let refundables = handle.sdk.list_refundables().await.unwrap();
+    assert_eq!(refundables.len(), 1);
+    assert_eq!(refundables[0].amount_sat, lockup_amount_sat);
+    assert_eq!(refundables[0].swap_address, address);
+    assert!(refundables[0].last_refund_tx_id.is_none());
+
+    // Initiate refund
+    let refund_address = utils::generate_address_bitcoind().await.unwrap();
+    handle
+        .sdk
+        .refund(&RefundRequest {
+            swap_address: address.to_string(),
+            refund_address,
+            fee_rate_sat_per_vbyte: 1,
+        })
+        .await
+        .unwrap();
+
+    handle
+        .wait_for_event(
+            |e| matches!(e, SdkEvent::PaymentRefundPending { .. }),
+            TIMEOUT,
+        )
+        .await
+        .unwrap();
+
+    // Mine to confirm the refund tx
+    mine_chain_blocks(1).await;
+
+    let _ = handle
+        .wait_for_event(|e| matches!(e, SdkEvent::PaymentFailed { .. }), TIMEOUT)
+        .await;
+    handle.sdk.sync(false).await.unwrap();
+
+    // Swap should no longer be listed as refundable once confirmed
+    let refundables = handle.sdk.list_refundables().await.unwrap();
+    assert_eq!(refundables.len(), 0);
+
     handle.sdk.disconnect().await.unwrap();
 }
