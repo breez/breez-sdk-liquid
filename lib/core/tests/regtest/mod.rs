@@ -37,6 +37,8 @@ impl EventListener for ForwardingEventListener {
 
 pub struct SdkNodeHandle {
     pub sdk: Arc<LiquidSdk>,
+    pub indexers: utils::Indexers,
+    pub onchain_sync_period_sec: u32,
     receiver: Receiver<SdkEvent>,
 }
 
@@ -63,7 +65,13 @@ impl SdkNodeHandle {
             ChainBackend::Electrum => Config::regtest(),
             ChainBackend::Esplora => Config::regtest_esplora(),
         };
+        let indexers = match backend {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            ChainBackend::Electrum => utils::Indexers::electrum(),
+            ChainBackend::Esplora => utils::Indexers::esplora(),
+        };
         config.working_dir = data_dir.to_str().unwrap().to_string();
+        let onchain_sync_period_sec = config.onchain_sync_period_sec;
 
         #[cfg(all(target_family = "wasm", target_os = "unknown"))]
         let sdk = {
@@ -108,7 +116,12 @@ impl SdkNodeHandle {
         let listener = ForwardingEventListener { sender };
         sdk.add_event_listener(Box::new(listener)).await?;
 
-        Ok(Self { sdk, receiver })
+        Ok(Self {
+            sdk,
+            indexers,
+            onchain_sync_period_sec,
+            receiver,
+        })
     }
 
     pub async fn get_balance_sat(&self) -> Result<u64> {
@@ -192,5 +205,32 @@ impl SdkNodeHandle {
             Err(anyhow::anyhow!("Channel closed while waiting for event"))
         })
         .await?
+    }
+
+    /// Assert that no pending funds are in-flight and the confirmed balance matches expectation.
+    pub async fn assert_wallet_settled(&self, expected_balance_sat: u64) {
+        assert_eq!(self.get_pending_receive_sat().await.unwrap(), 0);
+        assert_eq!(self.get_pending_send_sat().await.unwrap(), 0);
+        assert_eq!(self.get_balance_sat().await.unwrap(), expected_balance_sat);
+    }
+
+    /// Assert wallet state while a payment is in-flight.
+    /// Explicitly checks pending receive amount, pending send amount,
+    /// and confirmed balance.
+    pub async fn assert_wallet_pending(
+        &self,
+        expected_pending_receive_sat: u64,
+        expected_pending_send_sat: u64,
+        expected_balance_sat: u64,
+    ) {
+        assert_eq!(
+            self.get_pending_receive_sat().await.unwrap(),
+            expected_pending_receive_sat
+        );
+        assert_eq!(
+            self.get_pending_send_sat().await.unwrap(),
+            expected_pending_send_sat
+        );
+        assert_eq!(self.get_balance_sat().await.unwrap(), expected_balance_sat);
     }
 }

@@ -1,17 +1,96 @@
 use base64::Engine;
+use breez_sdk_liquid::model::{Payment, PaymentState, PaymentType, SdkEvent};
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::error::Error;
+use std::time::Duration;
+use tokio_with_wasm::alias as tokio;
 
 const BITCOIND_URL: &str = "http://localhost:18443/wallet/client";
 const ELEMENTSD_URL: &str = "http://localhost:18884/wallet/client";
 const LND_URL: &str = "https://localhost:8081";
 
 const PROXY_URL: &str = "http://localhost:51234/proxy";
+const SWAPPROXY_URL: &str = "http://localhost:8387";
+
+const BTC_ESPLORA_URL: &str = "http://localhost:4002/api";
+const BTC_ELECTRS_URL: &str = "http://localhost:3002";
+const LBTC_ESPLORA_URL: &str = "http://localhost:3120/api";
+const WATERFALLS_URL: &str = "http://localhost:3102";
 
 const BITCOIND_COOKIE: Option<&str> = option_env!("BITCOIND_COOKIE");
 const ELEMENTSD_COOKIE: &str = "regtest:regtest";
 const LND_MACAROON_HEX: Option<&str> = option_env!("LND_MACAROON_HEX");
+
+#[derive(Clone, Copy)]
+pub enum Chain {
+    Bitcoin,
+    Liquid,
+    Both,
+}
+
+/// Describes which indexing services are present in the test environment
+/// and must be waited on after mining.
+#[derive(Clone, Copy)]
+pub struct Indexers {
+    pub btc_esplora: bool,
+    pub btc_electrs: bool,
+    pub lbtc_esplora: bool,
+    pub waterfalls: bool,
+}
+
+impl Indexers {
+    /// Electrum environment: esplora + electrs, no waterfalls.
+    pub fn electrum() -> Self {
+        Self {
+            btc_esplora: true,
+            btc_electrs: true,
+            lbtc_esplora: true,
+            waterfalls: false,
+        }
+    }
+
+    /// Esplora environment: esplora + waterfalls (no electrs needed).
+    pub fn esplora() -> Self {
+        Self {
+            btc_esplora: true,
+            btc_electrs: false,
+            lbtc_esplora: true,
+            waterfalls: true,
+        }
+    }
+
+    /// Merge any number of handles: if any node uses an indexer, we must wait for it.
+    pub fn from_handles(handles: &[&super::SdkNodeHandle]) -> Self {
+        handles.iter().fold(
+            Self {
+                btc_esplora: false,
+                btc_electrs: false,
+                lbtc_esplora: false,
+                waterfalls: false,
+            },
+            |acc, h| Self {
+                btc_esplora: acc.btc_esplora || h.indexers.btc_esplora,
+                btc_electrs: acc.btc_electrs || h.indexers.btc_electrs,
+                lbtc_esplora: acc.lbtc_esplora || h.indexers.lbtc_esplora,
+                waterfalls: acc.waterfalls || h.indexers.waterfalls,
+            },
+        )
+    }
+}
+
+pub fn assert_payment(
+    payment: &Payment,
+    expected_amount_sat: u64,
+    expected_fees_sat: u64,
+    expected_type: PaymentType,
+    expected_status: PaymentState,
+) {
+    assert_eq!(payment.amount_sat, expected_amount_sat);
+    assert_eq!(payment.fees_sat, expected_fees_sat);
+    assert_eq!(payment.payment_type, expected_type);
+    assert_eq!(payment.status, expected_status);
+}
 
 async fn json_rpc_request(
     url: &str,
@@ -123,6 +202,24 @@ pub async fn send_to_address_elementsd(
     .ok_or_else(|| "Invalid response".into())
 }
 
+pub async fn get_lbtc_tx_fee_sat(tx_id: &str) -> Result<u64, Box<dyn Error>> {
+    let client = Client::new();
+    let url = format!("{LBTC_ESPLORA_URL}/tx/{tx_id}");
+
+    let response = client
+        .get(PROXY_URL)
+        .header("X-Proxy-URL", url)
+        .send()
+        .await?
+        .json::<Value>()
+        .await?;
+
+    response
+        .get("fee")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| "Missing or invalid fee field in liquid esplora tx response".into())
+}
+
 pub async fn generate_invoice_lnd(amount_sat: u64) -> Result<String, Box<dyn Error>> {
     let response = lnd_request("v1/invoices", json!({ "value": amount_sat })).await?;
     response["payment_request"]
@@ -140,25 +237,347 @@ pub async fn pay_invoice_lnd(invoice: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn mine_blocks(n_blocks: u64) -> Result<(), Box<dyn Error>> {
-    let address_btc = generate_address_bitcoind().await?;
-    let address_lqd = generate_address_elementsd().await?;
+/// To avoid permanently skipped BTC tip fetches due to PR #978:
+/// Mine one block on Bitcoin first, then one on Liquid, waiting for each
+/// indexer before proceeding.
+/// This ensures when the SDK's background poller sees the Liquid block,
+/// the BTC block is fully indexed.
+pub async fn mine_bitcoin_then_liquid(
+    n_blocks: u64,
+    indexers: &Indexers,
+) -> Result<(), Box<dyn Error>> {
+    mine_and_index_blocks(n_blocks, Chain::Bitcoin, Some(indexers)).await?;
+    mine_and_index_blocks(n_blocks, Chain::Liquid, Some(indexers)).await
+}
 
-    json_rpc_request(
-        BITCOIND_URL,
-        BITCOIND_COOKIE.unwrap(),
-        "generatetoaddress",
-        json!([n_blocks, address_btc]),
-    )
-    .await?;
+pub async fn mine_and_index_blocks(
+    n_blocks: u64,
+    chain: Chain,
+    indexers: Option<&Indexers>,
+) -> Result<(), Box<dyn Error>> {
+    let mine_bitcoin = matches!(chain, Chain::Bitcoin | Chain::Both);
+    let mine_liquid = matches!(chain, Chain::Liquid | Chain::Both);
 
-    json_rpc_request(
-        ELEMENTSD_URL,
-        ELEMENTSD_COOKIE,
-        "generatetoaddress",
-        json!([n_blocks, address_lqd]),
-    )
-    .await?;
+    for _ in 0..n_blocks {
+        if mine_bitcoin {
+            let address = generate_address_bitcoind().await?;
+            json_rpc_request(
+                BITCOIND_URL,
+                BITCOIND_COOKIE.unwrap(),
+                "generatetoaddress",
+                json!([1, address]),
+            )
+            .await?;
+        }
+
+        if mine_liquid {
+            let address = generate_address_elementsd().await?;
+            json_rpc_request(
+                ELEMENTSD_URL,
+                ELEMENTSD_COOKIE,
+                "generatetoaddress",
+                json!([1, address]),
+            )
+            .await?;
+        }
+
+        if let Some(idx) = indexers {
+            wait_for_indexers(chain, idx).await?;
+        }
+    }
 
     Ok(())
+}
+
+pub async fn wait_for_indexers(chain: Chain, indexers: &Indexers) -> Result<(), Box<dyn Error>> {
+    let timeout = Duration::from_secs(30);
+    let wait_bitcoin = matches!(chain, Chain::Bitcoin | Chain::Both);
+    let wait_liquid = matches!(chain, Chain::Liquid | Chain::Both);
+
+    if wait_bitcoin {
+        let h = get_daemon_blockcount(BITCOIND_URL, BITCOIND_COOKIE.unwrap()).await?;
+        if indexers.btc_esplora {
+            wait_for_indexer_tip(BTC_ESPLORA_URL, h, timeout).await?;
+        }
+        if indexers.btc_electrs {
+            wait_for_indexer_tip(BTC_ELECTRS_URL, h, timeout).await?;
+        }
+    }
+    if wait_liquid {
+        let h = get_daemon_blockcount(ELEMENTSD_URL, ELEMENTSD_COOKIE).await?;
+        if indexers.lbtc_esplora {
+            wait_for_indexer_tip(LBTC_ESPLORA_URL, h, timeout).await?;
+        }
+        if indexers.waterfalls {
+            wait_for_waterfalls_tip(h, timeout).await?;
+        }
+    }
+    Ok(())
+}
+
+async fn get_daemon_blockcount(url: &str, cookie: &str) -> Result<u64, Box<dyn Error>> {
+    let result = json_rpc_request(url, cookie, "getblockcount", json!([])).await?;
+    result
+        .as_u64()
+        .ok_or_else(|| "getblockcount did not return a number".into())
+}
+
+async fn wait_for_waterfalls_tip(
+    expected_height: u64,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/block-height/{}", WATERFALLS_URL, expected_height);
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client.get(&url).send().await {
+            if resp.status().is_success() {
+                return Ok(());
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Waterfalls did not index Liquid height {} within {:?}",
+        expected_height, timeout
+    )
+    .into())
+}
+
+async fn wait_for_indexer_tip(
+    esplora_url: &str,
+    expected_height: u64,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/blocks/tip/height", esplora_url);
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client.get(&url).send().await {
+            if let Ok(text) = resp.text().await {
+                if let Ok(tip) = text.trim().parse::<u64>() {
+                    if tip >= expected_height {
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Indexer at {} did not reach height {} within {:?}",
+        esplora_url, expected_height, timeout
+    )
+    .into())
+}
+
+fn chain_rpc_params(chain: Chain) -> (&'static str, &'static str) {
+    match chain {
+        Chain::Bitcoin => (BITCOIND_URL, BITCOIND_COOKIE.unwrap()),
+        Chain::Liquid => (ELEMENTSD_URL, ELEMENTSD_COOKIE),
+        Chain::Both => panic!("chain_rpc_params requires a single chain, not Both"),
+    }
+}
+
+fn chain_name(chain: Chain) -> &'static str {
+    match chain {
+        Chain::Bitcoin => "Bitcoin",
+        Chain::Liquid => "Liquid",
+        Chain::Both => "Bitcoin+Liquid",
+    }
+}
+
+pub async fn wait_for_tx_in_mempool(
+    chain: Chain,
+    txid: &str,
+    timeout: Duration,
+) -> Result<(), Box<dyn Error>> {
+    let (url, cookie) = chain_rpc_params(chain);
+    let poll_interval = Duration::from_millis(100);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
+        if let Some(arr) = result.as_array() {
+            if arr.iter().any(|v| v.as_str() == Some(txid)) {
+                return Ok(());
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Transaction {} did not appear in {} mempool within {:?}",
+        txid,
+        chain_name(chain),
+        timeout
+    )
+    .into())
+}
+
+/// Wait for an SDK event, with optional retry and mine if initial timeout occurs.
+/// With #978's poller gating optimization, there can be a race condition between
+/// the SDK's internal poller and the indexers after mining a liquid block.
+/// To force an update it might be required to mine an additional liquid block.
+/// However always mining can lead to unexpected side-effect / further state advances
+/// so it is only added when also after one polling cycle the expected event is not
+/// emitted.
+pub async fn wait_for_event_with_retry<F>(
+    handle: &mut super::SdkNodeHandle,
+    indexers: &Indexers,
+    event_match: F,
+    total_timeout: Duration,
+) -> Result<SdkEvent, Box<dyn Error>>
+where
+    F: Fn(&SdkEvent) -> bool,
+{
+    let first_timeout = Duration::from_secs(handle.onchain_sync_period_sec as u64 + 1);
+    assert!(
+        first_timeout * 2 <= total_timeout,
+        "total_timeout ({total_timeout:?}) must be at least 2x one_poll_cycle ({first_timeout:?}) \
+         to leave room for the try-then-mine retry pattern",
+    );
+
+    match handle.wait_for_event(&event_match, first_timeout).await {
+        Ok(event) => Ok(event),
+        Err(_) => {
+            // Tip N was consumed with stale indexer data. Mine N+1
+            // so the poller gets a fresh tip with consistent data.
+            mine_and_index_blocks(1, Chain::Liquid, Some(indexers)).await?;
+            let remaining_timeout = total_timeout.saturating_sub(first_timeout);
+            handle
+                .wait_for_event(&event_match, remaining_timeout)
+                .await
+                .map_err(|e| format!("Event wait timed out after retry: {e}").into())
+        }
+    }
+}
+
+/// Mine blocks on both chains until both mempools are empty
+pub async fn drain_mempools(max_rounds: u32) -> Result<(), Box<dyn Error>> {
+    let settle = Duration::from_millis(1000);
+
+    for _ in 0..max_rounds {
+        mine_and_index_blocks(1, Chain::Both, None).await?;
+
+        if !both_mempools_empty().await? {
+            continue; // more txs than fit in one block, mine again
+        }
+
+        // Quiescence check: wait for deferred broadcasts.
+        tokio::time::sleep(settle).await;
+        if both_mempools_empty().await? {
+            return Ok(());
+        }
+        // Something appeared after the first check — loop and mine again
+    }
+
+    Err(format!("Mempools not empty after {max_rounds} rounds of mining").into())
+}
+
+async fn is_mempool_empty(chain: Chain) -> Result<bool, Box<dyn Error>> {
+    let (url, cookie) = chain_rpc_params(chain);
+    let result = json_rpc_request(url, cookie, "getrawmempool", json!([])).await?;
+    Ok(result.as_array().map_or(true, |a| a.is_empty()))
+}
+
+async fn both_mempools_empty() -> Result<bool, Box<dyn Error>> {
+    Ok(is_mempool_empty(Chain::Bitcoin).await? && is_mempool_empty(Chain::Liquid).await?)
+}
+
+pub async fn poll_boltz_server_lockup_txid(
+    swap_id: &str,
+    timeout: Duration,
+) -> Result<String, Box<dyn Error>> {
+    let url = format!("{}/v2/swap/chain/{}/transactions", SWAPPROXY_URL, swap_id);
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(200);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client
+            .get(PROXY_URL)
+            .header("X-Proxy-URL", &url)
+            .send()
+            .await
+        {
+            if let Ok(body) = resp.json::<Value>().await {
+                if let Some(txid) = body
+                    .get("serverLock")
+                    .and_then(|sl| sl.get("transaction"))
+                    .and_then(|tx| tx.get("id"))
+                    .and_then(|id| id.as_str())
+                {
+                    return Ok(txid.to_string());
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Boltz did not broadcast server lockup for chain swap {} within {:?}",
+        swap_id, timeout
+    )
+    .into())
+}
+
+pub async fn poll_boltz_zero_conf_accepted(
+    swap_id: &str,
+    timeout: Duration,
+) -> Result<bool, Box<dyn Error>> {
+    // Duplicate the id so Express always parses `ids` as an array
+    // (a single `?ids=X` is parsed as a string, not a one-element array).
+    let url = format!(
+        "{}/v2/swap/status?ids={}&ids={}",
+        SWAPPROXY_URL, swap_id, swap_id
+    );
+    let client = Client::new();
+    let poll_interval = Duration::from_millis(200);
+    let iterations = (timeout.as_millis() / poll_interval.as_millis()).max(1) as u64;
+
+    for _ in 0..iterations {
+        if let Ok(resp) = client
+            .get(PROXY_URL)
+            .header("X-Proxy-URL", &url)
+            .send()
+            .await
+        {
+            if let Ok(body) = resp.json::<Value>().await {
+                if let Some(swap_status) = body.get(swap_id) {
+                    // If `zeroConfRejected` is present, use it directly.
+                    if let Some(rejected) = swap_status
+                        .get("zeroConfRejected")
+                        .and_then(|v| v.as_bool())
+                    {
+                        return Ok(!rejected);
+                    }
+                    // If the swap already advanced past mempool (e.g. confirmed,
+                    // claimed), zero-conf was implicitly accepted — the field is
+                    // only present transiently during `transaction.mempool`.
+                    if let Some(status) = swap_status.get("status").and_then(|v| v.as_str()) {
+                        match status {
+                            "transaction.confirmed" | "transaction.claimed" => {
+                                return Ok(true);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+        tokio::time::sleep(poll_interval).await;
+    }
+
+    Err(format!(
+        "Boltz did not report zeroConfRejected for chain swap {} within {:?}",
+        swap_id, timeout
+    )
+    .into())
 }
