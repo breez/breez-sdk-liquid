@@ -28,7 +28,7 @@ async fn liquid_esplora() {
 }
 
 async fn liquid(mut handle: SdkNodeHandle) {
-    let indexers = handle.indexers;
+    let indexers = utils::Indexers::from_handles(&[&handle]);
 
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)

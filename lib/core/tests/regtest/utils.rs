@@ -59,6 +59,24 @@ impl Indexers {
             waterfalls: true,
         }
     }
+
+    /// Merge any number of handles: if any node uses an indexer, we must wait for it.
+    pub fn from_handles(handles: &[&super::SdkNodeHandle]) -> Self {
+        handles.iter().fold(
+            Self {
+                btc_esplora: false,
+                btc_electrs: false,
+                lbtc_esplora: false,
+                waterfalls: false,
+            },
+            |acc, h| Self {
+                btc_esplora: acc.btc_esplora || h.indexers.btc_esplora,
+                btc_electrs: acc.btc_electrs || h.indexers.btc_electrs,
+                lbtc_esplora: acc.lbtc_esplora || h.indexers.lbtc_esplora,
+                waterfalls: acc.waterfalls || h.indexers.waterfalls,
+            },
+        )
+    }
 }
 
 pub fn assert_payment(

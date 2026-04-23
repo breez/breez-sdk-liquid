@@ -60,13 +60,7 @@ async fn bolt12(mut handle_alice: SdkNodeHandle, mut handle_bob: SdkNodeHandle) 
         .await
         .unwrap();
 
-    // Merge indexers from both handles: if either node uses an indexer, we must wait for it.
-    let indexers = utils::Indexers {
-        btc_esplora: handle_alice.indexers.btc_esplora || handle_bob.indexers.btc_esplora,
-        btc_electrs: handle_alice.indexers.btc_electrs || handle_bob.indexers.btc_electrs,
-        lbtc_esplora: handle_alice.indexers.lbtc_esplora || handle_bob.indexers.lbtc_esplora,
-        waterfalls: handle_alice.indexers.waterfalls || handle_bob.indexers.waterfalls,
-    };
+    let indexers = utils::Indexers::from_handles(&[&handle_alice, &handle_bob]);
 
     // -------------------SETUP-------------------
     // Setup Alice with some funds
