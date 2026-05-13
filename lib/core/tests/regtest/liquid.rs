@@ -28,6 +28,8 @@ async fn liquid_esplora() {
 }
 
 async fn liquid(mut handle: SdkNodeHandle) {
+    let indexers = utils::Indexers::from_handles(&[&handle]);
+
     handle
         .wait_for_event(|e| matches!(e, SdkEvent::Synced { .. }), TIMEOUT)
         .await
@@ -49,7 +51,10 @@ async fn liquid(mut handle: SdkNodeHandle) {
     let address = receive_response.destination;
     let amount_sat = 100_000;
 
-    utils::send_to_address_elementsd(&address, amount_sat)
+    let receive_tx_id = utils::send_to_address_elementsd(&address, amount_sat)
+        .await
+        .unwrap();
+    utils::wait_for_tx_in_mempool(utils::Chain::Liquid, &receive_tx_id, TIMEOUT)
         .await
         .unwrap();
 
@@ -61,26 +66,40 @@ async fn liquid(mut handle: SdkNodeHandle) {
         .await
         .unwrap();
 
-    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), amount_sat);
-    assert_eq!(handle.get_balance_sat().await.unwrap(), 0);
+    handle.assert_wallet_pending(amount_sat, 0, 0).await;
 
-    utils::mine_blocks(1).await.unwrap();
-
-    handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
         .await
         .unwrap();
 
-    assert_eq!(handle.get_pending_receive_sat().await.unwrap(), 0);
-    assert_eq!(handle.get_balance_sat().await.unwrap(), amount_sat);
+    utils::wait_for_event_with_retry(
+        &mut handle,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
+
+    // Workaround for #828: mine an extra Liquid block so that sync() sees a
+    // new tip and takes the full scan path, refreshing the LWK wallet state.
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
+    handle.sdk.sync(false).await.unwrap();
+
+    handle.assert_wallet_settled(amount_sat).await;
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 1);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, amount_sat);
-    assert_eq!(payment.fees_sat, 0);
-    assert_eq!(payment.payment_type, PaymentType::Receive);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        amount_sat,
+        0,
+        PaymentType::Receive,
+        PaymentState::Complete,
+    );
     assert!(matches!(payment.details, PaymentDetails::Liquid { .. }));
 
     // --------------SEND--------------
@@ -89,7 +108,7 @@ async fn liquid(mut handle: SdkNodeHandle) {
     let address = utils::generate_address_elementsd().await.unwrap();
     let receiver_amount_sat = 50_000;
 
-    let (prepare_response, _) = handle
+    let (prepare_response, send_response) = handle
         .send_payment(&PrepareSendRequest {
             destination: address,
             amount: Some(PayAmount::Bitcoin {
@@ -104,25 +123,64 @@ async fn liquid(mut handle: SdkNodeHandle) {
     let fees_sat = prepare_response.fees_sat.unwrap();
     let sender_amount_sat = receiver_amount_sat + fees_sat;
 
-    utils::mine_blocks(1).await.unwrap();
-
-    handle
-        .wait_for_event(|e| matches!(e, SdkEvent::PaymentSucceeded { .. }), TIMEOUT)
+    let send_tx_id = send_response
+        .payment
+        .tx_id
+        .as_ref()
+        .expect("tx_id should be set after send_payment returns");
+    utils::wait_for_tx_in_mempool(utils::Chain::Liquid, send_tx_id, TIMEOUT)
         .await
         .unwrap();
 
-    assert_eq!(
-        handle.get_balance_sat().await.unwrap(),
-        initial_balance_sat - sender_amount_sat
-    );
+    handle
+        .wait_for_event(
+            |e| matches!(e, SdkEvent::PaymentWaitingConfirmation { .. }),
+            TIMEOUT,
+        )
+        .await
+        .unwrap();
+    handle
+        .assert_wallet_pending(
+            0,
+            sender_amount_sat,
+            initial_balance_sat - sender_amount_sat,
+        )
+        .await;
+
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
+
+    utils::wait_for_event_with_retry(
+        &mut handle,
+        &indexers,
+        |e| matches!(e, SdkEvent::PaymentSucceeded { .. }),
+        TIMEOUT,
+    )
+    .await
+    .unwrap();
+
+    // Workaround for #828: mine an extra Liquid block so that sync() sees a
+    // new tip and takes the full scan path, refreshing the LWK wallet state.
+    utils::mine_and_index_blocks(1, utils::Chain::Liquid, Some(&indexers))
+        .await
+        .unwrap();
+    handle.sdk.sync(false).await.unwrap();
+
+    handle
+        .assert_wallet_settled(initial_balance_sat - sender_amount_sat)
+        .await;
 
     let payments = handle.get_payments().await.unwrap();
     assert_eq!(payments.len(), 2);
     let payment = &payments[0];
-    assert_eq!(payment.amount_sat, receiver_amount_sat);
-    assert_eq!(payment.fees_sat, fees_sat);
-    assert_eq!(payment.payment_type, PaymentType::Send);
-    assert_eq!(payment.status, PaymentState::Complete);
+    utils::assert_payment(
+        payment,
+        receiver_amount_sat,
+        fees_sat,
+        PaymentType::Send,
+        PaymentState::Complete,
+    );
     assert!(matches!(payment.details, PaymentDetails::Liquid { .. }));
 
     // On node.js, without disconnecting the sdk, the wasm-pack test process fails after the test succeeds

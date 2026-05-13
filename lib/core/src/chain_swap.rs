@@ -338,7 +338,7 @@ impl ChainSwapHandler {
 
             // If swap state is unrecoverable, either:
             // 1. The transaction failed
-            // 2. Lockup failed (too little/too much funds were sent)
+            // 2. Lockup failed (too little/too much funds were sent; incl. amountless receive swaps)
             // 3. The claim lockup was refunded
             // 4. The swap has expired (>24h)
             // We initiate a cooperative refund, and then fallback to a regular one
@@ -350,10 +350,20 @@ impl ChainSwapHandler {
                 let is_zero_amount = swap.payer_amount_sat == 0;
                 if matches!(swap_state, ChainSwapStates::TransactionLockupFailed) && is_zero_amount
                 {
-                    if let Err(e) = self.handle_amountless_update(swap).await {
-                        // In case of error, we log the error but don't mark as refundable,
-                        // letting the recovery logic handle the state.
-                        error!("Failed to accept the quote for swap {}: {e:?}", &swap.id);
+                    // Assumption: after a successful quote acceptance for a swap id, swapper does
+                    // not provide renegotiation via subsequent lockupFailed updates. Therefore,
+                    // ignore post-accept duplicates to avoid regressing accepted amount state.
+                    if swap.is_waiting_fee_acceptance() {
+                        if let Err(e) = self.handle_amountless_update(swap).await {
+                            // In case of error, we log the error but don't mark as refundable,
+                            // letting the recovery logic handle the state.
+                            error!("Failed to accept the quote for swap {}: {e:?}", &swap.id);
+                        }
+                    } else {
+                        debug!(
+                            "Ignoring repeated TransactionLockupFailed for already-accepted zero-amount swap {}",
+                            &swap.id
+                        );
                     }
                     return Ok(());
                 }
