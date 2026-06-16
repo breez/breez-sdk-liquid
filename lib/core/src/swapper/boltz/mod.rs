@@ -23,10 +23,12 @@ use boltz_client::{
     Amount,
 };
 use client::{BitcoinClient, LiquidClient};
-use secp256k1_musig::musig::{PartialSignature as MusigPartialSignature, PublicNonce as MusigPubNonce};
 use log::{info, warn};
 use proxy::split_boltz_url;
 use rand::Rng;
+use secp256k1_musig::musig::{
+    PartialSignature as MusigPartialSignature, PublicNonce as MusigPubNonce,
+};
 use tokio::sync::broadcast;
 use tokio::time::sleep;
 use tokio_with_wasm::alias as tokio;
