@@ -100,6 +100,14 @@ impl BoltzLiquidClient for LiquidClient {
         }
     }
 
+    async fn get_tx(&self, txid: elements::Txid) -> Result<elements::Transaction, Error> {
+        match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            Self::Electrum(c) => c.get_tx(txid).await,
+            Self::Esplora(c) => c.get_tx(txid).await,
+        }
+    }
+
     fn network(&self) -> LiquidChain {
         match self {
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
@@ -168,6 +176,14 @@ impl BoltzBitcoinClient for BitcoinClient {
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             Self::Electrum(c) => c.broadcast_tx(signed_tx).await,
             Self::Esplora(c) => c.broadcast_tx(signed_tx).await,
+        }
+    }
+
+    async fn get_tx(&self, txid: bitcoin::Txid) -> Result<bitcoin::Transaction, Error> {
+        match self {
+            #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
+            Self::Electrum(c) => c.get_tx(txid).await,
+            Self::Esplora(c) => c.get_tx(txid).await,
         }
     }
 

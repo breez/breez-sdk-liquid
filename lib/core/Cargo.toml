@@ -63,6 +63,9 @@ esplora-client = { git = "https://github.com/breez/rust-esplora-client", branch 
 sideswap_api = { git = "https://github.com/breez/sideswap_rust", rev = "2c3c4312d8fe" }
 aes = "0.8.4"
 aes-gcm = "0.10.3"
+# Matches boltz-client's musig secp; needed to name the musig signature types
+# exposed in its public API (e.g. Cooperative::signature).
+secp256k1_musig = { package = "secp256k1", version = "0.32.0-beta.0" }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
@@ -74,7 +77,7 @@ lwk_wollet = { git = "https://github.com/breez/lwk", rev = "dffb6574c3c076cd984d
 prost = "^0.11"
 tonic = { version = "^0.8", features = ["tls", "tls-webpki-roots"] }
 uuid = { version = "1.8.0", features = ["v4"] }
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "d62288fdd1799d90df72a811f4bb6a1b400c5ac7", features = [
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "2d52ad541de5c24ea24542cbcde7cfc25628d6ed", features = [
     "electrum",
     "ws",
 ] }
@@ -96,7 +99,7 @@ tonic = { version = "0.12", default-features = false, features = [
     "codegen",
     "prost",
 ] }
-boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "d62288fdd1799d90df72a811f4bb6a1b400c5ac7", features = [
+boltz-client = { git = "https://github.com/SatoshiPortal/boltz-rust", rev = "2d52ad541de5c24ea24542cbcde7cfc25628d6ed", features = [
     "ws",
 ] }
 rusqlite = { git = "https://github.com/breez/rusqlite", branch = "rusqlite-v0.38.0", features = [

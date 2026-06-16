@@ -62,6 +62,9 @@ impl From<boltz_client::error::Error> for SdkError {
             boltz_client::error::Error::HTTP(e) => {
                 SdkError::generic(format!("Could not contact servers: {e:?}"))
             }
+            boltz_client::error::Error::HTTPStatusNotSuccess(status, body) => {
+                SdkError::generic(format!("Boltz API returned error status {status}: {body}"))
+            }
             _ => SdkError::generic(format!("{err:?}")),
         }
     }
@@ -190,6 +193,11 @@ impl From<boltz_client::error::Error> for PaymentError {
             boltz_client::error::Error::HTTP(e) => PaymentError::Generic {
                 err: format!("Could not contact servers: {e:?}"),
             },
+            boltz_client::error::Error::HTTPStatusNotSuccess(status, body) => {
+                PaymentError::Generic {
+                    err: format!("Boltz API returned error status {status}: {body}"),
+                }
+            }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },

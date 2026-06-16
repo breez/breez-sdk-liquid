@@ -2659,7 +2659,7 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
 
         let claim_keypair = utils::generate_keypair();
@@ -3151,7 +3151,7 @@ impl LiquidSdk {
 
         let keypair = utils::generate_keypair();
 
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
@@ -3341,7 +3341,7 @@ impl LiquidSdk {
 
         let secp = Secp256k1::new();
         let keypair = bolt12_offer.get_keypair()?;
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_byte_array();
 
@@ -3582,7 +3582,7 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
 
         let claim_keypair = utils::generate_keypair();
