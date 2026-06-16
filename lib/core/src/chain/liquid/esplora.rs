@@ -56,7 +56,7 @@ impl EsploraLiquidChainService {
                         }
                     };
                 }
-                builder.timeout(3).waterfalls(*use_waterfalls).build()
+                builder.timeout(3).waterfalls(*use_waterfalls).build()?
             }
             #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
             BlockchainExplorer::Electrum { .. } => {

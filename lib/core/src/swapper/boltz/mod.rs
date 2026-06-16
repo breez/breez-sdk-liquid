@@ -19,7 +19,6 @@ use boltz_client::{
         GetBolt12FetchResponse, GetBolt12ParamsResponse, GetNodesResponse, ReversePair,
         SubmarineClaimTxResponse, SubmarinePair, UpdateBolt12OfferRequest, WsRequest,
     },
-    elements::secp256k1_zkp::{MusigPartialSignature, MusigPubNonce},
     network::Chain,
     Amount,
 };
@@ -27,6 +26,9 @@ use client::{BitcoinClient, LiquidClient};
 use log::{info, warn};
 use proxy::split_boltz_url;
 use rand::Rng;
+use secp256k1_musig::musig::{
+    PartialSignature as MusigPartialSignature, PublicNonce as MusigPubNonce,
+};
 use tokio::sync::broadcast;
 use tokio::time::sleep;
 use tokio_with_wasm::alias as tokio;
@@ -166,7 +168,11 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             .get_chain_claim_tx_details(&swap.id)
             .await
         {
-            Ok(claim_tx_details) => claim_tx_details,
+            Ok(Some(claim_tx_details)) => claim_tx_details,
+            Ok(None) => {
+                warn!("Chain claim tx details not available (server claim already succeeded) - continuing without signature");
+                return Ok(None);
+            }
             Err(e) => {
                 warn!("Failed to get chain claim tx details: {e:?} - continuing without signature as we may have already sent it");
                 return Ok(None);

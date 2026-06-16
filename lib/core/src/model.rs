@@ -10,7 +10,6 @@ use boltz_client::{
 };
 use derivative::Derivative;
 use elements::AssetId;
-use lwk_wollet::ElementsNetwork;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::ToSql;
 use sdk_common::prelude::*;
@@ -361,17 +360,22 @@ impl LiquidNetwork {
     }
 }
 
-impl From<LiquidNetwork> for ElementsNetwork {
+impl From<LiquidNetwork> for lwk_wollet::Network {
     fn from(value: LiquidNetwork) -> Self {
         match value {
-            LiquidNetwork::Mainnet => ElementsNetwork::Liquid,
-            LiquidNetwork::Testnet => ElementsNetwork::LiquidTestnet,
-            LiquidNetwork::Regtest => ElementsNetwork::ElementsRegtest {
-                policy_asset: AssetId::from_str(
-                    "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
-                )
-                .unwrap(),
-            },
+            LiquidNetwork::Mainnet => lwk_wollet::Network::Liquid,
+            LiquidNetwork::Testnet => lwk_wollet::Network::TestnetLiquid,
+            LiquidNetwork::Regtest => lwk_wollet::Network::CustomElements(
+                lwk_common::ElementsParamsBuilder::new()
+                    .with_policy_asset(
+                        AssetId::from_str(
+                            "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+                        )
+                        .unwrap(),
+                    )
+                    .build()
+                    .expect("valid regtest elements params"),
+            ),
         }
     }
 }

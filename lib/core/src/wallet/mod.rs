@@ -17,7 +17,7 @@ use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
 use lwk_wollet::secp256k1::Message;
-use lwk_wollet::{ElementsNetwork, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
+use lwk_wollet::{Network, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use persister::SqliteWalletCachePersister;
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -145,13 +145,11 @@ impl WalletClient {
                         }
                     };
                 }
-                let client = Box::new(
-                    builder
-                        .timeout(config.onchain_sync_request_timeout_sec as u8)
-                        .waterfalls(waterfalls)
-                        .build(),
-                );
-                Ok(Self::Esplora(client))
+                let client = builder
+                    .timeout(config.onchain_sync_request_timeout_sec as u8)
+                    .waterfalls(waterfalls)
+                    .build()?;
+                Ok(Self::Esplora(Box::new(client)))
             }
         }
     }
@@ -201,11 +199,9 @@ impl LiquidOnchainWallet {
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
 
-        let wallet_cache_persister: Arc<dyn WalletCachePersister> =
-            Arc::new(SqliteWalletCachePersister::new(
-                std::sync::Arc::clone(&persister),
-                get_descriptor(&signer)?,
-            )?);
+        let wallet_cache_persister: Arc<dyn WalletCachePersister> = Arc::new(
+            SqliteWalletCachePersister::new(std::sync::Arc::clone(&persister))?,
+        );
 
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
@@ -224,27 +220,24 @@ impl LiquidOnchainWallet {
         signer: &SdkLwkSigner,
         wallet_cache_persister: Arc<dyn WalletCachePersister>,
     ) -> Result<Wollet> {
-        let elements_network: ElementsNetwork = config.network.into();
+        let network: Network = config.network.into();
         let descriptor = get_descriptor(signer)?;
-        let wollet_res = Wollet::new(
-            elements_network,
-            wallet_cache_persister.get_lwk_persister()?,
-            descriptor.clone(),
-        );
+        let build_wollet = |persister: persister::LwkPersister| {
+            lwk_wollet::WolletBuilder::new(network, descriptor.clone())
+                .with_updates_store(persister)
+                .build()
+        };
+        let wollet_res = build_wollet(wallet_cache_persister.get_lwk_persister()?);
         match wollet_res {
             Ok(wollet) => Ok(wollet),
             res @ Err(
-                lwk_wollet::Error::PersistError(_)
-                | lwk_wollet::Error::UpdateHeightTooOld { .. }
-                | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
+                lwk_wollet::Error::UpdateHeightTooOld { .. }
+                | lwk_wollet::Error::UpdateOnDifferentStatus { .. }
+                | lwk_wollet::Error::StoreError(_),
             ) => {
                 warn!("Update error initialising wollet, wiping cache and retrying: {res:?}");
                 wallet_cache_persister.clear_cache().await?;
-                Ok(Wollet::new(
-                    elements_network,
-                    wallet_cache_persister.get_lwk_persister()?,
-                    descriptor.clone(),
-                )?)
+                Ok(build_wollet(wallet_cache_persister.get_lwk_persister()?)?)
             }
             Err(e) => Err(e.into()),
         }
@@ -289,7 +282,95 @@ impl LiquidOnchainWallet {
             recipient_outputs,
             fee_rate,
         })?;
-        let selected_utxos = selected_in_outs
+        let selected_utxos = Self::resolve_selected_utxos(&mut wallet_utxos, &selected_in_outs)?;
+        debug!(
+            "Selected wallet outputs: {:?}",
+            selected_utxos
+                .iter()
+                .map(|outpoint| format!("{}:{}", outpoint.txid, outpoint.vout))
+                .collect::<Vec<_>>()
+        );
+        Ok(selected_utxos)
+    }
+
+    /// Selects wallet utxos for a non-L-BTC asset send: enough utxos of `asset`
+    /// to cover `amount_sat`, plus a bounded set of L-BTC utxos to cover the fee.
+    ///
+    /// Without an explicit selection, lwk falls into its "always add all L-BTC
+    /// inputs" path, which can exceed the 256-input surjection-proof limit (and
+    /// fail with `TooManyInputs`) for wallets with many small L-BTC utxos, even
+    /// though an asset send only needs a couple of inputs to pay the fee.
+    fn select_asset_and_fee_utxos(
+        &self,
+        wallet: &Wollet,
+        asset: AssetId,
+        amount_sat: u64,
+        fee_rate_sats_per_kvb: Option<f32>,
+    ) -> Result<Vec<OutPoint>, PaymentError> {
+        let policy_asset = wallet.policy_asset();
+        ensure_sdk!(
+            asset != policy_asset,
+            PaymentError::generic("select_asset_and_fee_utxos called for the policy asset")
+        );
+
+        let mut wallet_utxos = wallet.utxos()?;
+
+        // Select asset utxos to cover the amount being sent.
+        let asset_values = wallet_utxos
+            .iter()
+            .filter(|tx_out| tx_out.unblinded.asset == asset)
+            .map(|tx_out| tx_out.unblinded.value)
+            .collect::<Vec<_>>();
+        let selected_asset_values = utxo_select::utxo_select_best(amount_sat, &asset_values)
+            .ok_or_else(|| PaymentError::generic("Failed to select asset utxos"))?;
+        let asset_input_count = selected_asset_values.len();
+
+        // Select a bounded set of L-BTC utxos to cover the fee. The fee depends on
+        // the total input count, so seed the estimate with the asset inputs above.
+        let fee_rate = fee_rate_sats_per_kvb.map(|rate| rate as f64 / 1000.0);
+        let policy_values = wallet_utxos
+            .iter()
+            .filter(|tx_out| tx_out.unblinded.asset == policy_asset)
+            .map(|tx_out| tx_out.unblinded.value)
+            .collect::<Vec<_>>();
+        let selected_fee_values = utxo_select::utxo_select_dynamic(
+            0,
+            &policy_values,
+            |lbtc_input_count, change_count| {
+                network_fee::TxFee {
+                    native_inputs: asset_input_count + lbtc_input_count,
+                    nested_inputs: 0,
+                    // asset recipient + asset change + L-BTC change
+                    outputs: 2 + change_count,
+                }
+                .fee(fee_rate)
+            },
+        )
+        .ok_or_else(|| PaymentError::generic("Failed to select L-BTC utxos for fee"))?;
+
+        // Resolve the selected asset and fee values to their wallet outpoints.
+        let selected = selected_asset_values
+            .into_iter()
+            .map(|value| InOut {
+                asset_id: asset,
+                value,
+            })
+            .chain(selected_fee_values.into_iter().map(|value| InOut {
+                asset_id: policy_asset,
+                value,
+            }))
+            .collect::<Vec<_>>();
+        Self::resolve_selected_utxos(&mut wallet_utxos, &selected)
+    }
+
+    /// Resolves selected `(asset, value)` pairs to their wallet outpoints,
+    /// removing each match as it is found so that duplicate values resolve to
+    /// distinct utxos. Errors if any selected value has no matching utxo.
+    fn resolve_selected_utxos(
+        wallet_utxos: &mut Vec<WalletTxOut>,
+        selected: &[InOut],
+    ) -> Result<Vec<OutPoint>, PaymentError> {
+        let selected_utxos = selected
             .iter()
             .filter_map(|in_out| {
                 wallet_utxos
@@ -302,15 +383,8 @@ impl LiquidOnchainWallet {
             })
             .collect::<Vec<_>>();
         ensure_sdk!(
-            selected_utxos.len() == selected_in_outs.len(),
-            PaymentError::generic("Failed to select wallet utxos")
-        );
-        debug!(
-            "Selected wallet outputs: {:?}",
-            selected_utxos
-                .iter()
-                .map(|outpoint| format!("{}:{}", outpoint.txid, outpoint.vout))
-                .collect::<Vec<_>>()
+            selected_utxos.len() == selected.len(),
+            PaymentError::generic("Failed to resolve selected wallet utxos to outpoints")
         );
         Ok(selected_utxos)
     }
@@ -402,6 +476,20 @@ impl OnchainWallet for LiquidOnchainWallet {
         } else {
             // Add the asset recipient
             let asset = AssetId::from_str(asset_id)?;
+            // Explicitly select the asset utxos plus a bounded set of L-BTC utxos
+            // for the fee. If selection fails, fall back to letting lwk select the
+            // utxos (which adds all L-BTC inputs).
+            match self.select_asset_and_fee_utxos(
+                &lwk_wollet,
+                asset,
+                amount_sat,
+                fee_rate_sats_per_kvb,
+            ) {
+                Ok(wallet_utxos) => {
+                    tx_builder = tx_builder.set_wallet_utxos(wallet_utxos);
+                }
+                Err(e) => warn!("Failed to select asset and fee wallet utxos: {e:?}"),
+            }
             tx_builder = tx_builder.add_recipient(&address, amount_sat, asset)?;
         }
         let mut pset = tx_builder.finish(&lwk_wollet)?;
@@ -442,7 +530,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                 .balances
                 .get(&lwk_wollet.policy_asset())
                 .unwrap_or(&0);
-            let pset_fees = pset_details.balance.fee;
+            let pset_fees = pset_details.balance.fees_in(&lwk_wollet.policy_asset());
 
             ensure_sdk!(
                 (*pset_balance_sat * -1) as u64 - pset_fees == enforce_amount_sat,
@@ -614,7 +702,8 @@ impl OnchainWallet for LiquidOnchainWallet {
                 if matches!(
                     e,
                     lwk_wollet::Error::UpdateHeightTooOld { .. }
-                        | lwk_wollet::Error::PersistError(_)
+                        | lwk_wollet::Error::UpdateOnDifferentStatus { .. }
+                        | lwk_wollet::Error::StoreError(_)
                 ) =>
             {
                 warn!("Full scan failed due to {e}, reloading wallet and retrying");

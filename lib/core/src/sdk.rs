@@ -2659,7 +2659,7 @@ impl LiquidSdk {
             PaymentError::InsufficientFunds
         );
 
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
 
         let claim_keypair = utils::generate_keypair();
@@ -3151,7 +3151,7 @@ impl LiquidSdk {
 
         let keypair = utils::generate_keypair();
 
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_string();
 
@@ -3341,7 +3341,7 @@ impl LiquidSdk {
 
         let secp = Secp256k1::new();
         let keypair = bolt12_offer.get_keypair()?;
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
         let preimage_hash = preimage.sha256.to_byte_array();
 
@@ -3582,7 +3582,7 @@ impl LiquidSdk {
             PaymentError::InvalidOrExpiredFees
         );
 
-        let preimage = Preimage::new();
+        let preimage = Preimage::random();
         let preimage_str = preimage.to_string().ok_or(PaymentError::InvalidPreimage)?;
 
         let claim_keypair = utils::generate_keypair();
@@ -4180,10 +4180,10 @@ impl LiquidSdk {
         let asset_balances = transactions
             .into_iter()
             .fold(BTreeMap::<AssetId, i64>::new(), |mut acc, tx| {
-                tx.balance.into_iter().for_each(|(asset_id, balance)| {
+                tx.balance.iter().for_each(|(asset_id, balance)| {
                     // Consider only confirmed unspent outputs (confirmed transactions output reduced by unconfirmed spent outputs)
-                    if tx.height.is_some() || balance < 0 {
-                        *acc.entry(asset_id).or_default() += balance;
+                    if tx.height.is_some() || *balance < 0 {
+                        *acc.entry(*asset_id).or_default() += *balance;
                     }
                 });
                 acc
@@ -4393,7 +4393,7 @@ impl LiquidSdk {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
-        path.push(Into::<lwk_wollet::ElementsNetwork>::into(self.config.network).as_str());
+        path.push(Into::<lwk_wollet::Network>::into(self.config.network).as_str());
         path.push("enc_cache");
 
         std::fs::remove_dir_all(&path)?;

@@ -62,6 +62,9 @@ impl From<boltz_client::error::Error> for SdkError {
             boltz_client::error::Error::HTTP(e) => {
                 SdkError::generic(format!("Could not contact servers: {e:?}"))
             }
+            boltz_client::error::Error::HTTPStatusNotSuccess(status, body) => {
+                SdkError::generic(format!("Boltz API returned error status {status}: {body}"))
+            }
             _ => SdkError::generic(format!("{err:?}")),
         }
     }
@@ -190,6 +193,11 @@ impl From<boltz_client::error::Error> for PaymentError {
             boltz_client::error::Error::HTTP(e) => PaymentError::Generic {
                 err: format!("Could not contact servers: {e:?}"),
             },
+            boltz_client::error::Error::HTTPStatusNotSuccess(status, body) => {
+                PaymentError::Generic {
+                    err: format!("Boltz API returned error status {status}: {body}"),
+                }
+            }
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
@@ -209,6 +217,12 @@ impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
         match err {
             lwk_wollet::Error::InsufficientFunds { .. } => PaymentError::InsufficientFunds,
+            lwk_wollet::Error::TooManyInputs(count) => PaymentError::Generic {
+                err: format!(
+                    "Transaction would require {count} inputs, which exceeds the maximum of 256 \
+                     supported by the Liquid surjection proof. Consolidate UTXOs and try again."
+                ),
+            },
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },

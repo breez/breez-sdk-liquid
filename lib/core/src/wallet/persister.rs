@@ -1,13 +1,13 @@
 use anyhow::Result;
-use log::debug;
-use lwk_wollet::{PersistError, Update, WolletDescriptor};
-use std::sync::{Arc, Mutex};
+use lwk_wollet::{BoxError, DynStore};
+use std::fmt;
+use std::sync::Arc;
 
 pub use lwk_wollet;
 
 use crate::persist::Persister;
 
-pub type LwkPersister = Arc<dyn lwk_wollet::Persister + Send + Sync>;
+pub type LwkPersister = Arc<dyn DynStore>;
 
 #[sdk_macros::async_trait]
 pub trait WalletCachePersister: Send + Sync {
@@ -19,82 +19,63 @@ pub trait WalletCachePersister: Send + Sync {
 #[derive(Clone)]
 pub struct SqliteWalletCachePersister {
     persister: Arc<Persister>,
-    descriptor: WolletDescriptor,
 }
 
 impl SqliteWalletCachePersister {
-    pub fn new(persister: Arc<Persister>, descriptor: WolletDescriptor) -> Result<Self> {
-        Ok(Self {
-            persister,
-            descriptor,
-        })
+    pub fn new(persister: Arc<Persister>) -> Result<Self> {
+        Ok(Self { persister })
     }
 }
 
 #[sdk_macros::async_trait]
 impl WalletCachePersister for SqliteWalletCachePersister {
     fn get_lwk_persister(&self) -> Result<LwkPersister> {
-        SqliteLwkPersister::new(Arc::clone(&self.persister), self.descriptor.clone())
+        Ok(Arc::new(SqliteDynStore {
+            persister: Arc::clone(&self.persister),
+        }))
     }
 
     async fn clear_cache(&self) -> Result<()> {
-        self.persister.clear_wallet_updates()
+        self.persister.clear_wallet_cache()
     }
 }
 
-pub(crate) struct SqliteLwkPersister {
+/// A [`DynStore`] implementation backed by the SDK's SQLite [`Persister`].
+///
+/// LWK owns serialization, merging and (when persisted) encryption of the wallet
+/// cache: this store only persists opaque key-value pairs.
+struct SqliteDynStore {
     persister: Arc<Persister>,
-    descriptor: WolletDescriptor,
-    next: Mutex<u64>,
 }
 
-impl SqliteLwkPersister {
-    #[allow(clippy::new_ret_no_self)]
-    pub(crate) fn new(
-        persister: Arc<Persister>,
-        descriptor: WolletDescriptor,
-    ) -> Result<LwkPersister> {
-        let next = persister.get_next_wallet_update_index()?;
-        Ok(Arc::new(Self {
-            persister,
-            descriptor,
-            next: Mutex::new(next),
-        }))
+impl fmt::Debug for SqliteDynStore {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SqliteDynStore").finish()
     }
 }
 
-impl lwk_wollet::Persister for SqliteLwkPersister {
-    fn get(&self, index: usize) -> std::result::Result<Option<Update>, PersistError> {
-        let maybe_update_bytes = self
-            .persister
-            .get_wallet_update(index as u64)
-            .map_err(|e| PersistError::Other(e.to_string()))?;
-        maybe_update_bytes
-            .map(|update_bytes| {
-                Update::deserialize_decrypted(&update_bytes, &self.descriptor)
-                    .map_err(|e| PersistError::Other(e.to_string()))
-            })
-            .transpose()
-    }
-
-    fn push(&self, update: Update) -> std::result::Result<(), PersistError> {
-        debug!(
-            "LwkPersister starting push update with status {}",
-            update.wollet_status
-        );
-
-        let mut next = self.next.lock().unwrap();
-
-        let ciphertext = update
-            .serialize_encrypted(&self.descriptor)
-            .map_err(|e| PersistError::Other(e.to_string()))?;
-
+impl DynStore for SqliteDynStore {
+    fn get(&self, key: &str) -> Result<Option<Vec<u8>>, BoxError> {
         self.persister
-            .insert_wallet_update(*next, &ciphertext)
-            .map_err(|e| PersistError::Other(e.to_string()))?;
+            .get_wallet_cache(key)
+            .map_err(|e| e.to_string().into())
+    }
 
-        *next += 1;
+    fn put(&self, key: &str, value: &[u8]) -> Result<(), BoxError> {
+        self.persister
+            .set_wallet_cache(key, value)
+            .map_err(|e| e.to_string().into())
+    }
 
-        Ok(())
+    fn remove(&self, key: &str) -> Result<(), BoxError> {
+        self.persister
+            .remove_wallet_cache(key)
+            .map_err(|e| e.to_string().into())
+    }
+
+    /// The cache is persisted across restarts, so LWK encrypts it with the
+    /// descriptor-derived key.
+    fn is_persisted(&self) -> bool {
+        true
     }
 }

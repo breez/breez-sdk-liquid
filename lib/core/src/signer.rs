@@ -168,6 +168,20 @@ impl LwkSigner for SdkLwkSigner {
         let xpub = Xpub::decode(pubkey_bytes.as_slice())?;
         Ok(xpub)
     }
+
+    /// Message signing is not used by the SDK (LWK only invokes this for its own
+    /// AMP0 software/hardware signers, which the SDK does not use) and the SDK's
+    /// `Signer` abstraction does not expose a recoverable-sign-at-path primitive,
+    /// so this is intentionally unsupported.
+    fn sign_message(
+        &self,
+        _message: &str,
+        _path: &DerivationPath,
+    ) -> Result<bitcoin::sign_message::MessageSignature, Self::Error> {
+        Err(SignError::Generic(anyhow!(
+            "sign_message is not supported by the Breez SDK signer"
+        )))
+    }
 }
 
 pub struct SdkSigner {
@@ -295,7 +309,7 @@ mod tests {
     use lwk_signer::SwSigner;
     use lwk_wollet::{
         elements::{self, Script},
-        ElementsNetwork, NoPersist, Wollet, WolletDescriptor,
+        FakeStore, Network, WolletBuilder, WolletDescriptor,
     };
     use std::collections::BTreeMap;
 
@@ -472,26 +486,22 @@ mod tests {
     fn test_sdk_signer_vs_sw_signer() {
         // Use a test mnemonic (don't use this in production!)
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
-        let network = ElementsNetwork::LiquidTestnet;
+        let network = Network::TestnetLiquid;
 
         // 1. Create a wallet using SwSigner
         let sw_signer = SwSigner::new(mnemonic, false).unwrap();
-        let sw_wallet = Wollet::new(
-            network,
-            NoPersist::new(),
-            get_descriptor(&sw_signer).unwrap(),
-        )
-        .unwrap();
+        let sw_wallet = WolletBuilder::new(network, get_descriptor(&sw_signer).unwrap())
+            .with_updates_store(Arc::new(FakeStore::new()))
+            .build()
+            .unwrap();
 
         // 2. Create a wallet using SdkLwkSigner
         let sdk_signer: Box<dyn Signer> = Box::new(SdkSigner::new(mnemonic, "", false).unwrap());
         let sdk_signer = SdkLwkSigner::new(Arc::new(sdk_signer)).unwrap();
-        let sdk_wallet = Wollet::new(
-            network,
-            NoPersist::new(),
-            get_descriptor(&sdk_signer).unwrap(),
-        )
-        .unwrap();
+        let sdk_wallet = WolletBuilder::new(network, get_descriptor(&sdk_signer).unwrap())
+            .with_updates_store(Arc::new(FakeStore::new()))
+            .build()
+            .unwrap();
 
         // Generate new addresses and compare
         let sw_address = sw_wallet.address(None).unwrap();

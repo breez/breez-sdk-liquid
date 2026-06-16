@@ -465,7 +465,7 @@ impl SyncService {
             .await
             .map_err(PullError::recovery)?;
 
-        Ok(succeded.into_iter().zip(swaps.into_iter()).collect())
+        Ok(succeded.into_iter().zip(swaps).collect())
     }
 
     pub(crate) async fn pull(&self) -> Result<u32, PullError> {

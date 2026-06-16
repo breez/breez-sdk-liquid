@@ -183,7 +183,7 @@ impl Swapper for MockSwapper {
     }
 
     async fn get_submarine_preimage(&self, _swap_id: &str) -> Result<String, PaymentError> {
-        Ok(Preimage::new().to_string().unwrap())
+        Ok(Preimage::random().to_string().unwrap())
     }
 
     async fn get_submarine_pairs(&self) -> Result<Option<SubmarinePair>, PaymentError> {
@@ -208,7 +208,7 @@ impl Swapper for MockSwapper {
         _swap: &SendSwap,
     ) -> Result<SubmarineClaimTxResponse, PaymentError> {
         Ok(SubmarineClaimTxResponse {
-            preimage: Preimage::new()
+            preimage: Preimage::random()
                 .to_string()
                 .expect("Expected valid preimage"),
             pub_nonce: "".to_string(),
