@@ -284,7 +284,7 @@ impl PayjoinService for SideSwapPayjoinService {
             utxo_select_res
                 .user_inputs
                 .into_iter()
-                .chain(utxo_select_res.client_inputs.into_iter())
+                .chain(utxo_select_res.client_inputs)
                 .collect(),
         )?);
         inputs.append(&mut select_utxos(
@@ -299,7 +299,7 @@ impl PayjoinService for SideSwapPayjoinService {
         for (output, recipient) in utxo_select_res
             .user_outputs
             .iter()
-            .zip(recipients.into_iter())
+            .zip(recipients)
         {
             debug!(
                 "Payjoin recipent output: {} value: {}",
