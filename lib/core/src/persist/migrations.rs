@@ -376,6 +376,16 @@ pub(crate) fn current_migrations(network: LiquidNetwork) -> Vec<&'static str> {
         ",
         "ALTER TABLE chain_swaps ADD COLUMN user_lockup_spent INTEGER NOT NULL DEFAULT 0;",
         "ALTER TABLE payment_details ADD COLUMN settled_at INTEGER;",
+        // Key-value store backing the LWK wallet cache (lwk_common::DynStore).
+        // Replaces the legacy index-based `wallet_updates` table; the old cache is
+        // abandoned on upgrade and rebuilt on the next wallet scan.
+        "
+        DROP TABLE IF EXISTS wallet_updates;
+        CREATE TABLE IF NOT EXISTS wallet_cache_kv (
+            key TEXT NOT NULL PRIMARY KEY,
+            value BLOB NOT NULL
+        ) STRICT;
+        ",
     ]
 }
 

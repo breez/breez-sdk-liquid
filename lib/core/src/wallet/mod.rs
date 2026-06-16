@@ -17,7 +17,7 @@ use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
 use lwk_wollet::secp256k1::Message;
-use lwk_wollet::{ElementsNetwork, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
+use lwk_wollet::{Network, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use persister::SqliteWalletCachePersister;
 use sdk_common::bitcoin::hashes::{sha256, Hash};
 use sdk_common::bitcoin::secp256k1::PublicKey;
@@ -145,13 +145,11 @@ impl WalletClient {
                         }
                     };
                 }
-                let client = Box::new(
-                    builder
-                        .timeout(config.onchain_sync_request_timeout_sec as u8)
-                        .waterfalls(waterfalls)
-                        .build(),
-                );
-                Ok(Self::Esplora(client))
+                let client = builder
+                    .timeout(config.onchain_sync_request_timeout_sec as u8)
+                    .waterfalls(waterfalls)
+                    .build()?;
+                Ok(Self::Esplora(Box::new(client)))
             }
         }
     }
@@ -201,11 +199,9 @@ impl LiquidOnchainWallet {
     ) -> Result<Self> {
         let signer = SdkLwkSigner::new(user_signer.clone())?;
 
-        let wallet_cache_persister: Arc<dyn WalletCachePersister> =
-            Arc::new(SqliteWalletCachePersister::new(
-                std::sync::Arc::clone(&persister),
-                get_descriptor(&signer)?,
-            )?);
+        let wallet_cache_persister: Arc<dyn WalletCachePersister> = Arc::new(
+            SqliteWalletCachePersister::new(std::sync::Arc::clone(&persister))?,
+        );
 
         let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
 
@@ -224,27 +220,23 @@ impl LiquidOnchainWallet {
         signer: &SdkLwkSigner,
         wallet_cache_persister: Arc<dyn WalletCachePersister>,
     ) -> Result<Wollet> {
-        let elements_network: ElementsNetwork = config.network.into();
+        let network: Network = config.network.into();
         let descriptor = get_descriptor(signer)?;
-        let wollet_res = Wollet::new(
-            elements_network,
-            wallet_cache_persister.get_lwk_persister()?,
-            descriptor.clone(),
-        );
+        let build_wollet = |persister: persister::LwkPersister| {
+            lwk_wollet::WolletBuilder::new(network, descriptor.clone())
+                .with_updates_store(persister)
+                .build()
+        };
+        let wollet_res = build_wollet(wallet_cache_persister.get_lwk_persister()?);
         match wollet_res {
             Ok(wollet) => Ok(wollet),
             res @ Err(
-                lwk_wollet::Error::PersistError(_)
-                | lwk_wollet::Error::UpdateHeightTooOld { .. }
+                lwk_wollet::Error::UpdateHeightTooOld { .. }
                 | lwk_wollet::Error::UpdateOnDifferentStatus { .. },
             ) => {
                 warn!("Update error initialising wollet, wiping cache and retrying: {res:?}");
                 wallet_cache_persister.clear_cache().await?;
-                Ok(Wollet::new(
-                    elements_network,
-                    wallet_cache_persister.get_lwk_persister()?,
-                    descriptor.clone(),
-                )?)
+                Ok(build_wollet(wallet_cache_persister.get_lwk_persister()?)?)
             }
             Err(e) => Err(e.into()),
         }
@@ -442,7 +434,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                 .balances
                 .get(&lwk_wollet.policy_asset())
                 .unwrap_or(&0);
-            let pset_fees = pset_details.balance.fee;
+            let pset_fees = pset_details.balance.fees_in(&lwk_wollet.policy_asset());
 
             ensure_sdk!(
                 (*pset_balance_sat * -1) as u64 - pset_fees == enforce_amount_sat,
@@ -614,7 +606,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                 if matches!(
                     e,
                     lwk_wollet::Error::UpdateHeightTooOld { .. }
-                        | lwk_wollet::Error::PersistError(_)
+                        | lwk_wollet::Error::UpdateOnDifferentStatus { .. }
                 ) =>
             {
                 warn!("Full scan failed due to {e}, reloading wallet and retrying");

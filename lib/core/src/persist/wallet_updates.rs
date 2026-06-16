@@ -1,47 +1,16 @@
-use crate::utils::{from_row_to_optional_u64, from_u64_to_row};
-
 use super::Persister;
 
 use anyhow::Result;
-use rusqlite::{OptionalExtension, TransactionBehavior};
+use rusqlite::OptionalExtension;
 
 impl Persister {
-    /// Inserts a new wallet update if the provided index matches the next index
-    pub(crate) fn insert_wallet_update(&self, index: u64, update: &[u8]) -> Result<()> {
-        let mut conn = self.get_connection()?;
-        let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
-
-        let next_index = self.get_next_index(&tx)?;
-
-        // Only allow inserting at next_index
-        if index != next_index {
-            return Err(anyhow::anyhow!(
-                "Invalid index for insert: tried {} - must be {}",
-                index,
-                next_index
-            ));
-        }
-
-        tx.execute(
-            "INSERT INTO wallet_updates (id, data) VALUES (?, ?)",
-            (from_u64_to_row(index)?, update),
-        )?;
-
-        tx.commit()?;
-        Ok(())
-    }
-
-    pub(crate) fn get_next_wallet_update_index(&self) -> Result<u64> {
-        let conn = self.get_connection()?;
-        self.get_next_index(&conn)
-    }
-
-    pub(crate) fn get_wallet_update(&self, index: u64) -> Result<Option<Vec<u8>>> {
+    /// Get a value from the wallet cache key-value store.
+    pub(crate) fn get_wallet_cache(&self, key: &str) -> Result<Option<Vec<u8>>> {
         let conn = self.get_connection()?;
         let data: Option<Vec<u8>> = conn
             .query_row(
-                "SELECT data FROM wallet_updates WHERE id = ?",
-                [from_u64_to_row(index)?],
+                "SELECT value FROM wallet_cache_kv WHERE key = ?",
+                [key],
                 |row| row.get(0),
             )
             .optional()?;
@@ -49,18 +18,28 @@ impl Persister {
         Ok(data)
     }
 
-    pub(crate) fn clear_wallet_updates(&self) -> Result<()> {
+    /// Insert or update a value in the wallet cache key-value store.
+    pub(crate) fn set_wallet_cache(&self, key: &str, value: &[u8]) -> Result<()> {
         let conn = self.get_connection()?;
-        conn.execute("DELETE FROM wallet_updates", [])?;
+        conn.execute(
+            "INSERT INTO wallet_cache_kv (key, value) VALUES (?, ?)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            rusqlite::params![key, value],
+        )?;
         Ok(())
     }
 
-    fn get_next_index(&self, conn: &rusqlite::Connection) -> Result<u64> {
-        let max_index: Option<u64> =
-            conn.query_row("SELECT MAX(id) FROM wallet_updates", [], |row| {
-                from_row_to_optional_u64(row, 0)
-            })?;
-        Ok(max_index.map_or(0, |max| max + 1))
+    /// Remove a value from the wallet cache key-value store.
+    pub(crate) fn remove_wallet_cache(&self, key: &str) -> Result<()> {
+        let conn = self.get_connection()?;
+        conn.execute("DELETE FROM wallet_cache_kv WHERE key = ?", [key])?;
+        Ok(())
+    }
+
+    pub(crate) fn clear_wallet_cache(&self) -> Result<()> {
+        let conn = self.get_connection()?;
+        conn.execute("DELETE FROM wallet_cache_kv", [])?;
+        Ok(())
     }
 }
 
@@ -73,57 +52,34 @@ mod tests {
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     #[sdk_macros::test_all]
-    fn test_wallet_updates_basic_operations() -> Result<()> {
+    fn test_wallet_cache_basic_operations() -> Result<()> {
         create_persister!(storage);
 
-        // Test initial state
-        assert_eq!(storage.get_next_wallet_update_index()?, 0);
+        // Test getting non-existent key
+        assert_eq!(storage.get_wallet_cache("key1")?, None);
 
-        // Test inserting first update
-        let update1 = b"test update 1";
-        storage.insert_wallet_update(0, update1)?;
-        assert_eq!(storage.get_next_wallet_update_index()?, 1);
-        assert_eq!(storage.get_wallet_update(0)?, Some(update1.to_vec()));
+        // Test inserting a value
+        let value1 = b"test value 1";
+        storage.set_wallet_cache("key1", value1)?;
+        assert_eq!(storage.get_wallet_cache("key1")?, Some(value1.to_vec()));
 
-        // Test inserting second update
-        let update2 = b"test update 2";
-        storage.insert_wallet_update(1, update2)?;
-        assert_eq!(storage.get_next_wallet_update_index()?, 2);
-        assert_eq!(storage.get_wallet_update(1)?, Some(update2.to_vec()));
+        // Test updating an existing value
+        let value2 = b"test value 2";
+        storage.set_wallet_cache("key1", value2)?;
+        assert_eq!(storage.get_wallet_cache("key1")?, Some(value2.to_vec()));
 
-        // Test clearing updates
-        storage.clear_wallet_updates()?;
-        assert_eq!(storage.get_next_wallet_update_index()?, 0);
+        // Test a second key
+        storage.set_wallet_cache("key2", value1)?;
+        assert_eq!(storage.get_wallet_cache("key2")?, Some(value1.to_vec()));
 
-        // Verify we can insert again
-        storage.insert_wallet_update(0, update1)?;
+        // Test removing a key
+        storage.remove_wallet_cache("key1")?;
+        assert_eq!(storage.get_wallet_cache("key1")?, None);
+        assert_eq!(storage.get_wallet_cache("key2")?, Some(value1.to_vec()));
 
-        Ok(())
-    }
-
-    #[sdk_macros::test_all]
-    fn test_wallet_updates_invalid_index() -> Result<()> {
-        create_persister!(storage);
-
-        // Test inserting with invalid index
-        let update = b"test update";
-        assert!(storage.insert_wallet_update(1, update).is_err());
-
-        // Insert first update
-        storage.insert_wallet_update(0, update)?;
-
-        // Test inserting with index too far ahead
-        assert!(storage.insert_wallet_update(2, update).is_err());
-
-        Ok(())
-    }
-
-    #[sdk_macros::test_all]
-    fn test_wallet_updates_get_nonexistent() -> Result<()> {
-        create_persister!(storage);
-
-        // Test getting non-existent update
-        assert_eq!(storage.get_wallet_update(0)?, None);
+        // Test clearing the cache
+        storage.clear_wallet_cache()?;
+        assert_eq!(storage.get_wallet_cache("key2")?, None);
 
         Ok(())
     }

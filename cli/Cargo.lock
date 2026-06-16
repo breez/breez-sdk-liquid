@@ -644,7 +644,7 @@ dependencies = [
  "bip39",
  "bitcoin 0.32.7",
  "electrum-client",
- "elements",
+ "elements 0.25.2",
  "env_logger 0.7.1",
  "futures-util",
  "getrandom 0.2.16",
@@ -961,6 +961,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc32fast"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "critical-section"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1201,13 +1210,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "elements"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1210978e2686f892318085f806866014d4788479a37f0a634db97fcb39454bde"
+dependencies = [
+ "bech32 0.11.0",
+ "bitcoin 0.32.7",
+ "secp256k1-zkp",
+ "serde_json",
+]
+
+[[package]]
 name = "elements-miniscript"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "571fa105690f83c7833df2109eb2e14ca0e62d633d2624ffcb166ff18a3da870"
 dependencies = [
  "bitcoin 0.32.7",
- "elements",
+ "elements 0.25.2",
  "miniscript",
  "serde",
 ]
@@ -1366,6 +1387,16 @@ name = "fixedbitset"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d674e81391d1e1ab681a28d99df07927c6d4aa5b027d7da16ba32d1d21ecd99"
+
+[[package]]
+name = "flate2"
+version = "1.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide",
+]
 
 [[package]]
 name = "fluent"
@@ -2611,61 +2642,77 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
 name = "lwk_common"
-version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=57f78f778038e716979c1cb3cd3c710d46ed657f#57f78f778038e716979c1cb3cd3c710d46ed657f"
+version = "0.18.0"
+source = "git+https://github.com/breez/lwk?rev=dffb6574c3c076cd984d327bd6a0e537fd323b87#dffb6574c3c076cd984d327bd6a0e537fd323b87"
 dependencies = [
+ "aes-gcm-siv",
  "base64 0.21.7",
- "elements",
+ "elements 0.25.2",
  "elements-miniscript",
  "getrandom 0.2.16",
  "qr_code",
  "rand 0.8.5",
  "serde",
- "thiserror 1.0.69",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "lwk_signer"
-version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=57f78f778038e716979c1cb3cd3c710d46ed657f#57f78f778038e716979c1cb3cd3c710d46ed657f"
+version = "0.18.0"
+source = "git+https://github.com/breez/lwk?rev=dffb6574c3c076cd984d327bd6a0e537fd323b87#dffb6574c3c076cd984d327bd6a0e537fd323b87"
 dependencies = [
- "base64 0.13.1",
+ "base64 0.21.7",
  "bip39",
  "elements-miniscript",
  "lwk_common",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "lwk_wollet"
-version = "0.9.0"
-source = "git+https://github.com/breez/lwk?rev=57f78f778038e716979c1cb3cd3c710d46ed657f#57f78f778038e716979c1cb3cd3c710d46ed657f"
+version = "0.18.0"
+source = "git+https://github.com/breez/lwk?rev=dffb6574c3c076cd984d327bd6a0e537fd323b87#dffb6574c3c076cd984d327bd6a0e537fd323b87"
 dependencies = [
+ "aes",
+ "aes-gcm",
  "aes-gcm-siv",
  "age",
  "base64 0.21.7",
  "bip39",
  "bitcoincore-rpc",
+ "cbc",
  "electrum-client",
- "elements",
+ "elements 0.25.2",
+ "elements 0.26.2",
  "elements-miniscript",
+ "flate2",
  "futures",
  "fxhash",
+ "hmac",
  "idna",
  "js-sys",
  "log",
  "lwk_common",
  "once_cell",
+ "pbkdf2",
  "rand 0.8.5",
  "regex-lite",
  "reqwest 0.12.18",
+ "rmp-serde",
+ "rmpv",
+ "scrypt",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "sha2",
+ "thiserror 2.0.18",
  "tokio",
+ "tokio-tungstenite",
  "tokio_with_wasm",
  "url",
  "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -2719,6 +2766,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
+ "simd-adler32",
 ]
 
 [[package]]
@@ -3086,9 +3134,9 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "openssl-src"
-version = "300.5.1+3.5.1"
+version = "300.6.1+3.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "735230c832b28c000e3bc117119e6466a663ec73506bc0a9907ea4187508e42a"
+checksum = "46eb8fb9fb3b61ce1c0f8a026c4c1a0714d3a9e138e7fbde78753ce2babc3846"
 dependencies = [
  "cc",
 ]
@@ -3515,7 +3563,7 @@ dependencies = [
  "rustc-hash 2.1.1",
  "rustls 0.23.31",
  "socket2 0.5.10",
- "thiserror 2.0.12",
+ "thiserror 2.0.18",
  "tokio",
  "tracing",
  "web-time",
@@ -3536,7 +3584,7 @@ dependencies = [
  "rustls 0.23.31",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.12",
+ "thiserror 2.0.18",
  "tinyvec",
  "tracing",
  "web-time",
@@ -3812,12 +3860,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmp"
+version = "0.8.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ba8be72d372b2c9b35542551678538b562e7cf86c3315773cae48dfbfe7790c"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52e599a477cf9840e92f2cde9a7189e67b42c57532749bf90aea6ec10facd4db"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
+]
+
+[[package]]
+name = "rmpv"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58450723cd9ee93273ce44a20b6ec4efe17f8ed2e3631474387bfdecf18bb2a9"
+dependencies = [
+ "num-traits",
+ "rmp",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
 name = "rsqlite-vfs"
 version = "0.1.0"
 source = "git+https://github.com/breez/sqlite-wasm-rs?branch=rusqlite-v0.38.0#61afdd3aef30b27892602a43933e346eb8cc7ecc"
 dependencies = [
  "hashbrown 0.16.1",
- "thiserror 2.0.12",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4131,7 +4211,7 @@ dependencies = [
  "bitcoin 0.29.2",
  "cbc",
  "dns-parser",
- "elements",
+ "elements 0.25.2",
  "getrandom 0.2.16",
  "hex",
  "hickory-resolver",
@@ -4297,6 +4377,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_bytes"
+version = "0.11.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8437fd221bde2d4ca316d61b90e337e9e702b3820b87d63caa9ba6c02bd06d96"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4396,7 +4485,7 @@ name = "sideswap_api"
 version = "0.1.2"
 source = "git+https://github.com/breez/sideswap_rust?rev=2c3c4312d8fe#2c3c4312d8fe9f2766d96320994145ba7287cc28"
 dependencies = [
- "elements",
+ "elements 0.25.2",
  "hex",
  "rand 0.8.5",
  "serde",
@@ -4410,11 +4499,17 @@ name = "sideswap_types"
 version = "0.1.2"
 source = "git+https://github.com/breez/sideswap_rust?rev=2c3c4312d8fe#2c3c4312d8fe9f2766d96320994145ba7287cc28"
 dependencies = [
- "elements",
+ "elements 0.25.2",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
 ]
+
+[[package]]
+name = "simd-adler32"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 
 [[package]]
 name = "slab"
@@ -4616,11 +4711,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.12"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
+checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
 dependencies = [
- "thiserror-impl 2.0.12",
+ "thiserror-impl 2.0.18",
 ]
 
 [[package]]
@@ -4636,9 +4731,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.12"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
+checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4826,7 +4921,7 @@ dependencies = [
  "httparse",
  "js-sys",
  "native-tls",
- "thiserror 2.0.12",
+ "thiserror 2.0.18",
  "tokio",
  "tokio-tungstenite",
  "wasm-bindgen",
@@ -5116,7 +5211,7 @@ dependencies = [
  "rustls 0.23.31",
  "rustls-pki-types",
  "sha1",
- "thiserror 2.0.12",
+ "thiserror 2.0.18",
  "utf-8",
 ]
 

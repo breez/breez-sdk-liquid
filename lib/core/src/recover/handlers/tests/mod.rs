@@ -74,7 +74,7 @@ pub(crate) fn create_mock_lbtc_wallet_tx(
         balance: {
             let mut map = BTreeMap::new();
             map.insert(asset_id, amount);
-            map
+            map.into()
         },
         outputs: vec![],
         inputs: Vec::new(),

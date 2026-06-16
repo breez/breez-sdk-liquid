@@ -297,7 +297,7 @@ impl Recoverer {
             );
         let lbtc_script_to_history_map: HashMap<LBtcScript, Vec<LBtcHistory>> = swap_lbtc_scripts
             .into_iter()
-            .zip(lbtc_script_histories.into_iter())
+            .zip(lbtc_script_histories)
             .collect();
 
         debug!("Recoverer::fetch_lbtc_history_map: end");

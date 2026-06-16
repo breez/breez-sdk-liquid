@@ -4180,10 +4180,10 @@ impl LiquidSdk {
         let asset_balances = transactions
             .into_iter()
             .fold(BTreeMap::<AssetId, i64>::new(), |mut acc, tx| {
-                tx.balance.into_iter().for_each(|(asset_id, balance)| {
+                tx.balance.iter().for_each(|(asset_id, balance)| {
                     // Consider only confirmed unspent outputs (confirmed transactions output reduced by unconfirmed spent outputs)
-                    if tx.height.is_some() || balance < 0 {
-                        *acc.entry(asset_id).or_default() += balance;
+                    if tx.height.is_some() || *balance < 0 {
+                        *acc.entry(*asset_id).or_default() += *balance;
                     }
                 });
                 acc
@@ -4393,7 +4393,7 @@ impl LiquidSdk {
     #[cfg(not(all(target_family = "wasm", target_os = "unknown")))]
     pub fn empty_wallet_cache(&self) -> Result<()> {
         let mut path = PathBuf::from(self.config.working_dir.clone());
-        path.push(Into::<lwk_wollet::ElementsNetwork>::into(self.config.network).as_str());
+        path.push(Into::<lwk_wollet::Network>::into(self.config.network).as_str());
         path.push("enc_cache");
 
         std::fs::remove_dir_all(&path)?;
