@@ -703,6 +703,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                     e,
                     lwk_wollet::Error::UpdateHeightTooOld { .. }
                         | lwk_wollet::Error::UpdateOnDifferentStatus { .. }
+                        | lwk_wollet::Error::StoreError(_)
                 ) =>
             {
                 warn!("Full scan failed due to {e}, reloading wallet and retrying");
