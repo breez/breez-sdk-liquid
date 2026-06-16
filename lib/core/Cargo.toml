@@ -69,6 +69,10 @@ secp256k1_musig = { package = "secp256k1", version = "0.32.0-beta.0" }
 
 # Non-Wasm dependencies
 [target.'cfg(not(all(target_family = "wasm", target_os = "unknown")))'.dependencies]
+# Transitive deps (sdk-common, esplora-client) pull reqwest's native-tls -> openssl-sys
+# on native targets. Build OpenSSL from source so it cross-compiles (e.g. Android/iOS)
+# without a system OpenSSL. (The SDK itself uses rustls; wasm is unaffected.)
+openssl = { version = "0.10", features = ["vendored"] }
 electrum-client = { version = "0.21.0", default-features = false, features = [
     "use-rustls-ring",
     "proxy",
