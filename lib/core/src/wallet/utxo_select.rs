@@ -595,6 +595,36 @@ mod tests {
         let selection = selected.unwrap();
         let fee = fee_fn(selection.len(), 0);
         assert_eq!(selection.iter().sum::<u64>(), target + fee);
+
+        // Fee-only selection (target_value = 0), as used when selecting L-BTC
+        // utxos to cover only the fee of an asset send. Should pick a minimal,
+        // bounded set that covers the fee rather than all utxos.
+        let fee_fn = |utxo_count, change_count| 30 * utxo_count as u64 + 10 * change_count as u64;
+
+        // A single large utxo easily covers the fee: expect exactly one input.
+        let utxos = vec![100_000, 200_000, 300_000];
+        let selected = utxo_select_dynamic(0, &utxos, fee_fn);
+        assert!(selected.is_some());
+        assert_eq!(selected.unwrap().len(), 1);
+
+        // Many normal-sized utxos: should pick a small bounded set covering the
+        // fee, not the whole set (this is the property that keeps an asset send
+        // from pulling in all L-BTC inputs).
+        let utxos = vec![1_000; 50];
+        let selected = utxo_select_dynamic(0, &utxos, fee_fn);
+        assert!(selected.is_some());
+        let selection = selected.unwrap();
+        assert!(selection.iter().sum::<u64>() >= fee_fn(selection.len(), 1));
+        assert!(selection.len() < 50);
+
+        // Uneconomical dust (each utxo worth less than the per-input fee) cannot
+        // cover its own fee: no selection is possible.
+        let utxos = vec![20; 50];
+        assert_eq!(utxo_select_dynamic(0, &utxos, fee_fn), None);
+
+        // No utxos: cannot cover the fee.
+        let utxos: Vec<u64> = vec![];
+        assert_eq!(utxo_select_dynamic(0, &utxos, fee_fn), None);
     }
 
     fn test_with_large_utxo_set(size: u64, target_div: u64) {

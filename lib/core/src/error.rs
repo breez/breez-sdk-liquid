@@ -217,6 +217,12 @@ impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
         match err {
             lwk_wollet::Error::InsufficientFunds { .. } => PaymentError::InsufficientFunds,
+            lwk_wollet::Error::TooManyInputs(count) => PaymentError::Generic {
+                err: format!(
+                    "Transaction would require {count} inputs, which exceeds the maximum of 256 \
+                     supported by the Liquid surjection proof. Consolidate UTXOs and try again."
+                ),
+            },
             _ => PaymentError::Generic {
                 err: format!("{err:?}"),
             },
