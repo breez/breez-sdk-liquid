@@ -695,7 +695,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid"
-version = "0.12.3"
+version = "0.12.4"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -764,7 +764,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-bindings"
-version = "0.12.3"
+version = "0.12.4"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -806,7 +806,7 @@ dependencies = [
 
 [[package]]
 name = "breez-sdk-liquid-wasm"
-version = "0.12.3"
+version = "0.12.4"
 dependencies = [
  "anyhow",
  "async-trait",
