@@ -256,7 +256,7 @@ abstract class ForegroundService :
             }
 
             liquidSDK?.let {
-                synchronized(this) {
+                synchronized(sdkListener) {
                     jobs.add(job)
                 }
                 job.start(liquidSDK!!, getPluginConfigs())
