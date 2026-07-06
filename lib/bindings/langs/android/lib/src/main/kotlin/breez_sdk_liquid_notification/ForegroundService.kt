@@ -37,6 +37,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlin.io.path.Path
 
@@ -55,6 +56,9 @@ abstract class ForegroundService :
     protected var logger: ServiceLogger = ServiceLogger()
     private var jobs: MutableList<Job> = arrayListOf()
 
+    @Volatile
+    private var destroyed = false
+
     companion object {
         private const val TAG = "ForegroundService"
     }
@@ -64,6 +68,17 @@ abstract class ForegroundService :
     // =========================================================== //
 
     override fun onBind(intent: Intent): IBinder? = null
+
+    /** Called when the service instance is destroyed. Cancels any pending delayed
+     *  callbacks so a stale timer from this (now dead) instance can't later fire and
+     *  disconnect the process-wide SDK shared with a newer instance. */
+    override fun onDestroy() {
+        destroyed = true
+        serviceTimeoutHandler.removeCallbacksAndMessages(null)
+        shutdownHandler.removeCallbacksAndMessages(null)
+        serviceScope.cancel()
+        super.onDestroy()
+    }
 
     /** Called by a Job to signal that it is complete. */
     override fun onFinished(job: Job) {
@@ -97,17 +112,25 @@ abstract class ForegroundService :
         serviceTimeoutHandler.removeCallbacksAndMessages(null)
         shutdownHandler.removeCallbacksAndMessages(null)
 
-        shutdownHandler.postDelayed(serviceTimeoutRunnable, SERVICE_TIMEOUT_MS)
+        serviceTimeoutHandler.postDelayed(serviceTimeoutRunnable, SERVICE_TIMEOUT_MS)
     }
 
     private fun delayedShutdown() {
-        if (jobs.isEmpty()) {
-            shutdownHandler.postDelayed(shutdownRunnable, SHUTDOWN_DELAY_MS)
+        synchronized(this) {
+            if (jobs.isEmpty()) {
+                shutdownHandler.postDelayed(shutdownRunnable, SHUTDOWN_DELAY_MS)
+            }
         }
     }
 
     open fun shutdown() {
+        if (destroyed) {
+            logger.log(TAG, "Ignoring shutdown; service instance already destroyed", "DEBUG")
+            return
+        }
         logger.log(TAG, "Shutting down foreground service", "DEBUG")
+        serviceTimeoutHandler.removeCallbacksAndMessages(null)
+        shutdownHandler.removeCallbacksAndMessages(null)
         cancelNotification(applicationContext, NOTIFICATION_ID_REPLACEABLE)
         shutdownSdkConnection()
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -233,7 +256,9 @@ abstract class ForegroundService :
             }
 
             liquidSDK?.let {
-                jobs.add(job)
+                synchronized(sdkListener) {
+                    jobs.add(job)
+                }
                 job.start(liquidSDK!!, getPluginConfigs())
             }
         }
