@@ -1,0 +1,88 @@
+apply plugin: 'com.android.library'
+
+group = 'com.breezsdkliquid_notifications'
+version = '0.1.0'
+
+def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+apply from: expoModulesCorePlugin
+applyKotlinExpoModulesCorePlugin()
+useCoreDependencies()
+useExpoPublishing()
+
+// Track the Android SDK versions of whichever Expo SDK the app is built against.
+// The app can still override them through rootProject.ext.
+useDefaultAndroidSdkVersions()
+
+// Expo autolinks this project into every app that installs the SDK, but the notification service
+// is only wanted when the app opts in by adding the config plugin. The plugin is what writes these
+// properties, so their absence means "not opted in" — and in that case the service must stay out of
+// the build entirely: it would otherwise pull in the Kotlin bindings, whose native library collides
+// with the one the react-native package already ships, and the pickFirst that resolves the clash is
+// itself only added by the plugin.
+def pluginEnabled = rootProject.hasProperty("breezApiKey")
+
+// Versions are resolved from the app's node_modules by the config plugin and written into
+// gradle.properties, so they always match what the app actually installed.
+def requiredVersion = { String property, String hint ->
+  def version = rootProject.findProperty(property)
+  if (version == null) {
+    throw new GradleException(
+      "$property is not set. It is written to gradle.properties by the Breez SDK Expo " +
+      "config plugin — run 'expo prebuild' rather than editing android/ by hand. ($hint)"
+    )
+  }
+  return version
+}
+
+android {
+  namespace "com.breezsdkliquid_notifications"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+    buildConfigField "String", "BREEZ_API_KEY", "\"" + rootProject.findProperty("breezApiKey") + "\""
+    buildConfigField "String", "MNEMONIC_KEY_NAME", "\"" + rootProject.findProperty("mnemonicKeyName") + "\""
+  }
+  // AGP 8 no longer generates BuildConfig unless asked.
+  buildFeatures {
+    buildConfig true
+  }
+  lint {
+    abortOnError false
+  }
+
+  if (!pluginEnabled) {
+    sourceSets {
+      main {
+        java.srcDirs = []
+        manifest.srcFile 'src/disabled/AndroidManifest.xml'
+      }
+    }
+  }
+}
+
+if (pluginEnabled) {
+  repositories {
+    maven { url 'https://www.jitpack.io' }
+  }
+}
+
+dependencies {
+  if (pluginEnabled) {
+    // This service runs headless, with no JS runtime, so it cannot go through the JSI
+    // bindings that the react-native package ships. It needs the Kotlin bindings, and
+    // since the uniffi-bindgen-react-native migration those live only in this artifact.
+    //
+    // Jitpack resolves JNA to a plain jar, which omits Android's libjnadispatch.so, so
+    // the platform aar has to be pulled in by hand.
+    implementation("com.github.breez:breez-sdk-liquid:${requiredVersion('breezSdkVersion', 'the Breez SDK version')}") {
+      exclude group: "net.java.dev.jna"
+    }
+    implementation "net.java.dev.jna:jna:5.18.0@aar"
+
+    // Since SDK 54 most Expo modules ship as precompiled aars rather than Gradle projects, so
+    // project(":expo-notifications") no longer resolves. Depend on the published artifact and let
+    // the config plugin pin it to the version the app installed. expo-secure-store is deliberately
+    // absent: the mnemonic lives in BreezMnemonicStore, which owns its own format.
+    compileOnly "host.exp.exponent:expo.modules.notifications:${requiredVersion('expoNotificationsVersion', 'the expo-notifications version')}"
+  }
+}

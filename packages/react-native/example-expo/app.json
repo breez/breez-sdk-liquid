@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "example-expo",
+    "slug": "example-expo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.breeztech.exampleexpo"
+    },
+    "android": {
+      "package": "com.breeztech.exampleexpo",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "../app.plugin.js",
+        {
+          "apiKey": "test-api-key"
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "BreezNotificationService",
+                  "bundleIdentifier": "com.breeztech.exampleexpo.BreezNotificationService",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.breeztech.exampleexpo"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
