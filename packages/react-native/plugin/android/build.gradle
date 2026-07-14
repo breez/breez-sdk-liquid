@@ -84,5 +84,12 @@ dependencies {
     // the config plugin pin it to the version the app installed. expo-secure-store is deliberately
     // absent: the mnemonic lives in BreezMnemonicStore, which owns its own format.
     compileOnly "host.exp.exponent:expo.modules.notifications:${requiredVersion('expoNotificationsVersion', 'the expo-notifications version')}"
+
+    // Needed to extend ExpoFirebaseMessagingService and read RemoteMessage. expo-notifications
+    // declares firebase-messaging at runtime scope, so it isn't on our compile classpath and has
+    // to be named here. compileOnly: the app resolves the actual version through
+    // expo-notifications, and the RemoteMessage/FirebaseMessagingService API this uses has been
+    // stable for years, so a version skew between the two is harmless.
+    compileOnly "com.google.firebase:firebase-messaging:25.0.1"
   }
 }

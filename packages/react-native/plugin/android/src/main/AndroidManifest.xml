@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SHORT_SERVICE" />
 
     <application>
-        <receiver
-            android:name=".NotificationService"
+        <!--
+          Takes over FCM delivery from expo-notifications, which registers its own service at
+          priority -1 so that it can be overridden. Only one service receives a given message,
+          and BreezFirebaseMessagingService forwards anything that isn't a Breez message back to
+          Expo's handling.
+        -->
+        <service
+            android:name=".BreezFirebaseMessagingService"
             android:exported="false">
-            <intent-filter>
-                <action android:name="expo.modules.notifications.NOTIFICATION_EVENT" />
+            <intent-filter android:priority="1">
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-        </receiver>
+        </service>
 
         <service
             android:name=".ForegroundService"
