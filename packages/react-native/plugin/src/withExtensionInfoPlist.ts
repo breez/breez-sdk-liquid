@@ -4,7 +4,7 @@ import type { ExpoConfig } from "@expo/config"
 import type { InfoPlist } from "@expo/config-plugins"
 import { IOSConfig, withDangerousMod } from "@expo/config-plugins"
 import plist from "@expo/plist"
-import { NotificationServiceExtensionProps } from "./withBreezIOS"
+import type { NotificationServiceExtensionProps } from "./withBreezIOS"
 
 type InfoPlistProps = NotificationServiceExtensionProps & {
     targetName: string
