@@ -65,10 +65,7 @@ use crate::swapper::{
 };
 use crate::utils::bolt12::encode_invoice;
 use crate::utils::run_with_shutdown;
-use crate::wallet::{
-    handle_stale_cache_broadcast_error, should_retry_after_cache_repair, LiquidOnchainWallet,
-    OnchainWallet,
-};
+use crate::wallet::{handle_stale_cache_broadcast_error, LiquidOnchainWallet, OnchainWallet};
 use crate::{
     error::{PaymentError, SdkResult},
     event::EventManager,
@@ -2079,40 +2076,27 @@ impl LiquidSdk {
             PaymentError::AlreadyPaid
         );
 
-        // Stale-cache repair and retry
-        let mut repaired_cache = false;
-        let (tx, tx_id) = loop {
-            let tx = self
-                .onchain_wallet
-                .build_tx_or_drain_tx(
-                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                    &address_data.address,
-                    &asset_id,
-                    receiver_amount_sat,
-                )
-                .await?;
-            let tx_id = tx.txid().to_string();
-            let tx_fees_sat = tx.all_fees().values().sum::<u64>();
-            ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
+        let tx = self
+            .onchain_wallet
+            .build_tx_or_drain_tx(
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                &address_data.address,
+                &asset_id,
+                receiver_amount_sat,
+            )
+            .await?;
+        let tx_id = tx.txid().to_string();
+        let tx_fees_sat = tx.all_fees().values().sum::<u64>();
+        ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
 
-            info!(
-                "Built onchain Liquid tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
-            );
+        info!(
+            "Built onchain Liquid tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
+        );
 
-            match self.liquid_chain_service.broadcast(&tx).await {
-                Ok(tx_id) => break (tx, tx_id.to_string()),
-                Err(err) => {
-                    if should_retry_after_cache_repair(
-                        &*self.onchain_wallet,
-                        &err,
-                        &mut repaired_cache,
-                    )
-                    .await?
-                    {
-                        continue;
-                    }
-                    return Err(handle_stale_cache_broadcast_error(err));
-                }
+        let tx_id = match self.liquid_chain_service.broadcast(&tx).await {
+            Ok(tx_id) => tx_id.to_string(),
+            Err(err) => {
+                return Err(handle_stale_cache_broadcast_error(&*self.onchain_wallet, err).await)
             }
         };
 
@@ -2209,26 +2193,13 @@ impl LiquidSdk {
         );
         swap.check_sufficient_balance(&self.get_info().await?.wallet_info)?;
 
-        // Stale-cache repair and retry
-        let mut repaired_cache = false;
-        let tx_id = loop {
-            match sideswap_service
-                .execute_swap(to_address.clone(), &swap)
-                .await
-            {
-                Ok(tx_id) => break tx_id,
-                Err(err) => {
-                    if should_retry_after_cache_repair(
-                        &*self.onchain_wallet,
-                        &err,
-                        &mut repaired_cache,
-                    )
-                    .await?
-                    {
-                        continue;
-                    }
-                    return Err(handle_stale_cache_broadcast_error(err));
-                }
+        let tx_id = match sideswap_service
+            .execute_swap(to_address.clone(), &swap)
+            .await
+        {
+            Ok(tx_id) => tx_id,
+            Err(err) => {
+                return Err(handle_stale_cache_broadcast_error(&*self.onchain_wallet, err).await)
             }
         };
 
@@ -2292,35 +2263,22 @@ impl LiquidSdk {
             ));
         };
 
-        // Stale-cache repair and retry; see `SendSwapHandler::try_lockup`.
-        let mut repaired_cache = false;
-        let (tx, asset_fees, fees_sat, tx_id) = loop {
-            let (tx, asset_fees) = self
-                .payjoin_service
-                .build_payjoin_tx(&address_data.address, &asset_id, receiver_amount_sat)
-                .await
-                .inspect_err(|e| error!("Error building payjoin tx: {e}"))?;
-            let tx_id = tx.txid().to_string();
-            let fees_sat = tx.all_fees().values().sum::<u64>();
+        let (tx, asset_fees) = self
+            .payjoin_service
+            .build_payjoin_tx(&address_data.address, &asset_id, receiver_amount_sat)
+            .await
+            .inspect_err(|e| error!("Error building payjoin tx: {e}"))?;
+        let tx_id = tx.txid().to_string();
+        let fees_sat = tx.all_fees().values().sum::<u64>();
 
-            info!(
-                "Built payjoin Liquid tx with receiver_amount_sat = {receiver_amount_sat}, asset_fees = {asset_fees}, fees_sat = {fees_sat} and txid = {tx_id}"
-            );
+        info!(
+            "Built payjoin Liquid tx with receiver_amount_sat = {receiver_amount_sat}, asset_fees = {asset_fees}, fees_sat = {fees_sat} and txid = {tx_id}"
+        );
 
-            match self.liquid_chain_service.broadcast(&tx).await {
-                Ok(tx_id) => break (tx, asset_fees, fees_sat, tx_id.to_string()),
-                Err(err) => {
-                    if should_retry_after_cache_repair(
-                        &*self.onchain_wallet,
-                        &err,
-                        &mut repaired_cache,
-                    )
-                    .await?
-                    {
-                        continue;
-                    }
-                    return Err(handle_stale_cache_broadcast_error(err));
-                }
+        let tx_id = match self.liquid_chain_service.broadcast(&tx).await {
+            Ok(tx_id) => tx_id.to_string(),
+            Err(err) => {
+                return Err(handle_stale_cache_broadcast_error(&*self.onchain_wallet, err).await)
             }
         };
 

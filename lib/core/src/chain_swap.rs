@@ -28,7 +28,7 @@ use crate::{
     persist::Persister,
     swapper::Swapper,
     utils,
-    wallet::{handle_stale_cache_broadcast_error, should_retry_after_cache_repair, OnchainWallet},
+    wallet::{handle_stale_cache_broadcast_error, OnchainWallet},
 };
 use crate::{
     error::is_txn_already_spent_error, model::DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT,
@@ -775,34 +775,20 @@ impl ChainSwapHandler {
             lockup_details.amount, lockup_details.lockup_address
         );
 
-        // An input rejection means our cached utxo set is stale: repair it and rebuild the
-        // tx, since selection must pick different inputs. One retry; then fail fast.
-        let mut repaired_cache = false;
-        let (lockup_tx, lockup_tx_id) = loop {
-            let lockup_tx = self
-                .onchain_wallet
-                .build_tx_or_drain_tx(
-                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                    &lockup_details.lockup_address,
-                    &self.config.lbtc_asset_id().to_string(),
-                    lockup_details.amount,
-                )
-                .await?;
+        let lockup_tx = self
+            .onchain_wallet
+            .build_tx_or_drain_tx(
+                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                &lockup_details.lockup_address,
+                &self.config.lbtc_asset_id().to_string(),
+                lockup_details.amount,
+            )
+            .await?;
 
-            match self.liquid_chain_service.broadcast(&lockup_tx).await {
-                Ok(tx_id) => break (lockup_tx, tx_id.to_string()),
-                Err(err) => {
-                    if should_retry_after_cache_repair(
-                        &*self.onchain_wallet,
-                        &err,
-                        &mut repaired_cache,
-                    )
-                    .await?
-                    {
-                        continue;
-                    }
-                    return Err(handle_stale_cache_broadcast_error(err));
-                }
+        let lockup_tx_id = match self.liquid_chain_service.broadcast(&lockup_tx).await {
+            Ok(tx_id) => tx_id.to_string(),
+            Err(err) => {
+                return Err(handle_stale_cache_broadcast_error(&*self.onchain_wallet, err).await)
             }
         };
 

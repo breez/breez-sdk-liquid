@@ -124,33 +124,20 @@ pub trait OnchainWallet: Send + Sync {
     async fn repair_cache(&self) -> Result<bool, PaymentError>;
 }
 
-/// Runs the local repair and reports whether the caller should rebuild its tx and broadcast
-/// again. The tx must be *rebuilt*, not re-broadcast: selection has to pick different inputs.
+/// Maps a stale-cache broadcast rejection to an actionable error, repairing the cache on the way.
 ///
-/// Retries at most once — the caller owns `already_repaired`. False means the repair could not
-/// resolve the drift, leaving the caller to fail via [`handle_stale_cache_broadcast_error`].
-pub(crate) async fn should_retry_after_cache_repair(
+/// The repair is local and instant, so a retry by the caller succeeds. If it cannot resolve the
+/// drift it schedules a wipe for the next scan, which runs in the background.
+pub(crate) async fn handle_stale_cache_broadcast_error(
     onchain_wallet: &dyn OnchainWallet,
-    err: &anyhow::Error,
-    already_repaired: &mut bool,
-) -> Result<bool, PaymentError> {
-    if *already_repaired || !crate::error::is_txn_inputs_missing_or_spent_error(err) {
-        return Ok(false);
-    }
-    *already_repaired = true;
-    let repaired = onchain_wallet.repair_cache().await?;
-    if repaired {
-        info!("Wallet cache repaired locally, retrying the broadcast with fresh inputs");
-    }
-    Ok(repaired)
-}
-
-/// Maps a stale-cache broadcast rejection to an actionable error. The wipe is left to the next
-/// scan (a cold rescan takes minutes and must not stall a payment), and the wallet has already
-/// flagged itself inside [`OnchainWallet::repair_cache`].
-pub(crate) fn handle_stale_cache_broadcast_error(err: anyhow::Error) -> PaymentError {
+    err: anyhow::Error,
+) -> PaymentError {
     if !crate::error::is_txn_inputs_missing_or_spent_error(&err) {
         return err.into();
+    }
+    warn!("Broadcast rejected for spending inputs the node does not have, repairing the cache");
+    if let Err(e) = onchain_wallet.repair_cache().await {
+        warn!("Could not repair the wallet cache: {e}");
     }
     PaymentError::Generic {
         err: format!("Wallet state was out of date, please retry shortly: {err}"),
@@ -1306,10 +1293,14 @@ mod tests {
         let resurrected = has_utxo(&w, a0)?;
         let spender_known = w.transactions()?.iter().any(|t| t.txid == spend.txid());
 
+        // Asserts the bug is still PRESENT, so this fails if lwk ever fixes it. That is the
+        // point: it is the signal to revisit the recovery code, not a regression in this crate.
         assert!(
             resurrected && spender_known,
-            "expected the observed corruption shape (A:0 unspent + spender still known), \
-             got resurrected={resurrected} spender_known={spender_known}"
+            "lwk no longer resurrects outputs of a re-announced funding tx \
+             (resurrected={resurrected}, spender_known={spender_known}). If this failed after an \
+             lwk bump, the upstream bug is likely fixed: see LWK_ISSUE.md and reassess whether \
+             repair_cache / check_and_repair_cache are still needed."
         );
         assert_eq!(
             find_spent_utxos(&w.transactions()?, &w.utxos()?),
