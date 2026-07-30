@@ -15,7 +15,7 @@ use futures_util::{StreamExt, TryFutureExt};
 use lnurl::auth::SdkLnurlAuthSigner;
 use log::{debug, error, info, warn};
 use lwk_wollet::bitcoin::base64::Engine as _;
-use lwk_wollet::elements::AssetId;
+use lwk_wollet::elements::{AssetId, Txid};
 use lwk_wollet::elements_miniscript::elements::bitcoin::bip32::Xpub;
 use lwk_wollet::hashes::{sha256, Hash};
 use persist::model::{PaymentTxBalance, PaymentTxDetails};
@@ -65,7 +65,10 @@ use crate::swapper::{
 };
 use crate::utils::bolt12::encode_invoice;
 use crate::utils::run_with_shutdown;
-use crate::wallet::{LiquidOnchainWallet, OnchainWallet};
+use crate::wallet::{
+    handle_stale_cache_broadcast_error, should_retry_after_cache_repair, LiquidOnchainWallet,
+    OnchainWallet,
+};
 use crate::{
     error::{PaymentError, SdkResult},
     event::EventManager,
@@ -2076,24 +2079,44 @@ impl LiquidSdk {
             PaymentError::AlreadyPaid
         );
 
-        let tx = self
-            .onchain_wallet
-            .build_tx_or_drain_tx(
-                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                &address_data.address,
-                &asset_id,
-                receiver_amount_sat,
-            )
-            .await?;
-        let tx_id = tx.txid().to_string();
-        let tx_fees_sat = tx.all_fees().values().sum::<u64>();
-        ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
+        // Stale-cache repair and retry
+        let mut repaired_cache = false;
+        let (tx, tx_id) = loop {
+            let tx = self
+                .onchain_wallet
+                .build_tx_or_drain_tx(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    &address_data.address,
+                    &asset_id,
+                    receiver_amount_sat,
+                )
+                .await?;
+            let tx_id = tx.txid().to_string();
+            let tx_fees_sat = tx.all_fees().values().sum::<u64>();
+            ensure_sdk!(tx_fees_sat <= fees_sat, PaymentError::InvalidOrExpiredFees);
 
-        info!(
-            "Built onchain Liquid tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
-        );
+            info!(
+                "Built onchain Liquid tx with receiver_amount_sat = {receiver_amount_sat}, fees_sat = {fees_sat} and txid = {tx_id}"
+            );
 
-        let tx_id = self.liquid_chain_service.broadcast(&tx).await?.to_string();
+            match self.liquid_chain_service.broadcast(&tx).await {
+                Ok(tx_id) => break (tx, tx_id.to_string()),
+                Err(err) => {
+                    if should_retry_after_cache_repair(
+                        &*self.onchain_wallet,
+                        &err,
+                        &mut repaired_cache,
+                    )
+                    .await?
+                    {
+                        continue;
+                    }
+                    return Err(handle_stale_cache_broadcast_error(err));
+                }
+            }
+        };
+
+        self.onchain_wallet.apply_broadcast_tx(&tx).await;
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -2186,9 +2209,41 @@ impl LiquidSdk {
         );
         swap.check_sufficient_balance(&self.get_info().await?.wallet_info)?;
 
-        let tx_id = sideswap_service
-            .execute_swap(to_address.clone(), &swap)
-            .await?;
+        // Stale-cache repair and retry
+        let mut repaired_cache = false;
+        let tx_id = loop {
+            match sideswap_service
+                .execute_swap(to_address.clone(), &swap)
+                .await
+            {
+                Ok(tx_id) => break tx_id,
+                Err(err) => {
+                    if should_retry_after_cache_repair(
+                        &*self.onchain_wallet,
+                        &err,
+                        &mut repaired_cache,
+                    )
+                    .await?
+                    {
+                        continue;
+                    }
+                    return Err(handle_stale_cache_broadcast_error(err));
+                }
+            }
+        };
+
+        // SideSwap completes our partial PSET with its own inputs, so fetch the tx rather than
+        // rebuild it. Best-effort: until it is indexed, the coins stay selectable as before.
+        match Txid::from_str(&tx_id) {
+            Ok(txid) => match self.liquid_chain_service.get_transaction_hex(&txid).await {
+                Ok(Some(tx)) => self.onchain_wallet.apply_broadcast_tx(&tx).await,
+                Ok(None) => {
+                    debug!("SideSwap tx {tx_id} is not retrievable yet, skipping wallet apply")
+                }
+                Err(e) => warn!("Could not fetch SideSwap tx {tx_id} to apply to the wallet: {e}"),
+            },
+            Err(e) => warn!("SideSwap returned an unparsable txid {tx_id}: {e}"),
+        }
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -2237,19 +2292,39 @@ impl LiquidSdk {
             ));
         };
 
-        let (tx, asset_fees) = self
-            .payjoin_service
-            .build_payjoin_tx(&address_data.address, &asset_id, receiver_amount_sat)
-            .await
-            .inspect_err(|e| error!("Error building payjoin tx: {e}"))?;
-        let tx_id = tx.txid().to_string();
-        let fees_sat = tx.all_fees().values().sum::<u64>();
+        // Stale-cache repair and retry; see `SendSwapHandler::try_lockup`.
+        let mut repaired_cache = false;
+        let (tx, asset_fees, fees_sat, tx_id) = loop {
+            let (tx, asset_fees) = self
+                .payjoin_service
+                .build_payjoin_tx(&address_data.address, &asset_id, receiver_amount_sat)
+                .await
+                .inspect_err(|e| error!("Error building payjoin tx: {e}"))?;
+            let tx_id = tx.txid().to_string();
+            let fees_sat = tx.all_fees().values().sum::<u64>();
 
-        info!(
-            "Built payjoin Liquid tx with receiver_amount_sat = {receiver_amount_sat}, asset_fees = {asset_fees}, fees_sat = {fees_sat} and txid = {tx_id}"
-        );
+            info!(
+                "Built payjoin Liquid tx with receiver_amount_sat = {receiver_amount_sat}, asset_fees = {asset_fees}, fees_sat = {fees_sat} and txid = {tx_id}"
+            );
 
-        let tx_id = self.liquid_chain_service.broadcast(&tx).await?.to_string();
+            match self.liquid_chain_service.broadcast(&tx).await {
+                Ok(tx_id) => break (tx, asset_fees, fees_sat, tx_id.to_string()),
+                Err(err) => {
+                    if should_retry_after_cache_repair(
+                        &*self.onchain_wallet,
+                        &err,
+                        &mut repaired_cache,
+                    )
+                    .await?
+                    {
+                        continue;
+                    }
+                    return Err(handle_stale_cache_broadcast_error(err));
+                }
+            }
+        };
+
+        self.onchain_wallet.apply_broadcast_tx(&tx).await;
 
         // We insert a pseudo-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -4029,9 +4104,7 @@ impl LiquidSdk {
                         .flatten()
                         .collect::<Vec<&String>>()
                     {
-                        if let Some(tx) =
-                            wallet_tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
-                        {
+                        if let Some(tx) = wallet_tx_map.remove(&Txid::from_str(tx_id)?) {
                             self.persister
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
@@ -4047,9 +4120,7 @@ impl LiquidSdk {
                         .flatten()
                         .collect::<Vec<&String>>()
                     {
-                        if let Some(tx) =
-                            wallet_tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
-                        {
+                        if let Some(tx) = wallet_tx_map.remove(&Txid::from_str(tx_id)?) {
                             self.persister
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }
@@ -4070,9 +4141,7 @@ impl LiquidSdk {
                         .flatten()
                         .collect::<Vec<&String>>()
                     {
-                        if let Some(tx) =
-                            wallet_tx_map.remove(&lwk_wollet::elements::Txid::from_str(tx_id)?)
-                        {
+                        if let Some(tx) = wallet_tx_map.remove(&Txid::from_str(tx_id)?) {
                             self.persister
                                 .insert_or_update_payment_with_wallet_tx(&tx)?;
                         }

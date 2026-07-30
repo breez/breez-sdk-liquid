@@ -29,6 +29,9 @@ use lwk_wollet::{
 pub(crate) struct MockWallet {
     signer: SdkLwkSigner,
     utxos: Mutex<Vec<WalletTxOut>>,
+    repair_cache_calls: Mutex<usize>,
+    /// What [`OnchainWallet::repair_cache`] should report.
+    repair_cache_succeeds: Mutex<bool>,
 }
 
 lazy_static! {
@@ -43,11 +46,24 @@ impl MockWallet {
         Ok(Self {
             signer,
             utxos: Mutex::new(vec![]),
+            repair_cache_calls: Mutex::new(0),
+            repair_cache_succeeds: Mutex::new(true),
         })
     }
 
     pub(crate) fn set_utxos(&self, utxos: Vec<WalletTxOut>) -> &Self {
         *self.utxos.lock().unwrap() = utxos;
+        self
+    }
+
+    /// How many times a local cache repair has been attempted.
+    pub(crate) fn repair_cache_calls(&self) -> usize {
+        *self.repair_cache_calls.lock().unwrap()
+    }
+
+    /// Sets whether a local cache repair reports success.
+    pub(crate) fn set_repair_cache_succeeds(&self, succeeds: bool) -> &Self {
+        *self.repair_cache_succeeds.lock().unwrap() = succeeds;
         self
     }
 }
@@ -129,6 +145,13 @@ impl OnchainWallet for MockWallet {
 
     async fn full_scan(&self) -> Result<(), PaymentError> {
         Ok(())
+    }
+
+    async fn apply_broadcast_tx(&self, _tx: &Transaction) {}
+
+    async fn repair_cache(&self) -> Result<bool, PaymentError> {
+        *self.repair_cache_calls.lock().unwrap() += 1;
+        Ok(*self.repair_cache_succeeds.lock().unwrap())
     }
 }
 

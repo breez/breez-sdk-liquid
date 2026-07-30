@@ -28,10 +28,10 @@ use crate::{
     persist::Persister,
     swapper::Swapper,
     utils,
-    wallet::OnchainWallet,
+    wallet::{handle_stale_cache_broadcast_error, should_retry_after_cache_repair, OnchainWallet},
 };
 use crate::{
-    error::is_txn_mempool_conflict_error, model::DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT,
+    error::is_txn_already_spent_error, model::DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT,
     persist::model::PaymentTxBalance,
 };
 
@@ -775,21 +775,38 @@ impl ChainSwapHandler {
             lockup_details.amount, lockup_details.lockup_address
         );
 
-        let lockup_tx = self
-            .onchain_wallet
-            .build_tx_or_drain_tx(
-                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                &lockup_details.lockup_address,
-                &self.config.lbtc_asset_id().to_string(),
-                lockup_details.amount,
-            )
-            .await?;
+        // An input rejection means our cached utxo set is stale: repair it and rebuild the
+        // tx, since selection must pick different inputs. One retry; then fail fast.
+        let mut repaired_cache = false;
+        let (lockup_tx, lockup_tx_id) = loop {
+            let lockup_tx = self
+                .onchain_wallet
+                .build_tx_or_drain_tx(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    &lockup_details.lockup_address,
+                    &self.config.lbtc_asset_id().to_string(),
+                    lockup_details.amount,
+                )
+                .await?;
 
-        let lockup_tx_id = self
-            .liquid_chain_service
-            .broadcast(&lockup_tx)
-            .await?
-            .to_string();
+            match self.liquid_chain_service.broadcast(&lockup_tx).await {
+                Ok(tx_id) => break (lockup_tx, tx_id.to_string()),
+                Err(err) => {
+                    if should_retry_after_cache_repair(
+                        &*self.onchain_wallet,
+                        &err,
+                        &mut repaired_cache,
+                    )
+                    .await?
+                    {
+                        continue;
+                    }
+                    return Err(handle_stale_cache_broadcast_error(err));
+                }
+            }
+        };
+
+        self.onchain_wallet.apply_broadcast_tx(&lockup_tx).await;
 
         debug!(
           "Successfully broadcast lockup transaction for Chain Swap {swap_id}. Lockup tx id: {lockup_tx_id}"
@@ -918,7 +935,7 @@ impl ChainSwapHandler {
                     SdkTransaction::Liquid(tx) => {
                         match self.liquid_chain_service.broadcast(&tx).await {
                             Ok(tx_id) => Ok(tx_id.to_hex()),
-                            Err(e) if is_txn_mempool_conflict_error(&e) => {
+                            Err(e) if is_txn_already_spent_error(&e) => {
                                 Err(PaymentError::AlreadyClaimed)
                             }
                             Err(err) => {

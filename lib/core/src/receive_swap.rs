@@ -13,7 +13,7 @@ use lwk_wollet::secp256k1::SecretKey;
 use tokio::sync::{broadcast, Mutex};
 
 use crate::chain::liquid::LiquidChainService;
-use crate::error::is_txn_mempool_conflict_error;
+use crate::error::is_txn_already_spent_error;
 use crate::model::{BlockListener, PaymentState::*};
 use crate::model::{Config, PaymentTxData, PaymentType, ReceiveSwap};
 use crate::persist::model::{PaymentTxBalance, PaymentTxDetails};
@@ -434,9 +434,7 @@ impl ReceiveSwapHandler {
                 // We attempt broadcasting via chain service, then fallback to Boltz
                 let broadcast_res = match self.liquid_chain_service.broadcast(&claim_tx).await {
                     Ok(tx_id) => Ok(tx_id.to_hex()),
-                    Err(e) if is_txn_mempool_conflict_error(&e) => {
-                        Err(PaymentError::AlreadyClaimed)
-                    }
+                    Err(e) if is_txn_already_spent_error(&e) => Err(PaymentError::AlreadyClaimed),
                     Err(err) => {
                         debug!(
                             "Could not broadcast claim tx via chain service for Receive swap {swap_id}: {err:?}"

@@ -23,7 +23,9 @@ use crate::prelude::{PaymentTxData, PaymentType, Swap};
 use crate::recover::recoverer::Recoverer;
 use crate::swapper::Swapper;
 use crate::utils;
-use crate::wallet::OnchainWallet;
+use crate::wallet::{
+    handle_stale_cache_broadcast_error, should_retry_after_cache_repair, OnchainWallet,
+};
 use crate::{
     error::PaymentError,
     model::{PaymentState, Transaction as SdkTransaction},
@@ -244,32 +246,50 @@ impl SendSwapHandler {
             create_response.expected_amount, create_response.address
         );
 
-        let lockup_tx = self
-            .onchain_wallet
-            .build_tx_or_drain_tx(
-                Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
-                &create_response.address,
-                &self.config.lbtc_asset_id(),
-                create_response.expected_amount,
-            )
-            .await?;
-        let lockup_tx_id = lockup_tx.txid().to_string();
+        // An input rejection means our cached utxo set is stale: repair it and rebuild the
+        // tx, since selection must pick different inputs. One retry; then fail fast.
+        let mut repaired_cache = false;
+        let (lockup_tx, lockup_tx_id) = loop {
+            let lockup_tx = self
+                .onchain_wallet
+                .build_tx_or_drain_tx(
+                    Some(LIQUID_FEE_RATE_MSAT_PER_VBYTE),
+                    &create_response.address,
+                    &self.config.lbtc_asset_id(),
+                    create_response.expected_amount,
+                )
+                .await?;
+            let lockup_tx_id = lockup_tx.txid().to_string();
 
-        self.persister
-            .set_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
-
-        info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
-
-        let broadcast_result = self.chain_service.broadcast(&lockup_tx).await;
-
-        if let Err(err) = broadcast_result {
-            debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
             self.persister
-                .unset_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
-            return Err(err.into());
-        }
+                .set_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+
+            info!("Broadcasting lockup tx {lockup_tx_id} for Send swap {swap_id}",);
+
+            match self.chain_service.broadcast(&lockup_tx).await {
+                Ok(_) => break (lockup_tx, lockup_tx_id),
+                Err(err) => {
+                    debug!("Could not broadcast lockup tx for Send Swap {swap_id}: {err:?}");
+                    self.persister
+                        .unset_send_swap_lockup_tx_id(swap_id, &lockup_tx_id)?;
+
+                    if should_retry_after_cache_repair(
+                        &*self.onchain_wallet,
+                        &err,
+                        &mut repaired_cache,
+                    )
+                    .await?
+                    {
+                        continue;
+                    }
+                    return Err(handle_stale_cache_broadcast_error(err));
+                }
+            }
+        };
 
         info!("Successfully broadcast lockup tx for Send Swap {swap_id}. Lockup tx id: {lockup_tx_id}");
+
+        self.onchain_wallet.apply_broadcast_tx(&lockup_tx).await;
 
         // We insert a pseudo-lockup-tx in case LWK fails to pick up the new mempool tx for a while
         // This makes the tx known to the SDK (get_info, list_payments) instantly
@@ -620,19 +640,132 @@ impl SendSwapHandler {
 #[cfg(test)]
 mod tests {
     use std::collections::{HashMap, HashSet};
+    use std::sync::Arc;
 
     use anyhow::Result;
 
     use crate::{
         model::PaymentState::{self, *},
         test_utils::{
+            chain::MockLiquidChainService,
             persist::{create_persister, new_send_swap},
-            send_swap::new_send_swap_handler,
+            send_swap::{new_mock_wallet, new_send_swap_handler, new_send_swap_handler_with_mocks},
         },
     };
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    /// The verbatim rejection observed in the field: the node does not have the input the
+    /// lockup tx spends, because the SDK's cached UTXO set is stale.
+    const MISSING_OR_SPENT_ERR: &str = r#"https://lq1.breez.technology/liquid/api/tx returned HTTP 400: sendrawtransaction RPC error: {"code":-25,"message":"bad-txns-inputs-missingorspent"}"#;
+
+    /// When the cached utxo set is stale but the tx set can explain it, the repair is local and
+    /// instant, so the lockup is rebuilt with fresh inputs and retried within the same call.
+    #[sdk_macros::async_test_all]
+    async fn test_try_lockup_repairs_cache_locally_and_retries() -> Result<()> {
+        create_persister!(storage);
+
+        let chain_service = Arc::new(MockLiquidChainService::new());
+        chain_service.set_broadcast_results(vec![Some(MISSING_OR_SPENT_ERR.to_string()), None]);
+        let onchain_wallet = new_mock_wallet()?;
+        onchain_wallet.set_repair_cache_succeeds(true);
+
+        let send_swap_handler = new_send_swap_handler_with_mocks(
+            storage.clone(),
+            chain_service.clone(),
+            onchain_wallet.clone(),
+        )?;
+
+        let swap = new_send_swap(Some(Created), None);
+        storage.insert_or_update_send_swap(&swap)?;
+        let create_response = swap.get_boltz_create_response()?;
+
+        let res = send_swap_handler.try_lockup(&swap, &create_response).await;
+
+        assert!(res.is_ok(), "expected recovery, got: {:?}", res.err());
+        assert_eq!(onchain_wallet.repair_cache_calls(), 1);
+        assert_eq!(
+            chain_service.broadcast_calls(),
+            2,
+            "expected exactly one retry"
+        );
+
+        let swap = storage.fetch_send_swap_by_id(&swap.id)?.unwrap();
+        assert_eq!(swap.state, Pending);
+        assert!(swap.lockup_tx_id.is_some());
+
+        Ok(())
+    }
+
+    /// When the local repair cannot resolve the drift, the payment fails fast and the cache is
+    /// flagged so the next background scan rescans — the rescan must not stall this call.
+    #[sdk_macros::async_test_all]
+    async fn test_try_lockup_fails_fast_when_local_repair_insufficient() -> Result<()> {
+        create_persister!(storage);
+
+        let chain_service = Arc::new(MockLiquidChainService::new());
+        chain_service.set_broadcast_results(vec![Some(MISSING_OR_SPENT_ERR.to_string())]);
+        let onchain_wallet = new_mock_wallet()?;
+        onchain_wallet.set_repair_cache_succeeds(false);
+
+        let send_swap_handler = new_send_swap_handler_with_mocks(
+            storage.clone(),
+            chain_service.clone(),
+            onchain_wallet.clone(),
+        )?;
+
+        let swap = new_send_swap(Some(Created), None);
+        storage.insert_or_update_send_swap(&swap)?;
+        let create_response = swap.get_boltz_create_response()?;
+
+        assert!(send_swap_handler
+            .try_lockup(&swap, &create_response)
+            .await
+            .is_err());
+        assert_eq!(onchain_wallet.repair_cache_calls(), 1);
+        assert_eq!(
+            chain_service.broadcast_calls(),
+            1,
+            "no retry without a repair"
+        );
+        // Flagging for a rescan is internal to `repair_cache`; what is observable here is
+        // that the payment fails without stalling.
+
+        let swap = storage.fetch_send_swap_by_id(&swap.id)?.unwrap();
+        assert_eq!(swap.state, Created);
+        assert!(swap.lockup_tx_id.is_none());
+
+        Ok(())
+    }
+
+    /// An unrelated broadcast failure must not be mistaken for a stale cache.
+    #[sdk_macros::async_test_all]
+    async fn test_try_lockup_does_not_repair_on_unrelated_error() -> Result<()> {
+        create_persister!(storage);
+
+        let chain_service = Arc::new(MockLiquidChainService::new());
+        chain_service.set_broadcast_results(vec![Some("connection reset by peer".to_string())]);
+        let onchain_wallet = new_mock_wallet()?;
+
+        let send_swap_handler = new_send_swap_handler_with_mocks(
+            storage.clone(),
+            chain_service.clone(),
+            onchain_wallet.clone(),
+        )?;
+
+        let swap = new_send_swap(Some(Created), None);
+        storage.insert_or_update_send_swap(&swap)?;
+        let create_response = swap.get_boltz_create_response()?;
+
+        assert!(send_swap_handler
+            .try_lockup(&swap, &create_response)
+            .await
+            .is_err());
+        assert_eq!(onchain_wallet.repair_cache_calls(), 0);
+
+        Ok(())
+    }
 
     #[sdk_macros::async_test_all]
     async fn test_send_swap_state_transitions() -> Result<()> {

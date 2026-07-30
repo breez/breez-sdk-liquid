@@ -5,6 +5,7 @@ pub(crate) mod utxo_select;
 use std::collections::HashMap;
 use std::io::Write;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
@@ -110,6 +111,50 @@ pub trait OnchainWallet: Send + Sync {
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError>;
+
+    /// Records a just-broadcast tx so the coins it spends stop being selectable before the next
+    /// scan sees them; without this a second payment re-selects them and is rejected.
+    async fn apply_broadcast_tx(&self, tx: &Transaction);
+
+    /// Repairs the cached unspent set locally, with no network access, by re-applying the txs
+    /// the wallet already holds that spend outputs still listed as unspent.
+    ///
+    /// Returns whether the cache is consistent afterwards. If not, the wallet flags itself so the
+    /// next scan wipes and rescans.
+    async fn repair_cache(&self) -> Result<bool, PaymentError>;
+}
+
+/// Runs the local repair and reports whether the caller should rebuild its tx and broadcast
+/// again. The tx must be *rebuilt*, not re-broadcast: selection has to pick different inputs.
+///
+/// Retries at most once — the caller owns `already_repaired`. False means the repair could not
+/// resolve the drift, leaving the caller to fail via [`handle_stale_cache_broadcast_error`].
+pub(crate) async fn should_retry_after_cache_repair(
+    onchain_wallet: &dyn OnchainWallet,
+    err: &anyhow::Error,
+    already_repaired: &mut bool,
+) -> Result<bool, PaymentError> {
+    if *already_repaired || !crate::error::is_txn_inputs_missing_or_spent_error(err) {
+        return Ok(false);
+    }
+    *already_repaired = true;
+    let repaired = onchain_wallet.repair_cache().await?;
+    if repaired {
+        info!("Wallet cache repaired locally, retrying the broadcast with fresh inputs");
+    }
+    Ok(repaired)
+}
+
+/// Maps a stale-cache broadcast rejection to an actionable error. The wipe is left to the next
+/// scan (a cold rescan takes minutes and must not stall a payment), and the wallet has already
+/// flagged itself inside [`OnchainWallet::repair_cache`].
+pub(crate) fn handle_stale_cache_broadcast_error(err: anyhow::Error) -> PaymentError {
+    if !crate::error::is_txn_inputs_missing_or_spent_error(&err) {
+        return err.into();
+    }
+    PaymentError::Generic {
+        err: format!("Wallet state was out of date, please retry shortly: {err}"),
+    }
 }
 
 pub enum WalletClient {
@@ -188,6 +233,39 @@ pub struct LiquidOnchainWallet {
     client: Mutex<Option<WalletClient>>,
     pub(crate) signer: SdkLwkSigner,
     wallet_cache_persister: Arc<dyn WalletCachePersister>,
+    /// Whether the next scan should verify the cached unspent set.
+    needs_cache_check: AtomicBool,
+    /// Whether the next scan must wipe the cache first, because a local repair could not fix it.
+    needs_cache_clear: AtomicBool,
+    /// Whether a wipe-and-rescan is running. It holds the wallet lock for a cold rescan, so tx
+    /// building checks this first to fail fast rather than block for minutes.
+    recovery_scan_in_progress: AtomicBool,
+}
+
+/// Clears an [`AtomicBool`] on drop, so the flag is released even on an early return.
+struct FlagGuard<'a>(&'a AtomicBool);
+
+impl Drop for FlagGuard<'_> {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::Relaxed);
+    }
+}
+
+/// Outpoints still listed as unspent despite being spent by a tx the wallet already knows about.
+///
+/// lwk enforced this on every `utxos()` call before the unspent set became materialised state
+/// (`RawCache::spent()`). A violation is permanent without a wipe: selection is deterministic, so
+/// it keeps picking the same spent coin and every broadcast is rejected.
+pub(crate) fn find_spent_utxos(txs: &[WalletTx], utxos: &[WalletTxOut]) -> Vec<OutPoint> {
+    let spent: std::collections::HashSet<OutPoint> = txs
+        .iter()
+        .flat_map(|wtx| wtx.tx.input.iter().map(|i| i.previous_output))
+        .collect();
+    utxos
+        .iter()
+        .map(|u| u.outpoint)
+        .filter(|o| spent.contains(o))
+        .collect()
 }
 
 impl LiquidOnchainWallet {
@@ -212,7 +290,41 @@ impl LiquidOnchainWallet {
             client: Mutex::new(None),
             signer,
             wallet_cache_persister,
+            // Check on startup, so a cache corrupted in a previous session is repaired before a
+            // payment discovers it.
+            needs_cache_check: AtomicBool::new(true),
+            needs_cache_clear: AtomicBool::new(false),
+            recovery_scan_in_progress: AtomicBool::new(false),
         })
+    }
+
+    /// Verifies the cached unspent set against the tx set and repairs any drift. Cheap and
+    /// local; only a repair costs anything. Runs after a scan, never during one.
+    async fn check_and_repair_cache(&self) -> Result<(), PaymentError> {
+        if !self.needs_cache_check.swap(false, Ordering::Relaxed) {
+            return Ok(());
+        }
+
+        let spent = {
+            let wallet = self.wallet.lock().await;
+            let txs = wallet.transactions()?;
+            let utxos = wallet.utxos()?;
+            find_spent_utxos(&txs, &utxos)
+        };
+
+        if spent.is_empty() {
+            debug!("Wallet cache check: no utxo is spent by a known tx");
+            return Ok(());
+        }
+
+        error!(
+            "Wallet cache is inconsistent: {} utxo(s) are already spent by known txs. {spent:?}",
+            spent.len()
+        );
+
+        // The local repair usually suffices; if not it schedules a wipe for the next scan.
+        self.repair_cache().await?;
+        Ok(())
     }
 
     async fn create_wallet(
@@ -440,6 +552,12 @@ impl OnchainWallet for LiquidOnchainWallet {
         asset_id: &str,
         amount_sat: u64,
     ) -> Result<Transaction, PaymentError> {
+        ensure_sdk!(
+            !self.recovery_scan_in_progress.load(Ordering::Relaxed),
+            PaymentError::Generic {
+                err: "Wallet state is being repaired, please retry shortly".to_string()
+            }
+        );
         let lwk_wollet = self.wallet.lock().await;
         let address =
             ElementsAddress::from_str(recipient_address).map_err(|e| PaymentError::Generic {
@@ -507,6 +625,12 @@ impl OnchainWallet for LiquidOnchainWallet {
         recipient_address: &str,
         enforce_amount_sat: Option<u64>,
     ) -> Result<Transaction, PaymentError> {
+        ensure_sdk!(
+            !self.recovery_scan_in_progress.load(Ordering::Relaxed),
+            PaymentError::Generic {
+                err: "Wallet state is being repaired, please retry shortly".to_string()
+            }
+        );
         let lwk_wollet = self.wallet.lock().await;
 
         let address =
@@ -662,73 +786,166 @@ impl OnchainWallet for LiquidOnchainWallet {
 
     /// Perform a full scan of the wallet
     async fn full_scan(&self) -> Result<(), PaymentError> {
-        debug!("LiquidOnchainWallet::full_scan: start");
-        let full_scan_started = Instant::now();
-
-        // create electrum client if doesn't already exist
-        let mut client = self.client.lock().await;
-        if client.is_none() {
-            *client = Some(WalletClient::from_config(&self.config)?);
-        }
-        let client = client.as_mut().ok_or_else(|| PaymentError::Generic {
-            err: "Wallet client not initialized".to_string(),
-        })?;
-
-        // Use the cached derivation index with a buffer of 5 to perform the scan
-        let last_derivation_index = self
-            .persister
-            .get_last_derivation_index()?
-            .unwrap_or_default();
-        let index_with_buffer = last_derivation_index + 5;
-        let mut wallet = self.wallet.lock().await;
-
-        // Reunblind the wallet txs if there has been a change in the derivation index since the
-        // last full scan
-        if self
-            .persister
-            .get_last_scanned_derivation_index()?
-            .is_some_and(|index| index != last_derivation_index)
+        // Scoped so the wallet and client locks drop before the repair re-acquires them.
         {
-            debug!("LiquidOnchainWallet::full_scan: reunblinding all transactions");
-            wallet.reunblind()?;
-        }
+            debug!("LiquidOnchainWallet::full_scan: start");
+            let full_scan_started = Instant::now();
 
-        let res = match client
-            .full_scan_to_index(&mut wallet, index_with_buffer)
-            .await
-        {
-            Ok(()) => Ok(()),
-            Err(e)
-                if matches!(
-                    e,
-                    lwk_wollet::Error::UpdateHeightTooOld { .. }
-                        | lwk_wollet::Error::UpdateOnDifferentStatus { .. }
-                        | lwk_wollet::Error::StoreError(_)
-                ) =>
-            {
-                warn!("Full scan failed due to {e}, reloading wallet and retrying");
-                let mut new_wallet = Self::create_wallet(
+            // create electrum client if doesn't already exist
+            let mut client = self.client.lock().await;
+            if client.is_none() {
+                *client = Some(WalletClient::from_config(&self.config)?);
+            }
+            let client = client.as_mut().ok_or_else(|| PaymentError::Generic {
+                err: "Wallet client not initialized".to_string(),
+            })?;
+
+            // Use the cached derivation index with a buffer of 5 to perform the scan
+            let last_derivation_index = self
+                .persister
+                .get_last_derivation_index()?
+                .unwrap_or_default();
+            let index_with_buffer = last_derivation_index + 5;
+            let mut wallet = self.wallet.lock().await;
+
+            // Wipe at the *start* of a scan so this same scan repopulates before the sync runs
+            // `update_wallet_info`; wiping after one would persist an empty balance.
+            let clearing = self.needs_cache_clear.swap(false, Ordering::Relaxed);
+            let _recovery_guard = if clearing {
+                warn!("Wiping the wallet cache; this scan will rebuild it from scratch");
+                self.recovery_scan_in_progress
+                    .store(true, Ordering::Relaxed);
+                self.wallet_cache_persister.clear_cache().await?;
+                *wallet = Self::create_wallet(
                     &self.config,
                     &self.signer,
                     self.wallet_cache_persister.clone(),
                 )
                 .await?;
-                client
-                    .full_scan_to_index(&mut new_wallet, index_with_buffer)
-                    .await?;
-                *wallet = new_wallet;
-                Ok(())
+                Some(FlagGuard(&self.recovery_scan_in_progress))
+            } else {
+                None
+            };
+
+            // Reunblind the wallet txs if there has been a change in the derivation index since the
+            // last full scan
+            if self
+                .persister
+                .get_last_scanned_derivation_index()?
+                .is_some_and(|index| index != last_derivation_index)
+            {
+                debug!("LiquidOnchainWallet::full_scan: reunblinding all transactions");
+                wallet.reunblind()?;
             }
-            Err(e) => Err(e.into()),
-        };
 
-        self.persister
-            .set_last_scanned_derivation_index(last_derivation_index)?;
+            let res: Result<(), PaymentError> = match client
+                .full_scan_to_index(&mut wallet, index_with_buffer)
+                .await
+            {
+                Ok(()) => Ok(()),
+                Err(e)
+                    if matches!(
+                        e,
+                        lwk_wollet::Error::UpdateHeightTooOld { .. }
+                            | lwk_wollet::Error::UpdateOnDifferentStatus { .. }
+                            | lwk_wollet::Error::StoreError(_)
+                    ) =>
+                {
+                    warn!("Full scan failed due to {e}, reloading wallet and retrying");
+                    let mut new_wallet = Self::create_wallet(
+                        &self.config,
+                        &self.signer,
+                        self.wallet_cache_persister.clone(),
+                    )
+                    .await?;
+                    let rescan_res = client
+                        .full_scan_to_index(&mut new_wallet, index_with_buffer)
+                        .await;
+                    // Adopt the reloaded wallet even if the rescan failed: `create_wallet` may
+                    // have wiped the cache, and a stale in-memory wallet would then persist a
+                    // delta that cannot reconstruct it.
+                    *wallet = new_wallet;
+                    rescan_res?;
+                    Ok(())
+                }
+                Err(e) => Err(e.into()),
+            };
 
-        let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
-        info!("lwk wallet full_scan duration: ({duration_ms} ms)");
-        debug!("LiquidOnchainWallet::full_scan: end");
-        res
+            self.persister
+                .set_last_scanned_derivation_index(last_derivation_index)?;
+
+            let duration_ms = Instant::now().duration_since(full_scan_started).as_millis();
+            info!("lwk wallet full_scan duration: ({duration_ms} ms)");
+            debug!("LiquidOnchainWallet::full_scan: end");
+            res?;
+        }
+
+        self.check_and_repair_cache().await
+    }
+
+    async fn apply_broadcast_tx(&self, tx: &Transaction) {
+        // Same mutex `full_scan` holds across scan + apply_update, which is what stops this
+        // racing an update into UpdateOnDifferentStatus.
+        let mut wallet = self.wallet.lock().await;
+        match wallet.apply_transaction(tx.clone()) {
+            Ok(_) => debug!("Applied broadcast tx {} to the wallet state", tx.txid()),
+            Err(e) => warn!(
+                "Could not apply broadcast tx {} to the wallet state: {e}",
+                tx.txid()
+            ),
+        }
+    }
+
+    async fn repair_cache(&self) -> Result<bool, PaymentError> {
+        let mut wallet = self.wallet.lock().await;
+        let txs = wallet.transactions()?;
+        let stale = find_spent_utxos(&txs, &wallet.utxos()?);
+        if stale.is_empty() {
+            // Logged because a retry now only helps if something else changed the set.
+            debug!(
+                "Wallet cache repair found no utxo spent by a known tx; \
+                 the unspent set is unchanged"
+            );
+            return Ok(true);
+        }
+
+        // Each stale utxo is by definition spent by a tx we already hold, so re-applying
+        // those makes lwk drop the stale inputs.
+        let stale: std::collections::HashSet<OutPoint> = stale.into_iter().collect();
+        let spenders: Vec<Transaction> = txs
+            .iter()
+            .filter(|wtx| {
+                wtx.tx
+                    .input
+                    .iter()
+                    .any(|i| stale.contains(&i.previous_output))
+            })
+            .map(|wtx| wtx.tx.clone())
+            .collect();
+
+        warn!(
+            "Repairing wallet cache locally: re-applying {} tx(s) that spend {} stale utxo(s)",
+            spenders.len(),
+            stale.len()
+        );
+        for tx in spenders {
+            let txid = tx.txid();
+            // Note this records the tx as unconfirmed; the next scan restores its real height.
+            if let Err(e) = wallet.apply_transaction(tx) {
+                warn!("Could not re-apply tx {txid} while repairing the wallet cache: {e}");
+            }
+        }
+
+        let remaining = find_spent_utxos(&wallet.transactions()?, &wallet.utxos()?);
+        if remaining.is_empty() {
+            info!("Wallet cache repaired locally, no rescan needed");
+            Ok(true)
+        } else {
+            warn!("Local wallet cache repair left {remaining:?} unresolved, flagging for a rescan");
+            // Only a wipe fixes this now; schedule it rather than stall the call in flight.
+            self.needs_cache_clear.store(true, Ordering::Relaxed);
+            Ok(false)
+        }
     }
 
     fn sign_message(&self, message: &str) -> Result<String> {
@@ -757,6 +974,380 @@ mod tests {
     use crate::test_utils::persist::create_persister;
     use crate::wallet::LiquidOnchainWallet;
     use anyhow::Result;
+    use lwk_common::SignedBalance;
+    use lwk_wollet::elements::confidential::{AssetBlindingFactor, ValueBlindingFactor};
+    use lwk_wollet::elements::{AssetId, TxIn, TxOutSecrets, Txid};
+    use lwk_wollet::Chain;
+    use std::collections::BTreeMap;
+
+    fn test_asset() -> AssetId {
+        AssetId::from_str("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d")
+            .unwrap()
+    }
+
+    /// A transaction spending `spends`, wrapped as a wallet tx.
+    fn wallet_tx(spends: &[OutPoint]) -> WalletTx {
+        let tx = Transaction {
+            version: 2,
+            lock_time: lwk_wollet::elements::LockTime::ZERO,
+            input: spends
+                .iter()
+                .map(|o| TxIn {
+                    previous_output: *o,
+                    ..Default::default()
+                })
+                .collect(),
+            output: vec![],
+        };
+        WalletTx {
+            txid: tx.txid(),
+            tx,
+            height: Some(1),
+            balance: SignedBalance::from(BTreeMap::new()),
+            fee: 0,
+            type_: "outgoing".to_string(),
+            timestamp: None,
+            inputs: vec![],
+            outputs: vec![],
+        }
+    }
+
+    fn wallet_utxo(outpoint: OutPoint) -> WalletTxOut {
+        // p2wpkh so it renders to an address; neither is read by the invariant.
+        let mut bytes = vec![0x00, 0x14];
+        bytes.extend_from_slice(&[7u8; 20]);
+        let script = lwk_wollet::elements::Script::from(bytes);
+        let address =
+            Address::from_script(&script, None, &lwk_wollet::elements::AddressParams::LIQUID)
+                .expect("p2wpkh script should render to an address");
+        WalletTxOut {
+            outpoint,
+            script_pubkey: script,
+            height: Some(1),
+            unblinded: TxOutSecrets::new(
+                test_asset(),
+                AssetBlindingFactor::zero(),
+                1000,
+                ValueBlindingFactor::zero(),
+            ),
+            wildcard_index: 0,
+            ext_int: Chain::External,
+            is_spent: false,
+            address,
+        }
+    }
+
+    /// `repair_cache` rests on this: applying a tx must remove the inputs it spends from
+    /// lwk's unspent set. Against a real `Wollet`, not a mock.
+    #[sdk_macros::async_test_all]
+    async fn test_apply_transaction_drops_spent_inputs() -> Result<()> {
+        use lwk_wollet::clients::LastUnused;
+        use lwk_wollet::elements::bitcoin::bip32::ChildNumber;
+        use lwk_wollet::elements::{BlockExtData, BlockHash, BlockHeader, TxMerkleNode};
+        use lwk_wollet::hashes::Hash as _;
+        use lwk_wollet::{DownloadTxResult, Update};
+
+        let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let signer: Arc<Box<dyn Signer>> =
+            Arc::new(Box::new(SdkSigner::new(mnemonic, "", false).unwrap()));
+        create_persister!(storage);
+        let wallet =
+            LiquidOnchainWallet::new(Config::regtest_esplora(), storage, signer.clone()).await?;
+        let mut w = wallet.wallet.lock().await;
+
+        // Derive a real script from the wallet descriptor so it resolves back to an index.
+        // `None` for the blinding pubkey: lwk derives it from the wallet descriptor.
+        let script: lwk_wollet::elements::Script = {
+            let desc = w.wollet_descriptor();
+            desc.definite_descriptor(Chain::External, 0)?
+                .script_pubkey()
+        };
+        let blinding_pubkey = None;
+
+        // Non-zero blinding factors, or the output counts as explicit and `utxos()` drops it.
+        let secrets = TxOutSecrets::new(
+            test_asset(),
+            AssetBlindingFactor::from_slice(&[3u8; 32])?,
+            1000,
+            ValueBlindingFactor::from_slice(&[4u8; 32])?,
+        );
+
+        let funding = Transaction {
+            version: 2,
+            lock_time: lwk_wollet::elements::LockTime::ZERO,
+            input: vec![],
+            output: vec![lwk_wollet::elements::TxOut {
+                script_pubkey: script.clone(),
+                ..Default::default()
+            }],
+        };
+        let funding_txid = funding.txid();
+        let outpoint = OutPoint::new(funding_txid, 0);
+
+        let wollet_status = w.status();
+        w.apply_update(Update {
+            version: 4,
+            wollet_status,
+            new_txs: DownloadTxResult {
+                txs: vec![(funding_txid, funding)],
+                unblinds: vec![(outpoint, secrets)],
+            },
+            txid_height_new: vec![(funding_txid, Some(1))],
+            txid_height_delete: vec![],
+            timestamps: vec![(1, 1)],
+            scripts_with_blinding_pubkey: vec![(
+                Chain::External,
+                ChildNumber::from_normal_idx(0)?,
+                script,
+                blinding_pubkey,
+            )],
+            tip: BlockHeader {
+                version: 0,
+                prev_blockhash: BlockHash::all_zeros(),
+                merkle_root: TxMerkleNode::all_zeros(),
+                time: 0,
+                height: 0,
+                ext: BlockExtData::default(),
+            },
+            unspent: vec![],
+            last_unused: LastUnused {
+                internal: 0,
+                external: 1,
+            },
+        })?;
+
+        assert!(
+            w.utxos()?.iter().any(|u| u.outpoint == outpoint),
+            "the funding output should be unspent"
+        );
+
+        let spend = Transaction {
+            version: 2,
+            lock_time: lwk_wollet::elements::LockTime::ZERO,
+            input: vec![TxIn {
+                previous_output: outpoint,
+                ..Default::default()
+            }],
+            output: vec![],
+        };
+        w.apply_transaction(spend)?;
+
+        assert!(
+            !w.utxos()?.iter().any(|u| u.outpoint == outpoint),
+            "apply_transaction must drop the input it spends - repair_cache depends on it"
+        );
+
+        Ok(())
+    }
+
+    const TEST_MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+
+    fn descriptor_script(w: &Wollet) -> Result<lwk_wollet::elements::Script> {
+        Ok(w.wollet_descriptor()
+            .definite_descriptor(Chain::External, 0)?
+            .script_pubkey())
+    }
+
+    fn default_tip() -> lwk_wollet::elements::BlockHeader {
+        use lwk_wollet::elements::{BlockExtData, BlockHash, TxMerkleNode};
+        use lwk_wollet::hashes::Hash as _;
+        lwk_wollet::elements::BlockHeader {
+            version: 0,
+            prev_blockhash: BlockHash::all_zeros(),
+            merkle_root: TxMerkleNode::all_zeros(),
+            time: 0,
+            height: 0,
+            ext: BlockExtData::default(),
+        }
+    }
+
+    fn tx_paying(script: &lwk_wollet::elements::Script) -> Transaction {
+        Transaction {
+            version: 2,
+            lock_time: lwk_wollet::elements::LockTime::ZERO,
+            input: vec![],
+            output: vec![lwk_wollet::elements::TxOut {
+                script_pubkey: script.clone(),
+                ..Default::default()
+            }],
+        }
+    }
+
+    fn tx_spending(outpoint: OutPoint) -> Transaction {
+        Transaction {
+            version: 2,
+            lock_time: lwk_wollet::elements::LockTime::ZERO,
+            input: vec![TxIn {
+                previous_output: outpoint,
+                ..Default::default()
+            }],
+            output: vec![],
+        }
+    }
+
+    fn has_utxo(w: &Wollet, outpoint: OutPoint) -> Result<bool> {
+        Ok(w.utxos()?.iter().any(|u| u.outpoint == outpoint))
+    }
+
+    /// Applies `tx` with the given heights, unblinding any output paying `script`.
+    fn apply(
+        w: &mut Wollet,
+        tx: &Transaction,
+        heights: &[(Txid, Option<u32>)],
+        script: &lwk_wollet::elements::Script,
+    ) -> Result<()> {
+        use lwk_wollet::clients::LastUnused;
+        use lwk_wollet::elements::bitcoin::bip32::ChildNumber;
+        use lwk_wollet::{DownloadTxResult, Update};
+
+        let txid = tx.txid();
+        let unblinds = tx
+            .output
+            .iter()
+            .enumerate()
+            .filter(|(_, o)| &o.script_pubkey == script)
+            .map(|(vout, _)| {
+                (
+                    OutPoint::new(txid, vout as u32),
+                    TxOutSecrets::new(
+                        test_asset(),
+                        AssetBlindingFactor::from_slice(&[3u8; 32]).unwrap(),
+                        1000,
+                        ValueBlindingFactor::from_slice(&[4u8; 32]).unwrap(),
+                    ),
+                )
+            })
+            .collect();
+
+        let wollet_status = w.status();
+        w.apply_update(Update {
+            version: 4,
+            wollet_status,
+            new_txs: DownloadTxResult {
+                txs: vec![(txid, tx.clone())],
+                unblinds,
+            },
+            txid_height_new: heights.to_vec(),
+            txid_height_delete: vec![],
+            timestamps: vec![(1, 1)],
+            scripts_with_blinding_pubkey: vec![(
+                Chain::External,
+                ChildNumber::from_normal_idx(0)?,
+                script.clone(),
+                None,
+            )],
+            tip: default_tip(),
+            unspent: vec![],
+            last_unused: LastUnused {
+                internal: 0,
+                external: 1,
+            },
+        })?;
+        Ok(())
+    }
+
+    /// A height-only delta, as a scan produces when a known tx confirms.
+    fn apply_heights_only(w: &mut Wollet, heights: &[(Txid, Option<u32>)]) -> Result<()> {
+        use lwk_wollet::clients::LastUnused;
+        use lwk_wollet::{DownloadTxResult, Update};
+        let wollet_status = w.status();
+        w.apply_update(Update {
+            version: 4,
+            wollet_status,
+            new_txs: DownloadTxResult {
+                txs: vec![],
+                unblinds: vec![],
+            },
+            txid_height_new: heights.to_vec(),
+            txid_height_delete: vec![],
+            timestamps: vec![(1, 1)],
+            scripts_with_blinding_pubkey: vec![],
+            tip: default_tip(),
+            unspent: vec![],
+            last_unused: LastUnused {
+                internal: 0,
+                external: 1,
+            },
+        })?;
+        Ok(())
+    }
+
+    /// `Cache::update_unspent` re-adds the outputs of every tx in `txid_height_new`
+    /// filtered only by txid. It never checks whether a tx already in the cache
+    /// spends them. So a funding tx confirming *after* the tx spending its output was recorded
+    /// resurrects that output. Which is what happens whenever unconfirmed change is spent.
+    #[sdk_macros::async_test_all]
+    async fn test_lwk_resurrects_outputs_of_reannounced_funding_tx() -> Result<()> {
+        let signer: Arc<Box<dyn Signer>> =
+            Arc::new(Box::new(SdkSigner::new(TEST_MNEMONIC, "", false).unwrap()));
+        create_persister!(storage);
+        let wallet =
+            LiquidOnchainWallet::new(Config::regtest_esplora(), storage, signer.clone()).await?;
+        let mut w = wallet.wallet.lock().await;
+        let script = descriptor_script(&w)?;
+
+        // 1. Funding tx A arrives unconfirmed, paying us.
+        let funding = tx_paying(&script);
+        let a0 = OutPoint::new(funding.txid(), 0);
+        apply(&mut w, &funding, &[(funding.txid(), None)], &script)?;
+        assert!(
+            has_utxo(&w, a0)?,
+            "A:0 should be spendable while unconfirmed"
+        );
+
+        // 2. We spend that unconfirmed output. B is recorded, A:0 correctly leaves the set.
+        let spend = tx_spending(a0);
+        apply(&mut w, &spend, &[(spend.txid(), None)], &script)?;
+        assert!(!has_utxo(&w, a0)?, "A:0 should be spent by B");
+
+        // 3. A confirms. Only A is in this delta, so B is never consulted.
+        apply_heights_only(&mut w, &[(funding.txid(), Some(1))])?;
+
+        let resurrected = has_utxo(&w, a0)?;
+        let spender_known = w.transactions()?.iter().any(|t| t.txid == spend.txid());
+
+        assert!(
+            resurrected && spender_known,
+            "expected the observed corruption shape (A:0 unspent + spender still known), \
+             got resurrected={resurrected} spender_known={spender_known}"
+        );
+        assert_eq!(
+            find_spent_utxos(&w.transactions()?, &w.utxos()?),
+            vec![a0],
+            "and our invariant should catch it"
+        );
+        Ok(())
+    }
+
+    /// The invariant that drives both detection and repair: a utxo the wallet still lists as
+    /// unspent, but which a transaction it already knows about spends, is stale.
+    #[sdk_macros::test_all]
+    fn test_find_spent_utxos() {
+        let a = OutPoint::new(Txid::from_str(&"a".repeat(64)).unwrap(), 0);
+        let b = OutPoint::new(Txid::from_str(&"b".repeat(64)).unwrap(), 1);
+
+        // Healthy: nothing the wallet holds spends either utxo.
+        let unrelated = wallet_tx(&[OutPoint::new(Txid::from_str(&"c".repeat(64)).unwrap(), 0)]);
+        assert!(find_spent_utxos(
+            std::slice::from_ref(&unrelated),
+            &[wallet_utxo(a), wallet_utxo(b)]
+        )
+        .is_empty());
+
+        // Corrupt: `a` is still listed as unspent although a known tx spends it.
+        let spender = wallet_tx(&[a]);
+        assert_eq!(
+            find_spent_utxos(
+                &[unrelated.clone(), spender.clone()],
+                &[wallet_utxo(a), wallet_utxo(b)]
+            ),
+            vec![a],
+            "a utxo spent by a known tx must be reported"
+        );
+
+        // An empty utxo set cannot be corrupt, however many spends are known.
+        assert!(find_spent_utxos(&[spender], &[]).is_empty());
+    }
 
     #[cfg(feature = "browser-tests")]
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

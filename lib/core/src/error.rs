@@ -337,3 +337,17 @@ impl From<PaymentError> for LnUrlWithdrawError {
 pub(crate) fn is_txn_mempool_conflict_error(err: &Error) -> bool {
     err.to_string().contains("txn-mempool-conflict")
 }
+
+/// Whether an input is absent from the node's UTXO set: already spent by a confirmed tx, or its
+/// parent never existed. Unlike [`is_txn_mempool_conflict_error`], which means we merely compete
+/// with an unconfirmed tx, this means our cached UTXO view is stale.
+pub(crate) fn is_txn_inputs_missing_or_spent_error(err: &Error) -> bool {
+    let err = err.to_string();
+    err.contains("bad-txns-inputs-missingorspent") || err.contains("missing-inputs")
+}
+
+/// Whether the output being spent is already claimed by another tx, whether that tx is in the
+/// mempool (`txn-mempool-conflict`) or confirmed (`bad-txns-inputs-missingorspent`).
+pub(crate) fn is_txn_already_spent_error(err: &Error) -> bool {
+    is_txn_mempool_conflict_error(err) || is_txn_inputs_missing_or_spent_error(err)
+}
