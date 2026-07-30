@@ -426,7 +426,7 @@ impl SendSwapHandler {
     ) -> Result<(), PaymentError> {
         debug!(
             "Claim is pending for Send Swap {}. Initiating cooperative claim",
-            &send_swap.id
+            send_swap.id
         );
         let refund_address = match send_swap.refund_address {
             Some(ref refund_address) => refund_address.clone(),
