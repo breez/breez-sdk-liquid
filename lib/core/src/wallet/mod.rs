@@ -797,11 +797,16 @@ impl OnchainWallet for LiquidOnchainWallet {
 
             // Wipe at the *start* of a scan so this same scan repopulates before the sync runs
             // `update_wallet_info`; wiping after one would persist an empty balance.
-            let clearing = self.needs_cache_clear.swap(false, Ordering::Relaxed);
-            let _recovery_guard = if clearing {
+            let clearing = self.needs_cache_clear.load(Ordering::Relaxed);
+            // Guard before anything fallible: an early return here must still release the flag,
+            // or tx building fails fast forever.
+            let _recovery_guard = clearing.then(|| {
                 warn!("Wiping the wallet cache; this scan will rebuild it from scratch");
                 self.recovery_scan_in_progress
                     .store(true, Ordering::Relaxed);
+                FlagGuard(&self.recovery_scan_in_progress)
+            });
+            if clearing {
                 self.wallet_cache_persister.clear_cache().await?;
                 *wallet = Self::create_wallet(
                     &self.config,
@@ -809,10 +814,10 @@ impl OnchainWallet for LiquidOnchainWallet {
                     self.wallet_cache_persister.clone(),
                 )
                 .await?;
-                Some(FlagGuard(&self.recovery_scan_in_progress))
-            } else {
-                None
-            };
+                // Only now is the wipe complete. Clearing earlier would strand a wiped store
+                // beside the old in-memory wallet if `create_wallet` failed.
+                self.needs_cache_clear.store(false, Ordering::Relaxed);
+            }
 
             // Reunblind the wallet txs if there has been a change in the derivation index since the
             // last full scan
@@ -867,7 +872,12 @@ impl OnchainWallet for LiquidOnchainWallet {
             res?;
         }
 
-        self.check_and_repair_cache().await
+        // Best-effort: a failed check must not abort the scan, or `sync_inner` returns before
+        // syncing payments.
+        if let Err(e) = self.check_and_repair_cache().await {
+            error!("Wallet cache check failed, continuing: {e}");
+        }
+        Ok(())
     }
 
     async fn apply_broadcast_tx(&self, tx: &Transaction) {
@@ -884,55 +894,64 @@ impl OnchainWallet for LiquidOnchainWallet {
     }
 
     async fn repair_cache(&self) -> Result<bool, PaymentError> {
+        // Re-applying a spender drops its stale inputs, but re-adds its own outputs. If one of
+        // those was itself already spent, the drift simply moves one hop down the chain, so
+        // iterate to a fixpoint rather than giving up and scheduling a wipe.
+        const MAX_PASSES: usize = 16;
+
         let mut wallet = self.wallet.lock().await;
-        let txs = wallet.transactions()?;
-        let stale = find_spent_utxos(&txs, &wallet.utxos()?);
-        if stale.is_empty() {
-            // Logged because a retry now only helps if something else changed the set.
-            debug!(
-                "Wallet cache repair found no utxo spent by a known tx; \
-                 the unspent set is unchanged"
+        let mut previous: Option<Vec<OutPoint>> = None;
+
+        for _ in 0..MAX_PASSES {
+            let txs = wallet.transactions()?;
+            let stale = find_spent_utxos(&txs, &wallet.utxos()?);
+            if stale.is_empty() {
+                if previous.is_some() {
+                    info!("Wallet cache repaired locally, no rescan needed");
+                }
+                return Ok(true);
+            }
+
+            // No progress since the last pass means re-applying cannot resolve the rest.
+            if previous.as_deref() == Some(stale.as_slice()) {
+                break;
+            }
+            previous = Some(stale.clone());
+
+            let stale: std::collections::HashSet<OutPoint> = stale.into_iter().collect();
+            let spenders: Vec<Transaction> = txs
+                .iter()
+                .filter(|wtx| {
+                    wtx.tx
+                        .input
+                        .iter()
+                        .any(|i| stale.contains(&i.previous_output))
+                })
+                .map(|wtx| wtx.tx.clone())
+                .collect();
+            if spenders.is_empty() {
+                break;
+            }
+
+            warn!(
+                "Repairing wallet cache locally: re-applying {} tx(s) that spend {} stale utxo(s)",
+                spenders.len(),
+                stale.len()
             );
-            return Ok(true);
-        }
-
-        // Each stale utxo is by definition spent by a tx we already hold, so re-applying
-        // those makes lwk drop the stale inputs.
-        let stale: std::collections::HashSet<OutPoint> = stale.into_iter().collect();
-        let spenders: Vec<Transaction> = txs
-            .iter()
-            .filter(|wtx| {
-                wtx.tx
-                    .input
-                    .iter()
-                    .any(|i| stale.contains(&i.previous_output))
-            })
-            .map(|wtx| wtx.tx.clone())
-            .collect();
-
-        warn!(
-            "Repairing wallet cache locally: re-applying {} tx(s) that spend {} stale utxo(s)",
-            spenders.len(),
-            stale.len()
-        );
-        for tx in spenders {
-            let txid = tx.txid();
-            // Note this records the tx as unconfirmed; the next scan restores its real height.
-            if let Err(e) = wallet.apply_transaction(tx) {
-                warn!("Could not re-apply tx {txid} while repairing the wallet cache: {e}");
+            for tx in spenders {
+                let txid = tx.txid();
+                // Note this records the tx as unconfirmed; the next scan restores its real height.
+                if let Err(e) = wallet.apply_transaction(tx) {
+                    warn!("Could not re-apply tx {txid} while repairing the wallet cache: {e}");
+                }
             }
         }
 
         let remaining = find_spent_utxos(&wallet.transactions()?, &wallet.utxos()?);
-        if remaining.is_empty() {
-            info!("Wallet cache repaired locally, no rescan needed");
-            Ok(true)
-        } else {
-            warn!("Local wallet cache repair left {remaining:?} unresolved, flagging for a rescan");
-            // Only a wipe fixes this now; schedule it rather than stall the call in flight.
-            self.needs_cache_clear.store(true, Ordering::Relaxed);
-            Ok(false)
-        }
+        warn!("Local wallet cache repair left {remaining:?} unresolved, flagging for a rescan");
+        // Only a wipe fixes this now; schedule it rather than stall the call in flight.
+        self.needs_cache_clear.store(true, Ordering::Relaxed);
+        Ok(false)
     }
 
     fn sign_message(&self, message: &str) -> Result<String> {
@@ -1259,6 +1278,62 @@ mod tests {
         Ok(())
     }
 
+    /// Re-applying a spender re-adds its own outputs, so if one of those was already spent the
+    /// drift moves one hop down the chain. Raised in review: the repair must iterate, not give up
+    /// after a single pass and schedule a wipe.
+    #[sdk_macros::async_test_all]
+    async fn test_repair_cache_resolves_a_chain_of_spends() -> Result<()> {
+        let signer: Arc<Box<dyn Signer>> =
+            Arc::new(Box::new(SdkSigner::new(TEST_MNEMONIC, "", false).unwrap()));
+        create_persister!(storage);
+        let wallet =
+            LiquidOnchainWallet::new(Config::regtest_esplora(), storage, signer.clone()).await?;
+
+        let (a0, b0) = {
+            let mut w = wallet.wallet.lock().await;
+            let script = descriptor_script(&w)?;
+
+            // A funds us; B spends A:0 and pays us change; C spends that change.
+            let a = tx_paying(&script);
+            let a0 = OutPoint::new(a.txid(), 0);
+            apply(&mut w, &a, &[(a.txid(), None)], &script)?;
+
+            let mut b = tx_paying(&script);
+            b.input = vec![TxIn {
+                previous_output: a0,
+                ..Default::default()
+            }];
+            let b0 = OutPoint::new(b.txid(), 0);
+            apply(&mut w, &b, &[(b.txid(), None)], &script)?;
+
+            let c = tx_spending(b0);
+            apply(&mut w, &c, &[(c.txid(), None)], &script)?;
+
+            assert!(!has_utxo(&w, a0)?, "A:0 is spent by B");
+            assert!(!has_utxo(&w, b0)?, "B:0 is spent by C");
+
+            // A confirms, resurrecting A:0 (the lwk bug).
+            apply_heights_only(&mut w, &[(a.txid(), Some(1))])?;
+            assert!(has_utxo(&w, a0)?, "A:0 resurrected");
+            (a0, b0)
+        };
+
+        // One pass would drop A:0 but re-add B:0, which C spends. Only iterating resolves both.
+        assert!(
+            wallet.repair_cache().await?,
+            "the repair should resolve the chain without needing a wipe"
+        );
+
+        let w = wallet.wallet.lock().await;
+        assert!(!has_utxo(&w, a0)?, "A:0 must not survive the repair");
+        assert!(
+            !has_utxo(&w, b0)?,
+            "B:0 must not be left behind by the repair"
+        );
+        assert!(find_spent_utxos(&w.transactions()?, &w.utxos()?).is_empty());
+        Ok(())
+    }
+
     /// `Cache::update_unspent` re-adds the outputs of every tx in `txid_height_new`
     /// filtered only by txid. It never checks whether a tx already in the cache
     /// spends them. So a funding tx confirming *after* the tx spending its output was recorded
@@ -1299,8 +1374,8 @@ mod tests {
             resurrected && spender_known,
             "lwk no longer resurrects outputs of a re-announced funding tx \
              (resurrected={resurrected}, spender_known={spender_known}). If this failed after an \
-             lwk bump, the upstream bug is likely fixed: see LWK_ISSUE.md and reassess whether \
-             repair_cache / check_and_repair_cache are still needed."
+             lwk bump the upstream bug is likely fixed, so reassess whether repair_cache and \
+             check_and_repair_cache are still needed."
         );
         assert_eq!(
             find_spent_utxos(&w.transactions()?, &w.utxos()?),
