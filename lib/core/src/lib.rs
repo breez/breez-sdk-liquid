@@ -193,6 +193,7 @@ pub(crate) mod test_utils;
 pub(crate) mod utils;
 pub mod wallet;
 
+pub use lwk_common;
 pub use lwk_wollet::bitcoin;
 pub use lwk_wollet::elements;
 pub use sdk_common::prelude::*;

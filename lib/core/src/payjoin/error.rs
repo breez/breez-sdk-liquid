@@ -11,7 +11,7 @@ pub enum PayjoinError {
     Generic(String),
 
     #[error("Cannot pay: not enough funds")]
-    InsufficientFunds,
+    InsufficientFunds { missing_sats: u64 },
 
     #[error("{0}")]
     ServiceConnectivity(String),
@@ -54,7 +54,9 @@ impl From<elements::hashes::hex::HexToArrayError> for PayjoinError {
 impl From<PaymentError> for PayjoinError {
     fn from(value: PaymentError) -> Self {
         match value {
-            PaymentError::InsufficientFunds => Self::InsufficientFunds,
+            PaymentError::InsufficientFunds { missing_sats } => {
+                Self::InsufficientFunds { missing_sats }
+            }
             _ => Self::Generic(value.to_string()),
         }
     }

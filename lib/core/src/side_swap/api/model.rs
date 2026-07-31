@@ -139,7 +139,9 @@ impl AssetSwap {
         if wallet_asset_balance.balance_sat < self.payer_amount_sat
             || wallet_info.balance_sat < self.fees_sat
         {
-            return Err(PaymentError::InsufficientFunds);
+            return Err(PaymentError::InsufficientFunds {
+                missing_sats: self.payer_amount_sat - wallet_asset_balance.balance_sat,
+            });
         }
 
         Ok(())

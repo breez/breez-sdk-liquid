@@ -10,12 +10,14 @@ use std::sync::Arc;
 use anyhow::{anyhow, bail, Result};
 use boltz_client::ElementsAddress;
 use log::{debug, error, info, warn};
-use lwk_common::Signer as LwkSigner;
 use lwk_common::{singlesig_desc, Singlesig};
+use lwk_common::{Multisig, Signer as LwkSigner};
 use lwk_wollet::asyncr::{EsploraClient, EsploraClientBuilder};
+use lwk_wollet::bitcoin::bip32::{KeySource, Xpub};
 use lwk_wollet::elements::hex::ToHex;
 use lwk_wollet::elements::pset::PartiallySignedTransaction;
 use lwk_wollet::elements::{Address, AssetId, OutPoint, Transaction, TxOut, Txid};
+use lwk_wollet::elements_miniscript::descriptor::checksum::desc_checksum;
 use lwk_wollet::secp256k1::Message;
 use lwk_wollet::{Network, WalletTx, WalletTxOut, Wollet, WolletDescriptor};
 use persister::SqliteWalletCachePersister;
@@ -26,7 +28,9 @@ use tokio::sync::Mutex;
 use utxo_select::{InOut, WalletUtxoSelectRequest};
 use web_time::Instant;
 
-use crate::model::{BlockchainExplorer, Signer, BREEZ_LIQUID_ESPLORA_URL};
+use crate::model::{
+    BlockchainExplorer, PsbtSigner, Signer, SignerPolicy, BREEZ_LIQUID_ESPLORA_URL,
+};
 use crate::persist::Persister;
 use crate::signer::SdkLwkSigner;
 use crate::{ensure_sdk, error::PaymentError, model::Config};
@@ -196,14 +200,25 @@ impl LiquidOnchainWallet {
         config: Config,
         persister: std::sync::Arc<Persister>,
         user_signer: Arc<Box<dyn Signer>>,
+        psbt_signer: Option<Arc<Box<dyn PsbtSigner>>>,
     ) -> Result<Self> {
-        let signer = SdkLwkSigner::new(user_signer.clone())?;
+        let signer = SdkLwkSigner::new(user_signer.clone(), psbt_signer.clone())?;
 
         let wallet_cache_persister: Arc<dyn WalletCachePersister> = Arc::new(
             SqliteWalletCachePersister::new(std::sync::Arc::clone(&persister))?,
         );
+        let signer_policy = match psbt_signer {
+            Some(signer) => signer.sign_policy(),
+            None => SignerPolicy::Singlesig,
+        };
 
-        let wollet = Self::create_wallet(&config, &signer, wallet_cache_persister.clone()).await?;
+        let wollet = Self::create_wallet(
+            &config,
+            &signer,
+            wallet_cache_persister.clone(),
+            signer_policy,
+        )
+        .await?;
 
         Ok(Self {
             config,
@@ -219,9 +234,10 @@ impl LiquidOnchainWallet {
         config: &Config,
         signer: &SdkLwkSigner,
         wallet_cache_persister: Arc<dyn WalletCachePersister>,
+        signer_policy: SignerPolicy,
     ) -> Result<Wollet> {
         let network: Network = config.network.into();
-        let descriptor = get_descriptor(signer)?;
+        let descriptor = get_descriptor(signer, signer_policy)?;
         let build_wollet = |persister: persister::LwkPersister| {
             lwk_wollet::WolletBuilder::new(network, descriptor.clone())
                 .with_updates_store(persister)
@@ -390,13 +406,97 @@ impl LiquidOnchainWallet {
     }
 }
 
-pub fn get_descriptor(signer: &SdkLwkSigner) -> Result<WolletDescriptor, PaymentError> {
-    let descriptor_str = singlesig_desc(
-        signer,
-        Singlesig::Wpkh,
-        lwk_common::DescriptorBlindingKey::Slip77,
-    )
-    .map_err(|e| anyhow!("Invalid descriptor: {e}"))?;
+pub fn test_multisig_desc(
+    threshold: u32,
+    xpubs: Vec<(Option<KeySource>, Xpub)>,
+    script_variant: Multisig,
+    blinding_key: Vec<u8>,
+) -> Result<String, String> {
+    if threshold == 0 {
+        return Err("Threshold cannot be 0".into());
+    } else if threshold as usize > xpubs.len() {
+        return Err("Threshold cannot be greater than the number of xpubs".into());
+    }
+
+    let (prefix, suffix) = match script_variant {
+        Multisig::Wsh => ("elwsh(multi", ")"),
+    };
+
+    let blinding_key = format!("slip77({})", blinding_key.to_hex());
+
+    let xpubs = xpubs
+        .iter()
+        .map(|(keyorigin, xpub)| {
+            let prefix = if let Some((fingerprint, path)) = keyorigin {
+                format!(
+                    "[{fingerprint}/{}]",
+                    path.to_string().replace("m/", "").replace('\'', "h")
+                )
+            } else {
+                "".to_string()
+            };
+            format!("{prefix}{xpub}/<0;1>/*")
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+    let desc = format!("ct({blinding_key},{prefix}({threshold},{xpubs}){suffix})");
+    let checksum = desc_checksum(&desc).map_err(|e| format!("{:?}", e))?;
+    Ok(format!("{desc}#{checksum}"))
+}
+
+pub fn get_descriptor(
+    signer: &SdkLwkSigner,
+    signer_policy: SignerPolicy,
+) -> Result<WolletDescriptor, PaymentError> {
+    let descriptor_str = match signer_policy {
+        SignerPolicy::Singlesig => singlesig_desc(
+            signer,
+            Singlesig::Wpkh,
+            lwk_common::DescriptorBlindingKey::Slip77,
+        )
+        .map_err(|e| anyhow::anyhow!("Invalid descriptor: {e}"))?,
+        SignerPolicy::Multisig { threshold, xpubs } => {
+            if xpubs.len() < (threshold as usize) || threshold == 0 {
+                return Err(anyhow!(
+                    "Invalid multisig policy: threshold={}, xpubs={}",
+                    threshold,
+                    xpubs.len()
+                )
+                .into());
+            }
+
+            let xpubs = xpubs
+                .into_iter()
+                .map(|xpub| {
+                    (
+                        None,
+                        Xpub::from_str(&xpub)
+                            .map_err(|e| anyhow!("Invalid Xpub: {e}"))
+                            .unwrap(),
+                    )
+                })
+                .collect();
+
+            // multisig_desc(
+            //     threshold,
+            //     xpubs,
+            //     Multisig::Wsh,
+            //     DescriptorBlindingKey::Slip77Rand,
+            // )
+            test_multisig_desc(
+                threshold,
+                xpubs,
+                Multisig::Wsh,
+                signer
+                    .slip77_master_blinding_key()
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+            )
+            .map_err(|e| anyhow!("Invalid multisig descriptor: {e}"))?
+        }
+    };
+
     Ok(descriptor_str.parse()?)
 }
 
@@ -498,6 +598,7 @@ impl OnchainWallet for LiquidOnchainWallet {
             .map_err(|e| PaymentError::Generic {
                 err: format!("Failed to sign transaction: {e:?}"),
             })?;
+
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -539,12 +640,19 @@ impl OnchainWallet for LiquidOnchainWallet {
                 }
             );
         }
+        let signer = self.signer.clone();
+        let mut pset = tokio::task::spawn_blocking(move || {
+            signer
+                .sign(&mut pset)
+                .map_err(|e| PaymentError::Generic {
+                    err: format!("Failed to sign transaction: {e:?}"),
+                })
+                .unwrap();
 
-        self.signer
-            .sign(&mut pset)
-            .map_err(|e| PaymentError::Generic {
-                err: format!("Failed to sign transaction: {e:?}"),
-            })?;
+            pset
+        })
+        .await
+        .unwrap();
         Ok(lwk_wollet.finalize(&mut pset)?)
     }
 
@@ -565,7 +673,9 @@ impl OnchainWallet for LiquidOnchainWallet {
             .await
         {
             Ok(tx) => Ok(tx),
-            Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
+            Err(PaymentError::InsufficientFunds { .. })
+                if asset_id.eq(&self.config.lbtc_asset_id()) =>
+            {
                 warn!("Cannot build tx due to insufficient funds, attempting to build drain tx");
                 self.build_drain_tx(fee_rate_sats_per_kvb, recipient_address, Some(amount_sat))
                     .await
@@ -595,7 +705,6 @@ impl OnchainWallet for LiquidOnchainWallet {
         }
 
         lwk_wollet.add_details(pset)?;
-
         self.signer.sign(pset).map_err(|e| PaymentError::Generic {
             err: format!("Failed to sign transaction: {e:?}"),
         })?;
@@ -711,6 +820,7 @@ impl OnchainWallet for LiquidOnchainWallet {
                     &self.config,
                     &self.signer,
                     self.wallet_cache_persister.clone(),
+                    self.signer.sign_policy(),
                 )
                 .await?;
                 client
@@ -772,7 +882,7 @@ mod tests {
         create_persister!(storage);
 
         let wallet: Arc<dyn OnchainWallet> = Arc::new(
-            LiquidOnchainWallet::new(config, storage, sdk_signer.clone())
+            LiquidOnchainWallet::new(config, storage, sdk_signer.clone(), None)
                 .await
                 .unwrap(),
         );
