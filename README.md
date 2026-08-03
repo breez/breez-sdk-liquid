@@ -1,16 +1,11 @@
 > **Notice for Builders**\
-> For new partners looking to add instant, non-custodial bitcoin or stablecoins to their apps or services, we recommend building with the [Breez SDK - Spark](https://sdk-doc-spark.breez.technology/). For existing partners building with the Breez SDK - Liquid, we recommend moving to the Spark implementation ASAP.
+> For new partners looking to add instant, non-custodial bitcoin and stablecoins to their apps or services, we recommend building with the [Breez SDK - Spark](https://sdk-doc-spark.breez.technology/). For existing partners building with the Breez SDK - Liquid, we recommend moving to the Spark implementation ASAP.
 
 # Breez SDK - Liquid
 
 ## **Overview**
 
-The Breez SDK provides developers with an end-to-end solution for integrating non-custodial bitcoin into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of value transfer.
-
-To provide the best experience for their end-users, developers can choose between the following implementations:
-
-- [Breez SDK - Spark](https://sdk-doc-spark.breez.technology/)
-- [Breez SDK -  Liquid](https://sdk-doc-liquid.breez.technology/)
+The Breez SDK provides developers with an end-to-end solution for integrating instant, non-custodial bitcoin and stablecoins into their apps and services. It eliminates the need for third parties, simplifies the complexities of Bitcoin and Lightning, and enables seamless onboarding for billions of users to the future of value transfer.
 
 **The Breez SDK is free for developers.**
 
