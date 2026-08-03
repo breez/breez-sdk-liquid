@@ -391,7 +391,7 @@ impl<P: ProxyUrlFetcher> Swapper for BoltzSwapper<P> {
             .inner
             .get_submarine_claim_tx_details(&swap.id)
             .await?;
-        info!("Received claim tx details: {:?}", &claim_tx_response);
+        info!("Received claim tx details: {claim_tx_response:?}");
 
         self.validate_send_swap_preimage(&swap.id, &swap.invoice, &claim_tx_response.preimage)?;
         Ok(claim_tx_response)

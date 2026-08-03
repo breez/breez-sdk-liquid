@@ -361,7 +361,7 @@ impl SyncService {
     async fn handle_decryption(&self, new_record: Record) -> Result<DecryptionInfo, PullError> {
         info!(
             "realtime-sync: Handling decryption for record record_id {}",
-            &new_record.id
+            new_record.id
         );
 
         // Step 3: Check whether or not record is applicable (from its schema_version)
@@ -417,7 +417,7 @@ impl SyncService {
 
         info!(
             "realtime-sync: Successfully decrypted record {}",
-            &decrypted_record.id
+            decrypted_record.id
         );
 
         Ok(DecryptionInfo {

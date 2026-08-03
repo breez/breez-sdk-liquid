@@ -528,7 +528,7 @@ impl LiquidSdk {
     }
 
     async fn start_plugins(self: &Arc<LiquidSdk>) -> SdkResult<()> {
-        for (_, plugin) in self.plugins.lock().await.iter() {
+        for plugin in self.plugins.lock().await.values() {
             self.start_plugin_inner(plugin).await?;
         }
         Ok(())
@@ -613,7 +613,7 @@ impl LiquidSdk {
                 handle.handle.abort();
             }
         }
-        for (_, plugin) in self.plugins.lock().await.iter() {
+        for plugin in self.plugins.lock().await.values() {
             plugin.on_stop().await;
         }
 
