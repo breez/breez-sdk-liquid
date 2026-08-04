@@ -1275,7 +1275,10 @@ impl LiquidSdk {
             Err(PaymentError::InsufficientFunds) if asset_id.eq(&self.config.lbtc_asset_id()) => {
                 self.estimate_drain_tx_fee(Some(amount_sat), Some(address))
                     .await
-                    .map_err(|_| PaymentError::InsufficientFunds)
+                    .map_err(|e| {
+                        warn!("Drain fallback for {amount_sat} sat failed: {e}");
+                        PaymentError::InsufficientFunds
+                    })
             }
             Err(e) => Err(e),
         }

@@ -1,4 +1,5 @@
 use anyhow::Error;
+use log::warn;
 use lwk_wollet::secp256k1;
 use sdk_common::{
     lightning_with_bolt12::offers::parse::Bolt12SemanticError,
@@ -216,7 +217,17 @@ impl From<boltz_client::bitcoin::hex::HexToArrayError> for PaymentError {
 impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
         match err {
-            lwk_wollet::Error::InsufficientFunds { .. } => PaymentError::InsufficientFunds,
+            lwk_wollet::Error::InsufficientFunds {
+                missing_sats,
+                asset_id,
+                is_token,
+            } => {
+                warn!(
+                    "lwk reported insufficient funds: missing {missing_sats} sat of asset \
+                     {asset_id}, is_token: {is_token}"
+                );
+                PaymentError::InsufficientFunds
+            }
             lwk_wollet::Error::TooManyInputs(count) => PaymentError::Generic {
                 err: format!(
                     "Transaction would require {count} inputs, which exceeds the maximum of 256 \

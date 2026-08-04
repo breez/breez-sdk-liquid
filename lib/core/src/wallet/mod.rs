@@ -1230,6 +1230,93 @@ mod tests {
         }
     }
 
+    /// A tx paying `sats` of the policy asset to `script`, plus the secrets it unblinds with.
+    ///
+    /// Unlike [`tx_paying`], the commitments are real and consistent with the secrets. The cache
+    /// tests can leave them `Default::default()` because `extend_unblinded` does no crypto, but
+    /// anything that *builds* a tx blinds and proves against them, so they have to be genuine.
+    fn confidential_tx_paying(
+        script: &lwk_wollet::elements::Script,
+        policy_asset: AssetId,
+        sats: u64,
+        seed: u8,
+    ) -> (Transaction, TxOutSecrets) {
+        use lwk_wollet::elements::confidential::{Asset, Nonce, Value};
+        use lwk_wollet::elements::secp256k1_zkp;
+
+        let secp = secp256k1_zkp::Secp256k1::new();
+        let asset_bf = AssetBlindingFactor::from_slice(&[seed | 0x01; 32]).unwrap();
+        let value_bf = ValueBlindingFactor::from_slice(&[seed | 0x40; 32]).unwrap();
+        let asset_gen = secp256k1_zkp::Generator::new_blinded(
+            &secp,
+            policy_asset.into_tag(),
+            asset_bf.into_inner(),
+        );
+        let value_commit =
+            secp256k1_zkp::PedersenCommitment::new(&secp, sats, value_bf.into_inner(), asset_gen);
+
+        let tx = Transaction {
+            version: 2,
+            lock_time: lwk_wollet::elements::LockTime::ZERO,
+            input: vec![],
+            output: vec![lwk_wollet::elements::TxOut {
+                asset: Asset::Confidential(asset_gen),
+                value: Value::Confidential(value_commit),
+                nonce: Nonce::Null,
+                script_pubkey: script.clone(),
+                witness: Default::default(),
+            }],
+        };
+        let secrets = TxOutSecrets {
+            asset: policy_asset,
+            value: sats,
+            asset_bf,
+            value_bf,
+        };
+        (tx, secrets)
+    }
+
+    /// Credits the wallet a spendable confirmed utxo of `sats`, returning its outpoint.
+    fn fund(
+        w: &mut Wollet,
+        script: &lwk_wollet::elements::Script,
+        sats: u64,
+        seed: u8,
+    ) -> Result<OutPoint> {
+        use lwk_wollet::clients::LastUnused;
+        use lwk_wollet::elements::bitcoin::bip32::ChildNumber;
+        use lwk_wollet::{DownloadTxResult, Update};
+
+        let (tx, secrets) = confidential_tx_paying(script, w.policy_asset(), sats, seed);
+        let txid = tx.txid();
+        let outpoint = OutPoint::new(txid, 0);
+        let wollet_status = w.status();
+        w.apply_update(Update {
+            version: 4,
+            wollet_status,
+            new_txs: DownloadTxResult {
+                txs: vec![(txid, tx)],
+                unblinds: vec![(outpoint, secrets)],
+            },
+            txid_height_new: vec![(txid, Some(1))],
+            txid_height_delete: vec![],
+            timestamps: vec![(1, 1)],
+            scripts_with_blinding_pubkey: vec![(
+                Chain::External,
+                ChildNumber::from_normal_idx(0)?,
+                script.clone(),
+                None,
+            )],
+            tip: default_tip(),
+            unspent: vec![],
+            last_unused: LastUnused {
+                internal: 0,
+                external: 1,
+            },
+        })?;
+        Ok(outpoint)
+    }
+
     fn tx_spending(outpoint: OutPoint) -> Transaction {
         Transaction {
             version: 2,
@@ -1437,6 +1524,143 @@ mod tests {
         let w = wallet.wallet.lock().await;
         assert!(!has_utxo(&w, first_outpoint)?);
         assert!(find_spent_utxos(&w.transactions()?, &w.utxos()?).is_empty());
+        Ok(())
+    }
+
+    /// Drain hands the whole job to lwk's `drain_lbtc_wallet()` and never consults
+    /// `select_wallet_utxos`, so it must keep spending every utxo regardless of what our own
+    /// coin selection would have picked.
+    #[sdk_macros::async_test_all]
+    async fn test_build_drain_tx_spends_every_utxo() -> Result<()> {
+        let signer: Arc<Box<dyn Signer>> =
+            Arc::new(Box::new(SdkSigner::new(TEST_MNEMONIC, "", false).unwrap()));
+        create_persister!(storage);
+        let wallet =
+            LiquidOnchainWallet::new(Config::regtest_esplora(), storage, signer.clone()).await?;
+
+        let (script, recipient) = {
+            let w = wallet.wallet.lock().await;
+            (
+                descriptor_script(&w)?,
+                w.address(Some(1))?.address().clone(),
+            )
+        };
+
+        // A spread that our own selector would never take whole: a 21 sat send would pick one.
+        let funded = {
+            let mut w = wallet.wallet.lock().await;
+            let outpoints = [
+                fund(&mut w, &script, 100_000, 1)?,
+                fund(&mut w, &script, 50_000, 2)?,
+                fund(&mut w, &script, 25_000, 3)?,
+            ];
+            assert_eq!(w.utxos()?.len(), 3, "wallet should hold the 3 funded utxos");
+            outpoints
+        };
+
+        let tx = wallet
+            .build_drain_tx(None, &recipient.to_string(), None)
+            .await?;
+
+        assert_eq!(
+            tx.input.len(),
+            funded.len(),
+            "a drain must spend every utxo, not a selected subset"
+        );
+        for outpoint in funded {
+            assert!(
+                tx.input.iter().any(|i| i.previous_output == outpoint),
+                "drain tx is missing utxo {outpoint}"
+            );
+        }
+        // The drain output reuses the change slot, so there is no third output to change into.
+        assert_eq!(tx.output.len(), 2, "expected the drain output and the fee");
+        let fee = tx.output.iter().find(|o| o.is_fee()).expect("a fee output");
+        assert!(
+            fee.value.explicit().is_some_and(|sats| sats > 0),
+            "the fee must be explicit and non-zero, so the tx actually balanced"
+        );
+
+        // Contrast: an ordinary send of the same funds goes through `select_wallet_utxos` and
+        // takes a subset. Without this the drain assertion would pass on any built tx.
+        let ordinary = wallet
+            .build_tx(
+                None,
+                &recipient.to_string(),
+                &wallet.config.lbtc_asset_id(),
+                1_000,
+            )
+            .await?;
+        assert!(
+            ordinary.input.len() < funded.len(),
+            "a 1000 sat send should select a subset, got {} of {} inputs",
+            ordinary.input.len(),
+            funded.len()
+        );
+        Ok(())
+    }
+
+    /// `enforce_amount_sat` is the branch `build_tx_or_drain_tx` falls back to when an ordinary
+    /// send cannot be built, and it only passes when the drained amount matches exactly. Getting
+    /// the arithmetic wrong turns an unbuildable tx into a bare "not enough funds".
+    #[sdk_macros::async_test_all]
+    async fn test_build_drain_tx_enforces_the_exact_amount() -> Result<()> {
+        let signer: Arc<Box<dyn Signer>> =
+            Arc::new(Box::new(SdkSigner::new(TEST_MNEMONIC, "", false).unwrap()));
+        create_persister!(storage);
+        let wallet =
+            LiquidOnchainWallet::new(Config::regtest_esplora(), storage, signer.clone()).await?;
+
+        let (script, recipient) = {
+            let w = wallet.wallet.lock().await;
+            (
+                descriptor_script(&w)?,
+                w.address(Some(1))?.address().clone(),
+            )
+        };
+        let total = 175_000;
+        {
+            let mut w = wallet.wallet.lock().await;
+            fund(&mut w, &script, 100_000, 1)?;
+            fund(&mut w, &script, 50_000, 2)?;
+            fund(&mut w, &script, 25_000, 3)?;
+        }
+        let recipient = recipient.to_string();
+
+        // Learn the fee from an unconstrained drain, so the expected amount is derived rather
+        // than hardcoded to a fee model that may change.
+        let fee = wallet
+            .build_drain_tx(None, &recipient, None)
+            .await?
+            .output
+            .iter()
+            .find(|o| o.is_fee())
+            .and_then(|o| o.value.explicit())
+            .expect("an explicit fee output");
+        let drained = total - fee;
+
+        wallet
+            .build_drain_tx(None, &recipient, Some(drained))
+            .await
+            .unwrap_or_else(|e| {
+                panic!("enforcing the actual drained amount {drained} failed: {e}")
+            });
+
+        // Off by one in either direction must be rejected, not silently drained.
+        for wrong in [drained - 1, drained + 1] {
+            let err = match wallet.build_drain_tx(None, &recipient, Some(wrong)).await {
+                // Report the txid rather than the tx, which Debug-prints every rangeproof.
+                Ok(tx) => panic!(
+                    "enforcing {wrong} must fail, but it built {} draining {drained}",
+                    tx.txid()
+                ),
+                Err(e) => e,
+            };
+            assert!(
+                err.to_string().contains("doesn't match enforce_amount_sat"),
+                "expected an enforce mismatch for {wrong}, got: {err}"
+            );
+        }
         Ok(())
     }
 
