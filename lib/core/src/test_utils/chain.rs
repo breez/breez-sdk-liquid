@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::sync::Mutex;
 
 use crate::{
@@ -20,6 +21,10 @@ use crate::{
 #[derive(Default)]
 pub(crate) struct MockLiquidChainService {
     history: Mutex<Vec<LBtcHistory>>,
+    /// Scripted outcomes for the next `broadcast` calls, consumed front to back.
+    /// `Some(err)` fails with that message, `None` succeeds. Calls beyond the script succeed.
+    broadcast_results: Mutex<VecDeque<Option<String>>>,
+    broadcast_calls: Mutex<usize>,
 }
 
 impl MockLiquidChainService {
@@ -35,6 +40,17 @@ impl MockLiquidChainService {
     pub(crate) fn get_history(&self) -> Vec<LBtcHistory> {
         self.history.lock().unwrap().clone()
     }
+
+    /// Scripts the outcome of the next `broadcast` calls. See [`Self::broadcast_results`].
+    pub(crate) fn set_broadcast_results(&self, results: Vec<Option<String>>) -> &Self {
+        *self.broadcast_results.lock().unwrap() = results.into();
+        self
+    }
+
+    /// How many times `broadcast` has been called.
+    pub(crate) fn broadcast_calls(&self) -> usize {
+        *self.broadcast_calls.lock().unwrap()
+    }
 }
 
 #[sdk_macros::async_trait]
@@ -44,6 +60,10 @@ impl LiquidChainService for MockLiquidChainService {
     }
 
     async fn broadcast(&self, tx: &elements::Transaction) -> Result<elements::Txid> {
+        *self.broadcast_calls.lock().unwrap() += 1;
+        if let Some(Some(err)) = self.broadcast_results.lock().unwrap().pop_front() {
+            return Err(anyhow::anyhow!(err));
+        }
         Ok(tx.txid())
     }
 

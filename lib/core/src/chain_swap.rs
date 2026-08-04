@@ -28,10 +28,10 @@ use crate::{
     persist::Persister,
     swapper::Swapper,
     utils,
-    wallet::OnchainWallet,
+    wallet::{handle_stale_cache_broadcast_error, OnchainWallet},
 };
 use crate::{
-    error::is_txn_mempool_conflict_error, model::DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT,
+    error::is_txn_already_spent_error, model::DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT,
     persist::model::PaymentTxBalance,
 };
 
@@ -785,11 +785,14 @@ impl ChainSwapHandler {
             )
             .await?;
 
-        let lockup_tx_id = self
-            .liquid_chain_service
-            .broadcast(&lockup_tx)
-            .await?
-            .to_string();
+        let lockup_tx_id = match self.liquid_chain_service.broadcast(&lockup_tx).await {
+            Ok(tx_id) => tx_id.to_string(),
+            Err(err) => {
+                return Err(handle_stale_cache_broadcast_error(&*self.onchain_wallet, err).await)
+            }
+        };
+
+        self.onchain_wallet.apply_broadcast_tx(&lockup_tx).await;
 
         debug!(
           "Successfully broadcast lockup transaction for Chain Swap {swap_id}. Lockup tx id: {lockup_tx_id}"
@@ -918,7 +921,7 @@ impl ChainSwapHandler {
                     SdkTransaction::Liquid(tx) => {
                         match self.liquid_chain_service.broadcast(&tx).await {
                             Ok(tx_id) => Ok(tx_id.to_hex()),
-                            Err(e) if is_txn_mempool_conflict_error(&e) => {
+                            Err(e) if is_txn_already_spent_error(&e) => {
                                 Err(PaymentError::AlreadyClaimed)
                             }
                             Err(err) => {

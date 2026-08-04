@@ -190,7 +190,11 @@ where
     for utxo_count in 1..=utxos.len() {
         let fee = get_fee(utxo_count, 1);
         if fee < best_fee {
-            let target_incl_fee = target_value + fee;
+            // At least one sat of change, not just enough to cover `target + fee`. When the
+            // inputs leave no room for change lwk drops the change output and then requires
+            // them to cover the *changeless* fee exactly, which is lower. A sum equal to
+            // `target + fee` satisfies neither branch and fails to build.
+            let target_incl_fee = target_value + fee + 1;
             let upper_bound_delta = available_value.saturating_sub(target_incl_fee);
             if let Some(selected_utxos) =
                 utxo_select_in_range(target_incl_fee, upper_bound_delta, utxo_count, utxos)
@@ -464,6 +468,27 @@ mod tests {
         // With target count
         let selected = utxo_select_in_range(250, 0, 2, &utxos);
         assert_eq!(selected, Some(vec![200, 50]));
+    }
+
+    /// lwk builds a changeless tx only when the inputs cover the changeless fee *exactly*, and a
+    /// tx with change only when they leave at least one sat of it. Between those, `target + fee`
+    /// inclusive, nothing is buildable, so selection must not return a sum that lands there.
+    ///
+    /// Taken from a real wallet: a 21 sat send with a 47 sat utxo, where `fee(1 in, change) = 26`
+    /// and `fee(1 in, no change) = 20`. Selecting 47 gives zero change and lwk rejects it with
+    /// `InsufficientFunds { missing_sats: 1 }` despite a 20.5M sat balance.
+    #[sdk_macros::test_all]
+    fn test_utxo_select_dynamic_leaves_room_for_change() {
+        let fee = |_utxo_count: usize, change_count: usize| if change_count > 0 { 26 } else { 20 };
+
+        // 47 == 21 + 26 is the dead zone: too little for change, too much for changeless.
+        assert_eq!(utxo_select_dynamic(21, &[47], fee), None);
+        // One more sat and a change output fits.
+        assert_eq!(utxo_select_dynamic(21, &[48], fee), Some(vec![48]));
+        // An exact changeless match is still preferred, and costs the lower fee.
+        assert_eq!(utxo_select_dynamic(21, &[41], fee), Some(vec![41]));
+        // With a real spread, skip the unusable 47 rather than fail the payment.
+        assert_eq!(utxo_select_dynamic(21, &[47, 2876], fee), Some(vec![2876]));
     }
 
     #[sdk_macros::test_all]

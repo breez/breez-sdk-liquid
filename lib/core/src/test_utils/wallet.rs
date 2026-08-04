@@ -29,6 +29,7 @@ use lwk_wollet::{
 pub(crate) struct MockWallet {
     signer: SdkLwkSigner,
     utxos: Mutex<Vec<WalletTxOut>>,
+    repair_cache_calls: Mutex<usize>,
 }
 
 lazy_static! {
@@ -43,12 +44,18 @@ impl MockWallet {
         Ok(Self {
             signer,
             utxos: Mutex::new(vec![]),
+            repair_cache_calls: Mutex::new(0),
         })
     }
 
     pub(crate) fn set_utxos(&self, utxos: Vec<WalletTxOut>) -> &Self {
         *self.utxos.lock().unwrap() = utxos;
         self
+    }
+
+    /// How many times a local cache repair has been attempted.
+    pub(crate) fn repair_cache_calls(&self) -> usize {
+        *self.repair_cache_calls.lock().unwrap()
     }
 }
 
@@ -129,6 +136,13 @@ impl OnchainWallet for MockWallet {
 
     async fn full_scan(&self) -> Result<(), PaymentError> {
         Ok(())
+    }
+
+    async fn apply_broadcast_tx(&self, _tx: &Transaction) {}
+
+    async fn repair_cache(&self) -> Result<bool, PaymentError> {
+        *self.repair_cache_calls.lock().unwrap() += 1;
+        Ok(true)
     }
 }
 

@@ -15,14 +15,31 @@ use super::{
     wallet::{MockSigner, MockWallet},
 };
 
+pub(crate) fn new_mock_wallet() -> Result<Arc<MockWallet>> {
+    let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
+    Ok(Arc::new(MockWallet::new(signer)?))
+}
+
 pub(crate) fn new_send_swap_handler(
     persister: std::sync::Arc<Persister>,
 ) -> Result<SendSwapHandler> {
+    new_send_swap_handler_with_mocks(
+        persister,
+        Arc::new(MockLiquidChainService::new()),
+        new_mock_wallet()?,
+    )
+}
+
+/// Same as [`new_send_swap_handler`], but lets the caller keep handles on the chain service used
+/// for broadcasting and on the wallet, so their behaviour can be scripted and asserted on.
+pub(crate) fn new_send_swap_handler_with_mocks(
+    persister: std::sync::Arc<Persister>,
+    chain_service: Arc<MockLiquidChainService>,
+    onchain_wallet: Arc<MockWallet>,
+) -> Result<SendSwapHandler> {
     let config = Config::regtest_esplora();
     let signer: Arc<Box<dyn Signer>> = Arc::new(Box::new(MockSigner::new()?));
-    let onchain_wallet = Arc::new(MockWallet::new(signer.clone())?);
     let swapper = Arc::new(MockSwapper::default());
-    let chain_service = Arc::new(MockLiquidChainService::new());
     let liquid_chain_service = Arc::new(MockLiquidChainService::new());
     let bitcoin_chain_service = Arc::new(MockBitcoinChainService::new());
     let recoverer = Arc::new(Recoverer::new(

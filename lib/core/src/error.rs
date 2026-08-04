@@ -1,4 +1,5 @@
 use anyhow::Error;
+use log::warn;
 use lwk_wollet::secp256k1;
 use sdk_common::{
     lightning_with_bolt12::offers::parse::Bolt12SemanticError,
@@ -216,7 +217,17 @@ impl From<boltz_client::bitcoin::hex::HexToArrayError> for PaymentError {
 impl From<lwk_wollet::Error> for PaymentError {
     fn from(err: lwk_wollet::Error) -> Self {
         match err {
-            lwk_wollet::Error::InsufficientFunds { .. } => PaymentError::InsufficientFunds,
+            lwk_wollet::Error::InsufficientFunds {
+                missing_sats,
+                asset_id,
+                is_token,
+            } => {
+                warn!(
+                    "lwk reported insufficient funds: missing {missing_sats} sat of asset \
+                     {asset_id}, is_token: {is_token}"
+                );
+                PaymentError::InsufficientFunds
+            }
             lwk_wollet::Error::TooManyInputs(count) => PaymentError::Generic {
                 err: format!(
                     "Transaction would require {count} inputs, which exceeds the maximum of 256 \
@@ -336,4 +347,18 @@ impl From<PaymentError> for LnUrlWithdrawError {
 
 pub(crate) fn is_txn_mempool_conflict_error(err: &Error) -> bool {
     err.to_string().contains("txn-mempool-conflict")
+}
+
+/// Whether an input is absent from the node's UTXO set: already spent by a confirmed tx, or its
+/// parent never existed. Unlike [`is_txn_mempool_conflict_error`], which means we merely compete
+/// with an unconfirmed tx, this means our cached UTXO view is stale.
+pub(crate) fn is_txn_inputs_missing_or_spent_error(err: &Error) -> bool {
+    let err = err.to_string();
+    err.contains("bad-txns-inputs-missingorspent") || err.contains("missing-inputs")
+}
+
+/// Whether the output being spent is already claimed by another tx, whether that tx is in the
+/// mempool (`txn-mempool-conflict`) or confirmed (`bad-txns-inputs-missingorspent`).
+pub(crate) fn is_txn_already_spent_error(err: &Error) -> bool {
+    is_txn_mempool_conflict_error(err) || is_txn_inputs_missing_or_spent_error(err)
 }
