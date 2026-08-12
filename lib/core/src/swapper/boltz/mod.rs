@@ -7,7 +7,7 @@ use crate::model::BREEZ_SWAP_PROXY_URL;
 use crate::{
     error::{PaymentError, SdkError},
     model::LIQUID_FEE_RATE_SAT_PER_VBYTE,
-    prelude::{ChainSwap, Config, Direction, LiquidNetwork, SendSwap, Swap, Transaction, Utxo},
+    prelude::{ChainSwap, Config, Direction, SendSwap, Swap, Transaction, Utxo},
 };
 use anyhow::{anyhow, bail, Result};
 use boltz_client::reqwest::header::HeaderMap;
@@ -24,7 +24,6 @@ use boltz_client::{
 };
 use client::{BitcoinClient, LiquidClient};
 use log::{info, warn};
-use proxy::split_boltz_url;
 use rand::Rng;
 use secp256k1_musig::musig::{
     PartialSignature as MusigPartialSignature, PublicNonce as MusigPubNonce,
@@ -55,6 +54,9 @@ pub struct BoltzSwapper<P: ProxyUrlFetcher> {
     boltz_client: OnceLock<BoltzClient>,
     liquid_client: OnceLock<LiquidClient>,
     bitcoin_client: OnceLock<BitcoinClient>,
+    // Retained for API/constructor compatibility; swap URLs are now selected internally
+    // via `Config::default_boltz_url()`, so the proxy fetcher is no longer queried.
+    #[allow(dead_code)]
     proxy_url: Arc<P>,
     request_notifier: broadcast::Sender<WsRequest>,
     update_notifier: broadcast::Sender<boltz::SwapStatus>,
@@ -84,21 +86,11 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             return Ok(client);
         }
 
-        let (boltz_api_base_url, referral_id) = match &self.config.network {
-            LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
-            LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
-                Ok(Some(boltz_swapper_urls)) => {
-                    if self.config.breez_api_key.is_some() {
-                        split_boltz_url(&boltz_swapper_urls.proxy_url)
-                    } else {
-                        split_boltz_url(&boltz_swapper_urls.boltz_url)
-                    }
-                }
-                _ => (None, None),
-            },
-        };
-
-        let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
+        // The Boltz API base URL is selected per-network by `default_boltz_url()`.
+        // On Mainnet this points to the self-hosted instance (see `SELF_HOSTED_BOLTZ_URL`),
+        // so swaps never go through the Breez swap proxy.
+        let referral_id: Option<String> = None;
+        let boltz_url = self.config.default_boltz_url().to_string();
 
         let mut ws_auth_api_key = None;
         let mut headers = HeaderMap::new();

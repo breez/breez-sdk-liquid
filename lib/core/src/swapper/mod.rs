@@ -163,6 +163,9 @@ pub trait SwapperStatusStream: Send + Sync {
     ) -> broadcast::Receiver<boltz_client::boltz::InvoiceRequest>;
 }
 
+// Retained for API compatibility. Swap URLs are now selected internally via
+// `Config::default_boltz_url()`, so this fetcher is no longer queried at runtime.
+#[allow(dead_code)]
 #[sdk_macros::async_trait]
 pub(crate) trait ProxyUrlFetcher: Send + Sync + 'static {
     async fn fetch(&self) -> Result<&Option<BoltzSwapperUrls>>;

@@ -4,29 +4,13 @@ use crate::PRODUCTION_BREEZSERVER_URL;
 use anyhow::Result;
 use log::warn;
 use sdk_common::prelude::{BoltzSwapperUrls, BreezServer};
-use url::Url;
 
 use crate::{persist::Persister, swapper::ProxyUrlFetcher};
 
+#[allow(dead_code)]
 pub(crate) struct BoltzProxyFetcher {
     url: OnceLock<Option<BoltzSwapperUrls>>,
     persister: std::sync::Arc<Persister>,
-}
-
-pub(crate) fn split_boltz_url(url: &str) -> (Option<String>, Option<String>) {
-    Url::parse(url)
-        .map(|url| {
-            let api_base_url = url.domain().map(|domain| format!("https://{domain}/v2"));
-            let referral_id = url.query().and_then(|q| {
-                q.split('=')
-                    .map(Into::into)
-                    .collect::<Vec<String>>()
-                    .get(1)
-                    .cloned()
-            });
-            (api_base_url, referral_id)
-        })
-        .unwrap_or_default()
 }
 
 impl BoltzProxyFetcher {

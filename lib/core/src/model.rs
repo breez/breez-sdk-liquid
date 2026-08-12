@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use bitcoin::{bip32, ScriptBuf};
 use boltz_client::{
-    boltz::{ChainPair, BOLTZ_MAINNET_URL_V2, BOLTZ_TESTNET_URL_V2},
+    boltz::{ChainPair, BOLTZ_TESTNET_URL_V2},
     network::{BitcoinChain, Chain, LiquidChain},
     swaps::boltz::{
         CreateChainResponse, CreateReverseResponse, CreateSubmarineResponse, Leaf, Side, SwapTree,
@@ -42,6 +42,8 @@ pub const LIQUID_FEE_RATE_MSAT_PER_VBYTE: f32 = (LIQUID_FEE_RATE_SAT_PER_VBYTE *
 pub const BREEZ_SYNC_SERVICE_URL: &str = "https://datasync.breez.technology";
 pub const BREEZ_LIQUID_ESPLORA_URL: &str = "https://lq1.breez.technology/liquid/api";
 pub const BREEZ_SWAP_PROXY_URL: &str = "https://swap.breez.technology/v2";
+/// Default self-hosted Boltz swap API (v2) base URL used on Mainnet.
+pub const SELF_HOSTED_BOLTZ_URL: &str = "https://satsrouting.exchange/v2";
 pub const DEFAULT_ONCHAIN_FEE_RATE_LEEWAY_SAT: u64 = 500;
 const DEFAULT_ONCHAIN_SYNC_PERIOD_SEC: u32 = 10;
 const DEFAULT_ONCHAIN_SYNC_REQUEST_TIMEOUT_SEC: u32 = 7;
@@ -260,13 +262,8 @@ impl Config {
 
     pub(crate) fn default_boltz_url(&self) -> &str {
         match self.network {
-            LiquidNetwork::Mainnet => {
-                if self.breez_api_key.is_some() {
-                    BREEZ_SWAP_PROXY_URL
-                } else {
-                    BOLTZ_MAINNET_URL_V2
-                }
-            }
+            // Default to the self-hosted Boltz instance on Mainnet.
+            LiquidNetwork::Mainnet => SELF_HOSTED_BOLTZ_URL,
             LiquidNetwork::Testnet => BOLTZ_TESTNET_URL_V2,
             // On regtest use the swapproxy instance by default
             LiquidNetwork::Regtest => "http://localhost:8387/v2",
