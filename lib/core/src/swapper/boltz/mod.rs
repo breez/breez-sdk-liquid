@@ -84,21 +84,27 @@ impl<P: ProxyUrlFetcher> BoltzSwapper<P> {
             return Ok(client);
         }
 
+        let default_url = self.config.default_boltz_url().to_string();
+
+        // The URLs served by the Breez server only apply when the Breez swap proxy is the
+        // configured backend. Any other backend (e.g. SatsRouting) is used as-is.
         let (boltz_api_base_url, referral_id) = match &self.config.network {
-            LiquidNetwork::Testnet | LiquidNetwork::Regtest => (None, None),
-            LiquidNetwork::Mainnet => match self.proxy_url.fetch().await {
-                Ok(Some(boltz_swapper_urls)) => {
-                    if self.config.breez_api_key.is_some() {
-                        split_boltz_url(&boltz_swapper_urls.proxy_url)
-                    } else {
-                        split_boltz_url(&boltz_swapper_urls.boltz_url)
+            LiquidNetwork::Mainnet if default_url == BREEZ_SWAP_PROXY_URL => {
+                match self.proxy_url.fetch().await {
+                    Ok(Some(boltz_swapper_urls)) => {
+                        if self.config.breez_api_key.is_some() {
+                            split_boltz_url(&boltz_swapper_urls.proxy_url)
+                        } else {
+                            split_boltz_url(&boltz_swapper_urls.boltz_url)
+                        }
                     }
+                    _ => (None, None),
                 }
-                _ => (None, None),
-            },
+            }
+            _ => (None, None),
         };
 
-        let boltz_url = boltz_api_base_url.unwrap_or(self.config.default_boltz_url().to_string());
+        let boltz_url = boltz_api_base_url.unwrap_or(default_url);
 
         let mut ws_auth_api_key = None;
         let mut headers = HeaderMap::new();
