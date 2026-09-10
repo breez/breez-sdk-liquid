@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Used when the app has not added the Breez SDK Expo config plugin. Expo autolinks this project
+  regardless, so it still has to configure, but nothing of it should reach the app: no sources are
+  compiled and no permissions, services or receivers are merged in.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
