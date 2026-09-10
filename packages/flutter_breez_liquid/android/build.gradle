@@ -34,7 +34,8 @@ apply plugin: 'com.android.library'
 // itself. Applying the Kotlin plugin on top of it fails configuration with
 // "Cannot add extension with name 'kotlin'". Only apply it when nothing has
 // registered that extension yet.
-if (project.extensions.findByName('kotlin') == null) {
+def hasBuiltInKotlin = project.extensions.findByName('kotlin') != null
+if (!hasBuiltInKotlin) {
     apply plugin: 'kotlin-android'
 }
 
@@ -60,8 +61,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    // kotlinOptions comes from the Kotlin plugin, so it is absent when AGP's
+    // built-in Kotlin is in use. There it takes the JVM target from
+    // compileOptions above.
+    if (!hasBuiltInKotlin) {
+        kotlinOptions {
+            jvmTarget = "17"
+        }
     }
 
     defaultConfig {

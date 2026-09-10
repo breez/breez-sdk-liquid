@@ -17,3 +17,7 @@ turboModule:
   ts: src
 noOverwrite:
   - "android/src/main/AndroidManifest.xml"
+  # Holds a hand-written AGP 9 guard around `apply plugin: "kotlin-android"`
+  # that is absent from the ubrn template. Without this, `ubrn:android`
+  # regenerates the file and drops the guard.
+  - "android/build.gradle"
