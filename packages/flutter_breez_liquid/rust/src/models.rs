@@ -303,6 +303,7 @@ pub use breez_sdk_liquid::{
     model::{
         AcceptPaymentProposedFeesRequest, AssetBalance, AssetInfo, AssetMetadata, BackupRequest,
         BlockchainExplorer, BlockchainInfo, BuyBitcoinProvider, BuyBitcoinRequest,
+        ExplorerAuthorization,
         CheckMessageRequest, CheckMessageResponse, Config, ConnectRequest,
         CreateBolt12InvoiceRequest, CreateBolt12InvoiceResponse, DescriptionHash,
         FetchPaymentProposedFeesRequest, FetchPaymentProposedFeesResponse, GetInfoResponse,
@@ -656,10 +657,20 @@ pub struct _AssetMetadata {
     pub fiat_id: Option<String>,
 }
 
+#[frb(mirror(ExplorerAuthorization))]
+pub enum _ExplorerAuthorization {
+    Basic { username: String, password: String },
+    Bearer { token: String },
+}
+
 #[frb(mirror(BlockchainExplorer))]
 pub enum _BlockchainExplorer {
     Electrum { url: String },
-    Esplora { url: String, use_waterfalls: bool },
+    Esplora {
+        url: String,
+        use_waterfalls: bool,
+        authorization: Option<ExplorerAuthorization>,
+    },
 }
 
 #[frb(mirror(BlockchainInfo))]
