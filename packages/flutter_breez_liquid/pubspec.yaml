@@ -4,14 +4,14 @@ version: 0.12.2
 homepage:
 
 environment:
-  sdk: ^3.8.1
-  flutter: '>=3.3.0'
+  sdk: ^3.9.2
+  flutter: '>=3.35.3'
 
 dependencies:
   flutter:
     sdk: flutter
   freezed_annotation: ^3.1.0  
-  flutter_rust_bridge: 2.11.1
+  flutter_rust_bridge: 2.13.0
   plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
