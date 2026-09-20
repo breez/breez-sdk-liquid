@@ -8,4 +8,4 @@ For existing partners building with the Breez SDK - Liquid, we recommend moving 
 
 ## Support
 
-Contact us at [t.me/breezsdk](https://t.me/breezsdk) or contact@breez.technology
+Contact us at [t.me/breezsdk](https://t.me/breezsdk) or contact@breez.technology.
