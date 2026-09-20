@@ -1,3 +1,5 @@
+![Breez](https://raw.githubusercontent.com/breez/website/main/src/assets/images/open-graph-home.jpg)
+
 # Breez SDK - Liquid
 
 ## Notice for Builders
